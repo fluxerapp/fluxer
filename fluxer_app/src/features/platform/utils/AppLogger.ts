@@ -88,10 +88,6 @@ export class Logger {
 		return level >= this.getCurrentLogLevel();
 	}
 
-	child(suffix: string): Logger {
-		return new Logger(`${this.name}:${suffix}`, this.minLevelOverride);
-	}
-
 	trace(...args: Array<unknown>): void {
 		this.log(LogLevel.Trace, ...args);
 	}

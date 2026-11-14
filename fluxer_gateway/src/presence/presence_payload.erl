@@ -18,8 +18,17 @@ build(UserData, Status, Mobile, Afk, CustomStatus) ->
         <<"status">> => StatusBin,
         <<"mobile">> => Mobile,
         <<"afk">> => Afk,
-        <<"custom_status">> => custom_status_for(StatusBin, CustomStatus)
+        <<"custom_status">> => custom_status_for(
+            StatusBin, visible_custom_status(UserData, CustomStatus)
+        )
     }.
+
+-spec visible_custom_status(map(), term()) -> term().
+visible_custom_status(UserData, CustomStatus) ->
+    case user_utils:profile_restricted(UserData) of
+        true -> null;
+        false -> CustomStatus
+    end.
 
 -spec ensure_status_binary(term()) -> binary().
 ensure_status_binary(online) -> <<"online">>;
@@ -31,7 +40,7 @@ ensure_status_binary(<<"invisible">>) -> <<"offline">>;
 ensure_status_binary(Status) when is_binary(Status) -> Status;
 ensure_status_binary(_) -> <<"offline">>.
 
--spec custom_status_for(binary(), custom_status()) -> custom_status().
+-spec custom_status_for(binary(), term()) -> custom_status().
 custom_status_for(<<"offline">>, _CustomStatus) ->
     null;
 custom_status_for(<<"invisible">>, _CustomStatus) ->
@@ -43,98 +52,3 @@ custom_status_for(_StatusBin, CustomStatus) ->
 normalize_custom_status(null) -> null;
 normalize_custom_status(CustomStatus) when is_map(CustomStatus) -> CustomStatus;
 normalize_custom_status(_) -> null.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-ensure_status_binary_atom_test() ->
-    ?assertEqual(<<"online">>, ensure_status_binary(online)),
-    ?assertEqual(<<"offline">>, ensure_status_binary(offline)),
-    ?assertEqual(<<"idle">>, ensure_status_binary(idle)),
-    ?assertEqual(<<"dnd">>, ensure_status_binary(dnd)),
-    ?assertEqual(<<"offline">>, ensure_status_binary(invisible)).
-
-ensure_status_binary_binary_test() ->
-    ?assertEqual(<<"online">>, ensure_status_binary(<<"online">>)),
-    ?assertEqual(<<"offline">>, ensure_status_binary(<<"invisible">>)),
-    ?assertEqual(<<"custom">>, ensure_status_binary(<<"custom">>)).
-
-ensure_status_binary_unknown_test() ->
-    ?assertEqual(<<"offline">>, ensure_status_binary(123)),
-    ?assertEqual(<<"offline">>, ensure_status_binary(undefined)).
-
-custom_status_for_visible_test() ->
-    Status = #{<<"text">> => <<"hello">>},
-    ?assertEqual(Status, custom_status_for(<<"online">>, Status)),
-    ?assertEqual(Status, custom_status_for(<<"idle">>, Status)),
-    ?assertEqual(Status, custom_status_for(<<"dnd">>, Status)).
-
-custom_status_for_invisible_test() ->
-    Status = #{<<"text">> => <<"hello">>},
-    ?assertEqual(null, custom_status_for(<<"offline">>, Status)),
-    ?assertEqual(null, custom_status_for(<<"invisible">>, Status)).
-
-custom_status_for_null_test() ->
-    ?assertEqual(null, custom_status_for(<<"online">>, null)).
-
-normalize_custom_status_test() ->
-    ?assertEqual(null, normalize_custom_status(null)),
-    ?assertEqual(#{<<"text">> => <<"hi">>}, normalize_custom_status(#{<<"text">> => <<"hi">>})),
-    ?assertEqual(null, normalize_custom_status(<<"invalid">>)),
-    ?assertEqual(null, normalize_custom_status(123)).
-
-build_invisible_atom_normalized_to_offline_test() ->
-    CustomStatus = #{<<"text">> => <<"hello">>},
-    Result = build(test_user(), invisible, false, false, CustomStatus),
-    ?assertEqual(<<"offline">>, maps:get(<<"status">>, Result)),
-    ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
-
-build_invisible_binary_normalized_to_offline_test() ->
-    CustomStatus = #{<<"text">> => <<"hello">>},
-    Result = build(test_user(), <<"invisible">>, false, false, CustomStatus),
-    ?assertEqual(<<"offline">>, maps:get(<<"status">>, Result)),
-    ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
-
-build_clears_expired_custom_status_test() ->
-    Result = build(test_user(), online, false, false, expired_custom_status()),
-    ?assertEqual(<<"online">>, maps:get(<<"status">>, Result)),
-    ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
-
-build_coalesces_an_expired_status_with_no_status_test() ->
-    ?assertEqual(
-        build(test_user(), online, false, false, null),
-        build(test_user(), online, false, false, expired_custom_status())
-    ).
-
-build_keeps_unexpired_custom_status_test() ->
-    Live = future_custom_status(),
-    Result = build(test_user(), dnd, false, false, Live),
-    ?assertEqual(Live, maps:get(<<"custom_status">>, Result)).
-
-build_keeps_custom_status_without_expires_at_test() ->
-    Live = #{<<"text">> => <<"forever">>},
-    Result = build(test_user(), idle, false, false, Live),
-    ?assertEqual(Live, maps:get(<<"custom_status">>, Result)).
-
-build_keeps_malformed_expires_at_test() ->
-    Live = #{<<"text">> => <<"hi">>, <<"expires_at">> => <<"not-a-date">>},
-    Result = build(test_user(), online, false, false, Live),
-    ?assertEqual(Live, maps:get(<<"custom_status">>, Result)).
-
-test_user() ->
-    #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>}.
-
-expired_custom_status() ->
-    #{
-        <<"emoji_animated">> => false,
-        <<"emoji_name">> => null,
-        <<"expires_at">> => <<"2026-05-13T13:02:27.497Z">>,
-        <<"text">> => <<"brb">>
-    }.
-
-future_custom_status() ->
-    ExpiresAt = calendar:system_time_to_rfc3339(
-        erlang:system_time(millisecond) + 3600000, [{unit, millisecond}, {offset, "Z"}]
-    ),
-    #{<<"text">> => <<"brb">>, <<"expires_at">> => list_to_binary(ExpiresAt)}.
--endif.

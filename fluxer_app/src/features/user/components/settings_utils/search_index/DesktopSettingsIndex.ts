@@ -4,13 +4,23 @@ import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getElectronAPI, getNativePlatformSync, isDesktop, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
-import {BACKGROUND_DESCRIPTOR} from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
+import {
+	BACKGROUND_DESCRIPTOR,
+	DESKTOP_WINDOW_DESCRIPTOR,
+	MINIMIZE_DESCRIPTOR as MINIMISE_DESCRIPTOR,
+	MINIMIZE_DESCRIPTOR,
+	SIZE_DESCRIPTOR,
+	TITLE_BAR_DESCRIPTOR,
+	TITLE_BAR_DESCRIPTOR as TITLEBAR_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR,
+	DOWNLOAD_SOURCE_MAPS_DESCRIPTOR,
+	LAUNCH_AT_LOGIN_DESCRIPTOR,
+	USE_NATIVE_TITLE_BAR_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const DOWNLOAD_SOURCE_MAPS_DESCRIPTOR = msg({
-	message: 'Download source maps',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
 const SOURCE_MAPS_DESCRIPTOR = msg({
 	message: 'Source maps',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -60,10 +70,17 @@ const TOGGLE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Toggle hardware acceleration',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const LAUNCH_AT_LOGIN_DESCRIPTOR = msg({
-	message: 'Launch {productName} at login',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+
+const UPDATES_DESCRIPTOR = msg({
+	message: 'Updates',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
+const INSTALL_UPDATES_ON_DEMAND_DESCRIPTOR = msg({
+	message:
+		"{productName} won't update while starting. When an update is available, you can install it from the app whenever you like. Takes effect the next time {productName} starts.",
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+
 const AUTOMATIC_START_DESCRIPTOR = msg({
 	message: 'Automatic start',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -120,14 +137,7 @@ const REMEMBER_WINDOW_DESCRIPTOR = msg({
 	message: 'Remember window',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const DESKTOP_WINDOW_DESCRIPTOR = msg({
-	message: 'Desktop window',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SIZE_DESCRIPTOR = msg({
-	message: 'Size',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const POSITION_DESCRIPTOR = msg({
 	message: 'Position',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -140,18 +150,7 @@ const KEEP_WINDOW_DIMENSIONS_AND_PLACEMENT_BETWEEN_RELOADS_DESCRIPTOR = msg({
 	message: 'Keep window dimensions and placement between reloads',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
-const USE_NATIVE_TITLE_BAR_DESCRIPTOR = msg({
-	message: 'Use native title bar',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const TITLE_BAR_DESCRIPTOR = msg({
-	message: 'Title bar',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const TITLEBAR_DESCRIPTOR = msg({
-	message: 'Title bar',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const NATIVE_TITLE_BAR_DESCRIPTOR = msg({
 	message: 'Native title bar',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -212,14 +211,7 @@ const MINIMIZE_TO_TRAY_DESCRIPTOR = msg({
 	message: 'Minimize to tray',
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
-const MINIMIZE_DESCRIPTOR = msg({
-	message: 'Minimize',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const MINIMISE_DESCRIPTOR = msg({
-	message: 'Minimize',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const HIDE_WINDOW_DESCRIPTOR = msg({
 	message: 'Hide window',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -265,6 +257,15 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 		description: TOGGLE_HARDWARE_ACCELERATION_DESCRIPTOR,
 		tags: ['desktop'],
 		isVisible: () => isDesktop() && getElectronAPI()?.platform !== 'darwin',
+	},
+	{
+		id: 'advanced-automatic-updates',
+		tabType: 'desktop_settings',
+		label: DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR,
+		keywords: [UPDATES_DESCRIPTOR],
+		description: {...INSTALL_UPDATES_ON_DEMAND_DESCRIPTOR, values: {productName: PRODUCT_NAME}},
+		tags: ['desktop'],
+		isVisible: () => isDesktop() && getElectronAPI()?.setDesktopDisableModuleUpdates != null,
 	},
 	{
 		id: 'advanced-autostart',

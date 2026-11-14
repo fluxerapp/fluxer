@@ -56,17 +56,11 @@ export interface ResizeStart {
 	paneStartY: number;
 }
 
-export interface FlingOptions {
+interface FlingOptions {
 	lookaheadSeconds: number;
 	strongVelocity: number;
 	axisVelocityFloor: number;
 }
-
-const DEFAULT_FLING_OPTIONS: FlingOptions = {
-	lookaheadSeconds: 0.2,
-	strongVelocity: 550,
-	axisVelocityFloor: 180,
-};
 
 function isFiniteNumber(value: number): boolean {
 	return typeof value === 'number' && Number.isFinite(value);
@@ -140,57 +134,36 @@ function snapPointToCorner(point: Point, bounds: DragBounds): Corner {
 	const midY = (bounds.minY + bounds.maxY) / 2;
 	const isRight = point.x >= midX;
 	const isBottom = point.y >= midY;
-	return `${isBottom ? 'bottom' : 'top'}-${isRight ? 'right' : 'left'}` as Corner;
+	return `${isBottom ? 'bottom' : 'top'}-${isRight ? 'right' : 'left'}`;
 }
 
-export function pickCornerForFling(
-	point: Point,
-	velocity: Point,
-	bounds: DragBounds,
-	options: FlingOptions = DEFAULT_FLING_OPTIONS,
-): Corner {
+export function pickCornerForFling(point: Point, velocity: Point, bounds: DragBounds, options: FlingOptions): Corner {
 	const projectedX = clamp(point.x + velocity.x * options.lookaheadSeconds, bounds.minX, bounds.maxX);
 	const projectedY = clamp(point.y + velocity.y * options.lookaheadSeconds, bounds.minY, bounds.maxY);
 	const speed = Math.hypot(velocity.x, velocity.y);
 	const midX = (bounds.minX + bounds.maxX) / 2;
 	const midY = (bounds.minY + bounds.maxY) / 2;
 	if (speed >= options.strongVelocity) {
-		const horizontal =
-			Math.abs(velocity.x) >= options.axisVelocityFloor
-				? velocity.x >= 0
-					? 'right'
-					: 'left'
-				: projectedX >= midX
-					? 'right'
-					: 'left';
-		const vertical =
-			Math.abs(velocity.y) >= options.axisVelocityFloor
-				? velocity.y >= 0
-					? 'bottom'
-					: 'top'
-				: projectedY >= midY
-					? 'bottom'
-					: 'top';
-		return `${vertical}-${horizontal}` as Corner;
+		let horizontal: 'left' | 'right';
+		if (Math.abs(velocity.x) >= options.axisVelocityFloor) {
+			horizontal = velocity.x >= 0 ? 'right' : 'left';
+		} else {
+			horizontal = projectedX >= midX ? 'right' : 'left';
+		}
+		let vertical: 'top' | 'bottom';
+		if (Math.abs(velocity.y) >= options.axisVelocityFloor) {
+			vertical = velocity.y >= 0 ? 'bottom' : 'top';
+		} else {
+			vertical = projectedY >= midY ? 'bottom' : 'top';
+		}
+		return `${vertical}-${horizontal}`;
 	}
 	return snapPointToCorner({x: projectedX, y: projectedY}, bounds);
 }
 
-export interface ResizeResult {
+interface ResizeResult {
 	width: number;
 	offset: Point;
-}
-
-function computeRawWidthDelta(edge: ResizeEdge, deltaX: number, deltaY: number, aspectRatio: number): number {
-	const fromHorizontal = edge.includes('right') ? deltaX : edge.includes('left') ? -deltaX : 0;
-	const fromVertical = edge.includes('bottom')
-		? deltaY * aspectRatio
-		: edge.includes('top')
-			? -deltaY * aspectRatio
-			: 0;
-	if (edge === 'top' || edge === 'bottom') return fromVertical;
-	if (edge === 'left' || edge === 'right') return fromHorizontal;
-	return fromHorizontal + fromVertical;
 }
 
 export function computeResize(
@@ -203,7 +176,26 @@ export function computeResize(
 	const {aspectRatio} = geometry;
 	const deltaX = pointerX - pointerStartX;
 	const deltaY = pointerY - pointerStartY;
-	const rawWidthDelta = computeRawWidthDelta(edge, deltaX, deltaY, aspectRatio);
+	let fromHorizontal = 0;
+	if (edge.includes('right')) {
+		fromHorizontal = deltaX;
+	} else if (edge.includes('left')) {
+		fromHorizontal = -deltaX;
+	}
+	let fromVertical = 0;
+	if (edge.includes('bottom')) {
+		fromVertical = deltaY * aspectRatio;
+	} else if (edge.includes('top')) {
+		fromVertical = -deltaY * aspectRatio;
+	}
+	let rawWidthDelta: number;
+	if (edge === 'top' || edge === 'bottom') {
+		rawWidthDelta = fromVertical;
+	} else if (edge === 'left' || edge === 'right') {
+		rawWidthDelta = fromHorizontal;
+	} else {
+		rawWidthDelta = fromHorizontal + fromVertical;
+	}
 	const nextWidth = clampWidth(startWidth + rawWidthDelta, geometry);
 	const appliedWidthDelta = nextWidth - startWidth;
 	const appliedHeightDelta = appliedWidthDelta / aspectRatio;
@@ -212,4 +204,78 @@ export function computeResize(
 	const bounds = getDragBounds(geometry, nextWidth);
 	const offset = clampPoint({x: paneStartX + offsetXDelta, y: paneStartY + offsetYDelta}, bounds);
 	return {width: nextWidth, offset};
+}
+
+interface FreeResizeRect {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
+interface FreeResizeBounds {
+	left: number;
+	top: number;
+	right: number;
+	bottom: number;
+}
+
+interface FreeResizeStart {
+	edge: ResizeEdge;
+	pointerStartX: number;
+	pointerStartY: number;
+	rect: FreeResizeRect;
+}
+
+function resizeAxis(
+	start: number,
+	size: number,
+	delta: number,
+	growsAtStart: boolean,
+	boundsMin: number,
+	boundsMax: number,
+	minSize: number,
+): {start: number; size: number} {
+	const end = start + size;
+	if (growsAtStart) {
+		const nextStart = clamp(start + delta, boundsMin, Math.max(boundsMin, end - minSize));
+		return {start: nextStart, size: end - nextStart};
+	}
+	const nextEnd = clamp(end + delta, Math.min(boundsMax, start + minSize), boundsMax);
+	return {start, size: nextEnd - start};
+}
+
+export function computeFreeResize(
+	start: FreeResizeStart,
+	pointerX: number,
+	pointerY: number,
+	bounds: FreeResizeBounds,
+	minSize: Size,
+): FreeResizeRect {
+	const {edge, rect} = start;
+	let horizontal = {start: rect.x, size: rect.width};
+	if (edge.includes('left') || edge.includes('right')) {
+		horizontal = resizeAxis(
+			rect.x,
+			rect.width,
+			pointerX - start.pointerStartX,
+			edge.includes('left'),
+			bounds.left,
+			bounds.right,
+			minSize.width,
+		);
+	}
+	let vertical = {start: rect.y, size: rect.height};
+	if (edge.includes('top') || edge.includes('bottom')) {
+		vertical = resizeAxis(
+			rect.y,
+			rect.height,
+			pointerY - start.pointerStartY,
+			edge.includes('top'),
+			bounds.top,
+			bounds.bottom,
+			minSize.height,
+		);
+	}
+	return {x: horizontal.start, y: vertical.start, width: horizontal.size, height: vertical.size};
 }

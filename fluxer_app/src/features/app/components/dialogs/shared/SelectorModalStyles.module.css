@@ -17,14 +17,29 @@
 	color: var(--text-secondary);
 }
 
+.selectorRoot {
+	height: 45rem;
+}
+
+.selectorFooter {
+	border-top: 0.0625rem solid var(--background-modifier-accent);
+}
+
 .selectorContent {
-	--selector-modal-content-height: clamp(20rem, 48vh, 23.75rem);
 	display: flex;
 	flex-direction: column;
+	padding: 0;
+}
+
+:global(html.mobile-layout) .selectorRoot {
+	height: auto;
+}
+
+:global(html.mobile-layout) .selectorContent {
+	--selector-modal-content-height: clamp(20rem, 48vh, 23.75rem);
 	height: var(--selector-modal-content-height);
 	min-height: var(--selector-modal-content-height);
 	max-height: var(--selector-modal-content-height);
-	padding: 0;
 }
 
 .listContainer {
@@ -69,7 +84,7 @@
 	border-radius: 0;
 	padding: 0.5rem 1rem;
 	background-color: transparent;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	box-sizing: border-box;
 	transition: none;

@@ -3,17 +3,12 @@
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {maskThreadArtifactsByChannel} from '@app/api/channel/services/message/ThreadMessageResponses';
 import {mapThreadMemberToResponse, mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
-import {
-	everEnabled,
-	THREAD_CHANNEL_TYPES,
-	type ThreadViewer,
-	viewerActive,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {THREAD_CHANNEL_TYPES, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import {maskChannelResponseThreadBits} from '@app/api/guild/services/ThreadPermissionBits';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -29,7 +24,7 @@ const CHANNEL_LOOKUP_CONCURRENCY = 16;
 
 export class MessageSearchResponseMapper {
 	constructor(
-		private readonly channelRepository: IChannelRepository,
+		private readonly channelRepository: ChannelRepository,
 		private readonly userCacheService: UserCacheService,
 	) {}
 
@@ -46,7 +41,7 @@ export class MessageSearchResponseMapper {
 	}> {
 		const orderedChannelIds = Array.from(new Set(messages.map((message) => message.channelId.toString())));
 		const channels = await mapWithConcurrency(orderedChannelIds, CHANNEL_LOOKUP_CONCURRENCY, (channelId) =>
-			this.channelRepository.findUnique(createChannelID(BigInt(channelId))),
+			this.channelRepository.channelData.findUnique(createChannelID(BigInt(channelId))),
 		);
 		const channelById = new Map(
 			channels
@@ -112,7 +107,6 @@ export class MessageSearchResponseMapper {
 		responses: Array<MessageSearchResultsResponse['channels'][number]>,
 		viewer: ThreadViewer,
 	): Promise<Array<MessageSearchResultsResponse['channels'][number]>> {
-		if (!everEnabled()) return responses;
 		const guildIds = new Map<string, GuildID>();
 		for (const channel of channels) {
 			if (channel.guildId) guildIds.set(channel.guildId.toString(), channel.guildId);

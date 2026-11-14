@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {OPEN_SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {useVerifyEmailAction} from '@app/features/auth/hooks/useVerifyEmailAction';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {BouncedEmailChangeModal} from '@app/features/user/components/modals/BouncedEmailChangeModal';
@@ -16,9 +15,9 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 const EMAIL_VERIFICATION_NAGBAR_MESSAGE_DESCRIPTOR = msg({
-	message: 'Hey {displayName}, please verify your email address.',
+	message: 'Hey {displayName}, please confirm your email address.',
 	comment:
-		'Nagbar warning shown when the current user still needs to verify email. displayName is the user display name.',
+		'Nagbar warning shown when the current user still needs to confirm their email. A verification email is sent when the account is created, and the button next to this sends another one or opens the code entry dialog. displayName is the user display name.',
 });
 const EMAIL_BOUNCED_NAGBAR_MESSAGE_DESCRIPTOR = msg({
 	message: "Hey {displayName}, we can't deliver email to your address. Add a working email to verify your account.",
@@ -32,6 +31,7 @@ const ADD_A_WORKING_EMAIL_BUTTON_DESCRIPTOR = msg({
 export const EmailVerificationNagbar = observer(({isMobile}: {isMobile: boolean}) => {
 	const {i18n} = useLingui();
 	const user = Users.currentUser;
+	const verifyEmailAction = useVerifyEmailAction();
 	if (!user) {
 		return null;
 	}
@@ -43,24 +43,11 @@ export const EmailVerificationNagbar = observer(({isMobile}: {isMobile: boolean}
 			)),
 		);
 	};
-	const openUserSettings = () => {
-		ModalCommands.push(
-			modal(
-				() => (
-					<UserSettingsModal
-						initialTab="account_security"
-						data-flx="app.app-layout.nagbars.email-verification-nagbar.open-user-settings.user-settings-modal"
-					/>
-				),
-				'user-settings',
-			),
-		);
-	};
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor={NAGBAR_TONES[NagbarToneKind.ALERT].backgroundColor}
-			textColor={NAGBAR_TONES[NagbarToneKind.ALERT].textColor}
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.NEUTRAL].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.NEUTRAL].textColor}
 			data-flx="app.app-layout.nagbars.email-verification-nagbar.nagbar"
 		>
 			<NagbarContent
@@ -81,10 +68,12 @@ export const EmailVerificationNagbar = observer(({isMobile}: {isMobile: boolean}
 					) : (
 						<NagbarButton
 							isMobile={isMobile}
-							onClick={openUserSettings}
-							data-flx="app.app-layout.nagbars.email-verification-nagbar.nagbar-button.open-user-settings"
+							onClick={verifyEmailAction.onClick}
+							disabled={verifyEmailAction.submitting}
+							submitting={verifyEmailAction.submitting}
+							data-flx="app.app-layout.nagbars.email-verification-nagbar.nagbar-button.verify-email"
 						>
-							{i18n._(OPEN_SETTINGS_DESCRIPTOR)}
+							{verifyEmailAction.text}
 						</NagbarButton>
 					)
 				}

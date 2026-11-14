@@ -6,6 +6,7 @@ import {
 	AppStorageBroadcast,
 	withAppStorageLock,
 } from '@app/features/platform/state/AppStorageBroadcast';
+import {GLOBAL_APP_STORAGE_SCOPE} from '@app/features/platform/state/AppStorageDatabase';
 import {
 	AppStorageKey,
 	isGlobalAppStorageKey,
@@ -18,22 +19,22 @@ import {
 import {
 	getPersistentStorageBackend,
 	PersistentStorageBackendKind,
+	switchToMemoryPersistentStorageBackend,
 } from '@app/features/platform/state/PersistentStorageBackend';
 import {PersistentStorageWriteQueue} from '@app/features/platform/state/PersistentStorageWriteQueue';
 import {
 	GATEWAY_PREBOOT_SESSION_STORAGE_KEY,
 	isRawStorageArea,
 	PREBOOT_MIRROR_KEYS,
-	rawStorageKeyAt,
 	rawStorageKeys,
 	rawStorageKind,
-	rawStorageLength,
 	readRawStorageItem,
 	writeRawStorageItem,
+	ZOOM_PREBOOT_MIRROR_STORAGE_KEY,
 } from '@app/features/platform/state/PrebootMirror';
 import {countTelemetryEvent, TelemetryEvent} from '@app/features/platform/utils/AppTelemetry';
 
-export type StorageChangeSource = 'local' | 'external';
+type StorageChangeSource = 'local' | 'external';
 
 export interface StorageChangeEvent {
 	key: string | null;
@@ -54,9 +55,7 @@ interface EnhancedStorage {
 	getItem(key: string): string | null;
 	setItem(key: string, value: string): void;
 	removeItem(key: string): void;
-	clear(): void;
-	key(index: number): string | null;
-	readonly length: number;
+
 	getJSON<T>(key: string, defaultValue?: T): T | null;
 	setJSON<T>(key: string, value: T): void;
 	keys(): Array<string>;
@@ -76,10 +75,15 @@ interface LoadedScopeCache {
 	readonly deletedKeys: Set<string>;
 }
 
-export const GLOBAL_APP_STORAGE_SCOPE = 'global';
-export const UNAUTHENTICATED_APP_STORAGE_SCOPE = 'unauthenticated';
+export interface AppStorageScopeActivation {
+	readonly scope: string;
+	readonly failure: Error | null;
+}
 
-const APP_STORAGE_SCOPED_ENABLED = true;
+type AppStorageDegradedListener = (reason: Error) => void;
+
+export {GLOBAL_APP_STORAGE_SCOPE} from '@app/features/platform/state/AppStorageDatabase';
+export const UNAUTHENTICATED_APP_STORAGE_SCOPE = 'unauthenticated';
 
 export const RAW_MIRROR_SCOPE_PREFIX = 'fluxer:app-storage-mirror:';
 
@@ -87,6 +91,7 @@ const RAW_ONLY_APP_STORAGE_KEYS: ReadonlySet<string> = new Set([
 	AppStorageKey.AUTH_SESSION_TOKEN,
 	AppStorageKey.AUTH_SESSION_USER_ID,
 	GATEWAY_PREBOOT_SESSION_STORAGE_KEY,
+	ZOOM_PREBOOT_MIRROR_STORAGE_KEY,
 	'runtimeConfig',
 	'AccountManager',
 ]);
@@ -101,9 +106,9 @@ const RAW_MIRRORED_APP_STORAGE_KEYS: ReadonlySet<string> = new Set([
 	...PREBOOT_MIRROR_KEYS,
 	...PRE_HYDRATION_APP_STORAGE_KEYS,
 	AppStorageKey.ACCESSIBILITY_LEGACY_STORE,
+	AppStorageKey.ACCOUNT_THEME,
 	AppStorageKey.MESSAGING_DRAFTS,
 	AppStorageKey.MESSAGING_MESSAGE_EDIT,
-	AppStorageKey.THEME,
 ]);
 
 let activeScope: string = UNAUTHENTICATED_APP_STORAGE_SCOPE;
@@ -120,6 +125,8 @@ const deletedKeys = new Set<string>();
 const listeners = new Set<{listener: StorageChangeListener; options: StorageSubscriptionOptions}>();
 const beforeScopeChangeListeners = new Set<AppStorageScopeListener>();
 const scopeChangeListeners = new Set<AppStorageScopeListener>();
+const degradedListeners = new Set<AppStorageDegradedListener>();
+let degradedReason: Error | null = null;
 
 function isContentAppStorageKey(key: string): boolean {
 	return resolveLegacyAppStorageKey(key)?.row.fanout === 'content';
@@ -127,10 +134,6 @@ function isContentAppStorageKey(key: string): boolean {
 
 function isGlobalStorageKey(key: string): boolean {
 	return isGlobalAppStorageKey(key) || resolveLegacyAppStorageKey(key)?.row.scope === 'global';
-}
-
-function scopedStorageActive(): boolean {
-	return scopedStorageEngaged;
 }
 
 function normalizeAppStorageScope(scope: string | null | undefined): string {
@@ -253,7 +256,7 @@ function readThroughLegacyValue(key: string): string | null {
 }
 
 function readValue(key: string): string | null {
-	if (!scopedStorageActive()) {
+	if (!scopedStorageEngaged) {
 		return readRawStorageItem(key);
 	}
 	if (RAW_ONLY_APP_STORAGE_KEYS.has(key)) {
@@ -297,7 +300,7 @@ function forgetDeletedKey(scope: string, key: string): void {
 }
 
 function writeValue(key: string, value: string | null): void {
-	if (!scopedStorageActive() || RAW_ONLY_APP_STORAGE_KEYS.has(key)) {
+	if (!scopedStorageEngaged || RAW_ONLY_APP_STORAGE_KEYS.has(key)) {
 		writeRawStorageItem(key, value);
 		return;
 	}
@@ -316,14 +319,14 @@ function writeValue(key: string, value: string | null): void {
 }
 
 function hasUnsettledWriteFailure(key: string): boolean {
-	if (!scopedStorageActive() || RAW_ONLY_APP_STORAGE_KEYS.has(key)) {
+	if (!scopedStorageEngaged || RAW_ONLY_APP_STORAGE_KEYS.has(key)) {
 		return false;
 	}
 	return writeQueue.hasFailure(storageScopeForKey(key), key);
 }
 
 function allKeys(): Array<string> {
-	if (!scopedStorageActive()) {
+	if (!scopedStorageEngaged) {
 		return rawStorageKeys();
 	}
 	const keys = [...scopedCache.keys()];
@@ -481,6 +484,7 @@ async function loadCacheForScope(scope: string): Promise<LoadedScopeCache> {
 	takeDeletedKeys();
 	if (scope !== GLOBAL_APP_STORAGE_SCOPE) {
 		for (const [key, entry] of await backend.load(scope)) {
+			if (isGlobalStorageKey(key)) continue;
 			values.set(key, entry.value);
 		}
 		takeDeletedKeys();
@@ -558,7 +562,7 @@ async function adoptRemoteDeletedKeys(scope: string): Promise<void> {
 }
 
 async function applyRemoteCommit(scope: string, key: string): Promise<void> {
-	if (!scopedStorageActive() || (scope !== GLOBAL_APP_STORAGE_SCOPE && scope !== activeScope)) {
+	if (!scopedStorageEngaged || (scope !== GLOBAL_APP_STORAGE_SCOPE && scope !== activeScope)) {
 		return;
 	}
 	if (key === AppStorageKey.ACCOUNT_RESET_KEPT_KEYS) {
@@ -598,7 +602,7 @@ async function applyRemoteCommit(scope: string, key: string): Promise<void> {
 }
 
 async function applyRemoteScopeReload(scope: string): Promise<void> {
-	if (!scopedStorageActive() || (scope !== GLOBAL_APP_STORAGE_SCOPE && scope !== activeScope)) {
+	if (!scopedStorageEngaged || (scope !== GLOBAL_APP_STORAGE_SCOPE && scope !== activeScope)) {
 		return;
 	}
 	const reloadScope = activeScope;
@@ -629,7 +633,7 @@ async function applyRemoteScopeReload(scope: string): Promise<void> {
 
 if (typeof window !== 'undefined' && rawStorageKind() !== 'memory') {
 	window.addEventListener('storage', (event: StorageEvent) => {
-		if (scopedStorageActive() || !isRawStorageArea(event.storageArea)) {
+		if (scopedStorageEngaged || !isRawStorageArea(event.storageArea)) {
 			return;
 		}
 		notifyListeners({
@@ -649,10 +653,6 @@ export function getAppStorageScope(): string {
 	return activeScope;
 }
 
-export function mutationsBlocked(): boolean {
-	return storageMutationsBlocked;
-}
-
 export function onBeforeAppStorageScopeChange(listener: AppStorageScopeListener): () => void {
 	beforeScopeChangeListeners.add(listener);
 	return () => {
@@ -667,7 +667,7 @@ export function subscribeAppStorageScope(listener: AppStorageScopeListener): () 
 	};
 }
 
-export async function initializeAppStorage(options?: {readonly scoped?: boolean}): Promise<void> {
+export async function initializeAppStorage(): Promise<void> {
 	if (storageInitialized) {
 		await flushAppStorageWrites();
 		return;
@@ -675,13 +675,8 @@ export async function initializeAppStorage(options?: {readonly scoped?: boolean}
 	if (initializePromise !== null) {
 		return initializePromise;
 	}
-	const scoped = options?.scoped ?? APP_STORAGE_SCOPED_ENABLED;
 	const completion = runTransition(async () => {
 		if (storageInitialized) {
-			return;
-		}
-		if (!scoped) {
-			storageInitialized = true;
 			return;
 		}
 		scopedStorageEngaged = true;
@@ -696,9 +691,13 @@ export async function initializeAppStorage(options?: {readonly scoped?: boolean}
 		} catch (error) {
 			console.error('[AppStorage] Failed to hydrate the scoped cache, serving the legacy corpus', error);
 			replaceScopedCache(new Map());
+			markAppStorageDegraded(toError(error));
 		}
 		replayRawMirror(activeScope);
 		storageInitialized = true;
+		if (getPersistentStorageBackend().kind === PersistentStorageBackendKind.MEMORY) {
+			markAppStorageDegraded(new Error('IndexedDB is not available in this browser'));
+		}
 		notifyListeners({key: null, oldValue: null, newValue: null, source: 'external'});
 	})
 		.catch((error: unknown) => {
@@ -735,27 +734,80 @@ async function activateScopeWithinTransition(previousScope: string, nextScope: s
 	}
 }
 
-export async function activateAppStorageScope(scope: string | null): Promise<void> {
-	const nextScope = normalizeAppStorageScope(scope);
-	await runTransition(async () => {
-		const previousScope = activeScope;
-		if (!scopedStorageActive()) {
-			activeScope = nextScope;
-			return;
+function toError(value: unknown): Error {
+	return value instanceof Error ? value : new Error(String(value));
+}
+
+export function getAppStorageDegradedReason(): Error | null {
+	return degradedReason;
+}
+
+export function subscribeAppStorageDegraded(listener: AppStorageDegradedListener): () => void {
+	degradedListeners.add(listener);
+	return () => {
+		degradedListeners.delete(listener);
+	};
+}
+
+function markAppStorageDegraded(reason: Error): void {
+	if (degradedReason !== null) {
+		return;
+	}
+	degradedReason = reason;
+	for (const listener of [...degradedListeners]) {
+		try {
+			listener(reason);
+		} catch (error) {
+			console.error('[AppStorage] A degraded storage listener failed', error);
 		}
-		await withAppStorageLock(APP_STORAGE_SCOPE_LOCK_NAME, () =>
-			activateScopeWithinTransition(previousScope, nextScope),
-		);
-	}).catch((error: unknown) => {
-		countTelemetryEvent(TelemetryEvent.STORAGE_SCOPE_ACTIVATION_FAILED, 1, nextScope);
-		console.error('[AppStorage] Failed to activate the storage scope', error);
+	}
+}
+
+async function activateScopeInMemory(
+	previousScope: string,
+	nextScope: string,
+	cause: Error,
+): Promise<AppStorageScopeActivation> {
+	const retainedGlobalEntries = [...scopedCache].filter(([key]) => isGlobalStorageKey(key));
+	const memory = switchToMemoryPersistentStorageBackend();
+	storageEventType = 'memory';
+	await memory.setMany(retainedGlobalEntries.map(([key, value]) => ({scope: GLOBAL_APP_STORAGE_SCOPE, key, value})));
+	markAppStorageDegraded(cause);
+	try {
+		await activateScopeWithinTransition(previousScope, nextScope);
+	} catch (error) {
+		console.error('[AppStorage] Failed to activate the storage scope in memory', error);
+		return {scope: activeScope, failure: toError(error)};
+	}
+	return {scope: activeScope, failure: cause};
+}
+
+export async function activateAppStorageScope(scope: string | null): Promise<AppStorageScopeActivation> {
+	const nextScope = normalizeAppStorageScope(scope);
+	return runTransition(async (): Promise<AppStorageScopeActivation> => {
+		const previousScope = activeScope;
+		if (!scopedStorageEngaged) {
+			activeScope = nextScope;
+			return {scope: activeScope, failure: null};
+		}
+		try {
+			await withAppStorageLock(APP_STORAGE_SCOPE_LOCK_NAME, () =>
+				activateScopeWithinTransition(previousScope, nextScope),
+			);
+			return {scope: activeScope, failure: null};
+		} catch (error) {
+			const cause = toError(error);
+			countTelemetryEvent(TelemetryEvent.STORAGE_SCOPE_ACTIVATION_FAILED, 1, nextScope);
+			console.error('[AppStorage] Failed to activate the storage scope, keeping it in memory', cause);
+			return activateScopeInMemory(previousScope, nextScope, cause);
+		}
 	});
 }
 
 export async function deleteAppStorageScope(scope: string): Promise<void> {
 	const normalizedScope = normalizeAppStorageScope(scope);
 	await runTransition(async () => {
-		if (!scopedStorageActive()) {
+		if (!scopedStorageEngaged) {
 			removeEntries(collectEntries(() => true));
 			return;
 		}
@@ -786,7 +838,7 @@ export async function deleteAppStorageScope(scope: string): Promise<void> {
 export async function resetActiveAccountScope(keysToKeep: ReadonlyArray<string>): Promise<void> {
 	const keepSet = new Set(keysToKeep);
 	await runTransition(async () => {
-		if (!scopedStorageActive()) {
+		if (!scopedStorageEngaged) {
 			removeEntries(collectEntries((key) => !keepSet.has(key)));
 			return;
 		}
@@ -814,7 +866,7 @@ export async function resetActiveAccountScope(keysToKeep: ReadonlyArray<string>)
 export async function resetAppStorage(keysToKeep: ReadonlyArray<string>): Promise<void> {
 	const keepSet = new Set(keysToKeep);
 	await runTransition(async () => {
-		if (!scopedStorageActive()) {
+		if (!scopedStorageEngaged) {
 			removeEntries(collectEntries((key) => !keepSet.has(key)));
 			return;
 		}
@@ -882,28 +934,7 @@ function createStorage(): EnhancedStorage {
 			writable: false,
 			enumerable: false,
 		},
-		clear: {
-			value: () => {
-				requireMutationsAvailable();
-				removeEntries(collectEntries(() => true));
-			},
-			writable: false,
-			enumerable: false,
-		},
-		key: {
-			value: (index: number) => {
-				if (!scopedStorageActive()) {
-					return rawStorageKeyAt(index);
-				}
-				return allKeys()[index] ?? null;
-			},
-			writable: false,
-			enumerable: false,
-		},
-		length: {
-			get: () => (scopedStorageActive() ? allKeys().length : rawStorageLength()),
-			enumerable: false,
-		},
+
 		getJSON: {
 			value: <T>(key: string, defaultValue?: T): T | null => {
 				const item = readValue(key);

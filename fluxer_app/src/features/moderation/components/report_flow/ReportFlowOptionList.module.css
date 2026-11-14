@@ -66,10 +66,6 @@
 	color: var(--text-primary-muted);
 }
 
-[dir='rtl'] .chevron {
-	transform: scaleX(-1);
-}
-
 .srOnly {
 	position: absolute;
 	width: 0.0625rem;

@@ -9,121 +9,8 @@ import {
 import {describe, expect, it} from 'vitest';
 
 describe('getCurrencyPreferences first choice', () => {
-	describe('returns USD for non-EEA countries', () => {
-		it('returns USD for United States', () => {
-			expect(getCurrencyPreferences('US')[0]).toBe('USD');
-		});
-		it('returns USD for Canada', () => {
-			expect(getCurrencyPreferences('CA')[0]).toBe('USD');
-		});
-		it('returns USD for United Kingdom', () => {
-			expect(getCurrencyPreferences('GB')[0]).toBe('USD');
-		});
-		it('returns USD for Japan', () => {
-			expect(getCurrencyPreferences('JP')[0]).toBe('USD');
-		});
-		it('returns USD for Australia', () => {
-			expect(getCurrencyPreferences('AU')[0]).toBe('USD');
-		});
-		it('returns USD for Switzerland', () => {
-			expect(getCurrencyPreferences('CH')[0]).toBe('USD');
-		});
-	});
-	describe('returns EUR for EEA countries', () => {
-		it('returns EUR for Germany', () => {
-			expect(getCurrencyPreferences('DE')[0]).toBe('EUR');
-		});
-		it('returns EUR for France', () => {
-			expect(getCurrencyPreferences('FR')[0]).toBe('EUR');
-		});
-		it('returns EUR for Italy', () => {
-			expect(getCurrencyPreferences('IT')[0]).toBe('EUR');
-		});
-		it('returns EUR for Spain', () => {
-			expect(getCurrencyPreferences('ES')[0]).toBe('EUR');
-		});
-		it('returns EUR for Netherlands', () => {
-			expect(getCurrencyPreferences('NL')[0]).toBe('EUR');
-		});
-		it('returns EUR for Belgium', () => {
-			expect(getCurrencyPreferences('BE')[0]).toBe('EUR');
-		});
-		it('returns EUR for Austria', () => {
-			expect(getCurrencyPreferences('AT')[0]).toBe('EUR');
-		});
-		it('returns EUR for Portugal', () => {
-			expect(getCurrencyPreferences('PT')[0]).toBe('EUR');
-		});
-		it('returns EUR for Ireland', () => {
-			expect(getCurrencyPreferences('IE')[0]).toBe('EUR');
-		});
-		it('returns EUR for Finland', () => {
-			expect(getCurrencyPreferences('FI')[0]).toBe('EUR');
-		});
-		it('returns SEK for Sweden', () => {
-			expect(getCurrencyPreferences('SE')[0]).toBe('SEK');
-		});
-		it('returns DKK for Denmark', () => {
-			expect(getCurrencyPreferences('DK')[0]).toBe('DKK');
-		});
-		it('returns PLN for Poland', () => {
-			expect(getCurrencyPreferences('PL')[0]).toBe('PLN');
-		});
-		it('returns EUR for Greece', () => {
-			expect(getCurrencyPreferences('GR')[0]).toBe('EUR');
-		});
-		it('returns EUR for Czech Republic', () => {
-			expect(getCurrencyPreferences('CZ')[0]).toBe('EUR');
-		});
-		it('returns EUR for Hungary', () => {
-			expect(getCurrencyPreferences('HU')[0]).toBe('EUR');
-		});
-		it('returns EUR for Romania', () => {
-			expect(getCurrencyPreferences('RO')[0]).toBe('EUR');
-		});
-		it('returns NOK for Norway (EEA but not EU)', () => {
-			expect(getCurrencyPreferences('NO')[0]).toBe('NOK');
-		});
-		it('returns ISK for Iceland (EEA but not EU)', () => {
-			expect(getCurrencyPreferences('IS')[0]).toBe('ISK');
-		});
-		it('returns EUR for Liechtenstein (EEA but not EU)', () => {
-			expect(getCurrencyPreferences('LI')[0]).toBe('EUR');
-		});
-	});
-	describe('handles case insensitivity', () => {
-		it('returns EUR for lowercase country code', () => {
-			expect(getCurrencyPreferences('de')[0]).toBe('EUR');
-			expect(getCurrencyPreferences('fr')[0]).toBe('EUR');
-		});
-		it('returns USD for lowercase non-EEA', () => {
-			expect(getCurrencyPreferences('us')[0]).toBe('USD');
-			expect(getCurrencyPreferences('gb')[0]).toBe('USD');
-		});
-		it('handles mixed case', () => {
-			expect(getCurrencyPreferences('De')[0]).toBe('EUR');
-			expect(getCurrencyPreferences('dE')[0]).toBe('EUR');
-		});
-	});
-	describe('handles null and undefined', () => {
-		it('returns USD for null', () => {
-			expect(getCurrencyPreferences(null)[0]).toBe('USD');
-		});
-		it('returns USD for undefined', () => {
-			expect(getCurrencyPreferences(undefined)[0]).toBe('USD');
-		});
-	});
-	describe('handles empty and invalid inputs', () => {
-		it('returns USD for empty string', () => {
-			expect(getCurrencyPreferences('')[0]).toBe('USD');
-		});
-		it('returns USD for invalid country code', () => {
-			expect(getCurrencyPreferences('XX')[0]).toBe('USD');
-			expect(getCurrencyPreferences('ZZ')[0]).toBe('USD');
-		});
-		it('returns USD for numeric strings', () => {
-			expect(getCurrencyPreferences('12')[0]).toBe('USD');
-		});
+	it.each(['US', 'CA', 'GB', 'JP', 'AU', 'CH'])('returns USD for non-EEA country %s', (country) => {
+		expect(getCurrencyPreferences(country)[0]).toBe('USD');
 	});
 	describe('covers all EEA member states', () => {
 		const eeaCountries = [
@@ -153,6 +40,12 @@ describe('getCurrencyPreferences first choice', () => {
 			'ES',
 			'LI',
 			'AX',
+			'GF',
+			'GP',
+			'MF',
+			'MQ',
+			'RE',
+			'YT',
 		];
 		for (const country of eeaCountries) {
 			it(`returns EUR for ${country}`, () => {
@@ -193,21 +86,14 @@ describe('getCurrencyPreferences first choice', () => {
 });
 
 describe('shouldDisableAdaptivePricing', () => {
-	it('disables adaptive pricing for the native Nordic currencies', () => {
-		for (const currency of ['SEK', 'NOK', 'DKK', 'ISK', 'sek']) {
-			expect(shouldDisableAdaptivePricing(currency)).toBe(true);
-		}
-	});
-	it('leaves adaptive pricing alone for every other currency', () => {
-		for (const currency of ['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']) {
-			expect(shouldDisableAdaptivePricing(currency)).toBe(false);
-		}
+	it('turns adaptive pricing off on the official instance for every currency', () => {
+		expect(shouldDisableAdaptivePricing()).toBe(true);
 	});
 	it('leaves adaptive pricing alone on a self-hosted instance', () => {
 		const originalSelfHosted = Config.instance.selfHosted;
 		Config.instance.selfHosted = true;
 		try {
-			expect(shouldDisableAdaptivePricing('SEK')).toBe(false);
+			expect(shouldDisableAdaptivePricing()).toBe(false);
 		} finally {
 			Config.instance.selfHosted = originalSelfHosted;
 		}

@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {NEXT_DESCRIPTOR, TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	BACK_DESCRIPTOR,
+	NEXT_DESCRIPTOR,
+	TRY_AGAIN_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import styles from '@app/features/moderation/components/pages/ReportPage.module.css';
 import type {ReportFlowStatus} from '@app/features/moderation/components/report/ReportTypes';
-import {BACK_DESCRIPTOR, LOAD_FAILED_DESCRIPTOR} from '@app/features/moderation/components/report_flow/ReportFlowCopy';
+import {LOAD_FAILED_DESCRIPTOR} from '@app/features/moderation/components/report_flow/ReportFlowCopy';
 import {ReportFlowNotice} from '@app/features/moderation/components/report_flow/ReportFlowNotice';
 import {ReportFlowScreenView} from '@app/features/moderation/components/report_flow/ReportFlowScreenView';
 import {

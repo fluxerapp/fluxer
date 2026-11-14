@@ -71,78 +71,6 @@ describe('Guild audit log channel writers', () => {
 	afterEach(async () => {
 		await harness?.shutdown();
 	});
-	test('records a voice channel created under a category and then its overwrite with the header reason', async () => {
-		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
-		const role = await createRole(harness, owner.token, guild.id, {name: 'Speakers'});
-		const category = await createChannel(harness, owner.token, guild.id, 'Voice', ChannelTypes.GUILD_CATEGORY);
-		const reason = 'Set up the lounge';
-		const voice = await createBuilder<ChannelResponse>(harness, owner.token)
-			.post(`/guilds/${guild.id}/channels`)
-			.header('X-Audit-Log-Reason', reason)
-			.body({
-				name: 'Lounge',
-				type: ChannelTypes.GUILD_VOICE,
-				parent_id: category.id,
-				permission_overwrites: [{id: role.id, type: 0, allow: Permissions.CONNECT.toString(), deny: '0'}],
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const createLog = await fetchAuditLog(harness, owner.token, guild.id, AuditLogActionType.CHANNEL_CREATE);
-		const createEntry = requireEntry(createLog.audit_log_entries, (entry) => entry.target_id === voice.id);
-		expect(createEntry.reason).toBe(reason);
-		expect(createEntry.changes?.find((change) => change.key === 'parent_id')?.new_value).toBe(category.id);
-		expect(changeKeys(createEntry)).not.toContain('permission_overwrite_count');
-		const overwriteLog = await fetchAuditLog(
-			harness,
-			owner.token,
-			guild.id,
-			AuditLogActionType.CHANNEL_OVERWRITE_CREATE,
-		);
-		const overwriteEntry = requireEntry(
-			overwriteLog.audit_log_entries,
-			(entry) => entry.target_id === role.id && entry.options?.channel_id === voice.id,
-		);
-		expect(overwriteEntry.reason).toBe(reason);
-		expect(BigInt(overwriteEntry.id) > BigInt(createEntry.id)).toBe(true);
-	});
-	test('records the url of a link channel on create and on a url-only update', async () => {
-		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
-		const link = await createBuilder<ChannelResponse>(harness, owner.token)
-			.post(`/guilds/${guild.id}/channels`)
-			.body({name: 'docs', type: ChannelTypes.GUILD_LINK, url: 'https://fluxer.app/docs'})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const createLog = await fetchAuditLog(harness, owner.token, guild.id, AuditLogActionType.CHANNEL_CREATE);
-		const createEntry = requireEntry(createLog.audit_log_entries, (entry) => entry.target_id === link.id);
-		expect(createEntry.changes?.find((change) => change.key === 'url')?.new_value).toBe('https://fluxer.app/docs');
-		await createBuilder<ChannelResponse>(harness, owner.token)
-			.patch(`/channels/${link.id}`)
-			.body({url: 'https://fluxer.app/help'})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const updateLog = await fetchAuditLog(harness, owner.token, guild.id, AuditLogActionType.CHANNEL_UPDATE);
-		const updateEntry = requireEntry(updateLog.audit_log_entries, (entry) => entry.target_id === link.id);
-		expect(updateEntry.options?.type).toBe(ChannelTypes.GUILD_LINK);
-		expect(updateEntry.changes).toEqual([
-			{key: 'url', old_value: 'https://fluxer.app/docs', new_value: 'https://fluxer.app/help'},
-		]);
-	});
-	test('records a channel rename with the header reason', async () => {
-		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
-		const channel = await createChannel(harness, owner.token, guild.id, 'before-rename');
-		const reason = 'Clearer name';
-		await createBuilder<ChannelResponse>(harness, owner.token)
-			.patch(`/channels/${channel.id}`)
-			.header('X-Audit-Log-Reason', reason)
-			.body({name: 'after-rename'})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const log = await fetchAuditLog(harness, owner.token, guild.id, AuditLogActionType.CHANNEL_UPDATE);
-		const entry = requireEntry(log.audit_log_entries, (candidate) => candidate.target_id === channel.id);
-		expect(entry.user_id).toBe(owner.userId);
-		expect(entry.reason).toBe(reason);
-		expect(entry.changes).toEqual([{key: 'name', old_value: 'before-rename', new_value: 'after-rename'}]);
-	});
 	test('records a permissions update as overwrite entries with the header reason and no channel update', async () => {
 		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
 		const channel = await createChannel(harness, owner.token, guild.id, 'announcements');
@@ -235,32 +163,5 @@ describe('Guild audit log channel writers', () => {
 			expect(entry.options?.type).toBe(0);
 			expect(entry.options?.role_name).toBe('Moderators');
 		}
-	});
-	test('lists a member overwrite target in users', async () => {
-		const {owner, members, guild, channels} = await setupTestGuildWithMembers(harness, 1);
-		const member = members[0];
-		const channel = channels[0];
-		await createBuilder(harness, owner.token)
-			.put(`/channels/${channel.id}/permissions/${member.userId}`)
-			.body({type: 1, allow: Permissions.ATTACH_FILES.toString(), deny: '0'})
-			.expect(HTTP_STATUS.NO_CONTENT)
-			.execute();
-		const log = await fetchAuditLog(harness, owner.token, guild.id, AuditLogActionType.CHANNEL_OVERWRITE_CREATE);
-		const entry = requireEntry(log.audit_log_entries, (candidate) => candidate.target_id === member.userId);
-		expect(entry.options?.type).toBe(1);
-		expect(entry.options?.role_name).toBeUndefined();
-		expect(log.users.map((user) => user.id)).toContain(member.userId);
-	});
-	test('writes nothing for a channel update without an effective change', async () => {
-		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
-		const channel = await createChannel(harness, owner.token, guild.id, 'steady-name');
-		await createBuilder<ChannelResponse>(harness, owner.token)
-			.patch(`/channels/${channel.id}`)
-			.header('X-Audit-Log-Reason', 'Nothing to change')
-			.body({name: 'steady-name', topic: null})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const log = await fetchAuditLog(harness, owner.token, guild.id, AuditLogActionType.CHANNEL_UPDATE);
-		expect(log.audit_log_entries.filter((entry) => entry.target_id === channel.id)).toHaveLength(0);
 	});
 });

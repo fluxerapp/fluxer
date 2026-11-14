@@ -144,33 +144,6 @@ function appendUniquePattern(patterns, pattern) {
 	patterns.push(normalized);
 }
 
-function inventoryPatternsForTargetPids(pids) {
-	if (!(binding && typeof binding.AudioBridge === 'function')) return [];
-	const wanted = new Set(pids.map((pid) => String(pid)));
-	const patterns = [];
-	let bridge = null;
-	try {
-		bridge = new binding.AudioBridge();
-		const inventory = bridge.inventory();
-		if (!Array.isArray(inventory)) return patterns;
-		for (const props of inventory) {
-			if (!props || typeof props !== 'object') continue;
-			if (props['media.class'] !== 'Stream/Output/Audio') continue;
-			const processId = props['application.process.id'] || props['pipewire.sec.pid'];
-			if (!wanted.has(String(processId || ''))) continue;
-			appendUniquePattern(patterns, {'object.serial': String(props['object.serial'] || '')});
-			appendUniquePattern(patterns, {'node.name': String(props['node.name'] || '')});
-			appendUniquePattern(patterns, {'client.id': String(props['client.id'] || '')});
-		}
-	} catch {
-	} finally {
-		try {
-			bridge?.release?.();
-		} catch {}
-	}
-	return patterns;
-}
-
 function routingRuleFromTarget(target, options) {
 	if (target && typeof target === 'object') {
 		return normalizeRoutingRule(target.linuxRule || target);
@@ -179,9 +152,8 @@ function routingRuleFromTarget(target, options) {
 	if (!Number.isSafeInteger(pid) || pid <= 0) {
 		throw new TypeError('ProcessLoopback target pid must be a positive integer');
 	}
-	const targetPids = targetPidList(pid, Boolean(options?.includeProcessTree));
-	const include = inventoryPatternsForTargetPids(targetPids);
-	for (const candidate of targetPids) {
+	const include = [];
+	for (const candidate of targetPidList(pid, Boolean(options?.includeProcessTree))) {
 		appendUniquePattern(include, {'application.process.id': String(candidate)});
 		appendUniquePattern(include, {'pipewire.sec.pid': String(candidate)});
 	}
@@ -196,7 +168,7 @@ const MAX_DRAIN_FRAMES_PER_TICK = 16;
 const MAX_IDLE_DIRECT_CAPTURES = 2;
 const MIX_TICK_PERIOD_MS = 20;
 
-let idleDirectCaptures = [];
+const idleDirectCaptures = [];
 
 function acquireDirectAudioCapture() {
 	if (typeof binding.DirectAudioCapture !== 'function') {
@@ -211,10 +183,6 @@ function releaseDirectAudioCapture(capture) {
 	if (idleDirectCaptures.length < MAX_IDLE_DIRECT_CAPTURES) {
 		idleDirectCaptures.push(capture);
 	}
-}
-
-function clearIdleDirectCapturePool() {
-	idleDirectCaptures = [];
 }
 
 function patternsEqual(a, b) {
@@ -369,29 +337,9 @@ class ProcessLoopback extends EventEmitter {
 		}
 	}
 
-	routingGraph() {
-		return this.capture && typeof this.capture.routingGraph === 'function' ? this.capture.routingGraph() : null;
-	}
-
-	setScreenAudioSink(handle) {
-		if (!this.capture || typeof this.capture.setScreenAudioSink !== 'function') return false;
-		try {
-			return this.capture.setScreenAudioSink(handle) !== false;
-		} catch {
-			return false;
-		}
-	}
-
-	clearScreenAudioSink() {
-		if (this.capture && typeof this.capture.clearScreenAudioSink === 'function') {
-			this.capture.clearScreenAudioSink();
-		}
-	}
-
 	async stop() {
 		if (this.closed) return;
 		this.closed = true;
-		this.clearScreenAudioSink();
 		if (this.timer) clearInterval(this.timer);
 		this.timer = null;
 		if (this.refreshTimer) clearInterval(this.refreshTimer);
@@ -416,15 +364,7 @@ class ProcessLoopback extends EventEmitter {
 module.exports = {
 	AudioBridge: binding.AudioBridge,
 	DirectAudioCapture: binding.DirectAudioCapture,
-	AudioMixRuntimeHandle: binding.AudioMixRuntimeHandle,
 	ProcessLoopback,
 	pipeWireAvailable: binding.pipeWireAvailable,
 	audioBackend: binding.audioBackend ?? (() => (binding.pipeWireAvailable?.() ? 'pipewire' : 'none')),
-	__setBindingForTests(nextBinding) {
-		binding = nextBinding;
-		clearIdleDirectCapturePool();
-	},
-	__getIdleDirectCaptureCountForTests() {
-		return idleDirectCaptures.length;
-	},
 };

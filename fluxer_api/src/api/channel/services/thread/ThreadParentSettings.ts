@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createEmojiID, type GuildID} from '@app/api/BrandedTypes';
-import type {IThreadRepository, ThreadParentConfigPatch} from '@app/api/channel/repositories/IThreadRepository';
+import type {ThreadParentConfigPatch, ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import type {ForumTagUdt} from '@app/api/database/types/ThreadTypes';
-import {guildActive, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadParentConfig} from '@app/api/models/ThreadParentConfig';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -66,7 +66,7 @@ export function pickThreadParentSettings(channelType: number, data: object): Thr
 	return Object.keys(picked).length > 0 ? (picked as ThreadParentSettingsInput) : null;
 }
 
-export function assertSettableParentFlags(channelType: number, flags: number): void {
+function assertSettableParentFlags(channelType: number, flags: number): void {
 	const settable = settableChannelFlags(channelType);
 	if ((flags & ~settable) === 0) return;
 	if ((flags & ChannelFlags.HIDE_MEDIA_DOWNLOAD_OPTIONS) !== 0 && channelType !== ChannelTypes.GUILD_MEDIA) {
@@ -88,7 +88,7 @@ function assertSingleEmoji(
 }
 
 async function assertGuildEmoji(
-	guildRepository: IGuildRepositoryAggregate,
+	guildRepository: GuildRepository,
 	guildId: GuildID,
 	emojiId: bigint | null | undefined,
 ): Promise<void> {
@@ -101,7 +101,7 @@ async function buildTags(params: {
 	input: Array<ForumTagUpdateRequest>;
 	current: ReadonlyArray<ForumTagUdt>;
 	guildId: GuildID;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	generateId: () => Promise<bigint>;
 }): Promise<Array<ForumTagUdt>> {
 	if (params.input.length > MAX_FORUM_TAGS_PER_CHANNEL) throw new MaxForumTagsError(MAX_FORUM_TAGS_PER_CHANNEL);
@@ -135,7 +135,7 @@ export async function buildThreadParentPatch(params: {
 	guildId: GuildID;
 	input: ThreadParentSettingsInput;
 	current: ThreadParentConfig | null;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	generateId: () => Promise<bigint>;
 }): Promise<ThreadParentConfigPatch> {
 	const {input, current} = params;
@@ -235,33 +235,33 @@ function isThreadParentInGuild(channel: Channel): channel is Channel & {guildId:
 }
 
 export async function loadThreadParentConfig(
-	threads: IThreadRepository,
+	threads: ThreadRepository,
 	channel: Channel,
 ): Promise<ThreadParentConfig | null> {
-	if (!isThreadParentInGuild(channel) || !guildActive(channel.guildId)) return null;
+	if (!isThreadParentInGuild(channel)) return null;
 	return threads.getParentConfig(channel.guildId, channel.id);
 }
 
 export async function withThreadParentFields(
-	threads: IThreadRepository,
+	threads: ThreadRepository,
 	channel: Channel,
 	response: ChannelResponse,
 	viewer?: ThreadViewer,
 ): Promise<ChannelResponse> {
-	if (!isThreadParentInGuild(channel) || !guildActive(channel.guildId)) return response;
+	if (!isThreadParentInGuild(channel)) return response;
 	if (viewer && !viewerActive(viewer, channel.guildId)) return response;
 	const config = await threads.getParentConfig(channel.guildId, channel.id);
 	return {...response, ...mapThreadParentFields(channel.type, config)};
 }
 
 export async function withThreadParentFieldsMany(
-	threads: IThreadRepository,
+	threads: ThreadRepository,
 	guildId: GuildID,
 	channels: ReadonlyArray<Channel>,
 	responses: Array<ChannelResponse>,
 	viewer?: ThreadViewer,
 ): Promise<Array<ChannelResponse>> {
-	if (!guildActive(guildId) || (viewer && !viewerActive(viewer, guildId))) return responses;
+	if (viewer && !viewerActive(viewer, guildId)) return responses;
 	if (!channels.some((channel) => THREAD_PARENT_CHANNEL_TYPES.has(channel.type))) return responses;
 	const configs = new Map(
 		(await threads.listParentConfigs(guildId)).map((config) => [config.channelId.toString(), config]),

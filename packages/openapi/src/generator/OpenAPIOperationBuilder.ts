@@ -156,7 +156,12 @@ export class OpenAPIOperationBuilder {
 			}
 			const required = new Set(schema.required ?? []);
 			for (const [name, property] of Object.entries(schema.properties)) {
-				const propertySchema: OpenAPISchema = typeof property === 'boolean' ? (property ? {} : {not: {}}) : property;
+				let propertySchema: OpenAPISchema;
+				if (typeof property === 'boolean') {
+					propertySchema = property ? {} : {not: {}};
+				} else {
+					propertySchema = property;
+				}
 				const key = `${location}:${name}`;
 				if (parameters.has(key)) throw new Error(`Duplicate parameter ${key} for ${route.method} ${route.path}`);
 				parameters.set(key, {

@@ -437,13 +437,6 @@ class ScreenShareWatchFailuresStore {
 	getFailure(target: ScreenShareWatchFailureTarget): ScreenShareWatchFailure | null {
 		return selectVoiceMediaGraphFailure(this.graph, target);
 	}
-
-	clearAll(): void {
-		this.harvestGraphFailures();
-		runInAction(() => {
-			this.transition({type: 'failureWatch.clearAll'});
-		});
-	}
 }
 
 export const ScreenShareWatchFailures = new ScreenShareWatchFailuresStore();

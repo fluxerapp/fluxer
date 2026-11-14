@@ -2,16 +2,17 @@
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
-import type {
-	DesktopHandoffInfoResponse,
-	DesktopHandoffReturnMethod,
-} from '@app/features/auth/commands/AuthenticationCommands';
+import type {DesktopHandoffInfoResponse} from '@app/features/auth/commands/AuthenticationCommands';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {DesktopHandoffMode} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
-import type {UserData} from '@app/features/auth/state/AccountStorage';
+import {resolveHandoffErrorMessage} from '@app/features/auth/flow/browser_handoff/HandoffErrorMessages';
+import {originOf} from '@app/features/auth/InstanceBranding';
+import type {UserData} from '@app/features/auth/state/AccountStorageContract';
 import {type InstanceHTTPTarget, instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as FormUtils from '@app/lib/forms';
+import {officialClientApiEndpointForAlias} from '@fluxer/instance_bootstrap/src/OfficialInstance';
+import type {DesktopHandoffReturnMethod} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {formatDesktopHandoffCode, parseDesktopHandoffCode} from '@fluxer/schema/src/domains/auth/DesktopHandoffCode';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -61,23 +62,12 @@ export interface DesktopHandoffRequest {
 	readonly identifier: string | null;
 }
 
-function readOrigin(value: string | null | undefined): string | null {
-	if (value == null || value.length === 0) {
-		return null;
-	}
-	try {
-		return new URL(value).origin;
-	} catch {
-		return null;
-	}
-}
-
-export function readDesktopHandoffRequest(search: string): DesktopHandoffRequest {
+function readDesktopHandoffRequest(search: string): DesktopHandoffRequest {
 	const params = new URLSearchParams(search);
 	const code = parseDesktopHandoffCode(params.get('code') ?? '');
 	return {
 		code: code == null ? null : formatDesktopHandoffCode(code),
-		apiOrigin: readOrigin(params.get('api')),
+		apiOrigin: originOf(params.get('api')),
 		identifier: params.get('email') ?? params.get('login'),
 	};
 }
@@ -88,6 +78,12 @@ function hostOf(endpoint: string): string {
 	} catch {
 		return endpoint;
 	}
+}
+
+function isSameInstanceOrigin(left: string, right: string): boolean {
+	if (left === right) return true;
+	const official = officialClientApiEndpointForAlias(`${left}/api`);
+	return official !== null && official === officialClientApiEndpointForAlias(`${right}/api`);
 }
 
 function matchesIdentifier(identifier: string, userData: UserData): boolean {
@@ -165,9 +161,10 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 			} catch (e) {
 				if (operationRevision !== operationRevisionRef.current) return;
 				failWith(
-					e && typeof e === 'object' && 'body' in e
-						? FormUtils.extractErrorMessage(i18n, e)
-						: i18n._(COULDN_T_VERIFY_THAT_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR),
+					resolveHandoffErrorMessage(i18n, e) ??
+						(e && typeof e === 'object' && 'body' in e
+							? FormUtils.extractErrorMessage(i18n, e)
+							: i18n._(COULDN_T_VERIFY_THAT_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR)),
 				);
 			}
 		},
@@ -186,8 +183,12 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 			setClientInfo(null);
 			setReturnMethod(null);
 			setReturnUrl(null);
-			const accountOrigin = readOrigin(runtimeSnapshot.apiEndpoint);
-			if (request.apiOrigin != null && accountOrigin != null && request.apiOrigin !== accountOrigin) {
+			const accountOrigin = originOf(runtimeSnapshot.apiEndpoint);
+			if (
+				request.apiOrigin != null &&
+				accountOrigin != null &&
+				!isSameInstanceOrigin(request.apiOrigin, accountOrigin)
+			) {
 				failWith(
 					i18n._(INSTANCE_MISMATCH_DESCRIPTOR, {
 						accountHost: hostOf(accountOrigin),
@@ -232,9 +233,10 @@ export function useDesktopHandoffFlow({enabled, hasStoredAccounts, initialMode}:
 		} catch (e) {
 			if (operationRevision !== operationRevisionRef.current) return;
 			failWith(
-				e && typeof e === 'object' && 'body' in e
-					? FormUtils.extractErrorMessage(i18n, e)
-					: i18n._(COULDN_T_COMPLETE_SIGN_IN_PLEASE_TRY_AGAIN_DESCRIPTOR),
+				resolveHandoffErrorMessage(i18n, e) ??
+					(e && typeof e === 'object' && 'body' in e
+						? FormUtils.extractErrorMessage(i18n, e)
+						: i18n._(COULDN_T_COMPLETE_SIGN_IN_PLEASE_TRY_AGAIN_DESCRIPTOR)),
 			);
 		}
 	}, [failWith, handoffCode, i18n, returnMethod]);

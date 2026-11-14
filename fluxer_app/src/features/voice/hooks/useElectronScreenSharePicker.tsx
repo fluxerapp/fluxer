@@ -12,7 +12,7 @@ async function hasScreenRecordingPermission(requestId: string): Promise<boolean>
 		import('@app/features/permissions/system/utils/NativePermissions'),
 		import('@app/features/permissions/system/state/MediaPermission'),
 	]);
-	const permission = await checkNativePermission('screen');
+	const permission = await checkNativePermission('screen', {liveProbe: true});
 	if (permission !== 'denied') {
 		return true;
 	}
@@ -30,7 +30,7 @@ export const useElectronScreenSharePicker = (): void => {
 	useEffect(() => {
 		const electronApi = getElectronAPI();
 		if (!electronApi?.onDisplayMediaRequested) {
-			logger.info('Screen share picker unavailable (missing platform handler)');
+			logger.debug('Screen share picker unavailable (missing platform handler)');
 			return;
 		}
 		let handlingRequest = false;

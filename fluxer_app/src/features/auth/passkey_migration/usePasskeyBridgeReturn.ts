@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showAccountRestriction} from '@app/features/auth/commands/AuthenticationCommands';
 import {
 	prunePasskeyBridgePageLogins,
 	readPasskeyBridgeReturn,
@@ -19,6 +20,7 @@ interface PasskeyBridgeReturnOptions {
 	redirectPath?: string;
 	onLoginSuccess: (payload: LoginSuccessPayload) => Promise<void> | void;
 	onRequireMfa: (challenge: MfaChallenge) => void;
+	onCancelled: () => void;
 	onFailure: () => void;
 }
 
@@ -54,6 +56,7 @@ export function usePasskeyBridgeReturn(options: PasskeyBridgeReturnOptions): boo
 				if (result.status === 'cancelled') {
 					writePasskeyLoginRoute('native');
 					restoreMfa();
+					optionsRef.current.onCancelled();
 					return;
 				}
 				await optionsRef.current.onLoginSuccess(toLoginSuccessPayload(result));
@@ -63,6 +66,9 @@ export function usePasskeyBridgeReturn(options: PasskeyBridgeReturnOptions): boo
 			})
 			.catch((error: unknown) => {
 				logger.error('Passkey sign-in on the previous address failed', error);
+				if (showAccountRestriction(error)) {
+					return;
+				}
 				restoreMfa();
 				optionsRef.current.onFailure();
 			})

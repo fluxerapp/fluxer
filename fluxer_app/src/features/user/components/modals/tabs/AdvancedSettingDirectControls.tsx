@@ -15,10 +15,12 @@ import {
 	KeepNekoStillControl,
 	ShowNekoControl,
 	VoiceChannelJoinBehaviorControl,
+	WindowsFluxerSansControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls';
 import {
 	AutoSendGifsControl,
 	ConvertEmoticonsAdvancedControl,
+	DoubleClickMessageActionsControl,
 	ExpressionAutocompleteControl,
 	HideMutedChannelsByDefaultControl,
 	InputButtonsControl,
@@ -38,12 +40,14 @@ import {
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls';
 import {DeveloperModeControl} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedClientDeveloperControls';
 import {
+	AutomaticUpdatesControl,
 	HardwareAccelerationControl,
 	NativeTitleBarControl,
 	SourceMapsControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls';
 import {
 	ExpressionCloneShortcutsControl,
+	HideBlockedMessagesControl,
 	UnreadBadgeCustomizationControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls';
 import {
@@ -61,6 +65,7 @@ import type {SearchableSettingItem} from '@app/features/user/components/settings
 import {observer} from 'mobx-react-lite';
 
 export const DIRECT_CONTROL_ITEM_IDS = new Set([
+	'advanced-windows-fluxer-sans',
 	'accessibility-text-selection',
 	'accessibility-video-seek-thumbnails',
 	'accessibility-smooth-scrolling',
@@ -89,6 +94,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
 	'chat-settings-skip-mark-all-as-read-confirmation',
+	'chat-settings-double-click-message-actions',
 	'chat-settings-hide-muted-channels',
 	'voice-video-new-device-alerts',
 	'voice-video-connection-volume-controls',
@@ -99,10 +105,12 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'voice-video-screen-share-encoder-controls',
 	'advanced-unread-badge-customization',
 	'advanced-expression-clone-shortcuts',
+	'advanced-hide-blocked-messages',
 	'client-developer-mode',
 	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
 	'advanced-hardware-acceleration',
+	'advanced-automatic-updates',
 	'desktop-source-maps',
 ]);
 
@@ -112,6 +120,7 @@ export const FULL_WIDTH_CONTROL_ITEM_IDS = new Set([
 ]);
 
 export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
+	'advanced-windows-fluxer-sans',
 	'accessibility-text-selection',
 	'accessibility-video-seek-thumbnails',
 	'accessibility-smooth-scrolling',
@@ -132,6 +141,7 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
 	'chat-settings-skip-mark-all-as-read-confirmation',
+	'chat-settings-double-click-message-actions',
 	'chat-settings-hide-muted-channels',
 	'voice-video-new-device-alerts',
 	'voice-video-connection-volume-controls',
@@ -139,15 +149,21 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'voice-video-screen-share-hevc-opt-in',
 	'advanced-unread-badge-customization',
 	'advanced-expression-clone-shortcuts',
+	'advanced-hide-blocked-messages',
 	'client-developer-mode',
 	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
 	'advanced-hardware-acceleration',
+	'advanced-automatic-updates',
 	'desktop-source-maps',
 ]);
 
 export const AdvancedSettingControl = observer(({item}: {item: SearchableSettingItem}) => {
 	switch (item.id) {
+		case 'advanced-windows-fluxer-sans':
+			return (
+				<WindowsFluxerSansControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.windows-fluxer-sans-control" />
+			);
 		case 'accessibility-text-selection':
 			return (
 				<TextSelectionControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.text-selection-control" />
@@ -281,6 +297,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 			return (
 				<SkipMarkAllAsReadControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.skip-mark-all-as-read-control" />
 			);
+		case 'chat-settings-double-click-message-actions':
+			return (
+				<DoubleClickMessageActionsControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.double-click-message-actions-control" />
+			);
 		case 'chat-settings-hide-muted-channels':
 			return (
 				<HideMutedChannelsByDefaultControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.hide-muted-channels-by-default-control" />
@@ -324,6 +344,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 			return (
 				<ExpressionCloneShortcutsControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.expression-clone-shortcuts-control" />
 			);
+		case 'advanced-hide-blocked-messages':
+			return (
+				<HideBlockedMessagesControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.hide-blocked-messages-control" />
+			);
 		case 'client-developer-mode':
 			return (
 				<DeveloperModeControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.developer-mode-control" />
@@ -343,6 +367,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'advanced-hardware-acceleration':
 			return (
 				<HardwareAccelerationControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.hardware-acceleration-control" />
+			);
+		case 'advanced-automatic-updates':
+			return (
+				<AutomaticUpdatesControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.automatic-updates-control" />
 			);
 		default:
 			return null;

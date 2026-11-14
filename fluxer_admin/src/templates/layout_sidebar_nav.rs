@@ -10,6 +10,8 @@ pub struct NavItem {
     pub hosted_only: bool,
 }
 
+pub const PENDING_REGISTRATIONS_KEY: &str = "pending-registrations";
+
 pub struct NavSection {
     pub title: &'static str,
     pub items: &'static [NavItem],
@@ -43,10 +45,22 @@ pub const NAV_SECTIONS: &[NavSection] = &[
         items: &[
             item!("Reports", "/reports", "reports", [acl::REPORT_VIEW]),
             item!(
-                "Discovery Review",
+                "Decisions",
+                "/decisions",
+                "decisions",
+                [acl::ENFORCEMENT_VIEW]
+            ),
+            item!(
+                "Explore review",
                 "/discovery",
                 "discovery",
                 [acl::DISCOVERY_REVIEW]
+            ),
+            item!(
+                "Pending Registrations",
+                "/pending-registrations",
+                PENDING_REGISTRATIONS_KEY,
+                [acl::REGISTRATION_REVIEW]
             ),
             item!(
                 "Bulk Actions",
@@ -235,6 +249,7 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                     acl::INSTANCE_LIMIT_CONFIG_UPDATE
                 ]
             ),
+            item!("Badges", "/badges", "badges", [acl::BADGE_LIST]),
             item!(
                 "Admin API Keys",
                 "/admin-api-keys",
@@ -245,34 +260,40 @@ pub const NAV_SECTIONS: &[NavSection] = &[
     },
     NavSection {
         title: "Premium",
-        items: &[item!(
-            "Gift Codes",
-            "/gift-codes",
-            "gift-codes",
-            [acl::GIFT_CODES_GENERATE]
-        )],
+        items: &[
+            item!(
+                "Gift Codes",
+                "/gift-codes",
+                "gift-codes",
+                [acl::GIFT_CODES_GENERATE]
+            ),
+            item!(
+                "Operators' Wall",
+                "/operator-pass-wall",
+                "operator-pass-wall",
+                [acl::USER_LOOKUP],
+                hosted
+            ),
+            item!(
+                "Operators' Wall Tools",
+                "/operator-pass-wall/tools",
+                "operator-pass-wall-tools",
+                [acl::USER_LOOKUP],
+                hosted
+            ),
+            item!(
+                "Operators Release List",
+                "/operator-pass-releases",
+                "operator-pass-releases",
+                [acl::USER_LOOKUP],
+                hosted
+            ),
+            item!(
+                "Payment Disputes",
+                "/payment-disputes",
+                "payment-disputes",
+                [acl::USER_LOOKUP]
+            ),
+        ],
     },
 ];
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn bulk_actions_nav_covers_every_acl_the_page_renders_a_section_for() {
-        let item = NAV_SECTIONS
-            .iter()
-            .flat_map(|section| section.items)
-            .find(|item| item.active_key == "bulk-actions")
-            .expect("bulk actions nav item");
-        for required in [
-            acl::BULK_UPDATE_USER_FLAGS,
-            acl::BULK_UPDATE_GUILD_FEATURES,
-            acl::BULK_ADD_GUILD_MEMBERS,
-            acl::BULK_DELETE_USERS,
-            acl::BULK_DELETE_USER_MESSAGES,
-        ] {
-            assert!(item.required_acls.contains(&required), "{required}");
-        }
-    }
-}

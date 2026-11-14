@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::pages::instance_config::ConfigForm;
 use crate::{
     api::types::{
-        AppBrandingConfigResponse, BillingCatalogMode, BillingPriceSet, InstanceBillingResponse,
-        PremiumMode, TRI_STATE_DEFAULT, TRI_STATE_OFF, TRI_STATE_ON,
+        AppBrandingConfigResponse, BillingCatalogMode, BillingPriceSet, DISTRIBUTION_PRODUCTS_ALL,
+        DistributionPricingResponse, DistributionProduct, DistributionRuleResponse,
+        InstanceBillingResponse, PremiumMode, TRI_STATE_DEFAULT, TRI_STATE_OFF, TRI_STATE_ON,
     },
     templates::components::{
         badge::{BadgeVariant, badge},
         form::{
-            FORM_INPUT_CLASS, FORM_SELECT_CLASS, checkbox, csrf_input, form_actions,
-            form_field_group, select_chevron, submit_button, text_input, textarea_input,
+            Checkbox, FORM_INPUT_CLASS, FORM_SELECT_CLASS, form_actions, form_field_group,
+            select_chevron, submit_button, text_input, textarea_input,
         },
         section_card::section_card_with_description,
     },
@@ -137,7 +139,13 @@ fn secret_field(
                 },
             ))
             @if is_stored {
-                (checkbox(clear_name, "true", "Clear the stored value", false, true))
+                (Checkbox {
+                    name: clear_name,
+                    value: "true",
+                    label: "Clear the stored value",
+                    checked: false,
+                    enabled: true,
+                }.render())
             }
         }
     }
@@ -200,10 +208,17 @@ fn checkout_options(billing: &InstanceBillingResponse) -> Markup {
         "Buyers must accept your terms of service at checkout. Needs a terms of service URL in the Stripe dashboard public details. Currently {}.",
         on_off(billing.effective_terms_consent_required)
     );
+    let billing_emails = format!(
+        "Sends emails about payments, refunds and failed payments from this instance. This instance issues no \
+         invoices or receipt documents, so buyers get those from your own Stripe receipt settings. Stripe can also \
+         email buyers about the same events, so check your Stripe customer email settings if you don't want buyers \
+         to get both. The customer portal uses your Stripe Dashboard settings. Currently {}.",
+        on_off(billing.effective_billing_emails)
+    );
     html! {
         div class="space-y-4" {
             h4 class="text-sm font-medium text-neutral-900" { "Checkout options" }
-            div class="grid grid-cols-1 gap-4 sm:grid-cols-3" {
+            div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                 (tri_state_select(
                     "billing_automatic_tax",
                     "Automatic tax",
@@ -224,6 +239,13 @@ fn checkout_options(billing: &InstanceBillingResponse) -> Markup {
                     "Use default",
                     billing.terms_consent_required,
                     &terms,
+                ))
+                (tri_state_select(
+                    "billing_billing_emails",
+                    "Billing emails",
+                    "Use default",
+                    billing.billing_emails,
+                    &billing_emails,
                 ))
             }
             p class="text-xs text-neutral-500" {
@@ -321,9 +343,9 @@ fn legacy_prices_text(billing: &InstanceBillingResponse) -> String {
         .join("\n")
 }
 
-pub fn premium_billing_section(
+pub(crate) fn premium_billing_section(
     base: &str,
-    csrf_token: &str,
+    config_form: ConfigForm<'_>,
     branding: &AppBrandingConfigResponse,
     billing: &InstanceBillingResponse,
     premium_mode: PremiumMode,
@@ -339,7 +361,7 @@ pub fn premium_billing_section(
         html! {
             form method="post" action={(base) "/instance-config?action=update_billing"}
                 data-admin-result-form="true" {
-                (csrf_input(csrf_token))
+                (config_form.fields())
                 div class="space-y-8" {
                     div class="space-y-4" {
                         h3 class="text-sm font-semibold text-neutral-900" { "Premium tier" }
@@ -359,7 +381,8 @@ pub fn premium_billing_section(
                         }
                         p class="text-xs text-neutral-500" {
                             "Clients show this name wherever the premium tier is mentioned. Clear it to use the default. \
-                             The info URL is an optional page that describes the tier."
+                             The info URL is an optional page about the tier. The premium page and the premium badge on \
+                             profiles link to it. The comparison chart on the premium page comes from your limit settings."
                         }
                         @if matches!(premium_mode, PremiumMode::Everyone) {
                             p class="text-sm text-amber-700" {
@@ -402,7 +425,11 @@ pub fn premium_billing_section(
                             "billing_webhook_url",
                             false,
                             None,
-                            Some("Add this endpoint in the Stripe dashboard, then paste its signing secret above."),
+                            Some(
+                                "Add this endpoint in the Stripe dashboard, then paste its signing secret above. \
+                                 Send it at least the checkout.session.*, customer.subscription.*, invoice.*, \
+                                 charge.refunded, charge.dispute.* and refund.* events.",
+                            ),
                             html! {
                                 input type="text" id="billing_webhook_url" value=(billing.webhook_url)
                                     readonly class=(FORM_INPUT_CLASS);
@@ -465,188 +492,139 @@ pub fn premium_billing_section(
     )
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::collections::BTreeMap;
-
-    fn operator_billing() -> InstanceBillingResponse {
-        InstanceBillingResponse {
-            enabled: Some(true),
-            effective_enabled: true,
-            stripe_secret_key_set: true,
-            stripe_webhook_secret_set: true,
-            stripe_secret_key_stored: true,
-            stripe_webhook_secret_stored: true,
-            default_currency: Some("GBP".to_owned()),
-            prices: Some(BTreeMap::from([(
-                "GBP".to_owned(),
-                BillingPriceSet {
-                    monthly: Some("price_1GbpM".to_owned()),
-                    yearly: Some("price_1GbpY".to_owned()),
-                    gift_1_month: None,
-                    gift_1_year: Some("price_1GbpG".to_owned()),
-                },
-            )])),
-            country_currencies: Some(BTreeMap::from([
-                ("GB".to_owned(), "GBP".to_owned()),
-                ("IE".to_owned(), "GBP".to_owned()),
-            ])),
-            legacy_prices: Some(BTreeMap::from([(
-                "monthly_GBP".to_owned(),
-                vec!["price_1OldA".to_owned(), "price_1OldB".to_owned()],
-            )])),
-            billing_active: true,
-            stripe_serviceable: true,
-            catalog_mode: BillingCatalogMode::Operator,
-            webhook_url: "https://api.example.com/stripe/webhook".to_owned(),
-            automatic_tax: None,
-            tax_id_collection: Some(true),
-            terms_consent_required: Some(false),
-            effective_automatic_tax: false,
-            effective_tax_id_collection: true,
-            effective_terms_consent_required: false,
+fn distribution_select(
+    name: &str,
+    label: &str,
+    options: &[(&str, &str)],
+    selected: &str,
+) -> Markup {
+    html! {
+        td class="px-2 py-2" {
+            div class="relative" {
+                select name=(name) aria-label=(label) class=(FORM_SELECT_CLASS) {
+                    @for (value, display) in options {
+                        option value=(value) selected[*value == selected] { (display) }
+                    }
+                }
+                (select_chevron())
+            }
         }
     }
+}
 
-    fn branding(name: &str) -> AppBrandingConfigResponse {
-        AppBrandingConfigResponse {
-            premium_product_name: name.to_owned(),
-            premium_info_url: Some("https://example.com/gold".to_owned()),
-            ..Default::default()
+fn distribution_rate_text(rate_bps: u64) -> String {
+    format!("{}.{:02}", rate_bps / 100, rate_bps % 100)
+        .trim_end_matches('0')
+        .trim_end_matches('.')
+        .to_owned()
+}
+
+fn distribution_products_value(products: &[DistributionProduct]) -> String {
+    match products {
+        [only] => only.to_string(),
+        _ => DISTRIBUTION_PRODUCTS_ALL.to_owned(),
+    }
+}
+
+fn distribution_row(rule: Option<&DistributionRuleResponse>) -> Markup {
+    let rate = rule
+        .map(|rule| distribution_rate_text(rule.rate_bps.get()))
+        .unwrap_or_default();
+    let products = rule.map_or_else(
+        || DISTRIBUTION_PRODUCTS_ALL.to_owned(),
+        |rule| distribution_products_value(&rule.products),
+    );
+    let active = if rule.is_none_or(|rule| rule.active) {
+        TRI_STATE_ON
+    } else {
+        TRI_STATE_OFF
+    };
+    html! {
+        tr {
+            td class="px-2 py-2" {
+                input type="text" name="distribution_id" value=(rule.map_or("", |rule| rule.id.as_str()))
+                    placeholder="ios_marketplace" maxlength="32" aria-label="Distribution id"
+                    autocomplete="off" spellcheck="false"
+                    class={(FORM_INPUT_CLASS) " w-48"};
+            }
+            td class="px-2 py-2" {
+                input type="text" name="distribution_rate" value=(rate)
+                    placeholder="5" inputmode="decimal" aria-label="Rate in percent"
+                    autocomplete="off" class={(FORM_INPUT_CLASS) " w-20"};
+            }
+            (distribution_select(
+                "distribution_products",
+                "Products",
+                &[
+                    (DISTRIBUTION_PRODUCTS_ALL, "Subscriptions and gifts"),
+                    ("plutonium_subscription", "Subscriptions"),
+                    ("plutonium_gift", "Gifts"),
+                ],
+                &products,
+            ))
+            (distribution_select(
+                "distribution_active",
+                "Active",
+                &[(TRI_STATE_ON, "On"), (TRI_STATE_OFF, "Off")],
+                active,
+            ))
+            td class="px-2 py-2 text-xs text-neutral-500 whitespace-nowrap" {
+                @if let Some(rule) = rule {
+                    "Version " (rule.rule_version) ", " (rule.prices.len())
+                    @if rule.prices.len() == 1 { " channel price" } @else { " channel prices" }
+                }
+            }
         }
     }
+}
 
-    #[test]
-    fn section_renders_every_field_and_one_empty_price_row() {
-        let markup = premium_billing_section(
-            "/admin",
-            "csrf",
-            &branding("Gold"),
-            &operator_billing(),
-            PremiumMode::Mirror,
-        )
-        .into_string();
-        assert!(markup.contains("action=\"/admin/instance-config?action=update_billing\""));
-        assert!(markup.contains("data-admin-result-form=\"true\""));
-        assert!(markup.contains("<option value=\"on\" selected>On</option>"));
-        assert!(markup.contains("name=\"billing_automatic_tax\""));
-        assert!(markup.contains("name=\"billing_tax_id_collection\""));
-        assert!(markup.contains("name=\"billing_terms_consent_required\""));
-        assert!(markup.contains("Customer portal"));
-        assert!(markup.contains("name=\"billing_premium_product_name\""));
-        assert!(markup.contains("value=\"Gold\""));
-        assert!(markup.contains("value=\"https://example.com/gold\""));
-        assert!(markup.contains("name=\"billing_enabled\""));
-        assert!(markup.contains("type=\"password\" id=\"billing_stripe_secret_key\""));
-        assert!(markup.contains("name=\"billing_clear_stripe_secret_key\""));
-        assert!(markup.contains("name=\"billing_clear_stripe_webhook_secret\""));
-        assert!(markup.contains("value=\"https://api.example.com/stripe/webhook\""));
-        assert!(markup.contains("Billing active"));
-        assert!(!markup.contains("Purchases are unavailable"));
-        assert_eq!(markup.matches("name=\"billing_price_currency\"").count(), 2);
-        assert_eq!(
-            markup.matches("name=\"billing_price_gift_1_year\"").count(),
-            2
-        );
-        assert!(markup.contains("value=\"price_1GbpG\""));
-        assert!(markup.contains("GB=GBP\nIE=GBP"));
-        assert!(markup.contains("monthly_GBP=price_1OldA\nmonthly_GBP=price_1OldB"));
-        assert!(!markup.contains("Plutonium"));
-        assert!(!markup.contains("sk_"));
-    }
-
-    #[test]
-    fn unset_secrets_have_no_clear_checkbox() {
-        let billing = InstanceBillingResponse::default();
-        let markup = premium_billing_section(
-            "/admin",
-            "csrf",
-            &branding("Premium"),
-            &billing,
-            PremiumMode::Everyone,
-        )
-        .into_string();
-        assert!(!markup.contains("billing_clear_stripe_secret_key"));
-        assert!(!markup.contains("billing_clear_stripe_webhook_secret"));
-        assert_eq!(markup.matches("name=\"billing_price_currency\"").count(), 1);
-        assert!(markup.contains("Switch the premium model to Mirror"));
-        assert!(markup.contains("Catalog: environment"));
-    }
-
-    #[test]
-    fn env_secrets_are_labelled_and_cannot_be_cleared() {
-        let billing = InstanceBillingResponse {
-            stripe_secret_key_set: true,
-            stripe_webhook_secret_set: true,
-            ..Default::default()
-        };
-        let markup = premium_billing_section(
-            "/admin",
-            "csrf",
-            &branding("Premium"),
-            &billing,
-            PremiumMode::Mirror,
-        )
-        .into_string();
-        assert!(markup.contains("Stripe secret key from environment"));
-        assert!(markup.contains("Webhook secret from environment"));
-        assert!(markup.contains("Set from the environment"));
-        assert!(!markup.contains("billing_clear_stripe_secret_key"));
-        assert!(!markup.contains("billing_clear_stripe_webhook_secret"));
-    }
-
-    #[test]
-    fn tri_state_selects_reflect_the_stored_value() {
-        let render = |stored| {
-            tri_state_select(
-                "billing_enabled",
-                "Billing",
-                "Use environment setting",
-                stored,
-                "",
-            )
-            .into_string()
-        };
-        assert!(
-            render(None)
-                .contains("<option value=\"default\" selected>Use environment setting</option>")
-        );
-        assert!(render(Some(true)).contains("<option value=\"on\" selected>On</option>"));
-        assert!(render(Some(false)).contains("<option value=\"off\" selected>Off</option>"));
-    }
-
-    #[test]
-    fn blockers_explain_why_billing_is_inactive() {
-        let mut billing = InstanceBillingResponse::default();
-        assert_eq!(
-            billing_blockers(&billing, PremiumMode::Everyone),
-            vec![
-                "the premium model is Everyone, so there is no paid tier to sell",
-                "billing is not enabled",
-                "no Stripe secret key is set",
-            ]
-        );
-        billing.effective_enabled = true;
-        billing.stripe_secret_key_set = true;
-        assert_eq!(
-            billing_blockers(&billing, PremiumMode::Mirror),
-            vec![
-                "the environment price catalog has no currency with both a monthly and a yearly price ID"
-            ]
-        );
-        billing.catalog_mode = BillingCatalogMode::Operator;
-        billing.prices = Some(BTreeMap::from([(
-            "GBP".to_owned(),
-            BillingPriceSet {
-                monthly: Some("price_1A".to_owned()),
-                ..Default::default()
-            },
-        )]));
-        assert_eq!(
-            billing_blockers(&billing, PremiumMode::Mirror),
-            vec!["no currency has both a monthly and a yearly price ID"]
-        );
-        assert!(billing_blockers(&operator_billing(), PremiumMode::Mirror).is_empty());
-    }
+pub(crate) fn distribution_pricing_section(
+    base: &str,
+    config_form: ConfigForm<'_>,
+    pricing: &DistributionPricingResponse,
+) -> Markup {
+    section_card_with_description(
+        "Distribution pricing",
+        "App builds sold through a store that keeps a share of each sale send their distribution id with price \
+         and checkout requests. A matching rule charges the price divided by one minus the rate, rounded up, \
+         so the amount left after the store's share is at least the standard price. Every other request pays the \
+         standard price.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_distribution_pricing"}
+                data-admin-result-form="true" {
+                (config_form.fields())
+                div class="space-y-4" {
+                    div class="overflow-x-auto" {
+                        table class="min-w-full text-sm" {
+                            thead {
+                                tr class="text-left text-xs text-neutral-500" {
+                                    th class="px-2 py-1 font-medium" { "Distribution id" }
+                                    th class="px-2 py-1 font-medium" { "Rate (%)" }
+                                    th class="px-2 py-1 font-medium" { "Products" }
+                                    th class="px-2 py-1 font-medium" { "Active" }
+                                    th class="px-2 py-1 font-medium" {}
+                                }
+                            }
+                            tbody {
+                                @for rule in &pricing.rules {
+                                    (distribution_row(Some(rule)))
+                                }
+                                (distribution_row(None))
+                            }
+                        }
+                    }
+                    p class="text-xs text-neutral-500" {
+                        "Changing a rate starts a new version. New checkouts and plan changes use \
+                         it, and existing subscriptions keep the price they signed up at. The API creates the \
+                         Stripe price for each channel the first time someone checks out. Clear a distribution id \
+                         to remove its rule. A rule that already has channel prices stays stored as inactive so \
+                         those subscriptions keep renewing."
+                    }
+                    (form_actions(html! {
+                        (submit_button("Save distribution pricing"))
+                    }))
+                }
+            }
+        },
+    )
 }

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {getExpiryBucket} from '@app/api/channel/repositories/PollMessageExpiryRepository';
+import {SYSTEM_THREAD_VIEWER} from '@app/api/experiment/ChannelThreadsGate';
+import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {Logger} from '../../Logger';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const BUCKET_LOOKBACK_DAYS = 3;
 const FETCH_LIMIT = 200;
@@ -36,7 +37,7 @@ async function processFinalizedPolls(now = new Date()): Promise<void> {
 					continue;
 				}
 
-				const channel = await channelRepository.findUnique(row.channel_id);
+				const channel = await channelRepository.channelData.findUnique(row.channel_id);
 				if (!channel) {
 					await repo.deleteRecords(row);
 					totalDeletedRows++;
@@ -50,18 +51,21 @@ async function processFinalizedPolls(now = new Date()): Promise<void> {
 					continue;
 				}
 
-				await pollService.endPollBypassAuth({
-					channel,
-					viewer: {
-						kind: 'user',
-						userId: message.authorId!,
-						bot: false,
-						capable: true,
-					},
-					message,
-					requestCache,
-					expiryRow: row,
-				});
+				try {
+					await pollService.endPollBypassAuth({
+						channel,
+						viewer: SYSTEM_THREAD_VIEWER,
+						message,
+						requestCache,
+						expiryRow: row,
+					});
+				} catch (error) {
+					Logger.error(
+						{error, channelId: row.channel_id.toString(), messageId: row.message_id.toString()},
+						'Failed to finalize expired poll',
+					);
+					await repo.deleteRecords(row);
+				}
 				totalQueued++;
 				totalDeletedRows++;
 			}

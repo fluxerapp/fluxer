@@ -22,6 +22,7 @@ import {
 	ChatInputSettingsSchema,
 	DoubleTapAction,
 	ReactionEmojiSchema,
+	SwipeAction,
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {describe, expect, it} from 'vitest';
 
@@ -108,6 +109,13 @@ describe('SyncedPreferencesCodec', () => {
 			const original = create(SyncedPreferencesSchema, {doubleTapAction: action});
 			const decoded = decodeSyncedPreferences(encodeSyncedPreferences(original));
 			expect(decoded.doubleTapAction).toBe(action);
+		}
+	});
+	it('round-trips every swipe right to left action', () => {
+		for (const action of [SwipeAction.CHANNEL_DETAILS, SwipeAction.REPLY]) {
+			const original = create(SyncedPreferencesSchema, {swipeRightToLeftAction: action});
+			const decoded = decodeSyncedPreferences(encodeSyncedPreferences(original));
+			expect(decoded.swipeRightToLeftAction).toBe(action);
 		}
 	});
 	it('produces canonical encodings for equal inputs', () => {

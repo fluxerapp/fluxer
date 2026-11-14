@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::limits;
+use super::signature::RequestSigner;
 use super::types::{
     ActivityPubActor, ActivityPubPost, InstanceInfo, MastodonInstance, MastodonPost,
 };
 use crate::http_fetch;
 use reqwest::header::{ACCEPT, HeaderMap, HeaderValue};
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 use tracing::debug;
 use url::Url;
 
@@ -17,18 +18,39 @@ const ACCEPT_ACTIVITY_PUB: &str = concat!(
     "profile=\"https://www.w3.org/ns/activitystreams\""
 );
 
-pub async fn fetch_activity_pub(client: &reqwest::Client, url: &str) -> Option<ActivityPubPost> {
-    let mut headers = HeaderMap::new();
-    headers.insert(ACCEPT, HeaderValue::from_static(ACCEPT_ACTIVITY_PUB));
-    let result = http_fetch::fetch_url_with_headers(
-        client,
+#[derive(Clone, Copy)]
+pub struct ActivityPubClient<'a> {
+    pub http: &'a reqwest::Client,
+    pub signer: Option<&'a RequestSigner>,
+}
+
+async fn fetch_activity_pub_object(
+    client: ActivityPubClient<'_>,
+    url: &str,
+) -> Option<http_fetch::FetchResult> {
+    http_fetch::fetch_url_with_headers(
+        client.http,
         url,
-        headers,
+        |hop| {
+            let mut headers = match client.signer {
+                Some(signer) => signer.headers(hop, SystemTime::now())?,
+                None => HeaderMap::new(),
+            };
+            headers.insert(ACCEPT, HeaderValue::from_static(ACCEPT_ACTIVITY_PUB));
+            Ok(headers)
+        },
         limits::OBJECT_MAX_BYTES,
         Duration::from_secs(5),
     )
     .await
-    .ok()?;
+    .ok()
+}
+
+pub async fn fetch_activity_pub(
+    client: ActivityPubClient<'_>,
+    url: &str,
+) -> Option<ActivityPubPost> {
+    let result = fetch_activity_pub_object(client, url).await?;
 
     if !(200..=299).contains(&result.status) {
         debug!(url, status = result.status, "ActivityPub fetch failed");
@@ -46,20 +68,10 @@ pub async fn fetch_activity_pub(client: &reqwest::Client, url: &str) -> Option<A
 }
 
 pub async fn fetch_activity_pub_actor(
-    client: &reqwest::Client,
+    client: ActivityPubClient<'_>,
     url: &str,
 ) -> Option<ActivityPubActor> {
-    let mut headers = HeaderMap::new();
-    headers.insert(ACCEPT, HeaderValue::from_static(ACCEPT_ACTIVITY_PUB));
-    let result = http_fetch::fetch_url_with_headers(
-        client,
-        url,
-        headers,
-        limits::OBJECT_MAX_BYTES,
-        Duration::from_secs(5),
-    )
-    .await
-    .ok()?;
+    let result = fetch_activity_pub_object(client, url).await?;
 
     if !(200..=299).contains(&result.status) {
         return None;

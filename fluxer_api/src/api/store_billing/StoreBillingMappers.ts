@@ -3,6 +3,7 @@
 import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
 import {STORE_PRODUCT_SLOTS} from '@app/api/store_billing/StoreBillingConfig';
 import {PREMIUM_GRACE_PERIOD_MS} from '@app/api/user/UserHelpers';
+import {toIsoOrNull} from '@fluxer/date_utils/src/DateSerialization';
 import type {AdminStorePurchaseResponse} from '@fluxer/schema/src/domains/admin/AdminStoreBillingSchemas';
 import type {
 	PremiumStoreSubscriptionState,
@@ -11,10 +12,6 @@ import type {
 
 const APP_STORE_MANAGE_URL = 'https://apps.apple.com/account/subscriptions';
 const GOOGLE_PLAY_MANAGE_URL = 'https://play.google.com/store/account/subscriptions';
-
-function toIso(value: Date | null | undefined): string | null {
-	return value ? value.toISOString() : null;
-}
 
 export function resolveStoreAccessEnd(row: StorePurchaseRow): Date | null {
 	if (row.state === 'grace' && row.grace_ends_at) {
@@ -64,8 +61,8 @@ export function mapStorePurchaseToResponse(row: StorePurchaseRow): StorePurchase
 		environment: row.environment,
 		state: row.state,
 		entitled: row.entitled,
-		expires_at: isSubscription ? toIso(row.expires_at) : null,
-		entitled_until: isSubscription && row.entitled ? toIso(resolveStoreAccessEnd(row)) : null,
+		expires_at: isSubscription ? toIsoOrNull(row.expires_at) : null,
+		entitled_until: isSubscription && row.entitled ? toIsoOrNull(resolveStoreAccessEnd(row)) : null,
 		will_renew: isSubscription ? (row.auto_renew ?? null) : null,
 		gift_code: row.gift_code ?? null,
 		created_at: row.created_at.toISOString(),
@@ -88,19 +85,19 @@ export function mapStorePurchaseToAdminResponse(row: StorePurchaseRow): AdminSto
 		state: row.state,
 		store_state: row.store_state ?? null,
 		entitled: row.entitled,
-		expires_at: toIso(row.expires_at),
-		grace_ends_at: toIso(row.grace_ends_at),
+		expires_at: toIsoOrNull(row.expires_at),
+		grace_ends_at: toIsoOrNull(row.grace_ends_at),
 		auto_renew: row.auto_renew ?? null,
-		started_at: toIso(row.started_at),
-		purchased_at: toIso(row.purchased_at),
-		revoked_at: toIso(row.revoked_at),
+		started_at: toIsoOrNull(row.started_at),
+		purchased_at: toIsoOrNull(row.purchased_at),
+		revoked_at: toIsoOrNull(row.revoked_at),
 		revocation_reason: row.revocation_reason ?? null,
 		superseded: row.superseded_by_store_key != null,
 		acknowledged: row.acknowledged,
 		gift_code: row.gift_code ?? null,
-		bound_at: toIso(row.bound_at),
-		last_event_at: toIso(row.last_event_at),
-		synced_at: toIso(row.synced_at),
+		bound_at: toIsoOrNull(row.bound_at),
+		last_event_at: toIsoOrNull(row.last_event_at),
+		synced_at: toIsoOrNull(row.synced_at),
 		created_at: row.created_at.toISOString(),
 		updated_at: row.updated_at.toISOString(),
 	};
@@ -126,7 +123,7 @@ export function mapPremiumStoreSubscriptionState(row: StorePurchaseRow): Premium
 		billing_cycle: billingCycle,
 		state: row.state,
 		expires_at: row.expires_at.toISOString(),
-		grace_ends_at: row.state === 'grace' ? toIso(row.grace_ends_at) : null,
+		grace_ends_at: row.state === 'grace' ? toIsoOrNull(row.grace_ends_at) : null,
 		will_renew: row.auto_renew === true,
 		manage_url: buildManageUrl(row),
 		environment: row.environment,

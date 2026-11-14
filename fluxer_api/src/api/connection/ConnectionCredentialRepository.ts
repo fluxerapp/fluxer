@@ -13,8 +13,20 @@ import {executeConditional, fetchMany} from '@app/api/database/CassandraQueryExe
 import {type ConditionalWriteEntry, Db, validateTtlSeconds} from '@app/api/database/CassandraTypes';
 import {USER_CONNECTION_CREDENTIAL_TYPE, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
 import {UserConnections} from '@app/api/Tables';
-import {isAtprotoDid} from '@atproto/oauth-client-node';
 import {z} from 'zod';
+
+const DID_PLC_PATTERN = /^did:plc:[a-z2-7]{24}$/;
+const DID_WEB_PREFIX = 'did:web:';
+const DID_WEB_PATTERN = /^did:web:(?:[A-Za-z0-9._-]|%[0-9A-F]{2})+$/;
+
+function isAtprotoDid(value: string): boolean {
+	if (DID_PLC_PATTERN.test(value)) return true;
+	if (!DID_WEB_PATTERN.test(value)) return false;
+	if (value.includes('%3A', DID_WEB_PREFIX.length) && !value.startsWith(`${DID_WEB_PREFIX}localhost%3A`)) {
+		return false;
+	}
+	return URL.canParse(`https://${value.slice(DID_WEB_PREFIX.length).replaceAll('%3A', ':')}`);
+}
 
 type CredentialWrite = ConditionalWriteEntry<UserConnectionStorageRow, 'user_id' | 'connection_type' | 'connection_id'>;
 

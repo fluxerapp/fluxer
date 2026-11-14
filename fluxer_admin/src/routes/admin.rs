@@ -158,11 +158,7 @@ fn admin_api_key_flash_response(
 }
 
 fn available_acls(auth: &AuthContext) -> Vec<&'static str> {
-    let admin_acls = auth
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.acls();
     acl::ALL_ACLS
         .iter()
         .copied()

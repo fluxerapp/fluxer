@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
+import {segmentsEqual} from '@app/features/messaging/state/MessagingDrafts';
 import type {MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {onBeforeAppStorageScopeChange} from '@app/features/platform/state/PersistentStorage';
 import {flushPendingPersistWrites} from '@app/features/platform/utils/MobXPersistence';
-import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
+import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSender';
 import {useEffect, useRef} from 'react';
 
 interface UseTextareaDraftAndTypingOptions {
+	bootFrameDraftRef?: React.RefObject<boolean>;
 	draftOwner: DraftCommands.DraftOwner;
 	channelId: string;
 	value: string;
@@ -25,26 +27,8 @@ function cloneSegments(segments: ReadonlyArray<MentionSegment> | null | undefine
 	return segments?.map((segment) => ({...segment})) ?? [];
 }
 
-function segmentsEqual(a: ReadonlyArray<MentionSegment>, b: ReadonlyArray<MentionSegment>): boolean {
-	if (a.length !== b.length) return false;
-	for (let i = 0; i < a.length; i++) {
-		const left = a[i];
-		const right = b[i];
-		if (
-			left.type !== right.type ||
-			left.id !== right.id ||
-			left.displayText !== right.displayText ||
-			left.actualText !== right.actualText ||
-			left.start !== right.start ||
-			left.end !== right.end
-		) {
-			return false;
-		}
-	}
-	return true;
-}
-
 export const useTextareaDraftAndTyping = ({
+	bootFrameDraftRef,
 	draftOwner,
 	channelId,
 	value,
@@ -78,7 +62,7 @@ export const useTextareaDraftAndTyping = ({
 		if (enabled) {
 			return;
 		}
-		TypingUtils.clear(channelId);
+		RollingTypingSender.stopTyping(channelId);
 		pendingDraftRef.current = null;
 		if (currentDraftRef.current) {
 			DraftCommands.deleteDraft(draftOwner, channelId);
@@ -98,7 +82,7 @@ export const useTextareaDraftAndTyping = ({
 		};
 	}, [draftOwner, channelId, enabled, setValue, previousValueRef]);
 	useEffect(() => {
-		if (isEditingMessageInComposer) {
+		if (isEditingMessageInComposer || bootFrameDraftRef?.current) {
 			return;
 		}
 		if (!draft || previousValueRef.current === undefined || !DraftCommands.ownsActiveDrafts(draftOwner)) {
@@ -183,7 +167,7 @@ export const useTextareaDraftAndTyping = ({
 		if (isRestoringDraftRef.current) {
 			return;
 		}
-		TypingUtils.handleComposerChange({
+		RollingTypingSender.handleComposerChange({
 			channelId,
 			value,
 			previousValue: typingPreviousValue?.channelId === channelId ? typingPreviousValue.value : null,

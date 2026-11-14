@@ -2,7 +2,7 @@
 
 const hueAxis = [220, 260, 300, 340, 20, 60, 110, 150, 190] as const;
 
-function hashString(input: string): number {
+export function hashString(input: string): number {
 	let hash = 2166136261;
 	for (let i = 0; i < input.length; i++) {
 		hash ^= input.charCodeAt(i);

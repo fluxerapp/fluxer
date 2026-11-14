@@ -1,218 +1,189 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type AccountIdentityMode, AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type WizardStep =
 	| 'welcome'
-	| 'theme'
+	| 'setup_token'
 	| 'sign_in_method'
-	| 'admin_intro'
-	| 'admin_account'
-	| 'loading'
-	| 'admin_recovery_kit'
-	| 'branding'
+	| 'sign_in_locked'
+	| 'shared_usernames'
+	| 'email_delivery'
+	| 'sign_in_to_finish'
+	| 'account'
+	| 'recovery_kit'
+	| 'email_service'
+	| 'email_sender'
+	| 'name'
+	| 'look'
+	| 'communities'
+	| 'direct_messages'
+	| 'personal_notes'
 	| 'registration'
-	| 'community'
-	| 'media_expiry'
-	| 'integration_gif'
-	| 'integration_youtube'
-	| 'integration_email'
-	| 'integration_bluesky'
-	| 'push_relay_consent'
-	| 'services'
-	| 'premium'
-	| 'finish';
+	| 'push_relay'
+	| 'gif_youtube'
+	| 'attachments'
+	| 'review'
+	| 'done';
 
-type WizardPhase = 'register' | 'loading' | 'configure';
+export type EmailDeliveryAnswer = 'now' | 'later';
 
-const REGISTER_STEPS: ReadonlyArray<WizardStep> = [
-	'welcome',
-	'theme',
-	'sign_in_method',
-	'admin_intro',
-	'admin_account',
-];
-const LOADING_STEPS: ReadonlyArray<WizardStep> = ['loading'];
-const CONFIGURE_STEPS: ReadonlyArray<WizardStep> = [
-	'welcome',
-	'branding',
-	'registration',
-	'community',
-	'media_expiry',
-	'integration_gif',
-	'integration_youtube',
-	'integration_email',
-	'integration_bluesky',
-	'push_relay_consent',
-	'services',
-	'premium',
-	'finish',
-];
-
-function derivePhase(isAuthenticated: boolean, hasConfig: boolean): WizardPhase {
-	if (!isAuthenticated) return 'register';
-	if (!hasConfig) return 'loading';
-	return 'configure';
-}
-
-const USERNAME_CONFIGURE_STEPS: ReadonlyArray<WizardStep> = [
-	'welcome',
-	'admin_recovery_kit',
-	...CONFIGURE_STEPS.slice(1).filter((step) => step !== 'integration_email'),
-];
-
-function phaseSteps(
-	phase: WizardPhase,
-	accountIdentity: AccountIdentityMode,
-	identityLocked = false,
-): ReadonlyArray<WizardStep> {
-	switch (phase) {
-		case 'register':
-			return identityLocked ? REGISTER_STEPS.filter((step) => step !== 'sign_in_method') : REGISTER_STEPS;
-		case 'loading':
-			return LOADING_STEPS;
-		case 'configure':
-			return accountIdentity === AccountIdentityModes.USERNAME ? USERNAME_CONFIGURE_STEPS : CONFIGURE_STEPS;
-	}
-}
-
-interface SetupWizardMachineContext {
-	step: WizardStep;
-	direction: number;
+export interface WizardConditions {
 	isAuthenticated: boolean;
-	hasConfig: boolean;
 	accountIdentity: AccountIdentityMode;
 	identityLocked: boolean;
+	adminExists: boolean;
+	setupTokenRequired: boolean;
+	setupTokenRejected: boolean;
+	emailsEnabled: boolean;
+	emailAnswer: EmailDeliveryAnswer;
+	finished: boolean;
 }
 
-export type SetupWizardMachineEvent =
-	| {type: 'wizard.next'}
-	| {type: 'wizard.back'}
-	| {
-			type: 'wizard.sync';
-			isAuthenticated: boolean;
-			hasConfig: boolean;
-			accountIdentity: AccountIdentityMode;
-			identityLocked: boolean;
-	  };
-
-export interface SetupWizardModel {
-	phase: WizardPhase;
-	step: WizardStep;
-	steps: ReadonlyArray<WizardStep>;
-	direction: number;
-	stepIndex: number;
+interface StepDefinition {
+	id: WizardStep;
+	shown: (conditions: WizardConditions) => boolean;
+	counted: boolean;
+	beforeAccount: boolean;
 }
 
-function advance(context: SetupWizardMachineContext, delta: number): Partial<SetupWizardMachineContext> {
-	const steps = phaseSteps(
-		derivePhase(context.isAuthenticated, context.hasConfig),
-		context.accountIdentity,
-		context.identityLocked,
-	);
-	const index = steps.indexOf(context.step);
-	const safeIndex = index < 0 ? 0 : index;
-	const nextIndex = Math.min(steps.length - 1, Math.max(0, safeIndex + delta));
-	return {step: steps[nextIndex], direction: Math.sign(delta)};
+const beforeAccount = (conditions: WizardConditions): boolean => !conditions.isAuthenticated && !conditions.finished;
+const createsAccount = (conditions: WizardConditions): boolean => beforeAccount(conditions) && !conditions.adminExists;
+const afterAccount = (conditions: WizardConditions): boolean => conditions.isAuthenticated && !conditions.finished;
+const usesEmail = (conditions: WizardConditions): boolean => conditions.accountIdentity === AccountIdentityModes.EMAIL;
+const connectsEmailNow = (conditions: WizardConditions): boolean =>
+	afterAccount(conditions) && usesEmail(conditions) && !conditions.emailsEnabled && conditions.emailAnswer === 'now';
+
+const STEP_DEFINITIONS: ReadonlyArray<StepDefinition> = [
+	{id: 'welcome', shown: beforeAccount, counted: false, beforeAccount: true},
+	{
+		id: 'setup_token',
+		shown: (c) => createsAccount(c) && (c.setupTokenRequired || c.setupTokenRejected),
+		counted: true,
+		beforeAccount: true,
+	},
+	{
+		id: 'sign_in_method',
+		shown: (c) => createsAccount(c) && !c.identityLocked,
+		counted: true,
+		beforeAccount: true,
+	},
+	{
+		id: 'sign_in_locked',
+		shown: (c) => createsAccount(c) && c.identityLocked,
+		counted: true,
+		beforeAccount: true,
+	},
+	{
+		id: 'shared_usernames',
+		shown: (c) => createsAccount(c) && !c.identityLocked && usesEmail(c),
+		counted: true,
+		beforeAccount: true,
+	},
+	{
+		id: 'email_delivery',
+		shown: (c) => createsAccount(c) && usesEmail(c) && !c.emailsEnabled,
+		counted: true,
+		beforeAccount: true,
+	},
+	{
+		id: 'sign_in_to_finish',
+		shown: (c) => beforeAccount(c) && c.adminExists,
+		counted: false,
+		beforeAccount: true,
+	},
+	{id: 'account', shown: createsAccount, counted: true, beforeAccount: true},
+	{
+		id: 'recovery_kit',
+		shown: (c) => afterAccount(c) && c.accountIdentity === AccountIdentityModes.USERNAME,
+		counted: true,
+		beforeAccount: false,
+	},
+	{id: 'email_service', shown: connectsEmailNow, counted: true, beforeAccount: false},
+	{id: 'email_sender', shown: connectsEmailNow, counted: true, beforeAccount: false},
+	{id: 'name', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'look', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'communities', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'direct_messages', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'personal_notes', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'registration', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'push_relay', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'gif_youtube', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'attachments', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'review', shown: afterAccount, counted: true, beforeAccount: false},
+	{id: 'done', shown: (c) => c.finished, counted: false, beforeAccount: false},
+];
+
+const STEP_ORDER: ReadonlyArray<WizardStep> = STEP_DEFINITIONS.map((definition) => definition.id);
+
+export function isWizardStep(value: unknown): value is WizardStep {
+	return typeof value === 'string' && (STEP_ORDER as ReadonlyArray<string>).includes(value);
 }
 
-function targetsPhase(event: SetupWizardMachineEvent, context: SetupWizardMachineContext, phase: WizardPhase): boolean {
-	if (event.type !== 'wizard.sync') return false;
-	return (
-		derivePhase(event.isAuthenticated, event.hasConfig) === phase &&
-		derivePhase(context.isAuthenticated, context.hasConfig) !== phase
-	);
+function definitionOf(step: WizardStep): StepDefinition {
+	return STEP_DEFINITIONS[STEP_ORDER.indexOf(step)];
 }
 
-const setupWizardStateMachine = setup({
-	types: {} as {
-		context: SetupWizardMachineContext;
-		events: SetupWizardMachineEvent;
-	},
-	guards: {
-		shouldEnterRegister: ({context, event}) => targetsPhase(event, context, 'register'),
-		shouldEnterLoading: ({context, event}) => targetsPhase(event, context, 'loading'),
-		shouldEnterConfigure: ({context, event}) => targetsPhase(event, context, 'configure'),
-	},
-	actions: {
-		applyConditions: assign({
-			isAuthenticated: ({context, event}) =>
-				event.type === 'wizard.sync' ? event.isAuthenticated : context.isAuthenticated,
-			hasConfig: ({context, event}) => (event.type === 'wizard.sync' ? event.hasConfig : context.hasConfig),
-			accountIdentity: ({context, event}) =>
-				event.type === 'wizard.sync' ? event.accountIdentity : context.accountIdentity,
-			identityLocked: ({context, event}) =>
-				event.type === 'wizard.sync' ? event.identityLocked : context.identityLocked,
-		}),
-		goNext: assign(({context}) => advance(context, 1)),
-		goBack: assign(({context}) => advance(context, -1)),
-		enterRegister: assign({step: () => REGISTER_STEPS[0], direction: () => 0}),
-		enterLoading: assign({step: () => LOADING_STEPS[0], direction: () => 0}),
-		enterConfigure: assign({step: () => CONFIGURE_STEPS[0], direction: () => 0}),
-	},
-}).createMachine({
-	id: 'setupWizard',
-	context: {
-		step: 'welcome',
-		direction: 0,
-		isAuthenticated: false,
-		hasConfig: false,
-		accountIdentity: AccountIdentityModes.EMAIL,
-		identityLocked: false,
-	},
-	initial: 'register',
-	on: {
-		'wizard.sync': [
-			{guard: 'shouldEnterConfigure', target: '.configure', actions: 'applyConditions'},
-			{guard: 'shouldEnterLoading', target: '.loading', actions: 'applyConditions'},
-			{guard: 'shouldEnterRegister', target: '.register', actions: 'applyConditions'},
-			{actions: 'applyConditions'},
-		],
-	},
-	states: {
-		register: {
-			entry: 'enterRegister',
-			on: {
-				'wizard.next': {actions: 'goNext'},
-				'wizard.back': {actions: 'goBack'},
-			},
-		},
-		loading: {
-			entry: 'enterLoading',
-		},
-		configure: {
-			entry: 'enterConfigure',
-			on: {
-				'wizard.next': {actions: 'goNext'},
-				'wizard.back': {actions: 'goBack'},
-			},
-		},
-	},
-});
-
-export type SetupWizardSnapshot = SnapshotFrom<typeof setupWizardStateMachine>;
-
-export function createSetupWizardSnapshot(): SetupWizardSnapshot {
-	return initialTransition(setupWizardStateMachine)[0];
+export function isBeforeAccountStep(step: WizardStep): boolean {
+	return definitionOf(step).beforeAccount;
 }
 
-export function transitionSetupWizardSnapshot(
-	snapshot: SetupWizardSnapshot,
-	event: SetupWizardMachineEvent,
-): SetupWizardSnapshot {
-	return transition(setupWizardStateMachine, snapshot, event)[0] as SetupWizardSnapshot;
+export function visibleSteps(conditions: WizardConditions): ReadonlyArray<WizardStep> {
+	return STEP_DEFINITIONS.filter((definition) => definition.shown(conditions)).map((definition) => definition.id);
 }
 
-export function selectSetupWizardModel(snapshot: SetupWizardSnapshot): SetupWizardModel {
-	const phase = derivePhase(snapshot.context.isAuthenticated, snapshot.context.hasConfig);
-	const steps = phaseSteps(phase, snapshot.context.accountIdentity, snapshot.context.identityLocked);
-	const stepIndex = steps.indexOf(snapshot.context.step);
-	return {
-		phase,
-		step: snapshot.context.step,
-		steps,
-		direction: snapshot.context.direction,
-		stepIndex: stepIndex < 0 ? 0 : stepIndex,
-	};
+export function resolveStep(step: WizardStep, conditions: WizardConditions): WizardStep {
+	const steps = visibleSteps(conditions);
+	if (steps.includes(step)) return step;
+	const position = STEP_ORDER.indexOf(step);
+	return steps.find((candidate) => STEP_ORDER.indexOf(candidate) > position) ?? steps[steps.length - 1] ?? 'welcome';
+}
+
+export function firstStepAfterAccount(conditions: WizardConditions): WizardStep {
+	return visibleSteps(conditions).find((step) => !isBeforeAccountStep(step)) ?? 'review';
+}
+
+export function nextStep(step: WizardStep, conditions: WizardConditions): WizardStep {
+	const steps = visibleSteps(conditions);
+	const position = STEP_ORDER.indexOf(step);
+	return steps.find((candidate) => STEP_ORDER.indexOf(candidate) > position) ?? step;
+}
+
+export function previousStep(step: WizardStep, conditions: WizardConditions): WizardStep | null {
+	if (step === 'done') return null;
+	const steps = visibleSteps(conditions);
+	const position = STEP_ORDER.indexOf(step);
+	const earlier = steps.filter((candidate) => STEP_ORDER.indexOf(candidate) < position);
+	const previous = earlier[earlier.length - 1];
+	if (previous === undefined) return null;
+	if (isBeforeAccountStep(previous) !== isBeforeAccountStep(step)) return null;
+	return previous;
+}
+
+export function countedStepsBeforeAccount(conditions: WizardConditions): number {
+	return visibleSteps({...conditions, isAuthenticated: false, adminExists: false, finished: false}).filter(
+		(step) => definitionOf(step).counted,
+	).length;
+}
+
+export interface WizardProgress {
+	current: number;
+	total: number;
+}
+
+export function wizardProgress(
+	step: WizardStep,
+	conditions: WizardConditions,
+	stepsBeforeAccount: number,
+): WizardProgress | null {
+	if (!definitionOf(step).counted) return null;
+	const counted = visibleSteps(conditions).filter((candidate) => definitionOf(candidate).counted);
+	const index = counted.indexOf(step);
+	if (index < 0) return null;
+	const offset = conditions.isAuthenticated ? stepsBeforeAccount : 0;
+	const remainingAfterAccount = conditions.isAuthenticated
+		? 0
+		: visibleSteps({...conditions, isAuthenticated: true}).filter((candidate) => definitionOf(candidate).counted)
+				.length;
+	return {current: offset + index + 1, total: offset + counted.length + remainingAfterAccount};
 }

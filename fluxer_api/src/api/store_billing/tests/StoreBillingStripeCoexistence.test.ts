@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import crypto, {randomUUID} from 'node:crypto';
+import {randomUUID} from 'node:crypto';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
@@ -10,6 +10,7 @@ import {
 	getStoreBillingRepository,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
+import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {
 	createTestStoreEntitlementService,
@@ -17,7 +18,7 @@ import {
 	seedStorePurchase,
 } from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
-import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {sendStripeWebhook, setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	buildFakeSubscriptionPurchase,
@@ -25,11 +26,9 @@ import {
 	type FakeGooglePlayDeveloperApi,
 } from '@app/api/test/msw/handlers/GooglePlayDeveloperApiHandlers';
 import {
-	createMockWebhookPayload,
 	createStripeApiHandlers,
 	createSubscriptionDeletedEvent,
 	type StripeApiHandlers,
-	type StripeWebhookEventData,
 } from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -96,20 +95,6 @@ describe('Store purchases alongside Stripe billing', () => {
 		server.resetHandlers();
 	});
 
-	async function sendStripeWebhook(eventData: StripeWebhookEventData): Promise<void> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = crypto
-			.createHmac('sha256', Config.stripe.webhookSecret!)
-			.update(`${timestamp}.${payload}`)
-			.digest('hex');
-		await createBuilder(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', `t=${timestamp},v1=${signature}`)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.execute();
-	}
-
 	async function createStoreSubscriber(): Promise<{account: TestAccount; userId: UserID; expiresAt: Date}> {
 		const account = await createTestAccount(harness);
 		const userId = createUserID(BigInt(account.userId));
@@ -129,6 +114,7 @@ describe('Store purchases alongside Stripe billing', () => {
 		);
 
 		await sendStripeWebhook(
+			harness,
 			createSubscriptionDeletedEvent({
 				subscriptionId: 'sub_store_coexist_old',
 				customerId: 'cus_store_coexist',
@@ -340,5 +326,94 @@ describe('Store purchases alongside Stripe billing', () => {
 		const cut = await findUser(account.userId);
 		expect(cut.premiumUntil?.getTime()).toBe(revokedAt.getTime());
 		expect(cut.premiumGraceEndsAt?.getTime()).toBe(revokedAt.getTime());
+	});
+
+	async function createGooglePlaySubscriber(): Promise<{
+		account: TestAccount;
+		purchaseToken: string;
+		expiresAt: Date;
+	}> {
+		const account = await createTestAccount(harness);
+		const userId = createUserID(BigInt(account.userId));
+		const purchaseToken = `token-${randomUUID()}`;
+		const expiresAt = new Date(Date.now() + ms('20 days'));
+		google.setSubscription(
+			'com.fluxer',
+			purchaseToken,
+			buildFakeSubscriptionPurchase({subscriptionState: 'SUBSCRIPTION_STATE_ACTIVE'}),
+		);
+		await seedStorePurchase(userId, {
+			store_key: `google_play:${purchaseToken}`,
+			provider: 'google_play',
+			app_id: 'com.fluxer',
+			product_id: 'plutonium',
+			base_plan_id: 'monthly',
+			store_reference: purchaseToken,
+			store_state: 'SUBSCRIPTION_STATE_ACTIVE',
+			expires_at: expiresAt,
+		});
+		await service.applyStoreEntitlementToUser(userId);
+		return {account, purchaseToken, expiresAt};
+	}
+
+	async function redeemNewGift(
+		account: TestAccount,
+		duration: {type: 'months' | 'years'; quantity: number},
+	): Promise<void> {
+		const gifter = await createTestAccount(harness);
+		const code = `STORELONG${randomUUID().replaceAll('-', '').slice(0, 12).toUpperCase()}`;
+		await createBuilder(harness, gifter.token)
+			.post(`/test/gifts/${code}`)
+			.body({duration_type: duration.type, duration_quantity: duration.quantity, created_by_user_id: gifter.userId})
+			.execute();
+		await createBuilder(harness, account.token).post(`/gifts/${code}/redeem`).expect(204).execute();
+	}
+
+	it('stops Google Play renewals and gifts the time after the paid period for a long gift', async () => {
+		const {account, purchaseToken, expiresAt} = await createGooglePlaySubscriber();
+
+		await redeemNewGift(account, {type: 'years', quantity: 100});
+
+		expect(google.spies.canceled).toEqual([
+			{
+				packageName: 'com.fluxer',
+				purchaseToken,
+				body: {cancellationContext: {cancellationType: 'USER_REQUESTED_STOP_RENEWALS'}},
+			},
+		]);
+		const after = await findUser(account.userId);
+		expect(after.premiumUntil?.getTime()).toBe(expiresAt.getTime());
+		expect(after.premiumGiftExtensionEndsAt?.getTime()).toBe(addGiftCodeDuration(expiresAt, 'years', 100)!.getTime());
+		expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
+	});
+
+	it('keeps Google Play renewing for a short gift and moves the gift past each paid period', async () => {
+		const {account, expiresAt} = await createGooglePlaySubscriber();
+
+		await redeemNewGift(account, {type: 'months', quantity: 1});
+
+		expect(google.spies.canceled).toEqual([]);
+		const after = await findUser(account.userId);
+		expect(after.premiumGiftExtensionEndsAt?.getTime()).toBe(addGiftCodeDuration(expiresAt, 'months', 1)!.getTime());
+	});
+
+	it('lets an App Store subscriber redeem a long gift without paying for gifted time', async () => {
+		const {account, userId, expiresAt} = await createStoreSubscriber();
+
+		await redeemNewGift(account, {type: 'years', quantity: 100});
+
+		const giftEnd = addGiftCodeDuration(expiresAt, 'years', 100)!;
+		const redeemed = await findUser(account.userId);
+		expect(redeemed.premiumUntil?.getTime()).toBe(expiresAt.getTime());
+		expect(redeemed.premiumGiftExtensionEndsAt?.getTime()).toBe(giftEnd.getTime());
+		expect(google.spies.canceled).toEqual([]);
+		expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
+		const row = (await getStoreBillingRepository().listPurchasesForUser(userId))[0]!;
+		const renewedUntil = new Date(expiresAt.getTime() + ms('30 days'));
+		await getStoreBillingRepository().updatePurchase(row, {expires_at: renewedUntil});
+		await service.applyStoreEntitlementToUser(userId);
+		const renewed = await findUser(account.userId);
+		expect(renewed.premiumUntil?.getTime()).toBe(renewedUntil.getTime());
+		expect(renewed.premiumGiftExtensionEndsAt?.getTime()).toBe(giftEnd.getTime() + ms('30 days'));
 	});
 });

@@ -20,19 +20,26 @@ import {
 import type {StateSnapshotEntries} from '@app/features/gateway/snapshot/SnapshotTypes';
 import type {WebAuthnCredential} from '@app/features/user/state/WebAuthnCredentials';
 import {AllLocales} from '@fluxer/constants/src/Locales';
-import {TimeFormatTypes} from '@fluxer/constants/src/UserConstants';
+import {TimeFormatTypes, TimestampFormatTypes} from '@fluxer/constants/src/UserConstants';
 import type {UserSettingsResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 type UserSettingsLocale = UserSettingsResponse['locale'];
 type UserSettingsTimeFormat = UserSettingsResponse['time_format'];
+type UserSettingsTimestampFormat = UserSettingsResponse['timestamp_format'];
 
 const SUPPORTED_LOCALES = new Set<string>(AllLocales satisfies ReadonlyArray<UserSettingsLocale>);
 const SUPPORTED_TIME_FORMATS = new Set<number>(
 	Object.values(TimeFormatTypes) satisfies ReadonlyArray<UserSettingsTimeFormat>,
 );
 
+const SUPPORTED_TIMESTAMP_FORMATS = new Set<number>(
+	Object.values(TimestampFormatTypes) satisfies ReadonlyArray<UserSettingsTimestampFormat>,
+);
+
 const isSupportedLocale = (value: string): value is UserSettingsLocale => SUPPORTED_LOCALES.has(value);
 const isSupportedTimeFormat = (value: number): value is UserSettingsTimeFormat => SUPPORTED_TIME_FORMATS.has(value);
+const isSupportedTimestampFormat = (value: number | undefined): value is UserSettingsTimestampFormat =>
+	value !== undefined && SUPPORTED_TIMESTAMP_FORMATS.has(value);
 
 export interface SnapshotAccountState {
 	readonly userSettings: SnapshotEntityRowMap['user_settings'] | null;
@@ -111,7 +118,11 @@ export class SnapshotAccountReducer {
 			status: data.status,
 			theme: data.theme,
 			time_format: timeFormat,
+			timestamp_format: isSupportedTimestampFormat(data.timestamp_format)
+				? data.timestamp_format
+				: current.timestamp_format,
 			locale,
+			regional_format: data.regional_format === undefined ? current.regional_format : data.regional_format,
 			synced_preferences: data.synced_preferences ?? current.synced_preferences,
 		};
 		this.userSettings = next;

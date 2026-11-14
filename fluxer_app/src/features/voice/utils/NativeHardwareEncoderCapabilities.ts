@@ -6,8 +6,8 @@ import {
 	hasVoiceEngineV2NativeHardwareEncoder,
 	normalizeVoiceEngineV2HardwareEncoderCapabilities,
 	unavailableVoiceEngineV2HardwareEncoderCapabilities,
-	type VoiceEngineV2HardwareEncoderCapabilities,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/policies/hardwareEncoderCapabilities';
+import type {VoiceEngineV2HardwareEncoderCapabilities} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {VideoCodec} from 'livekit-client';
 
 const logger = new Logger('NativeHardwareEncoderCapabilities');
@@ -48,9 +48,4 @@ export function getNativeHardwareEncoderCapabilitiesSync(): VoiceEngineV2Hardwar
 
 export function hasNativeHardwareEncoder(codec: VideoCodec): boolean {
 	return hasVoiceEngineV2NativeHardwareEncoder(getNativeHardwareEncoderCapabilitiesSync(), codec);
-}
-
-export function resetNativeHardwareEncoderCapabilities(): void {
-	cachedCapabilities = null;
-	pendingPromise = null;
 }

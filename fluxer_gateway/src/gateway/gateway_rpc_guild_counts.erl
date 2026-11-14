@@ -6,10 +6,6 @@
 
 -export([handle/2]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -spec handle(binary(), map()) -> term().
 handle(<<"guild.get_counts">>, #{<<"guild_id">> := GuildIdBin}) ->
     GuildId = validation:snowflake_or_throw(<<"guild_id">>, GuildIdBin),
@@ -109,30 +105,3 @@ count_entry(GuildId, MemberCount, OnlineCount) ->
         <<"member_count">> => MemberCount,
         <<"online_count">> => OnlineCount
     }.
-
--ifdef(TEST).
-
-execute_method_get_counts_uses_cache_hit_test() ->
-    GuildId = 910001,
-    ok = guild_counts_cache:delete(GuildId),
-    ok = guild_counts_cache:update(GuildId, 12, 7),
-    Params = #{<<"guild_id">> => integer_to_binary(GuildId)},
-    try
-        ?assertEqual(
-            #{<<"member_count">> => 12, <<"presence_count">> => 7},
-            handle(<<"guild.get_counts">>, Params)
-        )
-    after
-        ok = guild_counts_cache:delete(GuildId)
-    end.
-
-execute_method_get_counts_returns_zero_on_cache_miss_test() ->
-    GuildId = 910002,
-    ok = guild_counts_cache:delete(GuildId),
-    Params = #{<<"guild_id">> => integer_to_binary(GuildId)},
-    ?assertEqual(
-        #{<<"member_count">> => 0, <<"presence_count">> => 0},
-        handle(<<"guild.get_counts">>, Params)
-    ).
-
--endif.

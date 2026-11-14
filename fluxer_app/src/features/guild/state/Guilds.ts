@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import Initialization from '@app/features/app/state/Initialization';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import {Guild} from '@app/features/guild/models/Guild';
 import {GuildRole} from '@app/features/guild/models/GuildRole';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRole as WireGuildRole} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
+import isEqual from 'lodash/isEqual';
 import {makeAutoObservable} from 'mobx';
 
 class Guilds {
@@ -17,7 +19,8 @@ class Guilds {
 	}
 
 	getGuild(guildId: string): Guild | undefined {
-		return this.guilds[guildId];
+		const guild = this.guilds[guildId];
+		return guild instanceof Guild ? guild : undefined;
 	}
 
 	getGuildIds(): Array<string> {
@@ -25,7 +28,7 @@ class Guilds {
 	}
 
 	getGuildRoles(guildId: string, includeEveryone = false): Array<GuildRole> {
-		const guild = this.guilds[guildId];
+		const guild = this.getGuild(guildId);
 		if (!guild) {
 			return [];
 		}
@@ -33,7 +36,8 @@ class Guilds {
 	}
 
 	getGuildRole(guildId: string, roleId: string): GuildRole | undefined {
-		return this.guilds[guildId]?.roles[roleId];
+		const role = this.getGuild(guildId)?.roles[roleId];
+		return role instanceof GuildRole ? role : undefined;
 	}
 
 	getGuilds(): Array<Guild> {
@@ -45,15 +49,17 @@ class Guilds {
 	}
 
 	handleGatewayReady({guilds}: {guilds: Array<GuildReadyData>}): void {
-		const availableGuilds = guilds.filter((guild) => !guild.unavailable);
-		if (availableGuilds.length === 0) {
-			this.guilds = {};
-			return;
+		const incoming = new Set(guilds.filter((guild) => !guild.unavailable).map((guild) => guild.id));
+		if (!Initialization.isStale) this.guilds = {};
+		for (const id of Object.keys(this.guilds)) {
+			if (!incoming.has(id)) delete this.guilds[id];
 		}
-		this.guilds = availableGuilds.reduce<Record<string, Guild>>((acc, guildData) => {
-			acc[guildData.id] = Guild.fromGuildReadyData(guildData);
-			return acc;
-		}, {});
+		for (const data of guilds) {
+			if (data.unavailable) continue;
+			const record = Guild.fromGuildReadyData(data);
+			const existing = this.guilds[data.id];
+			if (existing === undefined || !isEqual(existing.toJSON(), record.toJSON())) this.guilds[data.id] = record;
+		}
 	}
 
 	hydrateFromSnapshot(guilds: Array<GuildReadyData>): void {
@@ -75,6 +81,7 @@ class Guilds {
 		this.guilds[guild.id] = new Guild({
 			...guild,
 			joined_at: guild.joined_at ?? existingGuild.joinedAt ?? undefined,
+			visiting: existingGuild.visiting ? true : undefined,
 			roles: existingGuild.roles,
 		});
 	}

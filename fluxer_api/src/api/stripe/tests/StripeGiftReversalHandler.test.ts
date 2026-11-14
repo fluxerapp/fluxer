@@ -3,12 +3,13 @@
 import {randomUUID} from 'node:crypto';
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
-import {getGatewayService} from '@app/api/middleware/ServiceRegistry';
+import {getGatewayService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {getPremiumStateReconciliationQueueService, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import {findUser} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {ms} from 'itty-time';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -28,7 +29,7 @@ describe('StripeGiftReversalHandler', () => {
 		await harness.resetData();
 	});
 
-	function createHandler(users: IUserRepository = getUserRepository()): StripeGiftReversalHandler {
+	function createHandler(users: UserRepository = getUserRepository()): StripeGiftReversalHandler {
 		return new StripeGiftReversalHandler(users, getGatewayService(), getPremiumStateReconciliationQueueService());
 	}
 
@@ -111,6 +112,28 @@ describe('StripeGiftReversalHandler', () => {
 		});
 
 		await expect(reverse(codes[0]!, createHandler(failing))).rejects.toThrow('user write failed');
+	});
+
+	it('queues the Labs Visionary role update when a reversal ends Visionary while another gift remains', async () => {
+		const {accountId, codes} = await createGiftedUser(2);
+		const user = await findUser(accountId);
+		await getUserRepository().patchUpsert(user.id, {premium_type: UserPremiumTypes.LIFETIME}, user.toRow());
+		const jobs: Array<{task: string; payload: Record<string, unknown>}> = [];
+		setInjectedWorkerService({
+			addJob: async (task: string, payload: Record<string, unknown>) => {
+				jobs.push({task, payload});
+				return 1n;
+			},
+			cancelJob: async () => false,
+		} as never);
+		try {
+			await reverse(codes[1]!);
+		} finally {
+			setInjectedWorkerService(new NoopWorkerService());
+		}
+
+		expect((await findUser(accountId)).premiumType).toBe(UserPremiumTypes.SUBSCRIPTION);
+		expect(jobs).toContainEqual({task: 'operatorPassLabsVisionaryRoleSync', payload: {user_id: accountId}});
 	});
 
 	it('removes premium once every stacked gift has been reversed', async () => {

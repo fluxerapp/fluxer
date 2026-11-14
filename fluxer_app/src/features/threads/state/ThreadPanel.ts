@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Navigation from '@app/features/navigation/state/Navigation';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {makeAutoObservable, observable} from 'mobx';
 
-export interface ThreadCreateTarget {
+interface ThreadCreateTarget {
 	readonly parentId: string;
 	readonly messageId: string | null;
 }
@@ -25,10 +25,6 @@ class ThreadPanel {
 		this.createCooldowns.set(parentId, Date.now() + seconds * 1000);
 	}
 
-	get openThreadId(): string | null {
-		return Navigation.threadId;
-	}
-
 	getCreateTarget(parentId: string): ThreadCreateTarget | null {
 		return this.createTarget?.parentId === parentId ? this.createTarget : null;
 	}
@@ -40,6 +36,15 @@ class ThreadPanel {
 	closeCreate(): void {
 		this.createTarget = null;
 	}
+
+	reset(): void {
+		this.createTarget = null;
+		this.createCooldowns.clear();
+	}
 }
 
-export default new ThreadPanel();
+const threadPanel = new ThreadPanel();
+
+ResettableStates.register(threadPanel, () => threadPanel.reset());
+
+export default threadPanel;

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 ARG DEBIAN_BASE=debian:trixie-slim
-ARG RUST_IMAGE=rust:1-trixie
+ARG RUST_IMAGE=rust:1.98.1-trixie@sha256:a8a5f0a1e5fe7dfe1d352591e4a1c7dd2c08fd70475cae872cf3458ba0df0546
 
 FROM ${DEBIAN_BASE} AS native
 
@@ -57,8 +57,8 @@ LABEL org.opencontainers.image.title="fluxer-media-proxy"
 LABEL org.opencontainers.image.description="High-throughput media transcoding proxy: libvips + libavformat + libcurl"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
 LABEL org.opencontainers.image.vendor="Fluxer"
-LABEL org.opencontainers.image.url="https://fluxer.app"
-LABEL org.opencontainers.image.documentation="https://docs.fluxer.app"
+LABEL org.opencontainers.image.url="https://fluxer.com"
+LABEL org.opencontainers.image.documentation="https://docs.fluxer.com"
 LABEL org.opencontainers.image.source="https://github.com/fluxerapp/fluxer"
 LABEL org.opencontainers.image.version="${BUILD_VERSION}"
 LABEL org.opencontainers.image.revision="${SOURCE_SHA}"

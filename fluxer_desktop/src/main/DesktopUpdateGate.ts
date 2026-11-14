@@ -6,12 +6,12 @@ import type {DesktopUpdateState} from '@fluxer/desktop_ipc/src/ModuleContract';
 const logger = createChildLogger('DesktopUpdateGate');
 
 export interface DesktopUpdateCheck {
-	readonly shellNewer: boolean;
-	readonly modulesChanged: boolean;
+	readonly shellReady: boolean;
+	readonly modulesReady: boolean;
 }
 
 interface DesktopUpdateController {
-	readonly check: () => Promise<DesktopUpdateCheck>;
+	readonly check: (manual: boolean) => Promise<DesktopUpdateCheck>;
 	readonly start: () => Promise<void>;
 }
 
@@ -21,8 +21,10 @@ interface DesktopUpdateGateState {
 	controller: DesktopUpdateController | null;
 	lastCheck: DesktopUpdateCheck | null;
 	running: Promise<void> | null;
+	checking: {readonly manual: boolean; readonly settled: Promise<void>} | null;
 	notifiedAvailable: boolean;
 	notifiedUpdating: boolean;
+	notifiedReplacesShell: boolean;
 	readonly listeners: Set<DesktopUpdateStateListener>;
 }
 
@@ -30,34 +32,44 @@ const gateState: DesktopUpdateGateState = {
 	controller: null,
 	lastCheck: null,
 	running: null,
+	checking: null,
 	notifiedAvailable: false,
 	notifiedUpdating: false,
+	notifiedReplacesShell: false,
 	listeners: new Set(),
 };
 
 function isAvailable(check: DesktopUpdateCheck | null): boolean {
-	return check != null && (check.shellNewer || check.modulesChanged);
+	return check != null && (check.shellReady || check.modulesReady);
 }
 
 export function getDesktopUpdateState(): DesktopUpdateState {
+	const available = gateState.running == null && isAvailable(gateState.lastCheck);
 	return {
-		available: gateState.running == null && isAvailable(gateState.lastCheck),
+		available,
 		updating: gateState.running != null,
+		replacesShell: available && gateState.lastCheck?.shellReady === true,
 	};
 }
 
 export function desktopUpdateReplacesShell(): boolean {
-	return gateState.lastCheck?.shellNewer === true;
+	return gateState.lastCheck?.shellReady === true;
 }
 
 function notify(): void {
 	const state = getDesktopUpdateState();
 	const updating = state.updating === true;
-	if (state.available === gateState.notifiedAvailable && updating === gateState.notifiedUpdating) {
+	const replacesShell = state.replacesShell === true;
+	if (
+		state.available === gateState.notifiedAvailable &&
+		updating === gateState.notifiedUpdating &&
+		replacesShell === gateState.notifiedReplacesShell
+	) {
 		return;
 	}
 	gateState.notifiedAvailable = state.available;
 	gateState.notifiedUpdating = updating;
+	gateState.notifiedReplacesShell = replacesShell;
 	for (const listener of Array.from(gateState.listeners)) {
 		try {
 			listener(state);
@@ -76,14 +88,37 @@ export function publishDesktopUpdateCheck(check: DesktopUpdateCheck): void {
 	notify();
 }
 
-export async function checkDesktopUpdateNow(): Promise<DesktopUpdateState> {
+export async function checkDesktopUpdateNow({
+	manual = false,
+}: {
+	readonly manual?: boolean;
+} = {}): Promise<DesktopUpdateState> {
+	const pending = gateState.checking;
+	if (pending != null) {
+		if (pending.manual || !manual) {
+			await pending.settled;
+			return getDesktopUpdateState();
+		}
+		await pending.settled.catch(() => {});
+		return await checkDesktopUpdateNow({manual});
+	}
 	const controller = gateState.controller;
 	if (controller == null || gateState.running != null) {
 		return getDesktopUpdateState();
 	}
-	const check = await controller.check();
-	if (gateState.running == null) {
-		publishDesktopUpdateCheck(check);
+	const settled = controller.check(manual).then((check) => {
+		if (gateState.running == null) {
+			publishDesktopUpdateCheck(check);
+		}
+	});
+	const checking = {manual, settled};
+	gateState.checking = checking;
+	try {
+		await settled;
+	} finally {
+		if (gateState.checking === checking) {
+			gateState.checking = null;
+		}
 	}
 	return getDesktopUpdateState();
 }

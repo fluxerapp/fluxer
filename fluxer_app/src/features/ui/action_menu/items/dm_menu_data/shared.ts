@@ -6,10 +6,6 @@ export const INVITE_SENT_FOR_DESCRIPTOR = msg({
 	message: 'Invite sent for {guildName}',
 	comment: 'Toast confirming a community invite was sent to a DM recipient. guildName is the community name.',
 });
-export const ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR = msg({
-	message: 'Close your DM with {recipientUsername}? You can reopen it anytime.',
-	comment: 'Confirm dialog body before closing a DM channel.',
-});
 export const PINNED_GROUP_DM_DESCRIPTOR = msg({
 	message: 'Pinned group DM',
 	comment: 'Toast confirming a group DM was pinned in the sidebar.',

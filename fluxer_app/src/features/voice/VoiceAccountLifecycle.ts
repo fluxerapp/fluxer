@@ -30,6 +30,7 @@ function snapshotToRestoreAfterExit(
 export async function leaveVoiceChannelForAccountExit(request: VoiceAccountExitRequest): Promise<void> {
 	const retained = snapshotToRestoreAfterExit(request);
 	await MediaEngine.disconnectFromVoiceChannel('user');
+	MediaEngine.dismissFailedVoiceConnection();
 	if (retained !== null) {
 		VoiceSessionRestore.saveSnapshot(retained);
 	}

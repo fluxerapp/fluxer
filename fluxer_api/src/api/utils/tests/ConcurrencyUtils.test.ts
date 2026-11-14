@@ -1,4 +1,4 @@
-import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {allSettledWithConcurrency, mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {describe, expect, it} from 'vitest';
 
 describe('mapWithConcurrency', () => {
@@ -113,5 +113,45 @@ describe('mapWithConcurrency', () => {
 			}),
 		).rejects.toBe(failure);
 		expect(started).toEqual([1]);
+	});
+});
+
+describe('allSettledWithConcurrency', () => {
+	it('continues queued work after synchronous and asynchronous failures and retains input order', async () => {
+		const syncFailure = new Error('synchronous');
+		const asyncFailure = new Error('asynchronous');
+		const started: Array<number> = [];
+		const results = await allSettledWithConcurrency([0, 1, 2, 3], 1, (item, index) => {
+			started.push(index);
+			if (item === 0) throw syncFailure;
+			if (item === 1) return Promise.reject(asyncFailure);
+			return Promise.resolve(item * 10);
+		});
+		expect(started).toEqual([0, 1, 2, 3]);
+		expect(results).toEqual([
+			{status: 'rejected', reason: syncFailure},
+			{status: 'rejected', reason: asyncFailure},
+			{status: 'fulfilled', value: 20},
+			{status: 'fulfilled', value: 30},
+		]);
+	});
+
+	it('waits for every in-flight result when a later item fails first', async () => {
+		const first = Promise.withResolvers<number>();
+		const second = Promise.withResolvers<number>();
+		const failure = new Error('later failure');
+		let completed = false;
+		const results = allSettledWithConcurrency([first.promise, second.promise], 2, (item) => item).then((value) => {
+			completed = true;
+			return value;
+		});
+		second.reject(failure);
+		await new Promise<void>((resolve) => setImmediate(resolve));
+		expect(completed).toBe(false);
+		first.resolve(10);
+		await expect(results).resolves.toEqual([
+			{status: 'fulfilled', value: 10},
+			{status: 'rejected', reason: failure},
+		]);
 	});
 });

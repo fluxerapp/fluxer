@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MessagePollAnswerCount} from '@fluxer/schema/src/domains/message/PollSchemas';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface PollVoteRecord {
 	answerId: number;
@@ -12,16 +11,6 @@ export interface PollVoteRecord {
 }
 
 export type PollVoteMap = ReadonlyMap<number, PollVoteRecord>;
-
-interface PollVoteMachineContext {
-	map: PollVoteMap;
-	currentUserId: string | null;
-}
-
-interface PollVoteMachineInput {
-	map?: PollVoteMap;
-	currentUserId?: string | null;
-}
 
 export type PollVoteMachineEvent =
 	| {
@@ -55,10 +44,6 @@ export function mapToAnswerCounts(map: PollVoteMap): ReadonlyArray<MessagePollAn
 	return out.length > 0 ? Object.freeze(out) : EMPTY_ANSWER_COUNTS;
 }
 
-export function getRecord(map: PollVoteMap, answerId: number): PollVoteRecord | undefined {
-	return map.get(answerId);
-}
-
 function withRecord(map: PollVoteMap, answerId: number, record: PollVoteRecord | null): PollVoteMap {
 	const next = new Map(map);
 	if (record === null) {
@@ -70,7 +55,7 @@ function withRecord(map: PollVoteMap, answerId: number, record: PollVoteRecord |
 }
 
 function clamp(n: number): number {
-	return n < 0 ? 0 : n;
+	return Math.max(n, 0);
 }
 
 const EMPTY_ANSWER_COUNTS: ReadonlyArray<MessagePollAnswerCount> = Object.freeze([]);
@@ -239,107 +224,6 @@ function untrackReactorInMap(map: PollVoteMap, answerId: number, userId: string)
 	return withRecord(map, answerId, {...existing, knownVoters: reactors});
 }
 
-export const pollVoteStateMachine = setup({
-	types: {} as {
-		context: PollVoteMachineContext;
-		events: PollVoteMachineEvent;
-		input: PollVoteMachineInput;
-	},
-	actions: {
-		applyHydration: assign({
-			map: ({context, event}) =>
-				event.type === 'pollVote.hydrate'
-					? hydrateMap(context.map, event.votes, event.currentUserId ?? context.currentUserId)
-					: context.map,
-			currentUserId: ({context, event}) =>
-				event.type === 'pollVote.hydrate' ? (event.currentUserId ?? context.currentUserId) : context.currentUserId,
-		}),
-		applyAdd: assign({
-			map: ({context, event}) =>
-				event.type === 'pollVote.add'
-					? addToMap(context.map, event.answerId, event.userId, event.isCurrentUser)
-					: context.map,
-		}),
-		applyRemove: assign({
-			map: ({context, event}) =>
-				event.type === 'pollVote.remove'
-					? removeFromMap(context.map, event.answerId, event.userId, event.isCurrentUser)
-					: context.map,
-		}),
-		applyTrackVoter: assign({
-			map: ({context, event}) =>
-				event.type === 'pollVote.trackVoter'
-					? trackReactorInMap(context.map, event.answerId, event.userId)
-					: context.map,
-		}),
-		applyTrackVoters: assign({
-			map: ({context, event}) =>
-				event.type === 'pollVote.trackVoters'
-					? trackReactorsInMap(context.map, event.answerId, event.userIds)
-					: context.map,
-		}),
-		applyUntrackVoter: assign({
-			map: ({context, event}) =>
-				event.type === 'pollVote.untrackVoter'
-					? untrackReactorInMap(context.map, event.answerId, event.userId)
-					: context.map,
-		}),
-	},
-	guards: {
-		hasVotes: ({context}) => context.map.size > 0,
-	},
-}).createMachine({
-	id: 'messagePollVoteAggregate',
-	context: ({input}) => ({
-		map: input.map ?? emptyMap(),
-		currentUserId: input.currentUserId ?? null,
-	}),
-	initial: 'routing',
-	states: {
-		routing: {
-			always: [{guard: 'hasVotes', target: 'active'}, {target: 'empty'}],
-		},
-		empty: {
-			on: {
-				'pollVote.hydrate': {target: 'routing', actions: 'applyHydration'},
-				'pollVote.add': {target: 'routing', actions: 'applyAdd'},
-				'pollVote.remove': {target: 'routing', actions: 'applyRemove'},
-				'pollVote.trackVoter': {target: 'routing', actions: 'applyTrackVoter'},
-				'pollVote.trackVoters': {target: 'routing', actions: 'applyTrackVoters'},
-				'pollVote.untrackVoter': {target: 'routing', actions: 'applyUntrackVoter'},
-			},
-		},
-		active: {
-			on: {
-				'pollVote.hydrate': {target: 'routing', actions: 'applyHydration'},
-				'pollVote.add': {target: 'routing', actions: 'applyAdd'},
-				'pollVote.remove': {target: 'routing', actions: 'applyRemove'},
-				'pollVote.trackVoter': {target: 'routing', actions: 'applyTrackVoter'},
-				'pollVote.trackVoters': {target: 'routing', actions: 'applyTrackVoters'},
-				'pollVote.untrackVoter': {target: 'routing', actions: 'applyUntrackVoter'},
-			},
-		},
-	},
-});
-
-export type PollVoteMachineSnapshot = SnapshotFrom<typeof pollVoteStateMachine>;
-export type PollVoteMachineStateValue = 'empty' | 'active';
-
-export function createPollVoteMachineSnapshot(
-	map: PollVoteMap = emptyMap(),
-	currentUserId?: string | null,
-): PollVoteMachineSnapshot {
-	return getInitialSnapshot(pollVoteStateMachine, {map, currentUserId});
-}
-
-export function transitionPollVoteSnapshot(
-	snapshot: PollVoteMachineSnapshot,
-	event: PollVoteMachineEvent,
-): PollVoteMachineSnapshot {
-	if (isSnapshotNoop(snapshot, event)) return snapshot;
-	return transition(pollVoteStateMachine, snapshot, event)[0] as PollVoteMachineSnapshot;
-}
-
 export function transitionPollVoteMap(
 	map: PollVoteMap,
 	event: PollVoteMachineEvent,
@@ -361,57 +245,6 @@ export function transitionPollVoteMap(
 	}
 }
 
-export function getPollVoteStateValue(snapshot: PollVoteMachineSnapshot): PollVoteMachineStateValue {
-	return snapshot.value === 'active' ? 'active' : 'empty';
-}
-
-export function applyAdd(map: PollVoteMap, answerId: number, userId: string, isCurrentUser: boolean): PollVoteMap {
-	return transitionPollVoteMap(map, {type: 'pollVote.add', answerId, userId, isCurrentUser});
-}
-
-export function applyRemove(map: PollVoteMap, answerId: number, userId: string, isCurrentUser: boolean): PollVoteMap {
-	return transitionPollVoteMap(map, {type: 'pollVote.remove', answerId, userId, isCurrentUser});
-}
-
-export function hydrate(
-	map: PollVoteMap,
-	wire: ReadonlyArray<MessagePollAnswerCount> | null | undefined,
-	currentUserId?: string | null,
-): PollVoteMap {
-	return transitionPollVoteMap(map, {type: 'pollVote.hydrate', votes: wire, currentUserId}, currentUserId);
-}
-
-export function trackVoter(map: PollVoteMap, answerId: number, userId: string): PollVoteMap {
-	return transitionPollVoteMap(map, {type: 'pollVote.trackVoter', answerId, userId});
-}
-
-export function trackVoters(map: PollVoteMap, answerId: number, userIds: ReadonlyArray<string>): PollVoteMap {
-	return transitionPollVoteMap(map, {type: 'pollVote.trackVoters', answerId, userIds});
-}
-
-export function untrackVoter(map: PollVoteMap, answerId: number, userId: string): PollVoteMap {
-	return transitionPollVoteMap(map, {type: 'pollVote.untrackVoter', answerId, userId});
-}
-
-function isSnapshotNoop(snapshot: PollVoteMachineSnapshot, event: PollVoteMachineEvent): boolean {
-	const map = snapshot.context.map;
-	switch (event.type) {
-		case 'pollVote.hydrate':
-			return (
-				(event.votes == null || event.votes.length === 0) &&
-				map.size === 0 &&
-				(event.currentUserId == null || event.currentUserId === snapshot.context.currentUserId)
-			);
-		case 'pollVote.remove':
-		case 'pollVote.trackVoter':
-		case 'pollVote.trackVoters':
-		case 'pollVote.untrackVoter':
-			return map.size === 0 || !map.has(event.answerId);
-		case 'pollVote.add':
-			return false;
-	}
-}
-
 function mapsEqual(a: PollVoteMap, b: PollVoteMap): boolean {
 	if (a === b) return true;
 	if (a.size !== b.size) return false;
@@ -428,22 +261,6 @@ function mapsEqual(a: PollVoteMap, b: PollVoteMap): boolean {
 		for (const id of left.removedVoters) {
 			if (!right.removedVoters.has(id)) return false;
 		}
-	}
-	return true;
-}
-
-export function answerCountsEqual(
-	a: ReadonlyArray<MessagePollAnswerCount>,
-	b: ReadonlyArray<MessagePollAnswerCount>,
-): boolean {
-	if (a === b) return true;
-	if (a.length !== b.length) return false;
-	for (let i = 0; i < a.length; i++) {
-		const left = a[i];
-		const right = b[i];
-		if (left.count !== right.count) return false;
-		if (left.me_voted !== right.me_voted) return false;
-		if (left.id !== right.id) return false;
 	}
 	return true;
 }

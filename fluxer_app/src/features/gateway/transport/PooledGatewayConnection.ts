@@ -3,12 +3,16 @@
 import GeoIP from '@app/features/app/state/GeoIP';
 import Initialization from '@app/features/app/state/Initialization';
 import InstanceSnapshotStore, {runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
+import {resolveAccountInstanceLabel} from '@app/features/auth/AccountDisplayUtils';
 import AccountAccess from '@app/features/auth/state/AccountAccess';
 import Authentication from '@app/features/auth/state/Authentication';
+import {clearBootState} from '@app/features/boot_state/BootStateBridge';
 import Channels from '@app/features/channel/state/Channels';
-import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
+import ForumReadState from '@app/features/forum/state/ForumReadState';
 import {scheduleAccountReadyWork} from '@app/features/gateway/events/AccountReadyWork';
 import type {GatewayGeoipPayload} from '@app/features/gateway/events/EventRouter';
 import {
@@ -21,10 +25,8 @@ import {
 	GatewayAuthenticationFailedError,
 } from '@app/features/gateway/transport/ForegroundGatewayConnectionFailure';
 import {ForegroundGatewayDispatchProcessor} from '@app/features/gateway/transport/ForegroundGatewayDispatchProcessor';
-import {ForegroundPromotionReplayBuffer} from '@app/features/gateway/transport/ForegroundPromotionReplayBuffer';
 import type {CompressionType} from '@app/features/gateway/transport/GatewayCompression';
 import {GatewayConnectionInterruption} from '@app/features/gateway/transport/GatewayConnectionInterruption';
-import {GatewayConnectionRole} from '@app/features/gateway/transport/GatewayConnectionRole';
 import {GatewayGuildSubscriptionSynchronizer} from '@app/features/gateway/transport/GatewayGuildSubscriptionSynchronizer';
 import {
 	GatewayReadinessWaiters,
@@ -38,17 +40,17 @@ import {
 import {
 	type GatewayDispatchDelivery,
 	type GatewayErrorData,
+	type GatewayHandoffSeed,
+	type GatewayResumeSeed,
 	GatewaySocket,
 	type GatewaySocketProperties,
 	GatewayState,
 	type GatewayVoiceStateUpdateParams,
 } from '@app/features/gateway/transport/GatewaySocket';
 import {selectGuildActivationTarget} from '@app/features/gateway/transport/GuildActivationTarget';
-import MemberSearch from '@app/features/member/state/MemberSearch';
-import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import Messages from '@app/features/messaging/state/MessagingMessages';
-import ReportFlows from '@app/features/moderation/state/ReportFlows';
 import Navigation from '@app/features/navigation/state/Navigation';
+import NavigationSideEffects from '@app/features/navigation/state/NavigationSideEffects';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {writePrebootNetworkHint} from '@app/features/platform/state/PrebootNetworkHandoff';
@@ -56,9 +58,9 @@ import {ResetClientStateReason, resetClientState} from '@app/features/platform/s
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getGatewayClientProperties} from '@app/features/platform/utils/ClientInfo';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
-import Presence from '@app/features/presence/state/Presence';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import ThreadSubscriptions from '@app/features/threads/state/ThreadSubscriptions';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {reportGatewayErrorToVoice, teardownVoiceForFatalGatewayCrash} from '@app/features/voice/VoiceGatewayLifecycle';
@@ -67,6 +69,20 @@ import {GatewayCloseCodes, GatewayIdentifyFlags} from '@fluxer/constants/src/Gat
 import {action, actionBound, makeAutoObservable, observableRef, runInAction} from 'mobx';
 
 const logger = new Logger('GatewayConnection');
+
+function gatewayLogName(accountKey: string | null): string {
+	const account = accountKey === null ? null : SessionManager.getAccount(accountKey);
+	const host = account === null ? null : resolveAccountInstanceLabel(account);
+	if (account === null || host === null) {
+		const webAppEndpoint = RuntimeConfig.webAppEndpoint;
+		return URL.canParse(webAppEndpoint) ? `Gateway ${new URL(webAppEndpoint).host}` : 'Gateway';
+	}
+	const username = account.userData?.username;
+	const sharesInstance = SessionManager.accounts.some(
+		(other) => other.storageKey !== account.storageKey && resolveAccountInstanceLabel(other) === host,
+	);
+	return sharesInstance && username ? `Gateway ${host} ${username}` : `Gateway ${host}`;
+}
 
 const FOREGROUND_SOCKET_EVENTS = [
 	'dispatch',
@@ -78,29 +94,14 @@ const FOREGROUND_SOCKET_EVENTS = [
 	'resumed',
 ] as const;
 
-export {
-	GATEWAY_FOREGROUND_READY_TIMEOUT_MS,
-	GatewayReadyTimeoutError,
-} from '@app/features/gateway/transport/GatewayReadinessWaiters';
-
-import ChannelFrecency from '@app/features/channel/state/ChannelFrecency';
-import ForumPosts from '@app/features/forum/state/ForumPosts';
-import ForumReadState from '@app/features/forum/state/ForumReadState';
-import NavigationSideEffects from '@app/features/navigation/state/NavigationSideEffects';
-import ChannelThreads from '@app/features/threads/state/ChannelThreads';
-import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
-import ThreadPanel from '@app/features/threads/state/ThreadPanel';
-import ThreadRoster from '@app/features/threads/state/ThreadRoster';
-import ThreadSubscriptions from '@app/features/threads/state/ThreadSubscriptions';
-
-export class GatewaySessionSupersededError extends Error {
+class GatewaySessionSupersededError extends Error {
 	constructor() {
 		super('Gateway session was superseded before it became ready');
 		this.name = 'GatewaySessionSupersededError';
 	}
 }
 
-export class GatewaySessionStartFailedError extends Error {
+class GatewaySessionStartFailedError extends Error {
 	constructor(status: GatewaySessionStartStatus) {
 		super(`Gateway session did not start: ${status}`);
 		this.name = 'GatewaySessionStartFailedError';
@@ -148,9 +149,8 @@ interface GatewayAuthenticationFailure {
 	readonly completion: Promise<void>;
 }
 
-export interface ForegroundSocketAdoptionMeta {
-	readonly accountKey: string;
-	readonly sessionId: string;
+export interface GatewaySessionStartOptions {
+	readonly resume?: GatewayResumeSeed;
 }
 
 export function selectForegroundActivationGuildId(): string | null {
@@ -178,7 +178,6 @@ export class PooledGatewayConnection {
 	private readonly dispatchProcessor: ForegroundGatewayDispatchProcessor;
 	private readonly resumeListeners: GatewayResumeListenerOwner;
 	private readonly demotionHandover: ForegroundDemotionHandover;
-	private readonly promotionReplay: ForegroundPromotionReplayBuffer;
 	private readonly readinessWaiters: GatewayReadinessWaiters;
 	private readonly guildSubscriptions: GatewayGuildSubscriptionSynchronizer;
 	private readonly connectionInterruption: GatewayConnectionInterruption;
@@ -187,6 +186,7 @@ export class PooledGatewayConnection {
 	private desired: DesiredSession | null = null;
 	private authenticationFailure: GatewayAuthenticationFailure | null = null;
 	private previousReadySessionId: string | null = null;
+	private promotedResumeAccountKey: string | null = null;
 	private isFatalCrashInProgress: boolean = false;
 
 	constructor() {
@@ -211,7 +211,6 @@ export class PooledGatewayConnection {
 			persistAccountToken: (accountKey, token) => SessionManager.setAccountToken(accountKey, token),
 			getAccountToken: (accountKey) => SessionManager.getAccount(accountKey)?.token ?? null,
 		});
-		this.promotionReplay = new ForegroundPromotionReplayBuffer();
 		this.readinessWaiters = new GatewayReadinessWaiters((generation, accountKey, error) => {
 			this.handleReadyTimeout(generation, accountKey, error);
 		});
@@ -227,7 +226,7 @@ export class PooledGatewayConnection {
 			| 'dispatchProcessor'
 			| 'resumeListeners'
 			| 'demotionHandover'
-			| 'promotionReplay'
+			| 'promotedResumeAccountKey'
 			| 'readinessWaiters'
 			| 'guildSubscriptions'
 			| 'connectionInterruption'
@@ -248,7 +247,7 @@ export class PooledGatewayConnection {
 				dispatchProcessor: false,
 				resumeListeners: false,
 				demotionHandover: false,
-				promotionReplay: false,
+				promotedResumeAccountKey: false,
 				readinessWaiters: false,
 				guildSubscriptions: false,
 				connectionInterruption: false,
@@ -355,7 +354,7 @@ export class PooledGatewayConnection {
 	private cleanupSocket(): void {
 		const owner = this.socketOwner;
 		this.demotionHandover.clear();
-		this.promotionReplay.clear();
+		this.promotedResumeAccountKey = null;
 		this.socketOwner = null;
 		this.isConnected = false;
 		this.isConnecting = false;
@@ -391,8 +390,8 @@ export class PooledGatewayConnection {
 		return true;
 	}
 
-	async consumeForegroundDemotionHandover(accountKey: string): Promise<boolean> {
-		return this.demotionHandover.consume(accountKey);
+	async finishForegroundDemotionHandover(accountKey: string): Promise<GatewayHandoffSeed | null> {
+		return this.demotionHandover.finish(accountKey);
 	}
 
 	async rollbackForegroundDemotionHandover(accountKey: string): Promise<void> {
@@ -436,120 +435,13 @@ export class PooledGatewayConnection {
 		}
 	}
 
-	detachForegroundSocket(): GatewaySocket | null {
-		if (this.demotionHandover.isActive) {
-			throw new Error('Foreground gateway socket cannot detach during an active demotion handover');
-		}
-		const owner = this.socketOwner;
-		if (owner === null) {
-			return null;
-		}
-		this.generation += 1;
-		for (const event of FOREGROUND_SOCKET_EVENTS) {
-			owner.socket.removeAllListeners(event);
-		}
-		this.resumeListeners.dispose();
-		this.socketOwner = null;
-		this.connectionInterruption.restore();
-		this.rejectReadyWaiters(new GatewaySessionSupersededError());
-		this.resetConnectionLocalState();
-		this.guildSubscriptions.clearInitialGuild();
-		this.previousReadySessionId = null;
-		this.promotionReplay.clear();
-		return owner.socket;
-	}
-
-	adoptForegroundSocket(socket: GatewaySocket, meta: ForegroundSocketAdoptionMeta): void {
-		if (this.socketOwner !== null) {
-			throw new Error('Foreground gateway socket adoption requires an empty owner');
-		}
-		if (SessionManager.currentAccountKey !== meta.accountKey) {
-			throw new Error('Foreground gateway socket adoption does not match the active account');
-		}
-		if (socket.getSessionId() !== meta.sessionId || !socket.isConnected()) {
-			throw new Error('Foreground gateway socket adoption requires its live session');
-		}
-		const token = SessionManager.token;
-		if (token === null) {
-			throw new Error('Foreground gateway socket adoption requires an active token');
-		}
-		LocalPresence.updatePresence();
-		const presence = LocalPresence.getGatewayPresence();
-		socket.setToken(token);
-		socket.configureOwnership({
-			role: GatewayConnectionRole.FOREGROUND,
-			presence:
-				presence === null
-					? undefined
-					: {
-							status: presence.status,
-							afk: presence.afk,
-							mobile: presence.mobile,
-							custom_status: presence.custom_status,
-						},
-			initialGuildId: null,
-			isMobileLayout: () => MobileLayout.isMobileLayout(),
-			geo: () => ({latitude: GeoIP.latitude, longitude: GeoIP.longitude}),
-		});
-		const generation = ++this.generation;
-		this.socketOwner = {socket, accountKey: meta.accountKey};
-		this.desired = {accountKey: meta.accountKey, token, userIdHint: SessionManager.userId};
-		this.sessionId = meta.sessionId;
-		this.previousReadySessionId = meta.sessionId;
-		this.connectionEpoch += 1;
-		this.isConnected = true;
-		this.isConnecting = false;
-		this.isReady = false;
-		this.connectionInterruption.restore();
-		this.guildSubscriptions.prepareAdoptedSession();
-		this.promotionReplay.begin(meta.accountKey, socket);
-		this.installSocketWiring(socket, generation, meta.accountKey);
-	}
-
 	preparePromotedForegroundReplay(): void {
-		this.resetEphemeralForegroundStates();
 		Initialization.setConnecting();
 	}
 
-	replayForegroundDispatch(accountKey: string, delivery: GatewayDispatchDelivery): void {
-		const socket = this.foregroundSocketForAccount(accountKey);
-		if (socket === null) {
-			throw new Error('Cannot replay a gateway dispatch without its account-owned foreground socket');
-		}
-		const isCurrent = (): boolean => this.foregroundSocketForAccount(accountKey) === socket;
-		if (!socket.isDispatchActive(delivery.receipt)) {
-			throw new Error('Cannot replay an inactive gateway dispatch receipt');
-		}
-		this.handleGatewayDispatch(socket, delivery, accountKey, isCurrent);
-		if (!socket.isConnected()) {
-			throw new Error('Foreground gateway disconnected while replaying a dispatch');
-		}
-		if (socket.isDispatchActive(delivery.receipt)) {
-			throw new Error('Foreground gateway dispatch replay did not complete its receipt');
-		}
-	}
-
-	finalizePromotedForegroundSession(accountKey: string): void {
-		const socket = this.foregroundSocketForAccount(accountKey);
-		if (socket === null || !socket.isConnected()) {
-			throw new Error('Cannot finalize a promoted foreground gateway without its live socket');
-		}
-		const sessionId = socket.getSessionId();
-		if (sessionId === null || sessionId !== this.sessionId) {
-			throw new Error('Cannot finalize a promoted foreground gateway with a mismatched session');
-		}
-		const isCurrent = (): boolean => this.foregroundSocketForAccount(accountKey) === socket;
-		this.promotionReplay.drain(accountKey, socket, (delivery) => {
-			if (!socket.isDispatchActive(delivery.receipt)) {
-				throw new Error('Cannot finalize a promoted foreground gateway with an inactive live dispatch');
-			}
-			this.handleGatewayDispatch(socket, delivery, accountKey, isCurrent);
-			if (!socket.isConnected() || socket.isDispatchActive(delivery.receipt)) {
-				throw new Error('Promoted foreground gateway failed while draining live dispatches');
-			}
-		});
-		SessionManager.handleConnectionStarted();
-		this.handleConnectionOpen(sessionId);
+	private completePromotedResume(accountKey: string, socket: GatewaySocket): void {
+		this.promotedResumeAccountKey = null;
+		this.previousReadySessionId = socket.getSessionId();
 		this.completeGatewayReady(accountKey);
 		Initialization.setReady();
 		Messages.handleGatewayReady();
@@ -559,10 +451,6 @@ export class PooledGatewayConnection {
 		const userId = SessionManager.userId;
 		if (userId !== null) {
 			scheduleAccountReadyWork(userId);
-		}
-		const presence = LocalPresence.getGatewayPresence();
-		if (presence !== null) {
-			socket.updatePresence(presence.status, presence.afk, presence.mobile, presence.custom_status);
 		}
 	}
 
@@ -576,10 +464,11 @@ export class PooledGatewayConnection {
 		LocalPresence.updatePresence();
 		const presence = LocalPresence.getGatewayPresence();
 		const compression: CompressionType = 'zstd-stream';
-		logger.info(`Using gateway compression: ${compression}`);
+		logger.debug(`Using gateway compression: ${compression}`);
 		let identifyFlags = 0;
 		identifyFlags |= GatewayIdentifyFlags.DEBOUNCE_MESSAGE_REACTIONS;
 		identifyFlags |= GatewayIdentifyFlags.CHANNEL_THREADS;
+		identifyFlags |= GatewayIdentifyFlags.GUILD_VISITS;
 		const initialGuildId = SelectedGuild.selectedGuildId ?? null;
 		this.guildSubscriptions.recordInitialGuild(initialGuildId);
 		const socket = new GatewaySocket(gatewayUrl, {
@@ -599,7 +488,8 @@ export class PooledGatewayConnection {
 			initialGuildId,
 			isMobileLayout: () => MobileLayout.isMobileLayout(),
 			geo: () => ({latitude: GeoIP.latitude, longitude: GeoIP.longitude}),
-			role: GatewayConnectionRole.FOREGROUND,
+			showsRestoredView: () => Initialization.isStale,
+			logName: gatewayLogName(accountKey),
 		});
 		this.installSocketWiring(socket, generation, accountKey);
 		return socket;
@@ -618,9 +508,6 @@ export class PooledGatewayConnection {
 		socket.on(
 			'dispatch',
 			whenCurrent((delivery: GatewayDispatchDelivery) => {
-				if (this.promotionReplay.capture(socket, accountKey, delivery)) {
-					return;
-				}
 				this.handleGatewayDispatch(socket, delivery, accountKey, isCurrent);
 			}),
 		);
@@ -657,11 +544,28 @@ export class PooledGatewayConnection {
 					const readyData = data as {
 						session_id: string;
 					};
+					if (this.promotedResumeAccountKey === accountKey) {
+						this.promotedResumeAccountKey = null;
+					}
 					this.handleConnectionOpen(readyData.session_id);
 				}),
 			),
 		);
-		socket.on('resumed', action(whenCurrent(() => this.handleConnectionResumed())));
+		socket.on(
+			'resumed',
+			action(
+				whenCurrent(() => {
+					const promoted = accountKey !== null && this.promotedResumeAccountKey === accountKey;
+					if (promoted) {
+						this.sessionId = socket.getSessionId();
+					}
+					this.handleConnectionResumed();
+					if (promoted) {
+						this.completePromotedResume(accountKey, socket);
+					}
+				}),
+			),
+		);
 	}
 
 	private handleSocketStateChange(newState: GatewayState, previousState: GatewayState): void {
@@ -722,7 +626,10 @@ export class PooledGatewayConnection {
 		this.guildSubscriptions.flush();
 	}
 
-	async startSession(accountKey: string | null): Promise<GatewaySessionStartResult> {
+	async startSession(
+		accountKey: string | null,
+		options: GatewaySessionStartOptions = {},
+	): Promise<GatewaySessionStartResult> {
 		const userIdHint = SessionManager.userId ?? null;
 		const storedToken = SessionManager.token;
 		const desired: DesiredSession = {
@@ -741,7 +648,11 @@ export class PooledGatewayConnection {
 		this.desired = desired;
 		const generation = ++this.generation;
 		this.rejectReadyWaiters(new GatewaySessionSupersededError());
-		LocalPresence.handleSessionChanging();
+		if (options.resume === undefined) {
+			LocalPresence.handleSessionChanging();
+		} else {
+			LocalPresence.updatePresence();
+		}
 		if (this.socket !== null) {
 			this.cleanupSocket();
 		}
@@ -787,6 +698,11 @@ export class PooledGatewayConnection {
 				}
 			});
 			if (this.socket === socket) {
+				if (options.resume !== undefined && accountKey !== null) {
+					socket.seedResume(options.resume);
+					this.guildSubscriptions.clearInitialGuild();
+					this.promotedResumeAccountKey = accountKey;
+				}
 				socket.connect();
 				return {status: GatewaySessionStartStatus.STARTED, generation};
 			}
@@ -952,22 +868,6 @@ export class PooledGatewayConnection {
 		return sent;
 	}
 
-	private resetEphemeralForegroundStates(): void {
-		Presence.handleSessionInvalidated();
-		Messages.handleSessionInvalidated();
-		FavoriteMemes.reset();
-		AttachmentUrlRefresher.reset();
-		ChannelFrecency.handleLogout();
-		MemberSearch.handleLogout();
-		ReportFlows.reset();
-		ThreadPanel.closeCreate();
-		ThreadGuilds.reset();
-		ChannelThreads.handleGatewayReady([]);
-		ThreadRoster.reset();
-		ForumPosts.reset();
-		ForumReadState.handleGatewayReady();
-	}
-
 	resetConnectionLocalState(): void {
 		this.isConnected = false;
 		this.isConnecting = false;
@@ -1004,7 +904,7 @@ export class PooledGatewayConnection {
 		this.connectionInterruption.restore();
 		this.cleanupSocket();
 		this.rejectReadyWaiters(new GatewaySessionSupersededError());
-		this.resetEphemeralForegroundStates();
+		ResettableStates.resetAll();
 		this.resetConnectionLocalState();
 	}
 
@@ -1025,7 +925,7 @@ export class PooledGatewayConnection {
 		SessionManager.handleConnectionReady();
 		ThreadSubscriptions.handleConnectionReady();
 		LocalPresence.updatePresence();
-		TypingIndicator.reset();
+		RollingTypingStore.reset();
 		QuickSwitcher.recomputeIfOpen();
 		this.flushPendingGuildSync();
 		void import('@app/features/member/state/GuildMembers').then((module) => {
@@ -1084,6 +984,7 @@ export class PooledGatewayConnection {
 	}
 
 	private async completeGatewayAuthenticationFailure(error: GatewayAuthenticationFailedError): Promise<void> {
+		const bootStateCleared = error.accountKey === null ? Promise.resolve() : clearBootState(error.accountKey);
 		const reset = resetClientState({reason: ResetClientStateReason.GATEWAY_AUTH_FAILURE, keepDrafts: true});
 		try {
 			LayerManager.closeAll();
@@ -1092,7 +993,7 @@ export class PooledGatewayConnection {
 			logger.error('Failed to retire the gateway after authentication failure', error);
 		}
 		try {
-			await reset;
+			await Promise.all([reset, bootStateCleared]);
 		} catch (error) {
 			logger.error('Failed to clear client state after gateway authentication failure', error);
 		}

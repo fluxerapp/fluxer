@@ -25,11 +25,11 @@ export function handleMessageReactionRemoveEmoji(
 	_context: GatewayHandlerContext,
 ): void {
 	const emoji = data.emoji as ReactionEmoji;
-	SavedMessages.handleMessageReactionRemoveEmoji(data.message_id);
+	SavedMessages.handleMessageReactionChange(data.message_id);
 	MessageReactions.handleReactionRemoveEmoji(data.message_id, emoji);
 	ChannelPins.handleMessageReactionRemoveEmoji(data.channel_id, data.message_id);
 	ForumPosts.handleReactionClear(data.channel_id, data.message_id, emoji);
-	MentionFeed.handleMessageReactionRemoveEmoji(data.message_id);
+	MentionFeed.handleMessageReactionChange(data.message_id);
 	Messages.handleRemoveReactionEmoji({
 		channelId: data.channel_id,
 		messageId: data.message_id,

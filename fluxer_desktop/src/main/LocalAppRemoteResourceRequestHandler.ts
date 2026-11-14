@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChildLogger} from '@electron/common/Logger';
+import {type ApiAttachmentAuthorization, ATTACHMENT_WINDOW_HEADER} from '@electron/main/ApiAttachmentAuthorization';
 import {type DesktopLocalAppProxyClient, emitLocalAppUploadFailure} from '@electron/main/LocalAppProxyClient';
 import {
 	buildProxyResponseHeaders,
@@ -30,6 +31,7 @@ interface LocalAppRemoteResourceRuntimePlans {
 interface DesktopLocalAppRemoteResourceRequestHandlerDependencies {
 	readonly proxyClient: DesktopLocalAppProxyClient;
 	readonly runtimePlans: LocalAppRemoteResourceRuntimePlans;
+	readonly attachmentAuthorization: ApiAttachmentAuthorization;
 }
 
 interface ForwardRemoteResourceRequest {
@@ -39,13 +41,24 @@ interface ForwardRemoteResourceRequest {
 	readonly signal: AbortSignal;
 }
 
+const RANGE_NOT_SATISFIABLE_STATUS = 416;
+
+function isRefusedMidFileRead(request: Request, response: Response): boolean {
+	if (request.method !== 'GET' || response.status < HttpStatus.BAD_REQUEST) return false;
+	if (response.status === RANGE_NOT_SATISFIABLE_STATUS) return false;
+	const start = /^bytes=(\d+)-/u.exec(request.headers.get('range') ?? '')?.[1];
+	return start !== undefined && Number(start) > 0;
+}
+
 export class DesktopLocalAppRemoteResourceRequestHandler {
 	private readonly proxyClient: DesktopLocalAppProxyClient;
 	private readonly runtimePlans: LocalAppRemoteResourceRuntimePlans;
+	private readonly attachmentAuthorization: ApiAttachmentAuthorization;
 
 	public constructor(dependencies: DesktopLocalAppRemoteResourceRequestHandlerDependencies) {
 		this.proxyClient = dependencies.proxyClient;
 		this.runtimePlans = dependencies.runtimePlans;
+		this.attachmentAuthorization = dependencies.attachmentAuthorization;
 	}
 
 	public async handle(request: Request, signal: AbortSignal): Promise<Response> {
@@ -85,18 +98,30 @@ export class DesktopLocalAppRemoteResourceRequestHandler {
 			});
 		}
 		const uploadId = readLocalAppUploadId(request.headers);
+		const requestHeaders = buildRemoteResourceRequestHeaders(request.headers);
+		requestHeaders.delete(ATTACHMENT_WINDOW_HEADER);
+		const authorization = this.attachmentAuthorization.authorizationForProxiedRequest(
+			request.headers.get(ATTACHMENT_WINDOW_HEADER),
+			request.method,
+			targetURL,
+		);
+		if (authorization !== null) requestHeaders.set('Authorization', authorization);
 		let response: Response | null = null;
 		try {
 			response = await this.proxyClient.fetch({
 				targetURL,
 				method: request.method,
-				headers: buildRemoteResourceRequestHeaders(request.headers),
+				headers: requestHeaders,
 				body: request.body,
 				signal,
 				acceptEncoding: null,
 				uploadId,
 				uploadTotalBytes: readRequestContentLength(request.headers),
 			});
+			if (isRefusedMidFileRead(request, response)) {
+				await response.body?.cancel();
+				return Response.error();
+			}
 			const body = await this.proxyClient.responseBodyForMethod({
 				method: request.method,
 				response,

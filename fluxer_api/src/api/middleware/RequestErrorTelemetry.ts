@@ -2,11 +2,10 @@
 
 import {createHash} from 'node:crypto';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
-import {Config} from '@app/api/Config';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import {workerMeta} from '@app/api/infrastructure/activity/ActivityMeta';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
-import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
+import {extractConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {getSameIpDecisionKey, isPublicIpAddress, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {createMiddleware} from 'hono/factory';
 
@@ -60,12 +59,7 @@ function countsFor(ip: string | null): IpErrorCounts | null {
 export function recordRequestStatus(request: Request, status: number): void {
 	if (status < 400 || status >= 500 || recordedRequests.has(request)) return;
 	recordedRequests.add(request);
-	const counts = countsFor(
-		extractClientIp(request, {
-			trustClientIpHeader: Config.proxy.trust_client_ip_header,
-			clientIpHeaderName: Config.proxy.client_ip_header,
-		}),
-	);
+	const counts = countsFor(extractConfiguredClientIp(request));
 	if (!counts) return;
 	if (status === 401) counts.s401++;
 	else if (status === 403) counts.s403++;

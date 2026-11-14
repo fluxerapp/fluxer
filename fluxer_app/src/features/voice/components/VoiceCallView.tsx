@@ -19,6 +19,7 @@ import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePopout} from '@app/features/ui/hooks/usePopout';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {PortalHostContext} from '@app/features/ui/overlay/PortalHostContext';
 import {Popout as PopoverPopout} from '@app/features/ui/popover/PopoverPopout';
 import ContextMenu, {isContextMenuNodeTarget} from '@app/features/ui/state/ContextMenu';
@@ -43,6 +44,7 @@ import {
 	useVoiceCallAppFullscreen,
 	useVoiceCallFullscreenPortalHost,
 } from '@app/features/voice/components/useVoiceCallAppFullscreen';
+import {useVoiceCallCornerLift} from '@app/features/voice/components/useVoiceCallCornerLift';
 import {useVoiceCallTracksAndLayout} from '@app/features/voice/components/useVoiceCallTracksAndLayout';
 import {useVoiceEngineConnectionState} from '@app/features/voice/components/useVoiceEngineConnectionState';
 import {VoiceCallCornerControls} from '@app/features/voice/components/VoiceCallCornerControls';
@@ -70,18 +72,15 @@ import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 import {hasValidRoomForVoiceCallContext} from '@app/features/voice/utils/VoiceCallContext';
 import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import {
+	DISCONNECTED_DESCRIPTOR,
+	ENTER_FULLSCREEN_DESCRIPTOR,
+	EXIT_FULLSCREEN_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {
-	ArrowLeftIcon,
-	ChartBarIcon,
-	CornersInIcon,
-	CornersOutIcon,
-	ListIcon,
-	PhoneIcon,
-	StarIcon,
-} from '@phosphor-icons/react';
+import {ChartBarIcon, CornersInIcon, CornersOutIcon, ListIcon, PhoneIcon, StarIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -96,18 +95,7 @@ const RECONNECTING_DESCRIPTOR = msg({
 	comment:
 		'Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.',
 });
-const DISCONNECTED_DESCRIPTOR = msg({
-	message: 'Disconnected',
-	comment: 'Overlay status in the voice call view when not connected.',
-});
-const EXIT_FULLSCREEN_DESCRIPTOR = msg({
-	message: 'Exit fullscreen',
-	comment: 'Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).',
-});
-const ENTER_FULLSCREEN_DESCRIPTOR = msg({
-	message: 'Enter fullscreen',
-	comment: 'Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).',
-});
+
 const BACK_TO_VOICE_CHANNEL_DESCRIPTOR = msg({
 	message: 'Back to voice channel',
 	comment: 'Tooltip / aria label on the back button that returns from the call view to the voice channel view.',
@@ -185,6 +173,7 @@ const VoiceCallViewInner = observer(
 			exitFullscreen: exitVoiceCallAppFullscreen,
 			toggleFullscreen: toggleVoiceCallAppFullscreen,
 		} = useVoiceCallAppFullscreen({containerRef});
+		const cornerLift = useVoiceCallCornerLift(containerRef);
 		const [isPointerHudActive, setIsPointerHudActive] = useState(false);
 		const connectionState = useVoiceEngineConnectionState();
 		const normalizedConnectionState = asVoiceEngineConnectionState(connectionState);
@@ -458,6 +447,7 @@ const VoiceCallViewInner = observer(
 						isChromePinned && styles.contextMenuActive,
 						keyboardModeEnabled && styles.keyboardModeActive,
 					)}
+					style={{'--voice-call-corner-lift': `${cornerLift}px`} as React.CSSProperties}
 					onPointerEnter={handleVoiceRootPointerActivity}
 					onPointerMove={handleVoiceRootPointerActivity}
 					onPointerDown={handleVoiceRootPointerActivity}
@@ -658,7 +648,7 @@ const VoiceCallViewInner = observer(
 					<VoiceCallCornerControls
 						wrapClassName={clsx(styles.fullscreenButtonWrap, styles.voiceChrome)}
 						buttonClassName={styles.voiceHeaderIconButton}
-						showPopout={!inPopout && isVoicePopoutSupported()}
+						showPopout={!inPopout && !isMobile && isVoicePopoutSupported()}
 						onPopOut={handlePopOutCall}
 						showFullscreen={!inPopout && supportsVoiceCallAppFullscreen}
 						isFullscreen={isVoiceCallAppFullscreen}

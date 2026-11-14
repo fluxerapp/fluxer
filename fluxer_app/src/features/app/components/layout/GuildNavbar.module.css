@@ -31,7 +31,7 @@
 }
 
 :global(html.platform-native) .guildNavbarContainer {
-	border-top-left-radius: clamp(0.5rem, 1.2vw, 0.875rem);
+	border-start-start-radius: clamp(0.5rem, 1.2vw, 0.875rem);
 	background-clip: padding-box;
 	overflow: hidden;
 }

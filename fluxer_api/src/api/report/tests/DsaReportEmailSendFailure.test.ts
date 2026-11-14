@@ -1,136 +1,194 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {clearTestEmails, createUniqueEmail, findLastTestEmail, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
-import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
-import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
-import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
-import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
-import type {IStorageService} from '@app/api/infrastructure/IStorageService';
-import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import {createReportID} from '@app/api/BrandedTypes';
+import {getConfig} from '@app/api/Config';
+import {sendChannelMessage, setupTestGuildWithMembers} from '@app/api/channel/tests/ChannelTestUtils';
+import {getEmailService, getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {getReportFlowResponse} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
-import {ReportService} from '@app/api/report/ReportService';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {createRecordingSmtpServer} from '@app/api/test/RecordingSmtpServer';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import {EmailDeliveryModes} from '@fluxer/constants/src/AccountConfigConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import type {IEmailService} from '@pkgs/email/src/IEmailService';
-import {TestEmailService} from '@pkgs/email/src/TestEmailService';
-import type {IRateLimitService, RateLimitResult} from '@pkgs/rate_limit/src/IRateLimitService';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {SmtpTlsModes} from '@fluxer/constants/src/SmtpConstants';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
-interface SentCode {
-	email: string;
-	code: string;
+const TEST_LOCALE = 'en-US';
+
+interface ReportTarget {
+	guildId: string;
+	channelId: string;
+	messageId: string;
+	authorId: string;
 }
 
-function allowedLimit(): RateLimitResult {
-	return {allowed: true, limit: 5, remaining: 4, resetTime: new Date(Date.now() + 1000), resetAfterDecimal: 1};
-}
-
-function createService(sendResult: boolean): {service: ReportService; sent: Array<SentCode>} {
-	const sent: Array<SentCode> = [];
-	const emailService = {
-		sendDsaReportVerificationCode: async (email: string, code: string) => {
-			sent.push({email, code});
-			return sendResult;
+async function configureSmtp(port: number) {
+	await getInstanceConfigRepository().setInstanceIntegrationsConfig({
+		email: {
+			delivery: EmailDeliveryModes.SMTP,
+			from_email: 'reports@example.com',
+			from_name: 'Report Team',
+			smtp: {host: '127.0.0.1', port, username: '', password: '', tls_mode: SmtpTlsModes.NONE},
 		},
-	} as unknown as IEmailService;
-	const rateLimitService = {
-		checkLimit: async () => allowedLimit(),
-		peekLimit: async () => allowedLimit(),
-		resetLimit: async () => {},
-	} as unknown as IRateLimitService;
-	const emailDnsValidationService: IEmailDnsValidationService = {hasValidDnsRecords: async () => true};
-	const service = new ReportService(
-		new ReportRepository(),
-		{} as IChannelRepository,
-		{} as IGuildRepositoryAggregate,
-		{} as IUserRepository,
-		{} as IInviteRepository,
-		emailService,
-		emailDnsValidationService,
-		{} as ISnowflakeService,
-		{} as IStorageService,
-		{} as IGatewayService,
-		rateLimitService,
-		{} as IWebhookRepository,
-	);
-	return {service, sent};
+	});
 }
 
-describe('DSA verification email delivery result in the service', () => {
-	let executor: InMemoryCassandraQueryExecutor;
+function verificationCode(body: string): string {
+	const match = /(?:^|\r\n)([A-Z0-9]{4}-[A-Z0-9]{4})(?:\r\n|$)/.exec(body);
+	if (!match) throw new Error('The delivered DSA email has no verification code');
+	return match[1];
+}
 
-	beforeEach(() => {
-		executor = new InMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-	});
-
-	afterEach(() => {
-		executor.reset();
-		setCassandraQueryExecutorForTesting(null);
-	});
-
-	test('an email that was not sent is answered with 503 and leaves no code behind', async () => {
-		const {service, sent} = createService(false);
-		const email = createUniqueEmail('dsa-send-failure');
-		const failure = await service.sendDsaReportVerificationCode(email).catch((error: unknown) => error);
-		expect(failure).toBeInstanceOf(ServiceUnavailableError);
-		expect((failure as ServiceUnavailableError).status).toBe(503);
-		expect((failure as ServiceUnavailableError).code).toBe(APIErrorCodes.SERVICE_UNAVAILABLE);
-		expect(sent).toHaveLength(1);
-		expect(await new ReportRepository().getDsaEmailVerification(email.toLowerCase())).toBeNull();
-	});
-
-	test('an email that was sent resolves and keeps its code', async () => {
-		const {service, sent} = createService(true);
-		const email = createUniqueEmail('dsa-send-failure');
-		await expect(service.sendDsaReportVerificationCode(email)).resolves.toBeUndefined();
-		expect(sent).toEqual([{email: email.toLowerCase(), code: expect.stringMatching(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)}]);
-		expect(await new ReportRepository().getDsaEmailVerification(email.toLowerCase())).not.toBeNull();
-		await expect(service.verifyDsaReportEmail(email, sent[0].code)).resolves.toMatch(/^[0-9a-f]{64}$/);
-	});
-});
-
-describe('DSA verification email delivery result on the route', () => {
+describe('DSA email delivery through SMTP', () => {
 	let harness: ApiTestHarness;
+	const servers = new Set<Awaited<ReturnType<typeof createRecordingSmtpServer>>>();
 
 	beforeEach(async () => {
-		harness = await createApiTestHarness();
+		harness = await createApiTestHarness({search: 'enabled'});
+		const config = getConfig();
+		const previousTestMode = config.dev.testModeEnabled;
+		try {
+			config.dev.testModeEnabled = false;
+			getEmailService();
+		} finally {
+			config.dev.testModeEnabled = previousTestMode;
+		}
 	});
 
 	afterEach(async () => {
-		vi.restoreAllMocks();
-		await harness?.shutdown();
+		try {
+			await Promise.all([...servers].map((smtp) => smtp.close()));
+		} finally {
+			servers.clear();
+			await harness?.shutdown();
+		}
 	});
 
 	test('the route answers 503 and the next send goes through right away', async () => {
-		await clearTestEmails(harness);
-		const email = createUniqueEmail('dsa-send-failure');
-		const send = vi.spyOn(TestEmailService.prototype, 'sendDsaReportVerificationCode').mockResolvedValueOnce(false);
+		const smtp = await createRecordingSmtpServer({firstDelivery: 'reject'});
+		servers.add(smtp);
+		await configureSmtp(smtp.port);
+		const email = 'dsa-send-failure@example.com';
 		await createBuilderWithoutAuth(harness)
 			.post('/reports/dsa/email/send')
-			.body({email})
+			.body({email, locale: TEST_LOCALE})
 			.expect(HTTP_STATUS.SERVICE_UNAVAILABLE, APIErrorCodes.SERVICE_UNAVAILABLE)
 			.execute();
-		expect(send).toHaveBeenCalledTimes(1);
-		expect(await new ReportRepository().getDsaEmailVerification(email.toLowerCase())).toBeNull();
+		expect(smtp.attempts).toHaveLength(1);
+		expect(smtp.attempts[0]).toMatchObject({from: '<reports@example.com>', to: '<dsa-send-failure@example.com>'});
+		expect(smtp.attempts[0].body).toContain('Use this code to send your Digital Services Act report to Fluxer.');
+		expect(smtp.delivered).toEqual([]);
+		expect(await new ReportRepository().getDsaEmailVerification(email)).toBeNull();
 		await createBuilderWithoutAuth(harness)
 			.post('/reports/dsa/email/send')
-			.body({email})
+			.body({email, locale: TEST_LOCALE})
 			.expect(HTTP_STATUS.OK)
 			.execute();
-		const code = findLastTestEmail(await listTestEmails(harness), 'dsa_report_verification')?.metadata.code;
+		expect(smtp.attempts).toHaveLength(2);
+		expect(smtp.delivered).toHaveLength(1);
+		expect(smtp.delivered[0]).toMatchObject({from: '<reports@example.com>', to: '<dsa-send-failure@example.com>'});
+		expect(smtp.delivered[0].body).toContain('This code expires in 10 minutes.');
 		await createBuilderWithoutAuth(harness)
 			.post('/reports/dsa/email/verify')
-			.body({email, code})
+			.body({email, code: verificationCode(smtp.delivered[0].body)})
 			.expect(HTTP_STATUS.OK)
 			.execute();
+		expect(await new ReportRepository().getDsaEmailVerification(email)).toBeNull();
+	});
+
+	test.each<{
+		kind: 'message' | 'guild';
+		receipt: string;
+		request: (target: ReportTarget) => Record<string, unknown>;
+		reportedUserId: (target: ReportTarget) => bigint | null;
+	}>([
+		{
+			kind: 'message',
+			receipt: 'We received your Digital Services Act report about a message on Fluxer.',
+			request: (target) => ({
+				message_link: `https://web.fluxer.app/channels/${target.guildId}/${target.channelId}/${target.messageId}`,
+				steps: [
+					{screen_id: 'root_message', option_id: 'abuse'},
+					{screen_id: 'abuse', option_id: 'hate'},
+					{screen_id: 'hate', option_id: 'hate_incitement'},
+				],
+				additional_info: 'This message calls for violence against a group of people.',
+			}),
+			reportedUserId: (target) => BigInt(target.authorId),
+		},
+		{
+			kind: 'guild',
+			receipt: 'We received your Digital Services Act report about a community on Fluxer.',
+			request: (target) => ({
+				guild_id: target.guildId,
+				steps: [
+					{screen_id: 'community_parts', item_ids: ['activity']},
+					{screen_id: 'root_guild', option_id: 'abuse'},
+					{screen_id: 'abuse_guild', option_id: 'raid'},
+				],
+				additional_info: 'This community organizes raids on other communities.',
+			}),
+			reportedUserId: () => null,
+		},
+	])('a $kind notice is filed when SMTP refuses its receipt', async ({kind, receipt, request, reportedUserId}) => {
+		const verificationSmtp = await createRecordingSmtpServer({firstDelivery: 'hold'});
+		servers.add(verificationSmtp);
+		verificationSmtp.release();
+		await configureSmtp(verificationSmtp.port);
+		const {members, guild, systemChannel} = await setupTestGuildWithMembers(harness, 1);
+		const message = await sendChannelMessage(harness, members[0].token, systemChannel.id, 'Reported on the DSA form');
+		const email = 'dsa-receipt-failure@example.com';
+		await createBuilderWithoutAuth(harness)
+			.post('/reports/dsa/email/send')
+			.body({email, locale: TEST_LOCALE})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const verificationEmails = verificationSmtp.delivered.filter(
+			(mail) => mail.to === '<dsa-receipt-failure@example.com>',
+		);
+		expect(verificationEmails).toHaveLength(1);
+		const {ticket} = await createBuilderWithoutAuth<{ticket: string}>(harness)
+			.post('/reports/dsa/email/verify')
+			.body({email, code: verificationCode(verificationEmails[0].body)})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const receiptSmtp = await createRecordingSmtpServer({firstDelivery: 'reject'});
+		servers.add(receiptSmtp);
+		await configureSmtp(receiptSmtp.port);
+		const target = {
+			guildId: guild.id,
+			channelId: systemChannel.id,
+			messageId: message.id,
+			authorId: members[0].userId,
+		};
+		const body = {
+			ticket,
+			report_type: kind,
+			revision_hash: getReportFlowResponse(kind, 'dsa', TEST_LOCALE).revision_hash,
+			good_faith_confirmed: true,
+			reporter_full_legal_name: 'Jane Doe',
+			reporter_country_of_residence: 'DE',
+			...request(target),
+		};
+		const result = await createBuilderWithoutAuth<{report_id: string; status: string}>(harness)
+			.post('/reports/dsa')
+			.body(body)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(result.status).toBe('pending');
+		const stored = await new ReportRepository().getReport(createReportID(BigInt(result.report_id)));
+		expect(stored?.reporterEmail).toBe('dsa-receipt-failure@example.com');
+		expect(stored?.reportedGuildId?.toString()).toBe(guild.id);
+		expect(stored?.reportedUserId).toBe(reportedUserId(target));
+		expect(receiptSmtp.attempts).toHaveLength(1);
+		expect(receiptSmtp.attempts[0]).toMatchObject({
+			from: '<reports@example.com>',
+			to: '<dsa-receipt-failure@example.com>',
+		});
+		expect(receiptSmtp.attempts[0].body).toContain(receipt);
+		expect(receiptSmtp.attempts[0].body).toContain(result.report_id);
+		expect(receiptSmtp.delivered).toEqual([]);
 	});
 });

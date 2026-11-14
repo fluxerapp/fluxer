@@ -5,33 +5,25 @@ import {createUserID} from '@app/api/BrandedTypes';
 import {runAdminBulkJob} from '@app/api/worker/tasks/admin_bulk/AdminBulkJob';
 import {createAdminBulkServices} from '@app/api/worker/tasks/admin_bulk/AdminBulkServices';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
-import type {ScheduleAccountDeletionRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import {BulkModerationBasis} from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {z} from 'zod';
 
-interface Payload {
-	user_ids: Array<string>;
-	reason_code: ScheduleAccountDeletionRequest['reason_code'];
-	days_until_deletion: number;
-	public_reason: string | null;
-	notify_user: boolean;
-	admin_user_id: string;
-	audit_log_reason: string | null;
-}
+const BulkScheduleUserDeletionPayload = z.object({
+	user_ids: z.array(z.string()),
+	days_until_deletion: z.number().int(),
+	basis: BulkModerationBasis,
+	admin_user_id: z.string(),
+	audit_log_reason: z.string().nullable(),
+});
 
 const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
-	const payload: Payload = {
-		user_ids: rawPayload.user_ids as Array<string>,
-		reason_code: rawPayload.reason_code as ScheduleAccountDeletionRequest['reason_code'],
-		days_until_deletion: rawPayload.days_until_deletion as number,
-		public_reason: (rawPayload.public_reason as string | null) ?? null,
-		notify_user: rawPayload.notify_user !== false,
-		admin_user_id: rawPayload.admin_user_id as string,
-		audit_log_reason: (rawPayload.audit_log_reason as string | null) ?? null,
-	};
+	const payload = BulkScheduleUserDeletionPayload.parse(rawPayload);
 	const {auditService, userService} = createAdminBulkServices(getWorkerDependencies());
 	const adminUserId = createUserID(BigInt(payload.admin_user_id));
+	const actor = {adminUserId, acls: new Set<string>(), internalNote: payload.audit_log_reason};
 	const total = payload.user_ids.length;
-	const daysUntilDeletion = resolveDeletionDays(payload.reason_code, payload.days_until_deletion);
+	const daysUntilDeletion = resolveDeletionDays(payload.basis.type, payload.days_until_deletion);
 	await helpers.setContextLink(`/users?ids=${payload.user_ids.slice(0, 50).join(',')}`);
 	await helpers.reportProgress(0, total, `Scheduling deletion of ${total} users in ${daysUntilDeletion} days`);
 	return await runAdminBulkJob({
@@ -40,15 +32,9 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 		progressEvery: 10,
 		apply: async (userId) => {
 			await userService.deletionService.applyScheduledDeletion(
-				{
-					user_id: BigInt(userId),
-					reason_code: payload.reason_code,
-					public_reason: payload.public_reason ?? undefined,
-					days_until_deletion: payload.days_until_deletion,
-					notify_user: payload.notify_user,
-				},
-				adminUserId,
-				payload.audit_log_reason,
+				createUserID(BigInt(userId)),
+				{days_until_deletion: payload.days_until_deletion, basis: payload.basis},
+				actor,
 			);
 		},
 		summary: {
@@ -58,9 +44,11 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 			auditLogReason: payload.audit_log_reason,
 			metadata: [
 				['user_count', total.toString()],
-				['reason_code', payload.reason_code.toString()],
+				['basis', payload.basis.type],
+				...(payload.basis.type === 'enforcement'
+					? ([['reason_code', payload.basis.decision.reason_code.toString()]] as Array<[string, string]>)
+					: []),
 				['days', daysUntilDeletion.toString()],
-				['notify_user', payload.notify_user ? 'true' : 'false'],
 			],
 		},
 	});

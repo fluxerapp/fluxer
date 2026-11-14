@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/InstanceSnapshotStore';
+import type {AccountRestriction} from '@app/features/auth/state/AccountRestriction';
 import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import SessionManager from '@app/features/platform/state/AuthSession';
@@ -21,7 +22,7 @@ export const LoginState = Object.freeze({
 
 export type LoginState = (typeof LoginState)[keyof typeof LoginState];
 
-export interface MfaMethods {
+interface MfaMethods {
 	totp: boolean;
 	webauthn: boolean;
 	backupCodes: boolean;
@@ -32,13 +33,13 @@ class Authentication {
 	currentMfaTicket: string | null = null;
 	availableMfaMethods: MfaMethods | null = null;
 	currentMfaRuntimeSnapshot: RuntimeConfigSnapshot | null = null;
+	accountRestriction: AccountRestriction | null = null;
 
 	constructor() {
 		makeAutoObservable(
 			this,
 			{
 				isAuthenticated: computed,
-				authToken: computed,
 				currentUserId: computed,
 			},
 			{autoBind: true},
@@ -49,29 +50,13 @@ class Authentication {
 		return SessionManager.isAuthenticated;
 	}
 
-	get authToken(): string | null {
-		return SessionManager.token;
-	}
-
 	get currentUserId(): string | null {
 		return SessionManager.userId;
-	}
-
-	get userId(): string | null {
-		return SessionManager.userId;
-	}
-
-	setUserId(userId: string | null): void {
-		SessionManager.setUserId(userId);
 	}
 
 	handleGatewayReady({user}: {user: UserPrivate}): void {
 		SessionManager.setUserId(user.id);
 		SessionManager.handleConnectionReady();
-	}
-
-	handleAuthSessionChange({token}: {token: string}): void {
-		persistToken(token || null);
 	}
 
 	async handleConnectionClosed({code, accountKey}: {code: number; accountKey?: string | null}): Promise<void> {
@@ -84,10 +69,8 @@ class Authentication {
 
 	handleSessionStart({token}: {token: string | null | undefined}): void {
 		persistToken(token ?? null);
-		this.loginState = LoginState.DEFAULT;
-		this.currentMfaTicket = null;
-		this.availableMfaMethods = null;
-		this.currentMfaRuntimeSnapshot = null;
+		this.handleMfaTicketClear();
+		this.handleAccountRestrictionClear();
 	}
 
 	handleMfaTicketSet({
@@ -113,12 +96,19 @@ class Authentication {
 		this.currentMfaRuntimeSnapshot = null;
 	}
 
+	handleAccountRestriction(restriction: AccountRestriction): void {
+		this.handleMfaTicketClear();
+		this.accountRestriction = restriction;
+	}
+
+	handleAccountRestrictionClear(): void {
+		this.accountRestriction = null;
+	}
+
 	handleLogout(options?: {skipRedirect?: boolean}): void {
 		ExperimentAssignments.reset();
-		this.loginState = LoginState.DEFAULT;
-		this.currentMfaTicket = null;
-		this.availableMfaMethods = null;
-		this.currentMfaRuntimeSnapshot = null;
+		this.handleMfaTicketClear();
+		this.handleAccountRestrictionClear();
 		if (!options?.skipRedirect) {
 			void import('@app/features/navigation/utils/RouterUtils').then((module) => {
 				module.replaceWith('/login');

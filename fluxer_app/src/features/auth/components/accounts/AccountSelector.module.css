@@ -3,52 +3,29 @@
 .container {
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-2);
+	gap: var(--spacing-4);
+	width: 100%;
+}
+
+.header {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
 }
 
 .title {
-	margin-bottom: 0;
-	text-align: center;
+	margin: 0;
+	color: var(--text-primary);
 	font-size: 1.25rem;
 	font-weight: 600;
-	letter-spacing: 0.025em;
-	color: var(--text-primary);
+	line-height: 1.625rem;
+	text-align: center;
 }
 
 .description {
 	margin: 0;
-	text-align: center;
-	font-size: 0.875rem;
 	color: var(--text-tertiary);
-}
-
-.error {
-	background-color: hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.1);
-	border: 0.0625rem solid hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.2);
-	border-radius: 0.5rem;
-	padding: 0.75rem;
 	font-size: 0.875rem;
-	color: var(--status-danger);
+	line-height: 1.25rem;
 	text-align: center;
-}
-
-.scroller {
-	max-height: 17.5rem;
-}
-
-.accountList {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-1);
-	padding: var(--spacing-1) 0;
-}
-
-.noAccounts {
-	display: flex;
-	height: 7.5rem;
-	align-items: center;
-	justify-content: center;
-	color: var(--text-secondary);
-	font-size: 0.875rem;
-	font-weight: 500;
 }

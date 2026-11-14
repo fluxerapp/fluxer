@@ -3,38 +3,18 @@
 import Toast from '@app/features/ui/state/Toast';
 import type {ToastProps} from '@app/features/ui/toast';
 
-type ToastIntent =
-	| {kind: 'create'; data: ToastProps}
-	| {kind: 'destroy'; id: string}
-	| {kind: 'success'; message: string}
-	| {kind: 'error'; message: string};
-
-function dispatchToastIntent(intent: ToastIntent): string | undefined {
-	switch (intent.kind) {
-		case 'create':
-			return Toast.createToast(intent.data);
-		case 'destroy':
-			Toast.destroyToast(intent.id);
-			return;
-		case 'success':
-			return Toast.success(intent.message);
-		case 'error':
-			return Toast.error(intent.message);
-	}
-}
-
 export function createToast(data: ToastProps): string {
-	return dispatchToastIntent({kind: 'create', data}) as string;
+	return Toast.createToast(data);
 }
 
 export function destroyToast(id: string): void {
-	dispatchToastIntent({kind: 'destroy', id});
+	Toast.destroyToast(id);
 }
 
 export function success(message: string): string {
-	return dispatchToastIntent({kind: 'success', message}) as string;
+	return Toast.success(message);
 }
 
 export function error(message: string): string {
-	return dispatchToastIntent({kind: 'error', message}) as string;
+	return Toast.error(message);
 }

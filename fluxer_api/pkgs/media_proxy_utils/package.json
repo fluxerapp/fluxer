@@ -12,17 +12,9 @@
 			"import": "./src/MediaProxyUtils.ts",
 			"types": "./src/MediaProxyUtils.ts"
 		},
-		"./src/ExternalMediaProxyUrlBuilder": {
-			"import": "./src/ExternalMediaProxyUrlBuilder.ts",
-			"types": "./src/ExternalMediaProxyUrlBuilder.ts"
-		},
 		"./src/ExternalMediaProxyPathCodec": {
 			"import": "./src/ExternalMediaProxyPathCodec.ts",
 			"types": "./src/ExternalMediaProxyPathCodec.ts"
-		},
-		"./src/MediaProxySigner": {
-			"import": "./src/MediaProxySigner.ts",
-			"types": "./src/MediaProxySigner.ts"
 		},
 		"./src/AttachmentUrlSignature": {
 			"import": "./src/AttachmentUrlSignature.ts",

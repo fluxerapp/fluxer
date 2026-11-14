@@ -38,7 +38,6 @@ import {z} from 'zod';
 
 const EXPERIMENT = {experiment: 'channel_threads'} as const;
 const EMOJI_NAME_MAX_LENGTH = 64;
-const LOCATION_MAX_LENGTH = 100;
 
 export const ForumTagRequest = withSchemaMetadata(
 	z.object({
@@ -108,7 +107,11 @@ export const ForumChannelRequestFields = {
 	topic: createStringType(1, FORUM_TOPIC_MAX_LENGTH)
 		.nullish()
 		.describe(`The guidelines of the channel (1-${FORUM_TOPIC_MAX_LENGTH} characters)`),
-	available_tags: z.array(ForumTagUpdateRequest).optional().describe('Tags that can be applied to posts (max 20)'),
+	available_tags: z
+		.array(ForumTagUpdateRequest)
+		.max(1000)
+		.optional()
+		.describe('Tags that can be applied to posts (max 20)'),
 	default_reaction_emoji: DefaultReactionEmojiRequest.nullish().describe('Default reaction shown on posts'),
 	default_sort_order: ForumSortOrderSchema.nullish(),
 	default_tag_setting: ForumTagSettingSchema.nullish(),
@@ -141,7 +144,6 @@ export const StartForumThreadRequest = withSchemaMetadata(
 			.describe('Seconds a user has to wait before sending another message (0-21600)'),
 		applied_tags: AppliedTagsType.optional(),
 		message: ForumThreadMessageRequest.describe('The first message of the post'),
-		location: z.string().max(LOCATION_MAX_LENGTH).optional().describe('Accepted and ignored'),
 	}),
 	EXPERIMENT,
 );

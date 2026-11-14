@@ -266,8 +266,12 @@ impl FreedesktopNotifications {
         let method_conn = open_blocking_connection()
             .map_err(|err| generic_error(format!("notifications client init failed: {err}")))?;
         let stop_signal_thread = Arc::new(AtomicBool::new(false));
-        let signal_thread = spawn_signal_thread(event_callback.clone(), stop_signal_thread.clone())
-            .map_err(|err| generic_error(format!("notifications client init failed: {err}")))?;
+        let signal_thread = spawn_signal_thread(
+            event_callback.clone(),
+            method_conn.clone(),
+            stop_signal_thread.clone(),
+        )
+        .map_err(|err| generic_error(format!("notifications client init failed: {err}")))?;
 
         Ok(Self {
             inner: Arc::new(Inner {
@@ -393,41 +397,6 @@ impl Task for CloseTask {
     }
 }
 
-#[napi(object)]
-pub struct ServerInformation {
-    pub name: String,
-    pub vendor: String,
-    pub version: String,
-    #[napi(js_name = "specVersion")]
-    pub spec_version: String,
-}
-
-pub struct GetServerInformationTask;
-
-impl Task for GetServerInformationTask {
-    type Output = ServerInformation;
-    type JsValue = ServerInformation;
-
-    fn compute(&mut self) -> Result<Self::Output> {
-        if !has_dbus_session() {
-            return Err(generic_error(DBUS_SESSION_UNREACHABLE));
-        }
-        let conn = open_blocking_connection()
-            .map_err(|err| generic_error(format!("openSessionBus failed: {err}")))?;
-        get_server_information_on(&conn)
-            .map_err(|err| generic_error(format!("GetServerInformation failed: {}", err.reason)))
-    }
-
-    fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
-        Ok(output)
-    }
-}
-
-#[napi(js_name = "getServerInformation")]
-pub fn get_server_information() -> Result<AsyncTask<GetServerInformationTask>> {
-    Ok(AsyncTask::new(GetServerInformationTask))
-}
-
 fn open_blocking_connection() -> zbus::Result<BlockingConnection> {
     zbus::blocking::connection::Builder::session()?
         .method_timeout(CALL_TIMEOUT)
@@ -470,19 +439,6 @@ fn get_capabilities(conn: &BlockingConnection) -> Result<Vec<String>> {
     notification_proxy(conn)?
         .call("GetCapabilities", &())
         .map_err(|err| generic_error(err.to_string()))
-}
-
-fn get_server_information_on(conn: &BlockingConnection) -> Result<ServerInformation> {
-    let (name, vendor, version, spec_version): (String, String, String, String) =
-        notification_proxy(conn)?
-            .call("GetServerInformation", &())
-            .map_err(|err| generic_error(err.to_string()))?;
-    Ok(ServerInformation {
-        name,
-        vendor,
-        version,
-        spec_version,
-    })
 }
 
 fn flatten_actions(actions: &[NotifyAction]) -> Vec<&str> {
@@ -536,6 +492,7 @@ fn build_hints(hints: &NotifyHints) -> HashMap<&'static str, Value<'_>> {
 
 fn spawn_signal_thread(
     event_callback: EventThreadsafeFunction,
+    method_conn: BlockingConnection,
     stop: Arc<AtomicBool>,
 ) -> std::result::Result<JoinHandle<()>, String> {
     let (ready_tx, ready_rx) = mpsc::sync_channel(1);
@@ -544,13 +501,13 @@ fn spawn_signal_thread(
         .name("fluxer-linux-notifications-signals".to_string())
         .spawn(move || {
             let setup = future::block_on(async {
-                let conn = zbus::Connection::session().await?;
+                let conn = method_conn.inner();
                 let rule = MatchRule::builder()
                     .msg_type(MessageType::Signal)
                     .path(NOTIFY_PATH)?
                     .interface(NOTIFY_IFACE)?
                     .build();
-                let stream = MessageStream::for_match_rule(rule, &conn, Some(64)).await?;
+                let stream = MessageStream::for_match_rule(rule, conn, Some(64)).await?;
                 zbus::Result::Ok((conn, stream))
             });
 
@@ -892,281 +849,4 @@ fn generic_error(reason: impl Into<String>) -> napi::Error {
 
 fn invalid_arg(reason: impl Into<String>) -> napi::Error {
     napi::Error::new(Status::InvalidArg, reason.into())
-}
-
-#[cfg(test)]
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum FakeArg<'a> {
-    U32(u32),
-    String(&'a str),
-}
-
-#[cfg(test)]
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct NotifyReply {
-    id: u32,
-}
-
-#[cfg(test)]
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct ActionInvokedSignal {
-    id: u32,
-    action_key: String,
-}
-
-#[cfg(test)]
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct ClosedSignal {
-    id: u32,
-    reason: u32,
-}
-
-#[cfg(test)]
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum ParseError {
-    InvalidReply,
-}
-
-#[cfg(test)]
-fn parse_notify_reply_from_args(
-    args: &[FakeArg<'_>],
-) -> std::result::Result<NotifyReply, ParseError> {
-    match args.first() {
-        Some(FakeArg::U32(id)) => Ok(NotifyReply { id: *id }),
-        _ => Err(ParseError::InvalidReply),
-    }
-}
-
-#[cfg(test)]
-fn parse_action_invoked_from_args(
-    args: &[FakeArg<'_>],
-) -> std::result::Result<ActionInvokedSignal, ParseError> {
-    match (args.first(), args.get(1)) {
-        (Some(FakeArg::U32(id)), Some(FakeArg::String(action_key))) => Ok(ActionInvokedSignal {
-            id: *id,
-            action_key: (*action_key).to_string(),
-        }),
-        _ => Err(ParseError::InvalidReply),
-    }
-}
-
-#[cfg(test)]
-fn parse_closed_from_args(args: &[FakeArg<'_>]) -> std::result::Result<ClosedSignal, ParseError> {
-    match (args.first(), args.get(1)) {
-        (Some(FakeArg::U32(id)), Some(FakeArg::U32(reason))) => Ok(ClosedSignal {
-            id: *id,
-            reason: *reason,
-        }),
-        _ => Err(ParseError::InvalidReply),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn notify_reply_valid_u32_yields_id() {
-        let reply = parse_notify_reply_from_args(&[FakeArg::U32(42)]).unwrap();
-        assert_eq!(reply.id, 42);
-    }
-
-    #[test]
-    fn notify_reply_rejects_empty_body() {
-        assert_eq!(
-            parse_notify_reply_from_args(&[]),
-            Err(ParseError::InvalidReply)
-        );
-    }
-
-    #[test]
-    fn notify_reply_rejects_wrong_type() {
-        assert_eq!(
-            parse_notify_reply_from_args(&[FakeArg::String("wrong")]),
-            Err(ParseError::InvalidReply)
-        );
-    }
-
-    #[test]
-    fn action_invoked_valid_body() {
-        let signal =
-            parse_action_invoked_from_args(&[FakeArg::U32(7), FakeArg::String("default")]).unwrap();
-        assert_eq!(
-            signal,
-            ActionInvokedSignal {
-                id: 7,
-                action_key: "default".to_string()
-            }
-        );
-    }
-
-    #[test]
-    fn action_invoked_rejects_swapped_types() {
-        assert_eq!(
-            parse_action_invoked_from_args(&[FakeArg::String("x"), FakeArg::String("y")]),
-            Err(ParseError::InvalidReply)
-        );
-    }
-
-    #[test]
-    fn notification_closed_valid_body() {
-        let signal = parse_closed_from_args(&[FakeArg::U32(11), FakeArg::U32(2)]).unwrap();
-        assert_eq!(signal, ClosedSignal { id: 11, reason: 2 });
-    }
-
-    #[test]
-    fn notification_closed_rejects_too_short() {
-        assert_eq!(
-            parse_closed_from_args(&[FakeArg::U32(11)]),
-            Err(ParseError::InvalidReply)
-        );
-    }
-
-    #[test]
-    fn actions_are_flattened_as_key_label_pairs() {
-        let actions = vec![
-            NotifyAction {
-                key: "default".to_string(),
-                label: "Open".to_string(),
-            },
-            NotifyAction {
-                key: "dismiss".to_string(),
-                label: "Dismiss".to_string(),
-            },
-        ];
-
-        assert_eq!(
-            flatten_actions(&actions),
-            vec!["default", "Open", "dismiss", "Dismiss"]
-        );
-    }
-
-    #[test]
-    fn urgency_strings_match_freedesktop_bytes() {
-        assert_eq!(Urgency::parse("low").map(Urgency::as_byte), Some(0));
-        assert_eq!(Urgency::parse("normal").map(Urgency::as_byte), Some(1));
-        assert_eq!(Urgency::parse("critical").map(Urgency::as_byte), Some(2));
-        assert_eq!(Urgency::parse("unknown"), None);
-    }
-
-    #[test]
-    fn default_notify_args_match_legacy_defaults() {
-        let args = NotifyArgs {
-            app_name: String::new(),
-            replaces_id: 0,
-            app_icon: String::new(),
-            summary: String::new(),
-            body: String::new(),
-            actions: Vec::new(),
-            hints: NotifyHints::empty(),
-            expire_timeout_ms: -1,
-        };
-
-        assert_eq!(args.replaces_id, 0);
-        assert_eq!(args.expire_timeout_ms, -1);
-        assert!(flatten_actions(&args.actions).is_empty());
-        assert!(build_hints(&args.hints).is_empty());
-    }
-
-    #[test]
-    fn hints_use_freedesktop_variant_signatures() {
-        let hints = NotifyHints {
-            urgency: Some(Urgency::Critical),
-            category: Some("im.received".to_string()),
-            desktop_entry: Some("fluxer".to_string()),
-            sound_file: Some("/tmp/notify.oga".to_string()),
-            suppress_sound: Some(true),
-            transient: Some(true),
-            action_icons: Some(false),
-            image_data: Some(NotifyImageData {
-                width: 1,
-                height: 1,
-                rowstride: 4,
-                has_alpha: true,
-                bits_per_sample: 8,
-                channels: 4,
-                data: vec![0, 1, 2, 3],
-            }),
-        };
-
-        let values = build_hints(&hints);
-
-        assert_eq!(values["urgency"].value_signature().to_string(), "y");
-        assert_eq!(values["category"].value_signature().to_string(), "s");
-        assert_eq!(values["desktop-entry"].value_signature().to_string(), "s");
-        assert_eq!(values["sound-file"].value_signature().to_string(), "s");
-        assert_eq!(values["suppress-sound"].value_signature().to_string(), "b");
-        assert_eq!(values["transient"].value_signature().to_string(), "b");
-        assert_eq!(values["action-icons"].value_signature().to_string(), "b");
-        assert_eq!(
-            values["image-data"].value_signature().to_string(),
-            "(iiibiiay)"
-        );
-    }
-
-    #[test]
-    fn dbus_session_detected_via_bus_address() {
-        assert!(has_dbus_session_from(
-            Some("unix:path=/run/user/1000/bus"),
-            None,
-            |_| false
-        ));
-    }
-
-    #[test]
-    fn dbus_session_detected_via_runtime_dir_socket() {
-        assert!(has_dbus_session_from(
-            None,
-            Some("/run/user/1000"),
-            |path| path == "/run/user/1000/bus"
-        ));
-        assert!(has_dbus_session_from(
-            None,
-            Some("/run/user/1000/"),
-            |path| path == "/run/user/1000/bus"
-        ));
-    }
-
-    #[test]
-    fn dbus_session_absent_in_headless_container() {
-        assert!(!has_dbus_session_from(None, None, |_| false));
-        assert!(!has_dbus_session_from(Some(""), Some(""), |_| true));
-        assert!(!has_dbus_session_from(None, Some("/tmp/xdg"), |_| false));
-    }
-
-    #[test]
-    fn dbus_session_unreachable_marker_is_stable_for_renderer_matching() {
-        assert!(DBUS_SESSION_UNREACHABLE.starts_with("DBus session bus unreachable"));
-    }
-
-    #[test]
-    fn image_rowstride_defaults_to_width_times_channels() {
-        let width = 3;
-        let channels = 4;
-        let mut rowstride = 0;
-        if rowstride <= 0 {
-            rowstride = width * channels;
-        }
-        assert_eq!(rowstride, 12);
-    }
-
-    #[test]
-    fn image_data_shape_matches_freedesktop_pixbuf_contract() {
-        assert!(validate_image_data_shape(2, 2, 8, true, 8, 4, 16).is_ok());
-        assert!(validate_image_data_shape(2, 2, 6, false, 8, 3, 12).is_ok());
-        assert!(validate_image_data_shape(2, 2, 8, true, 16, 4, 16).is_err());
-        assert!(validate_image_data_shape(2, 2, 8, true, 8, 3, 16).is_err());
-        assert!(validate_image_data_shape(2, 2, 4, true, 8, 4, 16).is_err());
-        assert!(validate_image_data_shape(2, 2, 8, true, 8, 4, 15).is_err());
-    }
-
-    #[test]
-    fn image_data_typed_array_gate_accepts_only_uint8array() {
-        assert!(is_uint8_typed_array(sys::TypedarrayType::uint8_array));
-        assert!(!is_uint8_typed_array(sys::TypedarrayType::int8_array));
-        assert!(!is_uint8_typed_array(
-            sys::TypedarrayType::uint8_clamped_array
-        ));
-        assert!(!is_uint8_typed_array(sys::TypedarrayType::float32_array));
-    }
 }

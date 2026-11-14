@@ -7,7 +7,7 @@ import type {UserContactChangeLogRepository} from '@app/api/user/repositories/Us
 import {formatUserTag} from '@app/api/user/UserTag';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 
-type ContactChangeReason = 'user_requested' | 'admin_action';
+export type ContactChangeReason = 'user_requested' | 'admin_action' | 'sso_sync';
 
 interface ContactChange {
 	field: 'email' | 'fluxer_tag';

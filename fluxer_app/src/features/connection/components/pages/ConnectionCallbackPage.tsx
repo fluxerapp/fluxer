@@ -6,6 +6,17 @@ import {Trans} from '@lingui/react/macro';
 import {CheckCircleIcon, XCircleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 
+const ConnectionFailureDescription = ({reason}: {reason: string | null}) => {
+	switch (reason) {
+		case 'denied':
+			return <Trans>The connection was not allowed. You can close this tab and try again.</Trans>;
+		case 'limit_reached':
+			return <Trans>You already have the most connections an account can have. Remove one and try again.</Trans>;
+		default:
+			return <Trans>Something went wrong while connecting your account. You can close this tab and try again.</Trans>;
+	}
+};
+
 const ConnectionCallbackPage = observer(() => {
 	const location = useLocation();
 	const queryParams = new URLSearchParams(location.search);
@@ -45,7 +56,10 @@ const ConnectionCallbackPage = observer(() => {
 							<Trans>Connection failed</Trans>
 						</h1>
 						<p className={styles.description} data-flx="connection.connection-callback-page.description--2">
-							<Trans>Something went wrong while connecting your account. You can close this tab and try again.</Trans>
+							<ConnectionFailureDescription
+								reason={queryParams.get('reason')}
+								data-flx="connection.connection-callback-page.connection-failure-description"
+							/>
 						</p>
 					</div>
 				</>

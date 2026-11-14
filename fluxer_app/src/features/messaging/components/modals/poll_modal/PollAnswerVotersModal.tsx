@@ -4,6 +4,7 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {VOTES_DESCRIPTOR} from '@app/features/channel/components/Poll';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
 import type {Guild} from '@app/features/guild/models/Guild';
+import * as styles from '@app/features/messaging/components/modals/poll_modal/PollAnswerVotersModal.module.css';
 import {useMessagePollAnswerVotersState} from '@app/features/messaging/hooks/useMessagePollAnswerVotersState';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -14,8 +15,7 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useMemo, type UIEvent} from 'react';
-import * as styles from './PollAnswerVotersModal.module.css';
+import {type UIEvent, useCallback, useMemo} from 'react';
 
 interface PollAnswerVotersModalProps {
 	guild?: Guild;
@@ -119,10 +119,13 @@ export const PollAnswerVotersModal = observer(
 									</button>
 								);
 							})}
-							<div className={styles.scrollerVoid} />
+							<div
+								className={styles.scrollerVoid}
+								data-flx="messaging.poll-modal.poll-answer-voters-modal.scroller-void"
+							/>
 						</Scroller>
 					</div>
-					<div className={styles.voterList}>
+					<div className={styles.voterList} data-flx="messaging.poll-modal.poll-answer-voters-modal.voter-list">
 						<Scroller
 							className={styles.scrollerPadding}
 							key={voterScrollerKey}
@@ -141,11 +144,23 @@ export const PollAnswerVotersModal = observer(
 									data-flx="channel.message-avatar.preloadable-user-popout"
 								>
 									<FocusRing data-flx="channel.message-avatar.focus-ring">
-										<div className={styles.voter}>
-											<Avatar user={user} guildId={guild?.id} size={32} />
-											<div>
-												<div>{NicknameUtils.getNickname(user, guildId, channelId)}</div>
-												<div className={styles.smallText}>{user.tag}</div>
+										<div className={styles.voter} data-flx="messaging.poll-modal.poll-answer-voters-modal.voter">
+											<Avatar
+												user={user}
+												guildId={guild?.id}
+												size={32}
+												data-flx="messaging.poll-modal.poll-answer-voters-modal.avatar"
+											/>
+											<div data-flx="messaging.poll-modal.poll-answer-voters-modal.div">
+												<div data-flx="messaging.poll-modal.poll-answer-voters-modal.div--2">
+													{NicknameUtils.getNickname(user, guildId, channelId)}
+												</div>
+												<div
+													className={styles.smallText}
+													data-flx="messaging.poll-modal.poll-answer-voters-modal.small-text"
+												>
+													{user.tag}
+												</div>
 											</div>
 										</div>
 									</FocusRing>

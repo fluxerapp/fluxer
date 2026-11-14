@@ -13,16 +13,13 @@ import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerFiel
 import {Input, Textarea} from '@app/features/ui/components/form/FormInput';
 import {InlineEdit} from '@app/features/ui/components/InlineEdit';
 import styles from '@app/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.module.css';
+import {DISPLAY_NAME_DESCRIPTOR, USER_PROFILE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon, UserIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const DISPLAY_NAME_DESCRIPTOR = msg({
-	message: 'Display name',
-	comment: 'Short label in the inputs tab. Keep it concise.',
-});
 const ENTER_YOUR_NAME_DESCRIPTOR = msg({
 	message: 'Enter your name',
 	comment: 'Short label in the inputs tab. Keep it concise.',
@@ -43,10 +40,7 @@ const SEARCH_FOR_ANYTHING_DESCRIPTOR = msg({
 	message: 'Search for anything...',
 	comment: 'Button or menu action label in the inputs tab. Keep it concise.',
 });
-const USER_PROFILE_DESCRIPTOR = msg({
-	message: 'User profile',
-	comment: 'Short label in the inputs tab. Keep it concise.',
-});
+
 const ENTER_USERNAME_DESCRIPTOR = msg({
 	message: 'Enter username',
 	comment: 'Short label in the inputs tab. Keep it concise.',

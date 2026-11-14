@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Config} from '@app/api/Config';
-import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
+import type {NetworkBlock} from '@app/api/enforcement/NetworkBlockError';
+import type {EmailDnsValidationService} from '@app/api/infrastructure/EmailDnsValidationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IMediaService} from '@app/api/infrastructure/IMediaService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {BotMfaMirrorService} from '@app/api/oauth/BotMfaMirrorService';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {UserActivityBuffer} from '@app/api/user/services/UserActivityBuffer';
 import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -17,13 +18,13 @@ import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 export interface ApiServices {
-	users: IUserRepository;
+	users: UserRepository;
 	cache: ICacheService;
 	gateway: IGatewayService;
 	kv: IKVProvider;
 	media: IMediaService;
 	email: IEmailService;
-	emailDnsValidation: IEmailDnsValidationService;
+	emailDnsValidation: EmailDnsValidationService;
 	worker: IWorkerService<WorkerTaskName>;
 	snowflake: ISnowflakeService;
 	rateLimit: IRateLimitService;
@@ -37,6 +38,8 @@ export interface RequestScope {
 	requestId: string;
 	clientIp: string | null;
 	userAgent: string | null;
+	locale: string;
+	blockedNetworkSignIn: NetworkBlock | null;
 }
 
 export interface ApiContext {

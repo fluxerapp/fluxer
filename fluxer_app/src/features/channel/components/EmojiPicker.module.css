@@ -20,7 +20,7 @@
 .skinTonePickerOptions {
 	position: absolute;
 	top: -0.25rem;
-	right: -0.25rem;
+	inset-inline-end: -0.25rem;
 	display: flex;
 	flex-direction: column;
 	width: auto;
@@ -78,9 +78,9 @@
 .listWrapper {
 	position: absolute;
 	top: 0;
-	right: 0;
+	inset-inline-end: 0;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 }
 
 .list {
@@ -164,7 +164,7 @@
 }
 
 .inspectorTextContainer {
-	margin-left: 0.5rem;
+	margin-inline-start: 0.5rem;
 	min-width: 0;
 	display: flex;
 	flex: 1 1 auto;
@@ -204,7 +204,7 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	left: 0;
+	inset-inline-start: 0;
 	width: 2.875rem;
 	padding: var(--spacing-2) 0;
 	box-sizing: border-box;

@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	getExtendedDocument,
-	supportsMozRequestFullScreen,
-	supportsMsRequestFullscreen,
-	supportsWebkitRequestFullscreen,
-} from '@app/features/platform/types/Browser';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {
+	exitFullscreenAPI,
+	getFullscreenElement,
+	requestFullscreen,
+	supportsFullscreenAPI,
+} from '@app/features/platform/utils/FullscreenMediaUtils';
 import {setActivePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import Modal from '@app/features/ui/state/Modal';
 import VoiceCallFullscreen from '@app/features/voice/state/VoiceCallFullscreen';
-import type {ExtendedHTMLElement} from '@app/types/browser.d';
 import type {RefObject} from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
 
@@ -28,67 +27,6 @@ interface UseVoiceCallAppFullscreenReturn {
 	toggleFullscreen: () => Promise<void>;
 }
 
-function getVoiceCallFullscreenElement(): Element | null {
-	const doc = getExtendedDocument();
-	return (
-		document.fullscreenElement ||
-		doc.webkitFullscreenElement ||
-		doc.mozFullScreenElement ||
-		doc.msFullscreenElement ||
-		null
-	);
-}
-
-function supportsFullscreenAPI(): boolean {
-	const doc = getExtendedDocument();
-	return !!(
-		document.fullscreenEnabled ||
-		doc.webkitFullscreenEnabled ||
-		doc.mozFullScreenEnabled ||
-		doc.msFullscreenEnabled
-	);
-}
-
-async function requestFullscreen(element: HTMLElement): Promise<void> {
-	if (element.requestFullscreen) {
-		await element.requestFullscreen();
-		return;
-	}
-	if (supportsWebkitRequestFullscreen(element)) {
-		const extendedElement = element as ExtendedHTMLElement;
-		await extendedElement.webkitRequestFullscreen!();
-		return;
-	}
-	if (supportsMozRequestFullScreen(element)) {
-		const extendedElement = element as ExtendedHTMLElement;
-		await extendedElement.mozRequestFullScreen!();
-		return;
-	}
-	if (supportsMsRequestFullscreen(element)) {
-		const extendedElement = element as ExtendedHTMLElement;
-		await extendedElement.msRequestFullscreen!();
-	}
-}
-
-async function exitFullscreenAPI(): Promise<void> {
-	const doc = getExtendedDocument();
-	if (document.exitFullscreen) {
-		await document.exitFullscreen();
-		return;
-	}
-	if (doc.webkitExitFullscreen) {
-		await doc.webkitExitFullscreen();
-		return;
-	}
-	if (doc.mozCancelFullScreen) {
-		await doc.mozCancelFullScreen();
-		return;
-	}
-	if (doc.msExitFullscreen) {
-		await doc.msExitFullscreen();
-	}
-}
-
 const VOICE_CALL_FULLSCREEN_ATTR = 'data-voice-call-fullscreen';
 
 export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOptions): UseVoiceCallAppFullscreenReturn {
@@ -97,7 +35,7 @@ export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOpti
 	const [supportsFullscreen] = useState(() => supportsFullscreenAPI());
 	const initiatedFullscreenRef = useRef(false);
 	const handleFullscreenChange = useCallback(() => {
-		const fullscreenElement = getVoiceCallFullscreenElement();
+		const fullscreenElement = getFullscreenElement();
 		if (!fullscreenElement) {
 			setIsFullscreen(false);
 			initiatedFullscreenRef.current = false;
@@ -128,7 +66,7 @@ export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOpti
 		if (!supportsFullscreenAPI()) return;
 		const container = containerRef.current;
 		if (!container) return;
-		const fullscreenElement = getVoiceCallFullscreenElement();
+		const fullscreenElement = getFullscreenElement();
 		if (fullscreenElement === container && initiatedFullscreenRef.current) {
 			setIsFullscreen(true);
 			return;
@@ -145,7 +83,7 @@ export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOpti
 		}
 	}, [containerRef]);
 	const exitFullscreen = useCallback(async () => {
-		const fullscreenElement = getVoiceCallFullscreenElement();
+		const fullscreenElement = getFullscreenElement();
 		if (!fullscreenElement) {
 			setIsFullscreen(false);
 			return;
@@ -167,7 +105,7 @@ export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOpti
 	}, [enterFullscreen, exitFullscreen, isFullscreen]);
 	useEffect(() => {
 		return () => {
-			if (!initiatedFullscreenRef.current || getVoiceCallFullscreenElement() !== containerRef.current) {
+			if (!initiatedFullscreenRef.current || getFullscreenElement() !== containerRef.current) {
 				return;
 			}
 			void exitFullscreen();
@@ -219,7 +157,7 @@ export function useVoiceCallFullscreenViewState({
 	const closeFullscreenView = useCallback(() => {
 		const wasActive = VoiceCallFullscreen.isScopeActive(scopeKey);
 		VoiceCallFullscreen.close(scopeKey);
-		if (!wasActive || !getVoiceCallFullscreenElement()) return;
+		if (!wasActive || !getFullscreenElement()) return;
 		void exitFullscreenAPI().catch((error) => {
 			logger.error('Failed to exit voice call fullscreen view:', error);
 		});
@@ -242,7 +180,7 @@ export function useVoiceCallFullscreenViewState({
 	useEffect(() => {
 		if (!showFullscreenView) return;
 		const handleFullscreenChange = () => {
-			if (getVoiceCallFullscreenElement()) return;
+			if (getFullscreenElement()) return;
 			VoiceCallFullscreen.close(scopeKey);
 		};
 		document.addEventListener('fullscreenchange', handleFullscreenChange);

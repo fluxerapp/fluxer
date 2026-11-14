@@ -3,8 +3,13 @@
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
+import Permission from '@app/features/permissions/state/Permission';
+import ThreadPanel from '@app/features/threads/state/ThreadPanel';
 import Users from '@app/features/user/state/Users';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageAttachment, MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessageCreatePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
+import {useEffect, useState} from 'react';
 
 export interface ThreadStarterPayload {
 	content: string;
@@ -39,4 +44,36 @@ export function sendThreadStarter(thread: Channel, payload: ThreadStarterPayload
 		stickers: payload.stickers,
 		favoriteMemeId: payload.favoriteMemeId,
 	});
+}
+
+function useCooldownSeconds(until: number): number {
+	const [now, setNow] = useState(() => Date.now());
+	useEffect(() => {
+		if (until <= Date.now()) return;
+		const timer = window.setInterval(() => setNow(Date.now()), 1000);
+		return () => window.clearInterval(timer);
+	}, [until]);
+	return Math.max(0, Math.ceil((until - now) / 1000));
+}
+export function resolveStarterArgs(
+	stickersOrTts?: Array<MessageStickerItem> | MessageCreatePoll | boolean,
+	favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
+	maybeFavoriteMemeId?: string,
+): {stickers: Array<MessageStickerItem>; favoriteMemeId?: string} {
+	if (typeof stickersOrTts === 'boolean') {
+		return {
+			stickers: Array.isArray(favoriteMemeIdOrStickers) ? favoriteMemeIdOrStickers : [],
+			favoriteMemeId: maybeFavoriteMemeId,
+		};
+	}
+	return {
+		stickers: Array.isArray(stickersOrTts) ? stickersOrTts : [],
+		favoriteMemeId: typeof favoriteMemeIdOrStickers === 'string' ? favoriteMemeIdOrStickers : undefined,
+	};
+}
+
+export function useThreadCreateCooldownSeconds(parent: Channel): number {
+	return useCooldownSeconds(
+		Permission.can(Permissions.BYPASS_SLOWMODE, parent) ? 0 : ThreadPanel.getCreateCooldownUntil(parent.id),
+	);
 }

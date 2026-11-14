@@ -2,10 +2,14 @@
 
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createMessageID, createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
-import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
+import {
+	dispatchMessageDelete,
+	dispatchMessageDeleteBulk,
+} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {
 	decrementThreadMessageCount,
 	isOperationDisabled,
@@ -13,7 +17,8 @@ import {
 } from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
-import type {MessagePollService} from '@app/api/channel/services/message/MessagePollService';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
@@ -38,24 +43,60 @@ import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
 
 interface MessageDeleteServiceDeps {
-	channelRepository: IChannelRepositoryAggregate;
+	channelRepository: ChannelRepository;
 	storageService: IStorageService;
 	purgeQueue: IPurgeQueue;
 	validationService: MessageValidationService;
 	channelAuthService: MessageChannelAuthService;
-	dispatchService: MessageDispatchService;
 	searchService: MessageSearchService;
-	pollService: MessagePollService;
 	gatewayService: IGatewayService;
 	guildAuditLogService: GuildAuditLogService;
 	crosspostPropagation: CrosspostPropagation;
 }
 
 export class MessageDeleteService {
+	private async finishDelete(channel: Channel, message: Message): Promise<void> {
+		const channelId = channel.id;
+		const messageId = message.id;
+		if (message.pinnedTimestamp) {
+			await this.deps.channelRepository.messageInteractions.removeChannelPin(channelId, messageId);
+		}
+		await purgeMessageAttachments(message, this.deps.storageService, this.deps.purgeQueue);
+		await this.deps.channelRepository.messages.deleteMessage(
+			channelId,
+			messageId,
+			message.authorId || createUserID(0n),
+			message.pinnedTimestamp || undefined,
+		);
+		await this.decrementThreadMessageCount(channel, [messageId]);
+		await dispatchMessageDelete({gatewayService: this.deps.gatewayService, channel, messageId, message});
+		await this.deps.crosspostPropagation.enqueueCrosspostSourceRemoval({
+			messages: [message],
+			mode: 'source_deleted',
+			channel,
+		});
+		if (message.pinnedTimestamp) {
+			await dispatchChannelEvent({
+				gatewayService: this.deps.gatewayService,
+				channel,
+				event: 'CHANNEL_PINS_UPDATE',
+				data: {
+					channel_id: channel.id.toString(),
+					last_pin_timestamp: channel.lastPinTimestamp?.toISOString() ?? null,
+				},
+			});
+		}
+	}
 	private readonly guildAuditLogService: GuildAuditLogService;
 
 	constructor(private readonly deps: MessageDeleteServiceDeps) {
 		this.guildAuditLogService = deps.guildAuditLogService;
+	}
+
+	async deleteSystemGuildMessage(channel: Channel, message: Message): Promise<void> {
+		if (message.authorId !== SYSTEM_USER_ID) return;
+		await this.finishDelete(channel, message);
+		await this.deps.searchService.deleteMessageIndex(message.id);
 	}
 
 	async deleteMessage({
@@ -63,7 +104,6 @@ export class MessageDeleteService {
 		viewer,
 		channelId,
 		messageId,
-		skipGuildAuditLog,
 		auditLogReason,
 	}: {
 		userId: UserID;
@@ -71,7 +111,6 @@ export class MessageDeleteService {
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
-		skipGuildAuditLog?: boolean;
 		auditLogReason?: string | null;
 	}): Promise<void> {
 		const {channel, guild, hasPermission, thread} = await this.deps.channelAuthService.getChannelAuthenticated({
@@ -95,34 +134,8 @@ export class MessageDeleteService {
 		}
 		const canDelete = await this.deps.validationService.canDeleteMessage({message, userId, guild, hasPermission});
 		if (!canDelete) throw new MissingPermissionsError();
-		if (message.pinnedTimestamp) {
-			await this.deps.channelRepository.messageInteractions.removeChannelPin(channelId, messageId);
-		}
-		await purgeMessageAttachments(message, this.deps.storageService, this.deps.purgeQueue);
-		await this.deps.channelRepository.messages.deleteMessage(
-			channelId,
-			messageId,
-			message.authorId || createUserID(0n),
-			message.pinnedTimestamp || undefined,
-		);
-		await this.decrementThreadMessageCount(channel, [messageId]);
-		await this.deps.dispatchService.dispatchMessageDelete({channel, messageId, message});
-		await this.deps.crosspostPropagation.enqueueCrosspostSourceRemoval({
-			messages: [message],
-			mode: 'source_deleted',
-			channel,
-		});
-		if (message.pinnedTimestamp) {
-			await this.deps.dispatchService.dispatchEvent({
-				channel,
-				event: 'CHANNEL_PINS_UPDATE',
-				data: {
-					channel_id: channel.id.toString(),
-					last_pin_timestamp: channel.lastPinTimestamp?.toISOString() ?? null,
-				},
-			});
-		}
-		if (channel.guildId && !skipGuildAuditLog) {
+		await this.finishDelete(channel, message);
+		if (channel.guildId) {
 			await this.guildAuditLogService
 				.createBuilder(channel.guildId, userId)
 				.withAction(AuditLogActionType.MESSAGE_DELETE, message.id.toString())
@@ -132,7 +145,6 @@ export class MessageDeleteService {
 				.commit();
 		}
 		await this.deps.searchService.deleteMessageIndex(messageId);
-		await this.deps.pollService.removeAllVotes(channelId, messageId);
 	}
 
 	async deleteWebhookMessage({
@@ -155,33 +167,7 @@ export class MessageDeleteService {
 		if (message.webhookId !== webhook.id) {
 			throw new MissingPermissionsError();
 		}
-		if (message.pinnedTimestamp) {
-			await this.deps.channelRepository.messageInteractions.removeChannelPin(channelId, messageId);
-		}
-		await purgeMessageAttachments(message, this.deps.storageService, this.deps.purgeQueue);
-		await this.deps.channelRepository.messages.deleteMessage(
-			channelId,
-			messageId,
-			message.authorId || createUserID(0n),
-			message.pinnedTimestamp || undefined,
-		);
-		await this.decrementThreadMessageCount(channel, [messageId]);
-		await this.deps.dispatchService.dispatchMessageDelete({channel, messageId, message});
-		await this.deps.crosspostPropagation.enqueueCrosspostSourceRemoval({
-			messages: [message],
-			mode: 'source_deleted',
-			channel,
-		});
-		if (message.pinnedTimestamp) {
-			await this.deps.dispatchService.dispatchEvent({
-				channel,
-				event: 'CHANNEL_PINS_UPDATE',
-				data: {
-					channel_id: channel.id.toString(),
-					last_pin_timestamp: channel.lastPinTimestamp?.toISOString() ?? null,
-				},
-			});
-		}
+		await this.finishDelete(channel, message);
 		await this.deps.searchService.deleteMessageIndex(messageId);
 	}
 
@@ -228,7 +214,8 @@ export class MessageDeleteService {
 		await this.deps.channelRepository.messages.bulkDeleteMessages(channelId, messageIds);
 		const existingIds = existingMessages.map((message) => message.id);
 		await this.decrementThreadMessageCount(channel, existingIds);
-		await this.deps.dispatchService.dispatchMessageDeleteBulk({
+		await dispatchMessageDeleteBulk({
+			gatewayService: this.deps.gatewayService,
 			channel,
 			messageIds: channel.isThread() ? existingIds : messageIds,
 		});
@@ -264,10 +251,7 @@ export class MessageDeleteService {
 		deletedCount: number;
 	}> {
 		const {channel} = await this.deps.channelAuthService.getChannelAuthenticated({userId, channelId, viewer});
-		if (
-			channel.type !== ChannelTypes.DM_PERSONAL_NOTES ||
-			!this.deps.channelAuthService.isPersonalNotesChannel({userId, channelId})
-		) {
+		if (channel.type !== ChannelTypes.DM_PERSONAL_NOTES || !isPersonalNotesChannelId({userId, channelId})) {
 			throw new InvalidChannelTypeError();
 		}
 		const PAGE_SIZE = 100;
@@ -281,7 +265,7 @@ export class MessageDeleteService {
 				messages.map((message) => purgeMessageAttachments(message, this.deps.storageService, this.deps.purgeQueue)),
 			);
 			await this.deps.channelRepository.messages.bulkDeleteMessages(channelId, messageIds);
-			await this.deps.dispatchService.dispatchMessageDeleteBulk({channel, messageIds});
+			await dispatchMessageDeleteBulk({gatewayService: this.deps.gatewayService, channel, messageIds});
 			await this.deps.searchService.deleteMessagesIndex(messageIds);
 			totalDeleted += messages.length;
 			if (messages.length < PAGE_SIZE) break;
@@ -332,7 +316,7 @@ export class MessageDeleteService {
 						);
 						await this.deps.channelRepository.messages.bulkDeleteMessages(channel.id, messageIds);
 						await this.decrementThreadMessageCount(channel, messageIds);
-						await this.deps.dispatchService.dispatchMessageDeleteBulk({channel, messageIds});
+						await dispatchMessageDeleteBulk({gatewayService: this.deps.gatewayService, channel, messageIds});
 						await this.deps.crosspostPropagation.enqueueCrosspostSourceRemoval({
 							messages: userMessages,
 							mode: 'source_deleted',

@@ -21,14 +21,6 @@ export async function listFavoriteMemes(harness: ApiTestHarness, token: string):
 	return createBuilder<Array<FavoriteMemeResponse>>(harness, token).get('/users/@me/memes').execute();
 }
 
-export async function getFavoriteMeme(
-	harness: ApiTestHarness,
-	token: string,
-	memeId: string,
-): Promise<FavoriteMemeResponse> {
-	return createBuilder<FavoriteMemeResponse>(harness, token).get(`/users/@me/memes/${memeId}`).execute();
-}
-
 export async function createFavoriteMemeFromMessage(
 	harness: ApiTestHarness,
 	token: string,
@@ -65,26 +57,6 @@ export async function createFavoriteMemeFromUrl(
 		.post('/users/@me/memes')
 		.body(data)
 		.expect(HTTP_STATUS.CREATED)
-		.execute();
-}
-
-export async function updateFavoriteMeme(
-	harness: ApiTestHarness,
-	token: string,
-	memeId: string,
-	data: {
-		name?: string;
-		alt_text?: string | null;
-		tags?: Array<string>;
-	},
-): Promise<FavoriteMemeResponse> {
-	return createBuilder<FavoriteMemeResponse>(harness, token).patch(`/users/@me/memes/${memeId}`).body(data).execute();
-}
-
-export async function deleteFavoriteMeme(harness: ApiTestHarness, token: string, memeId: string): Promise<void> {
-	await createBuilder<void>(harness, token)
-		.delete(`/users/@me/memes/${memeId}`)
-		.expect(HTTP_STATUS.NO_CONTENT)
 		.execute();
 }
 

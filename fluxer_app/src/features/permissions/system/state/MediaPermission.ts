@@ -6,6 +6,7 @@ import {
 	type NativePermissionResult,
 } from '@app/features/permissions/system/utils/NativePermissions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {MediaDeviceRefreshType, refreshMediaDeviceLists} from '@app/features/voice/utils/MediaDeviceRefresh';
 import {makeAutoObservable, reaction, runInAction} from 'mobx';
@@ -82,6 +83,18 @@ class MediaPermission {
 	}
 
 	private async initializePermissionState(): Promise<void> {
+		if (isInsecureBrowserContext()) {
+			runInAction(() => {
+				this.microphoneExplicitlyDenied = true;
+				this.cameraExplicitlyDenied = true;
+				this.screenRecordingExplicitlyDenied = true;
+				this.microphonePermissionState = 'denied';
+				this.cameraPermissionState = 'denied';
+				this.screenRecordingPermissionState = 'denied';
+				this.initialized = true;
+			});
+			return;
+		}
 		if (await this.tryInitializeNativePermissions()) {
 			return;
 		}
@@ -202,17 +215,6 @@ class MediaPermission {
 		this.screenRecordingPermissionState = 'granted';
 		MacPermissions.applyPermissionResult('screen', 'granted');
 		logger.debug('Updated screen recording permission to granted');
-	}
-
-	reset(): void {
-		this.microphoneExplicitlyDenied = false;
-		this.cameraExplicitlyDenied = false;
-		this.screenRecordingExplicitlyDenied = false;
-		this.microphonePermissionState = null;
-		this.cameraPermissionState = null;
-		this.screenRecordingPermissionState = null;
-		this.initialized = false;
-		logger.debug('Reset all permissions');
 	}
 
 	isInitialized(): boolean {

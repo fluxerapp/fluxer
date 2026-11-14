@@ -3,8 +3,8 @@
 -module(fluxer_gateway_config).
 -typing([eqwalizer]).
 
--export([load/0, build_config/1, optional_string/1, env_value/1]).
--export_type([config/0]).
+-export([load/0, optional_string/1, env_value/1, visitor_limit_default/1]).
+-export_type([config/0, visitor_limit_key/0]).
 
 -type config() :: map().
 -type raw_value() ::
@@ -17,6 +17,12 @@
     | undefined.
 -type log_level() :: debug | info | notice | warning | error | critical | alert | emergency.
 -type gateway_role() :: websocket | sessions | presence | guilds | calls | push | all.
+-type visitor_limit_key() ::
+    guild_visitor_sessions_max
+    | guild_visitor_sessions_floor
+    | guild_visitor_sessions_per_member
+    | guild_visitor_sessions_per_user
+    | guild_visitor_sessions_per_ip.
 
 -define(MAX_CLUSTER_STATIC_PEERS, 256).
 
@@ -28,6 +34,7 @@ load() ->
 env_config() ->
     #{
         <<"env">> => env_binary("FLUXER_ENV", <<"development">>),
+        <<"instance">> => #{<<"self_hosted">> => env_bool("FLUXER_SELF_HOSTED", false)},
         <<"internal">> => env_internal_config(),
         <<"public">> => env_public_config(),
         <<"proxy">> => env_proxy_config(),
@@ -51,8 +58,8 @@ env_public_config() ->
 -spec env_proxy_config() -> map().
 env_proxy_config() ->
     #{
-        <<"client_ip_header">> => env_binary(
-            "FLUXER_CLIENT_IP_HEADER_NAME", <<"x-forwarded-for">>
+        <<"client_ip_header">> => string:lowercase(
+            string:trim(env_binary("FLUXER_CLIENT_IP_HEADER_NAME", <<"x-forwarded-for">>))
         ),
         <<"trust_client_ip_header">> => env_bool("FLUXER_TRUST_CLIENT_IP_HEADER", false)
     }.
@@ -66,12 +73,38 @@ env_services_config() ->
 
 -spec env_gateway_config() -> map().
 env_gateway_config() ->
-    env_gateway_base_config().
+    maps:merge(env_gateway_base_config(), #{
+        <<"zstd_window_log">> => env_int("FLUXER_GATEWAY_ZSTD_WINDOW_LOG", 17),
+        <<"identify_token_limit_per_minute">> => env_int(
+            "FLUXER_GATEWAY_IDENTIFY_TOKEN_LIMIT_PER_MINUTE", 0
+        ),
+        <<"guild_visitor_sessions_max">> => env_int(
+            "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_MAX",
+            visitor_limit_default(guild_visitor_sessions_max)
+        ),
+        <<"guild_visitor_sessions_floor">> => env_int(
+            "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_FLOOR",
+            visitor_limit_default(guild_visitor_sessions_floor)
+        ),
+        <<"guild_visitor_sessions_per_member">> => env_int(
+            "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_MEMBER",
+            visitor_limit_default(guild_visitor_sessions_per_member)
+        ),
+        <<"guild_visitor_sessions_per_user">> => env_int(
+            "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_USER",
+            visitor_limit_default(guild_visitor_sessions_per_user)
+        ),
+        <<"guild_visitor_sessions_per_ip">> => env_int(
+            "FLUXER_GATEWAY_GUILD_VISITOR_SESSIONS_PER_IP",
+            visitor_limit_default(guild_visitor_sessions_per_ip)
+        )
+    }).
 
 -spec env_gateway_base_config() -> map().
 env_gateway_base_config() ->
     #{
         <<"port">> => env_int("FLUXER_GATEWAY_PORT", 8771),
+        <<"bind_host">> => env_optional_binary("FLUXER_GATEWAY_BIND_HOST"),
         <<"gateway_role">> => env_optional_binary("FLUXER_GATEWAY_ROLE"),
         <<"rpc_auth_token">> => env_binary("FLUXER_GATEWAY_RPC_AUTH_TOKEN", <<>>),
         <<"push_enabled">> => env_bool("FLUXER_GATEWAY_PUSH_ENABLED", true),
@@ -147,13 +180,15 @@ build_config(RawConfig) ->
     Nats = get_map(RawConfig, [<<"services">>, <<"nats">>]),
     Proxy = get_map(RawConfig, [<<"proxy">>]),
     Public = get_map(RawConfig, [<<"public">>]),
+    Instance = get_map(RawConfig, [<<"instance">>]),
     lists:foldl(fun maps:merge/2, #{}, [
         build_core_config(Service, Internal, Nats, Proxy),
-        build_push_config(Service, Public),
+        build_push_config(Service, Public, Instance),
         build_sharding_config(Service),
         build_http_config(Service),
         build_cluster_config(Service, Public),
         build_pinned_node_config(Service),
+        build_visitor_config(Service),
         build_misc_config(Service)
     ]).
 
@@ -161,6 +196,7 @@ build_config(RawConfig) ->
 build_core_config(Service, Internal, Nats, Proxy) ->
     #{
         port => get_int(Service, <<"port">>, 8080),
+        bind_ip => parse_bind_ip(get_optional_binary(Service, <<"bind_host">>)),
         gateway_role => normalize_gateway_role(get_value(Service, <<"gateway_role">>)),
         client_ip_header => get_binary(Proxy, <<"client_ip_header">>, <<"x-forwarded-for">>),
         trust_client_ip_header => get_bool(Proxy, <<"trust_client_ip_header">>, false),
@@ -170,16 +206,23 @@ build_core_config(Service, Internal, Nats, Proxy) ->
         nats_auth_token => get_string(Nats, <<"auth_token">>, ""),
         rpc_auth_token => get_string(Service, <<"rpc_auth_token">>, ""),
         gateway_nats_rpc_max_handlers =>
-            get_int(Service, <<"gateway_nats_rpc_max_handlers">>, 512),
-        identify_rate_limit_enabled => get_bool(
-            Service, <<"identify_rate_limit_enabled">>, false
-        )
+            get_int(Service, <<"gateway_nats_rpc_max_handlers">>, 512)
     }.
 
--spec build_push_config(map(), map()) -> config().
-build_push_config(Service, Public) ->
+-spec parse_bind_ip(binary() | undefined) -> inet:ip_address() | undefined.
+parse_bind_ip(undefined) ->
+    undefined;
+parse_bind_ip(Host) ->
+    case inet:parse_address(string:trim(binary_to_list(Host))) of
+        {ok, Ip} -> Ip;
+        {error, einval} -> erlang:error({invalid_gateway_bind_host, Host})
+    end.
+
+-spec build_push_config(map(), map(), map()) -> config().
+build_push_config(Service, Public, Instance) ->
     #{
         push_enabled => get_bool(Service, <<"push_enabled">>, true),
+        self_hosted => get_bool(Instance, <<"self_hosted">>, false),
         static_cdn_endpoint => public_endpoint(
             get_binary(Service, <<"static_cdn_endpoint">>, <<"http://localhost:8088">>), Public
         ),
@@ -278,14 +321,51 @@ parse_guild_id(Token) ->
         error:badarg -> erlang:error({invalid_pinned_guild_id, Token})
     end.
 
+-spec build_visitor_config(map()) -> config().
+build_visitor_config(Service) ->
+    #{
+        guild_visitor_sessions_max => get_int(
+            Service,
+            <<"guild_visitor_sessions_max">>,
+            visitor_limit_default(guild_visitor_sessions_max)
+        ),
+        guild_visitor_sessions_floor => get_int(
+            Service,
+            <<"guild_visitor_sessions_floor">>,
+            visitor_limit_default(guild_visitor_sessions_floor)
+        ),
+        guild_visitor_sessions_per_member => get_int(
+            Service,
+            <<"guild_visitor_sessions_per_member">>,
+            visitor_limit_default(guild_visitor_sessions_per_member)
+        ),
+        guild_visitor_sessions_per_user => get_int(
+            Service,
+            <<"guild_visitor_sessions_per_user">>,
+            visitor_limit_default(guild_visitor_sessions_per_user)
+        ),
+        guild_visitor_sessions_per_ip => get_int(
+            Service,
+            <<"guild_visitor_sessions_per_ip">>,
+            visitor_limit_default(guild_visitor_sessions_per_ip)
+        )
+    }.
+
+-spec visitor_limit_default(visitor_limit_key()) -> non_neg_integer().
+visitor_limit_default(guild_visitor_sessions_max) -> 10000;
+visitor_limit_default(guild_visitor_sessions_floor) -> 500;
+visitor_limit_default(guild_visitor_sessions_per_member) -> 2;
+visitor_limit_default(guild_visitor_sessions_per_user) -> 5;
+visitor_limit_default(guild_visitor_sessions_per_ip) -> 20.
+
 -spec build_misc_config(map()) -> config().
 build_misc_config(Service) ->
     #{
-        handoff_enable_event_pause => get_bool(
-            Service, <<"handoff_enable_event_pause">>, false
-        ),
         voice_state_counts_sync_interval_ms =>
             get_int(Service, <<"voice_state_counts_sync_interval_ms">>, 30000),
+        zstd_window_log => get_int(Service, <<"zstd_window_log">>, 17),
+        identify_token_limit_per_minute =>
+            get_int(Service, <<"identify_token_limit_per_minute">>, 0),
         logger_level => get_log_level(Service, <<"logger_level">>, info)
     }.
 
@@ -387,7 +467,7 @@ parse_int(Name, Value) ->
 
 -spec env_bool(string(), boolean()) -> boolean().
 env_bool(Name, Default) ->
-    case string:lowercase(env_string(Name, "")) of
+    case string:lowercase(string:trim(env_string(Name, ""))) of
         "1" -> true;
         "true" -> true;
         "yes" -> true;

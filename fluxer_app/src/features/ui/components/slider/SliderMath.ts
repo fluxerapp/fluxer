@@ -11,7 +11,7 @@ interface BuildMarkerStateOptions {
 }
 
 export function clamp(value: number, min: number, max: number): number {
-	return Math.max(min, Math.min(max, value));
+	return Math.min(max, Math.max(min, value));
 }
 
 function findClosestMarkerIndex(value: number, markerArray: ReadonlyArray<number>): number {
@@ -64,12 +64,19 @@ export function buildMarkerState({
 	const min = sortedMarkers[0];
 	const max = sortedMarkers[sortedMarkers.length - 1];
 	const range = max - min;
-	const markerPositions =
-		sortedMarkers.length === 1
-			? [0]
-			: equidistant
-				? sortedMarkers.map((_, i) => i * (100 / (sortedMarkers.length - 1)))
-				: sortedMarkers.map((marker) => scaleValue({min, range}, marker));
+	let markerPositions: Array<number>;
+	if (sortedMarkers.length === 1) {
+		markerPositions = [0];
+	} else if (equidistant) {
+		markerPositions = sortedMarkers.map((_, i) => i * (100 / (sortedMarkers.length - 1)));
+	} else {
+		markerPositions = sortedMarkers.map((marker) => {
+			if (range === 0) {
+				return 0;
+			}
+			return (100 * (marker - min)) / range;
+		});
+	}
 	return {
 		min,
 		max,
@@ -78,11 +85,6 @@ export function buildMarkerState({
 		markerPositions,
 		closestMarkerIndex,
 	};
-}
-
-function scaleValue(markerState: Pick<MarkerState, 'min' | 'range'>, value: number): number {
-	if (markerState.range === 0) return 0;
-	return (100 * (value - markerState.min)) / markerState.range;
 }
 
 export function scaleValueEquidistant(markers: ReadonlyArray<number>, value: number): number {

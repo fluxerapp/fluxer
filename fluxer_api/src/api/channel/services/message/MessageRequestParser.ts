@@ -1,28 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
 import {
 	type AttachmentRequestData,
 	mergeUploadWithClientData,
 	type UploadedAttachment,
 } from '@app/api/channel/AttachmentDTOs';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {FormDataUpload} from '@app/api/channel/services/AttachmentUploadService';
 import {normalizeMessageRequestPayload} from '@app/api/channel/services/message/MessageRequestCompatibility';
+import {type MultipartFilePart, readMultipartStream} from '@app/api/channel/services/message/MultipartStreamReader';
 import {SYSTEM_THREAD_VIEWER, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {DEFAULT_REQUEST_BODY_LIMIT, isMultipartFormData} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
+import {requireRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
 import {MAX_ATTACHMENTS_PER_MESSAGE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import type {
 	ClientAttachmentReferenceRequest,
 	ClientAttachmentRequest,
@@ -34,7 +36,7 @@ import type {z} from 'zod';
 const FIELD_NAME_PATTERN = /^files\[(\d+)\]$/;
 const LEGACY_FILE_FIELD_NAME_PATTERN = /^file(\d+)?$/;
 
-type MultipartBody = Record<string, string | File | Array<string | File>>;
+type MultipartBody = Record<string, string>;
 type AttachmentMetadata = ClientAttachmentRequest | ClientUploadedAttachmentRequest | ClientAttachmentReferenceRequest;
 
 interface ParseMultipartMessageDataOptions {
@@ -49,83 +51,135 @@ export async function parseMultipartMessageData(
 	schema: z.ZodType<MessageRequest | MessageUpdateRequest>,
 	options?: ParseMultipartMessageDataOptions,
 ): Promise<MessageRequest | MessageUpdateRequest> {
-	let body: MultipartBody;
-	try {
-		body = await ctx.req.parseBody();
-	} catch (_error) {
-		throw InputValidationError.fromCode('multipart_form', ValidationErrorCodes.FAILED_TO_PARSE_MULTIPART_FORM_DATA);
-	}
-	const jsonData = parseMultipartPayload(body);
-	const mergedJsonData = normalizeMessageRequestPayload(mergeMultipartScalarFields(body, jsonData));
-	options?.onPayloadParsed?.(mergedJsonData);
-	const validationResult = schema.safeParse(mergedJsonData);
-	if (!validationResult.success) {
-		throw inputValidationErrorFromZodIssues(validationResult.error.issues);
-	}
-	const data = validationResult.data as Partial<MessageRequest> &
-		Partial<MessageUpdateRequest> & {
-			attachments?: Array<AttachmentRequestData>;
-		};
+	const attachmentService = ctx.get('channelService').attachments;
 	const maxAttachments = await resolveMessageAttachmentLimit(ctx, user, channelId);
+	const upload = await attachmentService.prepareFormDataUpload({
+		userId: user.id,
+		viewer: options?.actor === 'webhook' ? SYSTEM_THREAD_VIEWER : viewerFromCtx(ctx),
+		channelId,
+		actor: options?.actor,
+	});
+	const sender = options?.actor === 'webhook' ? `webhook:${ctx.req.param('webhook_id')}` : `user:${user.id.toString()}`;
+	const body: MultipartBody = {};
+	const storedFiles: Array<StoredMultipartFile> = [];
+	try {
+		const data = await readMultipartMessageBody(ctx, {
+			body,
+			storedFiles,
+			maxAttachments,
+			upload,
+			storeFile: (stream, filename) =>
+				attachmentService.storeFormDataFile({
+					body: stream,
+					filename,
+					holder: {sender, clientIp: requireRequestClientIp(ctx)},
+				}),
+		});
+		const mergedJsonData = normalizeMessageRequestPayload(mergeMultipartScalarFields(body, data));
+		options?.onPayloadParsed?.(mergedJsonData);
+		const validationResult = schema.safeParse(mergedJsonData);
+		if (!validationResult.success) {
+			throw inputValidationErrorFromZodIssues(validationResult.error.issues);
+		}
+		return await attachStoredFiles(ctx, user, channelId, validationResult.data, storedFiles);
+	} catch (error) {
+		await attachmentService.deleteFormDataFiles(storedFiles.map((file) => file.uploadKey));
+		throw error;
+	}
+}
+
+interface StoredMultipartFile {
+	index: number;
+	filename: string;
+	uploadKey: string;
+	size: number;
+}
+
+async function readMultipartMessageBody(
+	ctx: Context<HonoEnv>,
+	params: {
+		body: MultipartBody;
+		storedFiles: Array<StoredMultipartFile>;
+		maxAttachments: number;
+		upload: FormDataUpload;
+		storeFile: (stream: MultipartFilePart['stream'], filename: string) => Promise<string>;
+	},
+): Promise<unknown> {
+	const {body, storedFiles, maxAttachments, upload, storeFile} = params;
 	const maxIndexLabel = maxAttachments > 0 ? maxAttachments - 1 : 0;
-	const filesWithIndices: Array<{
-		file: File;
-		index: number;
-	}> = [];
 	const seenIndices = new Set<number>();
 	let nextLegacyFileIndex = 0;
-	for (const [key, fieldValue] of Object.entries(body)) {
-		const fileIndex = getMultipartFileFieldIndex(key, nextLegacyFileIndex);
-		if (fileIndex === null) {
-			continue;
-		}
-		if (fileIndex.isLegacy) {
-			nextLegacyFileIndex = Math.max(nextLegacyFileIndex, fileIndex.index + 1);
-		}
-		const {index} = fileIndex;
-		if (Number.isNaN(index) || index < 0 || index > 10000) {
-			throw InputValidationError.fromCode('files', ValidationErrorCodes.FILE_INDEX_EXCEEDS_MAXIMUM, {
-				index,
-				maxIndex: 10000,
-			});
-		}
-		if (maxAttachments <= 0) {
-			throw InputValidationError.fromCode('files', ValidationErrorCodes.ATTACHMENTS_NOT_ALLOWED_FOR_MESSAGE);
-		}
-		if (index >= maxAttachments) {
-			throw InputValidationError.fromCode('files', ValidationErrorCodes.FILE_INDEX_EXCEEDS_MAXIMUM, {
-				index,
-				maxIndex: maxIndexLabel,
-			});
-		}
-		if (seenIndices.has(index)) {
-			throw InputValidationError.fromCode('files', ValidationErrorCodes.DUPLICATE_FILE_INDEX, {
-				index,
-			});
-		}
-		if (fieldValue instanceof File) {
-			filesWithIndices.push({file: fieldValue, index});
-			seenIndices.add(index);
-		} else if (Array.isArray(fieldValue)) {
-			const validFiles = fieldValue.filter((f) => f instanceof File);
-			if (validFiles.length > 0) {
-				if (fileIndex.isLegacy && validFiles.length === 1) {
-					filesWithIndices.push({file: validFiles[0], index});
-					seenIndices.add(index);
-					continue;
-				}
-				throw InputValidationError.fromCode('files', ValidationErrorCodes.MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED, {
+	let canAttachFiles = false;
+	let payload: unknown = {};
+	await readMultipartStream(ctx, {
+		maxFiles: maxAttachments,
+		maxFileSize: upload.maxFileSize,
+		maxFieldBytes: DEFAULT_REQUEST_BODY_LIMIT,
+		onField(name, value) {
+			if (getMultipartFileFieldIndex(name, 0) !== null) {
+				return;
+			}
+			body[name] = value;
+			if (name === 'payload_json') {
+				payload = parseMultipartPayload(value);
+			}
+		},
+		async onFile({fieldName, filename, stream}) {
+			const fileIndex = getMultipartFileFieldIndex(fieldName, nextLegacyFileIndex);
+			if (fileIndex === null) {
+				stream.resume();
+				return;
+			}
+			if (fileIndex.isLegacy) {
+				nextLegacyFileIndex = Math.max(nextLegacyFileIndex, fileIndex.index + 1);
+			}
+			const {index} = fileIndex;
+			if (Number.isNaN(index) || index < 0 || index > 10000) {
+				throw InputValidationError.fromCode('files', ValidationErrorCodes.FILE_INDEX_EXCEEDS_MAXIMUM, {
+					index,
+					maxIndex: 10000,
+				});
+			}
+			if (maxAttachments <= 0) {
+				throw InputValidationError.fromCode('files', ValidationErrorCodes.ATTACHMENTS_NOT_ALLOWED_FOR_MESSAGE);
+			}
+			if (index >= maxAttachments) {
+				throw InputValidationError.fromCode('files', ValidationErrorCodes.FILE_INDEX_EXCEEDS_MAXIMUM, {
+					index,
+					maxIndex: maxIndexLabel,
+				});
+			}
+			if (seenIndices.has(index)) {
+				throw InputValidationError.fromCode('files', ValidationErrorCodes.DUPLICATE_FILE_INDEX, {
 					index,
 				});
 			}
-		}
-	}
-	filesWithIndices.sort((left, right) => left.index - right.index);
-	if (filesWithIndices.length > maxAttachments) {
-		throw InputValidationError.fromCode('files', ValidationErrorCodes.TOO_MANY_FILES, {maxFiles: maxAttachments});
-	}
+			seenIndices.add(index);
+			if (!canAttachFiles) {
+				await upload.assertCanAttachFiles();
+				canAttachFiles = true;
+			}
+			const uploadKey = await storeFile(stream, filename);
+			storedFiles.push({index, filename, uploadKey, size: stream.bytesRead});
+		},
+	});
+	return payload;
+}
+
+async function attachStoredFiles(
+	ctx: Context<HonoEnv>,
+	user: User,
+	channelId: ChannelID,
+	validated: MessageRequest | MessageUpdateRequest,
+	storedFiles: Array<StoredMultipartFile>,
+): Promise<MessageRequest | MessageUpdateRequest> {
+	const data = validated as Partial<MessageRequest> &
+		Partial<MessageUpdateRequest> & {
+			attachments?: Array<AttachmentRequestData>;
+		};
+	storedFiles.sort((left, right) => left.index - right.index);
 	const attachmentMetadata = Array.isArray(data.attachments) ? (data.attachments as Array<AttachmentMetadata>) : [];
-	const fileIds = new Set(filesWithIndices.map((file) => file.index));
+	const fileIds = new Set(storedFiles.map((file) => file.index));
 	const inlineAttachmentMetadata = new Map<number, AttachmentMetadata>();
 	const existingAttachments: Array<ClientAttachmentReferenceRequest> = [];
 	for (const metadata of attachmentMetadata) {
@@ -144,14 +198,11 @@ export async function parseMultipartMessageData(
 		}
 		existingAttachments.push(metadata);
 	}
-	if (filesWithIndices.length > 0) {
-		const clientIp = requireClientIp(ctx.req.raw, {
-			trustClientIpHeader: Config.proxy.trust_client_ip_header,
-			clientIpHeaderName: Config.proxy.client_ip_header,
-		});
-		const inlineNewAttachments = filesWithIndices.map(({file, index}) =>
+	if (storedFiles.length > 0) {
+		const clientIp = requireRequestClientIp(ctx);
+		const inlineNewAttachments = storedFiles.map(({filename, index}) =>
 			buildInlineAttachmentMetadata({
-				file,
+				filename,
 				index,
 				metadata: inlineAttachmentMetadata.get(index),
 			}),
@@ -160,12 +211,10 @@ export async function parseMultipartMessageData(
 			.get('channelService')
 			.attachments.uploadFormDataAttachments({
 				userId: user.id,
-				viewer: options?.actor === 'webhook' ? SYSTEM_THREAD_VIEWER : viewerFromCtx(ctx),
 				channelId,
 				clientIp,
-				files: filesWithIndices,
+				files: storedFiles,
 				attachmentMetadata: inlineNewAttachments,
-				actor: options?.actor,
 			});
 		const uploadedMap = new Map(uploadedAttachments.map((attachment) => [attachment.id, attachment]));
 		const processedInlineAttachments = inlineNewAttachments.map((clientData) => {
@@ -184,14 +233,7 @@ export async function parseMultipartMessageData(
 	return data as MessageRequest | MessageUpdateRequest;
 }
 
-function parseMultipartPayload(body: MultipartBody): unknown {
-	const payloadJson = body['payload_json'];
-	if (payloadJson === undefined) {
-		return {};
-	}
-	if (typeof payloadJson !== 'string') {
-		throw InputValidationError.fromCode('payload_json', ValidationErrorCodes.INVALID_JSON_IN_PAYLOAD_JSON);
-	}
+function parseMultipartPayload(payloadJson: string): unknown {
 	try {
 		return parseJsonPreservingLargeIntegers(payloadJson);
 	} catch (_error) {
@@ -208,26 +250,22 @@ function mergeMultipartScalarFields(body: MultipartBody, payload: unknown): unkn
 		if (key === 'payload_json' || getMultipartFileFieldIndex(key, 0) !== null) {
 			continue;
 		}
-		const values = getMultipartStringValues(value);
-		if (values.length === 0) {
-			continue;
-		}
 		switch (key) {
 			case 'content':
 			case 'nonce':
-				mergedPayload[key] = values[values.length - 1];
+				mergedPayload[key] = value;
 				break;
 			case 'tts':
-				mergedPayload.tts = parseMultipartBoolean(values[values.length - 1]!);
+				mergedPayload.tts = parseMultipartBoolean(value);
 				break;
 			case 'flags':
-				mergedPayload.flags = parseMultipartInteger(values[values.length - 1]!);
+				mergedPayload.flags = parseMultipartInteger(value);
 				break;
 			case 'favorite_meme_id':
-				mergedPayload.favorite_meme_id = values[values.length - 1];
+				mergedPayload.favorite_meme_id = value;
 				break;
 			case 'sticker_ids':
-				mergedPayload.sticker_ids = values;
+				mergedPayload.sticker_ids = [value];
 				break;
 			default:
 				break;
@@ -260,16 +298,6 @@ function getMultipartFileFieldIndex(
 		index: legacyMatch[1] === undefined ? nextLegacyFileIndex : parseInt(legacyMatch[1], 10),
 		isLegacy: true,
 	};
-}
-
-function getMultipartStringValues(value: MultipartBody[string]): Array<string> {
-	if (typeof value === 'string') {
-		return [value];
-	}
-	if (value instanceof File) {
-		return [];
-	}
-	return value.filter((entry): entry is string => typeof entry === 'string');
 }
 
 function parseMultipartBoolean(value: string): boolean | string {
@@ -307,14 +335,14 @@ function getMatchingMultipartFileIndex(id: number | bigint, fileIds: Set<number>
 }
 
 function buildInlineAttachmentMetadata(params: {
-	file: File;
+	filename: string;
 	index: number;
 	metadata?: AttachmentMetadata;
 }): ClientAttachmentRequest {
-	const {file, index, metadata} = params;
+	const {filename, index, metadata} = params;
 	return {
 		id: index,
-		filename: metadata && 'filename' in metadata && metadata.filename ? metadata.filename : file.name,
+		filename: metadata && 'filename' in metadata && metadata.filename ? metadata.filename : filename,
 		content_type:
 			metadata && 'content_type' in metadata ? (metadata as ClientUploadedAttachmentRequest).content_type : undefined,
 		title: metadata?.title ?? null,
@@ -331,13 +359,13 @@ async function resolveMessageAttachmentLimit(ctx: Context<HonoEnv>, user: User, 
 		return MAX_ATTACHMENTS_PER_MESSAGE;
 	}
 	let guildFeatures: Iterable<string> | null = null;
-	const channelRepository = ctx.get('channelRepository') as IChannelRepository | undefined;
+	const channelRepository = ctx.get('channelRepository') as ChannelRepository | undefined;
 	const guildService = ctx.get('guildService') as GuildService | undefined;
 	if (channelRepository) {
 		try {
-			const channel = await channelRepository.findUnique(channelId);
+			const channel = await channelRepository.channelData.findUnique(channelId);
 			if (channel?.guildId && guildService) {
-				const guild = await guildService.data.getGuildSystem(channel.guildId);
+				const guild = await guildService.data.operations.getGuildSystem(channel.guildId);
 				guildFeatures = guild.features;
 			}
 		} catch {
@@ -355,4 +383,26 @@ async function resolveMessageAttachmentLimit(ctx: Context<HonoEnv>, user: User, 
 		MAX_ATTACHMENTS_PER_MESSAGE,
 	);
 	return Math.floor(limitValue);
+}
+
+export async function readMessageJsonBody(ctx: Context<HonoEnv>): Promise<unknown> {
+	try {
+		const raw = await ctx.req.text();
+		return raw.trim().length === 0 ? {} : parseJsonPreservingLargeIntegers(raw);
+	} catch {
+		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+	}
+}
+
+export async function parseMessageRequestBody<T extends z.ZodType<MessageRequest | MessageUpdateRequest>>(
+	ctx: Context<HonoEnv>,
+	user: User,
+	channelId: ChannelID,
+	schema: T,
+): Promise<z.output<T>> {
+	if (isMultipartFormData(ctx.req.header('content-type')))
+		return (await parseMultipartMessageData(ctx, user, channelId, schema)) as z.output<T>;
+	const result = schema.safeParse(normalizeMessageRequestPayload(await readMessageJsonBody(ctx)));
+	if (!result.success) throw inputValidationErrorFromZodIssues(result.error.issues);
+	return result.data;
 }

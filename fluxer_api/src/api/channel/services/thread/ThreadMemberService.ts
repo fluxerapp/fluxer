@@ -8,7 +8,7 @@ import {dispatchThreadEvents, threadMembersUpdateEvent} from '@app/api/channel/s
 import {mapThreadMemberToResponse} from '@app/api/channel/services/thread/ThreadMappers';
 import type {ThreadServiceContext} from '@app/api/channel/services/thread/ThreadServiceContext';
 import {loadThreadView} from '@app/api/channel/services/thread/ThreadViews';
-import {recipientActive, type ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {ThreadMember} from '@app/api/models/ThreadMember';
@@ -75,8 +75,7 @@ export class ThreadMemberService {
 		});
 		const canViewParent =
 			(targetIsOwner || (withImplicitThreadBits(targetPermissions) & Permissions.VIEW_CHANNEL) !== 0n) &&
-			targetUser !== null &&
-			recipientActive(guildId, params.targetId, targetUser.isBot);
+			targetUser !== null;
 		assertThreadAllowed(canAddThreadMember(thread.actor, {canViewParent, isModerator: targetIsModerator}));
 		if (thread.state.locked || (thread.state.isPrivate && !(thread.state.invitable ?? true) && !targetIsModerator)) {
 			thread.enforceMfa(ThreadPermissionFlags.MANAGE_THREADS);

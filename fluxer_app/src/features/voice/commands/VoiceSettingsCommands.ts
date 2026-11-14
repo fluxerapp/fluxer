@@ -1,81 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import VoiceSettings, {
-	type CameraResolution,
-	type ScreenshareResolution,
-	type StreamingMode,
-} from '@app/features/voice/state/VoiceSettings';
-import type {
-	CodecPreference,
-	ScreenShareContentHint,
-	ScreenShareEncoderMode,
-	ScreenShareScalabilityModePreference,
-} from '@app/features/voice/utils/CodecCapabilityDetector';
-import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
+import type {VoiceSettingsUpdate} from '@app/features/voice/state/VoiceSettings';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {getActiveInputDeviceLabel, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
 
-type VoiceSettingsPatch = Partial<{
-	inputDeviceId: string;
-	outputDeviceId: string;
-	videoDeviceId: string;
-	inputVolume: number;
-	outputVolume: number;
-	echoCancellation: boolean;
-	autoGainControl: boolean;
-	noiseSuppressionBackend: VoiceNoiseSuppressionBackend | null;
-	stereoMicrophone: boolean | null;
-	voiceProcessingMode: VoiceProcessingMode;
-	cameraResolution: CameraResolution;
-	mirrorCamera: boolean;
-	screenshareResolution: ScreenshareResolution;
-	videoFrameRate: number;
-	streamingMode: StreamingMode;
-	hideStreamPreview: boolean;
-	muteStreamAudio: boolean;
-	shareAppAudio: boolean;
-	shareDesktopAudio: boolean;
-	shareDeviceAudio: boolean;
-	screenShareAudioDeviceId: string;
-	backgroundImageId: string;
-	backgroundImages: Array<{
-		id: string;
-		createdAt: number;
-	}>;
-	backgroundBlurStrength: number;
-	showGridView: boolean;
-	showMyOwnCamera: boolean;
-	showMyOwnScreenShare: boolean;
-	showNonVideoParticipants: boolean;
-	showParticipantsCarousel: boolean;
-	showVoiceConnectionAvatarStack: boolean;
-	showVoiceConnectionId: boolean;
-	showConnectionVolumeControls: boolean;
-	pauseOwnScreenSharePreviewOnUnfocus: boolean;
-	disablePictureInPicturePopoutScreenShare: boolean;
-	preferredVideoCodec: CodecPreference;
-	preferredScreenShareCodec: CodecPreference;
-	screenShareAv1OptIn: boolean;
-	screenShareHevcOptIn: boolean;
-	screenShareContentHint: ScreenShareContentHint;
-	screenShareEncoderMode: ScreenShareEncoderMode;
-	screenShareScalabilityMode: ScreenShareScalabilityModePreference;
-	vadThreshold: number;
-	vadAutoSensitivity: boolean;
-	vadEnhanced: boolean;
-	linuxAudioCaptureWorkaround: boolean;
-	linuxAudioCaptureOnlySpeakers: boolean;
-	linuxAudioCaptureOnlyDefaultSpeakers: boolean;
-	linuxAudioCaptureIgnoreInputMedia: boolean;
-	linuxAudioCaptureIgnoreVirtual: boolean;
-	linuxAudioCaptureIgnoreDevices: boolean;
-	linuxAudioCaptureGranularSelect: boolean;
-	linuxAudioCaptureDeviceSelect: boolean;
-	screenShareAudioSourceMode: 'none' | 'system' | 'specific';
-	screenShareAudioIncludeSources: Array<Record<string, string>>;
-	screenShareAudioExcludeSources: Array<Record<string, string>>;
-	screenShareDeviceAudioUsesMicrophone: boolean;
-}>;
+type VoiceSettingsPatch = VoiceSettingsUpdate;
 
 interface VoiceSettingsUpdateOptions {
 	refreshCameraBackground?: boolean;
@@ -85,7 +15,6 @@ const CAMERA_BACKGROUND_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
 	'backgroundImageId',
 	'backgroundImages',
 	'backgroundBlurStrength',
-	'mirrorCamera',
 ];
 const CAMERA_CAPTURE_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = ['cameraResolution', 'videoDeviceId'];
 const SCREEN_SHARE_CODEC_NEGOTIATION_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
@@ -95,15 +24,15 @@ const SCREEN_SHARE_CODEC_NEGOTIATION_REFRESH_KEYS: Array<keyof VoiceSettingsPatc
 	'screenShareEncoderMode',
 ];
 function refreshCameraBackground(): void {
-	MediaEngine.refreshCameraBackgroundFromSettings();
+	VoiceRuntime.engine?.refreshCameraBackgroundFromSettings();
 }
 
 function refreshCameraCapture(): void {
-	MediaEngine.refreshCameraCaptureFromSettings();
+	VoiceRuntime.engine?.refreshCameraCaptureFromSettings();
 }
 
 function refreshScreenShareCodecNegotiation(): void {
-	MediaEngine.refreshScreenShareCodecNegotiationFromSettings();
+	VoiceRuntime.engine?.refreshScreenShareCodecNegotiationFromSettings();
 }
 
 function shouldRefreshCameraBackground(settings: VoiceSettingsPatch): boolean {
@@ -133,11 +62,11 @@ function applyUpdatedVoiceSettings(settings: VoiceSettingsPatch, options: VoiceS
 	const cameraCaptureBefore = readCameraCaptureRefreshValues();
 	VoiceSettings.updateSettings(settings);
 	if (settings.muteStreamAudio !== undefined) {
-		MediaEngine.setScreenShareAudioMuted(settings.muteStreamAudio);
+		VoiceRuntime.engine?.setScreenShareAudioMuted(settings.muteStreamAudio);
 	}
 	if (settings.outputVolume !== undefined) {
-		if (MediaEngine.room) {
-			MediaEngine.applyAllLocalAudioPreferences();
+		if (VoiceRuntime.room) {
+			VoiceRuntime.engine?.applyAllLocalAudioPreferences();
 		}
 	}
 	if (options.refreshCameraBackground !== false && shouldRefreshCameraBackground(settings)) {

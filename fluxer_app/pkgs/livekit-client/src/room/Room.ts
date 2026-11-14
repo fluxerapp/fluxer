@@ -499,7 +499,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			return;
 		}
 
-		this.engine = new RTCEngine(this.options);
+		this.engine = this.options.createEngine ? this.options.createEngine(this.options) : new RTCEngine(this.options);
 		this.engine.e2eeManager = this.e2eeManager;
 
 		this.engine

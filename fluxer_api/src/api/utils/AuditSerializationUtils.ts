@@ -4,7 +4,6 @@ import type {Channel} from '@app/api/models/Channel';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildEmoji} from '@app/api/models/GuildEmoji';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
-import {toIdString, toSortedIdArray} from '@app/api/utils/IdUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 
 export function serializeGuildForAudit(guild: Guild): Record<string, unknown> {
@@ -24,7 +23,7 @@ export function serializeGuildForAudit(guild: Guild): Record<string, unknown> {
 		embed_splash_hash: guild.embedSplashHash ?? null,
 		embed_splash_width: guild.embedSplashWidth ?? null,
 		embed_splash_height: guild.embedSplashHeight ?? null,
-		features: toSortedIdArray(guild.features),
+		features: [...guild.features].sort(),
 		verification_level: guild.verificationLevel,
 		mfa_level: guild.mfaLevel,
 		nsfw_level: guild.nsfwLevel,
@@ -33,10 +32,10 @@ export function serializeGuildForAudit(guild: Guild): Record<string, unknown> {
 		content_warning_text: guild.contentWarningText,
 		explicit_content_filter: guild.explicitContentFilter,
 		default_message_notifications: guild.defaultMessageNotifications,
-		system_channel_id: toIdString(guild.systemChannelId),
+		system_channel_id: guild.systemChannelId?.toString() ?? null,
 		system_channel_flags: guild.systemChannelFlags,
-		rules_channel_id: toIdString(guild.rulesChannelId),
-		afk_channel_id: toIdString(guild.afkChannelId),
+		rules_channel_id: guild.rulesChannelId?.toString() ?? null,
+		afk_channel_id: guild.afkChannelId?.toString() ?? null,
 		afk_timeout: guild.afkTimeout,
 		disabled_operations: guild.disabledOperations,
 		member_count: guild.memberCount,
@@ -51,7 +50,7 @@ export function serializeChannelForAudit(channel: Channel): Record<string, unkno
 		name: channel.name ?? null,
 		topic: channel.topic ?? null,
 		...(channel.type === ChannelTypes.GUILD_LINK ? {url: channel.url ?? null} : {}),
-		parent_id: toIdString(channel.parentId),
+		parent_id: channel.parentId?.toString() ?? null,
 		position: channel.position,
 		nsfw: channel.nsfwOverride,
 		content_warning_level: channel.contentWarningLevel,
@@ -61,6 +60,7 @@ export function serializeChannelForAudit(channel: Channel): Record<string, unkno
 		voice_connection_limit: channel.voiceConnectionLimit,
 		bitrate: channel.bitrate,
 		rtc_region: channel.rtcRegion ?? null,
+		rtc_p2p: channel.rtcP2p,
 	};
 }
 

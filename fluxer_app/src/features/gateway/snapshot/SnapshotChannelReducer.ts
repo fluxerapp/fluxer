@@ -32,14 +32,13 @@ import {ChannelTypes, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/Chan
 import {THREAD_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import type {Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
-import {decodeReadStateProto} from '@fluxer/schema/src/domains/read_state/ReadStateProtoCodec';
 
-export interface SnapshotChannelUserAuthority {
+interface SnapshotChannelUserAuthority {
 	readonly getSelfUserId: () => string | null;
 	readonly retainUser: (emit: SnapshotEmit, user: SnapshotUserRow) => void;
 }
 
-export interface SnapshotChannelReadyEntries {
+interface SnapshotChannelReadyEntries {
 	readonly channels: Array<SnapshotRowReplaceEntityEntry<'channel'>>;
 	readonly readStates: Array<SnapshotRowReplaceEntityEntry<'read_state'>>;
 }
@@ -106,22 +105,6 @@ export class SnapshotChannelReducer {
 		private readonly readStates: ReducerRowMap<string, SnapshotReadStateRow>,
 		private readonly users: SnapshotChannelUserAuthority,
 	) {}
-
-	get channelCount(): number {
-		return this.channels.size;
-	}
-
-	get readStateCount(): number {
-		return this.readStates.size;
-	}
-
-	get channelRows(): ReadonlyMap<string, WireChannel> {
-		return this.channels;
-	}
-
-	get readStateRows(): ReadonlyMap<string, SnapshotReadStateRow> {
-		return this.readStates;
-	}
 
 	load(entries: StateSnapshotEntries): void {
 		this.channels.clear();
@@ -415,8 +398,7 @@ export class SnapshotChannelReducer {
 				type: channel.type,
 			});
 		}
-		const readStates =
-			data.read_state_proto == null ? (data.read_states ?? []) : decodeReadStateProto(data.read_state_proto);
+		const readStates = data.read_states ?? [];
 		const channelsWithReadState = new Set<string>();
 		for (const readState of readStates) {
 			channelsWithReadState.add(readState.id);
@@ -481,7 +463,11 @@ export class SnapshotChannelReducer {
 			return;
 		}
 		const current = this.readState(channel.id);
-		const privateAck = this.isPrivateAckOnCreateChannel(channel);
+		const privateAck =
+			channel.last_message_id != null &&
+			(channel.type === ChannelTypes.DM ||
+				channel.type === ChannelTypes.GROUP_DM ||
+				channel.type === ChannelTypes.DM_PERSONAL_NOTES);
 		this.writeReadState(emit, channel.id, {
 			...current,
 			lastMessageId: channel.last_message_id ?? null,
@@ -499,23 +485,26 @@ export class SnapshotChannelReducer {
 	): void {
 		const current = this.readState(message.channel_id);
 		const authoredBySelf = message.author?.id === this.users.getSelfUserId();
-		this.writeReadState(emit, message.channel_id, {
+		const channelId = message.channel_id;
+		const next = {
 			...current,
 			lastMessageId: message.id,
 			guildId: channel.guild_id ?? message.guild_id ?? current.guildId,
 			readStateKnown: authoredBySelf || !current.readStateKnown ? true : current.readStateKnown,
-			ackMessageId: authoredBySelf ? message.id : current.readStateKnown ? current.ackMessageId : previousLastMessageId,
+		};
+		let ackMessageId: string | null;
+		if (authoredBySelf) {
+			ackMessageId = message.id;
+		} else if (current.readStateKnown) {
+			ackMessageId = current.ackMessageId;
+		} else {
+			ackMessageId = previousLastMessageId;
+		}
+		this.writeReadState(emit, channelId, {
+			...next,
+			ackMessageId,
 			mentionCount: authoredBySelf ? 0 : current.mentionCount,
 		});
-	}
-
-	private isPrivateAckOnCreateChannel(channel: WireChannel): boolean {
-		return (
-			channel.last_message_id != null &&
-			(channel.type === ChannelTypes.DM ||
-				channel.type === ChannelTypes.GROUP_DM ||
-				channel.type === ChannelTypes.DM_PERSONAL_NOTES)
-		);
 	}
 }
 

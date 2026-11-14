@@ -5,8 +5,8 @@ import {
 	type FavoriteGifMediaFormat,
 	slimFavoriteGifEntry,
 	stripFavoriteGifEntrySignatures,
+	stripOwnAttachmentSignature,
 } from '@app/features/channel/components/pickers/gif/FavoriteGifTypes';
-import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
@@ -168,13 +168,13 @@ class FavoriteGif {
 	}
 
 	hasUrl(url: string): boolean {
-		const target = stripAttachmentSignature(url);
-		return this.favoriteGifs.some((entry) => stripAttachmentSignature(entry.url) === target);
+		const target = stripOwnAttachmentSignature(url);
+		return this.favoriteGifs.some((entry) => stripOwnAttachmentSignature(entry.url) === target);
 	}
 
 	findByUrl(url: string): FavoriteGifEntry | null {
-		const target = stripAttachmentSignature(url);
-		return this.favoriteGifs.find((entry) => stripAttachmentSignature(entry.url) === target) ?? null;
+		const target = stripOwnAttachmentSignature(url);
+		return this.favoriteGifs.find((entry) => stripOwnAttachmentSignature(entry.url) === target) ?? null;
 	}
 
 	addEntry(entry: FavoriteGifEntry): void {
@@ -185,8 +185,8 @@ class FavoriteGif {
 
 	removeByUrl(url: string): void {
 		if (!this.hasUrl(url)) return;
-		const target = stripAttachmentSignature(url);
-		this.favoriteGifs = this.favoriteGifs.filter((entry) => stripAttachmentSignature(entry.url) !== target);
+		const target = stripOwnAttachmentSignature(url);
+		this.favoriteGifs = this.favoriteGifs.filter((entry) => stripOwnAttachmentSignature(entry.url) !== target);
 	}
 
 	replaceAll(entries: ReadonlyArray<FavoriteGifEntry>): void {

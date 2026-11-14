@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
 import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {requireRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {Validator} from '@app/api/Validator';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
+import {STREAM_PREVIEW_CONTENT_TYPE_JPEG} from '@fluxer/constants/src/StreamConstants';
 import {
 	StreamPreviewResponse,
 	StreamPreviewUploadBodySchema,
@@ -73,9 +73,9 @@ export function StreamController(app: HonoApp) {
 			if (!preview) {
 				return ctx.body(null, 404);
 			}
-			const payload: ArrayBuffer = preview.buffer.slice().buffer;
+			const payload: ArrayBuffer = preview.slice().buffer;
 			const headers = {
-				'Content-Type': preview.contentType || 'image/jpeg',
+				'Content-Type': STREAM_PREVIEW_CONTENT_TYPE_JPEG,
 				'Cache-Control': 'no-store, private',
 				Pragma: 'no-cache',
 			};
@@ -102,10 +102,7 @@ export function StreamController(app: HonoApp) {
 			const user = ctx.get('user');
 			const {channel_id, content_type} = ctx.req.valid('json');
 			const streamKey = ctx.req.valid('param').stream_key;
-			const clientIp = requireClientIp(ctx.req.raw, {
-				trustClientIpHeader: Config.proxy.trust_client_ip_header,
-				clientIpHeaderName: Config.proxy.client_ip_header,
-			});
+			const clientIp = requireRequestClientIp(ctx);
 			const response = await ctx.get('streamService').createPreviewUploadUrl({
 				viewer: viewerFromCtx(ctx),
 				streamKey,

@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {BUILD_CHANNEL, type BuildChannel} from '@electron/common/BuildChannel';
+import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
 import {app} from 'electron';
 
 interface UserDataPaths {
@@ -71,7 +72,9 @@ function resolveUserDataPaths(channel: BuildChannel): {
 	base: string;
 	portable: boolean;
 } {
-	const directoryName = channelStorageDirectoryMap[channel];
+	const directoryName = IS_OFFLINE_BUILD
+		? `${channelStorageDirectoryMap[channel]}-distro`
+		: channelStorageDirectoryMap[channel];
 	const portable = detectPortableMode();
 	if (portable) {
 		const base = path.join(getPortableBasePath(), directoryName);

@@ -57,24 +57,6 @@ export function desktopLegacyReplantMarker(replantedAt: number): string {
 	return JSON.stringify({version: DESKTOP_LEGACY_REPLANT_MARKER_VERSION, replantedAt});
 }
 
-export function isDesktopLegacyReplantMarker(value: string | null): boolean {
-	if (value === null) return false;
-	let parsed: unknown;
-	try {
-		parsed = JSON.parse(value);
-	} catch {
-		return false;
-	}
-	if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return false;
-	const record = parsed as {version?: unknown; replantedAt?: unknown};
-	return (
-		record.version === DESKTOP_LEGACY_REPLANT_MARKER_VERSION &&
-		typeof record.replantedAt === 'number' &&
-		Number.isFinite(record.replantedAt) &&
-		record.replantedAt > 0
-	);
-}
-
 export interface DesktopLegacyHarvestRecord {
 	readonly key: unknown | null;
 	readonly value: unknown;

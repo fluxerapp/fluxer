@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ADMIN_AUDIT_READ_ACTIONS, getAdminAuditAccess} from '@app/api/admin/AdminAuditActions';
-import type {AdminAuditLog, IAdminRepository} from '@app/api/admin/IAdminRepository';
+import {withAdminAuditAttribution} from '@app/api/admin/AdminAuditAttribution';
+import type {AdminAuditLog, AdminRepository} from '@app/api/admin/AdminRepository';
 import type {UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {Logger} from '@app/api/Logger';
+import {hasAdminACL} from '@app/api/middleware/AdminMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Guild} from '@app/api/models/Guild';
 import type {User} from '@app/api/models/User';
 import {getAuditLogSearchService} from '@app/api/SearchFactory';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {maskIpForDisplay} from '@fluxer/ip_utils/src/IpAddress';
 import type {AuditLogSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import type {
 	AdminAuditAccess,
@@ -34,7 +38,7 @@ interface CreateAdminAuditLogParams {
 
 export class AdminAuditService {
 	constructor(
-		private readonly adminRepository: IAdminRepository,
+		private readonly adminRepository: AdminRepository,
 		private readonly snowflakeService: ISnowflakeService,
 		private readonly enrichmentDeps: AuditLogEnrichmentDeps = {},
 	) {}
@@ -46,7 +50,7 @@ export class AdminAuditService {
 		action,
 		auditLogReason,
 		metadata = new Map(),
-	}: CreateAdminAuditLogParams): Promise<void> {
+	}: CreateAdminAuditLogParams): Promise<bigint> {
 		const log = await this.adminRepository.createAuditLog({
 			log_id: await this.snowflakeService.generate(),
 			admin_user_id: adminUserId,
@@ -54,7 +58,7 @@ export class AdminAuditService {
 			target_id: targetId,
 			action,
 			audit_log_reason: auditLogReason ?? null,
-			metadata,
+			metadata: withAdminAuditAttribution(metadata),
 			created_at: new Date(),
 		});
 		const auditLogSearchService = getAuditLogSearchService();
@@ -63,61 +67,16 @@ export class AdminAuditService {
 				Logger.error({error, logId: log.logId}, 'Failed to index audit log to search');
 			});
 		}
+		return log.logId;
 	}
 
-	async findAuditLog(logId: bigint): Promise<AdminAuditLog | null> {
-		return this.adminRepository.getAuditLog(logId);
-	}
-
-	async getAuditLog(logId: bigint): Promise<AdminAuditLogResponse | null> {
+	async getAuditLog(logId: bigint, acls: ReadonlySet<string>): Promise<AdminAuditLogResponse | null> {
 		const log = await this.adminRepository.getAuditLog(logId);
 		if (!log) {
 			return null;
 		}
-		const [response] = await this.toResponses([log]);
+		const [response] = await this.toResponses([log], acls);
 		return response;
-	}
-
-	async listAuditLogs(data: {
-		admin_user_id?: bigint;
-		target_type?: string;
-		target_id?: string;
-		access?: AdminAuditAccess;
-		limit?: number;
-		offset?: number;
-	}): Promise<AuditLogsListResponse> {
-		const auditLogSearchService = getAuditLogSearchService();
-		const targetIdBigInt = data.target_id ? BigInt(data.target_id) : undefined;
-		if (!auditLogSearchService?.isAvailable()) {
-			return this.listAuditLogsFromDatabase({
-				adminUserId: data.admin_user_id,
-				targetType: data.target_type,
-				targetId: targetIdBigInt,
-				access: data.access,
-				limit: data.limit,
-				offset: data.offset,
-			});
-		}
-		const limit = data.limit || 50;
-		const filters: AuditLogSearchFilters = {...accessFilters(data.access)};
-		if (data.admin_user_id) {
-			filters.adminUserId = data.admin_user_id.toString();
-		}
-		if (data.target_type) {
-			filters.targetType = data.target_type;
-		}
-		if (data.target_id) {
-			filters.targetId = data.target_id;
-		}
-		const {hits, total} = await auditLogSearchService.searchAuditLogs('', filters, {
-			limit,
-			offset: data.offset || 0,
-		});
-		const orderedLogs = await this.loadLogsInSearchOrder(hits.map((hit) => BigInt(hit.logId)));
-		return {
-			logs: await this.toResponses(orderedLogs),
-			total,
-		};
 	}
 
 	async searchAuditLogs(data: {
@@ -130,6 +89,7 @@ export class AdminAuditService {
 		sort_order?: 'asc' | 'desc';
 		limit?: number;
 		offset?: number;
+		acls: ReadonlySet<string>;
 	}): Promise<AuditLogsListResponse> {
 		const auditLogSearchService = getAuditLogSearchService();
 		const targetIdBigInt = data.target_id ? BigInt(data.target_id) : undefined;
@@ -141,6 +101,7 @@ export class AdminAuditService {
 				access: data.access,
 				limit: data.limit,
 				offset: data.offset,
+				acls: data.acls,
 			});
 		}
 		const filters: AuditLogSearchFilters = {...accessFilters(data.access)};
@@ -165,7 +126,7 @@ export class AdminAuditService {
 		});
 		const orderedLogs = await this.loadLogsInSearchOrder(hits.map((hit) => BigInt(hit.logId)));
 		return {
-			logs: await this.toResponses(orderedLogs),
+			logs: await this.toResponses(orderedLogs, data.acls),
 			total,
 		};
 	}
@@ -177,6 +138,7 @@ export class AdminAuditService {
 		access?: AdminAuditAccess;
 		limit?: number;
 		offset?: number;
+		acls: ReadonlySet<string>;
 	}): Promise<AuditLogsListResponse> {
 		const limit = data.limit || 50;
 		const allLogs = await this.adminRepository.listAllAuditLogsPaginated(limit + (data.offset || 0));
@@ -196,7 +158,7 @@ export class AdminAuditService {
 		const offset = data.offset || 0;
 		const paginatedLogs = filteredLogs.slice(offset, offset + limit);
 		return {
-			logs: await this.toResponses(paginatedLogs),
+			logs: await this.toResponses(paginatedLogs, data.acls),
 			total: filteredLogs.length,
 		};
 	}
@@ -214,12 +176,16 @@ export class AdminAuditService {
 		return result;
 	}
 
-	private async toResponses(logs: Array<AdminAuditLog>): Promise<Array<AdminAuditLogResponse>> {
+	private async toResponses(
+		logs: Array<AdminAuditLog>,
+		acls: ReadonlySet<string>,
+	): Promise<Array<AdminAuditLogResponse>> {
 		const enrichment = await this.loadEnrichment(logs);
-		return logs.map((log) => this.toResponse(log, enrichment));
+		const canViewIp = hasAdminACL(acls, AdminACLs.USER_VIEW_IP);
+		return logs.map((log) => this.toResponse(log, enrichment, canViewIp));
 	}
 
-	private toResponse(log: AdminAuditLog, enrichment: AuditLogEnrichment): AdminAuditLogResponse {
+	private toResponse(log: AdminAuditLog, enrichment: AuditLogEnrichment, canViewIp: boolean): AdminAuditLogResponse {
 		const adminUserId = log.adminUserId.toString();
 		const targetId = log.targetId.toString();
 		const targetUser = this.targetUserForLog(log, enrichment);
@@ -246,7 +212,7 @@ export class AdminAuditService {
 			action: log.action,
 			access: getAdminAuditAccess(log.action),
 			audit_log_reason: log.auditLogReason,
-			metadata: Object.fromEntries(log.metadata),
+			metadata: responseMetadata(log.metadata, canViewIp),
 			created_at: log.createdAt.toISOString(),
 		};
 	}
@@ -334,6 +300,18 @@ export class AdminAuditService {
 	}
 }
 
+function responseMetadata(metadata: Map<string, string>, canViewIp: boolean): Record<string, string> {
+	const result = Object.fromEntries(metadata);
+	const blockedIps = metadata.get('blocked_ips');
+	if (!canViewIp && blockedIps) {
+		result.blocked_ips = blockedIps
+			.split(',')
+			.map((ip) => maskIpForDisplay(ip) ?? '[redacted]')
+			.join(',');
+	}
+	return result;
+}
+
 function accessFilters(access: AdminAuditAccess | undefined): AuditLogSearchFilters {
 	if (access === 'read') return {actions: [...ADMIN_AUDIT_READ_ACTIONS]};
 	if (access === 'write') return {excludeActions: [...ADMIN_AUDIT_READ_ACTIONS]};
@@ -341,9 +319,9 @@ function accessFilters(access: AdminAuditAccess | undefined): AuditLogSearchFilt
 }
 
 interface AuditLogEnrichmentDeps {
-	userRepository?: Pick<IUserRepository, 'findUnique'>;
-	guildRepository?: Pick<IGuildRepositoryAggregate, 'findUnique'>;
-	channelRepository?: Pick<IChannelRepository, 'findUnique'>;
+	userRepository?: Pick<UserRepository, 'findUnique'>;
+	guildRepository?: Pick<GuildRepository, 'findUnique'>;
+	channelRepository?: Pick<ChannelDataRepository, 'findUnique'>;
 }
 
 interface AuditLogEnrichment {

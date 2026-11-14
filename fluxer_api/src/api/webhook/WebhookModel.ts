@@ -2,13 +2,13 @@
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Webhook} from '@app/api/models/Webhook';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+
 import {Permissions, WebhookTypes, type WebhookTypeValue} from '@fluxer/constants/src/ChannelConstants';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import type {WebhookResponse, WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
@@ -36,7 +36,7 @@ export function createWebhookSourceResolver({
 	gatewayService,
 	requestCache,
 }: {
-	channelRepository: IChannelRepository;
+	channelRepository: ChannelRepository;
 	gatewayService: IGatewayService;
 	requestCache: RequestCache;
 }): WebhookSourceResolver {
@@ -74,14 +74,14 @@ async function resolveWebhookSource({
 	sourceChannelId,
 	creatorId,
 }: {
-	channelRepository: IChannelRepository;
+	channelRepository: ChannelRepository;
 	gatewayService: IGatewayService;
 	sourceGuildId: GuildID;
 	sourceChannelId: ChannelID;
 	creatorId: UserID;
 }): Promise<WebhookSourceFields | null> {
 	try {
-		const channel = await channelRepository.findUnique(sourceChannelId);
+		const channel = await channelRepository.channelData.findUnique(sourceChannelId);
 		if (!channel || channel.guildId !== sourceGuildId) return null;
 		const canView = await gatewayService.checkPermission({
 			guildId: sourceGuildId,
@@ -120,11 +120,7 @@ export async function mapWebhookToResponseWithCache({
 	resolveSource?: WebhookSourceResolver;
 }): Promise<WebhookResponse> {
 	const [creatorPartial, source] = await Promise.all([
-		getCachedUserPartialResponse({
-			userId: webhook.creatorId ?? createUserID(DELETED_USER_ID),
-			userCacheService,
-			requestCache,
-		}),
+		userCacheService.getUserPartialResponse(webhook.creatorId ?? createUserID(DELETED_USER_ID), requestCache),
 		resolveSource ? resolveSource(webhook) : Promise.resolve(null),
 	]);
 	const {token, ...common} = mapWebhookToTokenResponse(webhook);

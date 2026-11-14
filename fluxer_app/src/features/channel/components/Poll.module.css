@@ -126,7 +126,6 @@
 
 		.answerMeSuccess {
 			color: var(--poll-answer-bar-accent);
-			background: white;
 			background: radial-gradient(circle, white 0%, white 50%, transparent 50%, transparent 100%);
 		}
 
@@ -154,7 +153,6 @@
 
 		.answerMeSuccess {
 			color: var(--accent-success);
-			background: white;
 			background: radial-gradient(circle, white 0%, white 50%, transparent 50%, transparent 100%);
 		}
 
@@ -166,7 +164,7 @@
 
 .answerText {
 	flex-grow: 1;
-	text-align: left;
+	text-align: start;
 }
 
 .answerTotalVotes {
@@ -185,7 +183,8 @@
 		text-decoration: underline;
 	}
 
-	&[aria-disabled='true'], &:disabled {
+	&[aria-disabled='true'],
+	&:disabled {
 		color: var(--text-tertiary);
 		text-decoration: none;
 		cursor: not-allowed;
@@ -203,7 +202,6 @@
 
 	&[data-variant='winner'] {
 		color: var(--accent-success);
-		background: white;
 		background: radial-gradient(circle, white 0%, white 50%, transparent 50%, transparent 100%);
 	}
 }

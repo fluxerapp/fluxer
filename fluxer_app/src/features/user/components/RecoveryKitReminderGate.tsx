@@ -60,7 +60,7 @@ function openRecoveryKitPrompt(): void {
 export const RecoveryKitReminderGate = observer(() => {
 	const user = Users.currentUser;
 	const userId = user?.id ?? null;
-	const eligible = RuntimeConfig.usesUsernameSignIn && Boolean(user?.isClaimed());
+	const eligible = RuntimeConfig.usesUsernameSignIn && Boolean(user?.isClaimed()) && Boolean(user?.hasPassword);
 	useEffect(() => {
 		if (!eligible || !userId || RecoveryKitStatus.hasShownPrompt(userId)) return;
 		const timer = window.setTimeout(async () => {

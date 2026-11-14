@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {CheckboxItem, MenuGroupLabel} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, MenuGroupLabel, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
@@ -22,7 +21,6 @@ import {
 } from '@app/features/voice/utils/LinuxAudioSourceRules';
 import {
 	formatScreenShareAudioSummary,
-	MICROPHONE_DESCRIPTOR,
 	MICROPHONE_WITH_DEVICE_DESCRIPTOR,
 	resolveDeviceShareAudioPairing,
 } from '@app/features/voice/utils/ScreenShareAudioSummary';
@@ -33,6 +31,7 @@ import {
 	supportsWindowShareAudioScope,
 	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {MICROPHONE_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import type {VirtmicNode} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';

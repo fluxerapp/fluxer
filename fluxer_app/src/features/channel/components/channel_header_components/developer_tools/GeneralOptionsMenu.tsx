@@ -5,8 +5,8 @@ import {updateOption} from '@app/features/channel/components/channel_header_comp
 import {getToggleGroups, type ToggleGroup} from '@app/features/devtools/components/DeveloperOptionsToggleGroups';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
+
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
@@ -66,7 +66,7 @@ export const GeneralDeveloperOptionsMenu: React.FC = observer(() => {
 	const toggleGroups = getToggleGroups();
 	const currentUser = Users.currentUser;
 	const canConfigureMentionSuppression = currentUser?.isStaff() ?? false;
-	const suppressUnprivilegedSelfMentions = UserSettings.getSuppressUnprivilegedSelfMentions();
+	const suppressUnprivilegedSelfMentions = UserSettings.suppressUnprivilegedSelfMentions;
 	return (
 		<>
 			{toggleGroups.map((group, index) => (

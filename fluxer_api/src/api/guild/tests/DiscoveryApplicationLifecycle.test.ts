@@ -16,6 +16,7 @@ import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryCategories, type DiscoveryCategory} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures, GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
 import type {
+	DiscoveryAdminPendingApplicationResponse,
 	DiscoveryApplicationResponse,
 	DiscoveryStatusResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
@@ -30,13 +31,6 @@ async function setGuildMemberCount(harness: ApiTestHarness, guildId: string, mem
 		.execute();
 }
 
-async function addGuildFeatureForTesting(harness: ApiTestHarness, guildId: string, feature: string): Promise<void> {
-	await createBuilder(harness, '')
-		.post(`/test/guilds/${guildId}/features`)
-		.body({add_features: [feature]})
-		.execute();
-}
-
 async function applyForDiscovery(
 	harness: ApiTestHarness,
 	token: string,
@@ -47,32 +41,6 @@ async function applyForDiscovery(
 	return createBuilder<DiscoveryApplicationResponse>(harness, token)
 		.post(`/guilds/${guildId}/discovery`)
 		.body({description, category_type: categoryId})
-		.expect(HTTP_STATUS.OK)
-		.execute();
-}
-
-async function adminApprove(
-	harness: ApiTestHarness,
-	adminToken: string,
-	guildId: string,
-	reason?: string,
-): Promise<DiscoveryApplicationResponse> {
-	return createBuilder<DiscoveryApplicationResponse>(harness, `${adminToken}`)
-		.patch(`/admin/discovery/applications/${guildId}`)
-		.body({status: 'approved', reason})
-		.expect(HTTP_STATUS.OK)
-		.execute();
-}
-
-async function adminReject(
-	harness: ApiTestHarness,
-	adminToken: string,
-	guildId: string,
-	reason: string,
-): Promise<DiscoveryApplicationResponse> {
-	return createBuilder<DiscoveryApplicationResponse>(harness, `${adminToken}`)
-		.patch(`/admin/discovery/applications/${guildId}`)
-		.body({status: 'rejected', reason})
 		.expect(HTTP_STATUS.OK)
 		.execute();
 }
@@ -104,9 +72,27 @@ async function loginWithTotp(harness: ApiTestHarness, account: TestAccount): Pro
 	return {...account, token: mfaResp.token};
 }
 
-async function createAdminAccount(harness: ApiTestHarness) {
-	const admin = await createTestAccount(harness);
-	return setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review', 'discovery:remove']);
+async function adminAddFeature(harness: ApiTestHarness, adminToken: string, guildId: string, feature: string) {
+	await createBuilder(harness, adminToken)
+		.patch(`/admin/guilds/${guildId}`)
+		.body({add_features: [feature]})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+}
+
+async function getDiscoveryStatus(harness: ApiTestHarness, token: string, guildId: string) {
+	return createBuilder<DiscoveryStatusResponse>(harness, token)
+		.get(`/guilds/${guildId}/discovery`)
+		.expect(HTTP_STATUS.OK)
+		.execute();
+}
+
+async function listQueueGuildIds(harness: ApiTestHarness, adminToken: string, path: string): Promise<Array<string>> {
+	const rows = await createBuilder<Array<DiscoveryAdminPendingApplicationResponse>>(harness, adminToken)
+		.get(path)
+		.expect(HTTP_STATUS.OK)
+		.execute();
+	return rows.map((row) => row.guild_id);
 }
 
 describe('Discovery Application Lifecycle', () => {
@@ -117,176 +103,36 @@ describe('Discovery Application Lifecycle', () => {
 	afterEach(async () => {
 		await harness?.shutdown();
 	});
-	test('should apply for discovery and return pending application', async () => {
+	test('keeps a pending application in review when a newly verified guild is below the member minimum', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			'admin:authenticate',
+			'discovery:review',
+			'guild:update:features',
+		]);
 		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Discovery Test Guild');
-		await setGuildMemberCount(harness, guild.id, 1);
-		const application = await applyForDiscovery(harness, owner.token, guild.id);
-		expect(application.guild_id).toBe(guild.id);
-		expect(application.status).toBe('pending');
-		expect(application.description).toBe('A great community for testing discovery features');
-		expect(application.category_type).toBe(DiscoveryCategories.GAMING);
-		expect(application.applied_at).toBeTruthy();
-		expect(application.reviewed_at).toBeNull();
-		expect(application.review_reason).toBeNull();
-	});
-	test('should retrieve application status', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Status Test Guild');
+		const guild = await createGuild(harness, owner.token, 'Pending Small Verified Guild');
 		await setGuildMemberCount(harness, guild.id, 1);
 		await applyForDiscovery(harness, owner.token, guild.id);
-		const status = await createBuilder<DiscoveryStatusResponse>(harness, owner.token)
-			.get(`/guilds/${guild.id}/discovery`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(status.application).not.toBeNull();
-		expect(status.application!.guild_id).toBe(guild.id);
-		expect(status.application!.status).toBe('pending');
-		expect(status.eligible).toBe(true);
-		expect(status.min_member_count).toBeGreaterThan(0);
+		await setGuildMemberCount(harness, guild.id, 0);
+		await adminAddFeature(harness, admin.token, guild.id, GuildFeatures.VERIFIED);
+		const status = await getDiscoveryStatus(harness, owner.token, guild.id);
+		expect(status.application?.status).toBe('pending');
+		expect((await getGuild(harness, owner.token, guild.id)).features).not.toContain(GuildFeatures.DISCOVERABLE);
+		expect(await listQueueGuildIds(harness, admin.token, '/admin/discovery/applications')).toContain(guild.id);
 	});
-	test('should edit pending application description', async () => {
+	test('still rejects a second application from an unverified guild with one pending', async () => {
 		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Edit Test Guild');
-		await setGuildMemberCount(harness, guild.id, 1);
-		await applyForDiscovery(harness, owner.token, guild.id);
-		const updated = await createBuilder<DiscoveryApplicationResponse>(harness, owner.token)
-			.patch(`/guilds/${guild.id}/discovery`)
-			.body({description: 'Updated community description'})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(updated.description).toBe('Updated community description');
-		expect(updated.category_type).toBe(DiscoveryCategories.GAMING);
-	});
-	test('should edit pending application category', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Category Edit Guild');
-		await setGuildMemberCount(harness, guild.id, 1);
-		await applyForDiscovery(harness, owner.token, guild.id);
-		const updated = await createBuilder<DiscoveryApplicationResponse>(harness, owner.token)
-			.patch(`/guilds/${guild.id}/discovery`)
-			.body({category_type: DiscoveryCategories.EDUCATION})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(updated.category_type).toBe(DiscoveryCategories.EDUCATION);
-	});
-	test('should withdraw pending application', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Withdraw Test Guild');
+		const guild = await createGuild(harness, owner.token, 'Pending Reapply Guild');
 		await setGuildMemberCount(harness, guild.id, 1);
 		await applyForDiscovery(harness, owner.token, guild.id);
 		await createBuilder(harness, owner.token)
-			.delete(`/guilds/${guild.id}/discovery`)
-			.expect(HTTP_STATUS.NO_CONTENT)
+			.post(`/guilds/${guild.id}/discovery`)
+			.body({
+				description: 'A great community for testing discovery features',
+				category_type: DiscoveryCategories.GAMING,
+			})
+			.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.DISCOVERY_ALREADY_APPLIED)
 			.execute();
-		const status = await createBuilder<DiscoveryStatusResponse>(harness, owner.token)
-			.get(`/guilds/${guild.id}/discovery`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(status.application).toBeNull();
-	});
-	test('should auto-approve applications for verified and partnered guilds', async () => {
-		const autoApprovedFeatures = [GuildFeatures.VERIFIED, GuildFeatures.PARTNERED];
-		for (const feature of autoApprovedFeatures) {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, `Auto-approved ${feature} Guild`);
-			await setGuildMemberCount(harness, guild.id, 1);
-			await addGuildFeatureForTesting(harness, guild.id, feature);
-			const application = await applyForDiscovery(harness, owner.token, guild.id);
-			expect(application.status).toBe('approved');
-			expect(application.reviewed_at).toBeTruthy();
-			expect(application.review_reason).toBeNull();
-			const guildData = await getGuild(harness, owner.token, guild.id);
-			expect(guildData.features).toContain(GuildFeatures.DISCOVERABLE);
-		}
-	});
-	test('should complete full lifecycle: apply → approve → verify feature → withdraw', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Full Lifecycle Guild');
-		await setGuildMemberCount(harness, guild.id, 1);
-		const admin = await createAdminAccount(harness);
-		const application = await applyForDiscovery(harness, owner.token, guild.id);
-		expect(application.status).toBe('pending');
-		const approved = await adminApprove(harness, admin.token, guild.id, 'Meets all criteria');
-		expect(approved.status).toBe('approved');
-		expect(approved.reviewed_at).toBeTruthy();
-		expect(approved.review_reason).toBe('Meets all criteria');
-		const guildData = await getGuild(harness, owner.token, guild.id);
-		expect(guildData.features).toContain(GuildFeatures.DISCOVERABLE);
-		await createBuilder(harness, owner.token)
-			.delete(`/guilds/${guild.id}/discovery`)
-			.expect(HTTP_STATUS.NO_CONTENT)
-			.execute();
-		const guildAfterWithdraw = await getGuild(harness, owner.token, guild.id);
-		expect(guildAfterWithdraw.features).not.toContain(GuildFeatures.DISCOVERABLE);
-	});
-	test('should allow reapplication after rejection', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Reapply Test Guild');
-		await setGuildMemberCount(harness, guild.id, 1);
-		const admin = await createAdminAccount(harness);
-		await applyForDiscovery(harness, owner.token, guild.id);
-		await adminReject(harness, admin.token, guild.id, 'Needs more detail');
-		const status = await createBuilder<DiscoveryStatusResponse>(harness, owner.token)
-			.get(`/guilds/${guild.id}/discovery`)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(status.application!.status).toBe('rejected');
-		const reapplication = await applyForDiscovery(
-			harness,
-			owner.token,
-			guild.id,
-			'Improved description with more detail about the community',
-		);
-		expect(reapplication.status).toBe('pending');
-	});
-	test('should edit approved application description', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Edit Approved Guild');
-		await setGuildMemberCount(harness, guild.id, 1);
-		const admin = await createAdminAccount(harness);
-		await applyForDiscovery(harness, owner.token, guild.id);
-		await adminApprove(harness, admin.token, guild.id);
-		const updated = await createBuilder<DiscoveryApplicationResponse>(harness, owner.token)
-			.patch(`/guilds/${guild.id}/discovery`)
-			.body({description: 'Updated description after approval'})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(updated.description).toBe('Updated description after approval');
-		expect(updated.status).toBe('approved');
-	});
-	test('should apply with each valid category', async () => {
-		const categories = [
-			DiscoveryCategories.GAMING,
-			DiscoveryCategories.MUSIC,
-			DiscoveryCategories.ENTERTAINMENT,
-			DiscoveryCategories.EDUCATION,
-			DiscoveryCategories.SCIENCE_AND_TECHNOLOGY,
-			DiscoveryCategories.CONTENT_CREATOR,
-			DiscoveryCategories.ANIME_AND_MANGA,
-			DiscoveryCategories.MOVIES_AND_TV,
-			DiscoveryCategories.OTHER,
-		];
-		for (const categoryId of categories) {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, `Cat ${categoryId} Guild`);
-			await setGuildMemberCount(harness, guild.id, 1);
-			const application = await applyForDiscovery(
-				harness,
-				owner.token,
-				guild.id,
-				'Valid description for this category',
-				categoryId,
-			);
-			expect(application.category_type).toBe(categoryId);
-		}
-	});
-	test('should allow applying with minimum description length', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Min Desc Guild');
-		await setGuildMemberCount(harness, guild.id, 1);
-		const application = await applyForDiscovery(harness, owner.token, guild.id, 'Short desc');
-		expect(application.description).toBe('Short desc');
 	});
 	test('rejects apply with TWO_FACTOR_REQUIRED for a non-owner without MFA in an elevated guild', async () => {
 		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
@@ -309,13 +155,5 @@ describe('Discovery Application Lifecycle', () => {
 			.body({description: 'Moderator without an authenticator', category_type: DiscoveryCategories.GAMING})
 			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.TWO_FACTOR_REQUIRED)
 			.execute();
-	});
-	test('should allow applying with maximum description length', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Max Desc Guild');
-		await setGuildMemberCount(harness, guild.id, 1);
-		const maxDescription = 'A'.repeat(300);
-		const application = await applyForDiscovery(harness, owner.token, guild.id, maxDescription);
-		expect(application.description).toBe(maxDescription);
 	});
 });

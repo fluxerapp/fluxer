@@ -1,0 +1,27 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.acronym {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	border-radius: inherit;
+	container-type: inline-size;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.text {
+	flex: 0 0 auto;
+	font-size: max(0.5rem, calc(var(--guild-acronym-font-scale) * 100cqi));
+	font-style: normal;
+	font-weight: 500;
+	letter-spacing: normal;
+	line-height: 1;
+	text-align: center;
+	text-transform: none;
+	white-space: nowrap;
+}

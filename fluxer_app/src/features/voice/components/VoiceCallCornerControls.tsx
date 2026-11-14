@@ -52,7 +52,7 @@ export const VoiceCallCornerControls: React.FC<VoiceCallCornerControlsProps> = (
 		return BoldIcon;
 	}, []);
 	return (
-		<div className={wrapClassName} data-flx="voice.voice-call-corner-controls.wrap">
+		<div className={wrapClassName} data-voice-call-corner data-flx="voice.voice-call-corner-controls.wrap">
 			{volumeControl}
 			{showPopout && onPopOut && (
 				<ChannelHeaderIcon

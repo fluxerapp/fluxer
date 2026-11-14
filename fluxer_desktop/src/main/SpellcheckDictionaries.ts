@@ -11,6 +11,13 @@ interface SpellcheckDictionarySource {
 }
 
 export const DICTIONARY_SOURCES = {
+	'dictionary-be': {
+		version: '1.0.0',
+		affSha256: '301c4e76780ed2e0dd67459e2ba266b60e6adf49e7fcbd59cae1a1f5e4ba156c',
+		dicSha256: 'd8b436fadd97d2faaf41b7aa45679b63db41ab4ec3b284df8e04382b2912e06e',
+		affBytes: 23242,
+		dicBytes: 1747153,
+	},
 	'dictionary-bg': {
 		version: '2.0.0',
 		affSha256: 'cb6bfc56d6b1e70c812061086d7ec5ad6aaf6d35acd927a035f1cee0188ea477',
@@ -207,6 +214,13 @@ export const DICTIONARY_SOURCES = {
 		affBytes: 979789,
 		dicBytes: 4477692,
 	},
+	'dictionary-pt-pt': {
+		version: '2.0.0',
+		affSha256: '975a209fcc892cb382fa5f34a28c391a39668661ce373ae071287809c5fcae24',
+		dicSha256: 'fcac21564163586df74ba88cde362bb75560548b35bcaa780558c8f97f43de04',
+		affBytes: 95089,
+		dicBytes: 1475328,
+	},
 	'dictionary-ro': {
 		version: '3.0.0',
 		affSha256: '3ee127a667bdec829faee546ae32033e8f10f7c63117f9b572ef03ad9df2b76b',
@@ -279,6 +293,7 @@ export interface SpellcheckDictionaryCatalogEntry extends SpellcheckBundledDicti
 }
 
 export const BUNDLED_DICTIONARIES: ReadonlyArray<SpellcheckDictionaryCatalogEntry> = [
+	{tag: 'be', package: 'dictionary-be', displayName: 'Belarusian', nativeName: 'Беларуская'},
 	{tag: 'bg', package: 'dictionary-bg', displayName: 'Bulgarian', nativeName: 'Български'},
 	{tag: 'ca', package: 'dictionary-ca', displayName: 'Catalan', nativeName: 'Català'},
 	{tag: 'cs', package: 'dictionary-cs', displayName: 'Czech', nativeName: 'Čeština'},
@@ -310,6 +325,7 @@ export const BUNDLED_DICTIONARIES: ReadonlyArray<SpellcheckDictionaryCatalogEntr
 	{tag: 'pl', package: 'dictionary-pl', displayName: 'Polish', nativeName: 'Polski'},
 	{tag: 'pt', package: 'dictionary-pt', displayName: 'Portuguese', nativeName: 'Português'},
 	{tag: 'pt-BR', package: 'dictionary-pt', displayName: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)'},
+	{tag: 'pt-PT', package: 'dictionary-pt-pt', displayName: 'Portuguese (Portugal)', nativeName: 'Português (Portugal)'},
 	{tag: 'ro', package: 'dictionary-ro', displayName: 'Romanian', nativeName: 'Română'},
 	{tag: 'ru', package: 'dictionary-ru', displayName: 'Russian', nativeName: 'Русский'},
 	{tag: 'sk', package: 'dictionary-sk', displayName: 'Slovak', nativeName: 'Slovenčina'},

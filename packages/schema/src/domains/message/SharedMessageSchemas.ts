@@ -14,7 +14,7 @@ export const ALLOWED_MENTIONS_PARSE = [
 	AllowedMentionParseTypes.EVERYONE,
 ] as const;
 export const AllowedMentionsRequest = z.object({
-	parse: z.array(AllowedMentionParseTypeSchema).optional().describe('Types of mentions to parse from content'),
+	parse: z.array(AllowedMentionParseTypeSchema).max(10).optional().describe('Types of mentions to parse from content'),
 	users: z.array(SnowflakeType).max(100).optional().describe('Array of user IDs to mention (max 100)'),
 	roles: z.array(SnowflakeType).max(100).optional().describe('Array of role IDs to mention (max 100)'),
 	replied_user: z.boolean().optional().describe('Whether to mention the author of the replied message'),

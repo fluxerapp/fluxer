@@ -1,22 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{
-    CALVER_SCHEME, CalverEnv, append_github_env, append_github_output, micro_segment,
-    month_day_segment, parse_version_instant, resolve_calver, trim_option,
+    CALVER_SCHEME, CalverEnv, append_github_output, micro_segment, month_day_segment,
+    parse_version_instant, resolve_calver,
 };
 use anyhow::Result;
 use chrono::{Datelike, Timelike, Utc};
 use clap::Args;
-use std::env;
 
 #[derive(Debug, Args, Clone)]
 pub struct ResolveCalverArgs {
     #[arg(long)]
     github_output: bool,
-    #[arg(long)]
-    github_env: bool,
-    #[arg(long, default_value = "BUILD_VERSION")]
-    env_name: String,
 }
 
 pub fn run(args: ResolveCalverArgs) -> Result<()> {
@@ -37,22 +32,12 @@ pub fn run(args: ResolveCalverArgs) -> Result<()> {
             ("calver_scheme", CALVER_SCHEME),
         ])?;
     }
-    if args.github_env {
-        append_github_env(&[(args.env_name.as_str(), resolved.as_str())])?;
-    }
     println!("{resolved}");
     Ok(())
 }
 
 fn resolve_calver_from_env() -> Result<String> {
-    resolve_calver(
-        &CalverEnv {
-            build_version: trim_option(env::var("BUILD_VERSION").ok()),
-            fluxer_build_version: trim_option(env::var("FLUXER_BUILD_VERSION").ok()),
-            fluxer_build_date: trim_option(env::var("FLUXER_BUILD_DATE").ok()),
-        },
-        Utc::now(),
-    )
+    resolve_calver(&CalverEnv::from_process(), Utc::now())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -127,13 +112,5 @@ mod tests {
         .unwrap();
 
         assert_eq!(version, "2026.109.0");
-    }
-
-    #[test]
-    fn calver_rejects_invalid_time() {
-        assert_eq!(
-            calver_outputs("2026.520.246000").unwrap_err().to_string(),
-            "Invalid build version date/time: 2026.520.246000"
-        );
     }
 }

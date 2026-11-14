@@ -2,36 +2,25 @@
 
 import {Config} from '@app/api/Config';
 import {
+	type AccountIdentity,
 	type AccountIdentityMode,
 	AccountIdentityModes,
 	DEFAULT_ACCOUNT_IDENTITY_MODE,
+	normalizeAccountIdentity,
 	type TagStyle,
 	TagStyles,
 } from '@fluxer/constants/src/AccountIdentityConstants';
 
-export interface StoredAccountIdentity {
-	mode: AccountIdentityMode;
-	tagStyle: TagStyle;
-}
+let cachedStored: AccountIdentity | null = null;
 
-export interface AccountIdentity {
-	mode: AccountIdentityMode;
-	tagStyle: TagStyle;
-}
-
-let cachedStored: StoredAccountIdentity | null = null;
-
-export function resolveAccountIdentity(stored: StoredAccountIdentity | null): AccountIdentity {
+export function resolveAccountIdentity(stored: AccountIdentity | null): AccountIdentity {
 	if (!Config.instance.selfHosted || !stored) {
 		return {mode: DEFAULT_ACCOUNT_IDENTITY_MODE, tagStyle: TagStyles.RANDOM};
 	}
-	return {
-		mode: stored.mode,
-		tagStyle: stored.mode === AccountIdentityModes.USERNAME ? TagStyles.NONE : stored.tagStyle,
-	};
+	return normalizeAccountIdentity(stored.mode, stored.tagStyle);
 }
 
-export function getCachedAccountIdentity(): AccountIdentity {
+function getCachedAccountIdentity(): AccountIdentity {
 	return resolveAccountIdentity(cachedStored);
 }
 
@@ -51,6 +40,6 @@ export function usesUniqueUsernames(): boolean {
 	return getCachedTagStyle() === TagStyles.NONE;
 }
 
-export function setCachedAccountIdentity(stored: StoredAccountIdentity | null): void {
+export function setCachedAccountIdentity(stored: AccountIdentity | null): void {
 	cachedStored = stored;
 }

@@ -175,7 +175,7 @@ authoritative_voice_states(State) ->
         {error, _Reason} -> voice_state_utils:voice_states(State)
     end.
 
--spec cast_disconnect_voice_user(integer(), guild_state()) -> ok.
+-spec cast_disconnect_voice_user(integer() | undefined, guild_state()) -> ok.
 cast_disconnect_voice_user(UserId, State) when is_integer(UserId), UserId > 0 ->
     case voice_server_pid(State) of
         {ok, VoiceServerPid} ->
@@ -248,52 +248,3 @@ read_from_pid(VoiceServerPid) ->
     catch
         exit:Reason -> {error, Reason}
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-cast_disconnect_voice_user_reaches_the_voice_server_test() ->
-    Self = self(),
-    VoicePid = spawn(fun() ->
-        receive
-            Message -> Self ! {voice_server_got, Message}
-        end
-    end),
-    ok = cast_disconnect_voice_user(7, #{id => 42, voice_server_pid => VoicePid}),
-    receive
-        {voice_server_got, {'$gen_cast', {disconnect_voice_user, Request}}} ->
-            ?assertEqual(#{user_id => 7, connection_id => null}, Request)
-    after 200 ->
-        exit(VoicePid, kill),
-        ?assert(false)
-    end.
-
-cast_disconnect_voice_user_without_a_voice_server_is_a_noop_test() ->
-    ?assertEqual(ok, cast_disconnect_voice_user(7, #{id => 987654329})),
-    ?assertEqual(ok, cast_disconnect_voice_user(undefined, #{id => 987654329})).
-
-authoritative_voice_states_falls_back_to_the_guild_copy_test() ->
-    Cached = #{<<"conn">> => #{<<"user_id">> => <<"7">>}},
-    State = #{id => 987654331, voice_states => Cached},
-    ?assertEqual(Cached, authoritative_voice_states(State)).
-
-authoritative_voice_states_prefers_the_voice_server_test() ->
-    Live = #{<<"live">> => #{<<"user_id">> => <<"8">>}},
-    VoicePid = spawn(fun() -> voice_states_reply_loop(Live) end),
-    State = #{id => 987654333, voice_states => #{}, voice_server_pid => VoicePid},
-    try
-        ?assertEqual(Live, authoritative_voice_states(State))
-    after
-        exit(VoicePid, kill)
-    end.
-
-voice_states_reply_loop(VoiceStates) ->
-    receive
-        {'$gen_call', From, {get_voice_states_map}} ->
-            gen_server:reply(From, VoiceStates),
-            voice_states_reply_loop(VoiceStates);
-        _ ->
-            voice_states_reply_loop(VoiceStates)
-    end.
-
--endif.

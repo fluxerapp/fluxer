@@ -3,6 +3,7 @@
 import pollStyles from '@app/features/channel/components/Poll.module.css';
 import styles from '@app/features/channel/components/PollClosedMessage.module.css';
 import {SystemMessage} from '@app/features/channel/components/SystemMessage';
+import {SystemMessageMessageLink} from '@app/features/channel/components/SystemMessageMessageLink';
 import {SystemMessageUsername} from '@app/features/channel/components/SystemMessageUsername';
 import {useSystemMessageData} from '@app/features/messaging/hooks/useSystemMessageData';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -14,14 +15,13 @@ import {Trans} from '@lingui/react/macro';
 import {CheckCircleIcon, TableIcon} from '@phosphor-icons/react';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {SystemMessageMessageLink} from './SystemMessageMessageLink';
 
 interface PollClosedMessage {
 	message: Message;
 }
 
 const NOBODY_VOTED_DESCRIPTOR = msg({
-	message: "Nobody voted!",
+	message: 'Nobody voted!',
 	comment: 'Small explanatory text informing the user that nobody voted on the poll.',
 });
 const ITS_A_DRAW_DESCRIPTOR = msg({
@@ -58,6 +58,12 @@ export const PollClosedMessage = observer(({message}: PollClosedMessage) => {
 		}
 	}
 
+	function resultDescription(): React.ReactNode {
+		if (totalVotes === 0) return i18n._(NOBODY_VOTED_DESCRIPTOR);
+		if (isDraw) return i18n._(ITS_A_DRAW_DESCRIPTOR);
+		return winningAnswer;
+	}
+
 	return (
 		<SystemMessage
 			icon={TableIcon}
@@ -88,9 +94,9 @@ export const PollClosedMessage = observer(({message}: PollClosedMessage) => {
 					data-flx="channel.poll-closed-message.embed"
 					className={clsx(pollStyles.pollContainer, styles.pollResults)}
 				>
-					<section>
+					<section data-flx="channel.poll-closed-message.section">
 						<div className={styles.resultDescription} data-flx="channel.poll-closed-message.embed.result-description">
-							{totalVotes === 0 ? i18n._(NOBODY_VOTED_DESCRIPTOR) : isDraw ? i18n._(ITS_A_DRAW_DESCRIPTOR) : winningAnswer}
+							<span data-flx="channel.poll-closed-message.span">{resultDescription()}</span>
 							{isDraw || totalVotes === 0 ? undefined : (
 								<CheckCircleIcon
 									weight="fill"

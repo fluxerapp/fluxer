@@ -4,21 +4,15 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/media_player/MediaPlayButton.module.css';
-import {msg} from '@lingui/core/macro';
+import {
+	ENTER_FULLSCREEN_DESCRIPTOR,
+	EXIT_FULLSCREEN_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
 import {CornersInIcon, CornersOutIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
 import {useCallback} from 'react';
-
-const EXIT_FULLSCREEN_DESCRIPTOR = msg({
-	message: 'Exit fullscreen',
-	comment: 'Tooltip / aria label on the fullscreen toggle in the media player (currently in fullscreen).',
-});
-const ENTER_FULLSCREEN_DESCRIPTOR = msg({
-	message: 'Enter fullscreen',
-	comment: 'Tooltip / aria label on the fullscreen toggle in the media player (not in fullscreen).',
-});
 
 interface MediaFullscreenButtonProps {
 	isFullscreen: boolean;

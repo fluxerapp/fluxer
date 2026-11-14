@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {TextareaButton} from '@app/features/channel/components/textarea/TextareaButton';
-import * as ExpressionPickerCommands from '@app/features/emoji/commands/ExpressionPickerCommands';
+import ExpressionPicker from '@app/features/emoji/state/ExpressionPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import styles from '@app/features/messaging/components/modals/poll_modal/PollAnswerInput.module.css';
@@ -121,7 +121,7 @@ export const PollAnswerInput = observer(
 		const closeExpressionPicker = useCallback(() => {
 			const popoutKey = getExpressionPickerPopoutKey();
 			PopoutCommands.close(popoutKey);
-			ExpressionPickerCommands.close();
+			ExpressionPicker.close();
 		}, [getExpressionPickerPopoutKey]);
 		const openExpressionPicker = useCallback(() => {
 			if (isMobile && onOpenEmojiSheet) {
@@ -216,6 +216,7 @@ export const PollAnswerInput = observer(
 											else openEmojiContextMenu(textareaRef.current);
 										}
 									}}
+									data-flx="messaging.poll-modal.poll-answer-input.emoji-value-button"
 								>
 									<img
 										src={emojiValue.url}

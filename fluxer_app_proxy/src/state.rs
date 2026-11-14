@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::branding_images::{BrandingSnapshot, InstanceBranding};
 use crate::config::{AppProxyConfig, HttpUrl};
 use crate::csp::CompiledCspPolicy;
 use crate::local_files::LocalFileStore;
-use crate::routes::present_local_asset_prefixes;
-use std::sync::Arc;
+use crate::routes::{bundles_app_assets, present_local_asset_prefixes};
+use axum::http::StatusCode;
+use futures_util::future::{BoxFuture, Shared};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
 use tokio::sync::Semaphore;
+use tokio::task::AbortHandle;
 
 pub const MAX_SPA_INDEX_BYTES: usize = 4 * 1024 * 1024;
 pub const MAX_RENDERED_SPA_INDEX_BYTES: usize = 8 * 1024 * 1024;
@@ -38,26 +42,30 @@ impl Default for AppProxyBudgets {
 
 pub const AUTH_ENTRY_SHELL_FILE: &str = "auth-index.html";
 
+pub type UpstreamSpaIndexFetch = Shared<BoxFuture<'static, Result<Arc<str>, StatusCode>>>;
+
+#[derive(Clone)]
+pub struct UpstreamSpaIndex {
+    pub url: Arc<HttpUrl>,
+    pub in_flight: Arc<Mutex<Option<(UpstreamSpaIndexFetch, AbortHandle)>>>,
+}
+
 #[derive(Clone)]
 pub enum SpaIndexSource {
     Bundled {
         shell: Arc<str>,
         auth_entry_shell: Option<Arc<str>>,
     },
-    Upstream(Arc<HttpUrl>),
+    Upstream(UpstreamSpaIndex),
 }
 
 impl SpaIndexSource {
-    pub fn bundled(shell: &str) -> Self {
-        Self::Bundled {
-            shell: Arc::from(shell),
-            auth_entry_shell: None,
-        }
-    }
-
     pub async fn load(config: &AppProxyConfig) -> anyhow::Result<Self> {
         if let Some(index_upstream_url) = &config.index_upstream_url {
-            return Ok(Self::Upstream(Arc::new(index_upstream_url.clone())));
+            return Ok(Self::Upstream(UpstreamSpaIndex {
+                url: Arc::new(index_upstream_url.clone()),
+                in_flight: Arc::new(Mutex::new(None)),
+            }));
         }
         let static_dir = std::path::Path::new(&config.static_dir);
         let shell = read_shell(&static_dir.join("index.html")).await?;
@@ -82,9 +90,11 @@ impl SpaIndexSource {
 pub struct AppState {
     pub config: Arc<AppProxyConfig>,
     pub csp: Arc<CompiledCspPolicy>,
+    pub branding: InstanceBranding,
     pub http_client: reqwest::Client,
     pub spa_index_source: SpaIndexSource,
     pub local_asset_prefixes: Option<Arc<[&'static str]>>,
+    pub bundled_app_assets: bool,
     pub budgets: AppProxyBudgets,
     pub(crate) local_files: LocalFileStore,
 }
@@ -101,37 +111,39 @@ impl AppState {
         let spa_index_source = SpaIndexSource::load(&config).await?;
         let local_asset_prefixes = (!spa_index_source.is_upstream())
             .then(|| present_local_asset_prefixes(&config.static_dir));
+        let bundled_app_assets = bundles_app_assets(&config.static_dir);
         Ok(Self {
+            branding: InstanceBranding::from_config(&config),
             config,
             csp,
             http_client,
             spa_index_source,
             local_asset_prefixes,
+            bundled_app_assets,
             budgets,
             local_files,
         })
     }
-}
 
-#[derive(Debug)]
-pub enum BoundedFileReadError {
-    TooLarge { actual: u64, maximum: usize },
-    Io(std::io::Error),
-}
-
-impl std::fmt::Display for BoundedFileReadError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::TooLarge { actual, maximum } => write!(
-                formatter,
-                "file is {actual} bytes, exceeding the {maximum} byte limit"
-            ),
-            Self::Io(source) => source.fmt(formatter),
+    pub fn branding_snapshot(&self) -> Arc<BrandingSnapshot> {
+        if self.config.self_hosted {
+            self.branding.refresh_if_due(
+                &self.http_client,
+                &self.config.discovery_upstream_url,
+                Duration::from_millis(self.config.discovery_refresh_interval_ms),
+            );
         }
+        self.branding.snapshot()
     }
 }
 
-impl std::error::Error for BoundedFileReadError {}
+#[derive(Debug, thiserror::Error)]
+pub enum BoundedFileReadError {
+    #[error("file is {actual} bytes, exceeding the {maximum} byte limit")]
+    TooLarge { actual: u64, maximum: usize },
+    #[error("{0}")]
+    Io(std::io::Error),
+}
 
 pub async fn read_bounded_file(
     path: &std::path::Path,

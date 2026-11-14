@@ -1,28 +1,37 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
 import {
 	POSTGRES_KV_MIGRATION_TABLE,
-	postgresKvPassIsFresh,
+	postgresKvPassRecorded,
 	recordPostgresKvCleanPass,
 } from '@app/api/database/PostgresKvQueryExecutor';
 import * as DonationTables from '@app/api/donation/DonationTables';
+import * as OperatorPassTables from '@app/api/operator_pass/OperatorPassTables';
 import * as Tables from '@app/api/Tables';
 import {type IPostgresClient, quoteIdentifier} from '@pkgs/postgres/src/Client';
-import {ms} from 'itty-time';
 
-const DEFAULT_TTL_EXPIRY_MARKER = 'default_ttl_expiry_v1';
-export const DEFAULT_TTL_EXPIRY_RESUME = 'default_ttl_expiry_v1_resume';
 const PAGE_SIZE = 2000;
-const CLEAN_PASS_INTERVAL_MS = ms('1 day');
 const OWN_EXPIRY_PASS = new Set<string>([Tables.JobsById.name, Tables.JobsByDayBucket.name]);
 
 export const DEFAULT_TTL_TABLES: ReadonlyArray<{name: string; defaultTtlSeconds: number}> = [
-	...[...Object.values(Tables), ...Object.values(DonationTables)].flatMap((table) =>
-		table.defaultTtlSeconds === undefined || OWN_EXPIRY_PASS.has(table.name)
-			? []
-			: [{name: table.name, defaultTtlSeconds: table.defaultTtlSeconds}],
+	...[...Object.values(Tables), ...Object.values(DonationTables), ...Object.values(OperatorPassTables)].flatMap(
+		(table) =>
+			table.defaultTtlSeconds === undefined || OWN_EXPIRY_PASS.has(table.name)
+				? []
+				: [{name: table.name, defaultTtlSeconds: table.defaultTtlSeconds}],
 	),
 ];
+
+const DEFAULT_TTL_EXPIRY_MARKER = `default_ttl_expiry_v1:${createHash('sha256')
+	.update(
+		DEFAULT_TTL_TABLES.map((table) => `${table.name}:${table.defaultTtlSeconds}`)
+			.sort()
+			.join('\n'),
+	)
+	.digest('hex')
+	.slice(0, 16)}`;
+const DEFAULT_TTL_EXPIRY_RESUME = `${DEFAULT_TTL_EXPIRY_MARKER}_resume`;
 
 export interface LegacyDefaultTtlExpiryResult {
 	deleted: number;
@@ -97,7 +106,7 @@ export async function expireLegacyDefaultTtlRows(
 	client: IPostgresClient,
 	deadlineMs: number,
 ): Promise<LegacyDefaultTtlExpiryResult | null> {
-	if (await postgresKvPassIsFresh(client, DEFAULT_TTL_EXPIRY_MARKER, CLEAN_PASS_INTERVAL_MS)) {
+	if (await postgresKvPassRecorded(client, DEFAULT_TTL_EXPIRY_MARKER)) {
 		return null;
 	}
 	const kvTable = quoteIdentifier(client.kvTable());

@@ -20,13 +20,14 @@ export const PiPOverlay = observer(function PiPOverlay() {
 	}, [room]);
 	const renderRoom = activeRoom;
 	const portalRoot = typeof document === 'undefined' ? null : document.body;
-	const blockReason = !portalRoot
-		? 'missing-portal-root'
-		: !isOpen
-			? 'pip-closed'
-			: !content
-				? 'missing-content'
-				: null;
+	let blockReason: 'missing-portal-root' | 'pip-closed' | 'missing-content' | null = null;
+	if (!portalRoot) {
+		blockReason = 'missing-portal-root';
+	} else if (!isOpen) {
+		blockReason = 'pip-closed';
+	} else if (!content) {
+		blockReason = 'missing-content';
+	}
 	useEffect(() => {
 		pipOverlayLogger.debug('PiP overlay shell state', {
 			blockReason,

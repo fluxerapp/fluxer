@@ -10,12 +10,19 @@ import {
 	createUserID,
 	createWebhookID,
 } from '@app/api/BrandedTypes';
-import {executeConditional, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {
+	deleteOneOrMany,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {
 	DSAReportEmailVerificationRow,
 	DSAReportTicketRow,
 	GuildReportSubmissionByReporterRow,
+	IARReportNoteRow,
 	MessageReportSubmissionByReporterRow,
 	UserReportSubmissionByReporterRow,
 } from '@app/api/database/types/ReportTypes';
@@ -25,25 +32,52 @@ import {
 	type IARMessageContextRow,
 	type IARSubmission,
 	type IARSubmissionRow,
-	type IReportRepository,
 	ReportStatus,
 	ReportType,
-} from '@app/api/report/IReportRepository';
+} from '@app/api/report/ReportModels';
 import {
 	DSAReportEmailVerifications,
 	DSAReportTickets,
 	GuildReportSubmissionsByReporter,
+	IARReportNotes,
 	IARSubmissions,
 	MessageReportSubmissionsByReporter,
 	UserReportSubmissionsByReporter,
 } from '@app/api/Tables';
 import {ReportAlreadyResolvedError} from '@fluxer/errors/src/domains/moderation/ReportAlreadyResolvedError';
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
+import {type ReportItemOutcome, UpdateReportRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {parseReportProfileSnapshot} from '@fluxer/schema/src/domains/report/ReportProfileSnapshotSchemas';
 
 const GET_REPORT_QUERY = IARSubmissions.select({
 	where: IARSubmissions.where.eq('report_id'),
 	limit: 1,
+});
+const FIND_MESSAGE_REPORT_BY_REPORTER_QUERY = MessageReportSubmissionsByReporter.select({
+	where: [
+		MessageReportSubmissionsByReporter.where.eq('reporter_id'),
+		MessageReportSubmissionsByReporter.where.eq('channel_id'),
+		MessageReportSubmissionsByReporter.where.eq('message_id'),
+	],
+	limit: 1,
+});
+const FIND_USER_REPORT_BY_REPORTER_QUERY = UserReportSubmissionsByReporter.select({
+	where: [
+		UserReportSubmissionsByReporter.where.eq('reporter_id'),
+		UserReportSubmissionsByReporter.where.eq('reported_user_id'),
+	],
+	limit: 1,
+});
+const FIND_GUILD_REPORT_BY_REPORTER_QUERY = GuildReportSubmissionsByReporter.select({
+	where: [
+		GuildReportSubmissionsByReporter.where.eq('reporter_id'),
+		GuildReportSubmissionsByReporter.where.eq('reported_guild_id'),
+	],
+	limit: 1,
+});
+const LIST_NOTES_QUERY = IARReportNotes.select({
+	where: IARReportNotes.where.eq('report_id'),
+	orderBy: {col: 'note_id', direction: 'ASC'},
 });
 const createFetchAllReportsPaginatedQuery = (limit: number) =>
 	IARSubmissions.select({
@@ -63,13 +97,14 @@ function createFetchAllReportsFirstPageQuery(limit: number) {
 	return IARSubmissions.select({limit});
 }
 
-export class ReportRepository implements IReportRepository {
+export class ReportRepository {
 	async createReport(data: IARSubmissionRow): Promise<IARSubmission> {
 		const row: IARSubmissionRow = {
 			...data,
 			reported_profile_snapshot: data.reported_profile_snapshot ?? null,
 			legal_hold_until: data.legal_hold_until ?? null,
 			legal_hold_reason: data.legal_hold_reason ?? null,
+			reporter_outcome: data.reporter_outcome ?? null,
 		};
 		await upsertOne(IARSubmissions.insert(row));
 		return this.mapRowToSubmission(row);
@@ -114,6 +149,31 @@ export class ReportRepository implements IReportRepository {
 		);
 	}
 
+	async findMessageReportByReporter(key: {
+		reporter_id: UserID;
+		channel_id: MessageReportSubmissionByReporterRow['channel_id'];
+		message_id: MessageReportSubmissionByReporterRow['message_id'];
+	}): Promise<IARSubmission | null> {
+		const row = await fetchOne<MessageReportSubmissionByReporterRow>(FIND_MESSAGE_REPORT_BY_REPORTER_QUERY.bind(key));
+		return row ? this.getReport(createReportID(row.report_id)) : null;
+	}
+
+	async findUserReportByReporter(key: {
+		reporter_id: UserID;
+		reported_user_id: UserReportSubmissionByReporterRow['reported_user_id'];
+	}): Promise<IARSubmission | null> {
+		const row = await fetchOne<UserReportSubmissionByReporterRow>(FIND_USER_REPORT_BY_REPORTER_QUERY.bind(key));
+		return row ? this.getReport(createReportID(row.report_id)) : null;
+	}
+
+	async findGuildReportByReporter(key: {
+		reporter_id: UserID;
+		reported_guild_id: GuildReportSubmissionByReporterRow['reported_guild_id'];
+	}): Promise<IARSubmission | null> {
+		const row = await fetchOne<GuildReportSubmissionByReporterRow>(FIND_GUILD_REPORT_BY_REPORTER_QUERY.bind(key));
+		return row ? this.getReport(createReportID(row.report_id)) : null;
+	}
+
 	async getReport(reportId: ReportID): Promise<IARSubmission | null> {
 		const row = await fetchOne<IARSubmissionRow>(GET_REPORT_QUERY.bind({report_id: reportId}));
 		return row ? this.mapRowToSubmission(row) : null;
@@ -124,6 +184,7 @@ export class ReportRepository implements IReportRepository {
 		resolvedByAdminId: UserID,
 		publicComment: string | null,
 		auditLogReason: string | null,
+		reporterOutcome: ReportItemOutcome | null,
 	): Promise<IARSubmission> {
 		const report = await this.getReport(reportId);
 		if (!report) {
@@ -143,6 +204,7 @@ export class ReportRepository implements IReportRepository {
 					public_comment: Db.set(publicComment),
 					audit_log_reason: Db.set(auditLogReason),
 					status: Db.set(newStatus),
+					reporter_outcome: Db.set(reporterOutcome),
 				},
 				{status: ReportStatus.PENDING},
 			),
@@ -157,6 +219,7 @@ export class ReportRepository implements IReportRepository {
 			publicComment,
 			auditLogReason,
 			status: newStatus,
+			reporterOutcome,
 		};
 	}
 
@@ -182,6 +245,39 @@ export class ReportRepository implements IReportRepository {
 		return {...report, legalHoldUntil, legalHoldReason};
 	}
 
+	async clearCopiedContext(report: IARSubmission): Promise<IARSubmissionRow | null> {
+		const row = await fetchOne<IARSubmissionRow>(GET_REPORT_QUERY.bind({report_id: report.reportId}));
+		if (!row) {
+			return null;
+		}
+		const cleared = await executeConditional(
+			IARSubmissions.conditionalPatchByPk(
+				{report_id: report.reportId},
+				{
+					message_context: Db.set(null),
+					reported_profile_snapshot: Db.set(null),
+					additional_info: Db.set(null),
+				},
+				{report_type: report.reportType, legal_hold_until: report.legalHoldUntil ?? null},
+			),
+		);
+		return cleared ? row : null;
+	}
+
+	async restoreCopiedContext(row: IARSubmissionRow): Promise<void> {
+		await executeConditional(
+			IARSubmissions.conditionalPatchByPk(
+				{report_id: row.report_id},
+				{
+					message_context: Db.set(row.message_context),
+					reported_profile_snapshot: Db.set(row.reported_profile_snapshot ?? null),
+					additional_info: Db.set(row.additional_info),
+				},
+				{report_type: row.report_type},
+			),
+		);
+	}
+
 	async clearReporterEmail(reportId: ReportID, reporterId: UserID): Promise<boolean> {
 		return executeConditional(
 			IARSubmissions.conditionalPatchByPk(
@@ -192,15 +288,35 @@ export class ReportRepository implements IReportRepository {
 		);
 	}
 
-	async deleteReport(reportId: ReportID): Promise<void> {
-		const report = await this.getReport(reportId);
-		if (!report) {
-			return;
+	async deleteReport(report: IARSubmission): Promise<IARSubmissionRow | null> {
+		const row = await fetchOne<IARSubmissionRow>(GET_REPORT_QUERY.bind({report_id: report.reportId}));
+		if (!row) {
+			return null;
 		}
-		await this.releaseReporterReservation(report);
-		await executeConditional(
-			IARSubmissions.conditionalDeleteByPk({report_id: reportId}, {report_type: report.reportType}),
+		const deleted = await executeConditional(
+			IARSubmissions.conditionalDeleteByPk(
+				{report_id: report.reportId},
+				{report_type: report.reportType, legal_hold_until: report.legalHoldUntil ?? null},
+			),
 		);
+		return deleted ? row : null;
+	}
+
+	async restoreReport(row: IARSubmissionRow): Promise<void> {
+		await executeConditional(IARSubmissions.insertIfNotExists(row));
+	}
+
+	async releaseDeletedReport(report: IARSubmission): Promise<void> {
+		await this.releaseReporterReservation(report);
+		await deleteOneOrMany(IARReportNotes.deletePartition({report_id: report.reportId}));
+	}
+
+	async addNote(note: IARReportNoteRow): Promise<void> {
+		await upsertOne(IARReportNotes.insert(note));
+	}
+
+	async listNotes(reportId: ReportID): Promise<Array<IARReportNoteRow>> {
+		return fetchMany<IARReportNoteRow>(LIST_NOTES_QUERY.bind({report_id: reportId}));
 	}
 
 	private async releaseReporterReservation(report: IARSubmission): Promise<void> {
@@ -286,6 +402,7 @@ export class ReportRepository implements IReportRepository {
 			reportedProfileSnapshot: parseReportProfileSnapshot(row.reported_profile_snapshot),
 			legalHoldUntil: row.legal_hold_until ?? null,
 			legalHoldReason: row.legal_hold_reason ?? null,
+			reporterOutcome: UpdateReportRequest.shape.outcome.safeParse(row.reporter_outcome ?? undefined).data ?? null,
 		};
 	}
 

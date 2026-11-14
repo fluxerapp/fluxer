@@ -13,12 +13,14 @@ use std::ffi::CString;
 const AUTO_LOSSLESS_PALETTE_ANIMATION_MAX_BYTES: usize = 4 * 1024 * 1024;
 const AUTO_LOSSLESS_PALETTE_ANIMATION_MAX_PIXELS: usize = 16 * 1024 * 1024;
 const VIPS_WEBP_MAX_EFFORT: u8 = 6;
+const PNG_MAX_COMPRESSION_MAX_PIXELS: u64 = 1024 * 1024;
 
 pub(super) fn output_suffix(
     format: OutputFormat,
     quality: ResolvedImageQuality,
     page_height: Option<c_int>,
     effort_override: Option<EncodeEffort>,
+    output_pixels: u64,
 ) -> Result<CString, MediaError> {
     let q = quality.encoder_quality();
     let animated = page_height.is_some();
@@ -43,12 +45,19 @@ pub(super) fn output_suffix(
                 ),
             }
         }
-        OutputFormat::PNG | OutputFormat::APNG => match page_height {
-            Some(ph) if format == OutputFormat::APNG => {
-                format!(".png[strip,compression=9,filter=all,page-height={ph}]")
+        OutputFormat::PNG | OutputFormat::APNG => {
+            let compression = if output_pixels > PNG_MAX_COMPRESSION_MAX_PIXELS {
+                6
+            } else {
+                9
+            };
+            match page_height {
+                Some(ph) if format == OutputFormat::APNG => {
+                    format!(".png[strip,compression={compression},filter=all,page-height={ph}]")
+                }
+                _ => format!(".png[strip,compression={compression},filter=all]"),
             }
-            _ => ".png[strip,compression=9,filter=all]".to_owned(),
-        },
+        }
         OutputFormat::GIF => match page_height {
             Some(ph) => {
                 format!(".gif[strip,dither=1.0,effort=7,interframe_maxerror=8.0,page-height={ph}]")

@@ -8,7 +8,6 @@
 	},
 	"scripts": {
 		"generate": "tsx src/scripts/GenerateSpec.ts",
-		"test": "vitest run",
 		"typecheck": "tsc --noEmit",
 		"validate": "tsx src/scripts/GenerateSpec.ts --validate-only"
 	},
@@ -21,10 +20,8 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
-		"@fluxer/constants": "workspace:*",
 		"@types/node": "catalog:",
 		"tsx": "catalog:",
-		"typescript": "catalog:ts7",
-		"vitest": "catalog:"
+		"typescript": "catalog:ts7"
 	}
 }

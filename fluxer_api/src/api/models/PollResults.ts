@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessagePollResults, MessagePollResultsDb} from '../database/types/PollTypes';
-import {PollAnswerCount} from './PollAnswerCount';
+import type {MessagePollResults, MessagePollResultsDb} from '@app/api/database/types/PollTypes';
+import {PollAnswerCount} from '@app/api/models/PollAnswerCount';
 
 export class PollResults {
 	readonly answer_counts: Array<PollAnswerCount>;

@@ -48,6 +48,32 @@ export const AuthRateLimitConfigs = {
 		bucket: 'auth:username_availability',
 		config: {limit: 30, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	AUTH_IDENTIFY: {
+		bucket: 'auth:identify',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	AUTH_EMAIL_CODE_SEND: {
+		bucket: 'auth:email_code:send',
+		config: {limit: 5, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_EMAIL_CODE_VERIFY: {
+		bucket: 'auth:email_code:verify',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_REGISTER_HANDOFF: {
+		bucket: 'auth:register:handoff',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+		trustForwardedClientIp: true,
+	} as RouteRateLimitConfig,
+	AUTH_REGISTER_HANDOFF_CHALLENGE: {
+		bucket: 'auth:register:handoff:challenge',
+		config: {limit: 20, windowMs: ms('1 minute')},
+		trustForwardedClientIp: true,
+	} as RouteRateLimitConfig,
+	AUTH_ACCOUNT_HANDOFF_REDEEM: {
+		bucket: 'auth:register:handoff:redeem',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	AUTH_VALIDATE_RESET_TOKEN: {
 		bucket: 'auth:reset:validate',
 		config: {limit: 20, windowMs: ms('1 minute')},
@@ -175,5 +201,9 @@ export const AuthRateLimitConfigs = {
 	SUDO_MFA_METHODS: {
 		bucket: 'sudo:mfa:methods',
 		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_SUDO_EMAIL_CODE: {
+		bucket: 'sudo:email_code',
+		config: {limit: 5, windowMs: ms('15 minutes')},
 	} as RouteRateLimitConfig,
 } as const;

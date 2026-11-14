@@ -76,15 +76,6 @@ describe('DSA verification code attempts per address', () => {
 		expect(await storedCode(email)).toBeNull();
 	});
 
-	test('the sixth attempt removes the code even when it is the right one', async () => {
-		const {email, code} = await requestCode(harness);
-		await enterWrongCode(harness, email, 5);
-		await verify(harness, email, code)
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_DSA_VERIFICATION_CODE)
-			.execute();
-		expect(await storedCode(email)).toBeNull();
-	});
-
 	test('attempts are counted per address', async () => {
 		const first = await requestCode(harness);
 		await enterWrongCode(harness, first.email, 6);

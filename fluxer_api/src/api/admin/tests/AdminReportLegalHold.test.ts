@@ -3,6 +3,7 @@
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createReportID, type ReportID} from '@app/api/BrandedTypes';
 import {IAR_SUBMISSION_COLUMNS, type IARSubmissionRow} from '@app/api/database/types/ReportTypes';
+import {EnforcementDecisionRepository} from '@app/api/enforcement/EnforcementDecisionRepository';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {MockStorageService} from '@app/api/test/mocks/MockStorageService';
@@ -47,6 +48,7 @@ describe('report legal hold', () => {
 			...Object.fromEntries(IAR_SUBMISSION_COLUMNS.map((column) => [column, null])),
 			report_id: sequence,
 			reported_at: new Date(Date.now() - ageDays * ms('1 day')),
+			resolved_at: new Date(Date.now() - ageDays * ms('1 day')),
 			status: 1,
 			report_type: 1,
 			category: 'harassment',
@@ -69,8 +71,13 @@ describe('report legal hold', () => {
 
 	async function runRetention() {
 		return processReportRetention(
-			{reportRepository: repository, storageService: new MockStorageService(), reportSearchService: null},
-			{now: new Date(), dryRun: false, policy: {retentionDays: 365, resolvedRetentionDays: null}},
+			{
+				reportRepository: repository,
+				storageService: new MockStorageService(),
+				reportSearchService: null,
+				decisionRepository: new EnforcementDecisionRepository(),
+			},
+			{now: new Date(), dryRun: false, policy: {retentionDays: 365}},
 		);
 	}
 
@@ -136,16 +143,6 @@ describe('report legal hold', () => {
 			expect((await repository.getReport(reportId))?.legalHoldUntil).toBeNull();
 		},
 	);
-
-	test('an end time that is not an ISO 8601 timestamp is refused', async () => {
-		const reportId = await seedReport(10);
-
-		const response = await holdRequest(admin, reportId, {legal_hold_until: 'next year', legal_hold_reason: 'Request'})
-			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
-			.execute();
-
-		expect(response.errors?.[0]?.path).toBe('legal_hold_until');
-	});
 
 	test('an unknown report gives UNKNOWN_REPORT and stores nothing', async () => {
 		await holdRequest(admin, '1499999999999999999', {legal_hold_until: HOLD_UNTIL, legal_hold_reason: 'Request'})

@@ -4,11 +4,11 @@ import type {
 	VoiceEngineV2Error,
 	VoiceEngineV2ScreenEncodingOptions,
 	VoiceEngineV2ScreenOptions,
-} from '@fluxer/voice_engine_v2/src/protocol';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
-export type VoiceEngineV2ScreenEncodingPlanAction = 'noop' | 'updateEncoding' | 'republish' | 'reject';
+type VoiceEngineV2ScreenEncodingPlanAction = 'noop' | 'updateEncoding' | 'republish' | 'reject';
 
-export type VoiceEngineV2ScreenEncodingPlanReason =
+type VoiceEngineV2ScreenEncodingPlanReason =
 	| 'unchanged'
 	| 'dimensionsOrBitrateChanged'
 	| 'codecChanged'
@@ -48,7 +48,7 @@ function invalidScreenEncodingPlan(
 	};
 }
 
-export function applyVoiceEngineV2ScreenEncodingOptions(
+function applyVoiceEngineV2ScreenEncodingOptions(
 	current: VoiceEngineV2ScreenOptions,
 	update: VoiceEngineV2ScreenEncodingOptions,
 ): VoiceEngineV2ScreenOptions {

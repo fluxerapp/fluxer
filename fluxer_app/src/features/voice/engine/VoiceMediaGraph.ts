@@ -23,8 +23,6 @@ import {
 	type VoiceMediaGraphStatsEntry,
 	type VoiceMediaGraphStatsPlatform,
 	type VoiceMediaGraphStatsTrackObservation,
-	type VoiceMediaGraphStatsTrackTarget,
-	voiceMediaGraphStatsObservationMatchesTarget,
 	voiceMediaGraphStatsTrackKey,
 } from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 import type {
@@ -58,22 +56,11 @@ function voiceMediaGraphAttemptKeyIsOperation(attemptKey: string): boolean {
 	return attemptKey.includes(':operation:');
 }
 
-export {
-	voiceMediaGraphPublicationMissingDeadlineKey,
-	voiceMediaGraphWatchAttemptDeadlineKey,
-} from '@app/features/voice/engine/VoiceMediaGraphDeadlines';
-export type {
-	VoiceMediaGraphStatsEntry,
-	VoiceMediaGraphStatsTrackObservation,
-	VoiceMediaGraphStatsTrackTarget,
-} from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 export type {
 	VoiceMediaGraphSubscriptionCommand,
 	VoiceMediaGraphSubscriptionContext,
 	VoiceMediaGraphSubscriptionEntry,
 	VoiceMediaGraphSubscriptionEvent,
-	VoiceMediaGraphSubscriptionObservedElement,
-	VoiceMediaGraphSubscriptionTarget,
 	VoiceMediaGraphVideoQuality,
 } from '@app/features/voice/engine/VoiceMediaGraphSubscriptionTypes';
 
@@ -389,11 +376,10 @@ export function normalizeVoiceMediaGraphViewerStreamKeys(
 	keys: ReadonlyArray<string> | null | undefined,
 ): Array<string> {
 	if (!keys || keys.length === 0) return [];
-	assert.ok(keys.length <= VOICE_MEDIA_GRAPH_ENTRY_LIMIT, 'viewer stream key input exceeded graph limit');
 	const normalized: Array<string> = [];
 	const seen = new Set<string>();
 	for (const key of keys) {
-		assert.ok(normalized.length <= VOICE_MEDIA_GRAPH_ENTRY_LIMIT, 'viewer stream key normalization exceeded limit');
+		if (normalized.length >= VOICE_MEDIA_GRAPH_ENTRY_LIMIT) break;
 		if (!key || seen.has(key)) continue;
 		seen.add(key);
 		normalized.push(key);
@@ -1543,18 +1529,4 @@ export function selectVoiceMediaGraphSubscriptionCommands(
 	snapshot: VoiceMediaGraphSnapshot,
 ): ReadonlyArray<VoiceMediaGraphSubscriptionCommand> {
 	return snapshot.subscriptionCommands;
-}
-
-export function selectVoiceMediaGraphStatsEntry(
-	snapshot: VoiceMediaGraphSnapshot,
-	target: VoiceMediaGraphStatsTrackTarget,
-): VoiceMediaGraphStatsEntry | null {
-	let visited = 0;
-	for (const entry of snapshot.statsByTrackKey.values()) {
-		visited += 1;
-		assert.ok(visited <= VOICE_MEDIA_GRAPH_ENTRY_LIMIT, 'stats selector exceeded graph limit');
-		if (snapshot.statsConnectionId !== null && entry.connectionId !== snapshot.statsConnectionId) continue;
-		if (voiceMediaGraphStatsObservationMatchesTarget(entry.observation, target)) return entry;
-	}
-	return null;
 }

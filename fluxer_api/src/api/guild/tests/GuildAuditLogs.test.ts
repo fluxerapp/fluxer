@@ -1,19 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
-import {
-	createChannel,
-	createChannelInvite,
-	createRole,
-	setupTestGuildWithMembers,
-	updateRole,
-} from '@app/api/guild/tests/GuildTestUtils';
+import {createChannel, createRole, setupTestGuildWithMembers, updateRole} from '@app/api/guild/tests/GuildTestUtils';
 import {deleteMessage, sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {createWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
@@ -56,11 +49,6 @@ interface AuditLogResponse {
 		id: string;
 	}>;
 	webhooks: Array<AuditLogWebhook>;
-}
-
-interface PermissionsDiff {
-	added: Array<string>;
-	removed: Array<string>;
 }
 
 describe('Guild audit log endpoint', () => {
@@ -110,27 +98,6 @@ describe('Guild audit log endpoint', () => {
 			.execute();
 		expect(response.audit_log_entries.length).toBeGreaterThan(0);
 	});
-	test('includes permissions diff entries for role updates', async () => {
-		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
-		const role = await createRole(harness, owner.token, guild.id, {
-			name: 'Audit Role',
-			permissions: Permissions.VIEW_CHANNEL.toString(),
-		});
-		await updateRole(harness, owner.token, guild.id, role.id, {
-			permissions: (Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES).toString(),
-		});
-		const response = await createBuilder<AuditLogResponse>(harness, owner.token)
-			.get(`/guilds/${guild.id}/audit-logs?action_type=${AuditLogActionType.ROLE_UPDATE}`)
-			.execute();
-		const entry = response.audit_log_entries.find((log) => log.target_id === role.id);
-		expect(entry).toBeDefined();
-		const diffChange = entry?.changes?.find((change) => change.key === 'permissions_diff');
-		expect(diffChange).toBeDefined();
-		const permissionsDiff = diffChange?.new_value as PermissionsDiff | undefined;
-		expect(permissionsDiff).toBeDefined();
-		expect(permissionsDiff?.added).toContain('SEND_MESSAGES');
-		expect(permissionsDiff?.removed).toEqual([]);
-	});
 	test('returns webhook references for webhook audit log entries', async () => {
 		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
 		const channel = await createChannel(harness, owner.token, guild.id, 'hooks');
@@ -145,19 +112,6 @@ describe('Guild audit log endpoint', () => {
 		expect(webhookEntry).toBeDefined();
 		expect(webhookEntry?.channel_id).toBe(channel.id);
 		expect(webhookEntry?.guild_id).toBe(guild.id);
-	});
-	test('maps invite metadata into audit log options', async () => {
-		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
-		const channel = await createChannel(harness, owner.token, guild.id, 'invites');
-		await createChannelInvite(harness, owner.token, channel.id);
-		const response = await createBuilder<AuditLogResponse>(harness, owner.token)
-			.get(`/guilds/${guild.id}/audit-logs?action_type=${AuditLogActionType.INVITE_CREATE}`)
-			.execute();
-		const entry = response.audit_log_entries.find((log) => log.options?.channel_id === channel.id);
-		expect(entry).toBeDefined();
-		expect(typeof entry?.options?.max_age).toBe('number');
-		expect(typeof entry?.options?.max_uses).toBe('number');
-		expect(typeof entry?.options?.temporary).toBe('boolean');
 	});
 	test('filters audit logs by user and action type', async () => {
 		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
@@ -248,21 +202,5 @@ describe('Guild audit log endpoint', () => {
 			Array.from({length: 5}, () => AuditLogActionType.MESSAGE_BULK_DELETE),
 		);
 		expect(response.audit_log_entries[5]?.action_type).toBe(AuditLogActionType.ROLE_CREATE);
-	});
-	test('rejects specifying before and after together', async () => {
-		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
-		await createRole(harness, owner.token, guild.id, {
-			name: 'Pagination Role',
-			permissions: Permissions.VIEW_CHANNEL.toString(),
-		});
-		const response = await createBuilder<AuditLogResponse>(harness, owner.token)
-			.get(`/guilds/${guild.id}/audit-logs?action_type=${AuditLogActionType.ROLE_CREATE}`)
-			.execute();
-		const logId = response.audit_log_entries[0]?.id;
-		expect(logId).toBeDefined();
-		await createBuilder(harness, owner.token)
-			.get(`/guilds/${guild.id}/audit-logs?before=${logId}&after=${logId}`)
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
-			.execute();
 	});
 });

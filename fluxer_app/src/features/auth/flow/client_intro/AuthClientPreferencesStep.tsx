@@ -2,17 +2,18 @@
 
 import styles from '@app/features/auth/flow/client_intro/AuthClientPreferencesStep.module.css';
 import {CONTINUE_DESCRIPTOR, THEME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import * as ThemeProfileCommands from '@app/features/theme/commands/ThemeProfileCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import Theme from '@app/features/theme/state/Theme';
+import ThemeProfile from '@app/features/theme/state/ThemeProfile';
+import {ThemeSelector} from '@app/features/theme_settings/components/ThemeSelector';
 import {Button, ButtonVariant} from '@app/features/ui/button/Button';
-import {ThemeSelector} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent';
+import {ArrowRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {LanguageSelector} from '@app/features/user/components/modals/tabs/LanguageTab';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
 import {flxElementClassName} from '@app/lib/react';
 import type {ThemeType} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowRightIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback} from 'react';
@@ -34,7 +35,6 @@ const CLIENT_LANGUAGE_MENU_MAX_HEIGHT = 220;
 
 interface AuthClientPreferencesStepProps {
 	readonly body?: React.ReactNode;
-	readonly continueLabel?: React.ReactNode;
 	readonly onContinue: () => void;
 	readonly title?: React.ReactNode;
 }
@@ -43,13 +43,12 @@ export const AuthClientPreferencesStep = observer(function AuthClientPreferences
 	onContinue,
 	title,
 	body,
-	continueLabel,
 }: AuthClientPreferencesStepProps) {
 	const {i18n} = useLingui();
 	const currentLocale = LocaleUtils.getCurrentOrDetectedLocale();
-	const theme = Theme.themePreference;
+	const theme = ThemeProfile.themePreference;
 	const handleThemeChange = useCallback((nextTheme: ThemeType) => {
-		Theme.setTheme(nextTheme);
+		ThemeProfileCommands.setSignedOutThemePreference(nextTheme);
 	}, []);
 	const themeLabel = i18n._(THEME_DESCRIPTOR);
 	return (
@@ -132,7 +131,7 @@ export const AuthClientPreferencesStep = observer(function AuthClientPreferences
 					data-step-focus="true"
 					data-flx="auth.flow.client-intro.auth-client-preferences-step.button.continue"
 				>
-					{continueLabel ?? i18n._(CONTINUE_DESCRIPTOR)}
+					{i18n._(CONTINUE_DESCRIPTOR)}
 				</Button>
 			</flx-auth-client-preferences-step-footer>
 		</section>

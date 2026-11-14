@@ -23,9 +23,6 @@ const MARK_FOLDER_AS_READ_DESCRIPTOR = msg({
 
 interface GuildFolder {
 	id: number | null;
-	name: string | null;
-	color: number | null;
-	guildIds: Array<string>;
 }
 
 interface GuildFolderContextMenuProps {

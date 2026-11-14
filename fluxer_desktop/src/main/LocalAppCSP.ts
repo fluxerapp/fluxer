@@ -28,14 +28,18 @@ const SCRIPT_SOURCES: ReadonlyArray<string> = Object.freeze(['https://*.fluxer.a
 
 const STYLE_SOURCES: ReadonlyArray<string> = Object.freeze([
 	'https://*.fluxer.app',
+	'https://*.fluxer.com',
+	'https://fluxer.com',
 	'https://fonts.googleapis.com',
 	'https://api.fonts.coollabs.io',
 ]);
 
 const FONT_SOURCES: ReadonlyArray<string> = Object.freeze([
 	'https://*.fluxer.app',
+	'https://*.fluxer.com',
+	'https://fluxer.com',
 	'https://fonts.gstatic.com',
-	'https://api.fonts.coollabs.io',
+	'https://cdn.fonts.coollabs.io',
 ]);
 
 const CONNECT_SOURCES: ReadonlyArray<string> = Object.freeze([
@@ -64,12 +68,15 @@ const DIRECTIVE_SEPARATOR = '; ';
 
 interface LocalAppCSPRequest {
 	readonly nonce: string;
-	readonly cleartextInstanceOrigins?: ReadonlyArray<string>;
+	readonly instanceOrigins?: ReadonlyArray<string>;
 }
 
-export function buildLocalAppCSP({nonce, cleartextInstanceOrigins = []}: LocalAppCSPRequest): string {
+export function buildLocalAppCSP({nonce, instanceOrigins = []}: LocalAppCSPRequest): string {
 	const cleartextSources = [...LOOPBACK_HTTP_SOURCES];
-	extendFrom(cleartextSources, cleartextInstanceOrigins.filter(isCleartextOriginSource));
+	extendFrom(cleartextSources, instanceOrigins.filter(isCleartextOriginSource));
+	const instanceSources = instanceOrigins.filter(
+		(origin) => isCleartextOriginSource(origin) || isSecureOriginSource(origin),
+	);
 
 	const directives: Array<string> = [];
 
@@ -81,6 +88,7 @@ export function buildLocalAppCSP({nonce, cleartextInstanceOrigins = []}: LocalAp
 
 	const style = [SELF_SOURCE, "'unsafe-inline'"];
 	extendFrom(style, STYLE_SOURCES);
+	extendFrom(style, instanceSources);
 	directives.push(`style-src ${style.join(' ')}`);
 
 	const image = [SELF_SOURCE, 'blob:', 'data:'];
@@ -95,14 +103,19 @@ export function buildLocalAppCSP({nonce, cleartextInstanceOrigins = []}: LocalAp
 	extendFrom(media, cleartextSources);
 	directives.push(`media-src ${media.join(' ')}`);
 
-	const font = [SELF_SOURCE, 'data:'];
+	const font = [SELF_SOURCE, 'blob:', 'data:'];
 	extendFrom(font, FONT_SOURCES);
+	extendFrom(font, instanceSources);
 	directives.push(`font-src ${font.join(' ')}`);
 
 	const connect = [SELF_SOURCE, 'blob:', 'data:'];
 	extendFrom(connect, CONNECT_SOURCES);
 	extendFrom(connect, DESKTOP_CEILING_CONNECT_SOURCES);
 	extendFrom(connect, cleartextSources);
+	extendFrom(
+		connect,
+		cleartextSources.map((source) => `ws:${source.slice('http:'.length)}`),
+	);
 	directives.push(`connect-src ${connect.join(' ')}`);
 
 	const frame = [SELF_SOURCE];
@@ -132,6 +145,16 @@ function isCleartextOriginSource(origin: string): boolean {
 		return false;
 	}
 	return url.protocol === 'http:' && url.origin === origin && !url.hostname.startsWith('[');
+}
+
+function isSecureOriginSource(origin: string): boolean {
+	let url: URL;
+	try {
+		url = new URL(origin);
+	} catch {
+		return false;
+	}
+	return url.protocol === 'https:' && url.origin === origin && !url.hostname.startsWith('[');
 }
 
 function extendFrom(target: Array<string>, defaults: ReadonlyArray<string>): void {

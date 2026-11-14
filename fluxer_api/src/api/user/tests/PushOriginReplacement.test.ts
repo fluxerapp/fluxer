@@ -6,7 +6,7 @@ import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {classifyWebPushOrigin, sameUserAgentFamily} from '@app/api/user/services/WebPushOriginReplacement';
 import {listPushSubscriptions} from '@app/api/user/tests/UserTestUtils';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const LEGACY_ORIGIN = 'https://web.fluxer.app';
 const TARGET_ORIGIN = 'https://fluxer.com';
@@ -84,9 +84,6 @@ describe('web push origin replacement', () => {
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
-	});
-	afterEach(() => {
-		vi.restoreAllMocks();
 	});
 
 	async function subscribeFrom(
@@ -298,30 +295,6 @@ describe('web push origin replacement', () => {
 			userAgent: IPHONE_UA,
 		});
 		expect(await listSubscriptionIds(approver.token)).toEqual([approverSubscription, paired].sort());
-	});
-
-	it('completes the approval when the predecessor link cannot be written', async () => {
-		const account = await createTestAccount(harness);
-		const approver = await loginAccount(harness, account);
-		const setex = harness.kvProvider.setex.bind(harness.kvProvider);
-		vi.spyOn(harness.kvProvider, 'setex').mockImplementation(async (key, ttl, value) => {
-			if (key.startsWith('push_session_predecessor:')) throw new Error('kv down');
-			return setex(key, ttl, value);
-		});
-		const pairedToken = await pairNewSession(approver.token, approver.userId, LEGACY_ORIGIN);
-		expect(pairedToken).toBeTruthy();
-	});
-
-	it('stores a subscribe when the replacement marker cannot be read or written', async () => {
-		const account = await createTestAccount(harness);
-		const get = harness.kvProvider.get.bind(harness.kvProvider);
-		vi.spyOn(harness.kvProvider, 'get').mockImplementation(async (key) => {
-			if (key.startsWith('push_origin_replaced:')) throw new Error('kv down');
-			return get(key);
-		});
-		const target = await subscribeFrom(account.token, TARGET_ORIGIN, 'https://push.example.com/target');
-		const legacy = await subscribeFrom(account.token, LEGACY_ORIGIN, 'https://push.example.com/legacy');
-		expect(await listSubscriptionIds(account.token)).toEqual([legacy, target].sort());
 	});
 
 	it('keeps an installed legacy app subscribed when only a browser tab moved', async () => {

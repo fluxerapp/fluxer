@@ -7,9 +7,11 @@ import type {UserRow} from '@app/api/database/types/UserTypes';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+
+const SWEEGO_WEBHOOK_TOLERANCE_SECONDS = 300;
 
 interface ISweegoUserRepository {
 	findByEmail(email: string): Promise<User | null>;
@@ -109,6 +111,14 @@ export class SweegoWebhookService {
 			Logger.warn('Sweego webhook missing signature headers');
 			return {status: 401, body: 'Missing signature headers'};
 		}
+		const timestampSeconds = Number(timestamp);
+		if (
+			!Number.isFinite(timestampSeconds) ||
+			Math.abs(Date.now() / 1000 - timestampSeconds) > SWEEGO_WEBHOOK_TOLERANCE_SECONDS
+		) {
+			Logger.warn({timestamp}, 'Sweego webhook timestamp outside tolerance');
+			return {status: 401, body: 'Invalid timestamp'};
+		}
 		const isValid = this.verifySignature(body, webhookId, timestamp, signature, secret);
 		if (!isValid) {
 			Logger.warn('Sweego webhook signature verification failed');
@@ -173,11 +183,7 @@ export class SweegoWebhookService {
 		);
 		Logger.info({userId: user.id, recipient: event.recipient, details: event.details}, 'User email marked as bounced');
 		if (updatedUser) {
-			await this.gatewayService.dispatchPresence({
-				userId: updatedUser.id,
-				event: 'USER_UPDATE',
-				data: mapUserToPrivateResponse(updatedUser),
-			});
+			await dispatchUserUpdate(this.gatewayService, updatedUser);
 		}
 	}
 }

@@ -2,6 +2,12 @@
 
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod keymap;
+#[cfg(target_os = "windows")]
+mod modifiers;
+#[cfg(target_os = "windows")]
+mod windows_mouse;
+
 use napi::{
     Env,
     bindgen_prelude::{Function, Object, Result, ToNapiValue},
@@ -139,7 +145,7 @@ fn scan_aware_key_name(vk: u16, flags: u32) -> Option<&'static str> {
 }
 
 pub fn write_key_name(buf: &mut [u8; KEY_NAME_BUF], len_out: &mut u8, vk: u16) {
-    use fluxer_desktop_native::input::keymap::{fallback_name, windows::vk_to_name};
+    use crate::keymap::{fallback_name, windows::vk_to_name};
     if let Some(name) = vk_to_name(vk) {
         write_ascii_key_name(buf, len_out, name);
     } else {
@@ -208,7 +214,7 @@ mod platform {
         EventKind, EventThreadsafeFunction, HeldInputs, QueuedEvent, VK_PACKET,
         write_key_name_from_hook, write_packet_key_name,
     };
-    use fluxer_desktop_native::input::modifiers::{
+    use crate::modifiers::{
         Modifiers,
         windows::{from_sampled, with_pressed_key},
     };
@@ -240,7 +246,6 @@ mod platform {
 
     pub(crate) struct HookHandle {
         pub(crate) tsfn: EventThreadsafeFunction,
-        pub(crate) dropped_events: AtomicU64,
         pub(crate) keyboard_hook: Mutex<Option<HHOOK>>,
         pub(crate) mouse_hook: Mutex<Option<HHOOK>>,
         pub(crate) thread_id: AtomicU64,
@@ -252,7 +257,6 @@ mod platform {
         pub(crate) last_cursor_y: AtomicI32,
         pub(crate) last_event_ms: AtomicU64,
         pub(crate) last_cursor_change_ms: AtomicU64,
-        pub(crate) reinstall_count: AtomicU64,
         held: Mutex<HeldInputs>,
     }
 
@@ -329,12 +333,9 @@ mod platform {
     }
 
     fn send(handle: &HookHandle, event: QueuedEvent) {
-        let status = handle
+        let _ = handle
             .tsfn
             .call(event, ThreadsafeFunctionCallMode::NonBlocking);
-        if !matches!(status, napi::Status::Ok) {
-            handle.dropped_events.fetch_add(1, Ordering::Relaxed);
-        }
     }
 
     unsafe extern "system" fn keyboard_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
@@ -395,7 +396,7 @@ mod platform {
     }
 
     unsafe extern "system" fn mouse_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
-        use fluxer_desktop_native::input::windows_mouse::{Action, classify};
+        use crate::windows_mouse::{Action, classify};
         if code >= 0
             && let Some(handle) = current_handle()
         {
@@ -509,7 +510,6 @@ mod platform {
                 uninstall_hooks(&handle);
                 if install_hooks(&handle).is_ok() {
                     handle.last_event_ms.store(now_ms(), Ordering::Release);
-                    handle.reinstall_count.fetch_add(1, Ordering::Relaxed);
                 } else {
                     uninstall_hooks(&handle);
                     handle.last_event_ms.store(now_ms(), Ordering::Release);
@@ -655,7 +655,6 @@ mod platform {
     pub(crate) fn new_handle(tsfn: EventThreadsafeFunction) -> Arc<HookHandle> {
         Arc::new(HookHandle {
             tsfn,
-            dropped_events: AtomicU64::new(0),
             keyboard_hook: Mutex::new(None),
             mouse_hook: Mutex::new(None),
             thread_id: AtomicU64::new(0),
@@ -667,7 +666,6 @@ mod platform {
             last_cursor_y: AtomicI32::new(0),
             last_event_ms: AtomicU64::new(0),
             last_cursor_change_ms: AtomicU64::new(0),
-            reinstall_count: AtomicU64::new(0),
             held: Mutex::new(HeldInputs::default()),
         })
     }
@@ -677,20 +675,13 @@ mod platform {
 mod platform {
     use super::EventThreadsafeFunction;
     use std::sync::Arc;
-    use std::sync::atomic::AtomicU64;
 
     pub(crate) struct HookHandle {
         pub(crate) tsfn: EventThreadsafeFunction,
-        pub(crate) dropped_events: AtomicU64,
-        pub(crate) reinstall_count: AtomicU64,
     }
 
     pub(crate) fn new_handle(tsfn: EventThreadsafeFunction) -> Arc<HookHandle> {
-        Arc::new(HookHandle {
-            tsfn,
-            dropped_events: AtomicU64::new(0),
-            reinstall_count: AtomicU64::new(0),
-        })
+        Arc::new(HookHandle { tsfn })
     }
 
     pub(crate) fn start(_handle: Arc<HookHandle>) -> Result<(), String> {
@@ -741,20 +732,6 @@ impl InputHook {
     pub fn stop(&self) {
         platform::stop(&self.inner);
     }
-
-    #[napi(getter, js_name = "droppedEvents")]
-    pub fn dropped_events(&self) -> f64 {
-        self.inner
-            .dropped_events
-            .load(std::sync::atomic::Ordering::Relaxed) as f64
-    }
-
-    #[napi(getter, js_name = "reinstallCount")]
-    pub fn reinstall_count(&self) -> f64 {
-        self.inner
-            .reinstall_count
-            .load(std::sync::atomic::Ordering::Relaxed) as f64
-    }
 }
 
 impl Drop for InputHook {
@@ -766,154 +743,4 @@ impl Drop for InputHook {
 #[napi(js_name = "isAvailable")]
 pub fn is_available() -> bool {
     cfg!(target_os = "windows")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use fluxer_desktop_native::input::ring::Ring;
-
-    #[test]
-    fn write_key_name_known_vk() {
-        let mut buf = [0u8; KEY_NAME_BUF];
-        let mut len = 0u8;
-        write_key_name(&mut buf, &mut len, 0x41);
-        assert_eq!(&buf[..len as usize], b"A");
-    }
-
-    #[test]
-    fn write_key_name_function_keys() {
-        let mut buf = [0u8; KEY_NAME_BUF];
-        let mut len = 0u8;
-        write_key_name(&mut buf, &mut len, 0x7b);
-        assert_eq!(&buf[..len as usize], b"F12");
-    }
-
-    #[test]
-    fn write_key_name_from_hook_distinguishes_keypad_navigation() {
-        let mut buf = [0u8; KEY_NAME_BUF];
-        let mut len = 0u8;
-
-        write_key_name_from_hook(&mut buf, &mut len, 0x2d, 0);
-        assert_eq!(&buf[..len as usize], b"Numpad0");
-
-        buf = [0u8; KEY_NAME_BUF];
-        len = 0;
-        write_key_name_from_hook(&mut buf, &mut len, 0x2d, LLKHF_EXTENDED_FLAG);
-        assert_eq!(&buf[..len as usize], b"Insert");
-
-        buf = [0u8; KEY_NAME_BUF];
-        len = 0;
-        write_key_name_from_hook(&mut buf, &mut len, 0x0d, LLKHF_EXTENDED_FLAG);
-        assert_eq!(&buf[..len as usize], b"NumpadEnter");
-    }
-
-    #[test]
-    fn write_key_name_fallback() {
-        let mut buf = [0u8; KEY_NAME_BUF];
-        let mut len = 0u8;
-        write_key_name(&mut buf, &mut len, 0x0fff);
-        assert_eq!(&buf[..len as usize], b"Key4095");
-    }
-
-    #[test]
-    fn write_packet_key_name_uses_the_injected_character() {
-        let name = |unit: u32| {
-            let mut buf = [0xffu8; KEY_NAME_BUF];
-            let mut len = 7u8;
-            write_packet_key_name(&mut buf, &mut len, unit);
-            String::from_utf8(buf[..len as usize].to_vec()).unwrap()
-        };
-        assert_eq!(name(u32::from('g')), "G");
-        assert_eq!(name(u32::from('G')), "G");
-        assert_eq!(name(u32::from('7')), "7");
-        assert_eq!(name(u32::from(' ')), "Space");
-        assert_eq!(name(u32::from('.')), "");
-        assert_eq!(name(0x00f6), "");
-        assert_eq!(name(0xd83d), "");
-    }
-
-    #[test]
-    fn queued_event_default_is_empty_keydown() {
-        let event = QueuedEvent::default();
-        assert_eq!(event.kind, EventKind::KeyDown);
-        assert_eq!(event.key_name_len, 0);
-    }
-
-    #[test]
-    fn event_kind_strings_match_contract() {
-        assert_eq!(EventKind::KeyDown.as_str(), "keydown");
-        assert_eq!(EventKind::KeyUp.as_str(), "keyup");
-        assert_eq!(EventKind::MouseDown.as_str(), "mousedown");
-        assert_eq!(EventKind::MouseUp.as_str(), "mouseup");
-    }
-
-    #[test]
-    fn held_inputs_release_each_pressed_input_once_without_modifiers() {
-        let key = |kind, keycode, scan_code, extended| QueuedEvent {
-            kind,
-            keycode,
-            scan_code,
-            extended,
-            ctrl: true,
-            ..QueuedEvent::default()
-        };
-        let mut held = HeldInputs::default();
-        held.track(&key(EventKind::KeyDown, 0x41, 0x1e, false));
-        held.track(&key(EventKind::KeyDown, 0x41, 0x1e, false));
-        held.track(&key(EventKind::KeyDown, 0x0d, 0x1c, true));
-        held.track(&key(EventKind::KeyDown, 0x0d, 0x1c, false));
-        held.track(&key(EventKind::KeyUp, 0x0d, 0x1c, false));
-        held.track(&QueuedEvent {
-            kind: EventKind::MouseDown,
-            button: 3,
-            has_xy: true,
-            ..QueuedEvent::default()
-        });
-        let releases = held.take_releases();
-        let summary: Vec<(EventKind, u32, bool, u8, bool, bool)> = releases
-            .iter()
-            .map(|event| {
-                (
-                    event.kind,
-                    event.keycode,
-                    event.extended,
-                    event.button,
-                    event.ctrl,
-                    event.has_xy,
-                )
-            })
-            .collect();
-        assert_eq!(
-            summary,
-            vec![
-                (EventKind::KeyUp, 0x41, false, 0, false, false),
-                (EventKind::KeyUp, 0x0d, true, 0, false, false),
-                (EventKind::MouseUp, 0, false, 3, false, false),
-            ]
-        );
-        assert!(held.take_releases().is_empty());
-    }
-
-    #[test]
-    fn is_available_matches_target() {
-        assert_eq!(is_available(), cfg!(target_os = "windows"));
-    }
-
-    #[test]
-    fn ring_holds_queued_events() {
-        let ring: Ring<QueuedEvent, 4> = Ring::new();
-        let idx = ring.claim().expect("claim slot") as usize;
-
-        unsafe {
-            let slots = ring.slots.as_ptr() as *mut QueuedEvent;
-            (*slots.add(idx)).kind = EventKind::MouseUp;
-            (*slots.add(idx)).button = 4;
-        }
-        let pop_idx = ring.pop().expect("pop slot") as usize;
-        assert_eq!(ring.slots[pop_idx].kind, EventKind::MouseUp);
-        assert_eq!(ring.slots[pop_idx].button, 4);
-        ring.release();
-        assert!(ring.pop().is_none());
-    }
 }

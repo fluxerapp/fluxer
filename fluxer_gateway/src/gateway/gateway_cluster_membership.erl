@@ -7,7 +7,6 @@
 -export([
     start_link/0, start_link/1,
     members/0,
-    is_member/1,
     alive_count/0,
     members_by_role/0,
     subscribe/1,
@@ -20,15 +19,6 @@
     handle_info/2,
     terminate/2,
     code_change/3
-]).
-
--export([
-    apply_discovered/2,
-    maybe_remove_member/2,
-    maybe_add_member/2,
-    update_members/2,
-    add_subscriber/2,
-    reconcile_against_connected_nodes/1
 ]).
 
 -define(MEMBERS_KEY, {gateway_cluster_membership, members}).
@@ -74,10 +64,6 @@ members() ->
 -spec members_by_role() -> #{atom() => [node()]}.
 members_by_role() ->
     persistent_term:get(?ROLE_MEMBERS_KEY, #{all => [node()]}).
-
--spec is_member(node()) -> boolean().
-is_member(Node) ->
-    lists:member(Node, members()).
 
 -spec alive_count() -> non_neg_integer().
 alive_count() ->

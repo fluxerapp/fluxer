@@ -2,9 +2,9 @@
 
 import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {PREBOOT_NETWORK_HINT_STORAGE_KEY, writeRawStorageItem} from '@app/features/platform/state/PrebootMirror';
+import {waitForAbortablePromise} from '@app/features/platform/utils/AbortablePromise';
 
-export const PREBOOT_NETWORK_HINT_VERSION = 1;
-const PREBOOT_HANDOFF_MAX_AGE_MS = 60_000;
+const PREBOOT_NETWORK_HINT_VERSION = 1;
 const MAX_HINT_FIELD_LENGTH = 2048;
 
 interface PrebootDiscoveryHandoff {
@@ -16,6 +16,7 @@ interface PrebootGatewayHandoff {
 	readonly url: string;
 	readonly socket: WebSocket;
 	readonly messages: Array<MessageEvent>;
+	readonly release: () => void;
 	open: boolean;
 }
 
@@ -46,15 +47,11 @@ function readHandoff(): PrebootNetworkHandoff | null {
 	if (typeof window === 'undefined') return null;
 	const handoff = window.__FLUXER_PREBOOT_NETWORK__;
 	if (handoff == null || typeof handoff.startedAt !== 'number') return null;
-	if (Date.now() - handoff.startedAt > PREBOOT_HANDOFF_MAX_AGE_MS) {
-		discardGateway(handoff);
-		window.__FLUXER_PREBOOT_NETWORK__ = null;
-		return null;
-	}
 	return handoff;
 }
 
 function detachGateway(gateway: PrebootGatewayHandoff): void {
+	gateway.release();
 	gateway.socket.onopen = null;
 	gateway.socket.onmessage = null;
 	gateway.socket.onclose = null;
@@ -67,27 +64,8 @@ function discardGateway(handoff: PrebootNetworkHandoff): void {
 	if (gateway == null) return;
 	detachGateway(gateway);
 	try {
-		gateway.socket.close(1000, 'Unused preboot gateway socket');
+		gateway.socket.close(1000, 'Preboot gateway claim declined');
 	} catch {}
-}
-
-function abortable<T>(promise: Promise<T>, signal: AbortSignal | null | undefined): Promise<T> {
-	if (signal == null) return promise;
-	if (signal.aborted) return Promise.reject(signal.reason);
-	return new Promise<T>((resolve, reject) => {
-		const onAbort = (): void => reject(signal.reason);
-		signal.addEventListener('abort', onAbort, {once: true});
-		promise.then(
-			(value) => {
-				signal.removeEventListener('abort', onAbort);
-				resolve(value);
-			},
-			(error: unknown) => {
-				signal.removeEventListener('abort', onAbort);
-				reject(error);
-			},
-		);
-	});
 }
 
 export function takePrebootDiscoveryResponse(url: string, signal?: AbortSignal | null): Promise<Response> | null {
@@ -95,7 +73,12 @@ export function takePrebootDiscoveryResponse(url: string, signal?: AbortSignal |
 	const discovery = handoff?.discovery;
 	if (handoff == null || discovery == null || discovery.url !== url) return null;
 	handoff.discovery = null;
-	return abortable(discovery.response, signal);
+	return signal == null ? discovery.response : waitForAbortablePromise(discovery.response, signal);
+}
+
+export function discardPrebootGatewaySocket(): void {
+	const handoff = readHandoff();
+	if (handoff != null) discardGateway(handoff);
 }
 
 export function takePrebootGatewaySocket(url: string): PrebootGatewaySocket | null {
@@ -107,17 +90,10 @@ export function takePrebootGatewaySocket(url: string): PrebootGatewaySocket | nu
 		return null;
 	}
 	handoff.gateway = null;
-	const readyState = gateway.socket.readyState;
-	if (readyState !== WebSocket.CONNECTING && readyState !== WebSocket.OPEN) {
-		detachGateway(gateway);
-		return null;
-	}
 	detachGateway(gateway);
+	const readyState = gateway.socket.readyState;
+	if (readyState !== WebSocket.CONNECTING && readyState !== WebSocket.OPEN) return null;
 	return {socket: gateway.socket, messages: gateway.messages};
-}
-
-function isPrebootNetworkSupported(): boolean {
-	return typeof window !== 'undefined' && window.electron == null && !isDesktopLocalAppDocument();
 }
 
 function boundedUrl(value: string | null, protocols: ReadonlyArray<string>): string | null {
@@ -130,9 +106,14 @@ function boundedUrl(value: string | null, protocols: ReadonlyArray<string>): str
 }
 
 export function writePrebootNetworkHint(hint: PrebootNetworkHint): void {
-	if (!isPrebootNetworkSupported()) return;
+	if (typeof window === 'undefined') return;
 	const gateway = boundedUrl(hint.gatewayEndpoint, ['ws:', 'wss:']);
-	if (gateway == null || hint.accountKey.length === 0 || hint.accountKey.length > MAX_HINT_FIELD_LENGTH) {
+	if (
+		isDesktopLocalAppDocument() ||
+		gateway == null ||
+		hint.accountKey.length === 0 ||
+		hint.accountKey.length > MAX_HINT_FIELD_LENGTH
+	) {
 		writeRawStorageItem(PREBOOT_NETWORK_HINT_STORAGE_KEY, null);
 		return;
 	}

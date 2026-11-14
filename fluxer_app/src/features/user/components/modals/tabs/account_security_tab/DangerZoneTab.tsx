@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {AccountDeleteModal} from '@app/features/auth/components/modals/AccountDeleteModal';
 import {AccountDisableModal} from '@app/features/auth/components/modals/AccountDisableModal';
 import {GuildOwnershipWarningModal} from '@app/features/guild/components/modals/GuildOwnershipWarningModal';
@@ -9,11 +8,20 @@ import {DELETE_ACCOUNT_DESCRIPTOR, DISABLE_ACCOUNT_DESCRIPTOR} from '@app/featur
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import styles from '@app/features/user/components/modals/tabs/account_security_tab/AccountTab.module.css';
+import {
+	AccountSecurityCard,
+	AccountSecurityRow,
+} from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecurityCard';
 import type {User} from '@app/features/user/models/User';
+import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+
+const DANGER_ZONE_ACTIONS_DESCRIPTOR = msg({
+	message: 'Disable or delete your account',
+	comment: 'Accessible name for the group of disable and delete account actions in account settings.',
+});
 
 interface DangerZoneTabProps {
 	user: User;
@@ -49,41 +57,42 @@ export const DangerZoneTabContent: React.FC<DangerZoneTabProps> = observer(({use
 		}
 	};
 	return (
-		<>
+		<AccountSecurityCard
+			aria-label={i18n._(DANGER_ZONE_ACTIONS_DESCRIPTOR)}
+			data-flx="user.account-security-tab.danger-zone-tab.card"
+		>
 			{isClaimed && (
-				<SettingsTabSection
-					title={i18n._(DISABLE_ACCOUNT_DESCRIPTOR)}
+				<AccountSecurityRow
+					label={i18n._(DISABLE_ACCOUNT_DESCRIPTOR)}
 					description={<Trans>Temporarily disable your account. You can reactivate it later by signing back in.</Trans>}
-					data-flx="user.account-security-tab.danger-zone-tab.danger-zone-tab-content.settings-tab-section"
+					data-flx="user.account-security-tab.danger-zone-tab.disable-row"
 				>
 					<Button
-						variant="primary"
-						className={styles.claimButton}
+						variant="secondary"
 						small={true}
 						onClick={handleDisableAccount}
-						data-flx="user.account-security-tab.danger-zone-tab.danger-zone-tab-content.claim-button.disable-account"
+						data-flx="user.account-security-tab.danger-zone-tab.button.disable-account"
 					>
 						{i18n._(DISABLE_ACCOUNT_DESCRIPTOR)}
 					</Button>
-				</SettingsTabSection>
+				</AccountSecurityRow>
 			)}
-			<SettingsTabSection
-				title={i18n._(DELETE_ACCOUNT_DESCRIPTOR)}
+			<AccountSecurityRow
+				label={i18n._(DELETE_ACCOUNT_DESCRIPTOR)}
 				description={
 					<Trans>Permanently delete your account and all associated data. This action cannot be undone.</Trans>
 				}
-				data-flx="user.account-security-tab.danger-zone-tab.danger-zone-tab-content.settings-tab-section--2"
+				data-flx="user.account-security-tab.danger-zone-tab.delete-row"
 			>
 				<Button
 					variant="danger"
-					className={styles.claimButton}
 					small={true}
 					onClick={handleDeleteAccount}
-					data-flx="user.account-security-tab.danger-zone-tab.danger-zone-tab-content.claim-button.delete-account"
+					data-flx="user.account-security-tab.danger-zone-tab.button.delete-account"
 				>
 					{i18n._(DELETE_ACCOUNT_DESCRIPTOR)}
 				</Button>
-			</SettingsTabSection>
-		</>
+			</AccountSecurityRow>
+		</AccountSecurityCard>
 	);
 });

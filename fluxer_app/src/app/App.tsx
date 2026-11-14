@@ -2,13 +2,13 @@
 
 import styles from '@app/app/App.module.css';
 import {router} from '@app/app/Router';
-import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
+import {SkipToContentLink} from '@app/app/SkipToContentLink';
 import {NekoSprite} from '@app/features/accessibility/components/NekoSprite';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import ScreenReader from '@app/features/accessibility/state/ScreenReader';
+import AccountEngine from '@app/features/account_engine/state/AccountEngine';
 import {DndContext} from '@app/features/app/components/layout/DndContext';
-import GlobalOverlays from '@app/features/app/components/layout/GlobalOverlays';
 import {NativeTitlebar} from '@app/features/app/components/layout/NativeTitlebar';
+import {useAppPlatformBridges} from '@app/features/app/hooks/useAppPlatformBridges';
 import {useDesktopAllowTransparency} from '@app/features/app/hooks/useDesktopAllowTransparency';
 import {useDesktopElectronBridges} from '@app/features/app/hooks/useDesktopElectronBridges';
 import {useDocumentClassToggle} from '@app/features/app/hooks/useDocumentClassToggle';
@@ -18,31 +18,33 @@ import {useKeybindManager} from '@app/features/app/hooks/useKeybindManager';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {usePlatformClasses} from '@app/features/app/hooks/usePlatformClasses';
 import {useServiceWorkerBadge} from '@app/features/app/hooks/useServiceWorkerBadge';
-import {useTabKeyFocusGuard} from '@app/features/app/hooks/useTabKeyFocusGuard';
+import {getInstanceBrandStyle, getInstanceCssOrigins} from '@app/features/app/state/InstanceBrandStyle';
 import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state/LayoutVariantContext';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
+import {afterBootReveal} from '@app/features/boot_state/BootReveal';
+import BootStateRestore from '@app/features/boot_state/BootStateRestore';
 import {showMyselfTypingHelper} from '@app/features/devtools/utils/ShowMyselfTypingHelper';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
-import {attachExternalLinkInterceptor} from '@app/features/messaging/utils/ExternalLinkUtils';
-import {startDeepLinkHandling} from '@app/features/navigation/utils/DeepLinkUtils';
+import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {Outlet, RouterProvider} from '@app/features/platform/components/router/RouterReact';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ensureAutostartDefaultEnabled} from '@app/features/platform/utils/Autostart';
-import {startDesktopJumpListBridge} from '@app/features/platform/utils/DesktopJumpListBridge';
-import {startDesktopLocaleBridge} from '@app/features/platform/utils/DesktopLocaleBridge';
-import {PremiumCheckoutReturnWatcher} from '@app/features/premium/components/PremiumCheckoutReturnWatcher';
+import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {QUICK_SWITCHER_PORTAL_ID} from '@app/features/search/components/quick_switcher/QuickSwitcherConstants';
-import {useCustomThemeStyle} from '@app/features/theme/hooks/useCustomThemeStyle';
+import {useCustomThemeStyle, useInstanceCustomCss} from '@app/features/theme/hooks/useCustomThemeStyle';
 import {useRemScaleTracking} from '@app/features/theme/hooks/useRemScaleTracking';
 import {useThemeCssVariables} from '@app/features/theme/hooks/useThemeCssVariables';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
-import {useThemeStudioBroadcast} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
-import ThemeStudioState from '@app/features/theme_studio/state/ThemeStudioState';
+import ThemeProfile from '@app/features/theme/state/ThemeProfile';
+import WindowsFont from '@app/features/theme/state/WindowsFont';
+import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
+import ThemeSettingsState from '@app/features/theme_settings/state/ThemeSettingsState';
+import {canTrustSites} from '@app/features/theme_settings/state/TrustedSites';
 import {SVGMasks} from '@app/features/ui/components/SVGMasks';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {useTextInputContextMenu} from '@app/features/ui/hooks/useTextInputContextMenu';
@@ -50,29 +52,39 @@ import {getActivePortalHost, setActivePortalHost} from '@app/features/ui/overlay
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Modal from '@app/features/ui/state/Modal';
 import Popout from '@app/features/ui/state/Popout';
-import {getDesktopWindowBehaviorSettings} from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
-import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {UNFOCUSED_FULLY_INTERACTIVE_CLASS} from '@app/features/ui/utils/WindowFocusInteractionGuard';
+import {preloadUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
-import {IncomingCallManager} from '@app/features/voice/components/IncomingCallManager';
 import {VoiceLiveKitRoot} from '@app/features/voice/components/VoiceLiveKitRoot';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import {useElectronScreenSharePicker} from '@app/features/voice/hooks/useElectronScreenSharePicker';
-import {startScreenSharePiPController} from '@app/features/voice/state/ScreenSharePiPController';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
-import {useStopFlashFrameOnFocus} from '@app/features/window/hooks/useStopFlashFrameOnFocus';
 import {useWindowEventListeners} from '@app/features/window/hooks/useWindowEventListeners';
+import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import {i18n} from '@lingui/core';
-import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {IconContext} from '@phosphor-icons/react';
 import {reaction} from 'mobx';
 import {observer} from 'mobx-react-lite';
-import React, {type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {type ReactNode, useEffect, useMemo, useRef, useState} from 'react';
 
-const SKIP_TO_CONTENT_DESCRIPTOR = msg({
-	message: 'Skip to content',
-	comment: 'Accessible skip-link label for keyboard users.',
+const NO_TRUSTED_SITES: ReadonlyArray<string> = [];
+const QuickCssEditorHost = createNamedLoadableComponent<Record<string, never>>({
+	displayName: 'QuickCssEditorHost',
+	load: async () => (await import('@app/features/theme_settings/components/QuickCssEditorHost')).QuickCssEditorHost,
+});
+
+const GlobalOverlays = createNamedLoadableComponent<Record<string, never>>({
+	displayName: 'GlobalOverlays',
+	load: async () => (await import('@app/features/app/components/layout/GlobalOverlays')).default,
+});
+const IncomingCallManager = createNamedLoadableComponent<Record<string, never>>({
+	displayName: 'IncomingCallManager',
+	load: async () => (await import('@app/features/voice/components/IncomingCallManager')).IncomingCallManager,
+});
+const PremiumCheckoutReturnWatcher = createNamedLoadableComponent<Record<string, never>>({
+	displayName: 'PremiumCheckoutReturnWatcher',
+	load: async () =>
+		(await import('@app/features/premium/components/PremiumCheckoutReturnWatcher')).PremiumCheckoutReturnWatcher,
 });
 
 const logger = new Logger('App');
@@ -96,31 +108,19 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	);
 	const topPopoutRequiresBackdrop = Popout.requiresBackdrop();
 	const hasBlockingModal = Modal.hasModalOpen();
-	const room = MediaEngine.room;
+	const voiceRuntime = VoiceRuntime.module;
+	const [overlaysReady, setOverlaysReady] = useState(() => BootStateRestore.phase !== 'stale');
+	useEffect(() => {
+		let active = true;
+		afterBootReveal(() => {
+			if (active) setOverlaysReady(true);
+		});
+		return () => {
+			active = false;
+		};
+	}, []);
 	const ringsContainerRef = useRef<HTMLDivElement>(null);
-	const overlayScopeRef = useRef<HTMLDivElement>(null);
-	useElectronScreenSharePicker();
 	useTextInputContextMenu();
-	useThemeStudioBroadcast(
-		useCallback((message) => {
-			switch (message.type) {
-				case 'customThemeCss':
-					if ((Accessibility.customThemeCss ?? null) !== message.value) {
-						AccessibilityCommands.update({customThemeCss: message.value});
-					}
-					return;
-				case 'themeLibrary':
-					void ThemeLibrary.reload();
-					return;
-				case 'studio:closed-popout':
-					ThemeStudioState.clearPoppedOut();
-					return;
-				default:
-					return;
-			}
-		}, []),
-	);
-	const handleSkipLinkFocus = useTabKeyFocusGuard();
 	useInertBackground(ringsContainerRef, hasBlockingModal || topPopoutRequiresBackdrop);
 	useEffect(() => {
 		showMyselfTypingHelper.start();
@@ -128,6 +128,23 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	}, []);
 	useEffect(() => {
 		let active = true;
+		AccountEngine.start();
+		let disposeBootStateWriter: (() => void) | null = null;
+		if (isDesktopLocalAppDocument()) {
+			afterBootReveal(preloadUserSettingsModal);
+		}
+		afterBootReveal(() => {
+			if (!active) return;
+			void loadLazyModule(() => import('@app/features/boot_state/BootStateWriter'))
+				.then(({installBootStateWriter}) => {
+					if (active) {
+						disposeBootStateWriter = installBootStateWriter();
+					}
+				})
+				.catch((error: unknown) => {
+					logger.warn('Failed to load the boot state writer', error);
+				});
+		});
 		void SessionManager.initialize()
 			.then(() => {
 				if (active) {
@@ -139,13 +156,15 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 			});
 		return () => {
 			active = false;
+			disposeBootStateWriter?.();
 			GatewaySessions.dispose();
+			AccountEngine.stop();
 		};
 	}, []);
 	useEffect(
 		() =>
 			reaction(
-				() => GatewayConnection.sessionId,
+				() => GatewaySessions.foregroundConnection.sessionId,
 				(sessionId) => MemberSidebar.synchronizeGatewaySession(sessionId),
 				{fireImmediately: true},
 			),
@@ -167,19 +186,26 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 			document.removeEventListener('keydown', clearForeignPortalHost, true);
 		};
 	}, []);
-	useEffect(() => startScreenSharePiPController(), []);
 	useServiceWorkerBadge();
 	useKeybindManager(i18n);
 	useDesktopElectronBridges();
 	useDocumentClassToggle('reduced-motion', reducedMotion);
 	useDocumentClassToggle('mobile-layout', MobileLayout.platformMobileDetected || MobileLayout.enabled);
 	useDocumentClassToggle(UNFOCUSED_FULLY_INTERACTIVE_CLASS, stayInteractiveWhenUnfocused);
+	useDocumentClassToggle('windows-fluxer-sans', WindowsFont.useFluxerSans);
 	useDesktopAllowTransparency(isNative);
 	useWindowEventListeners();
 	useRemScaleTracking();
 	usePlatformClasses(platform, isNative);
+	const isAuthLayout = layoutVariant === 'auth';
+	const quickCssEditorAllowed = !isAuthLayout && !MobileLayout.enabled;
+	const quickCssEditorOpen = quickCssEditorAllowed && ThemeSettingsState.editorOpen;
+	useEffect(() => {
+		if (!quickCssEditorAllowed) ThemeSettingsCommands.closeQuickCssEditor();
+	}, [quickCssEditorAllowed]);
+	const instanceBrandStyle = getInstanceBrandStyle();
 	useThemeCssVariables({
-		effectiveTheme: Theme.effectiveTheme,
+		effectiveTheme: isAuthLayout ? ThemeTypes.DARK : Theme.effectiveTheme,
 		saturationFactor: Accessibility.saturationFactor,
 		alwaysUnderlineLinks: Accessibility.alwaysUnderlineLinks,
 		dimStrikethroughText: Accessibility.dimStrikethroughText,
@@ -188,35 +214,36 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		messageGutter: Accessibility.messageGutter,
 		messageGroupSpacing: Accessibility.getMessageGroupSpacingValue(messageDisplayCompact),
 		hdrDisplayMode: Accessibility.hdrDisplayMode,
+		instanceThemeColor: instanceBrandStyle.themeColor,
 	});
+	useInstanceCustomCss(instanceBrandStyle.customCss, getInstanceCssOrigins());
+	const userCssApplied = !ThemeSettingsState.customCssOff;
 	useCustomThemeStyle({
-		enabledThemeCss: ThemeLibrary.activeThemeCss,
-		customThemeCss: Accessibility.customThemeCss,
+		enabledThemeCss: userCssApplied ? ThemeProfile.activeThemeCss : null,
+		customThemeCss: userCssApplied ? ThemeProfile.customThemeCss : null,
 		themeLibraryAssets: ThemeLibrary.assets,
 		themeLibraryLocalFiles: ThemeLibrary.localFiles,
 		themeLibraryRevision: ThemeLibrary.revision,
+		mediaEndpoint: RuntimeConfig.getSnapshotOrNull()?.mediaEndpoint ?? '',
+		trustedSites: canTrustSites() ? ThemeSettingsState.trustedSites : NO_TRUSTED_SITES,
+		onMissingReferences: ThemeSettingsState.setMissingReferences,
+		onBlockedUrl: ThemeSettingsState.recordBlockedUrl,
+		onCssRejected: ThemeSettingsState.setCssRejected,
 	});
 	return (
 		<LayoutVariantProvider value={layoutVariantContextValue} data-flx="app.app.app-wrapper.layout-variant-provider">
 			<SVGMasks data-flx="app.app.app-wrapper.svg-masks" />
-			<VoiceLiveKitRoot room={room} data-flx="app.app.app-wrapper.voice-live-kit-root">
+			<VoiceLiveKitRoot data-flx="app.app.app-wrapper.voice-live-kit-root">
 				<div ref={ringsContainerRef} className={styles.appContainer} data-flx="app.app.app-wrapper.app-container">
 					<FocusRingScope containerRef={ringsContainerRef} data-flx="app.app.app-wrapper.focus-ring-scope">
-						<a
-							href="#main-content"
-							className={styles.skipLink}
-							onFocus={handleSkipLinkFocus}
-							data-flx="app.app.app-wrapper.skip-link"
-						>
-							{i18n._(SKIP_TO_CONTENT_DESCRIPTOR)}
-						</a>
+						<SkipToContentLink data-flx="app.app.app-wrapper.skip-to-content-link" />
 						{isNative && !useSystemTitleBar && !isRootDocumentFullscreen && (
 							<NativeTitlebar platform={platform} data-flx="app.app.app-wrapper.native-titlebar" />
 						)}
 						{children}
 					</FocusRingScope>
 				</div>
-				<div ref={overlayScopeRef} className={styles.overlayScope} data-flx="app.app.app-wrapper.overlay-scope">
+				<div className={styles.overlayScope} data-flx="app.app.app-wrapper.overlay-scope">
 					<NekoSprite data-flx="app.app.app-wrapper.neko-sprite" />
 					<div
 						id={QUICK_SWITCHER_PORTAL_ID}
@@ -225,8 +252,12 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 						aria-hidden="true"
 						data-flx="app.app.app-wrapper.quick-switcher-portal"
 					/>
-					<GlobalOverlays data-flx="app.app.app-wrapper.global-overlays" />
-					<IncomingCallManager data-flx="app.app.app-wrapper.incoming-call-manager" />
+					{overlaysReady && <GlobalOverlays data-flx="app.app.app-wrapper.global-overlays" />}
+					{overlaysReady && <IncomingCallManager data-flx="app.app.app-wrapper.incoming-call-manager" />}
+					{overlaysReady && voiceRuntime ? (
+						<voiceRuntime.VoiceRuntimeEffects data-flx="app.app.app-wrapper.voice-runtime-voice-runtime-effects" />
+					) : null}
+					{quickCssEditorOpen ? <QuickCssEditorHost data-flx="app.app.app-wrapper.quick-css-editor-host" /> : null}
 				</div>
 			</VoiceLiveKitRoot>
 		</LayoutVariantProvider>
@@ -237,25 +268,7 @@ export const App = observer((): React.ReactElement => {
 	if (fatalError) {
 		throw fatalError;
 	}
-	useEffect(() => {
-		if (!isDesktop()) return;
-		void ensureAutostartDefaultEnabled();
-		void getDesktopWindowBehaviorSettings();
-	}, []);
-	useEffect(() => {
-		void startDeepLinkHandling();
-	}, []);
-	useEffect(() => {
-		if (!isDesktop()) return;
-		startDesktopLocaleBridge();
-		startDesktopJumpListBridge();
-		ScreenReader.startDesktopBridge();
-	}, []);
-	useStopFlashFrameOnFocus();
-	useEffect(() => {
-		const detach = attachExternalLinkInterceptor();
-		return () => detach?.();
-	}, []);
+	useAppPlatformBridges();
 	return (
 		<AppI18nProvider i18n={i18n}>
 			<IconContext.Provider value={{color: 'currentColor', weight: 'fill'}}>

@@ -85,6 +85,7 @@ export const DesktopHandoffMfaStep = observer(function DesktopHandoffMfaStep({
 			challenge={{ticket: mfaTicket, ...mfaMethods}}
 			onSuccess={handleMfaSuccess}
 			onCancel={handleCancel}
+			offerBrowserSignIn={true}
 			data-flx="auth.flow.desktop-handoff-mfa-step.mfa-screen"
 		/>
 	);

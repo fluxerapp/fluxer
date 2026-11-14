@@ -46,15 +46,6 @@ class EntranceSoundListenerPrefs {
 		this.localMutes = {...this.localMutes, [userId]: muted};
 		logger.debug(`Set entrance mute for ${userId}: ${muted}`);
 	}
-
-	reset(userId: string): void {
-		const nextVolumes = {...this.volumes};
-		const nextMutes = {...this.localMutes};
-		delete nextVolumes[userId];
-		delete nextMutes[userId];
-		this.volumes = nextVolumes;
-		this.localMutes = nextMutes;
-	}
 }
 
 export default new EntranceSoundListenerPrefs();

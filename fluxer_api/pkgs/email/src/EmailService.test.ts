@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {EmailI18nService, type IEmailI18nService} from '@pkgs/email/src/EmailI18nService';
 import type {EmailConfig, EmailMessage, IEmailProvider} from '@pkgs/email/src/EmailProviderTypes';
 import {EmailService} from '@pkgs/email/src/EmailService';
-import {TestEmailService} from '@pkgs/email/src/TestEmailService';
+import {PDFDocument} from 'pdf-lib';
 import {describe, expect, it} from 'vitest';
 
 const CONFIG: EmailConfig = {
@@ -11,40 +10,18 @@ const CONFIG: EmailConfig = {
 	fromEmail: 'noreply@example.com',
 	fromName: 'Fluxer',
 	appBaseUrl: 'https://example.com',
-	termsUrl: 'https://example.com/terms',
-	guidelinesUrl: 'https://example.com/guidelines',
+	apiBaseUrl: 'https://api.example.com',
 	appealsEmail: 'appeals@fluxer.com',
+	privacyEmail: 'privacy@fluxer.com',
 	safetyEmail: 'safety@fluxer.com',
 	supportEmail: 'support@fluxer.com',
 	productName: 'Fluxer',
+	marketingBaseUrl: 'https://example.com',
+	staticCdnBaseUrl: 'https://static.example.com',
+	legalAddress:
+		'Fluxer Platform AB (org. no. 559537-3993, registered office Haninge, Sweden), c/o Embassy House, Östgötagatan 12, 116 25 Stockholm, Sweden',
+	brandLogo: true,
 };
-
-async function sendWith(config: EmailConfig): Promise<EmailMessage> {
-	const sent: Array<EmailMessage> = [];
-	const provider: IEmailProvider = {
-		sendEmail: async (message) => {
-			sent.push(message);
-			return true;
-		},
-	};
-	const service = new EmailService(config, new EmailI18nService(), provider);
-	await expect(service.sendEmailChangeNew('user@example.com', 'testuser', '123456', 'en-US')).resolves.toBe(true);
-	expect(sent).toHaveLength(1);
-	return sent[0];
-}
-
-describe('EmailService reply-to', () => {
-	it('sets the configured reply-to address on every message', async () => {
-		const message = await sendWith({...CONFIG, replyTo: 'support@example.com'});
-		expect(message.replyTo).toBe('support@example.com');
-		expect(message.from).toEqual({email: 'noreply@example.com', name: 'Fluxer'});
-	});
-
-	it.each([undefined, null, ''])('omits the reply-to address when it is %j', async (replyTo) => {
-		const message = await sendWith({...CONFIG, replyTo});
-		expect(message).not.toHaveProperty('replyTo');
-	});
-});
 
 function createCapturingServiceFor(config: EmailConfig): {service: EmailService; sent: Array<EmailMessage>} {
 	const sent: Array<EmailMessage> = [];
@@ -54,341 +31,306 @@ function createCapturingServiceFor(config: EmailConfig): {service: EmailService;
 			return true;
 		},
 	};
-	return {service: new EmailService(config, new EmailI18nService(), provider), sent};
+	return {service: new EmailService(config, provider), sent};
 }
 
-function createCapturingService(): {service: EmailService; sent: Array<EmailMessage>} {
-	return createCapturingServiceFor(CONFIG);
-}
-
-describe('EmailService report notices', () => {
-	it('sends a receipt with the report id and target kind', async () => {
-		const {service, sent} = createCapturingService();
-		await expect(service.sendReportReceivedEmail('notifier@example.com', '1234567890', 'guild', 'en-US')).resolves.toBe(
-			true,
-		);
-		expect(sent).toHaveLength(1);
-		expect(sent[0].to).toBe('notifier@example.com');
-		expect(sent[0].subject).toBe('We received your Fluxer report');
-		expect(sent[0].text).toContain('report about a community on Fluxer.');
-		expect(sent[0].text).toContain('Report ID: 1234567890');
+describe('EmailService', () => {
+	it('keeps the HTML part on a plain-http instance whose links stay on its own origins', async () => {
+		const {service, sent} = createCapturingServiceFor({
+			...CONFIG,
+			appBaseUrl: 'http://chat.example.org',
+			apiBaseUrl: 'http://chat.example.org/api',
+			marketingBaseUrl: 'http://chat.example.org',
+			staticCdnBaseUrl: 'http://static.chat.example.org:8080',
+		});
+		await service.send('password_reset', 'user@example.com', {resetToken: 'tok.abc'}, 'en-US');
+		const html = sent[0].html ?? '';
+		expect(html).toContain('href="http://chat.example.org/reset#token=tok.abc"');
+		expect(html).toContain('src="http://static.chat.example.org:8080/email/brand/v1/logo-color.png"');
+		expect(html).not.toContain('%%');
 	});
 
-	it('sends the receipt in the requested locale', async () => {
-		const {service, sent} = createCapturingService();
-		await service.sendReportReceivedEmail('notifier@example.com', '1234567890', 'message', 'de');
-		expect(sent[0].subject).toBe('Wir haben deine Fluxer-Meldung erhalten');
-		expect(sent[0].text).toContain('Meldungs-ID: 1234567890');
-	});
-
-	it('sends a DSA decision notice with the public comment', async () => {
-		const {service, sent} = createCapturingService();
-		await expect(
-			service.sendDsaReportResolvedEmail('notifier@example.com', '1234567890', 'We removed the content.', 'en-US'),
-		).resolves.toBe(true);
-		expect(sent).toHaveLength(1);
-		expect(sent[0].to).toBe('notifier@example.com');
-		expect(sent[0].subject).toBe('We made a decision on your Fluxer report');
-		expect(sent[0].text).toContain('(ID: 1234567890)');
-		expect(sent[0].text).toContain('Response from the Safety Team:\nWe removed the content.');
-		expect(sent[0].text).toContain('Email appeals@fluxer.com from this email address');
-	});
-
-	it('sends a generic DSA decision notice without a public comment', async () => {
-		const {service, sent} = createCapturingService();
-		await service.sendDsaReportResolvedEmail('notifier@example.com', '1234567890', '', 'en-US');
-		expect(sent[0].text).not.toContain('Response from the Safety Team');
-		expect(sent[0].text).not.toContain('\n\n\n');
-		expect(sent[0].text).toContain('Email appeals@fluxer.com from this email address');
-	});
-});
-
-describe('TestEmailService report notices', () => {
-	it('records the receipt and the DSA decision notice', async () => {
-		const service = new TestEmailService();
-		await service.sendReportReceivedEmail('notifier@example.com', '1234567890', 'user', 'en-US');
-		await service.sendDsaReportResolvedEmail('notifier@example.com', '1234567890', '', 'en-US');
-		expect(service.listSentEmails().map(({to, type, metadata}) => ({to, type, metadata}))).toEqual([
-			{to: 'notifier@example.com', type: 'report_received', metadata: {report_id: '1234567890', target_kind: 'user'}},
+	it('sends the purchase confirmation and the terms in Portuguese whenever the Brazilian rule applies', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		await service.send(
+			'operator_pass_purchase_confirmation',
+			'buyer@example.com',
 			{
-				to: 'notifier@example.com',
-				type: 'dsa_report_resolved',
-				metadata: {report_id: '1234567890', public_comment: ''},
+				invoiceNumber: null,
+				orderDate: new Date('2026-11-02T14:00:00Z'),
+				quantity: 1,
+				totals: {totalMinor: 102000, paidMinor: 102000, currency: 'BRL', tax: null, reverseCharge: false},
+				document: null,
+				business: false,
+				consentAt: new Date('2026-11-02T13:59:00Z'),
+				withdrawalEndsOn: '2026-11-09',
+				withdrawalCountry: 'BR',
+				wallName: null,
+				unitAmountMinor: 102000,
+				paymentMethod: null,
+				deliveryBoxText: null,
+				termsVersion: '2026-11-01',
 			},
+			'en-US',
+		);
+		expect(sent[0].text).toContain('Direito de arrependimento');
+		expect(sent[0].attachments?.map((attachment) => attachment.filename)).toEqual([
+			'fluxer-operator-pass-terms-2026-11-01-pt-BR.pdf',
 		]);
 	});
-});
-
-describe('EmailService enforcement notices', () => {
-	function capture(config: EmailConfig): {service: EmailService; sent: Array<EmailMessage>} {
-		const sent: Array<EmailMessage> = [];
-		const provider: IEmailProvider = {
-			sendEmail: async (message) => {
-				sent.push(message);
-				return true;
-			},
+	it('attaches the terms of the version the purchase accepted, or sends nothing when that text is missing', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		const params = {
+			invoiceNumber: null,
+			orderDate: new Date('2026-11-02T14:00:00Z'),
+			quantity: 1,
+			totals: {totalMinor: 1000, paidMinor: 1000, currency: 'EUR', tax: null, reverseCharge: false},
+			document: null,
+			business: false,
+			consentAt: new Date('2026-11-02T13:59:00Z'),
+			withdrawalEndsOn: null,
+			withdrawalCountry: null,
+			wallName: null,
+			unitAmountMinor: 1000,
+			paymentMethod: null,
+			deliveryBoxText: null,
 		};
-		return {service: new EmailService(config, new EmailI18nService(), provider), sent};
-	}
-
-	async function sendBoth(config: EmailConfig, reason: string | null = 'Spam'): Promise<Array<string>> {
-		const {service, sent} = capture(config);
-		const until = new Date('2026-10-01T23:30:00Z');
-		await service.sendAccountTempBannedEmail('user@example.com', 'testuser', reason, 24, until, 'en-US');
-		await service.sendAccountScheduledForDeletionEmail('user@example.com', 'testuser', reason, until, 'en-US');
-		expect(sent).toHaveLength(2);
-		return sent.map((message) => message.text);
-	}
-
-	it('links the configured terms and guidelines', async () => {
-		for (const text of await sendBoth(CONFIG)) {
-			expect(text).toContain(
-				'Please review:\n- Terms of Service: https://example.com/terms\n- Community Guidelines: https://example.com/guidelines\n\n',
-			);
-		}
-	});
-
-	it('leaves out the review list when no policy page is configured', async () => {
-		for (const text of await sendBoth({...CONFIG, termsUrl: null, guidelinesUrl: null})) {
-			expect(text).not.toContain('Please review:');
-			expect(text).not.toContain('https://');
-			expect(text).not.toContain('\n\n\n');
-			expect(text).toContain('appeals@fluxer.com');
-		}
-	});
-
-	it('lists only the configured page', async () => {
-		for (const text of await sendBoth({...CONFIG, termsUrl: null, guidelinesUrl: 'https://rules.example.org'})) {
-			expect(text).toContain('Please review:\n- Community Guidelines: https://rules.example.org\n\n');
-			expect(text).not.toContain('Terms of Service:');
-		}
-		for (const text of await sendBoth({...CONFIG, termsUrl: 'https://tos.example.org', guidelinesUrl: null})) {
-			expect(text).toContain('Please review:\n- Terms of Service: https://tos.example.org\n\n');
-			expect(text).not.toContain('Community Guidelines:');
-		}
-	});
-
-	it('states the reason as its own paragraph', async () => {
-		const [suspended, deletion] = await sendBoth(CONFIG);
-		expect(suspended).toContain(' UTC\n\nReason: Spam\n\nDuring this time,');
-		expect(deletion).toContain(' UTC\n\nReason: Spam\n\nThis is a serious enforcement action.');
-		for (const text of [suspended, deletion]) {
-			expect(text).not.toContain('\n\n\n');
-		}
-	});
-
-	it.each([null, '', '  '])('leaves no gap when the reason is %j', async (reason) => {
-		const withReason = await sendBoth(CONFIG);
-		const [suspended, deletion] = await sendBoth(CONFIG, reason);
-		expect(suspended).toContain(' UTC\n\nDuring this time,');
-		expect(deletion).toContain(' UTC\n\nThis is a serious enforcement action.');
-		for (const [index, text] of [suspended, deletion].entries()) {
-			expect(text).not.toContain('Reason:');
-			expect(text).not.toContain('\n\n\n');
-			expect(text.split('\n\n')).toHaveLength(withReason[index].split('\n\n').length - 1);
-		}
-	});
-});
-
-describe('EmailService contact addresses', () => {
-	const SELF_HOSTED: EmailConfig = {...CONFIG, appealsEmail: null, safetyEmail: null, supportEmail: null};
-	const DATE = new Date('2026-10-01T23:30:00Z');
-
-	async function sendAll(config: EmailConfig, locale: string): Promise<Record<string, string>> {
-		const sent: Array<EmailMessage> = [];
-		const provider: IEmailProvider = {
-			sendEmail: async (message) => {
-				sent.push(message);
-				return true;
-			},
-		};
-		const service = new EmailService(config, new EmailI18nService(), provider);
-		const to = 'user@example.com';
-		await service.sendAccountTempBannedEmail(to, 'testuser', 'Spam', 24, DATE, locale);
-		await service.sendAccountScheduledForDeletionEmail(to, 'testuser', 'Spam', DATE, locale);
-		await service.sendScheduledDeletionNotification(to, 'testuser', DATE, 'Spam', locale);
-		await service.sendDsaReportResolvedEmail(to, '1234567890', 'We removed the content.', locale);
-		await service.sendReportResolvedEmail(to, 'testuser', '1234567890', 'We removed the content.', locale);
-		await service.sendAccountDeletionCancelledEmail(to, 'testuser', locale);
-		await service.sendAccountDeletionRequestedEmail(to, 'testuser', null, DATE, locale);
-		await service.sendAccountDeletionInactivityEmail(to, 'testuser', null, DATE, locale);
-		expect(sent).toHaveLength(8);
-		const [tempBan, deletion, deletionNotice, dsaResolved, resolved, cancelled, requested, inactivity] = sent.map(
-			(message) => message.text,
-		);
-		return {tempBan, deletion, deletionNotice, dsaResolved, resolved, cancelled, requested, inactivity};
-	}
-
-	it('names the hosted mailboxes in en-US', async () => {
-		const hosted = await sendAll(CONFIG, 'en-US');
-		expect(hosted.tempBan).toContain(
-			'Email appeals@fluxer.com from this email address and clearly explain why you believe the decision was incorrect.',
-		);
-		expect(hosted.deletion).toContain(
-			'you have 60 days to submit an appeal. Email appeals@fluxer.com from this email address.\n',
-		);
-		expect(hosted.deletionNotice).toContain(
-			'you can submit an appeal. Email appeals@fluxer.com from this email address.\n',
-		);
-		expect(hosted.dsaResolved).toContain('Email appeals@fluxer.com from this email address, include your report ID,');
-		expect(hosted.resolved).toContain('please contact safety@fluxer.com.\n');
-		expect(hosted.cancelled).toContain('If you have any questions, contact safety@fluxer.com.\n');
-		expect(hosted.requested).toContain('contact safety@fluxer.com from this email address before that date.\n');
-		expect(hosted.inactivity).toContain('contact safety@fluxer.com from this email address before that date.\n');
-	});
-
-	it('points at the instance administrators in en-US when no mailbox is configured', async () => {
-		const neutral = await sendAll(SELF_HOSTED, 'en-US');
-		expect(neutral.tempBan).toContain(
-			'you can submit an appeal. Contact the administrators of this instance and clearly explain why you believe the decision was incorrect.',
-		);
-		expect(neutral.deletion).toContain(
-			'you have 60 days to submit an appeal. Contact the administrators of this instance.\n',
-		);
-		expect(neutral.deletionNotice).toContain(
-			'you can submit an appeal. Contact the administrators of this instance.\n',
-		);
-		expect(neutral.dsaResolved).toContain(
-			'Contact the administrators of this instance, include your report ID, and explain why you think the decision is wrong.',
-		);
-		expect(neutral.resolved).toContain(
-			'If you have any questions or concerns about this outcome, please contact the administrators of this instance.\n',
-		);
-		expect(neutral.cancelled).toContain('If you have any questions, contact the administrators of this instance.\n');
-		expect(neutral.requested).toContain(
-			"Your account is locked until then. If you didn't request this, or you want to keep your account, contact the administrators of this instance before that date.\n",
-		);
-		expect(neutral.inactivity).toContain(
-			'If you want to keep your account, contact the administrators of this instance before that date.\n',
-		);
-	});
-
-	it.each([
-		['de', 'die Administratoren dieser Instanz', 'Sende eine E-Mail von dieser E-Mail-Adresse an appeals@fluxer.com'],
-		['ja', 'このインスタンスの管理者', 'このメールアドレスからappeals@fluxer.comまでメールを送信'],
-	])('renders both variants in %s', async (locale, administrators, hostedAppeal) => {
-		const hosted = await sendAll(CONFIG, locale);
-		const neutral = await sendAll(SELF_HOSTED, locale);
-		expect(hosted.tempBan).toContain(hostedAppeal);
-		for (const [name, text] of Object.entries(hosted)) {
-			expect(text, name).toMatch(/(appeals|safety)@fluxer\.com/);
-			expect(text, name).not.toContain(administrators);
-		}
-		for (const [name, text] of Object.entries(neutral)) {
-			expect(text, name).toContain(administrators);
-			expect(text, name).not.toContain('@');
-			expect(text, name).not.toMatch(/\bnull\b/);
-			expect(text, name).not.toContain('{');
-			expect(text, name).not.toContain('\n\n\n');
-			expect(text.split('\n'), name).toHaveLength(hosted[name].split('\n').length);
-		}
-	});
-});
-
-describe('EmailService support contact', () => {
-	const SELF_HOSTED: EmailConfig = {...CONFIG, appealsEmail: null, safetyEmail: null, supportEmail: null};
-	const DATE = new Date('2026-10-01T23:30:00Z');
-
-	async function sendSupportEmails(config: EmailConfig, locale: string): Promise<Array<string>> {
-		const {service, sent} = createCapturingServiceFor(config);
-		const to = 'user@example.com';
-		await service.sendGiftChargebackNotification(to, 'testuser', locale);
-		await service.sendHarvestCompletedEmail(to, 'testuser', 'https://example.com/d', 10, 1024, DATE, locale);
-		await service.sendInactivityWarningEmail(to, 'testuser', DATE, DATE, locale);
-		expect(sent).toHaveLength(3);
-		return sent.map((message) => message.text);
-	}
-
-	it('keeps the support team sentences on the hosted instance', async () => {
-		const [gift, harvest, inactivity] = await sendSupportEmails(CONFIG, 'en-US');
-		expect(gift).toContain(
-			'\n\nIf you think this is a mistake, please contact our support team and include any details you have about the gift code and when you redeemed it.\n\n',
-		);
-		expect(harvest).toContain(
-			"\n\nIf you didn't request this export, please change your password immediately and contact our support team.\n\n",
-		);
-		expect(inactivity).toContain("\n\nIf you've used Fluxer recently, please contact our support team right away.\n\n");
-	});
-
-	it('points at the instance administrators when the instance has no support mailbox', async () => {
-		const [gift, harvest, inactivity] = await sendSupportEmails({...SELF_HOSTED, productName: 'Example Chat'}, 'en-US');
-		expect(gift).toContain(
-			'\n\nIf you think this is a mistake, please contact the administrators of this instance and include any details you have about the gift code and when you redeemed it.\n\n',
-		);
-		expect(harvest).toContain(
-			"\n\nIf you didn't request this export, please change your password immediately and contact the administrators of this instance.\n\n",
-		);
-		expect(inactivity).toContain(
-			"\n\nIf you've used Example Chat recently, please contact the administrators of this instance right away.\n\n",
-		);
-		for (const text of [gift, harvest, inactivity]) {
-			expect(text).not.toMatch(/support/i);
-		}
-	});
-
-	it.each([
-		['de', 'unser Support-Team', 'die Administratoren dieser Instanz'],
-		['ja', 'サポートチーム', 'このインスタンスの管理者'],
-	])('renders both variants in %s', async (locale, supportTeam, administrators) => {
-		const hosted = await sendSupportEmails(CONFIG, locale);
-		const neutral = await sendSupportEmails(SELF_HOSTED, locale);
-		for (const [index, text] of hosted.entries()) {
-			expect(text).toContain(supportTeam);
-			expect(text).not.toContain(administrators);
-			expect(neutral[index]).toContain(administrators);
-			expect(neutral[index]).not.toContain(supportTeam);
-			expect(neutral[index].split('\n')).toHaveLength(text.split('\n').length);
-		}
-	});
-});
-
-describe('EmailService product name', () => {
-	async function sendPasswordReset(config: EmailConfig, locale: string): Promise<EmailMessage> {
-		const {service, sent} = createCapturingServiceFor(config);
-		await expect(service.sendPasswordResetEmail('user@example.com', 'testuser', 'token', locale)).resolves.toBe(true);
+		expect(
+			await service.send(
+				'operator_pass_purchase_confirmation',
+				'buyer@example.com',
+				{...params, termsVersion: '2026-11-01'},
+				'en-US',
+			),
+		).toBe(true);
+		const [attachment] = sent[0].attachments ?? [];
+		expect(attachment.filename).toBe('fluxer-operator-pass-terms-2026-11-01-en-US.pdf');
+		expect((await PDFDocument.load(attachment.content)).getTitle()).toBe('Fluxer Operator Pass terms (2026-11-01)');
+		expect(sent[0].text).toContain('(version 2026-11-01)');
+		expect(
+			await service.send(
+				'operator_pass_purchase_confirmation',
+				'buyer@example.com',
+				{...params, termsVersion: '2026-10-18'},
+				'en-US',
+			),
+		).toBe(false);
 		expect(sent).toHaveLength(1);
-		return sent[0];
-	}
-
-	it('names Fluxer on the hosted instance', async () => {
-		const message = await sendPasswordReset(CONFIG, 'en-US');
-		expect(message.subject).toBe('Reset your Fluxer password');
-		expect(message.text).toContain('Fluxer');
 	});
-
-	it.each(['en-US', 'de', 'ja'])('names the configured instance in the %s subject and body', async (locale) => {
-		const message = await sendPasswordReset({...CONFIG, productName: 'Example Chat'}, locale);
-		expect(message.subject).toContain('Example Chat');
-		expect(message.text).toContain('Example Chat');
-		expect(`${message.subject}\n${message.text}`).not.toContain('Fluxer');
-	});
-
-	it('uses the name of the config it was built with, so a renamed instance sends the new name', async () => {
-		const before = await sendPasswordReset({...CONFIG, productName: 'Example Chat'}, 'en-US');
-		const after = await sendPasswordReset({...CONFIG, productName: 'Renamed Chat'}, 'en-US');
-		expect(before.subject).toBe('Reset your Example Chat password');
-		expect(after.subject).toBe('Reset your Renamed Chat password');
-		expect(after.text).not.toContain('Example Chat');
-	});
-
-	it('passes the name to every template the service sends', async () => {
-		const names: Array<string> = [];
-		const i18n = new EmailI18nService();
-		const recording: IEmailI18nService = {
-			getTemplate: (key, locale, variables, productName) => {
-				names.push(productName);
-				return i18n.getTemplate(key, locale, variables, productName);
+	it('puts the Fluxer invoice with its tax line and PDF in the purchase confirmation, with no Stripe link', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		const invoicePdf = {filename: 'Fluxer-OP-000001.pdf', content: new Uint8Array([1]), contentType: 'application/pdf'};
+		await service.send(
+			'operator_pass_purchase_confirmation',
+			'buyer@example.com',
+			{
+				invoiceNumber: 'OP-000001',
+				orderDate: new Date('2026-11-02T14:00:00Z'),
+				quantity: 1,
+				totals: {
+					totalMinor: 19900,
+					paidMinor: 19900,
+					currency: 'EUR',
+					tax: {amountMinor: 3980, behavior: 'inclusive'},
+					reverseCharge: false,
+				},
+				document: {number: 'OP-000001', issuedAt: new Date('2026-11-02T14:00:00Z'), pdf: invoicePdf},
+				business: true,
+				consentAt: new Date('2026-11-02T13:59:00Z'),
+				withdrawalEndsOn: null,
+				withdrawalCountry: null,
+				wallName: null,
+				unitAmountMinor: 19900,
+				paymentMethod: null,
+				deliveryBoxText: null,
+				termsVersion: '2026-11-01',
 			},
+			'en-US',
+		);
+		expect(sent[0].text).toContain('Includes €39.80 tax');
+		expect(sent[0].text).toContain('Your invoice OP-000001 is attached to this email as a PDF.');
+		expect(sent[0].html).not.toContain('stripe.com');
+		expect(sent[0].attachments?.map((attachment) => attachment.filename)).toEqual([
+			'fluxer-operator-pass-terms-2026-11-01-en-US.pdf',
+			'Fluxer-OP-000001.pdf',
+		]);
+	});
+	it('attaches the credit note to an Operator Pass refund receipt', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		const creditNotePdf = {
+			filename: 'CreditNote-CN-1.pdf',
+			content: new Uint8Array([1]),
+			contentType: 'application/pdf',
 		};
-		const service = new EmailService({...CONFIG, productName: 'Example Chat'}, recording, {
-			sendEmail: async () => true,
-		});
-		const date = new Date('2026-10-01T23:30:00Z');
-		const to = 'user@example.com';
-		await service.sendEmailVerification(to, 'testuser', 'token', 'en-US');
-		await service.sendAccountTempBannedEmail(to, 'testuser', 'Spam', 24, date, 'en-US');
-		await service.sendReportResolvedEmail(to, 'testuser', '1', 'Thanks', 'en-US');
-		await service.sendSelfDeletionScheduledEmail(to, 'testuser', date, 'en-US');
-		expect(names).toEqual(['Example Chat', 'Example Chat', 'Example Chat', 'Example Chat']);
+		await service.send(
+			'operator_pass_refund_receipt',
+			'buyer@example.com',
+			{
+				invoiceNumber: 'A1B2-0001',
+				orderDate: new Date('2026-11-02T14:00:00Z'),
+				refundedAt: new Date('2026-11-03T14:00:00Z'),
+				amountMinor: 19900,
+				currency: 'EUR',
+				delivered: true,
+				passCount: 1,
+				lastPass: false,
+				visionary: false,
+				creditNote: {number: 'CN-1', issuedAt: new Date('2026-11-03T14:00:00Z'), pdf: creditNotePdf},
+			},
+			'en-US',
+		);
+		expect(sent[0].text).toContain('Credit note number');
+		expect(sent[0].text).toContain('CN-1');
+		expect(sent[0].text).toContain('The pass has ended. Your other passes stay.');
+		expect(sent[0].text).toContain('The credit note for this refund is attached to this email as a PDF.');
+		expect(sent[0].attachments?.map((attachment) => attachment.filename)).toEqual(['CreditNote-CN-1.pdf']);
+	});
+	it.each([
+		[
+			1,
+			true,
+			'The pass has ended. Your badge and wall listing have ended too. You keep #operators through your Visionary',
+		],
+		[2, false, '2 passes have ended. Your other passes stay.'],
+		[0, true, "This refund didn't end any of your passes, so nothing else on your account changes."],
+	])('says what a refund that ended %i passes did to the account', async (passCount, lastPass, text) => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		await service.send(
+			'operator_pass_refund_receipt',
+			'buyer@example.com',
+			{
+				invoiceNumber: 'A1B2-0001',
+				orderDate: new Date('2026-11-02T14:00:00Z'),
+				refundedAt: new Date('2026-11-03T14:00:00Z'),
+				amountMinor: 19900,
+				currency: 'EUR',
+				delivered: true,
+				passCount,
+				lastPass,
+				visionary: true,
+				creditNote: null,
+			},
+			'en-US',
+		);
+		expect(sent[0].text).toContain(text);
+	});
+	it('tells a Visionary whose pass bonus is removed that #operators stays through Visionary', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		const params = {
+			until: null,
+			rule: 'Community guidelines section 4, advertising',
+			facts: 'Posted ads in #operators three times.',
+			automated: false,
+			dispute: null,
+		};
+		await service.send('operator_pass_perks_removed', 'visionary@example.com', {...params, visionary: true}, 'en-US');
+		await service.send('operator_pass_perks_removed', 'operator@example.com', {...params, visionary: false}, 'en-US');
+		const [visionary, operator] = sent.map((message) => message.text ?? '');
+		expect(visionary).toContain('This includes your wall listing, badge and the Operator role.');
+		expect(visionary).toContain('You keep #operators through your Visionary.');
+		expect(operator).toContain('This includes your wall listing, badge, #operators and the Operator role.');
+		expect(operator).not.toContain('through your Visionary');
+	});
+	it('explains a dispute bar in the recipient language and says the disputed pages are canceled', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		const params = {
+			until: null,
+			rule: 'Section 9 of the Operator Pass terms',
+			facts: 'Payment dispute dp_test was found unjustified',
+			automated: false,
+			visionary: false,
+			dispute: {id: 'dp_test_sv', deadline: new Date('2026-12-01T12:00:00Z')},
+		};
+		await service.send('operator_pass_perks_removed', 'buyer@example.com', params, 'sv-SE');
+		await service.send('operator_pass_perks_removed', 'buyer@example.com', {...params, dispute: null}, 'sv-SE');
+		const [dispute, other] = sent.map((message) => message.text ?? '');
+		expect(dispute).toContain('Avsnitt 9 i villkoren för Operator Pass');
+		expect(dispute).toContain('betalningstvisten dp_test_sv');
+		expect(dispute).toContain('1 december 2026');
+		expect(dispute).toContain('Certifikatsidorna som den betalningen avsåg har makulerats');
+		expect(dispute).not.toContain('Payment dispute');
+		expect(dispute).not.toContain('påverkas inte');
+		expect(other).toContain('Ditt Operator-certifikat påverkas inte');
+		expect(other).toContain('Payment dispute dp_test was found unjustified');
+	});
+	it('puts the credit note number and attachment in a refusal email', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		await service.send(
+			'operator_pass_purchase_refused',
+			'buyer@example.com',
+			{
+				creditNote: {
+					number: 'CN-0001',
+					issuedAt: new Date('2026-11-03T14:00:00Z'),
+					pdf: {filename: 'CN-0001.pdf', content: Buffer.from('%PDF-1.7'), contentType: 'application/pdf'},
+				},
+			},
+			'de',
+		);
+		expect(sent[0].text).toContain('Gutschriftnummer');
+		expect(sent[0].text).toContain('CN-0001');
+		expect(sent[0].text).toContain('Die Gutschrift zu dieser Rückerstattung findest du als PDF im Anhang.');
+		expect(sent[0].attachments?.map((attachment) => attachment.filename)).toContain('CN-0001.pdf');
+	});
+	it('keeps the # in #operators when a pass leaves the last one on an account', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		await service.send(
+			'operator_pass_offer_accepted',
+			'sender@example.com',
+			{recipientName: 'Grace', remainingCount: 0, visionary: false},
+			'en-US',
+		);
+		expect(sent[0].text).toContain('your badge, wall listing and #operators are gone.');
+	});
+	it('tells a buyer who withdraws before delivery that nothing else on the account changes', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		const params = {
+			name: 'Ada Lovelace',
+			receivedAt: new Date('2026-11-02T14:00:00Z'),
+			invoiceNumber: null,
+			orderDate: new Date('2026-11-02T13:00:00Z'),
+			amountMinor: 59700,
+			currency: 'USD',
+			passCount: 3,
+			lastPass: true,
+			visionary: false,
+			refund: 'started' as const,
+			creditNote: null,
+		};
+		await service.send('operator_pass_withdrawal_receipt', 'buyer@example.com', {...params, delivered: false}, 'en-US');
+		await service.send('operator_pass_withdrawal_receipt', 'holder@example.com', {...params, delivered: true}, 'en-US');
+		const [undelivered, delivered] = sent.map((message) => message.text ?? '');
+		expect(undelivered).toContain(
+			"We hadn't delivered your certificates yet, so nothing else on your account changes.",
+		);
+		expect(undelivered).not.toContain('passes have ended');
+		expect(undelivered).not.toContain('Your badge, wall listing and #operators have ended too.');
+		expect(delivered).toContain('3 passes have ended.');
+		expect(delivered).toContain('Your badge, wall listing and #operators have ended too.');
+	});
+	it('says no new refund was needed when the payment was already refunded', async () => {
+		const {service, sent} = createCapturingServiceFor(CONFIG);
+		await service.send(
+			'operator_pass_withdrawal_receipt',
+			'buyer@example.com',
+			{
+				name: 'Ada Lovelace',
+				receivedAt: new Date('2026-11-02T14:00:00Z'),
+				invoiceNumber: null,
+				orderDate: new Date('2026-11-02T13:00:00Z'),
+				amountMinor: 19900,
+				currency: 'USD',
+				delivered: true,
+				passCount: 1,
+				lastPass: true,
+				visionary: false,
+				refund: 'already',
+				creditNote: null,
+			},
+			'en-US',
+		);
+		const text = sent[0]?.text ?? '';
+		expect(text).toContain('so no new refund was needed.');
+		expect(text).not.toContain('We started a full refund');
 	});
 });

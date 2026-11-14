@@ -1,0 +1,12 @@
+.resendRow {
+	display: flex;
+	justify-content: flex-start;
+	margin-top: -0.25rem;
+}
+
+.status {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+}

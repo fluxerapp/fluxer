@@ -1,14 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(dm_voice_connect).
+
 -typing([eqwalizer]).
 
 -export([handle_dm_voice_with_channel/5]).
--export([handle_dm_connect_or_update/1]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([
     dm_state/0,
@@ -74,6 +70,8 @@ build_connect_request(
         longitude => maps:get(longitude, Opts),
         e2ee_capable => maps:get(e2ee_capable, Opts),
         bot => maps:get(bot, Opts),
+        p2p => maps:get(p2p, Opts),
+        country_code => maps:get(country_code, Opts),
         voice_states => maps:get(dm_voice_states, State, #{}),
         state => State
     }.
@@ -98,7 +96,9 @@ extract_request_opts(Request) ->
         latitude => maps:get(latitude, Request, null),
         longitude => maps:get(longitude, Request, null),
         e2ee_capable => maps:get(e2ee_capable, Request, false),
-        bot => maps:get(bot, Request, false)
+        bot => maps:get(bot, Request, false),
+        p2p => maps:get(p2p, Request, undefined),
+        country_code => maps:get(country_code, Request, undefined)
     }.
 
 -spec handle_dm_connect_or_update(
@@ -152,25 +152,26 @@ handle_new_connection(
     connect_request()
 ) -> {reply, map(), dm_state()} | {reply, {error, atom(), atom()}, dm_state()}.
 check_e2ee_and_create(Req) ->
-    ChannelIdValue = maps:get(channel_id, Req),
     State = maps:get(state, Req),
-    DmJoinResult =
-        case guild_voice_e2ee:is_e2ee_enabled_for_dm() of
-            true ->
-                guild_voice_e2ee:check_join_allowed_dm(
-                    ChannelIdValue,
-                    maps:get(e2ee_capable, Req),
-                    maps:get(bot, Req),
-                    maps:get(voice_states, Req)
-                );
-            false ->
-                ok
-        end,
-    case DmJoinResult of
+    case check_dm_e2ee_join(Req) of
         {error, ErrorAtom2} ->
             {reply, gateway_errors:error(ErrorAtom2), State};
         ok ->
             dm_voice_token:get_dm_voice_token_and_create_state(Req)
+    end.
+
+-spec check_dm_e2ee_join(connect_request()) -> ok | {error, atom()}.
+check_dm_e2ee_join(Req) ->
+    case guild_voice_e2ee:is_e2ee_enabled_for_dm() of
+        true ->
+            guild_voice_e2ee:check_join_allowed_dm(
+                maps:get(channel_id, Req),
+                maps:get(e2ee_capable, Req),
+                maps:get(bot, Req),
+                maps:get(voice_states, Req)
+            );
+        false ->
+            ok
     end.
 
 -spec handle_existing_connection(
@@ -208,10 +209,27 @@ apply_existing_update(
         {error, ErrorAtom} ->
             {reply, gateway_errors:error(ErrorAtom), State};
         {ok, ParsedViewerKey} ->
-            commit_existing_update(Req#{
+            commit_checked_update(check_existing_move_e2ee(Req), Req#{
                 effective_session_id => EffSessId,
                 viewer_stream_keys => ParsedViewerKey
             })
+    end.
+
+-spec commit_checked_update(ok | {error, atom()}, connect_request()) ->
+    {reply, map(), dm_state()} | {reply, {error, atom(), atom()}, dm_state()}.
+commit_checked_update({error, E2EEError}, #{state := State}) ->
+    {reply, gateway_errors:error(E2EEError), State};
+commit_checked_update(ok, Req) ->
+    commit_existing_update(Req).
+
+-spec check_existing_move_e2ee(connect_request()) -> ok | {error, atom()}.
+check_existing_move_e2ee(
+    #{channel_id := ChannelIdValue, existing_voice_state := ExistingVoiceState} = Req
+) ->
+    OldChannelId = maps:get(<<"channel_id">>, ExistingVoiceState, null),
+    case snowflake_id:equal(ChannelIdValue, OldChannelId) of
+        true -> ok;
+        false -> check_dm_e2ee_join(Req)
     end.
 
 -spec resolve_existing_viewer_stream_keys(term(), integer(), voice_state_map(), voice_state()) ->
@@ -245,13 +263,16 @@ commit_existing_update(
         state := State
     } = Req
 ) ->
-    UpdatedVS = build_updated_voice_state(ExistingVoiceState, Req),
+    OldChannelId = maps:get(<<"channel_id">>, ExistingVoiceState, null),
+    NeedsToken = not snowflake_id:equal(ChannelIdValue, OldChannelId),
+    P2p =
+        voice_p2p:is_p2p(ExistingVoiceState) andalso not NeedsToken andalso
+            not voice_p2p:declined(maps:get(p2p, Req, undefined)),
+    UpdatedVS = build_updated_voice_state(ExistingVoiceState, Req#{p2p => P2p}),
     NewVoiceStates = VoiceStates#{ConnectionId => UpdatedVS},
     NewState = State#{dm_voice_states => NewVoiceStates},
     _ = voice_state_counts_cache:upsert_voice_state(UpdatedVS),
     dm_voice_ring:broadcast_voice_state_update(ChannelIdValue, UpdatedVS, NewState),
-    OldChannelId = maps:get(<<"channel_id">>, ExistingVoiceState, null),
-    NeedsToken = not snowflake_id:equal(ChannelIdValue, OldChannelId),
     UserId = maps:get(user_id, Req),
     maybe_spawn_call_voice_state_update(NeedsToken, ChannelIdValue, UserId, UpdatedVS),
     dm_voice_token:maybe_spawn_join_call(
@@ -294,6 +315,7 @@ build_updated_voice_state(ExistingVoiceState, Req) ->
         <<"is_mobile">> => maps:get(is_mobile, Req),
         <<"suppress">> => false,
         <<"viewer_stream_keys">> => maps:get(viewer_stream_keys, Req),
+        <<"p2p">> => maps:get(p2p, Req),
         <<"version">> => OldVersion + 1
     }).
 
@@ -323,20 +345,3 @@ increment_matching_dm_connection(VoiceState, UserId, ChannelIdValue, Acc) ->
         {UserId, ChannelIdValue} -> Acc + 1;
         _ -> Acc
     end.
-
--ifdef(TEST).
-
-dm_connection_limit_allows_join_test() ->
-    VoiceStates = #{
-        <<"conn-1">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-2">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-3">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-4">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-5">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => <<"10">>},
-        <<"conn-6">> => #{<<"channel_id">> => <<"200">>, <<"user_id">> => <<"10">>}
-    },
-    ?assertNot(dm_connection_limit_allows_join(10, 100, VoiceStates)),
-    ?assert(dm_connection_limit_allows_join(10, 200, VoiceStates)),
-    ?assert(dm_connection_limit_allows_join(20, 100, VoiceStates)).
-
--endif.

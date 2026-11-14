@@ -5,12 +5,12 @@ import type {AttachmentRequestData} from '@app/api/channel/AttachmentDTOs';
 import type {RichEmbedMediaWithMetadata} from '@app/api/channel/EmbedTypes';
 import {
 	EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
-	getContentType,
 	makeAttachmentCdnUrl,
 } from '@app/api/channel/services/message/MessageHelpers';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
+import {getContentTypeFromFilename} from '@pkgs/mime_utils/src/ContentTypeUtils';
 
 interface ProcessedAttachment {
 	attachment_id: AttachmentID;
@@ -76,7 +76,7 @@ export class MessageEmbedAttachmentResolver {
 					{filename},
 				);
 			}
-			if (!isEmbeddableMediaType(getContentType(filename))) {
+			if (!isEmbeddableMediaType(getContentTypeFromFilename(filename))) {
 				throw InputValidationError.fromCode(
 					`embeds[${embedIndex}].${field}`,
 					ValidationErrorCodes.ATTACHMENT_MUST_BE_IMAGE,

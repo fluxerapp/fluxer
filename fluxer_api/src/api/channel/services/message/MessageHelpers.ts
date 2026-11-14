@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
-import {createAttachmentID, userIdToChannelId} from '@app/api/BrandedTypes';
+import type {AttachmentDecayPayload} from '@app/api/attachment/AttachmentDecayService';
+import type {AttachmentID, ChannelID, MessageID} from '@app/api/BrandedTypes';
+import {createAttachmentID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {forEachEmbedMedia} from '@app/api/channel/services/message/CrosspostEmbedObjects';
 import type {
 	MessageSnapshot as CassandraMessageSnapshot,
@@ -13,7 +14,7 @@ import type {
 } from '@app/api/database/types/MessageTypes';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
-import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {type IStorageService, isStorageObjectMissing} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
@@ -23,16 +24,16 @@ import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import {MessageSnapshot as MessageSnapshotModel} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
-import {S3ServiceException} from '@aws-sdk/client-s3';
-import {MessageFlags, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
+import {MessageFlags, SENDABLE_MESSAGE_FLAGS, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {getContentTypeFromFilename, isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import {seconds} from 'itty-time';
 
 export const MESSAGE_NONCE_TTL = seconds('5 minutes');
@@ -53,11 +54,12 @@ function selectForwardAttachments(
 	if (!hasForwardMediaSelection(selection)) {
 		return [...attachments];
 	}
-	if (!selection?.attachmentIds?.size) {
+	const attachmentIds = selection?.attachmentIds;
+	if (!attachmentIds?.size) {
 		return [];
 	}
-	const selected = attachments.filter((attachment) => selection.attachmentIds!.has(attachment.id));
-	if (selected.length !== selection.attachmentIds.size) {
+	const selected = attachments.filter((attachment) => attachmentIds.has(attachment.id));
+	if (selected.length !== attachmentIds.size) {
 		throw InputValidationError.fromCode(
 			'message_reference.attachment_ids',
 			ValidationErrorCodes.REFERENCED_ATTACHMENT_NOT_FOUND,
@@ -84,18 +86,6 @@ function selectForwardEmbeds<T>(embeds: ReadonlyArray<T>, selection?: ForwardMed
 		selected.push(embeds[embedIndex]);
 	}
 	return selected;
-}
-
-export function isMediaFile(contentType: string): boolean {
-	return isSupportedMediaContentType(contentType);
-}
-
-export function isPersonalNotesChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): boolean {
-	return userIdToChannelId(userId) === channelId;
-}
-
-export function getContentType(filename: string): string {
-	return getContentTypeFromFilename(filename);
 }
 
 export function validateAttachmentIds(
@@ -162,19 +152,14 @@ export function attachmentStorageChannelId(message: Pick<Message, 'flags' | 'cha
 	return message.channelId;
 }
 
-function isMissingStorageObjectError(error: unknown): boolean {
-	return (
-		(error instanceof S3ServiceException && (error.name === 'NoSuchKey' || error.name === 'NotFound')) ||
-		(error instanceof Error && (error.name === 'NoSuchKey' || error.name === 'NotFound'))
-	);
-}
-
 async function copyCdnObject(
 	storageService: IStorageService,
 	sourceKey: string,
 	destinationKey: string,
 	contentType: string | null | undefined,
+	copyKeys: Array<string>,
 ): Promise<boolean> {
+	copyKeys.push(destinationKey);
 	try {
 		await storageService.copyObject({
 			sourceBucket: Config.s3.buckets.cdn,
@@ -185,7 +170,7 @@ async function copyCdnObject(
 		});
 		return true;
 	} catch (error) {
-		if (isMissingStorageObjectError(error)) {
+		if (isStorageObjectMissing(error)) {
 			Logger.warn({error, sourceKey, destinationKey}, 'Skipping missing attachment while cloning message');
 			return false;
 		}
@@ -199,6 +184,7 @@ async function cloneAttachments(
 	destinationChannelId: ChannelID,
 	storageService: IStorageService,
 	snowflakeService: ISnowflakeService,
+	copyKeys: Array<string>,
 ): Promise<Array<MessageAttachment>> {
 	const clonedAttachments: Array<MessageAttachment> = [];
 	for (const attachment of attachments) {
@@ -208,6 +194,7 @@ async function cloneAttachments(
 			makeAttachmentCdnKey(sourceChannelId, attachment.id, attachment.filename),
 			makeAttachmentCdnKey(destinationChannelId, newAttachmentId, attachment.filename),
 			attachment.contentType,
+			copyKeys,
 		);
 		if (!copied) {
 			continue;
@@ -239,7 +226,9 @@ export async function createMessageSnapshotsForForward(
 	storageService: IStorageService,
 	snowflakeService: ISnowflakeService,
 	limitConfigService: LimitConfigService,
+	copyKeys: Array<string>,
 	selection?: ForwardMediaSelection,
+	assertMediaAllowed?: (media: {hasAttachments: boolean; hasEmbeds: boolean}) => void,
 ): Promise<Array<MessageSnapshotModel>> {
 	if ((referencedMessage.flags & MessageFlags.SOURCE_MESSAGE_DELETED) !== 0) {
 		throw new UnknownMessageError();
@@ -258,6 +247,7 @@ export async function createMessageSnapshotsForForward(
 			throw InputValidationError.fromCode('message_reference', ValidationErrorCodes.NO_VALID_MEDIA_IN_MESSAGE);
 		}
 		validateTotalAttachmentSize(snapshotAttachments, user, limitConfigService);
+		assertMediaAllowed?.({hasAttachments: snapshotAttachments.length > 0, hasEmbeds: snapshotEmbeds.length > 0});
 		const attachmentsForClone = snapshotAttachments.map((att) =>
 			att instanceof Attachment ? att : new Attachment(att),
 		);
@@ -267,6 +257,7 @@ export async function createMessageSnapshotsForForward(
 			destinationChannelId,
 			storageService,
 			snowflakeService,
+			copyKeys,
 		);
 		await cloneOwnedEmbedAttachments(
 			snapshotEmbeds,
@@ -274,6 +265,7 @@ export async function createMessageSnapshotsForForward(
 			destinationChannelId,
 			storageService,
 			snowflakeService,
+			copyKeys,
 		);
 		const snapshotData: CassandraMessageSnapshot = {
 			content: isMediaOnlyForward ? null : snapshot.content,
@@ -292,14 +284,6 @@ export async function createMessageSnapshotsForForward(
 		return [new MessageSnapshotModel(snapshotData)];
 	}
 	const selectedAttachments = selectForwardAttachments(referencedMessage.attachments, selection);
-	validateTotalAttachmentSize(selectedAttachments, user, limitConfigService);
-	const clonedAttachments = await cloneAttachments(
-		selectedAttachments,
-		attachmentStorageChannelId(referencedMessage),
-		destinationChannelId,
-		storageService,
-		snowflakeService,
-	);
 	const referencedMessageEmbeds = selectForwardEmbeds(
 		(referencedMessage.flags & MessageFlags.SUPPRESS_EMBEDS) === 0
 			? referencedMessage.embeds.map((embed) => embed.toMessageEmbed())
@@ -309,30 +293,37 @@ export async function createMessageSnapshotsForForward(
 	if (isMediaOnlyForward && selectedAttachments.length === 0 && referencedMessageEmbeds.length === 0) {
 		throw InputValidationError.fromCode('message_reference', ValidationErrorCodes.NO_VALID_MEDIA_IN_MESSAGE);
 	}
+	validateTotalAttachmentSize(selectedAttachments, user, limitConfigService);
+	assertMediaAllowed?.({
+		hasAttachments: selectedAttachments.length > 0,
+		hasEmbeds: referencedMessageEmbeds.length > 0,
+	});
+	const clonedAttachments = await cloneAttachments(
+		selectedAttachments,
+		attachmentStorageChannelId(referencedMessage),
+		destinationChannelId,
+		storageService,
+		snowflakeService,
+		copyKeys,
+	);
 	await cloneOwnedEmbedAttachments(
 		referencedMessageEmbeds,
 		attachmentStorageChannelId(referencedMessage),
 		destinationChannelId,
 		storageService,
 		snowflakeService,
+		copyKeys,
 	);
 	const snapshotData: CassandraMessageSnapshot = {
 		content: isMediaOnlyForward ? null : referencedMessage.content,
 		timestamp: snowflakeToDate(referencedMessage.id),
 		edited_timestamp: isMediaOnlyForward ? null : referencedMessage.editedTimestamp,
-		mention_users: isMediaOnlyForward
-			? null
-			: referencedMessage.mentionedUserIds.size > 0
-				? referencedMessage.mentionedUserIds
-				: null,
-		mention_roles: isMediaOnlyForward
-			? null
-			: referencedMessage.mentionedRoleIds.size > 0
-				? referencedMessage.mentionedRoleIds
-				: null,
-		mention_channels: isMediaOnlyForward
-			? null
-			: referencedMessage.mentionedChannelIds.size > 0
+		mention_users:
+			!isMediaOnlyForward && referencedMessage.mentionedUserIds.size > 0 ? referencedMessage.mentionedUserIds : null,
+		mention_roles:
+			!isMediaOnlyForward && referencedMessage.mentionedRoleIds.size > 0 ? referencedMessage.mentionedRoleIds : null,
+		mention_channels:
+			!isMediaOnlyForward && referencedMessage.mentionedChannelIds.size > 0
 				? referencedMessage.mentionedChannelIds
 				: null,
 		attachments: clonedAttachments.length > 0 ? clonedAttachments : null,
@@ -350,7 +341,7 @@ export async function createMessageSnapshotsForForward(
 
 export const EMBED_MEDIA_OWNED_ATTACHMENT_FLAG = 1 << 30;
 
-function isOwnedEmbedAttachment(media: Pick<MessageEmbedMedia, 'flags'>): boolean {
+export function isOwnedEmbedAttachment(media: Pick<MessageEmbedMedia, 'flags'>): boolean {
 	return (media.flags & EMBED_MEDIA_OWNED_ATTACHMENT_FLAG) !== 0;
 }
 
@@ -376,6 +367,7 @@ async function cloneOwnedEmbedAttachments(
 	destinationChannelId: ChannelID,
 	storageService: IStorageService,
 	snowflakeService: ISnowflakeService,
+	copyKeys: Array<string>,
 ): Promise<void> {
 	const mediaPrefix = `${Config.endpoints.media}/`;
 	const sourcePrefix = `${mediaPrefix}attachments/${sourceChannelId}/`;
@@ -396,6 +388,7 @@ async function cloneOwnedEmbedAttachments(
 				url.slice(mediaPrefix.length),
 				makeAttachmentCdnKey(destinationChannelId, clonedId, filename),
 				media.content_type,
+				copyKeys,
 			);
 			clonedUrls.set(url, copied ? makeAttachmentCdnUrl(destinationChannelId, clonedId, filename) : null);
 		}
@@ -405,6 +398,18 @@ async function cloneOwnedEmbedAttachments(
 			media.flags |= EMBED_MEDIA_OWNED_ATTACHMENT_FLAG;
 		}
 	}
+}
+
+export function ownedEmbedAttachmentKeys(embeds: ReadonlyArray<MessageEmbed>, channelId: ChannelID): Set<string> {
+	const mediaPrefix = `${Config.endpoints.media}/`;
+	const ownPrefix = `${mediaPrefix}attachments/${channelId}/`;
+	const keys = new Set<string>();
+	forEachEmbedMedia(embeds, (media) => {
+		if (media.url?.startsWith(ownPrefix) && isOwnedEmbedAttachment(media)) {
+			keys.add(media.url.slice(mediaPrefix.length));
+		}
+	});
+	return keys;
 }
 
 export function collectOwnedEmbedAttachments(message: Message): Array<{key: string; media: MessageEmbedMedia}> {
@@ -474,18 +479,39 @@ export function collectMessageAttachments(message: Message): Array<Attachment> {
 	return [...message.attachments, ...message.messageSnapshots.flatMap((snapshot) => snapshot.attachments)];
 }
 
-export function countedThreadMessages(channel: Channel, messageIds: Array<MessageID>): number {
+export function attachmentDecayPayloadsForMessage(message: Message): Array<AttachmentDecayPayload> {
+	const attachments = collectMessageAttachments(message);
+	if (attachments.length === 0) return [];
+	const ownerMessageId = isCrosspostCopy(message) ? (message.reference?.messageId ?? message.id) : message.id;
+	const uploadedAt = snowflakeToDate(ownerMessageId);
+	const storageChannelId = attachmentStorageChannelId(message);
+	return attachments.map((attachment) => ({
+		attachmentId: attachment.id,
+		channelId: storageChannelId,
+		messageId: ownerMessageId,
+		filename: attachment.filename,
+		sizeBytes: attachment.size,
+		uploadedAt,
+	}));
+}
+
+function countedThreadMessages(channel: Channel, messageIds: Array<MessageID>): number {
 	if (!channel.isThread()) return 0;
 	const starterId = channel.id.toString();
 	return messageIds.filter((messageId) => messageId.toString() !== starterId).length;
 }
 
 export async function decrementThreadMessageCount(
-	channelRepository: IChannelRepositoryAggregate,
+	channelRepository: ChannelRepository,
 	channel: Channel | null,
 	messageIds: Array<MessageID>,
 ): Promise<void> {
 	if (!channel) return;
 	const count = countedThreadMessages(channel, messageIds);
 	if (count > 0) await channelRepository.threads.adjustMessageCount(channel.id, -count);
+}
+
+export function ensureTextChannel(channel: Channel): void {
+	if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_CHANNEL_TYPES.has(channel.type))
+		throw new CannotSendMessageToNonTextChannelError();
 }

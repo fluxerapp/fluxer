@@ -23,10 +23,12 @@ const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 	'premium_lifetime_sequence',
 	'premium_grace_ends_at',
 	'premium_discriminator',
-	'premium_badge_hidden',
+	'hidden_profile_badges',
 	'premium_badge_masked',
 	'premium_badge_timestamp_hidden',
-	'premium_badge_sequence_hidden',
+	'operator_pass_badge_timestamp_hidden',
+	'operator_pass_badge_count_hidden',
+	'operator_pass_since',
 	'premium_purchase_disabled',
 	'premium_enabled_override',
 	'premium_perks_disabled',
@@ -38,7 +40,7 @@ const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 	'has_ever_purchased',
 	'has_unread_gift_inventory',
 	'unread_gift_inventory_count',
-	'age_verified_adult',
+	'mature_content_unlocked',
 	'terms_agreed_at',
 	'privacy_agreed_at',
 	'traits',
@@ -120,27 +122,17 @@ class Users {
 		return this.usersList;
 	}
 
-	handleGatewayReady(accountKey: string, currentUser: UserPrivate): void {
+	handleGatewayReady(accountKey: string, currentUser: UserPrivate, options: {keepRestoredUsers: boolean}): void {
 		this.assertCurrentAccountIdentity(accountKey, currentUser.id);
-		const userRecord = new User(currentUser);
-		this.users = {
-			[currentUser.id]: userRecord,
-		};
-		this.userCount = 1;
+		const keepRestored = options.keepRestoredUsers && this.hydratedAccountKey === accountKey;
+		const restored = keepRestored ? this.users : {};
+		const next = new User(currentUser);
+		const existing = restored[currentUser.id];
+		if (!keepRestored) this.users = {};
+		if (existing === undefined || !existing.equals(next)) this.users[currentUser.id] = next;
+		this.userCount = Object.keys(this.users).length;
 		this.hydratedAccountKey = accountKey;
 		this.viewAccountKey = accountKey;
-		if (!userRecord.isClaimed()) {
-			setTimeout(async () => {
-				if (!this.isActiveUnclaimedAccount(accountKey, currentUser.id)) {
-					return;
-				}
-				const {openClaimAccountModal} = await import('@app/features/auth/components/modals/ClaimAccountModal');
-				if (!this.isActiveUnclaimedAccount(accountKey, currentUser.id)) {
-					return;
-				}
-				openClaimAccountModal();
-			}, 1000);
-		}
 	}
 
 	hydrateFromSnapshot(accountKey: string, currentUser: UserPrivate, users: ReadonlyArray<WireUser>): void {
@@ -224,16 +216,6 @@ class Users {
 		if (SessionManager.currentAccountKey !== accountKey || SessionManager.userId !== userId) {
 			throw new CurrentUserHydrationMismatchError(accountKey, userId);
 		}
-	}
-
-	private isActiveUnclaimedAccount(accountKey: string, userId: string): boolean {
-		const currentUser = this.currentUser;
-		return (
-			this.hydratedAccountKey === accountKey &&
-			SessionManager.currentAccountKey === accountKey &&
-			currentUser?.id === userId &&
-			!currentUser.isClaimed()
-		);
 	}
 }
 

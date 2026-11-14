@@ -3,19 +3,9 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {HelpCenterArticleSlug} from '@app/features/app/config/HelpCenterConstants';
-import {MatureContentCheckModal} from '@app/features/auth/components/modals/MatureContentCheckModal';
 import {MatureContentGateReason} from '@app/features/guild/state/GuildMatureContentAgree';
-import {
-	CLOSE_DESCRIPTOR,
-	COMPLETE_MATURE_CONTENT_CHECK_DESCRIPTOR,
-} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {
-	getEffectiveMatureContentGeoContext,
-	isMatureContentCheckAvailableInRegion,
-} from '@app/features/moderation/utils/MatureContentGeoUtils';
-import {Button} from '@app/features/ui/button/Button';
+import {getEffectiveMatureContentGeoContext} from '@app/features/moderation/utils/MatureContentGeoUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as HelpCenterUtils from '@app/features/ui/utils/HelpCenterUtils';
 import {getRegionDisplayName} from '@app/features/user/utils/UserGeo';
 import {msg} from '@lingui/core/macro';
@@ -43,18 +33,9 @@ export const MatureMediaGateDetailsModal = observer(({reason}: MatureMediaGateDe
 	const handleClose = useCallback(() => {
 		ModalCommands.pop();
 	}, []);
-	const handleOpenMatureContentCheck = useCallback(() => {
-		ModalCommands.pop();
-		ModalCommands.push(
-			modal(() => (
-				<MatureContentCheckModal data-flx="moderation.mature-media-gate-details-modal.handle-open-mature-content-check.mature-content-check-modal" />
-			)),
-		);
-	}, []);
 	if (reason === MatureContentGateReason.GEO_RESTRICTED) {
 		const {countryCode, regionCode} = getEffectiveMatureContentGeoContext();
 		const regionName = getRegionDisplayName(i18n, countryCode ?? undefined, regionCode ?? undefined);
-		const matureContentCheckAvailable = isMatureContentCheckAvailableInRegion();
 		return (
 			<Modal.Root size="small" centered data-flx="moderation.mature-media-gate-details-modal.modal-root">
 				<Modal.Header
@@ -68,35 +49,12 @@ export const MatureMediaGateDetailsModal = observer(({reason}: MatureMediaGateDe
 								Due to mature content laws in {regionName}, this media is not available from your current region.
 							</Trans>
 						</Modal.Description>
-						{matureContentCheckAvailable ? (
-							<Modal.Description data-flx="moderation.mature-media-gate-details-modal.modal-description--2">
-								<Trans>Complete the mature content check to unlock mature media.</Trans>
-							</Modal.Description>
-						) : (
-							<Modal.Description data-flx="moderation.mature-media-gate-details-modal.modal-description--3">
-								<Trans>Mature content checks are currently available only in the UK.</Trans>
-							</Modal.Description>
-						)}
 					</Modal.ContentLayout>
 				</Modal.Content>
-				{matureContentCheckAvailable && (
-					<Modal.Footer data-flx="moderation.mature-media-gate-details-modal.modal-footer">
-						<Button
-							onClick={handleClose}
-							variant="secondary"
-							data-flx="moderation.mature-media-gate-details-modal.button.close"
-						>
-							{i18n._(CLOSE_DESCRIPTOR)}
-						</Button>
-						<Button
-							onClick={handleOpenMatureContentCheck}
-							variant="primary"
-							data-flx="moderation.mature-media-gate-details-modal.button.open-mature-content-check"
-						>
-							{i18n._(COMPLETE_MATURE_CONTENT_CHECK_DESCRIPTOR)}
-						</Button>
-					</Modal.Footer>
-				)}
+				<Modal.DismissFooter
+					onDismiss={handleClose}
+					data-flx="moderation.mature-media-gate-details-modal.dismiss-footer"
+				/>
 			</Modal.Root>
 		);
 	}

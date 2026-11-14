@@ -2,36 +2,38 @@
 
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
+import {promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import Users from '@app/features/user/state/Users';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 
-export function canSubmitReport(): boolean {
-	const user = Users.currentUser;
-	if (!user) return false;
-	if (!user.isClaimed()) return false;
-	if (!user.verified) return false;
-	return true;
+const REPORT_ACCOUNT_SETUP_CODES: ReadonlySet<string> = new Set([
+	APIErrorCodes.ACCOUNT_VERIFICATION_REQUIRED,
+	APIErrorCodes.REPORT_EMAIL_VERIFICATION_REQUIRED,
+	APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS,
+]);
+
+export function needsReportAccountSetup(error: unknown): boolean {
+	const code = failureCode(error);
+	return code !== undefined && REPORT_ACCOUNT_SETUP_CODES.has(code);
 }
 
-export function showReportRestrictionDialog(): void {
-	const user = Users.currentUser;
-	if (!user) return;
-	if (!user.isClaimed()) {
-		openClaimAccountModal({force: true});
+export function openReportAccountSetup(error: unknown): void {
+	if (promptForAccountTier(error)) return;
+	if (failureCode(error) === APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS) {
+		openClaimAccountModal();
 		return;
 	}
-	if (!user.verified) {
-		ModalCommands.push(
-			modal(
-				() => (
-					<UserSettingsModal
-						initialTab="account_security"
-						data-flx="moderation.report-verification-gate.show-report-restriction-dialog.user-settings-modal"
-					/>
-				),
-				'user-settings',
+	ModalCommands.push(
+		modal(
+			() => (
+				<UserSettingsModal
+					initialTab="account_security"
+					data-flx="moderation.report-verification-gate.open-report-account-setup.user-settings-modal"
+				/>
 			),
-		);
-	}
+			'user-settings',
+		),
+	);
 }

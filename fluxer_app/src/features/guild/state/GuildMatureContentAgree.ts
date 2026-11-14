@@ -157,9 +157,8 @@ class GuildMatureContentAgree {
 		const requestedChannel = context.channelId ? Channels.getChannel(context.channelId) : null;
 		const threadParentId = requestedChannel?.isThread() ? requestedChannel.parentId : null;
 		const channelId = threadParentId ?? context.channelId ?? null;
-		const guildIdFromArg = context.guildId ?? null;
 		const channel = threadParentId ? Channels.getChannel(threadParentId) : requestedChannel;
-		const guildId = guildIdFromArg ?? channel?.guildId ?? null;
+		const guildId = channel?.guildId ?? context.guildId ?? null;
 		const guild = guildId ? Guilds.getGuild(guildId) : null;
 		let categoryId: string | null = null;
 		if (channel) {
@@ -279,7 +278,7 @@ class GuildMatureContentAgree {
 					if (geo.regionCode === null) return true;
 					return geo.regionCode === regionCode;
 				});
-				if (requiresMatureContentCheck && !currentUser?.matureContentCheckComplete) {
+				if (requiresMatureContentCheck && !currentUser?.matureContentUnlocked) {
 					return MatureContentGateReason.GEO_RESTRICTED;
 				}
 			}

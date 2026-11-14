@@ -1,0 +1,133 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.brand {
+	box-sizing: border-box;
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-primary);
+	text-align: center;
+}
+
+.identity {
+	display: flex;
+	min-width: 0;
+	max-width: 100%;
+	align-items: center;
+	justify-content: center;
+	gap: 0.625rem;
+}
+
+.logo {
+	display: none;
+	width: auto;
+	height: 1.75rem;
+	max-inline-size: 4rem;
+	flex: 0 0 auto;
+	object-fit: contain;
+}
+
+.textTier .logo,
+.card .logo {
+	display: block;
+}
+
+.wordmark {
+	min-width: 0;
+	max-inline-size: 14rem;
+	overflow-wrap: anywhere;
+}
+
+img.wordmark,
+svg.wordmark {
+	width: auto;
+	height: 1.5rem;
+	flex: 0 1 auto;
+	object-fit: contain;
+}
+
+span.wordmark {
+	display: block;
+	max-block-size: 2.2em;
+	overflow: hidden;
+	font-size: 1.125rem;
+}
+
+.host {
+	max-inline-size: 100%;
+	margin-block-start: 0.375rem;
+	overflow: hidden;
+	color: var(--text-tertiary);
+	font-size: 0.8125rem;
+	line-height: 1.25rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.card {
+	padding-block: var(--auth-card-padding) 0;
+	padding-inline: 3.5rem;
+}
+
+.mobile {
+	margin-block-end: 2rem;
+}
+
+.mobile img.wordmark,
+.mobile svg.wordmark {
+	height: 2rem;
+}
+
+.mobile span.wordmark {
+	font-size: 1.5rem;
+}
+
+@media (max-width: 640px) {
+	.card .host {
+		display: none;
+	}
+}
+
+@media (min-width: 55rem) {
+	.split {
+		flex: 0 0 18rem;
+		padding: 2.5rem 1.5rem;
+		border-inline-end: 0.0625rem solid var(--background-modifier-accent);
+	}
+
+	.split .identity {
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.split .logo {
+		display: block;
+		width: min(13rem, calc(8rem * var(--auth-brand-logo-ratio, 1)));
+		height: auto;
+		max-inline-size: none;
+		aspect-ratio: var(--auth-brand-logo-ratio, 1);
+	}
+
+	.split:has(.logo[data-pending]) > * {
+		visibility: hidden;
+	}
+
+	.split .wordmark {
+		max-inline-size: 13rem;
+	}
+
+	.split img.wordmark,
+	.split svg.wordmark {
+		height: 2rem;
+	}
+
+	.split span.wordmark {
+		font-size: 1.5rem;
+	}
+
+	.split .host {
+		margin-block-start: 0.75rem;
+	}
+}

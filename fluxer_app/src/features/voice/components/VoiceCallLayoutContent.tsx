@@ -4,6 +4,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {FocusMembersRowDivider} from '@app/features/voice/components/FocusMembersRowDivider';
 import {
 	createVoiceCallLayoutPresentationSnapshot,
 	selectVoiceCallLayoutPresentationModel,
@@ -23,7 +24,7 @@ import {clsx} from 'clsx';
 import type {Participant} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 function trackToEntry(trackRef: TrackReferenceOrPlaceholder, index: number): VoiceGridEntry {
 	const key =
@@ -79,6 +80,7 @@ interface FocusLayoutStyle extends React.CSSProperties {
 	'--content-padding'?: string;
 	'--focus-mini-tile-max-width'?: string;
 	'--focus-mini-grid-gap'?: string;
+	'--voice-focus-members-row-user-height'?: string;
 }
 
 interface FocusMainStyle extends React.CSSProperties {
@@ -106,7 +108,13 @@ export const VoiceCallLayoutContent = observer(function VoiceCallLayoutContent({
 	onExpandUser,
 }: VoiceCallLayoutContentProps) {
 	const {i18n} = useLingui();
-	const focusLayoutStyle = useMemo(() => (compact ? COMPACT_FOCUS_STYLE : undefined), [compact]);
+	const membersRowHeight = VoiceCallLayout.focusMembersRowHeight;
+	const focusLayoutStyle = useMemo<FocusLayoutStyle | undefined>(() => {
+		if (compact) return COMPACT_FOCUS_STYLE;
+		if (membersRowHeight == null) return undefined;
+		return {'--voice-focus-members-row-user-height': `${membersRowHeight}px`};
+	}, [compact, membersRowHeight]);
+	const membersRowRef = useRef<HTMLDivElement | null>(null);
 	const focusMainAspectRatio = DEFAULT_FOCUS_MAIN_ASPECT_RATIO;
 	const focusMainStyle = useMemo<FocusMainStyle>(() => {
 		return {
@@ -169,7 +177,6 @@ export const VoiceCallLayoutContent = observer(function VoiceCallLayoutContent({
 	const canShowParticipantsGridPanel = presentationModel.canShowParticipantsGridPanel;
 	const visibleCameraTracks = filteredCameraTracks;
 	const isParticipantsExpanded = presentationModel.isParticipantsExpanded;
-	const isFullscreenFocusLayout = presentationModel.isFullscreenFocusLayout;
 	const focusScrollerOverflow = presentationModel.focusScrollerOverflow;
 	const showMembersRow = presentationModel.showMembersRow;
 	const showMembersToggle = presentationModel.showMembersToggle;
@@ -195,6 +202,7 @@ export const VoiceCallLayoutContent = observer(function VoiceCallLayoutContent({
 		if (!showMembersRow) return null;
 		return (
 			<div
+				ref={membersRowRef}
 				className={styles.focusLayoutMembersRow}
 				data-flx="voice.voice-call-layout-content.focus-layout-node.members-row"
 			>
@@ -264,7 +272,6 @@ export const VoiceCallLayoutContent = observer(function VoiceCallLayoutContent({
 				className={clsx(
 					styles.focusLayoutContent,
 					!compact && styles.focusLayoutContentFullscreen,
-					isFullscreenFocusLayout && styles.focusLayoutContentAppFullscreen,
 					!compact && showMembersRow && styles.focusLayoutContentFullscreenMembersVisible,
 					compact && styles.focusLayoutContentCompact,
 					!isParticipantsExpanded && styles.focusLayoutContentNoParticipants,
@@ -346,19 +353,21 @@ export const VoiceCallLayoutContent = observer(function VoiceCallLayoutContent({
 															className={styles.iconMedium}
 															data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium"
 														/>
-													) : isParticipantsExpanded ? (
-														<CaretDownIcon
-															weight="bold"
-															className={styles.iconMedium}
-															data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium--2"
-														/>
-													) : (
-														<CaretUpIcon
-															weight="bold"
-															className={styles.iconMedium}
-															data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium--3"
-														/>
-													)}
+													) : null}
+													{!compact &&
+														(isParticipantsExpanded ? (
+															<CaretDownIcon
+																weight="bold"
+																className={styles.iconMedium}
+																data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium--2"
+															/>
+														) : (
+															<CaretUpIcon
+																weight="bold"
+																className={styles.iconMedium}
+																data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium--3"
+															/>
+														))}
 												</button>
 											</Tooltip>
 										</FocusRing>
@@ -472,19 +481,21 @@ export const VoiceCallLayoutContent = observer(function VoiceCallLayoutContent({
 														className={styles.iconMedium}
 														data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium--4"
 													/>
-												) : isParticipantsExpanded ? (
-													<CaretDownIcon
-														weight="bold"
-														className={styles.iconMedium}
-														data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium--5"
-													/>
-												) : (
-													<CaretUpIcon
-														weight="bold"
-														className={styles.iconMedium}
-														data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium--6"
-													/>
-												)}
+												) : null}
+												{!compact &&
+													(isParticipantsExpanded ? (
+														<CaretDownIcon
+															weight="bold"
+															className={styles.iconMedium}
+															data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium--5"
+														/>
+													) : (
+														<CaretUpIcon
+															weight="bold"
+															className={styles.iconMedium}
+															data-flx="voice.voice-call-layout-content.focus-layout-node.icon-medium--6"
+														/>
+													))}
 											</button>
 										</Tooltip>
 									</FocusRing>
@@ -493,7 +504,15 @@ export const VoiceCallLayoutContent = observer(function VoiceCallLayoutContent({
 						</div>
 					)}
 				</Scroller>
-				{showMembersRow && !isParticipantsExpanded && membersRowNode}
+				{showMembersRow && !isParticipantsExpanded && (
+					<>
+						{membersRowNode}
+						<FocusMembersRowDivider
+							rowRef={membersRowRef}
+							data-flx="voice.voice-call-layout-content.focus-layout-node.members-row-divider"
+						/>
+					</>
+				)}
 				{showMembersToggle && (
 					<div
 						className={styles.focusMembersToggleWrap}
@@ -550,7 +569,6 @@ export const VoiceCallLayoutContent = observer(function VoiceCallLayoutContent({
 		focusMainTrack,
 		canShowParticipantsGridPanel,
 		focusScrollerOverflow,
-		isFullscreenFocusLayout,
 		isParticipantsExpanded,
 		handleToggleParticipantsGrid,
 		handleToggleMembersRow,

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import type {SearchableAuditLog} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 

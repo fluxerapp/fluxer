@@ -7,7 +7,6 @@ import type {IMediaService} from '@app/api/infrastructure/IMediaService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import {EntranceSound, EntranceSoundSelection} from '@app/api/models/EntranceSound';
-import {resolveEntranceSoundDurationMs} from '@app/api/user/entrance_sound/EntranceSoundDurationProbe';
 import type {EntranceSoundRepository} from '@app/api/user/entrance_sound/EntranceSoundRepository';
 import {
 	ENTRANCE_SOUND_EXT_TO_MIME,
@@ -16,7 +15,6 @@ import {
 	ENTRANCE_SOUND_MAX_PER_USER,
 	ENTRANCE_SOUND_MIN_DURATION_MS,
 	ENTRANCE_SOUND_NAME_MAX_LENGTH,
-	type EntranceSoundExtension,
 	entranceSoundExtensionFromFormat,
 	entranceSoundExtensionFromMime,
 	isValidEntranceSoundScopeId,
@@ -50,6 +48,10 @@ export interface EntranceSoundLibraryEntry {
 
 const SOUND_PATH_PREFIX = 'entrance-sounds';
 
+export function entranceSoundStorageKey(userId: UserID, hash: string, extension: string): string {
+	return `${SOUND_PATH_PREFIX}/${userId}/${hash}.${extension}`;
+}
+
 export class EntranceSoundService {
 	constructor(
 		private readonly repository: EntranceSoundRepository,
@@ -59,10 +61,6 @@ export class EntranceSoundService {
 
 	cdnUrlFor(sound: EntranceSound): string {
 		return `${Config.endpoints.media}/${SOUND_PATH_PREFIX}/${sound.userId}/${sound.hash}.${sound.extension}`;
-	}
-
-	private s3KeyFor(userId: UserID, hash: string, extension: EntranceSoundExtension): string {
-		return `${SOUND_PATH_PREFIX}/${userId}/${hash}.${extension}`;
 	}
 
 	private async objectIsReferenced(
@@ -128,15 +126,15 @@ export class EntranceSoundService {
 				format: metadata.format ?? metadata.content_type ?? 'unknown',
 			});
 		}
-		const metadataDurationSeconds = typeof metadata.duration === 'number' ? metadata.duration : null;
-		const durationMs = await resolveEntranceSoundDurationMs({
-			bytes,
-			extension,
-			metadataDurationSeconds,
-		});
-		if (durationMs == null) {
+		const metadataDurationSeconds =
+			typeof metadata.duration === 'number' && Number.isFinite(metadata.duration) && metadata.duration > 0
+				? metadata.duration
+				: null;
+		const durationSeconds = (await this.mediaService.getAudioDurationSeconds(trimmed)) ?? metadataDurationSeconds;
+		if (durationSeconds == null) {
 			throw InputValidationError.fromCode('audio', ValidationErrorCodes.ENTRANCE_SOUND_INVALID_FORMAT);
 		}
+		const durationMs = Math.round(durationSeconds * 1000);
 		if (durationMs > ENTRANCE_SOUND_MAX_DURATION_MS) {
 			throw InputValidationError.fromCode('audio', ValidationErrorCodes.ENTRANCE_SOUND_DURATION_EXCEEDS_LIMIT, {
 				max_ms: ENTRANCE_SOUND_MAX_DURATION_MS,
@@ -149,7 +147,7 @@ export class EntranceSoundService {
 		}
 		const hash = crypto.createHash('md5').update(bytes).digest('hex').slice(0, 16);
 		const contentType = ENTRANCE_SOUND_EXT_TO_MIME[extension];
-		const s3Key = this.s3KeyFor(userId, hash, extension);
+		const s3Key = entranceSoundStorageKey(userId, hash, extension);
 		try {
 			await this.storageService.uploadObject({
 				bucket: Config.s3.buckets.cdn,
@@ -208,7 +206,7 @@ export class EntranceSoundService {
 		if (await this.objectIsReferenced(userId, existing.hash, existing.extension, soundId).catch(() => true)) {
 			return;
 		}
-		const s3Key = this.s3KeyFor(userId, existing.hash, existing.extension as EntranceSoundExtension);
+		const s3Key = entranceSoundStorageKey(userId, existing.hash, existing.extension);
 		await this.storageService.deleteObject(Config.s3.buckets.cdn, s3Key).catch((error) => {
 			Logger.error({error, userId: userId.toString(), s3Key}, 'Failed to delete entrance sound from S3');
 		});

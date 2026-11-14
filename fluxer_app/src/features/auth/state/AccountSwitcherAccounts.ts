@@ -5,36 +5,79 @@ import RuntimeConfig, {
 	runtimeConfigSnapshotsAreSameInstance,
 	runtimeInstanceKey,
 } from '@app/features/app/state/RuntimeConfig';
-import {parseAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
+import {resolveAccountInstanceKey} from '@app/features/auth/AccountDisplayUtils';
+import {getAccountKey, parseAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
+import {compareSwitcherOrder, mergeSwitcherOrder} from '@app/features/auth/state/AccountSwitcherOrder';
 import Accounts from '@app/features/auth/state/Accounts';
 import type {Account} from '@app/features/platform/state/AuthSession';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 
-function accountIsSelectableOnCurrentInstance(
-	account: Account,
-	currentInstance: RuntimeConfigSnapshot,
-	currentInstanceKey: string,
-): boolean {
+export function accountBelongsToInstance(account: Account, instance: RuntimeConfigSnapshot): boolean {
 	if (account.instance != null) {
-		return runtimeConfigSnapshotsAreSameInstance(account.instance, currentInstance);
+		return runtimeConfigSnapshotsAreSameInstance(account.instance, instance);
 	}
-	return parseAccountStorageKey(account.storageKey)?.instanceKey === currentInstanceKey;
+	const instanceKey = runtimeInstanceKey(instance);
+	return instanceKey !== null && parseAccountStorageKey(account.storageKey)?.instanceKey === instanceKey;
+}
+
+export function currentInstanceAccounts(): Array<Account> {
+	const accounts = Accounts.getAllAccounts();
+	const currentInstance = RuntimeConfig.getSnapshotOrNull();
+	if (currentInstance === null) {
+		return [...accounts].sort(compareSwitcherOrder);
+	}
+	if (runtimeInstanceKey(currentInstance) === null) {
+		throw new Error('Current runtime snapshot has no instance identity');
+	}
+	return accounts.filter((account) => accountBelongsToInstance(account, currentInstance)).sort(compareSwitcherOrder);
 }
 
 export function switcherAccounts(): Array<Account> {
-	const accounts = Accounts.getAllAccounts();
 	if (isDesktop()) {
-		return accounts;
+		return [...Accounts.getAllAccounts()].sort(compareSwitcherOrder);
 	}
-	const currentInstance = RuntimeConfig.getSnapshotOrNull();
-	if (currentInstance === null) {
-		return accounts;
+	return currentInstanceAccounts();
+}
+
+export async function saveSwitcherOrder(orderedAccountKeys: ReadonlyArray<string>): Promise<void> {
+	const allKeys = [...Accounts.getAllAccounts()].sort(compareSwitcherOrder).map(getAccountKey);
+	await Accounts.reorderAccounts(mergeSwitcherOrder(allKeys, orderedAccountKeys));
+}
+
+export function adjacentSwitcherAccount(direction: 1 | -1): Account | null {
+	const accounts = switcherAccounts();
+	if (accounts.length < 2) {
+		return null;
 	}
-	const currentInstanceKey = runtimeInstanceKey(currentInstance);
-	if (currentInstanceKey === null) {
-		throw new Error('Current runtime snapshot has no instance identity');
+	const currentAccountKey = Accounts.currentAccountKey;
+	const currentIndex = accounts.findIndex((account) => getAccountKey(account) === currentAccountKey);
+	if (currentIndex < 0) {
+		return direction === 1 ? accounts[0] : accounts[accounts.length - 1];
 	}
-	return accounts.filter((account) =>
-		accountIsSelectableOnCurrentInstance(account, currentInstance, currentInstanceKey),
-	);
+	return accounts[(currentIndex + direction + accounts.length) % accounts.length];
+}
+
+export function mostRecentOtherAccount(): Account | null {
+	const currentAccountKey = Accounts.currentAccountKey;
+	let mostRecent: Account | null = null;
+	for (const account of switcherAccounts()) {
+		if (getAccountKey(account) === currentAccountKey) {
+			continue;
+		}
+		if (mostRecent == null || account.lastActive > mostRecent.lastActive) {
+			mostRecent = account;
+		}
+	}
+	return mostRecent;
+}
+
+export function accountsSpanSeveralInstances(accounts: ReadonlyArray<Account>): boolean {
+	const instanceKeys = new Set<string | null>();
+	for (const account of accounts) {
+		instanceKeys.add(resolveAccountInstanceKey(account));
+		if (instanceKeys.size > 1) {
+			return true;
+		}
+	}
+	return false;
 }

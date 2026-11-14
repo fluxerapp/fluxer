@@ -1,0 +1,3 @@
+%%?fact_[[n]]_label%%<tr>
+	<td dir="[[dir]]" class="x-ink x-fact" style="padding:[[top]] 0 0;font-family:[[font]];font-size:16px;line-height:24px;color:#1b1a2e;text-align:[[start]];direction:[[dir]];overflow-wrap:anywhere;word-break:break-word"><span class="x-muted" style="color:#5b5a70">%%fact_[[n]]_label%%:</span> %%?fact_[[n]]_value%%<span dir="auto">%%fact_[[n]]_value%%</span>%%/fact_[[n]]_value%%%%?fact_[[n]]_link%%<a href="%%fact_[[n]]_link_url%%" class="x-link" dir="auto" style="color:#4641d9">%%fact_[[n]]_link%%</a>%%/fact_[[n]]_link%%</td>
+</tr>%%/fact_[[n]]_label%%

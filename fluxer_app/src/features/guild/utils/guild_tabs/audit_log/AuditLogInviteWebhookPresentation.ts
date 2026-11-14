@@ -41,10 +41,10 @@ import type {
 	AuditLogPlaceholder,
 	AuditLogPresentationContext,
 	AuditLogSentence,
-	AuditLogTone,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
 import {
 	actorPlaceholder,
+	channelPlaceholder,
 	readBoolean,
 	readChange,
 	readNumber,
@@ -52,6 +52,7 @@ import {
 	readSnowflake,
 	readString,
 	readTimestamp,
+	row,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {WebhookTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
@@ -82,19 +83,6 @@ function readChangeSide(entry: GuildAuditLogEntryResponse, key: string, side: Ch
 function readCount(value: unknown): number | null {
 	const count = readNumber(value);
 	return count !== null && Number.isInteger(count) && count >= 0 ? count : null;
-}
-
-function row(
-	id: string,
-	tone: AuditLogTone,
-	descriptor: MessageDescriptor,
-	values: AuditLogSentence['values'] = {},
-): AuditLogDetailRow {
-	return {id, tone, sentence: {descriptor, values}};
-}
-
-function channelPlaceholder(id: string): AuditLogPlaceholder {
-	return {kind: 'channel', id, recordedName: null, fallback: 'channel'};
 }
 
 function readSnapshotChannelId(entry: GuildAuditLogEntryResponse, side: ChangeSide): string | null {

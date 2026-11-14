@@ -7,6 +7,10 @@ import {
 	ArrowBendUpRightIcon,
 	ArrowLeftIcon,
 	ArrowRightIcon,
+	CaretRightIcon,
+	getCollapsedCaretAngle,
+} from '@app/features/ui/icons/DirectionalIcons';
+import {
 	ArrowSquareOutIcon,
 	ArrowsClockwiseIcon,
 	AtIcon,
@@ -19,7 +23,6 @@ import {
 	CameraIcon,
 	CameraSlashIcon,
 	CaretDownIcon,
-	CaretRightIcon,
 	CaretUpIcon,
 	ChatCircleIcon,
 	ChatsIcon,
@@ -52,7 +55,6 @@ import {
 	MonitorArrowUpIcon,
 	MonitorPlayIcon,
 	NotePencilIcon,
-	PaperPlaneIcon,
 	PaperPlaneRightIcon,
 	PencilIcon,
 	PencilSimpleIcon,
@@ -779,7 +781,7 @@ export const CollapseCategoryIcon: React.FC<IconProps & {collapsed?: boolean}> =
 		<CaretDownIcon
 			size={remFromPx(size)}
 			weight="bold"
-			style={{transform: collapsed ? 'rotate(-90deg)' : undefined}}
+			style={{transform: collapsed ? `rotate(${getCollapsedCaretAngle()}deg)` : undefined}}
 			data-flx="ui.action-menu.context-menu-icons.collapse-category-icon.caret-down-icon"
 		/>
 	),
@@ -872,13 +874,6 @@ export const UnfocusIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		size={remFromPx(size)}
 		weight="fill"
 		data-flx="ui.action-menu.context-menu-icons.unfocus-icon.eye-slash-icon"
-	/>
-));
-export const SendInvitesIcon: React.FC<IconProps> = observer(({size = 16}) => (
-	<PaperPlaneIcon
-		size={remFromPx(size)}
-		weight="fill"
-		data-flx="ui.action-menu.context-menu-icons.send-invites-icon.paper-plane-icon"
 	/>
 ));
 export const SendInviteToCommunityIcon: React.FC<IconProps> = observer(({size = 16}) => (

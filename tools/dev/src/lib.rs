@@ -9,7 +9,6 @@ pub mod disclaim;
 pub mod env;
 pub mod gateway;
 pub mod manifest;
-pub mod media_external;
 pub mod media_proxy;
 pub mod object_store;
 pub mod paths;

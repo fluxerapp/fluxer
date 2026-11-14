@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
-import {getCompiledChannelThreadsConfig} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
 
 const REPAIR_DEBOUNCE_MS = 30_000;
@@ -60,7 +59,7 @@ export function enqueueThreadSearchSync(threadId: ChannelID, opts: {activity?: b
 export async function enqueueThreadSearchBackfill(guildId: string): Promise<void> {
 	await (await workerService()).addJob(
 		'backfillThreadSearch',
-		{guildId, configVersion: getCompiledChannelThreadsConfig().config.config_version},
+		{guildId},
 		{jobKey: `backfill-thread-search-${guildId}`},
 	);
 }

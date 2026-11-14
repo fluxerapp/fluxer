@@ -5,45 +5,48 @@ import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
-import {CLAIM_ACCOUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import NagbarState from '@app/features/ui/state/Nagbar';
+import {snoozeUnclaimedNagbar} from '@app/features/ui/state/UnclaimedNagbarSnooze';
 import Users from '@app/features/user/state/Users';
-import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import {msg} from '@lingui/core/macro';
+import {
+	getUnclaimedAccountPresentation,
+	UnclaimedAccountSurfaces,
+} from '@app/features/user/utils/AccountGatePresentation';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
-const CLAIM_ACCOUNT_NAGBAR_MESSAGE_DESCRIPTOR = msg({
-	message: 'Hey {displayName}, claim your account to prevent losing access.',
-	comment: 'Nagbar warning shown to unclaimed-account users. displayName is the current user display name.',
-});
 export const UnclaimedAccountNagbar = observer(({isMobile}: {isMobile: boolean}) => {
 	const {i18n} = useLingui();
-	const user = Users.currentUser;
-	if (!user) {
-		return null;
-	}
-	const handleClaimAccount = () => {
-		openClaimAccountModal({force: true});
+	const presentation = getUnclaimedAccountPresentation(
+		i18n,
+		UnclaimedAccountSurfaces.NAGBAR,
+		Users.currentUser?.verificationNeed,
+	);
+	const handleDismiss = () => {
+		const userId = Users.currentUser?.id;
+		if (userId) snoozeUnclaimedNagbar(userId);
+		NagbarState.dismissUnclaimedAccountForSession();
 	};
 	return (
 		<Nagbar
 			isMobile={isMobile}
-			backgroundColor={NAGBAR_TONES[NagbarToneKind.ALERT].backgroundColor}
-			textColor={NAGBAR_TONES[NagbarToneKind.ALERT].textColor}
+			backgroundColor={NAGBAR_TONES[NagbarToneKind.NEUTRAL].backgroundColor}
+			textColor={NAGBAR_TONES[NagbarToneKind.NEUTRAL].textColor}
+			dismissible={true}
+			onDismiss={handleDismiss}
 			data-flx="app.app-layout.nagbars.unclaimed-account-nagbar.nagbar"
 		>
 			<NagbarContent
 				isMobile={isMobile}
-				message={i18n._(CLAIM_ACCOUNT_NAGBAR_MESSAGE_DESCRIPTOR, {
-					displayName: NicknameUtils.getDisplayName(user),
-				})}
+				onDismiss={handleDismiss}
+				message={presentation.message}
 				actions={
 					<NagbarButton
 						isMobile={isMobile}
-						onClick={handleClaimAccount}
+						onClick={() => openClaimAccountModal()}
 						data-flx="app.app-layout.nagbars.unclaimed-account-nagbar.nagbar-button.claim-account"
 					>
-						{i18n._(CLAIM_ACCOUNT_DESCRIPTOR)}
+						{presentation.actionLabel}
 					</NagbarButton>
 				}
 				data-flx="app.app-layout.nagbars.unclaimed-account-nagbar.nagbar-content"

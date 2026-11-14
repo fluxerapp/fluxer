@@ -23,7 +23,7 @@ export interface AuthFormControllerLike {
 	isSubmitting?: boolean;
 }
 
-export interface AuthEmailPasswordFormClasses {
+interface AuthEmailPasswordFormClasses {
 	form: string;
 }
 
@@ -33,7 +33,6 @@ interface Props {
 	fieldErrors?: FieldErrors;
 	submitLabel: React.ReactNode;
 	classes: AuthEmailPasswordFormClasses;
-	extraFields?: React.ReactNode;
 	links?: React.ReactNode;
 	linksWrapperClassName?: string;
 	disableSubmit?: boolean;
@@ -48,7 +47,6 @@ export default function AuthLoginEmailPasswordForm({
 	fieldErrors,
 	submitLabel,
 	classes,
-	extraFields,
 	links,
 	linksWrapperClassName,
 	disableSubmit,
@@ -99,7 +97,6 @@ export default function AuthLoginEmailPasswordForm({
 				error={form.getError('password') || fieldErrors?.get('password')}
 				data-flx="auth.flow.auth-login-core.auth-login-email-password-form.form-field.set-value.password"
 			/>
-			{extraFields}
 			{links ? (
 				<div className={linksWrapperClassName} data-flx="auth.flow.auth-login-core.auth-login-email-password-form.div">
 					{links}

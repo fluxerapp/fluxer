@@ -76,6 +76,7 @@ export interface SearchableGuild {
 	bannerHash: string | null;
 	splashHash: string | null;
 	features: Array<string>;
+	badgeIds?: Array<string>;
 	verificationLevel: number;
 	mfaLevel: number;
 	nsfwLevel: number;
@@ -133,6 +134,7 @@ export interface UserSearchFilters {
 	hasAcl?: Array<string>;
 	createdAtGreaterThanOrEqual?: number;
 	createdAtLessThanOrEqual?: number;
+	excludeEmail?: boolean;
 	sortBy?: 'createdAt' | 'lastActiveAt' | 'relevance';
 	sortOrder?: 'asc' | 'desc';
 }

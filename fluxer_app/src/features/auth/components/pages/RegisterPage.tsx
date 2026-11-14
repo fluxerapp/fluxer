@@ -6,11 +6,12 @@ import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import {AuthRuntimeTargetGate} from '@app/features/auth/flow/AuthRuntimeTargetGate';
-import {AuthSsoPanel, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
+import {AuthSsoPanel, isSsoLoginEnforced, resolveAuthPanelSso} from '@app/features/auth/flow/AuthSsoPanel';
 import {AUTH_LOGIN_METHOD_QUERY_PARAM} from '@app/features/auth/flow/auth_login_core/AuthLoginStepTypes';
 import {AuthClientPermissionStep} from '@app/features/auth/flow/client_intro/AuthClientPermissionStep';
 import {AuthClientPreferencesStep} from '@app/features/auth/flow/client_intro/AuthClientPreferencesStep';
 import {useDesktopClientIntroFlow} from '@app/features/auth/flow/client_intro/useDesktopClientIntroFlow';
+import {credentialRegisterFields} from '@app/features/auth/flow/RegisterFormFields';
 import {useAuthPresentation} from '@app/features/auth/flow/useAuthPresentation';
 import {AuthCardVariant} from '@app/features/auth/state/AuthLayoutContext';
 import {useAuthRuntimeTarget} from '@app/features/auth/state/AuthRuntimeTarget';
@@ -54,7 +55,7 @@ function selectRegisterPageStep(showPreferences: boolean, permission: Permission
 
 function isSsoEnforcedForSnapshot(runtimeSnapshot: RuntimeConfigSnapshot): boolean {
 	const ssoConfig = resolveAuthPanelSso(runtimeSnapshot);
-	return Boolean(ssoConfig?.enabled && ssoConfig.enforced);
+	return isSsoLoginEnforced(ssoConfig);
 }
 
 interface RegisterPageContentProps {
@@ -116,13 +117,7 @@ const RegisterPageContent = observer(function RegisterPageContent({runtimeSnapsh
 				</h1>
 				<div className={sharedStyles.container} data-flx="auth.register-page.register-page-content.div">
 					<AuthRegisterFormCore
-						fields={{
-							showEmail: !usernameSignIn,
-							showPassword: true,
-							showPasswordConfirmation: true,
-							showUsernameValidation: true,
-							requireUsername: usernameSignIn,
-						}}
+						fields={credentialRegisterFields(usernameSignIn)}
 						submitLabel={<Trans>Create account</Trans>}
 						redirectPath={redirectTo}
 						offerRecoveryKit={usernameSignIn}

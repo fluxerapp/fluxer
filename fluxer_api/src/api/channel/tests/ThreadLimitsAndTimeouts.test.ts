@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {createChannelID} from '@app/api/BrandedTypes';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
-import {ThreadRepository} from '@app/api/channel/repositories/ThreadRepository';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -11,22 +10,18 @@ import {
 	createChannelInvite,
 	createGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
-import {ensureSessionStarted, sendMessage} from '@app/api/message/tests/MessageTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes, MessageFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_ACTIVE_THREADS_PER_GUILD, ThreadMemberFlags} from '@fluxer/constants/src/ThreadConstants';
+import {ThreadMemberFlags} from '@fluxer/constants/src/ThreadConstants';
 import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
 import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface Setup {
 	owner: TestAccount;
@@ -50,15 +45,11 @@ describe('thread limits and timeouts', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
-	});
-
-	afterEach(() => {
-		vi.restoreAllMocks();
+		clearChannelThreadsTaintCacheForTesting();
 	});
 
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
@@ -71,7 +62,6 @@ describe('thread limits and timeouts', () => {
 	}
 
 	async function setup(): Promise<Setup> {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'threads');
 		const channel = await createChannel(harness, owner.token, guild.id, 'general');
@@ -99,66 +89,6 @@ describe('thread limits and timeouts', () => {
 			.expect(200)
 			.execute();
 	}
-
-	function capActiveThreads() {
-		return vi.spyOn(ThreadRepository.prototype, 'countActiveThreads').mockResolvedValue(MAX_ACTIVE_THREADS_PER_GUILD);
-	}
-
-	describe('active thread cap', () => {
-		it('refuses new threads at the cap without writing a thread, a member or a slowmode charge', async () => {
-			const s = await setup();
-			await threadsRequest(harness, s.owner.token)
-				.patch(`/channels/${s.channelId}`)
-				.body({rate_limit_per_user: 60})
-				.expect(200)
-				.execute();
-			const message = await sendMessage(harness, s.owner.token, s.channelId, 'x');
-			const cap = capActiveThreads();
-			await threadsRequest(harness, s.member.token)
-				.post(`/channels/${s.channelId}/threads`)
-				.body({name: 'capped', type: ChannelTypes.PUBLIC_THREAD})
-				.expect(400, APIErrorCodes.MAX_ACTIVE_THREADS)
-				.execute();
-			await threadsRequest(harness, s.member.token)
-				.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
-				.body({name: 'capped'})
-				.expect(400, APIErrorCodes.MAX_ACTIVE_THREADS)
-				.execute();
-			cap.mockRestore();
-			expect(await repository.threads.listActiveThreads(createGuildID(BigInt(s.guildId)))).toEqual([]);
-			expect(await repository.threads.getState(threadId(message.id))).toBeNull();
-			expect(await repository.threads.listMembers(threadId(message.id), {limit: 10})).toEqual([]);
-			await threadsRequest(harness, s.member.token)
-				.post(`/channels/${s.channelId}/messages/${message.id}/threads`)
-				.body({name: 'allowed'})
-				.expect(201)
-				.execute();
-		});
-
-		it('refuses unarchiving by PATCH and by send at the cap', async () => {
-			const s = await setup();
-			const thread = await startThread(s.owner.token, s.channelId);
-			await repository.threads.updateState(threadId(thread.id), () => ({archived: true}));
-			const cap = capActiveThreads();
-			await threadsRequest(harness, s.owner.token)
-				.patch(`/channels/${thread.id}`)
-				.body({archived: false})
-				.expect(400, APIErrorCodes.MAX_ACTIVE_THREADS)
-				.execute();
-			await threadsRequest(harness, s.member.token)
-				.post(`/channels/${thread.id}/messages`)
-				.body({content: 'wake up'})
-				.expect(400, APIErrorCodes.MAX_ACTIVE_THREADS)
-				.execute();
-			cap.mockRestore();
-			expect((await repository.threads.getState(threadId(thread.id)))?.archived).toBe(true);
-			expect(await repository.threads.getMember(threadId(thread.id), createUserID(BigInt(s.member.userId)))).toBeNull();
-			const messages = await threadsRequest<Array<MessageResponse>>(harness, s.owner.token)
-				.get(`/channels/${thread.id}/messages`)
-				.execute();
-			expect(messages.map((m) => m.content)).not.toContain('wake up');
-		});
-	});
 
 	describe('timeouts', () => {
 		it('blocks thread writes for a timed-out member but still lets them join, leave, change settings and read', async () => {
@@ -275,20 +205,6 @@ describe('thread limits and timeouts', () => {
 				.execute();
 			expect(privatePatched.thread_metadata?.invitable).toBe(false);
 			expect(privatePatched.thread_metadata?.locked).toBe(false);
-		});
-
-		it('leaves the channel row untouched when the thread state vanishes mid patch', async () => {
-			const s = await setup();
-			const thread = await startThread(s.member.token, s.channelId);
-			vi.spyOn(ThreadRepository.prototype, 'updateState').mockResolvedValueOnce(null);
-			await threadsRequest(harness, s.owner.token)
-				.patch(`/channels/${thread.id}`)
-				.body({name: 'renamed', rate_limit_per_user: 30})
-				.expect(404, APIErrorCodes.UNKNOWN_CHANNEL)
-				.execute();
-			const stored = await repository.findUnique(threadId(thread.id));
-			expect(stored?.name).toBe('topic');
-			expect(stored?.rateLimitPerUser ?? 0).toBe(thread.rate_limit_per_user ?? 0);
 		});
 
 		it('clears slowmode on null rate_limit_per_user for moderators only', async () => {

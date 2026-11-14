@@ -2,7 +2,6 @@
 
 export const NativeGatewayTransportMode = Object.freeze({
 	GATEWAY: 'gateway',
-	VOICE: 'voice',
 } as const);
 
 export type NativeGatewayTransportMode = (typeof NativeGatewayTransportMode)[keyof typeof NativeGatewayTransportMode];

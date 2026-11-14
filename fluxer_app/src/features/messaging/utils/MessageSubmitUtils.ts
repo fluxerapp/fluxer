@@ -13,6 +13,7 @@ import type {
 	AllowedMentions,
 	MessageAttachment,
 	MessageReference,
+	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 
@@ -23,6 +24,7 @@ interface MessageSubmitData {
 	currentUser: User;
 	referencedMessage?: Message | null;
 	replyMentioning?: boolean;
+	stickers?: Array<MessageStickerItem>;
 	favoriteMemeId?: string;
 	poll?: MessagePoll;
 }

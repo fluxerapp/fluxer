@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PAUSE_DESCRIPTOR, PLAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -79,9 +78,8 @@ export function AudioPlayer({
 	});
 	const {volume, isMuted, setVolume, toggleMute} = useMediaVolume({mediaRef});
 	const {escalateToMetadata, sourceAttribute, preloadAttribute} = useMetadataPreload(src, hasStarted);
-	const handleMediaError = useAttachmentRefreshOnError(src);
 	useEffect(() => {
-		if (hasStarted && pendingPlayRef.current) {
+		if (hasStarted && sourceAttribute !== undefined && pendingPlayRef.current) {
 			const timer = setTimeout(() => {
 				if (pendingPlayRef.current) {
 					pendingPlayRef.current = false;
@@ -91,7 +89,7 @@ export function AudioPlayer({
 			return () => clearTimeout(timer);
 		}
 		return undefined;
-	}, [hasStarted, play]);
+	}, [hasStarted, play, sourceAttribute]);
 	useEffect(() => {
 		if (!hasStarted || pendingSeekPercentageRef.current === null) {
 			return;
@@ -213,7 +211,6 @@ export function AudioPlayer({
 				ref={mediaRef as React.RefObject<HTMLAudioElement>}
 				src={resolveDesktopCrossOriginMediaURL(sourceAttribute)}
 				preload={preloadAttribute}
-				onError={handleMediaError}
 				data-flx="voice.media-player.audio-player.audio"
 			/>
 			{title && (

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {channelIdToMessageId, createChannelID, createMessageID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
-import {
-	type MessageResponseDataService,
-	messageResponseAccessForGuild,
+import type {
+	MessageResponseAccessContext,
+	MessageResponseDataService,
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
 import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
@@ -14,14 +14,18 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+
 import {ChannelTypes, MessageReferenceTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
 	ServerMessageFlags,
 	TEXT_THREAD_PARENT_CHANNEL_TYPES,
+	THREAD_FEATURE_CHANNEL_TYPES,
 	THREAD_MESSAGE_FLAG_MASK,
 } from '@fluxer/constants/src/ThreadConstants';
-import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {
+	MessageChannelMentionResponse,
+	MessageResponse,
+} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
 interface ThreadListQuery {
@@ -31,22 +35,43 @@ interface ThreadListQuery {
 	around?: MessageID;
 }
 
+function mentionsThreadChannel(mentions: ReadonlyArray<MessageChannelMentionResponse> | null | undefined): boolean {
+	return mentions?.some((mention) => THREAD_FEATURE_CHANNEL_TYPES.has(mention.type)) ?? false;
+}
+
+function withoutThreadChannelMentions<T extends {mention_channels?: Array<MessageChannelMentionResponse> | null}>(
+	value: T,
+): T {
+	if (!mentionsThreadChannel(value.mention_channels)) return value;
+	const {mention_channels, ...rest} = value;
+	const kept = mention_channels?.filter((mention) => !THREAD_FEATURE_CHANNEL_TYPES.has(mention.type)) ?? [];
+	return (kept.length > 0 ? {...rest, mention_channels: kept} : rest) as T;
+}
+
 export function carriesThreadArtifact(response: MessageResponse): boolean {
 	if (response.type === MessageTypes.THREAD_CREATED || response.type === MessageTypes.THREAD_STARTER_MESSAGE) {
 		return true;
 	}
 	if ((response.flags & THREAD_MESSAGE_FLAG_MASK) !== 0 || response.thread !== undefined) return true;
-	if (response.message_snapshots?.some((snapshot) => (snapshot.flags & THREAD_MESSAGE_FLAG_MASK) !== 0)) return true;
+	if (mentionsThreadChannel(response.mention_channels)) return true;
+	if (
+		response.message_snapshots?.some(
+			(snapshot) =>
+				(snapshot.flags & THREAD_MESSAGE_FLAG_MASK) !== 0 || mentionsThreadChannel(snapshot.mention_channels),
+		)
+	) {
+		return true;
+	}
 	const referenced = response.referenced_message;
 	return referenced != null && carriesThreadArtifact(referenced);
 }
 
 function maskResponse(response: MessageResponse): MessageResponse {
-	const {thread: _thread, ...rest} = response;
+	const {thread: _thread, ...rest} = withoutThreadChannelMentions(response);
 	const masked: MessageResponse = {...rest, flags: response.flags & ~THREAD_MESSAGE_FLAG_MASK};
 	if (response.message_snapshots) {
 		masked.message_snapshots = response.message_snapshots.map((snapshot) => ({
-			...snapshot,
+			...withoutThreadChannelMentions(snapshot),
 			flags: snapshot.flags & ~THREAD_MESSAGE_FLAG_MASK,
 		}));
 	}
@@ -104,7 +129,7 @@ export function maskThreadArtifactsByChannel(
 
 export class ThreadMessageResponses {
 	constructor(
-		private readonly channelRepository: IChannelRepositoryAggregate,
+		private readonly channelRepository: ChannelRepository,
 		private readonly responseDataService: MessageResponseDataService,
 		private readonly userCacheService: UserCacheService,
 	) {}
@@ -113,6 +138,7 @@ export class ThreadMessageResponses {
 		viewer: ThreadViewer;
 		userId: UserID;
 		authChannel: AuthenticatedChannel;
+		access: MessageResponseAccessContext;
 		responses: Array<MessageResponse>;
 		requestCache: RequestCache;
 		query?: ThreadListQuery;
@@ -137,6 +163,7 @@ export class ThreadMessageResponses {
 		viewer: ThreadViewer;
 		userId: UserID;
 		authChannel: AuthenticatedChannel;
+		access: MessageResponseAccessContext;
 		messageId: MessageID;
 		requestCache: RequestCache;
 	}): Promise<MessageResponse | null> {
@@ -147,8 +174,7 @@ export class ThreadMessageResponses {
 
 	async getFirstMessages(params: {
 		userId: UserID;
-		guildId: GuildID;
-		canReadMessageHistory: boolean;
+		access: MessageResponseAccessContext;
 		threadIds: Array<ChannelID>;
 	}): Promise<Map<string, MessageResponse>> {
 		if (params.threadIds.length === 0) return new Map();
@@ -161,11 +187,7 @@ export class ThreadMessageResponses {
 		const responses = await this.responseDataService.buildMessages({
 			userId: params.userId,
 			messages: found,
-			access: {
-				sourceGuildId: params.guildId,
-				messageHistoryCutoff: null,
-				canReadMessageHistory: params.canReadMessageHistory,
-			},
+			access: params.access,
 		});
 		return new Map(responses.map((response) => [response.channel_id, response]));
 	}
@@ -199,6 +221,7 @@ export class ThreadMessageResponses {
 	private async buildStarter(params: {
 		userId: UserID;
 		authChannel: AuthenticatedChannel;
+		access: MessageResponseAccessContext;
 		requestCache: RequestCache;
 	}): Promise<MessageResponse | null> {
 		const thread = params.authChannel.thread;
@@ -208,16 +231,12 @@ export class ThreadMessageResponses {
 			userId: params.userId,
 			channelId: thread.parent.id,
 			messageId: createMessageID(BigInt(channel.id)),
-			access: messageResponseAccessForGuild(channel.guildId),
+			access: params.access,
 		});
 		const author =
 			source?.author ??
 			(channel.ownerId
-				? await getCachedUserPartialResponse({
-						userId: channel.ownerId,
-						userCacheService: this.userCacheService,
-						requestCache: params.requestCache,
-					})
+				? await this.userCacheService.getUserPartialResponse(channel.ownerId, params.requestCache)
 				: null);
 		if (!author) return null;
 		const [referenced] = source ? await this.attachThreads([source], params.userId) : [null];

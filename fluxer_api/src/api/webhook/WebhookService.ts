@@ -1,28 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isGuardedAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
-import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
-import {createChannelID, createGuildID, createUserID, createWebhookID, createWebhookToken} from '@app/api/BrandedTypes';
+import {
+	type ChannelID,
+	createChannelID,
+	createUserID,
+	createWebhookID,
+	createWebhookToken,
+	type GuildID,
+	type MessageID,
+	type UserID,
+	type WebhookID,
+	type WebhookToken,
+} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {withChannelFollowLock} from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import type {ThreadService} from '@app/api/channel/services/thread/ThreadService';
-import {webhookThreadIdRefusedTotal} from '@app/api/channel/threads/ThreadMetrics';
 import {assertCrosspostContentRules} from '@app/api/channel/utils/CrosspostContentRules';
 import {
 	type ContentWarningChannelLike,
 	channelToContentWarningView,
 	guildResponseToContentWarningView,
 } from '@app/api/channel/utils/EffectiveContentWarning';
-import {
-	everEnabled,
-	guildActive,
-	isTainted,
-	type ThreadViewer,
-	viewerActive,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {isTainted, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
@@ -40,9 +44,10 @@ import type {Message} from '@app/api/models/Message';
 import type {Webhook} from '@app/api/models/Webhook';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {transform as GitHubTransform} from '@app/api/webhook/transformers/GitHubTransformer';
 import {instatusDeliveryKey, transformInstatusWebhook} from '@app/api/webhook/transformers/InstatusTransformer';
+import {transformLibredeskWebhook} from '@app/api/webhook/transformers/LibredeskTransformer';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {
 	CHANNEL_FOLLOW_TARGET_TYPES,
@@ -71,6 +76,7 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import type {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
+import type {LibredeskWebhook} from '@fluxer/schema/src/domains/webhook/LibredeskWebhookSchemas';
 import {
 	type WebhookCreateRequest,
 	WebhookForumPostRequestFields,
@@ -144,6 +150,17 @@ interface WebhookExecuteInstatusParams extends WebhookTokenParams {
 	requestCache: RequestCache;
 }
 
+interface WebhookExecuteLibredeskParams extends WebhookTokenParams, WebhookThreadParams {
+	data: LibredeskWebhook;
+	requestCache: RequestCache;
+}
+
+const WEBHOOK_AUDIT_ACTIONS = {
+	create: {name: 'guild_webhook_create', type: AuditLogActionType.WEBHOOK_CREATE},
+	update: {name: 'guild_webhook_update', type: AuditLogActionType.WEBHOOK_UPDATE},
+	delete: {name: 'guild_webhook_delete', type: AuditLogActionType.WEBHOOK_DELETE},
+} as const;
+
 const WEBHOOK_AVATAR_MISSING_CACHE_VALUE = '__fluxer_webhook_avatar_missing__';
 const HOSTED_WEBHOOK_AVATAR_URLS = {
 	github: 'https://fluxer.app/static/img/app-webhook-github.2d0319169a3aee33.webp',
@@ -170,10 +187,10 @@ export class WebhookService {
 	}
 
 	constructor(
-		private repository: IWebhookRepository,
+		private repository: WebhookRepository,
 		private guildService: GuildService,
 		private channelService: ChannelService,
-		private channelRepository: IChannelRepository,
+		private channelRepository: ChannelRepository,
 		private cacheService: ICacheService,
 		private gatewayService: IGatewayService,
 		private avatarService: AvatarService,
@@ -185,7 +202,8 @@ export class WebhookService {
 	) {}
 
 	async getWebhook(params: WebhookUserParams): Promise<Webhook> {
-		return this.getAuthenticatedWebhook(params);
+		const {webhook} = await this.getAuthenticatedWebhook(params);
+		return webhook;
 	}
 
 	async getWebhookByToken(params: WebhookTokenParams): Promise<Webhook> {
@@ -296,12 +314,7 @@ export class WebhookService {
 		auditLogReason?: string | null,
 	): Promise<Webhook> {
 		const {userId, viewer, webhookId, data} = params;
-		const webhook = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
-		const {checkPermission, guildData} = await this.guildService.getGuildAuthenticated({
-			userId,
-			guildId: webhook.guildId ? webhook.guildId : createGuildID(0n),
-		});
-		await checkPermission(Permissions.MANAGE_WEBHOOKS);
+		const {webhook, guildData} = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
 		const isFollower = webhook.type === WebhookTypes.CHANNEL_FOLLOWER;
 		if (isFollower && data.avatar !== undefined) {
 			throw InputValidationError.fromCode('avatar', ValidationErrorCodes.INVALID_FORMAT);
@@ -353,7 +366,7 @@ export class WebhookService {
 		const moveChannelId = followerMoveChannelId;
 		const updatedWebhook = moveChannelId
 			? await withChannelFollowLock(this.cacheService, moveChannelId, async () => {
-					const current = await this.channelRepository.findUnique(moveChannelId);
+					const current = await this.channelRepository.channelData.findUnique(moveChannelId);
 					if (!current || !CHANNEL_FOLLOW_TARGET_TYPES.has(current.type)) {
 						throw new InvalidFollowTargetChannelError();
 					}
@@ -407,9 +420,7 @@ export class WebhookService {
 	}
 
 	async deleteWebhook({userId, viewer, webhookId}: WebhookUserParams, auditLogReason?: string | null): Promise<void> {
-		const webhook = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
-		const {checkPermission} = await this.guildService.getGuildAuthenticated({userId, guildId: webhook.guildId!});
-		await checkPermission(Permissions.MANAGE_WEBHOOKS);
+		const {webhook} = await this.getAuthenticatedWebhook({userId, viewer, webhookId});
 		await this.repository.delete(webhookId);
 		await this.dispatchWebhooksUpdate({
 			guildId: webhook.guildId,
@@ -444,6 +455,13 @@ export class WebhookService {
 		service,
 	}: WebhookExecuteParams): Promise<Message> {
 		const {webhook, channel} = await this.getTokenAuthenticatedWebhookChannel({webhookId, token});
+		contentModerationService.scanText(data.username ?? null, {
+			userId: webhook.creatorId,
+			guildId: webhook.guildId,
+			channelId: webhook.channelId,
+			messageId: null,
+			surface: 'webhook',
+		});
 		const forumPost = this.resolveForumPost(channel, data);
 		if (channel.isThreadOnly()) {
 			if (service && threadId === undefined) throw new WebhookServiceForumUnsupportedError();
@@ -510,7 +528,7 @@ export class WebhookService {
 
 	private resolveForumPost(channel: Channel, data: WebhookExecuteMessageData): WebhookForumPost | null {
 		if (data.thread_name === undefined && data.applied_tags === undefined) return null;
-		if (!guildActive(channel.guildId!)) return null;
+
 		if (!channel.isThreadOnly()) throw new WebhookThreadNameRequiresForumError();
 		const parsed = WebhookForumPostFields.safeParse({thread_name: data.thread_name, applied_tags: data.applied_tags});
 		if (!parsed.success) throw inputValidationErrorFromZodIssues(parsed.error.issues);
@@ -557,7 +575,7 @@ export class WebhookService {
 		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
 		if (!webhook.channelId) throw new UnknownChannelError();
 		const thread = await this.resolveWebhookThread(webhook, threadId);
-		const message = await this.channelRepository.getMessage(thread?.id ?? webhook.channelId, messageId);
+		const message = await this.channelRepository.messages.getMessage(thread?.id ?? webhook.channelId, messageId);
 		if (!message) throw new UnknownMessageError();
 		if (message.webhookId !== webhook.id) throw new MissingPermissionsError();
 		return message;
@@ -606,6 +624,22 @@ export class WebhookService {
 		if (delivery) await this.cacheService.set(`instatus:${webhookId}:${delivery}`, 1, seconds('1 day'));
 	}
 
+	async executeLibredeskWebhook(params: WebhookExecuteLibredeskParams): Promise<void> {
+		const {webhookId, token, threadId, data, requestCache} = params;
+		const {webhook, channel} = await this.getTokenAuthenticatedWebhookChannel({webhookId, token});
+		if (channel.isThreadOnly() && threadId === undefined) throw new WebhookServiceForumUnsupportedError();
+		const thread = await this.resolveWebhookThread(webhook, threadId);
+		const embed = transformLibredeskWebhook(data);
+		if (!embed) return;
+		await this.channelService.messages.send.sendWebhookMessage({
+			webhook,
+			thread,
+			data: {embeds: [embed], allowed_mentions: WebhookService.NO_ALLOWED_MENTIONS},
+			username: 'Libredesk',
+			requestCache,
+		});
+	}
+
 	async dispatchWebhooksUpdate({
 		guildId,
 		channelId,
@@ -622,10 +656,17 @@ export class WebhookService {
 		}
 	}
 
-	private async getAuthenticatedWebhook({userId, viewer, webhookId}: WebhookUserParams): Promise<Webhook> {
+	private async getAuthenticatedWebhook({
+		userId,
+		viewer,
+		webhookId,
+	}: WebhookUserParams): Promise<{webhook: Webhook; guildData: GuildResponse}> {
 		const webhook = await this.repository.findUnique(webhookId);
 		if (!webhook) throw new UnknownWebhookError();
-		const {checkPermission} = await this.guildService.getGuildAuthenticated({userId, guildId: webhook.guildId!});
+		const {checkPermission, guildData} = await this.guildService.getGuildAuthenticated({
+			userId,
+			guildId: webhook.guildId!,
+		});
 		await checkPermission(Permissions.MANAGE_WEBHOOKS);
 		if (webhook.guildId && (await this.withoutHiddenForumWebhooks(webhook.guildId, viewer, [webhook])).length === 0) {
 			throw new UnknownWebhookError();
@@ -637,7 +678,7 @@ export class WebhookService {
 				channelId: webhook.channelId,
 			});
 		}
-		return webhook;
+		return {webhook, guildData};
 	}
 
 	async assertWebhookCapacity({
@@ -708,7 +749,7 @@ export class WebhookService {
 
 	private async resolveParentContentView(channel: Channel): Promise<ContentWarningChannelLike | null> {
 		if (!channel.parentId || channel.type === ChannelTypes.GUILD_CATEGORY) return null;
-		const parent = await this.channelRepository.findUnique(channel.parentId);
+		const parent = await this.channelRepository.channelData.findUnique(channel.parentId);
 		return parent ? channelToContentWarningView(parent) : null;
 	}
 
@@ -724,7 +765,7 @@ export class WebhookService {
 		userId: UserID;
 	}): Promise<void> {
 		if (!webhook.sourceChannelId || !webhook.sourceGuildId) return;
-		const sourceChannel = await this.channelRepository.findUnique(webhook.sourceChannelId);
+		const sourceChannel = await this.channelRepository.channelData.findUnique(webhook.sourceChannelId);
 		if (!sourceChannel) return;
 		const sourceGuild = await this.gatewayService
 			.getGuildData({guildId: webhook.sourceGuildId, userId, skipMembershipCheck: true})
@@ -761,15 +802,7 @@ export class WebhookService {
 	private async getTokenAuthenticatedWebhook({webhookId, token}: WebhookTokenParams): Promise<Webhook> {
 		const webhook = await this.repository.findByToken(webhookId, token);
 		if (!webhook || webhook.type !== WebhookTypes.INCOMING) throw new UnknownWebhookError();
-		if (await this.isDormantForumWebhook(webhook)) throw new UnknownWebhookError();
 		return webhook;
-	}
-
-	private async isDormantForumWebhook(webhook: Webhook): Promise<boolean> {
-		if (!everEnabled() || !webhook.guildId || !webhook.channelId || guildActive(webhook.guildId)) return false;
-		if (!(await isTainted(webhook.guildId))) return false;
-		const channel = await this.channelRepository.findUnique(webhook.channelId);
-		return channel?.isThreadOnly() ?? false;
 	}
 
 	private async withoutHiddenForumWebhooks(
@@ -777,11 +810,11 @@ export class WebhookService {
 		viewer: ThreadViewer,
 		webhooks: Array<Webhook>,
 	): Promise<Array<Webhook>> {
-		if (!everEnabled() || viewerActive(viewer, guildId) || !(await isTainted(guildId))) return webhooks;
+		if (viewerActive(viewer, guildId) || !(await isTainted(guildId))) return webhooks;
 		const channelIds = [...new Set(webhooks.flatMap((webhook) => (webhook.channelId ? [webhook.channelId] : [])))];
 		if (channelIds.length === 0) return webhooks;
 		const forumIds = new Set(
-			(await this.channelRepository.listChannels(channelIds))
+			(await this.channelRepository.channelData.listChannels(channelIds))
 				.filter((channel) => channel.isThreadOnly())
 				.map((channel) => channel.id),
 		);
@@ -795,14 +828,10 @@ export class WebhookService {
 	}
 
 	private async resolveWebhookThread(webhook: Webhook, threadId: string | undefined): Promise<Channel | null> {
-		if (threadId === undefined || !everEnabled() || !webhook.guildId || !webhook.channelId) return null;
-		if (!guildActive(webhook.guildId)) {
-			if (!(await isTainted(webhook.guildId))) return null;
-			webhookThreadIdRefusedTotal.inc();
-			throw new UnknownChannelError();
-		}
+		if (threadId === undefined || !webhook.guildId || !webhook.channelId) return null;
+
 		if (!/^\d{1,20}$/.test(threadId)) throw new UnknownChannelError();
-		const thread = await this.channelRepository.findUnique(createChannelID(BigInt(threadId)));
+		const thread = await this.channelRepository.channelData.findUnique(createChannelID(BigInt(threadId)));
 		if (!thread?.isThread() || thread.parentId !== webhook.channelId || thread.guildId !== webhook.guildId) {
 			throw new UnknownChannelError();
 		}
@@ -816,9 +845,8 @@ export class WebhookService {
 		const webhook = await this.repository.findByToken(webhookId, token);
 		if (!webhook || webhook.type !== WebhookTypes.INCOMING) throw new UnknownWebhookError();
 		if (!webhook.channelId) throw new UnknownChannelError();
-		const channel = await this.channelRepository.findUnique(webhook.channelId);
+		const channel = await this.channelRepository.channelData.findUnique(webhook.channelId);
 		if (!channel) throw new UnknownChannelError();
-		if (channel.isThreadOnly() && webhook.guildId && !guildActive(webhook.guildId)) throw new UnknownWebhookError();
 		this.assertWebhookTargetChannel(channel);
 		return {webhook, channel};
 	}
@@ -826,7 +854,7 @@ export class WebhookService {
 	private assertWebhookTargetChannel(channel: Channel): asserts channel is Channel & {guildId: GuildID} {
 		if (!channel.guildId) throw new UnknownChannelError();
 		if (GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type)) return;
-		if (channel.isThreadOnly() && guildActive(channel.guildId)) return;
+		if (channel.isThreadOnly()) return;
 		throw new UnknownChannelError();
 	}
 
@@ -849,7 +877,7 @@ export class WebhookService {
 				: webhook.avatarHash;
 		let channelId = webhook.channelId;
 		if (data.channel_id !== undefined && data.channel_id !== webhook.channelId) {
-			const channel = await this.channelRepository.findUnique(createChannelID(data.channel_id));
+			const channel = await this.channelRepository.channelData.findUnique(createChannelID(data.channel_id));
 			if (!channel) {
 				throw new UnknownChannelError();
 			}
@@ -884,7 +912,7 @@ export class WebhookService {
 		webhookId: WebhookID;
 		avatarUrl: string | null;
 	}): Promise<string | null> {
-		if (!requestedAvatarUrl) return null;
+		if (!requestedAvatarUrl || isGuardedAttachmentUrl(requestedAvatarUrl)) return null;
 		const avatarUrl = stripOwnAttachmentSignature(requestedAvatarUrl);
 		try {
 			const cacheKey = `webhook:${webhookId}:avatar:${avatarUrl}`;
@@ -964,22 +992,12 @@ export class WebhookService {
 		previousSnapshot?: Record<string, unknown> | null;
 		auditLogReason?: string | null;
 	}): Promise<void> {
-		const actionName =
-			params.action === 'create'
-				? 'guild_webhook_create'
-				: params.action === 'update'
-					? 'guild_webhook_update'
-					: 'guild_webhook_delete';
+		const actionName = WEBHOOK_AUDIT_ACTIONS[params.action].name;
 		const previousSnapshot =
 			params.action === 'create' ? null : (params.previousSnapshot ?? this.serializeWebhookForAudit(params.webhook));
 		const nextSnapshot = params.action === 'delete' ? null : this.serializeWebhookForAudit(params.webhook);
 		const changes = this.guildAuditLogService.computeChanges(previousSnapshot, nextSnapshot);
-		const actionType =
-			params.action === 'create'
-				? AuditLogActionType.WEBHOOK_CREATE
-				: params.action === 'update'
-					? AuditLogActionType.WEBHOOK_UPDATE
-					: AuditLogActionType.WEBHOOK_DELETE;
+		const actionType = WEBHOOK_AUDIT_ACTIONS[params.action].type;
 		try {
 			await this.guildAuditLogService
 				.createBuilder(params.guildId, params.userId)

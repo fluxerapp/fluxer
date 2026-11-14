@@ -2,6 +2,8 @@
 
 import {CustomStatusDisplay} from '@app/features/app/components/shared/custom_status_display/CustomStatusDisplay';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
+import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import {openProfileBadgeSettings} from '@app/features/user/commands/UserSettingsModalCommands';
 import userProfileModalStyles from '@app/features/user/components/modals/UserProfileModal.module.css';
 import type {UserInfoProps} from '@app/features/user/components/modals/user_profile_modal/UserProfileModalShared';
 import {LimitedProfileNotice} from '@app/features/user/components/popouts/LimitedProfileNotice';
@@ -9,6 +11,7 @@ import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfi
 import {UserProfileDataWarning} from '@app/features/user/components/popouts/UserProfileDataWarning';
 import {useAutoplayExpandedProfileAnimations} from '@app/features/user/hooks/useAutoplayExpandedProfileAnimations';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {canEditOwnProfileBadges} from '@app/features/user/utils/ProfileEditAccess';
 import {
 	getProfileMembershipDisplayName,
 	resolveProfileGuildMembership,
@@ -23,6 +26,10 @@ export const UserInfo: React.FC<UserInfoProps> = observer(({user, profile, guild
 	const displayName = getProfileMembershipDisplayName(user, membership, guildId);
 	const effectiveProfile = profile?.getEffectiveProfile() ?? null;
 	const shouldAutoplayProfileAnimations = useAutoplayExpandedProfileAnimations();
+	const handleEditBadges = () => {
+		ModalCommands.pop();
+		openProfileBadgeSettings();
+	};
 	return (
 		<div className={userProfileModalStyles.userInfo} data-flx="user.user-profile-modal.user-info.div">
 			<div
@@ -65,10 +72,10 @@ export const UserInfo: React.FC<UserInfoProps> = observer(({user, profile, guild
 						</div>
 						<div className={userProfileModalStyles.badgesWrapper} data-flx="user.user-profile-modal.user-info.div--8">
 							<UserProfileBadges
-								user={user}
-								profile={profile}
+								badges={profile.profileBadges}
 								isModal={true}
 								isMobile={false}
+								onEditBadges={canEditOwnProfileBadges(user.id, profile) ? handleEditBadges : undefined}
 								data-flx="user.user-profile-modal.user-info.user-profile-badges"
 							/>
 						</div>

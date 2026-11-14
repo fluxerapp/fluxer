@@ -31,11 +31,6 @@ class VoiceRegionTeleport {
 		}
 		return Date.now() < this.soundSuppressedUntilMs;
 	}
-
-	reset(): void {
-		this.isTeleporting = false;
-		this.soundSuppressedUntilMs = 0;
-	}
 }
 
 export default new VoiceRegionTeleport();

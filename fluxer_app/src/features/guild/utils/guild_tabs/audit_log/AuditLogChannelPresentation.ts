@@ -120,6 +120,7 @@ import {
 	readOption,
 	readSnowflake,
 	readString,
+	row,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
@@ -218,15 +219,6 @@ const OVERWRITE_DELETE_SUMMARIES: Record<OverwriteTarget, MessageDescriptor> = {
 	member: CHANNEL_OVERWRITE_DELETE_MEMBER_SUMMARY,
 	everyone: CHANNEL_OVERWRITE_DELETE_EVERYONE_SUMMARY,
 };
-
-function row(
-	id: string,
-	tone: AuditLogTone,
-	descriptor: MessageDescriptor,
-	values: AuditLogSentence['values'] = {},
-): AuditLogDetailRow {
-	return {id, tone, sentence: {descriptor, values}};
-}
 
 function compactRows(candidates: ReadonlyArray<AuditLogDetailRow | null>): Array<AuditLogDetailRow> {
 	return candidates.filter((candidate): candidate is AuditLogDetailRow => candidate !== null);

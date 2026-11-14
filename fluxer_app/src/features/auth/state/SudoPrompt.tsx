@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import SudoVerificationModal from '@app/features/auth/components/modals/SudoVerificationModal';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Sudo from '@app/features/auth/state/AuthSudo';
 import type {SudoVerificationPayload} from '@app/features/auth/types/AuthSudoTypes';
+import {createDefaultLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
+import {AccountScopedWork, accountScopedWorkAbortError} from '@app/features/platform/state/AccountScopedWork';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {HttpMethod} from '@app/features/platform/types/TransportTypes';
@@ -15,12 +17,20 @@ import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {MfaMethod, SudoPromptStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable, runInAction} from 'mobx';
 
+const SudoVerificationModal = createDefaultLoadableComponent<Record<string, never>>({
+	displayName: 'SudoVerificationModal',
+	load: () => import('@app/features/auth/components/modals/SudoVerificationModal'),
+});
+
 interface SudoErrorPayload {
 	has_mfa?: boolean;
 	methods?: {
 		totp?: boolean;
 		webauthn?: boolean;
 		backup_codes?: boolean;
+		email_code?: boolean;
+		password?: boolean;
+		sso_reauth?: boolean;
 	};
 }
 
@@ -37,32 +47,24 @@ interface SudoRequestContext {
 }
 
 export enum SudoVerificationMethod {
-	PASSWORD = 'password',
 	TOTP = 'totp',
 	WEBAUTHN = 'webauthn',
-}
-
-export function isAbortError(error: unknown): boolean {
-	if (error instanceof DOMException && error.name === 'AbortError') {
-		return true;
-	}
-	if (error instanceof Error && error.name === 'AbortError') {
-		return true;
-	}
-	return false;
+	EMAIL_CODE = 'email_code',
 }
 
 export const SUDO_MODAL_KEY = 'sudo-verification-modal';
 
 interface AvailableMethods {
 	password: boolean;
+	emailCode: boolean;
 	totp: boolean;
 	webauthn: boolean;
 	backupCodes: boolean;
+	ssoReauth: boolean;
 	hasMfa: boolean;
 }
 
-type StoredMfaMethod = NonNullable<SudoVerificationPayload['mfa_method']>;
+type StoredMfaMethod = 'totp' | 'webauthn';
 
 const MFA_FROM_PROTO: Record<MfaMethod, StoredMfaMethod | null> = {
 	[MfaMethod.UNSPECIFIED]: null,
@@ -75,9 +77,11 @@ const MFA_TO_PROTO: Record<StoredMfaMethod, MfaMethod> = {
 };
 const EMPTY_METHODS: AvailableMethods = {
 	password: false,
+	emailCode: false,
 	totp: false,
 	webauthn: false,
 	backupCodes: false,
+	ssoReauth: false,
 	hasMfa: false,
 };
 
@@ -89,11 +93,16 @@ function deriveMethodsFromCurrentUser(): AvailableMethods {
 	const webauthnIsSecondFactor = types?.includes(UserAuthenticatorTypes.WEBAUTHN) ?? false;
 	const webauthn = WebAuthnCredentials.credentials.length > 0;
 	const hasMfa = user.mfaEnabled ?? (totp || webauthnIsSecondFactor);
+	const secondFactor = totp || webauthnIsSecondFactor;
+	const tierAware = user.reportsAccountTier;
 	return {
-		password: !(totp || webauthnIsSecondFactor),
+		password: !secondFactor && (!tierAware || user.hasPassword),
+		emailCode:
+			tierAware && !secondFactor && RuntimeConfig.emailsEnabled && user.email != null && user.verified === true,
 		totp,
 		webauthn,
 		backupCodes: false,
+		ssoReauth: false,
 		hasMfa,
 	};
 }
@@ -105,7 +114,7 @@ class SudoPrompt {
 	rawError: HttpError | null = null;
 	currentRequest: SudoRequestContext | null = null;
 	availableMethods: AvailableMethods = {...EMPTY_METHODS};
-	lastUsedMfaMethod: SudoVerificationPayload['mfa_method'] | null = null;
+	lastUsedMfaMethod: StoredMfaMethod | null = null;
 	private resolver: ((payload: SudoVerificationPayload) => void) | null = null;
 	private rejecter: ((reason?: unknown) => void) | null = null;
 
@@ -120,11 +129,12 @@ class SudoPrompt {
 				if (token) {
 					Sudo.setToken(token);
 				}
-				this.handleTokenReceived(token);
+				this.settle();
 			},
 			invalidate: Sudo.clearToken,
 			prompt: this.handleSudoPrompt,
 			onFailure: this.onSudoVerificationFailed,
+			onSettled: this.settle,
 		});
 		void makeSyncedField(this, {
 			field: 'sudoPrompt',
@@ -189,10 +199,12 @@ class SudoPrompt {
 		const webauthn = methods.webauthn === true || (methods.webauthn === undefined && baseline.webauthn);
 		const backupCodes = methods.backup_codes === true || (methods.backup_codes === undefined && baseline.backupCodes);
 		this.availableMethods = {
-			password: baseline.password,
+			password: methods.password ?? baseline.password,
+			emailCode: methods.email_code ?? baseline.emailCode,
 			totp,
 			webauthn,
 			backupCodes,
+			ssoReauth: methods.sso_reauth === true,
 			hasMfa,
 		};
 	}
@@ -243,7 +255,7 @@ class SudoPrompt {
 		this.cleanup();
 	}
 
-	handleTokenReceived(_token: string | null): void {
+	settle(): void {
 		if (!this.isOpen && !this.isVerifying) {
 			return;
 		}
@@ -253,10 +265,6 @@ class SudoPrompt {
 	private onSudoVerificationFailed = (error: unknown): void => {
 		runInAction(() => {
 			this.isVerifying = false;
-			if (isAbortError(error)) {
-				this.cleanup();
-				return;
-			}
 			const responseErr = error instanceof HttpError ? error : null;
 			this.rawError = responseErr;
 			this.mergeFromError(error);
@@ -277,4 +285,8 @@ class SudoPrompt {
 	}
 }
 
-export default new SudoPrompt();
+const sudoPrompt = new SudoPrompt();
+
+AccountScopedWork.registerCancellation(() => sudoPrompt.reject(accountScopedWorkAbortError()));
+
+export default sudoPrompt;

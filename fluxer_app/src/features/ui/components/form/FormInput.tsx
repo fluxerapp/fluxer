@@ -15,11 +15,13 @@ import {CharacterCountAnnouncer} from '@app/features/ui/character_counter/Charac
 import styles from '@app/features/ui/components/form/FormInput.module.css';
 import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
+import {LinguiContext} from '@lingui/react';
 import {useLingui} from '@lingui/react/macro';
 import {EyeIcon, EyeSlashIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
-import React, {useCallback, useId, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useContext, useId, useLayoutEffect, useMemo, useReducer, useRef, useState} from 'react';
 
 const HIDE_PASSWORD_DESCRIPTOR = msg({
 	message: 'Hide password',
@@ -58,7 +60,7 @@ export const FieldSet = React.forwardRef<HTMLFieldSetElement, FieldSetProps>(
 			<div className={styles.inputGroup} data-flx="ui.form.input.field-set.input-group">
 				{children}
 				{error && (
-					<span id={errorId} className={styles.errorText} data-flx="ui.form.input.field-set.error-text">
+					<span id={errorId} className={styles.errorText} role="alert" data-flx="ui.form.input.field-set.error-text">
 						{error}
 					</span>
 				)}
@@ -95,6 +97,7 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 	leftIcon?: React.ReactNode;
 	rightIcon?: React.ReactNode;
 	renderInput?: (args: RenderInputArgs) => React.ReactNode;
+	sensitive?: boolean;
 };
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -113,6 +116,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 			renderInput,
 			disabled,
 			readOnly,
+			sensitive,
 			...props
 		},
 		forwardedRef,
@@ -121,6 +125,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 		const disableAutofocus = shouldDisableAutofocusOnMobile();
 		const [showPassword, setShowPassword] = useState(false);
 		const isPasswordType = type === 'password';
+		const isCredentialField = isPasswordType || props.autoComplete === 'one-time-code';
+		const keepsValueOutOfDom = (sensitive || isCredentialField) && props.value !== undefined;
+		const [, rerenderValue] = useReducer((revision: number) => revision + 1, 0);
 		const shouldIgnorePasswordManagers = useMemo(
 			() => shouldApplyPasswordManagerIgnoreAttributes(type, props.autoComplete),
 			[type, props.autoComplete],
@@ -154,6 +161,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 			},
 			[forwardedRef],
 		);
+		useLayoutEffect(() => {
+			if (!keepsValueOutOfDom || !inputRef.current) return;
+			const nextValue = String(props.value ?? '');
+			if (inputRef.current.value !== nextValue) inputRef.current.value = nextValue;
+		});
 		const ariaInvalid = !!error;
 		const hasControlledValue = props.value !== undefined;
 		const shouldForceReadOnly = useMemo(
@@ -179,6 +191,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 			() => ({
 				...props,
 				...(shouldIgnorePasswordManagers ? PASSWORD_MANAGER_IGNORE_ATTRIBUTES : {}),
+				...(keepsValueOutOfDom
+					? {
+							value: undefined,
+							onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+								props.onChange?.(event);
+								rerenderValue();
+							},
+						}
+					: {}),
 				autoFocus: disableAutofocus ? false : props.autoFocus,
 				disabled,
 				id: inputId,
@@ -191,6 +212,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 			[
 				props,
 				shouldIgnorePasswordManagers,
+				keepsValueOutOfDom,
 				disableAutofocus,
 				disabled,
 				inputId,
@@ -249,6 +271,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 						<button
 							type="button"
 							className={styles.passwordToggle}
+							tabIndex={-1}
+							onMouseDown={(event) => event.preventDefault()}
 							onClick={handlePasswordToggle}
 							aria-label={passwordToggleLabel}
 							data-flx="ui.form.input.input-content.password-toggle.button"
@@ -304,7 +328,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 				<div className={styles.inputContainer} data-flx="ui.form.input.input-container">
 					{focusDecoratedInput}
 					{error && (
-						<span id={errorId} className={styles.errorText} data-flx="ui.form.input.error-text">
+						<span id={errorId} className={styles.errorText} role="alert" data-flx="ui.form.input.error-text">
 							{error}
 						</span>
 					)}
@@ -351,8 +375,6 @@ type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
 	maxRows?: number;
 	showCharacterCount?: boolean;
 	actionButton?: React.ReactNode;
-	innerActionButton?: React.ReactNode;
-	characterCountTooltip?: (remaining: number, total: number, current: number) => React.ReactNode;
 };
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
@@ -367,21 +389,18 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 			maxLength,
 			value,
 			actionButton,
-			innerActionButton,
-			characterCountTooltip,
 			disabled,
 			id,
 			...props
 		},
 		forwardedRef,
 	) => {
-		const {i18n} = useLingui();
+		useContext(LinguiContext);
 		const disableAutofocus = shouldDisableAutofocusOnMobile();
-		const numberFormat = getCachedNumberFormat(i18n.locale);
+		const numberFormat = getCachedNumberFormat(getFormattingLocale());
 		const currentValue = useMemo(() => value || '', [value]);
 		const currentLength = useMemo(() => String(currentValue).length, [currentValue]);
 		const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-		const textareaWrapperRef = useRef<HTMLDivElement | null>(null);
 		const generatedTextareaId = useId();
 		const textareaId = id ?? generatedTextareaId;
 		const errorId = error ? `${textareaId}-error` : undefined;
@@ -456,88 +475,11 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 		const labelRight = useMemo(
 			() => (
 				<div className={styles.labelContainerWithGap} data-flx="ui.form.input.label-right.label-container-with-gap">
-					{!innerActionButton && characterCounter}
+					{characterCounter}
 					{actionButton}
 				</div>
 			),
-			[innerActionButton, characterCounter, actionButton],
-		);
-		const textareaWithActions = useMemo(
-			() =>
-				innerActionButton ? (
-					<div
-						ref={textareaWrapperRef}
-						className={clsx(styles.textareaWrapper, surfaceStyles.surface, error ? styles.error : styles.focusable)}
-						data-flx="ui.form.input.textarea-with-actions.textarea-wrapper"
-					>
-						<TextareaAutosize
-							data-flx="ui.form.input.textarea-with-actions.textarea"
-							{...textareaProps}
-							className={clsx(scrollerStyles.scroller, scrollerStyles.scrollerTextarea, styles.textarea)}
-							ref={setTextareaRefs}
-						/>
-						<div className={styles.textareaActions} data-flx="ui.form.input.textarea-with-actions.textarea-actions">
-							{innerActionButton}
-							{showCharacterCount && maxLength && (
-								<div
-									className={styles.characterCountContainer}
-									data-flx="ui.form.input.textarea-with-actions.character-count-container"
-								>
-									{characterCountTooltip ? (
-										characterCountTooltip(maxLength - currentLength, maxLength, currentLength)
-									) : (
-										<>
-											<span
-												className={styles.characterCount}
-												aria-hidden="true"
-												data-flx="ui.form.input.textarea-with-actions.character-count"
-											>
-												{numberFormat.format(currentLength)}/{numberFormat.format(maxLength)}
-											</span>
-											<CharacterCountAnnouncer
-												currentLength={currentLength}
-												maxLength={maxLength}
-												data-flx="ui.form.form-input.textarea-with-actions.character-count-announcer"
-											/>
-										</>
-									)}
-								</div>
-							)}
-						</div>
-					</div>
-				) : null,
-			[
-				innerActionButton,
-				textareaWrapperRef,
-				error,
-				textareaProps,
-				setTextareaRefs,
-				showCharacterCount,
-				maxLength,
-				characterCountTooltip,
-				currentLength,
-				numberFormat,
-			],
-		);
-		const simpleTextarea = useMemo(
-			() =>
-				!innerActionButton ? (
-					<BaseTextarea
-						data-flx="ui.form.input.simple-textarea.error"
-						{...textareaProps}
-						className={clsx(error ? styles.error : styles.focusable)}
-						ref={setTextareaRefs}
-					/>
-				) : null,
-			[innerActionButton, textareaProps, error, setTextareaRefs],
-		);
-		const ringTarget = useMemo(
-			() => (innerActionButton ? textareaWrapperRef : textareaRef),
-			[innerActionButton, textareaWrapperRef, textareaRef],
-		);
-		const control = useMemo(
-			() => (innerActionButton ? textareaWithActions : simpleTextarea)!,
-			[innerActionButton, textareaWithActions, simpleTextarea],
+			[characterCounter, actionButton],
 		);
 		return (
 			<FieldSet
@@ -551,12 +493,17 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 			>
 				<FocusRing
 					focusTarget={textareaRef}
-					ringTarget={ringTarget}
+					ringTarget={textareaRef}
 					offset={-2}
 					enabled={!disabled}
 					data-flx="ui.form.input.textarea.focus-ring"
 				>
-					{control}
+					<BaseTextarea
+						data-flx="ui.form.input.simple-textarea.error"
+						{...textareaProps}
+						className={clsx(error ? styles.error : styles.focusable)}
+						ref={setTextareaRefs}
+					/>
 				</FocusRing>
 			</FieldSet>
 		);

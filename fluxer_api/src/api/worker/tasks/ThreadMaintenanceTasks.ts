@@ -11,10 +11,9 @@ import {enqueueThreadSearchSync} from '@app/api/channel/threads/ThreadJobs';
 import {
 	setThreadArchiveSweepLag,
 	threadArchiveSweepBatch,
-	threadArchiveSweepSkippedInactiveTotal,
 	threadsArchivedTotal,
 } from '@app/api/channel/threads/ThreadMetrics';
-import {everEnabled, guildActive, isTainted} from '@app/api/experiment/ChannelThreadsGate';
+import {isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import {
 	KVThreadAutoArchiveQueueService,
 	threadAutoArchiveDueAt,
@@ -84,17 +83,13 @@ async function archiveDueThreads(
 }
 
 export const archiveInactiveThreads: WorkerTaskHandler = async () => {
-	if (!everEnabled()) return;
 	const queue = archiveQueue();
 	const nowMs = Date.now();
 	let budget = MAX_THREAD_ARCHIVES_PER_SWEEP_TICK;
 	let oldestDueMs: number | null = null;
 	for (const guildId of await queue.listGuilds()) {
 		if (budget <= 0) break;
-		if (!guildActive(guildId)) {
-			threadArchiveSweepSkippedInactiveTotal.inc();
-			continue;
-		}
+
 		const result = await archiveDueThreads(queue, guildId, nowMs, budget);
 		budget -= result.archived;
 		if (result.oldestDueMs !== null) {
@@ -117,7 +112,7 @@ export const deleteChannelThreads: WorkerTaskHandler = async (payload) => {
 	const validated = ParentPayload.parse(payload);
 	const guildId = createGuildID(BigInt(validated.guildId));
 	const parentId = createChannelID(BigInt(validated.parentId));
-	if (!everEnabled() || !(await isTainted(guildId, {fresh: true}))) return;
+	if (!(await isTainted(guildId, {fresh: true}))) return;
 	const {channelRepository, channelService} = getWorkerDependencies();
 	const queue = archiveQueue();
 	let deleted = 0;
@@ -146,7 +141,7 @@ export const removeThreadMembershipsForGuildMember: WorkerTaskHandler = async (p
 	const validated = MemberPayload.parse(payload);
 	const guildId = createGuildID(BigInt(validated.guildId));
 	const userId = createUserID(BigInt(validated.userId));
-	if (!everEnabled() || !(await isTainted(guildId, {fresh: true}))) return;
+	if (!(await isTainted(guildId, {fresh: true}))) return;
 	const {channelRepository, guildRepository, gatewayService} = getWorkerDependencies();
 	if (await guildRepository.getMember(guildId, userId)) return;
 	const threadIds = await channelRepository.threads.listJoinedThreadIds(userId, guildId);

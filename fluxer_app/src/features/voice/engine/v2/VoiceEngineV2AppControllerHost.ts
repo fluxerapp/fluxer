@@ -1,41 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
+import {VoiceEngineV2HostPortImplementation} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2HostPortImplementation';
+import type {VoiceEngineV2HostPorts} from '@fluxer/voice_engine_v2/src/ports';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {
+	VoiceEngineV2Error,
+	VoiceEngineV2Model,
+	VoiceEngineV2OperationId,
+	VoiceEngineV2ResourceKey,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 import {
-	type VoiceEngineV2Command,
-	VoiceEngineV2Controller,
-	type VoiceEngineV2Error,
-	type VoiceEngineV2Event,
 	type VoiceEngineV2EventLogSpillSink,
-	VoiceEngineV2HostPortImplementation,
-	type VoiceEngineV2HostPorts,
-	type VoiceEngineV2Model,
-	type VoiceEngineV2OperationId,
-	type VoiceEngineV2ResourceKey,
 	VoiceEngineV2Runtime,
-	type VoiceEngineV2RuntimeClock,
 	type VoiceEngineV2RuntimeListener,
-	type VoiceEngineV2Snapshot,
-	type VoiceEngineV2Transition,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
 
 export interface VoiceEngineV2AppControllerHostOptions {
 	ports: VoiceEngineV2HostPorts;
-	clock?: VoiceEngineV2RuntimeClock;
 	eventLogSpillSink: VoiceEngineV2EventLogSpillSink;
-	queuedCommandsCap?: number;
-	resourceQueuesCap?: number;
-}
-
-export interface VoiceEngineV2AppControllerHostView {
-	snapshot: VoiceEngineV2Snapshot;
-	model: VoiceEngineV2Model;
 }
 
 export interface VoiceEngineV2AppControllerHostWaitOptions {
 	description?: string;
 	staleCompletion?: 'reject' | 'resolve';
-	timeoutMs?: number;
 	onCommandsPlanned?: (commands: ReadonlyArray<VoiceEngineV2Command>) => void;
 }
 
@@ -65,7 +56,6 @@ function isSucceededTerminalEvent(event: VoiceEngineV2Event): boolean {
 	if (event.type === 'command.succeeded') return true;
 	if (event.type.endsWith('Succeeded')) return true;
 	if (event.type === 'stats.collected') return true;
-	if (event.type === 'capabilities.hardwareEncoderChanged') return operationIdOf(event) !== null;
 	if (event.type === 'permissions.result') return operationIdOf(event) !== null;
 	if (event.type === 'devices.changed') return operationIdOf(event) !== null;
 	if (event.type === 'nativeCapture.started') return true;
@@ -92,17 +82,13 @@ function buildWaitTimeout(description: string, pending: ReadonlySet<VoiceEngineV
 export class VoiceEngineV2AppControllerHost {
 	readonly controller: VoiceEngineV2Controller;
 	private readonly runtime: VoiceEngineV2Runtime;
-	private readonly runtimeDiagnosticsDisposer: () => void;
 
 	constructor(options: VoiceEngineV2AppControllerHostOptions) {
 		this.runtime = new VoiceEngineV2Runtime(new VoiceEngineV2HostPortImplementation(options.ports), {
-			clock: options.clock,
 			eventLogSpillSink: options.eventLogSpillSink,
-			...(options.queuedCommandsCap !== undefined ? {queuedCommandsCap: options.queuedCommandsCap} : {}),
-			...(options.resourceQueuesCap !== undefined ? {resourceQueuesCap: options.resourceQueuesCap} : {}),
 		});
 		this.controller = new VoiceEngineV2Controller(this.runtime);
-		this.runtimeDiagnosticsDisposer = this.runtime.subscribeDiagnostics((diagnostic) => {
+		this.runtime.subscribeDiagnostics((diagnostic) => {
 			logger.warn('Voice engine v2 runtime rejected a command at queue cap', {
 				queue: diagnostic.queue,
 				cap: diagnostic.cap,
@@ -119,13 +105,6 @@ export class VoiceEngineV2AppControllerHost {
 
 	get model(): VoiceEngineV2Model {
 		return this.controller.model;
-	}
-
-	get view(): VoiceEngineV2AppControllerHostView {
-		return {
-			snapshot: this.snapshot,
-			model: this.model,
-		};
 	}
 
 	subscribe(listener: VoiceEngineV2RuntimeListener): () => void {
@@ -148,7 +127,6 @@ export class VoiceEngineV2AppControllerHost {
 		const pending = new Set<VoiceEngineV2OperationId>();
 		const description = options.description ?? 'voice engine v2 command';
 		const staleCompletion = options.staleCompletion ?? 'reject';
-		const timeoutMs = options.timeoutMs ?? VOICE_ENGINE_V2_APP_COMMAND_WAIT_TIMEOUT_MS;
 		return new Promise((resolve, reject) => {
 			let actionComplete = false;
 			let timer: ReturnType<typeof setTimeout> | null = null;
@@ -167,13 +145,16 @@ export class VoiceEngineV2AppControllerHost {
 				if (!actionComplete) addPendingCommands(pending, plannedCommands, transition.commands);
 				this.consumeTerminalEvent(event, pending, {description, staleCompletion}, settle);
 			});
-			timer = setTimeout(() => settle(buildWaitTimeout(description, pending)), timeoutMs);
+			timer = setTimeout(
+				() => settle(buildWaitTimeout(description, pending)),
+				VOICE_ENGINE_V2_APP_COMMAND_WAIT_TIMEOUT_MS,
+			);
 			try {
 				action();
 				actionComplete = true;
 				options.onCommandsPlanned?.(plannedCommands);
 				if (pending.size === 0) {
-					logger.info('Voice engine v2 action planned zero commands', {
+					logger.debug('Voice engine v2 action planned zero commands', {
 						description,
 						connectionStatus: this.snapshot.connection.status,
 					});
@@ -206,11 +187,6 @@ export class VoiceEngineV2AppControllerHost {
 		if (!isSucceededTerminalEvent(event)) return;
 		pending.delete(operationId);
 		if (pending.size === 0) settle();
-	}
-
-	dispose(): void {
-		this.runtimeDiagnosticsDisposer();
-		this.controller.dispose();
 	}
 }
 

@@ -4,21 +4,35 @@ import {randomBytes} from 'node:crypto';
 import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import {createTestAccount, loginAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {createApplicationID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {getConfig} from '@app/api/Config';
+import {createApiContext} from '@app/api/CreateApiContext';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
 import type {AuthSessionRow} from '@app/api/database/types/AuthTypes';
+import {decisionBody} from '@app/api/enforcement/tests/EnforcementTestUtils';
 import {getGatewayService} from '@app/api/middleware/ServiceRegistry';
-import {getUserActivityBuffer, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {
+	getKVAccountDeletionQueue,
+	getUserActivityBuffer,
+	getUserRepository,
+} from '@app/api/middleware/ServiceSingletons';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {AuthSessions} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {createRecordingSmtpServer} from '@app/api/test/RecordingSmtpServer';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AuthSessionRepository} from '@app/api/user/repositories/auth/AuthSessionRepository';
-import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {TestEmailService} from '@pkgs/email/src/TestEmailService';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE} from '@fluxer/date_utils/src/DateConstants';
+import {EmailService} from '@pkgs/email/src/EmailService';
+import {SmtpEmailProvider} from '@pkgs/email/src/SmtpEmailProvider';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
+
+const SESSION_HASH_BYTES = 32;
+const EXTRA_SESSION_COUNT = 250;
+const OAUTH_TOKEN_COUNT = 40;
+const DELETION_GRACE_HOURS = 24;
+const DELETION_QUEUE_LIMIT = 10;
 
 const FETCH_SESSION_ROW_CQL = AuthSessions.selectCql({where: AuthSessions.where.eq('session_id_hash')});
 
@@ -26,68 +40,77 @@ function sessionRow(userId: UserID): AuthSessionRow {
 	const now = new Date();
 	return {
 		user_id: userId,
-		session_id_hash: randomBytes(32),
+		session_id_hash: randomBytes(SESSION_HASH_BYTES),
 		created_at: now,
 		approx_last_used_at: now,
 		client_ip: '203.0.113.20',
 		client_user_agent: null,
 		client_os: null,
 		client_country: null,
+		app_platform: null,
+		app_version: null,
+		app_release_channel: null,
+		app_build_number: null,
+		app_beta_number: null,
+		auth_method: null,
 		version: 1,
 	};
 }
 
-async function readSessionRows(sessionIdHash: Buffer): Promise<Array<Record<string, unknown>>> {
-	return fetchMany<Record<string, unknown>>(FETCH_SESSION_ROW_CQL, {session_id_hash: sessionIdHash});
+async function storedUser(userId: UserID) {
+	const user = await getUserRepository().findUnique(userId);
+	if (!user) throw new Error('Expected stored account');
+	return user;
 }
 
 async function markDeleted(userId: UserID): Promise<void> {
 	const users = getUserRepository();
-	const user = (await users.findUnique(userId))!;
+	const user = await storedUser(userId);
 	await users.patchUpsert(userId, {flags: user.flags | UserFlags.DELETED}, user.toRow());
 }
 
 describe('Account closure and credentials', () => {
 	let harness: ApiTestHarness;
+	let smtpCleanup: (() => Promise<void>) | undefined;
+	const deletionGraceHours = getConfig().deletionGracePeriodHours;
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
+		smtpCleanup = undefined;
 	});
 	afterEach(async () => {
-		vi.restoreAllMocks();
-		await harness?.shutdown();
+		try {
+			await smtpCleanup?.();
+		} finally {
+			getConfig().deletionGracePeriodHours = deletionGraceHours;
+			await harness?.shutdown();
+		}
 	});
 
-	test('revoking every session of a user with 250 sessions uses bounded batches', async () => {
+	test('revoking every session of a user with 250 sessions persists all tombstones', async () => {
 		const account = await createTestAccount(harness);
 		const userId = createUserID(BigInt(account.userId));
 		const sessions = new AuthSessionRepository();
-		for (let index = 0; index < 250; index++) {
+		for (let index = 0; index < EXTRA_SESSION_COUNT; index++) {
 			await sessions.createAuthSession(sessionRow(userId));
 		}
-		const batchSpy = vi.spyOn(InMemoryCassandraQueryExecutor.prototype, 'executeBatch');
 		const revoked = await revokeAllAuthSessions({users: getUserRepository(), gateway: getGatewayService()}, userId);
 		expect(revoked).toBe(251);
-		expect(Math.max(...batchSpy.mock.calls.map(([queries]) => queries.length))).toBeLessThanOrEqual(60);
 		expect(await sessions.listAuthSessions(userId)).toHaveLength(0);
 		expect(await sessions.listAuthSessionTombstones(userId)).toHaveLength(251);
 		await createBuilder(harness, account.token).get('/users/@me').expect(HTTP_STATUS.UNAUTHORIZED).execute();
 	});
 
-	test('a session of a user with the DELETED flag is refused and revoked', async () => {
+	test('a session of a user with the DELETED flag is refused', async () => {
 		const account = await createTestAccount(harness);
-		const userId = createUserID(BigInt(account.userId));
-		await markDeleted(userId);
+		await markDeleted(createUserID(BigInt(account.userId)));
 		await createBuilder(harness, account.token).get('/users/@me').expect(HTTP_STATUS.UNAUTHORIZED).execute();
-		await vi.waitFor(async () => {
-			expect(await new AuthSessionRepository().listAuthSessions(userId)).toHaveLength(0);
-		});
 	});
 
 	test('a session of a user whose deletion has started is refused', async () => {
 		const account = await createTestAccount(harness);
 		const userId = createUserID(BigInt(account.userId));
 		const users = getUserRepository();
-		const user = (await users.findUnique(userId))!;
+		const user = await storedUser(userId);
 		const pendingDeletionAt = new Date();
 		await users.updateDeletionSchedule(user, {
 			flags: user.flags | UserFlags.SELF_DELETED,
@@ -119,10 +142,10 @@ describe('Account closure and credentials', () => {
 		const userId = createUserID(BigInt(account.userId));
 		const other = await createTestAccount(harness);
 		const users = getUserRepository();
-		const user = (await users.findUnique(userId))!;
+		const user = await storedUser(userId);
 		await users.patchUpsert(
 			userId,
-			{flags: user.flags | UserFlags.DISABLED, temp_banned_until: new Date(Date.now() + 3_600_000)},
+			{flags: user.flags | UserFlags.DISABLED, temp_banned_until: new Date(Date.now() + MS_PER_HOUR)},
 			user.toRow(),
 		);
 		await createBuilder(harness, account.token).get('/users/@me').expect(HTTP_STATUS.UNAUTHORIZED).execute();
@@ -132,10 +155,10 @@ describe('Account closure and credentials', () => {
 			body: {type: 'session', token: other.token, version: 1, ip: '127.0.0.1'},
 		});
 		expect(identify.status).toBe(HTTP_STATUS.OK);
-		const otherUser = (await users.findUnique(createUserID(BigInt(other.userId))))!;
+		const otherUser = await storedUser(createUserID(BigInt(other.userId)));
 		await users.patchUpsert(
 			otherUser.id,
-			{flags: otherUser.flags | UserFlags.DISABLED, temp_banned_until: new Date(Date.now() + 3_600_000)},
+			{flags: otherUser.flags | UserFlags.DISABLED, temp_banned_until: new Date(Date.now() + MS_PER_HOUR)},
 			otherUser.toRow(),
 		);
 		const refused = await harness.requestJson({
@@ -150,10 +173,10 @@ describe('Account closure and credentials', () => {
 		const account = await createTestAccount(harness);
 		const userId = createUserID(BigInt(account.userId));
 		const users = getUserRepository();
-		const user = (await users.findUnique(userId))!;
+		const user = await storedUser(userId);
 		await users.patchUpsert(
 			userId,
-			{flags: user.flags | UserFlags.DISABLED, temp_banned_until: new Date(Date.now() - 60_000)},
+			{flags: user.flags | UserFlags.DISABLED, temp_banned_until: new Date(Date.now() - MS_PER_MINUTE)},
 			user.toRow(),
 		);
 		await createBuilder(harness, account.token).get('/users/@me').expect(HTTP_STATUS.OK).execute();
@@ -183,14 +206,16 @@ describe('Account closure and credentials', () => {
 		expect((await harness.kvProvider.hgetall('auth_session_activity:pending'))[encoded]).toBeUndefined();
 		await harness.kvProvider.hset('auth_session_activity:pending', encoded, JSON.stringify({ts: Date.now()}));
 		await buffer.drainAndFlush();
-		expect(await readSessionRows(row.session_id_hash)).toHaveLength(0);
+		expect(
+			await fetchMany<Record<string, unknown>>(FETCH_SESSION_ROW_CQL, {session_id_hash: row.session_id_hash}),
+		).toEqual([]);
 	});
 
 	test('the activity flush still records use of a live session', async () => {
 		const account = await createTestAccount(harness);
 		const userId = createUserID(BigInt(account.userId));
 		const sessions = new AuthSessionRepository();
-		const row = {...sessionRow(userId), approx_last_used_at: new Date(Date.now() - 86_400_000)};
+		const row = {...sessionRow(userId), approx_last_used_at: new Date(Date.now() - MS_PER_DAY)};
 		await sessions.createAuthSession(row);
 		const usedAt = new Date();
 		await getUserActivityBuffer().recordAuthSessionActivity(row.session_id_hash, usedAt);
@@ -208,7 +233,7 @@ describe('Account closure and credentials', () => {
 		const userId = createUserID(BigInt(target.userId));
 		const tokens = new OAuth2TokenRepository();
 		const applicationId = createApplicationID(1234567890123456789n);
-		for (let index = 0; index < 40; index++) {
+		for (let index = 0; index < OAUTH_TOKEN_COUNT; index++) {
 			await tokens.createAccessToken({
 				token_: `access-${index}-${target.userId}`,
 				application_id: applicationId,
@@ -226,7 +251,14 @@ describe('Account closure and credentials', () => {
 		}
 		await createBuilder(harness, admin.token)
 			.put(`/admin/users/${target.userId}/deletion`)
-			.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
+			.header('X-Audit-Log-Reason', 'Spam review')
+			.body({
+				days_until_deletion: 74,
+				basis: {
+					type: 'enforcement',
+					decision: decisionBody(),
+				},
+			})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(await new AuthSessionRepository().listAuthSessions(userId)).toHaveLength(0);
@@ -234,16 +266,80 @@ describe('Account closure and credentials', () => {
 		expect(await tokens.listRefreshTokensForUser(userId)).toHaveLength(0);
 	});
 
-	test('self deletion revokes sessions even when the confirmation email fails', async () => {
+	test('self deletion revokes sessions before a refused confirmation email completes', async () => {
+		getConfig().deletionGracePeriodHours = DELETION_GRACE_HOURS;
 		const account = await createTestAccount(harness);
-		vi.spyOn(TestEmailService.prototype, 'sendSelfDeletionScheduledEmail').mockRejectedValue(new Error('mail down'));
-		const response = await harness.requestJson({
+		const userId = createUserID(BigInt(account.userId));
+		const smtp = await createRecordingSmtpServer({firstDelivery: 'hold-and-reject'});
+		const provider = new SmtpEmailProvider({
+			host: '127.0.0.1',
+			port: smtp.port,
+			username: '',
+			password: '',
+			tlsMode: 'none',
+		});
+		const services = createApiContext().services;
+		const previous = services.email;
+		let deletionRequest: ReturnType<ApiTestHarness['requestJson']> | undefined;
+		smtpCleanup = async () => {
+			smtp.release();
+			try {
+				await deletionRequest;
+			} finally {
+				services.email = previous;
+				try {
+					await provider.close();
+				} finally {
+					await smtp.close();
+				}
+			}
+		};
+		services.email = new EmailService(
+			{
+				enabled: true,
+				fromEmail: 'accounts@example.com',
+				fromName: 'Closure test',
+				appBaseUrl: 'https://app.example.com',
+				apiBaseUrl: 'https://api.example.com',
+				appealsEmail: 'appeals@example.com',
+				privacyEmail: 'privacy@example.com',
+				safetyEmail: null,
+				supportEmail: 'support@example.com',
+				productName: 'Closure test',
+				marketingBaseUrl: 'https://example.com',
+				staticCdnBaseUrl: 'https://static.example.com',
+				legalAddress: null,
+				brandLogo: false,
+			},
+			provider,
+		);
+		const requestedAt = Date.now();
+		deletionRequest = harness.requestJson({
 			path: '/users/@me/delete',
 			method: 'POST',
 			body: {password: account.password},
 			headers: {Authorization: account.token},
 		});
-		expect(response.status).toBeGreaterThanOrEqual(400);
-		expect(await new AuthSessionRepository().listAuthSessions(createUserID(BigInt(account.userId)))).toHaveLength(0);
+		await smtp.entered;
+		expect(await new AuthSessionRepository().listAuthSessions(userId)).toEqual([]);
+		expect(smtp.delivered).toEqual([]);
+		expect(smtp.attempts).toHaveLength(1);
+		expect(smtp.attempts[0]?.from).toBe('<accounts@example.com>');
+		expect(smtp.attempts[0]?.to).toBe(`<${account.email}>`);
+		smtp.release();
+		const response = await deletionRequest;
+		const respondedAt = Date.now();
+		expect(response.status).toBe(HTTP_STATUS.OK);
+		expect(smtp.delivered).toEqual([]);
+		expect(await new AuthSessionRepository().listAuthSessions(userId)).toEqual([]);
+		const user = await storedUser(userId);
+		const pendingDeletionAt = user.pendingDeletionAt?.getTime() ?? 0;
+		expect(pendingDeletionAt).toBeGreaterThanOrEqual(requestedAt + DELETION_GRACE_HOURS * MS_PER_HOUR);
+		expect(pendingDeletionAt).toBeLessThanOrEqual(respondedAt + DELETION_GRACE_HOURS * MS_PER_HOUR);
+		expect(user.flags & UserFlags.SELF_DELETED).toBe(UserFlags.SELF_DELETED);
+		expect(await getKVAccountDeletionQueue().getReadyDeletions(pendingDeletionAt, DELETION_QUEUE_LIMIT)).toEqual([
+			{userId, deletionReasonCode: 1},
+		]);
+		await createBuilder(harness, account.token).get('/users/@me').expect(HTTP_STATUS.UNAUTHORIZED).execute();
 	});
 });

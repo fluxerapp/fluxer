@@ -2,7 +2,7 @@
 
 import {readRawStorageItem, writeRawStorageItem} from '@app/features/platform/state/PrebootMirror';
 
-export const CLIENT_INSTALLATION_ID_STORAGE_KEY = 'ClientInstallationId';
+const CLIENT_INSTALLATION_ID_STORAGE_KEY = 'ClientInstallationId';
 
 const CLIENT_INSTALLATION_ID_PATTERN = /^[0-9a-f]{32}$/;
 const CLIENT_INSTALLATION_ID_BYTE_LENGTH = 16;

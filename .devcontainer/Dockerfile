@@ -1,6 +1,6 @@
 FROM chrislusf/seaweedfs:4.47 AS seaweedfs
 
-FROM erlang:28.5.0.6
+FROM erlang:28.5.0.8
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
@@ -24,7 +24,6 @@ RUN apt-get update \
 		dbus-x11 \
 		desktop-file-utils \
 		dpkg-dev \
-		ffmpeg \
 		fakeroot \
 		git \
 		gnupg \
@@ -42,7 +41,6 @@ RUN apt-get update \
 		libfido2-dev \
 		libgbm1 \
 		libgtk-3-0 \
-		libimage-exiftool-perl \
 		libnotify4 \
 		libnss3 \
 		libpipewire-0.3-dev \
@@ -179,6 +177,11 @@ RUN if ! getent group "${USER_GID}" >/dev/null; then groupadd --gid "${USER_GID}
 	&& chmod 0440 "/etc/sudoers.d/${USERNAME}"
 
 COPY --from=seaweedfs /usr/bin/weed /usr/local/bin/weed
+
+# Dependency of direnv extension
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		direnv
 
 USER ${USERNAME}
 

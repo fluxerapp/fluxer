@@ -31,8 +31,6 @@
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--text-primary-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
 	margin-bottom: 0.35rem;
 }
 
@@ -58,7 +56,7 @@
 	border-radius: var(--radius-lg);
 	padding: 0.75rem 1rem;
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 	transition: background-color 0.15s;
 	-webkit-tap-highlight-color: transparent;
 }

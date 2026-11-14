@@ -121,6 +121,7 @@ export const ELASTICSEARCH_INDEX_DEFINITIONS: Record<FluxerSearchIndexName, Elas
 				bannerHash: keyword(),
 				splashHash: keyword(),
 				features: keyword(),
+				badgeIds: keyword(),
 				verificationLevel: integer(),
 				mfaLevel: integer(),
 				nsfwLevel: integer(),

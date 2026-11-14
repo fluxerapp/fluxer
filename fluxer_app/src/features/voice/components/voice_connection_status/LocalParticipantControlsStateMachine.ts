@@ -17,7 +17,7 @@ type LocalParticipantScreenShareLabelKey =
 	| 'shareScreen';
 type LocalParticipantScreenShareClickAction = 'none' | 'openPicker' | 'openMenu';
 
-export interface LocalParticipantControlSignals {
+interface LocalParticipantControlSignals {
 	isConnected: boolean;
 	canStream: boolean;
 	isCameraEnabled: boolean;
@@ -47,7 +47,7 @@ interface LocalParticipantScreenShareControlState {
 	canPreloadPicker: boolean;
 }
 
-export interface LocalParticipantControlsViewState {
+interface LocalParticipantControlsViewState {
 	camera: LocalParticipantCameraControlState;
 	screenShare: LocalParticipantScreenShareControlState;
 }
@@ -132,6 +132,14 @@ export function selectLocalParticipantControlsViewState(
 	const screenShareValue = selectLocalParticipantMediaControlState('screenShare', signals);
 	const cameraDisabled = isDisabled(cameraValue);
 	const screenShareDisabled = isDisabled(screenShareValue);
+	let clickAction: LocalParticipantScreenShareClickAction;
+	if (screenShareValue === 'active') {
+		clickAction = 'openMenu';
+	} else if (screenShareValue === 'ready') {
+		clickAction = 'openPicker';
+	} else {
+		clickAction = 'none';
+	}
 	return {
 		camera: {
 			value: cameraValue,
@@ -143,7 +151,7 @@ export function selectLocalParticipantControlsViewState(
 			value: screenShareValue,
 			labelKey: SCREEN_SHARE_LABEL_BY_STATE[screenShareValue],
 			disabled: screenShareDisabled,
-			clickAction: screenShareValue === 'active' ? 'openMenu' : screenShareValue === 'ready' ? 'openPicker' : 'none',
+			clickAction,
 			canOpenMenu: screenShareValue === 'active',
 			canPreloadPicker: screenShareValue === 'ready',
 		},

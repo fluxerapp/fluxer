@@ -2,9 +2,11 @@
 
 import {
 	EXPERIMENT_BUCKET_RESOLUTION,
+	ExperimentRolloutCountryCodesSchema,
 	type ExperimentTargeting,
 	experimentAudienceIncludes,
 	experimentBucket,
+	experimentRolloutCountryIncludes,
 } from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 import {z} from 'zod';
 
@@ -23,6 +25,7 @@ const domainMigrationConfigFields = {
 	enabled: z.boolean(),
 	config_version: z.number().int().min(0),
 	rollout_basis_points: z.number().int().min(0).max(DOMAIN_MIGRATION_ROLLOUT_BASIS_POINTS_MAX),
+	rollout_country_codes: ExperimentRolloutCountryCodesSchema,
 	rollout_salt: z.string().trim().min(1).max(64).regex(DOMAIN_MIGRATION_SALT_PATTERN),
 	included_user_ids: DomainMigrationTargetedUserIdsSchema,
 	included_guild_ids: DomainMigrationTargetedUserIdsSchema,
@@ -36,6 +39,7 @@ export const DomainMigrationConfigSchema = z.object({
 	enabled: domainMigrationConfigFields.enabled.default(false),
 	config_version: domainMigrationConfigFields.config_version.default(0),
 	rollout_basis_points: domainMigrationConfigFields.rollout_basis_points.default(0),
+	rollout_country_codes: domainMigrationConfigFields.rollout_country_codes.default([]),
 	rollout_salt: domainMigrationConfigFields.rollout_salt.default(DEFAULT_DOMAIN_MIGRATION_SALT),
 	included_user_ids: domainMigrationConfigFields.included_user_ids.default([]),
 	included_guild_ids: domainMigrationConfigFields.included_guild_ids.default([]),
@@ -79,6 +83,7 @@ export function resolveDomainMigrationAssignment(
 	if (config.excluded_user_ids.includes(userId)) return {...INERT_DOMAIN_MIGRATION_ASSIGNMENT};
 	if (config.included_user_ids.includes(userId)) return {enabled: true};
 	if (experimentAudienceIncludes(config, targeting)) return {enabled: true};
+	if (!experimentRolloutCountryIncludes(config, targeting)) return {...INERT_DOMAIN_MIGRATION_ASSIGNMENT};
 	return {enabled: experimentBucket(userId, config.rollout_salt) < config.rollout_basis_points};
 }
 

@@ -6,8 +6,8 @@ import {SystemMessageUsername} from '@app/features/channel/components/SystemMess
 import {useSystemMessageData} from '@app/features/messaging/hooks/useSystemMessageData';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {SystemMessageUtils} from '@app/features/messaging/utils/SystemMessageUtils';
+import {ArrowRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowRightIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 
 interface GuildJoinMessageProps {

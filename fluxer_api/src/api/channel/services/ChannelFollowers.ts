@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID} from '@app/api/BrandedTypes';
-import type {ICrosspostedMessageRepository} from '@app/api/channel/repositories/ICrosspostedMessageRepository';
+import type {CrosspostedMessageRepository} from '@app/api/channel/repositories/CrosspostedMessageRepository';
+import {withRetryingLock} from '@app/api/channel/utils/RetryingLock';
 import {Logger} from '@app/api/Logger';
 import {getSnowflakeService, getWorkerService} from '@app/api/middleware/ServiceRegistry';
 import type {Channel} from '@app/api/models/Channel';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {ThrottledError} from '@fluxer/errors/src/domains/core/ThrottledError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-
-const CHANNEL_FOLLOW_LOCK_TTL_SECONDS = 5;
-const CHANNEL_FOLLOW_LOCK_ACQUIRE_ATTEMPTS = 6;
-const CHANNEL_FOLLOW_LOCK_RETRY_DELAY_MS = 50;
 
 type ChannelFollowerRemovalReason = 'deleted' | 'converted';
 export type ChannelFollowerRemovalCopyMode = 'source_deleted' | 'purge';
@@ -23,37 +18,7 @@ export async function withChannelFollowLock<T>(
 	fn: () => Promise<T>,
 	keepAliveTtlSeconds?: number,
 ): Promise<T> {
-	const ttlSeconds = keepAliveTtlSeconds ?? CHANNEL_FOLLOW_LOCK_TTL_SECONDS;
-	const lockKey = `channel-follow:${channelId}`;
-	let lockToken: string | null = null;
-	for (let attempt = 0; attempt < CHANNEL_FOLLOW_LOCK_ACQUIRE_ATTEMPTS; attempt++) {
-		lockToken = await cacheService.acquireLock(lockKey, ttlSeconds);
-		if (lockToken) break;
-		await new Promise((resolve) => setTimeout(resolve, CHANNEL_FOLLOW_LOCK_RETRY_DELAY_MS * (attempt + 1)));
-	}
-	if (!lockToken) {
-		throw new ThrottledError({
-			code: APIErrorCodes.RESOURCE_LOCKED,
-			retryAfterSeconds: 1,
-			data: {retry_after: 1},
-		});
-	}
-	const token = lockToken;
-	const keepAlive =
-		keepAliveTtlSeconds === undefined
-			? null
-			: setInterval(
-					() => {
-						cacheService.extendLock(lockKey, token, keepAliveTtlSeconds).catch(() => {});
-					},
-					(keepAliveTtlSeconds * 1000) / 3,
-				);
-	try {
-		return await fn();
-	} finally {
-		if (keepAlive) clearInterval(keepAlive);
-		await cacheService.releaseLock(lockKey, token).catch(() => {});
-	}
+	return withRetryingLock(cacheService, `channel-follow:${channelId}`, fn, keepAliveTtlSeconds);
 }
 
 interface ChannelFollowerRemovalParams {
@@ -89,7 +54,7 @@ export async function enqueueChannelFollowerRemoval(params: ChannelFollowerRemov
 
 async function channelMayHaveFollowerCopies(
 	channel: Pick<Channel, 'id' | 'type'>,
-	crossposts: Pick<ICrosspostedMessageRepository, 'listSourcesByChannel'>,
+	crossposts: Pick<CrosspostedMessageRepository, 'listSourcesByChannel'>,
 ): Promise<boolean> {
 	if (channel.type === ChannelTypes.GUILD_ANNOUNCEMENT) return true;
 	const sources = await crossposts.listSourcesByChannel(channel.id, {limit: 1});
@@ -98,7 +63,7 @@ async function channelMayHaveFollowerCopies(
 
 export async function scheduleDeletedChannelFollowerRemoval(params: {
 	channel: Pick<Channel, 'id' | 'type'>;
-	crossposts: Pick<ICrosspostedMessageRepository, 'listSourcesByChannel'>;
+	crossposts: Pick<CrosspostedMessageRepository, 'listSourcesByChannel'>;
 	copyMode: ChannelFollowerRemovalCopyMode;
 }): Promise<void> {
 	if (!(await channelMayHaveFollowerCopies(params.channel, params.crossposts))) return;

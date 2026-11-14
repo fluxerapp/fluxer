@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import modalI18n from '@app/app/I18n';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import Authentication from '@app/features/auth/state/Authentication';
 import styles from '@app/features/channel/components/modals/GroupInvitesModal.module.css';
 import Channels from '@app/features/channel/state/Channels';
+import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
-import {InviteRevokeFailedModal} from '@app/features/invite/components/alerts/InviteRevokeFailedModal';
-import {InvitesLoadFailedModal} from '@app/features/invite/components/alerts/InvitesLoadFailedModal';
 import {InviteDateToggle} from '@app/features/invite/components/InviteDateToggle';
 import {InviteListHeader, InviteListItem} from '@app/features/invite/components/InviteListItem';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -21,6 +22,21 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useState} from 'react';
+
+const InviteRevokeFailedModal_FAILED_TO_REVOKE_INVITE_DESCRIPTOR = msg({
+	message: "Couldn't revoke invite",
+	comment: 'Error modal title shown when revoking an invite fails.',
+});
+
+const InviteRevokeFailedModal_WE_COULDN_T_REVOKE_THE_INVITE_THE_LINK_DESCRIPTOR = msg({
+	message: 'The link may still work. Try again in a moment.',
+	comment: 'Error modal body shown when revoking an invite fails; warns the user that the link may still be live.',
+});
+
+const InvitesLoadFailedModal_FAILED_TO_LOAD_INVITES_DESCRIPTOR = msg({
+	message: "Couldn't load invites",
+	comment: 'Error modal title shown when fetching invites fails.',
+});
 
 const REVOKE_INVITE_DESCRIPTOR = msg({
 	message: 'Revoke invite',
@@ -56,11 +72,11 @@ export const GroupInvitesModal = observer(({channelId}: {channelId: string}) => 
 		} catch (error) {
 			logger.error('Failed to load invites:', error);
 			setFetchStatus('error');
-			ModalCommands.push(
-				modal(() => (
-					<InvitesLoadFailedModal data-flx="channel.group-invites-modal.load-invites.invites-load-failed-modal" />
-				)),
-			);
+			showGenericErrorModal({
+				title: () => modalI18n._(InvitesLoadFailedModal_FAILED_TO_LOAD_INVITES_DESCRIPTOR),
+				message: () => modalI18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+				dataFlx: 'invite.invites-load-failed-modal.generic-error-modal',
+			});
 		}
 	}, [channelId, isOwner]);
 	useEffect(() => {
@@ -87,11 +103,12 @@ export const GroupInvitesModal = observer(({channelId}: {channelId: string}) => 
 							} catch (error) {
 								logger.error('Failed to revoke invite:', error);
 								window.setTimeout(() => {
-									ModalCommands.push(
-										modal(() => (
-											<InviteRevokeFailedModal data-flx="channel.group-invites-modal.handle-revoke.invite-revoke-failed-modal" />
-										)),
-									);
+									showGenericErrorModal({
+										title: () => modalI18n._(InviteRevokeFailedModal_FAILED_TO_REVOKE_INVITE_DESCRIPTOR),
+										message: () =>
+											modalI18n._(InviteRevokeFailedModal_WE_COULDN_T_REVOKE_THE_INVITE_THE_LINK_DESCRIPTOR),
+										dataFlx: 'invite.invite-revoke-failed-modal.generic-error-modal',
+									});
 								}, 0);
 							}
 						}}

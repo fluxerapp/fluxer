@@ -26,7 +26,7 @@ export interface ForegroundGatewayDispatchHost {
 	markGuildSynced(guildId: string): void;
 }
 
-export class ForegroundGatewayDispatchAccountUserUnknownError extends Error {
+class ForegroundGatewayDispatchAccountUserUnknownError extends Error {
 	constructor(accountKey: string) {
 		super(`Gateway dispatch account ${accountKey} has no stored user`);
 		this.name = 'ForegroundGatewayDispatchAccountUserUnknownError';
@@ -91,7 +91,7 @@ export class ForegroundGatewayDispatchProcessor {
 			if (receivedUserId !== expectedUserId) {
 				throw new Error(`Gateway READY user mismatch: expected ${expectedUserId}, received ${String(receivedUserId)}`);
 			}
-			SnapshotSync.applyReady(accountKey, event.data, 'foreground');
+			SnapshotSync.applyReady(accountKey, event.data);
 			return;
 		}
 		SnapshotSync.applyDispatch(accountKey, event);

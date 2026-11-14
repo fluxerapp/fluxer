@@ -14,9 +14,16 @@
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-end;
 	gap: 1rem;
 	padding: 1rem;
+}
+
+.body > * {
+	flex-shrink: 0;
+}
+
+.body > :first-child {
+	margin-top: auto;
 }
 
 .icon {
@@ -36,7 +43,7 @@
 }
 
 .sourcePreview {
-	border-left: 0.25rem solid var(--background-modifier-accent);
+	border-inline-start: 0.25rem solid var(--background-modifier-accent);
 	border-radius: 0.25rem;
 	padding: 0.25rem 0;
 }

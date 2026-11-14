@@ -78,6 +78,7 @@ const PLAIN_ROWS: ReadonlyArray<LegacyAppStorageKeyRow> = [
 	{kind: 'exact', key: 'pip_width', scope: 'global', fanout: 'preference'},
 	{kind: 'exact', key: 'incoming_call_overlay_position', scope: 'global', fanout: 'preference'},
 	{kind: 'exact', key: 'compact_voice_call_heights', scope: 'global', fanout: 'preference'},
+	{kind: 'exact', key: 'voice_focus_members_row', scope: 'global', fanout: 'preference'},
 	{kind: 'exact', key: 'member_list_default_hidden_channel_overrides', scope: 'account', fanout: 'content'},
 	{kind: 'exact', key: 'AdvancedSettings:unreadBadgeCustomizationEnabled', scope: 'account', fanout: 'preference'},
 	{kind: 'exact', key: 'AdvancedSettings:keepAttachmentsOnEmptyMessageEdit', scope: 'account', fanout: 'preference'},
@@ -106,7 +107,7 @@ const PLAIN_ROWS: ReadonlyArray<LegacyAppStorageKeyRow> = [
 
 const ACCESSIBILITY_ROWS: ReadonlyArray<LegacyAppStorageKeyRow> = [
 	{kind: 'exact', key: AppStorageKey.ACCESSIBILITY_LEGACY_STORE, scope: 'account', fanout: 'preference'},
-	{kind: 'exact', key: 'Accessibility:zoomLevel', scope: 'account', fanout: 'preference'},
+	{kind: 'exact', key: 'Accessibility:zoomLevel', scope: 'global', fanout: 'preference'},
 	{kind: 'exact', key: 'Accessibility:customThemeCss', scope: 'account', fanout: 'preference'},
 	{kind: 'exact', key: 'Accessibility:customThemeCssSyncAcrossDevices', scope: 'account', fanout: 'preference'},
 	{kind: 'exact', key: 'Accessibility:motion', scope: 'account', fanout: 'preference'},
@@ -122,7 +123,7 @@ export const LEGACY_APP_STORAGE_KEY_MAP: ReadonlyArray<LegacyAppStorageKeyRow> =
 	...ACCESSIBILITY_ROWS,
 ]);
 
-export const NOT_MIGRATED_LEGACY_KEYS: ReadonlyArray<string> = Object.freeze([
+const NOT_MIGRATED_LEGACY_KEYS: ReadonlyArray<string> = Object.freeze([
 	AppStorageKey.AUTH_SESSION_TOKEN,
 	AppStorageKey.AUTH_SESSION_USER_ID,
 	'runtimeConfig',

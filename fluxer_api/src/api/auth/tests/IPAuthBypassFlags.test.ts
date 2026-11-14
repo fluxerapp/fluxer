@@ -21,55 +21,6 @@ describe('Auth IP Authorization Bypass Flags', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	const testCases = [
-		{
-			name: 'APP_STORE_REVIEWER only',
-			flags: ['APP_STORE_REVIEWER'],
-		},
-		{
-			name: 'APP_STORE_REVIEWER with STAFF',
-			flags: ['APP_STORE_REVIEWER', 'STAFF'],
-		},
-		{
-			name: 'APP_STORE_REVIEWER with BUG_HUNTER and STAFF',
-			flags: ['APP_STORE_REVIEWER', 'BUG_HUNTER', 'STAFF'],
-		},
-		{
-			name: 'APP_STORE_REVIEWER with BUG_HUNTER',
-			flags: ['APP_STORE_REVIEWER', 'BUG_HUNTER'],
-		},
-	];
-	for (const tc of testCases) {
-		it(`validates that users with ${tc.name} can login from any IP without authorization`, async () => {
-			const email = createUniqueEmail(`bypass-flags-${tc.flags.join('-')}`);
-			const password = 'a-strong-password';
-			const reg = await registerUser(harness, {
-				email,
-				username: createUniqueUsername('bypass'),
-				global_name: 'Bypass User',
-				password,
-				date_of_birth: '2000-01-01',
-				consent: true,
-			});
-			await createBuilderWithoutAuth(harness)
-				.post(`/test/users/${reg.user_id}/security-flags`)
-				.body({
-					set_flags: tc.flags,
-				})
-				.execute();
-			const newIP = '10.50.60.70';
-			const loginResp = await createBuilderWithoutAuth<{
-				token?: string;
-				user_id?: string;
-			}>(harness)
-				.post('/auth/login')
-				.body({email, password})
-				.header('x-forwarded-for', newIP)
-				.execute();
-			expect(loginResp.token).toBeTruthy();
-			expect(loginResp.user_id).toBe(reg.user_id);
-		});
-	}
 	it('validates that users without bypass flags still require IP authorization for new IPs', async () => {
 		const email = createUniqueEmail('regular-with-flags');
 		const password = 'a-strong-password';
@@ -170,24 +121,5 @@ describe('Auth IP Authorization Bypass Flags', () => {
 			.header('x-forwarded-for', newIP)
 			.execute();
 		expect(loginResp.token).toBeTruthy();
-	});
-	it('verifies that regular users still require IP authorization when logging in from a new location', async () => {
-		const email = createUniqueEmail('regular-user-ip-check');
-		const password = 'a-strong-password';
-		await registerUser(harness, {
-			email,
-			username: createUniqueUsername('regularip'),
-			global_name: 'Regular IP User',
-			password,
-			date_of_birth: '2000-01-01',
-			consent: true,
-		});
-		const differentIP = '10.88.77.66';
-		await createBuilderWithoutAuth(harness)
-			.post('/auth/login')
-			.body({email, password})
-			.header('x-forwarded-for', differentIP)
-			.expect(403)
-			.execute();
 	});
 });

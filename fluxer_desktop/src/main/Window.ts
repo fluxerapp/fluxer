@@ -9,33 +9,46 @@ import {
 	MIN_WINDOW_HEIGHT,
 	MIN_WINDOW_WIDTH,
 } from '@electron/common/Constants';
-import {getDesktopWindowBehaviorSettings, getPrebootTheme} from '@electron/common/DesktopConfig';
+import {getDesktopWindowBehaviorSettings, getLaunchProductName, getPrebootTheme} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
 import type {DesktopWindowBehaviorSettings} from '@electron/common/Types';
+import {getApiAttachmentAuthorization} from '@electron/main/ApiAttachmentAuthorization';
 import {createAppLoadRetry} from '@electron/main/AppLoadRetry';
+import {readBootFrameInputs, replayBootFrameInputs} from '@electron/main/BootFrameInputReplay';
+import {prepareBootStateReload, requestBootStateFlush} from '@electron/main/BootState';
 import {
 	shouldForwardRendererConsoleToMainLog,
 	shouldIgnoreWindowStateForLaunch,
 	shouldOpenDevToolsOnLaunch,
 } from '@electron/main/DesktopDebugInfo';
-import {getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath';
+import {getAppResourcesPath, getDesktopDistributionPath} from '@electron/main/DesktopDistributionPath';
 import {resolveDesktopLandingUrl} from '@electron/main/DesktopLastRoute';
+import {allowRememberedRuntimePlans} from '@electron/main/DesktopRuntimeDiscovery';
 import {DesktopRuntimeSecurity} from '@electron/main/DesktopRuntimeSecurity';
 import {hasActiveDesktopTray, refreshDesktopTrayMenu} from '@electron/main/DesktopTray';
+import {wakeDesktopUpdatePoll} from '@electron/main/DesktopUpdatePoll';
 import {drainPendingDisplayMediaRequests, registerDisplayMediaRequestHandler} from '@electron/main/DisplayMedia';
-import {isNativeGatewayAvailable} from '@electron/main/GatewaySocketNativeBoundary';
+import {isNativeGatewayPermitted} from '@electron/main/GatewaySocketNativeBoundary';
+import {armHiddenWindowMemoryRelease} from '@electron/main/HiddenWindowMemory';
 import {shouldDisableV8CodeCache} from '@electron/main/LaunchOptions';
 import {getDesktopLocalAppAuthorization} from '@electron/main/LocalAppProtocolAuthorization';
 import {isLocalAppRendererDocumentURL, isLocalAppURL} from '@electron/main/LocalAppURL';
 import {cancelPendingFullScreenHide, hideWindowLeavingFullScreen} from '@electron/main/MacFullScreenHide';
 import {t} from '@electron/main/MainI18n';
-import {MainWindowRevealGate, MainWindowRevealReason} from '@electron/main/MainWindowReveal';
+import {MainWindowBootFrame} from '@electron/main/MainWindowBootFrame';
+import {getMainWindowCloseAction} from '@electron/main/MainWindowClose';
+import {
+	MAIN_WINDOW_LIVE_FRAME_WAIT_MS,
+	MainWindowRevealGate,
+	MainWindowRevealReason,
+} from '@electron/main/MainWindowReveal';
 import {signalMainWindowCreated, signalMainWindowReady} from '@electron/main/ModuleBootHandoff';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {registerSpellcheck} from '@electron/main/Spellcheck';
 import {resetStreamingPriority} from '@electron/main/StreamingPriority';
 import {getMainWindowRendererGoneAction} from '@electron/main/WindowRendererLifecycle';
 import {refreshWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
+import {DESKTOP_BOOT_STATE_CHANNELS, type DesktopBootFrame} from '@fluxer/desktop_ipc/src/BootStateContract';
 import {NATIVE_GATEWAY_TRANSPORT_AVAILABLE_RENDERER_ARG} from '@fluxer/desktop_ipc/src/GatewayTransportContract';
 import {app, BrowserWindow, dialog, ipcMain, screen} from 'electron';
 import log from 'electron-log';
@@ -44,8 +57,11 @@ const logger = createChildLogger('Window');
 const runtimeSecurity = new DesktopRuntimeSecurity({
 	logger: createChildLogger('DesktopRuntimeSecurity'),
 	localAppAuthorization: getDesktopLocalAppAuthorization(),
+	attachmentAuthorization: getApiAttachmentAuthorization(),
 });
 const LIVE_RESIZE_IDLE_MS = 400;
+const MAXIMIZED_REVEAL_REPAINT_TIMEOUT_MS = 250;
+const RELOAD_BOOT_STATE_FLUSH_TIMEOUT_MS = 1500;
 const VISIBILITY_MARGIN = 32;
 const RENDERER_GONE_REPEAT_WINDOW_MS = 30000;
 const CLOSE_FOR_UPDATE_TIMEOUT_MS = 5000;
@@ -61,12 +77,10 @@ const TRANSPARENT_WINDOW_BACKGROUND_COLOR = '#00000000';
 const MEDIA_DEVICE_BLINK_FEATURES = 'EnumerateDevices,AudioOutputDevices';
 const ACTIVE_ALLOW_TRANSPARENCY_RENDERER_ARG = '--fluxer-active-allow-transparency=1';
 const ACTIVE_USE_NATIVE_TITLEBAR_RENDERER_ARG = '--fluxer-active-use-native-titlebar=1';
-const THEME_STUDIO_POPOUT_WINDOW_NAME = 'fluxer_theme_studio';
-const THEME_STUDIO_POPOUT_PATHNAME = '/theme-studio';
-const THEME_STUDIO_POPOUT_TITLE = 'Fluxer | Theme Studio';
-const THEME_STUDIO_POPOUT_MIN_WIDTH = 900;
-const THEME_STUDIO_POPOUT_MIN_HEIGHT = 620;
-export const THEME_STUDIO_POPOUT_KEY = THEME_STUDIO_POPOUT_WINDOW_NAME;
+export const QUICK_CSS_EDITOR_WINDOW_KEY = 'fluxer_quick_css_editor';
+const QUICK_CSS_EDITOR_WINDOW_TITLE = 'Fluxer | Quick CSS';
+const QUICK_CSS_EDITOR_MIN_WIDTH = 900;
+const QUICK_CSS_EDITOR_MIN_HEIGHT = 620;
 const VOICE_POPOUT_WINDOW_NAME_PREFIX = 'fluxer-voice-popout:';
 const VOICE_POPOUT_WINDOW_NAME_LENGTH_MAX = 256;
 const VOICE_POPOUT_MIN_WIDTH = 360;
@@ -89,19 +103,9 @@ const trustedRendererPermissionTypes = new Set([
 	'speaker-selection',
 	'clipboard-sanitized-write',
 ]);
-const POPOUT_NAMESPACE = 'fluxer_';
 
 export function isTrustedOrigin(url?: string): boolean {
 	return isLocalAppRendererDocumentURL(url ?? null);
-}
-
-function getSanitizedPath(rawUrl: string): string | null {
-	try {
-		return new URL(rawUrl).pathname;
-	} catch (error) {
-		log.warn('Invalid URL for path check', {rawUrl, error});
-		return null;
-	}
 }
 
 function preventUntrustedNavigation(event: Electron.Event, url: string, isMainFrame: boolean): void {
@@ -146,6 +150,8 @@ interface WindowBounds {
 
 interface CreateWindowOptions {
 	startHidden?: boolean;
+	rendererReadiness?: Promise<unknown>;
+	liveFrameDeadlineMs?: number;
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -153,14 +159,26 @@ let windowStateFile: string;
 let isQuitting = false;
 let initialUseNativeTitleBar: boolean | null = null;
 let initialAllowTransparency: boolean | null = null;
-let themeStudioPopoutWindow: BrowserWindow | null = null;
+let quickCssEditorWindow: BrowserWindow | null = null;
 let lastRestorableMainWindowMaximized = false;
 let mainWindowRendererGone = false;
 let closingMainWindowForUpdate = false;
+let quitAfterMainWindowCloses = false;
 const SHELL_PAGE_URL_PREFIX = 'file:';
-let mainWindowTakeover: (() => void) | null = null;
-const takeoverEndedListeners = new Set<() => void>();
 let pendingMainWindowReveal: {readonly window: BrowserWindow; readonly requestShow: () => void} | null = null;
+
+let mainWindowBootFrame: MainWindowBootFrame | null = null;
+
+export function prepareMainWindowBootFrame(readFrame: (() => Promise<DesktopBootFrame | null>) | null): Promise<void> {
+	if (readFrame === null) mainWindowBootFrame?.dispose();
+	else return mainWindowBootFrame?.prepare(readFrame) ?? Promise.resolve();
+	return Promise.resolve();
+}
+
+export function takeMainWindowBootFrame(sender: Electron.WebContents): Promise<DesktopBootFrame | null> {
+	if (sender !== mainWindow?.webContents) return Promise.resolve(null);
+	return mainWindowBootFrame?.takeFrame() ?? Promise.resolve(null);
+}
 
 const maximizeChangeForwarders = new WeakSet<BrowserWindow>();
 const voicePopoutWindows = new Map<string, BrowserWindow>();
@@ -327,12 +345,13 @@ export function clearSavedWindowBounds(): void {
 	}
 }
 
-function shouldHideMainWindowOnClose(): boolean {
-	if (process.platform === 'darwin') {
-		return true;
-	}
+function shouldKeepMainWindowInTrayOnClose(): boolean {
 	const settings = getDesktopWindowBehaviorSettings();
 	return hasActiveDesktopTray() && settings.showTrayIcon && settings.closeToTray;
+}
+
+function shouldHideMainWindowOnClose(): boolean {
+	return process.platform === 'darwin' || shouldKeepMainWindowInTrayOnClose();
 }
 
 function shouldHideMainWindowOnMinimize(): boolean {
@@ -352,7 +371,7 @@ export function getActiveAllowTransparency(): boolean {
 	return initialAllowTransparency ?? false;
 }
 
-function isAliveWindow(window: BrowserWindow | null): window is BrowserWindow {
+export function isAliveWindow(window: BrowserWindow | null): window is BrowserWindow {
 	return Boolean(window && !window.isDestroyed());
 }
 
@@ -372,23 +391,14 @@ function recoverMainWindowRendererBeforeShow(reason: string): void {
 }
 
 export function isAppDocumentWindowContents(contents: Electron.WebContents): boolean {
-	return [mainWindow, themeStudioPopoutWindow].some(
-		(window) => isAliveWindow(window) && window.webContents === contents,
-	);
+	return isAliveWindow(mainWindow) && mainWindow.webContents === contents;
 }
 
-function getThemeStudioPopoutWindow(): BrowserWindow | null {
-	if (isAliveWindow(themeStudioPopoutWindow)) {
-		return themeStudioPopoutWindow;
+function getQuickCssEditorWindow(): BrowserWindow | null {
+	if (isAliveWindow(quickCssEditorWindow)) {
+		return quickCssEditorWindow;
 	}
-	themeStudioPopoutWindow = null;
-	for (const window of BrowserWindow.getAllWindows()) {
-		if (window === mainWindow || window.isDestroyed()) continue;
-		if (getSanitizedPath(window.webContents.getURL()) === THEME_STUDIO_POPOUT_PATHNAME) {
-			trackThemeStudioPopoutWindow(window);
-			return window;
-		}
-	}
+	quickCssEditorWindow = null;
 	return null;
 }
 
@@ -407,21 +417,12 @@ export function focusWindow(window: BrowserWindow): void {
 	window.focus();
 }
 
-export function focusThemeStudioPopoutWindow(): boolean {
-	const window = getThemeStudioPopoutWindow();
+export function focusQuickCssEditorWindow(): boolean {
+	const window = getQuickCssEditorWindow();
 	if (!window) {
 		return false;
 	}
 	focusWindow(window);
-	return true;
-}
-
-export function closeThemeStudioPopoutWindow(): boolean {
-	const window = getThemeStudioPopoutWindow();
-	if (!window) {
-		return false;
-	}
-	window.close();
 	return true;
 }
 
@@ -479,8 +480,8 @@ export function setVoicePopoutAlwaysOnTop(key: string, flag: boolean): boolean {
 	return true;
 }
 
-export function setThemeStudioPopoutAlwaysOnTop(flag: boolean): boolean {
-	const window = getThemeStudioPopoutWindow();
+export function setQuickCssEditorAlwaysOnTop(flag: boolean): boolean {
+	const window = getQuickCssEditorWindow();
 	if (!window) {
 		return false;
 	}
@@ -507,6 +508,11 @@ function getWindowBackgroundColor(allowTransparency: boolean): string {
 		return TRANSPARENT_WINDOW_BACKGROUND_COLOR;
 	}
 	return THEME_WINDOW_BACKGROUND_COLORS[getPrebootTheme() ?? ''] ?? DEFAULT_WINDOW_BACKGROUND_COLOR;
+}
+
+function getLaunchTitleWindowOptions(): Pick<Electron.BrowserWindowConstructorOptions, 'title'> {
+	const title = getLaunchProductName();
+	return title === null ? {} : {title};
 }
 
 function getWindowShadowOptions(
@@ -575,7 +581,7 @@ function getRendererAdditionalArguments(
 	const args: Array<string> = [];
 	if (allowTransparency) args.push(ACTIVE_ALLOW_TRANSPARENCY_RENDERER_ARG);
 	if (useNativeTitleBar) args.push(ACTIVE_USE_NATIVE_TITLEBAR_RENDERER_ARG);
-	if (allowNativeGateway && isNativeGatewayAvailable()) args.push(NATIVE_GATEWAY_TRANSPORT_AVAILABLE_RENDERER_ARG);
+	if (allowNativeGateway && isNativeGatewayPermitted()) args.push(NATIVE_GATEWAY_TRANSPORT_AVAILABLE_RENDERER_ARG);
 	return args;
 }
 
@@ -608,15 +614,18 @@ function forwardMaximizeChanges(window: BrowserWindow): void {
 	});
 }
 
-function trackThemeStudioPopoutWindow(window: BrowserWindow): void {
-	themeStudioPopoutWindow = window;
+function trackQuickCssEditorWindow(window: BrowserWindow): void {
+	const existing = getQuickCssEditorWindow();
+	if (existing && existing !== window) {
+		existing.close();
+	}
+	quickCssEditorWindow = window;
 	window.setAlwaysOnTop(true);
-	window.setTitle(THEME_STUDIO_POPOUT_TITLE);
-	window.setMinimumSize(THEME_STUDIO_POPOUT_MIN_WIDTH, THEME_STUDIO_POPOUT_MIN_HEIGHT);
+	window.setTitle(QUICK_CSS_EDITOR_WINDOW_TITLE);
 	forwardMaximizeChanges(window);
 	window.once('closed', () => {
-		if (themeStudioPopoutWindow === window) {
-			themeStudioPopoutWindow = null;
+		if (quickCssEditorWindow === window) {
+			quickCssEditorWindow = null;
 		}
 	});
 }
@@ -635,8 +644,8 @@ export function desktopTransparencyPendingRestart(): boolean {
 function getLinuxWindowIconPath(): string | null {
 	const baseIconName = '512x512.png';
 	const candidatePaths = [
-		path.join(process.resourcesPath, 'icons', baseIconName),
-		path.join(process.resourcesPath, baseIconName),
+		path.join(getAppResourcesPath(), 'icons', baseIconName),
+		path.join(getAppResourcesPath(), baseIconName),
 		path.join(path.dirname(app.getPath('exe')), baseIconName),
 	];
 	for (const candidatePath of candidatePaths) {
@@ -647,13 +656,13 @@ function getLinuxWindowIconPath(): string | null {
 	return null;
 }
 
-function getVoicePopoutWindowOptions(): Electron.BrowserWindowConstructorOptions {
+function getPopoutWindowOptions(minWidth: number, minHeight: number): Electron.BrowserWindowConstructorOptions {
 	const isMac = process.platform === 'darwin';
 	const isLinux = process.platform === 'linux';
 	const options: Electron.BrowserWindowConstructorOptions = {
 		...getTitleBarWindowOptions(getActiveUseNativeTitleBar()),
-		minWidth: VOICE_POPOUT_MIN_WIDTH,
-		minHeight: VOICE_POPOUT_MIN_HEIGHT,
+		minWidth,
+		minHeight,
 		...(isMac ? {trafficLightPosition: CUSTOM_TITLEBAR_TRAFFIC_LIGHT_POSITION} : {}),
 		backgroundColor: getWindowBackgroundColor(false),
 		transparent: false,
@@ -686,7 +695,7 @@ function getTitleBarWindowOptions(
 function getSharedWebPreferences(
 	allowTransparency: boolean,
 	useNativeTitleBar: boolean,
-	allowNativeGateway = false,
+	allowNativeGateway: boolean,
 ): Electron.WebPreferences {
 	return {
 		preload: getDesktopDistributionPath('preload', 'index.cjs'),
@@ -699,8 +708,44 @@ function getSharedWebPreferences(
 		spellcheck: process.platform !== 'linux',
 		transparent: allowTransparency,
 		additionalArguments: getRendererAdditionalArguments(allowTransparency, useNativeTitleBar, allowNativeGateway),
-		v8CacheOptions: shouldDisableV8CodeCache(process.argv) ? 'none' : 'code',
+		v8CacheOptions: shouldDisableV8CodeCache(process.argv) ? 'none' : 'bypassHeatCheck',
 	};
+}
+
+export function reloadWindowAfterBootStateFlush(window: BrowserWindow, ignoreCache: boolean): void {
+	const reload = (): void => {
+		if (window.isDestroyed()) return;
+		if (ignoreCache) window.webContents.reloadIgnoringCache();
+		else window.webContents.reload();
+	};
+	if (window !== mainWindow) {
+		reload();
+		return;
+	}
+	void requestBootStateFlush(window.webContents, RELOAD_BOOT_STATE_FLUSH_TIMEOUT_MS, {frame: false})
+		.catch(() => undefined)
+		.finally(reload);
+}
+
+function revealMaximizedAfterRepaint(window: BrowserWindow, maximize: () => void): void {
+	window.setOpacity(0);
+	maximize();
+	const {width, height} = window.getContentBounds();
+	const zoom = window.webContents.getZoomFactor();
+	const repainted = window.webContents.executeJavaScript(
+		`new Promise((resolve) => {
+			const settle = () => requestAnimationFrame(() => requestAnimationFrame(resolve));
+			if (Math.abs(innerWidth * ${zoom} - ${width}) < 2 && Math.abs(innerHeight * ${zoom} - ${height}) < 2) settle();
+			else addEventListener('resize', settle, {once: true});
+		})`,
+		true,
+	);
+	const deadline = new Promise<void>((resolve) => setTimeout(resolve, MAXIMIZED_REVEAL_REPAINT_TIMEOUT_MS));
+	void Promise.race([repainted, deadline])
+		.catch(() => {})
+		.finally(() => {
+			if (!window.isDestroyed()) window.setOpacity(1);
+		});
 }
 
 export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
@@ -729,6 +774,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		minWidth: MIN_WINDOW_WIDTH,
 		minHeight: MIN_WINDOW_HEIGHT,
 		show: false,
+		...getLaunchTitleWindowOptions(),
 		backgroundColor: getWindowBackgroundColor(allowTransparency),
 		transparent: allowTransparency,
 		...getWindowShadowOptions(allowTransparency),
@@ -750,6 +796,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		windowOptions.center = true;
 	}
 	mainWindow = new BrowserWindow(windowOptions);
+	armHiddenWindowMemoryRelease(mainWindow);
 	signalMainWindowCreated(mainWindow);
 	mainWindowRendererGone = false;
 	installHtmlFullscreenChromeGuard(mainWindow);
@@ -773,7 +820,12 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		onReveal: (reason) => {
 			releasePendingReveal();
 			logger.info('Main window revealed', {reason, revealShowsWindow, elapsedMs: Date.now() - startedAt});
-			if (reason !== MainWindowRevealReason.CONTENT_PAINTED) {
+			if (
+				reason !== MainWindowRevealReason.CONTENT_PAINTED &&
+				reason !== MainWindowRevealReason.NATIVE_FRAME_DEADLINE &&
+				reason !== MainWindowRevealReason.NATIVE_FRAME_READY &&
+				reason !== MainWindowRevealReason.FRAME_PAINTED
+			) {
 				logger.warn('The renderer never reported painted content, revealing the main window anyway', {reason});
 			}
 			if (!revealShowsWindow) {
@@ -781,24 +833,69 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 				return;
 			}
 			if (!isAliveWindow(createdWindow) || createdWindow.isVisible()) return;
+			if (pendingMaximize && process.platform !== 'linux') {
+				revealMaximizedAfterRepaint(createdWindow, () => applyPendingMaximize(createdWindow));
+				return;
+			}
 			applyPendingMaximize(createdWindow);
 			createdWindow.show();
 		},
 	});
+	const bootFrame = new MainWindowBootFrame(
+		createdWindow,
+		options.liveFrameDeadlineMs ?? process.uptime() * 1000 + MAIN_WINDOW_LIVE_FRAME_WAIT_MS,
+		(late) => revealGate.markNativeFramePainted(late),
+	);
+	mainWindowBootFrame = bootFrame;
 	pendingMainWindowReveal = {
 		window: createdWindow,
 		requestShow: () => {
 			revealShowsWindow = true;
 		},
 	};
+	const isTopFrameOfCreatedWindow = (event: Electron.IpcMainEvent): boolean =>
+		!createdWindow.isDestroyed() &&
+		event.sender === createdWindow.webContents &&
+		event.senderFrame != null &&
+		event.senderFrame.parent == null;
 	const onFirstContentPainted = (event: Electron.IpcMainEvent): void => {
-		if (createdWindow.isDestroyed() || event.sender !== createdWindow.webContents) return;
-		if (event.senderFrame == null || event.senderFrame.parent != null) return;
-		revealGate.markContentPainted();
+		if (isTopFrameOfCreatedWindow(event) && isTrustedOrigin(event.senderFrame?.url)) {
+			bootFrame.dispose();
+			revealGate.markContentPainted();
+		}
+	};
+	const onBootFramePainted = (event: Electron.IpcMainEvent): void => {
+		if (isTopFrameOfCreatedWindow(event) && isTrustedOrigin(event.senderFrame?.url)) {
+			if (!bootFrame.markDOMFramePainted()) {
+				bootFrame.dispose();
+				revealGate.markFramePainted();
+			}
+		}
+	};
+	const onBootFrameDropped = (event: Electron.IpcMainEvent): void => {
+		if (isTopFrameOfCreatedWindow(event)) bootFrame.dispose();
+	};
+	const onBootFrameInput = (event: Electron.IpcMainEvent, value: unknown): void => {
+		if (!isTopFrameOfCreatedWindow(event) || !isTrustedOrigin(event.senderFrame?.url ?? '')) return;
+		const inputs = readBootFrameInputs(value);
+		if (inputs === null) {
+			logger.warn('Ignored input held under the boot frame because it was malformed');
+			return;
+		}
+		logger.info('Replaying input held under the boot frame', {count: inputs.length});
+		replayBootFrameInputs(createdWindow.webContents, inputs);
 	};
 	ipcMain.on(DESKTOP_FIRST_CONTENT_PAINTED_CHANNEL, onFirstContentPainted);
+	ipcMain.on(DESKTOP_BOOT_STATE_CHANNELS.framePainted, onBootFramePainted);
+	ipcMain.on(DESKTOP_BOOT_STATE_CHANNELS.frameDropped, onBootFrameDropped);
+	ipcMain.on(DESKTOP_BOOT_STATE_CHANNELS.replayInput, onBootFrameInput);
 	createdWindow.once('closed', () => {
+		bootFrame.dispose();
+		if (mainWindowBootFrame === bootFrame) mainWindowBootFrame = null;
 		ipcMain.removeListener(DESKTOP_FIRST_CONTENT_PAINTED_CHANNEL, onFirstContentPainted);
+		ipcMain.removeListener(DESKTOP_BOOT_STATE_CHANNELS.framePainted, onBootFramePainted);
+		ipcMain.removeListener(DESKTOP_BOOT_STATE_CHANNELS.frameDropped, onBootFrameDropped);
+		ipcMain.removeListener(DESKTOP_BOOT_STATE_CHANNELS.replayInput, onBootFrameInput);
 		releasePendingReveal();
 		revealGate.dispose();
 	});
@@ -807,8 +904,19 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		revealGate.dispose();
 		signalMainWindowReady();
 	});
-	createdWindow.once('ready-to-show', () => revealGate.markReadyToShow());
-	revealGate.start();
+	let readyToShow = false;
+	createdWindow.once('ready-to-show', () => {
+		readyToShow = true;
+	});
+	void (options.rendererReadiness ?? Promise.resolve()).then(
+		() => {
+			if (createdWindow.isDestroyed()) return;
+			revealGate.start();
+			if (readyToShow) revealGate.markReadyToShow();
+			else createdWindow.once('ready-to-show', () => revealGate.markReadyToShow());
+		},
+		() => revealGate.dispose(),
+	);
 	let saveTimeout: NodeJS.Timeout | null = null;
 	const debouncedSave = () => {
 		if (saveTimeout) clearTimeout(saveTimeout);
@@ -865,12 +973,20 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 	});
 	mainWindow.on('restore', refreshDesktopTrayMenu);
 	mainWindow.on('show', refreshDesktopTrayMenu);
+	mainWindow.on('show', wakeDesktopUpdatePoll);
 	mainWindow.on('hide', refreshDesktopTrayMenu);
 	mainWindow.on('close', (event) => {
 		if (saveTimeout) clearTimeout(saveTimeout);
 		endLiveResize();
 		saveWindowBounds();
-		if (!isQuitting && !closingMainWindowForUpdate && shouldHideMainWindowOnClose()) {
+		const closeAction = getMainWindowCloseAction({
+			platform: process.platform,
+			isQuitting,
+			closingForUpdate: closingMainWindowForUpdate,
+			keepInTray: shouldKeepMainWindowInTrayOnClose(),
+		});
+		quitAfterMainWindowCloses = closeAction === 'quit';
+		if (closeAction === 'hide') {
 			event.preventDefault();
 			logger.info(
 				process.platform === 'darwin'
@@ -883,6 +999,10 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 	});
 	mainWindow.on('closed', () => {
 		mainWindow = null;
+		if (quitAfterMainWindowCloses && !isQuitting) {
+			logger.info('The main window closed and close to tray is off, quitting');
+			app.quit();
+		}
 	});
 	mainWindow.setMenuBarVisibility(false);
 	if (process.platform === 'win32') {
@@ -962,10 +1082,18 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 			reloadMainWindowRendererAfterGone(`render-process-gone:${details.reason}`, details);
 		}
 	});
+	let firstDocumentLoaded = false;
+	webContents.once('did-finish-load', () => {
+		firstDocumentLoaded = true;
+	});
 	webContents.on('did-start-navigation', (_event, _url, isSameDoc, isMainFrame) => {
 		if (isMainFrame && !isSameDoc) {
 			drainPendingDisplayMediaRequests('did-start-navigation');
 			resetStreamingPriority();
+			if (firstDocumentLoaded) {
+				allowRememberedRuntimePlans();
+				void prepareBootStateReload();
+			}
 		}
 	});
 	registerSpellcheck(webContents);
@@ -1082,11 +1210,8 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		preventUntrustedNavigation(event, event.url, event.isMainFrame);
 	});
 	webContents.on('did-create-window', (window, details) => {
-		if (
-			details.frameName === THEME_STUDIO_POPOUT_WINDOW_NAME &&
-			getSanitizedPath(details.url) === THEME_STUDIO_POPOUT_PATHNAME
-		) {
-			trackThemeStudioPopoutWindow(window);
+		if (details.frameName === QUICK_CSS_EDITOR_WINDOW_KEY) {
+			trackQuickCssEditorWindow(window);
 		}
 		if (isVoicePopoutWindowName(details.frameName)) {
 			trackVoicePopoutWindow(details.frameName, window);
@@ -1099,31 +1224,19 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 				logger.warn('Denied voice popout window: capacity reached', {frameName});
 				return {action: 'deny'};
 			}
-			return {action: 'allow', overrideBrowserWindowOptions: getVoicePopoutWindowOptions()};
-		}
-		const pathname = getSanitizedPath(url);
-		if (
-			frameName?.startsWith(POPOUT_NAMESPACE) &&
-			(pathname === '/popout' || pathname === '/quick-css-editor' || pathname === THEME_STUDIO_POPOUT_PATHNAME) &&
-			isTrustedOrigin(url)
-		) {
-			const isThemeStudioPopout =
-				frameName === THEME_STUDIO_POPOUT_WINDOW_NAME && pathname === THEME_STUDIO_POPOUT_PATHNAME;
-			const isOpaqueChromePopout = pathname === '/quick-css-editor' || pathname === THEME_STUDIO_POPOUT_PATHNAME;
-			const allowPopoutTransparency = allowTransparency && !isOpaqueChromePopout;
-			const overrideBrowserWindowOptions: Electron.BrowserWindowConstructorOptions = {
-				...getTitleBarWindowOptions(getActiveUseNativeTitleBar()),
-				title: isThemeStudioPopout ? THEME_STUDIO_POPOUT_TITLE : undefined,
-				minWidth: isThemeStudioPopout ? THEME_STUDIO_POPOUT_MIN_WIDTH : undefined,
-				minHeight: isThemeStudioPopout ? THEME_STUDIO_POPOUT_MIN_HEIGHT : undefined,
-				...(isMac ? {trafficLightPosition: CUSTOM_TITLEBAR_TRAFFIC_LIGHT_POSITION} : {}),
-				backgroundColor: getWindowBackgroundColor(allowPopoutTransparency),
-				transparent: allowPopoutTransparency,
-				...getWindowShadowOptions(allowPopoutTransparency),
-				show: true,
-				webPreferences: getSharedWebPreferences(allowPopoutTransparency, getActiveUseNativeTitleBar()),
+			return {
+				action: 'allow',
+				overrideBrowserWindowOptions: getPopoutWindowOptions(VOICE_POPOUT_MIN_WIDTH, VOICE_POPOUT_MIN_HEIGHT),
 			};
-			return {action: 'allow', overrideBrowserWindowOptions};
+		}
+		if (frameName === QUICK_CSS_EDITOR_WINDOW_KEY && url === 'about:blank') {
+			return {
+				action: 'allow',
+				overrideBrowserWindowOptions: {
+					...getPopoutWindowOptions(QUICK_CSS_EDITOR_MIN_WIDTH, QUICK_CSS_EDITOR_MIN_HEIGHT),
+					title: QUICK_CSS_EDITOR_WINDOW_TITLE,
+				},
+			};
 		}
 		openExternalDeduped(url).catch((error) => {
 			log.warn('Failed to open external URL from window-open:', error);
@@ -1134,10 +1247,6 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 }
 
 export function showWindow(): void {
-	if (mainWindowTakeover != null) {
-		mainWindowTakeover();
-		return;
-	}
 	if (mainWindow && pendingMainWindowReveal?.window === mainWindow && !mainWindow.isVisible()) {
 		pendingMainWindowReveal.requestShow();
 		return;
@@ -1190,36 +1299,11 @@ export function hideWindow(): void {
 
 export function setQuitting(quitting: boolean): void {
 	isQuitting = quitting;
-}
-
-export function beginMainWindowTakeover(focus: () => void): void {
-	mainWindowTakeover = focus;
-}
-
-export function endMainWindowTakeover(): void {
-	if (mainWindowTakeover == null) return;
-	mainWindowTakeover = null;
-	for (const listener of Array.from(takeoverEndedListeners)) {
-		try {
-			listener();
-		} catch (error) {
-			logger.error('A main window takeover listener threw', error);
-		}
-	}
-}
-
-export function onMainWindowTakeoverEnded(listener: () => void): () => void {
-	takeoverEndedListeners.add(listener);
-	return () => {
-		takeoverEndedListeners.delete(listener);
-	};
-}
-
-export function isMainWindowTakenOver(): boolean {
-	return mainWindowTakeover != null;
+	if (quitting) mainWindowBootFrame?.dispose();
 }
 
 export async function reloadMainWindowForUpdate(): Promise<boolean> {
+	mainWindowBootFrame?.dispose();
 	const window = mainWindow;
 	if (!isAliveWindow(window) || window.webContents.isDestroyed()) {
 		return false;
@@ -1229,7 +1313,7 @@ export async function reloadMainWindowForUpdate(): Promise<boolean> {
 		return false;
 	}
 	const committed = waitForReloadCommit(window.webContents);
-	window.webContents.reloadIgnoringCache();
+	window.webContents.reload();
 	if (await committed) {
 		return true;
 	}
@@ -1258,28 +1342,11 @@ function waitForReloadCommit(contents: Electron.WebContents): Promise<boolean> {
 	});
 }
 
-export function hideAppWindowsForUpdate(keep: BrowserWindow): ReadonlyArray<BrowserWindow> {
-	const hidden: Array<BrowserWindow> = [];
-	for (const window of BrowserWindow.getAllWindows()) {
-		if (window === keep || window.isDestroyed() || !window.isVisible()) continue;
-		window.hide();
-		hidden.push(window);
-	}
-	return hidden;
-}
-
-export function restoreAppWindowsAfterUpdate(hidden: ReadonlyArray<BrowserWindow>): void {
-	for (const window of hidden) {
-		if (window.isDestroyed()) continue;
-		window.show();
-	}
-}
-
 function showsShellPage(window: BrowserWindow): boolean {
 	return !window.webContents.isDestroyed() && window.webContents.getURL().startsWith(SHELL_PAGE_URL_PREFIX);
 }
 
-export async function closeAppWindowsForUpdate(
+async function closeAppWindowsForUpdate(
 	keep: BrowserWindow,
 	{keepShellPages = false}: {readonly keepShellPages?: boolean} = {},
 ): Promise<void> {

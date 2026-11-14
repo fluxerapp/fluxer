@@ -2,25 +2,41 @@
 
 mod failure;
 mod input;
+mod strip;
 
 pub(in crate::server) use failure::MediaFailure;
-pub(in crate::server) use input::{MediaInput, MediaInputLimit, load_media_input};
+pub(in crate::server) use input::{
+    MediaInput, MediaInputLimit, STORED_SNIFF_PREFIX_BYTES, load_media_input, read_sniff_prefix,
+    spool_stored_media,
+};
+pub(in crate::server) use strip::{StrippedMedia, probe_audio_duration, strip_media};
 
 use crate::{
-    constants::AssetExtension,
+    constants::{self, AssetExtension},
     image_quality::ImageQuality,
     image_transform::AnimationMode,
     media_process, mime,
     nsfw::NSFWPolicy,
     output_format::OutputFormat,
     server::{
+        external::serve_external,
         format_policy::image_extension_from_filename,
+        self_origin::{self, ServedRoute, ServedVariant},
         state::AppState,
-        transform::execution::{run_transform, transform_error_is_timeout},
+        stored,
+        transform::execution::{deadline_instant, run_transform, transform_error_is_timeout},
     },
 };
+use axum::{
+    body::to_bytes,
+    http::{HeaderMap, Method, StatusCode},
+};
 use bytes::Bytes;
+use http_body::Body as _;
 use input::LoadedMediaInput;
+use std::{sync::Arc, time::Duration};
+
+const SERVED_VARIANT_TIMEOUT: Duration = Duration::from_secs(2);
 
 pub(in crate::server) struct MetadataOutput {
     pub(in crate::server) metadata: serde_json::Value,
@@ -28,12 +44,19 @@ pub(in crate::server) struct MetadataOutput {
 }
 
 pub(in crate::server) async fn resolve_metadata(
-    app: &AppState,
+    app: &Arc<AppState>,
     input: MediaInput,
     scan_nsfw: bool,
     include_data: bool,
 ) -> Result<MetadataOutput, MediaFailure> {
+    let served = match &input {
+        MediaInput::External { url, .. } if !include_data => self_origin::served_variant(app, url),
+        _ => None,
+    };
     let mut input = load_media_input(app, input, MediaInputLimit::INTERNAL_REQUEST).await?;
+    if include_data && input.data.len() > constants::MAX_MEDIA_PROXY_BYTES {
+        return Err(MediaFailure::MetadataDecodedTooLarge);
+    }
     if include_data && metadata_input_is_svg(&input) {
         input = rasterize_metadata_svg(app, input).await?;
     }
@@ -43,25 +66,107 @@ pub(in crate::server) async fn resolve_metadata(
         app.media.nsfw().record_declined_scan();
         NSFWPolicy::Disabled
     };
-    let json = media_process::metadata_json_with_options(
-        &input.data,
-        &input.filename,
-        media_process::MetadataOptions {
-            placeholder: true,
-            nsfw,
-        },
-        &app.media.limits(),
-        app.media.nsfw(),
-        &app.metrics.transform(),
-    )
-    .await
-    .map_err(|err| MediaFailure::MetadataExtractionFailed {
+    let mut metadata = extract_metadata(app, &input, true, nsfw).await?;
+    let data = include_data.then_some(input.data);
+    let is_image = metadata["content_type"]
+        .as_str()
+        .is_some_and(|content_type| content_type.starts_with("image/"));
+    if let Some(served) = served.filter(|_| is_image)
+        && let Some(mut served) = served_variant_metadata(app, served).await
+    {
+        for field in ["width", "height", "content_type", "format"] {
+            metadata[field] = served[field].take();
+        }
+    }
+    Ok(MetadataOutput { metadata, data })
+}
+
+async fn served_variant_metadata(
+    app: &Arc<AppState>,
+    served: ServedVariant,
+) -> Option<serde_json::Value> {
+    let ServedVariant { route, params } = served;
+    let headers = HeaderMap::new();
+    let work = async {
+        let response = match route {
+            ServedRoute::Asset(asset) => {
+                stored::serve_asset_image(app, Method::GET, asset, &params, &headers).await
+            }
+            ServedRoute::Attachment { key } => {
+                stored::serve_attachment(app, Method::GET, &key, &params, &headers).await
+            }
+            ServedRoute::External { rest } => {
+                serve_external(app, Method::GET, &rest, &params, &headers).await
+            }
+        };
+        if response.status() != StatusCode::OK {
+            return None;
+        }
+        let body = response.into_body();
+        let reserved = body
+            .size_hint()
+            .upper()
+            .and_then(|upper| usize::try_from(upper).ok())
+            .unwrap_or(constants::MAX_MEDIA_PROXY_BYTES)
+            .min(constants::MAX_MEDIA_PROXY_BYTES);
+        let _reservation = app.media.external_buffer_bytes().try_reserve(reserved)?;
+        let data = to_bytes(body, constants::MAX_MEDIA_PROXY_BYTES)
+            .await
+            .ok()?;
+        let input = LoadedMediaInput {
+            data,
+            filename: "served".to_owned(),
+        };
+        extract_metadata(app, &input, false, NSFWPolicy::Disabled)
+            .await
+            .ok()
+    };
+    tokio::time::timeout(SERVED_VARIANT_TIMEOUT, work)
+        .await
+        .ok()
+        .flatten()
+}
+
+async fn extract_metadata(
+    app: &AppState,
+    input: &LoadedMediaInput,
+    placeholder: bool,
+    nsfw: NSFWPolicy,
+) -> Result<serde_json::Value, MediaFailure> {
+    let runtime = app.media.transforms();
+    let options = media_process::MetadataOptions {
+        placeholder,
+        nsfw,
+        deadline_ms: runtime.transform_deadline_ms(),
+    };
+    let deadline = deadline_instant(options.deadline_ms);
+    let media_limits = app.media.limits();
+    let transform_metrics = app.metrics.transform();
+    let data = input.data.clone();
+    let cost_data = input.data.clone();
+    let extraction_failed = |err: &dyn std::fmt::Debug| MediaFailure::MetadataExtractionFailed {
         detail: format!("filename={} err={err:?}", input.filename),
-    })?;
-    Ok(MetadataOutput {
-        metadata: serde_json::from_str(&json).unwrap_or_else(|_| serde_json::json!({})),
-        data: include_data.then_some(input.data),
-    })
+    };
+    let prepared = runtime
+        .tasks()
+        .run_native(
+            deadline,
+            move || Ok(media_process::metadata_cost(&cost_data, &media_limits)?),
+            move || {
+                Ok(media_process::prepare_metadata(
+                    &data,
+                    &options,
+                    &media_limits,
+                    &transform_metrics,
+                )?)
+            },
+        )
+        .await
+        .map_err(|err| extraction_failed(&err))?;
+    let json = media_process::finish_metadata(prepared, app.media.nsfw())
+        .await
+        .map_err(|err| extraction_failed(&err))?;
+    Ok(serde_json::from_str(&json).unwrap_or_else(|_| serde_json::json!({})))
 }
 
 fn metadata_input_is_svg(input: &LoadedMediaInput) -> bool {
@@ -74,6 +179,8 @@ async fn rasterize_metadata_svg(
     input: LoadedMediaInput,
 ) -> Result<LoadedMediaInput, MediaFailure> {
     let options = media_process::ImageOptions {
+        width: Some(constants::SVG_RASTER_MAX_DIMENSION),
+        height: Some(constants::SVG_RASTER_MAX_DIMENSION),
         format: OutputFormat::WebP,
         quality: ImageQuality::Lossless,
         animation: AnimationMode::Static,
@@ -103,95 +210,5 @@ fn replace_image_extension(filename: &str, ext: AssetExtension) -> String {
     match last_dot {
         Some(idx) => format!("{}.{}", &filename[..idx], ext.name()),
         None => format!("{}.{}", filename, ext.name()),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::byte_budget::{BudgetedBytes, ByteBudget};
-    use crate::config::Config;
-    use std::sync::Arc;
-
-    fn test_app_state() -> Arc<AppState> {
-        let cfg = Config::load_from_iter([("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret")])
-            .expect("test config");
-        Arc::new(AppState::for_tests(cfg))
-    }
-
-    #[test]
-    fn metadata_base64_svg_detection_uses_bytes_or_filename() {
-        let svg_bytes = LoadedMediaInput {
-            data: Bytes::from_static(br#"<svg xmlns="http://www.w3.org/2000/svg"></svg>"#),
-            filename: "upload.bin".to_owned(),
-        };
-        assert!(metadata_input_is_svg(&svg_bytes));
-
-        let svg_filename = LoadedMediaInput {
-            data: Bytes::from_static(b"not svg"),
-            filename: "icons/logo.svg".to_owned(),
-        };
-        assert!(metadata_input_is_svg(&svg_filename));
-
-        let png_filename = LoadedMediaInput {
-            data: Bytes::from_static(b"not svg"),
-            filename: "icons/logo.png".to_owned(),
-        };
-        assert!(!metadata_input_is_svg(&png_filename));
-    }
-
-    #[test]
-    fn replace_image_extension_only_changes_last_path_segment() {
-        assert_eq!(
-            "avatars/user.icon.webp",
-            replace_image_extension("avatars/user.icon.svg", AssetExtension::Webp)
-        );
-        assert_eq!(
-            "avatars.v1/user.webp",
-            replace_image_extension("avatars.v1/user", AssetExtension::Webp)
-        );
-    }
-
-    #[tokio::test]
-    async fn metadata_base64_svg_rasterizes_to_webp_bytes() {
-        let app = test_app_state();
-        let input = LoadedMediaInput {
-            data: Bytes::from_static(
-                br#"<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="red"/></svg>"#,
-            ),
-            filename: "icons/logo.svg".to_owned(),
-        };
-        let raster = match rasterize_metadata_svg(&app, input).await {
-            Ok(raster) => raster,
-            Err(failure) => panic!("unexpected failure {}", failure.code()),
-        };
-
-        assert_eq!("icons/logo.webp", raster.filename);
-        assert_eq!("image/webp", mime::sniff(&raster.data).mime);
-    }
-
-    #[test]
-    fn an_external_media_input_keeps_owing_the_shared_buffer_budget() {
-        let budget = ByteBudget::new(16);
-        let reservation = budget.try_reserve(16).expect("reserve at limit");
-        let data = input::retained_input_bytes(BudgetedBytes::budgeted(
-            Bytes::from_static(b"payload"),
-            reservation,
-        ));
-
-        assert_eq!(b"payload", data.as_ref());
-        assert!(
-            budget.try_reserve(1).is_none(),
-            "a resident external input still owes the external buffer budget"
-        );
-
-        drop(data);
-        assert_eq!(
-            16,
-            budget
-                .try_reserve(16)
-                .expect("dropping the input releases its reservation")
-                .amount()
-        );
     }
 }

@@ -3,7 +3,7 @@
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import EntranceSoundPlaybackEngine from '@app/features/voice/engine/EntranceSoundPlaybackEngine';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {waitForVoiceJoinChimeSequence} from '@app/features/voice/engine/VoiceSelfJoinChime';
 
 const logger = new Logger('EntranceSoundPlay');
@@ -20,11 +20,11 @@ interface EntranceSoundPlayPayload {
 }
 
 export function handleEntranceSoundPlay(data: EntranceSoundPlayPayload, _context: GatewayHandlerContext): void {
-	if (!MediaEngine.connected) return;
-	if (MediaEngine.channelId !== data.channel_id) {
+	if (!VoiceRuntime.connected) return;
+	if (VoiceRuntime.channelId !== data.channel_id) {
 		logger.debug('Ignoring entrance sound for a channel we are not in', {
 			eventChannelId: data.channel_id,
-			localChannelId: MediaEngine.channelId,
+			localChannelId: VoiceRuntime.channelId,
 		});
 		return;
 	}
@@ -33,7 +33,7 @@ export function handleEntranceSoundPlay(data: EntranceSoundPlayPayload, _context
 		channelId: data.channel_id,
 	}).then((result) => {
 		if (result === 'expired-before-start') return;
-		if (!MediaEngine.connected || MediaEngine.channelId !== data.channel_id) return;
+		if (!VoiceRuntime.connected || VoiceRuntime.channelId !== data.channel_id) return;
 		return EntranceSoundPlaybackEngine.play({
 			userId: data.user_id,
 			hash: data.hash,

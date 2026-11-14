@@ -118,38 +118,17 @@ describe('StorageService copies on providers that reject cross-bucket CopyObject
 	it('stores a non-media attachment in the CDN bucket', async () => {
 		ceph.objects.set(`${UPLOADS}/upload-1`, {body: PDF, contentType: 'application/octet-stream'});
 
-		await expect(
-			storage().copyObjectWithMetadataStripping({
-				sourceBucket: UPLOADS,
-				sourceKey: 'upload-1',
-				destinationBucket: CDN,
-				destinationKey: 'attachments/1/2/file.pdf',
-				contentType: 'application/pdf',
-			}),
-		).resolves.toBeNull();
+		await storage().copyObject({
+			sourceBucket: UPLOADS,
+			sourceKey: 'upload-1',
+			destinationBucket: CDN,
+			destinationKey: 'attachments/1/2/file.pdf',
+			newContentType: 'application/pdf',
+		});
 
 		const stored = ceph.objects.get(`${CDN}/attachments/1/2/file.pdf`);
 		expect(stored?.contentType).toBe('application/pdf');
 		expect(Buffer.from(stored!.body).equals(Buffer.from(PDF))).toBe(true);
-	});
-
-	it('keeps the original file when media processing fails', async () => {
-		const brokenHeic = new Uint8Array(4096).fill(7);
-		ceph.objects.set(`${UPLOADS}/upload-2`, {body: brokenHeic, contentType: 'application/octet-stream'});
-
-		await expect(
-			storage().copyObjectWithMetadataStripping({
-				sourceBucket: UPLOADS,
-				sourceKey: 'upload-2',
-				destinationBucket: CDN,
-				destinationKey: 'attachments/1/3/photo.heic',
-				contentType: 'image/heic',
-			}),
-		).resolves.toBeNull();
-
-		const stored = ceph.objects.get(`${CDN}/attachments/1/3/photo.heic`);
-		expect(stored?.contentType).toBe('image/heic');
-		expect(Buffer.from(stored!.body).equals(Buffer.from(brokenHeic))).toBe(true);
 	});
 
 	it('keeps the source headers when no new content type is given', async () => {
@@ -187,7 +166,7 @@ describe('StorageService copies on providers that reject cross-bucket CopyObject
 		expect(ceph.objects.has(`${CDN}/attachments/1/4/missing.pdf`)).toBe(false);
 	});
 
-	it('does not retry a failed same-bucket copy through the API', async () => {
+	it('reports a missing same-bucket source as a missing object', async () => {
 		await expect(
 			storage().copyObject({
 				sourceBucket: CDN,

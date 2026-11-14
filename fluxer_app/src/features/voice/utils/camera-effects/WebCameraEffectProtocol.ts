@@ -231,7 +231,7 @@ function isValidStartCommand(value: object): value is WebCameraEffectStartComman
 	return hasExpectedCustomBackgroundFrames(config, Reflect.get(value, 'customBackgroundFrames'), true);
 }
 
-function isValidUpdateRequestId(value: unknown): value is number {
+export function isValidUpdateRequestId(value: unknown): value is number {
 	if (!Number.isSafeInteger(value)) {
 		return false;
 	}

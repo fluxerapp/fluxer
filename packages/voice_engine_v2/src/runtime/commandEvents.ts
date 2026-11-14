@@ -1,63 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2CommandResult} from '@fluxer/voice_engine_v2/src/implementations';
+import type {
+	VoiceEngineV2CommandResult,
+	VoiceEngineV2DevicesCommand,
+	VoiceEngineV2LocalMediaCommand,
+	VoiceEngineV2NativeCommand,
+	VoiceEngineV2QueryCommand,
+	VoiceEngineV2RoutingCommand,
+	VoiceEngineV2SessionCommand,
+	VoiceEngineV2UtilityCommand,
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
 import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {VoiceEngineV2Error} from '@fluxer/voice_engine_v2/src/protocol/types';
-
-type VoiceEngineV2CommandOfType<Type extends VoiceEngineV2Command['type']> = Extract<
-	VoiceEngineV2Command,
-	{type: Type}
->;
-
-type VoiceEngineV2SessionCommand = VoiceEngineV2CommandOfType<
-	| 'implementation.prewarm'
-	| 'gateway.voiceState.write'
-	| 'gateway.voiceState.clear'
-	| 'connection.connect'
-	| 'connection.disconnect'
-	| 'lifecycle.teardown'
->;
-
-type VoiceEngineV2LocalMediaCommand = VoiceEngineV2CommandOfType<
-	| 'microphone.publish'
-	| 'microphone.unpublish'
-	| 'microphone.setEnabled'
-	| 'camera.publish'
-	| 'camera.updateEncoding'
-	| 'camera.unpublish'
-	| 'screen.publish'
-	| 'screen.updateEncoding'
-	| 'screen.unpublish'
-	| 'screenAudio.publish'
-	| 'screenAudio.unpublish'
->;
-
-type VoiceEngineV2RoutingCommand = VoiceEngineV2CommandOfType<
-	'outputDevice.set' | 'participantVolume.set' | 'remoteTrackSubscription.set' | 'data.publish'
->;
-
-type VoiceEngineV2QueryCommand = VoiceEngineV2CommandOfType<
-	'stats.collect' | 'capabilities.queryHardwareEncoder' | 'permissions.check' | 'permissions.request'
->;
-
-type VoiceEngineV2DevicesCommand = VoiceEngineV2CommandOfType<
-	'devices.enumerate' | 'devices.selectAudioInput' | 'devices.selectAudioOutput' | 'devices.selectCamera'
->;
-
-type VoiceEngineV2NativeCommand = VoiceEngineV2CommandOfType<
-	| 'nativeCapture.start'
-	| 'nativeCapture.update'
-	| 'nativeCapture.stop'
-	| 'nativeAudioTap.start'
-	| 'nativeAudioTap.stop'
-	| 'nativeFrameSink.attach'
-	| 'nativeFrameSink.detach'
->;
-
-type VoiceEngineV2UtilityCommand = VoiceEngineV2CommandOfType<
-	'e2ee.setEnabled' | 'timer.schedule' | 'timer.cancel' | 'diagnostics.log' | 'operation.cancel'
->;
 
 type VoiceEngineV2CommandSuccess = Extract<VoiceEngineV2CommandResult, {ok: true}>;
 
@@ -92,7 +47,6 @@ export function commandResultToEvent(
 		case 'data.publish':
 			return routingSuccessToEvent(command);
 		case 'stats.collect':
-		case 'capabilities.queryHardwareEncoder':
 		case 'permissions.check':
 		case 'permissions.request':
 			return querySuccessToEvent(command, result);
@@ -191,23 +145,7 @@ function querySuccessToEvent(
 					capability: 'stats',
 				},
 			};
-		case 'capabilities.queryHardwareEncoder':
-			if (result.hardwareEncoderCapabilities) {
-				return {
-					type: 'capabilities.hardwareEncoderChanged',
-					operationId: command.operationId,
-					capabilities: result.hardwareEncoderCapabilities,
-				};
-			}
-			return {
-				type: 'capabilities.hardwareEncoderQueryFailed',
-				operationId: command.operationId,
-				error: {
-					code: 'implementationError',
-					message: 'Voice engine v2 hardware encoder capability command succeeded without capabilities',
-					capability: 'hardwareEncoding',
-				},
-			};
+
 		case 'permissions.check':
 		case 'permissions.request':
 			if (result.permissionResult) {
@@ -323,8 +261,7 @@ function commandFailureToEvent(command: VoiceEngineV2Command, error: VoiceEngine
 			return {type: 'data.publishFailed', operationId: command.operationId, error};
 		case 'stats.collect':
 			return {type: 'stats.collectFailed', operationId: command.operationId, error};
-		case 'capabilities.queryHardwareEncoder':
-			return {type: 'capabilities.hardwareEncoderQueryFailed', operationId: command.operationId, error};
+
 		case 'permissions.check':
 		case 'permissions.request':
 			return {type: 'permissions.failed', operationId: command.operationId, name: command.name, error};

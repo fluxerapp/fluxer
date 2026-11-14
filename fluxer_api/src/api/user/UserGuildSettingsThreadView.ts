@@ -3,13 +3,7 @@
 import {createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {fetchMany} from '@app/api/database/CassandraQueryExecution';
 import type {ThreadOnlyChannelsByGuildRow} from '@app/api/database/types/ThreadTypes';
-import {
-	everEnabled,
-	isTainted,
-	type ThreadViewer,
-	viewerActive,
-	viewerFromCtx,
-} from '@app/api/experiment/ChannelThreadsGate';
+import {isTainted, type ThreadViewer, viewerActive, viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import {ThreadOnlyChannelsByGuild} from '@app/api/Tables';
@@ -27,7 +21,7 @@ const DM_SETTINGS_GUILD_ID = createGuildID(0n);
 
 export const SYSTEM_USER_GUILD_SETTINGS_VIEW: UserGuildSettingsThreadView = {flags: true};
 
-export async function listThreadOnlyChannelIds(guildId: GuildID): Promise<Set<string>> {
+async function listThreadOnlyChannelIds(guildId: GuildID): Promise<Set<string>> {
 	const rows = await fetchMany<Pick<ThreadOnlyChannelsByGuildRow, 'channel_id'>>(FETCH_THREAD_ONLY_CHANNEL_IDS_CQL, {
 		guild_id: guildId,
 	});
@@ -37,7 +31,7 @@ export async function listThreadOnlyChannelIds(guildId: GuildID): Promise<Set<st
 export async function controlUserGuildSettingsView(
 	settings: UserGuildSettings,
 ): Promise<UserGuildSettingsThreadView | undefined> {
-	if (settings.guildId === DM_SETTINGS_GUILD_ID || settings.channelOverrides.size === 0 || !everEnabled()) {
+	if (settings.guildId === DM_SETTINGS_GUILD_ID || settings.channelOverrides.size === 0) {
 		return undefined;
 	}
 	if (!(await isTainted(settings.guildId))) return undefined;
@@ -50,7 +44,7 @@ export async function controlUserGuildSettingsView(
 	return hiddenChannelIds.size > 0 ? {flags: false, hiddenChannelIds} : undefined;
 }
 
-export async function resolveUserGuildSettingsView(
+async function resolveUserGuildSettingsView(
 	settings: UserGuildSettings,
 	viewer: ThreadViewer,
 ): Promise<UserGuildSettingsThreadView | undefined> {

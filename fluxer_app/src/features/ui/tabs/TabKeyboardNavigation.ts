@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type TabListOrientation = 'horizontal' | 'vertical' | 'both';
+type TabListOrientation = 'horizontal' | 'vertical' | 'both';
 export type TabNavigationDirection = 'previous' | 'next' | 'first' | 'last';
 
 export function getTabNavigationDirection(key: string, orientation: TabListOrientation): TabNavigationDirection | null {
@@ -21,17 +21,24 @@ export function getNextTabIndex(
 	currentIndex: number,
 	itemCount: number,
 	direction: TabNavigationDirection,
-	loop = true,
 ): number | null {
-	if (itemCount <= 0) return null;
-	if (direction === 'first') return 0;
-	if (direction === 'last') return itemCount - 1;
-	const current = currentIndex >= 0 && currentIndex < itemCount ? currentIndex : direction === 'next' ? -1 : 0;
-	let nextIndex = current + (direction === 'next' ? 1 : -1);
-	if (loop) {
-		nextIndex = (nextIndex + itemCount) % itemCount;
-	} else {
-		nextIndex = Math.min(Math.max(nextIndex, 0), itemCount - 1);
+	if (itemCount <= 0) {
+		return null;
 	}
-	return nextIndex;
+	if (direction === 'first') {
+		return 0;
+	}
+	if (direction === 'last') {
+		return itemCount - 1;
+	}
+	let current: number;
+	if (currentIndex >= 0 && currentIndex < itemCount) {
+		current = currentIndex;
+	} else if (direction === 'next') {
+		current = -1;
+	} else {
+		current = 0;
+	}
+	const nextIndex = current + (direction === 'next' ? 1 : -1);
+	return (nextIndex + itemCount) % itemCount;
 }

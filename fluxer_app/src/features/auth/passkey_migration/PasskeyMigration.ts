@@ -2,6 +2,7 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import {readDomainMigrationDiscovery} from '@app/features/app/domain_migration/DomainMigrationBrowser';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {isPasskeyMigrationOrigin} from '@app/features/auth/passkey_migration/PasskeyMigrationOrigin';
 import {openPasskeyUpdateModal} from '@app/features/auth/passkey_migration/PasskeyUpdateModal';
 import {http} from '@app/features/platform/transport/RestTransport';
@@ -70,4 +71,8 @@ class PasskeyMigration {
 	}
 }
 
-export default new PasskeyMigration();
+const passkeyMigration = new PasskeyMigration();
+
+ResettableStates.register(passkeyMigration, () => passkeyMigration.clear());
+
+export default passkeyMigration;

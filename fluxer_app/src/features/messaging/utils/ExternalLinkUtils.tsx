@@ -13,7 +13,7 @@ export const MIDDLE_MOUSE_BUTTON = 1;
 
 let externalLinkInterceptorAttached = false;
 
-function isTrustedExternalUrl(url: string): boolean {
+export function isTrustedExternalUrl(url: string): boolean {
 	try {
 		return TrustedDomain.isTrustedDomain(new URL(url).hostname);
 	} catch {
@@ -21,7 +21,7 @@ function isTrustedExternalUrl(url: string): boolean {
 	}
 }
 
-export function openUrlInBrowserWithWarning(url: string): void {
+function openUrlInBrowserWithWarning(url: string): void {
 	const target = unwrapDesktopLocalResourceURL(url);
 	if (isTrustedExternalUrl(target)) {
 		void openExternalUrl(target);

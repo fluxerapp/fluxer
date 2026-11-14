@@ -8,33 +8,41 @@ import {
 	CALL_DESCRIPTOR,
 	DIRECT_MESSAGE_DESCRIPTOR,
 	DM_DESCRIPTOR,
+	DOCK_BADGE_DESCRIPTOR,
+	MASTER_VOLUME_DESCRIPTOR,
 	MENTIONS_DESCRIPTOR,
+	MESSAGE_BADGE_DESCRIPTOR,
 	NARRATION_DESCRIPTOR,
+	OUTPUT_VOLUME_DESCRIPTOR,
 	PING_DESCRIPTOR,
 	POPUP_DESCRIPTOR,
 	PREMIUM_PRODUCT_NAME_KEYWORD,
 	READ_ALOUD_DESCRIPTOR,
 	READ_MESSAGES_DESCRIPTOR,
+	RING_DESCRIPTOR,
+	SOUND_VOLUME_DESCRIPTOR,
 	SPEECH_DESCRIPTOR,
+	TASKBAR_BADGE_DESCRIPTOR,
 	TEXT_TO_SPEECH_3_DESCRIPTOR,
 	TTS_DESCRIPTOR,
+	UNREAD_BADGE_DESCRIPTOR,
 	UNREAD_DESCRIPTOR,
+	UNREAD_MESSAGE_BADGE_DESCRIPTOR,
 	VOLUME_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	AUTOMATIC_DESCRIPTOR,
+	DESKTOP_DESCRIPTOR,
+	MENTION_PREFERENCE_SECTION_TITLE_DESCRIPTOR as MENTION_PREFERENCE_DESCRIPTOR,
+	NOTIFICATIONS_2_DESCRIPTOR,
+	PER_SOUND_VOLUME_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {
 	VOICE_DEAFEN_DESCRIPTOR,
 	VOICE_DEAFEN_SOUND_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const NOTIFICATIONS_2_DESCRIPTOR = msg({
-	message: 'Notifications',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const DESKTOP_DESCRIPTOR = msg({
-	message: 'Desktop',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
 const ALERTS_DESCRIPTOR = msg({
 	message: 'Alerts',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -55,10 +63,7 @@ const PRIVATE_MESSAGE_DESCRIPTOR = msg({
 	message: 'Private message',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const MENTION_PREFERENCE_DESCRIPTOR = msg({
-	message: 'Mention preference',
-	comment: 'Settings section label. Names the settings section in the settings UI.',
-});
+
 const DECIDE_WHETHER_REPLIES_MENTION_YOU_BY_DEFAULT_DESCRIPTOR = msg({
 	message: 'Decide whether replies @mention you by default',
 	comment:
@@ -96,30 +101,12 @@ const NOTIFY_ON_REPLY_DESCRIPTOR = msg({
 	message: 'Notify on reply',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const UNREAD_BADGE_DESCRIPTOR = msg({
-	message: 'Unread badge',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const UNREAD_MESSAGE_BADGE_DESCRIPTOR = msg({
-	message: 'Unread message badge',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const APP_ICON_BADGE_DESCRIPTOR = msg({
 	message: 'App icon badge',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const MESSAGE_BADGE_DESCRIPTOR = msg({
-	message: 'Message badge',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const DOCK_BADGE_DESCRIPTOR = msg({
-	message: 'Dock badge',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const TASKBAR_BADGE_DESCRIPTOR = msg({
-	message: 'Taskbar badge',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const BROWSER_NOTIFICATIONS_DESCRIPTOR = msg({
 	message: 'Browser notifications',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -161,10 +148,7 @@ const NEW_MESSAGE_DESCRIPTOR = msg({
 	message: 'New message',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const RING_DESCRIPTOR = msg({
-	message: 'Ring',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const RINGTONE_DESCRIPTOR = msg({
 	message: 'Ringtone',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -217,22 +201,7 @@ const WAV_DESCRIPTOR = msg({
 	message: 'WAV',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const MASTER_VOLUME_DESCRIPTOR = msg({
-	message: 'Master volume',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const SOUND_VOLUME_DESCRIPTOR = msg({
-	message: 'Sound volume',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const OUTPUT_VOLUME_DESCRIPTOR = msg({
-	message: 'Output volume',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const PER_SOUND_VOLUME_DESCRIPTOR = msg({
-	message: 'Per-sound volume',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const STREAM_DESCRIPTOR = msg({
 	message: 'Stream',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -261,10 +230,7 @@ const AUTO_NARRATION_DESCRIPTOR = msg({
 	message: 'Auto narration',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const AUTOMATIC_DESCRIPTOR = msg({
-	message: 'Automatic',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const SPEAK_MESSAGES_DESCRIPTOR = msg({
 	message: 'Speak messages',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

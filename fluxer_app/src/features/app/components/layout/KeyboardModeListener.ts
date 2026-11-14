@@ -61,18 +61,33 @@ export const KeyboardModeListener = observer(() => {
 		const handleWindowFocused = () => {
 			lastWindowFocusTime = performance.now();
 		};
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Tab') {
-				if (!KeyboardMode.keyboardModeEnabled) {
-					const composer = document.querySelector<HTMLTextAreaElement>(CHANNEL_TEXTAREA_SELECTOR);
-					if (canRedirectTabToComposer(composer)) {
-						event.preventDefault();
-						ComponentBus.dispatch('FOCUS_TEXTAREA', {enterKeyboardMode: true});
-						return;
-					}
+		let pendingComposerTab: KeyboardEvent | null = null;
+		const handleTab = (event: KeyboardEvent) => {
+			if (!KeyboardMode.keyboardModeEnabled) {
+				const composer = document.querySelector<HTMLTextAreaElement>(CHANNEL_TEXTAREA_SELECTOR);
+				if (canRedirectTabToComposer(composer)) {
+					event.preventDefault();
+					ComponentBus.dispatch('FOCUS_TEXTAREA', {enterKeyboardMode: true});
+					return;
 				}
-				KeyboardMode.enterKeyboardMode(!isAuthRoute);
 			}
+			KeyboardMode.enterKeyboardMode(!isAuthRoute);
+		};
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key !== 'Tab') return;
+			pendingComposerTab = null;
+			const active = document.activeElement;
+			if (isEditableElement(active) && isChannelTextareaElement(active)) {
+				pendingComposerTab = event;
+				return;
+			}
+			handleTab(event);
+		};
+		const handleComposerTabAfterDispatch = (event: KeyboardEvent) => {
+			if (event !== pendingComposerTab) return;
+			pendingComposerTab = null;
+			if (event.defaultPrevented) return;
+			handleTab(event);
 		};
 		const handlePointer = (event: MouseEvent | PointerEvent) => {
 			recordPointerActivationFocusTarget(getActivatableFocusTarget(event.target));
@@ -83,11 +98,13 @@ export const KeyboardModeListener = observer(() => {
 		};
 		window.addEventListener('focus', handleWindowFocused);
 		window.addEventListener('keydown', handleKeyDown, true);
+		window.addEventListener('keydown', handleComposerTabAfterDispatch);
 		window.addEventListener('mousedown', handlePointer, true);
 		window.addEventListener('pointerdown', handlePointer, true);
 		return () => {
 			window.removeEventListener('focus', handleWindowFocused);
 			window.removeEventListener('keydown', handleKeyDown, true);
+			window.removeEventListener('keydown', handleComposerTabAfterDispatch);
 			window.removeEventListener('mousedown', handlePointer, true);
 			window.removeEventListener('pointerdown', handlePointer, true);
 		};

@@ -39,7 +39,7 @@ ensure_tables() ->
 -spec upsert_voice_state(voice_state()) -> ok.
 upsert_voice_state(VoiceState) when is_map(VoiceState) ->
     ensure_tables(),
-    ConnectionId = normalize_optional_binary(
+    ConnectionId = guild_voice_connection_normalize:normalize_optional_binary(
         get_optional_field(VoiceState, <<"connection_id">>, connection_id)
     ),
     upsert_by_connection(ConnectionId, VoiceState);
@@ -51,17 +51,17 @@ upsert_by_connection(undefined, _VoiceState) ->
     ok;
 upsert_by_connection(ConnectionId, VoiceState) ->
     case
-        normalize_optional_binary(
+        guild_voice_connection_normalize:normalize_optional_binary(
             get_optional_field(VoiceState, <<"channel_id">>, channel_id, null)
         )
     of
         undefined ->
             remove_connection(ConnectionId);
         _ChannelId ->
-            RegionId = normalize_optional_binary(
+            RegionId = guild_voice_connection_normalize:normalize_optional_binary(
                 get_optional_field(VoiceState, <<"region_id">>, region_id)
             ),
-            ServerId = normalize_optional_binary(
+            ServerId = guild_voice_connection_normalize:normalize_optional_binary(
                 get_optional_field(VoiceState, <<"server_id">>, server_id)
             ),
             upsert_connection_metadata(ConnectionId, RegionId, ServerId)
@@ -70,7 +70,7 @@ upsert_by_connection(ConnectionId, VoiceState) ->
 -spec remove_connection(binary() | term()) -> ok.
 remove_connection(ConnectionId) ->
     ensure_tables(),
-    case normalize_optional_binary(ConnectionId) of
+    case guild_voice_connection_normalize:normalize_optional_binary(ConnectionId) of
         undefined ->
             ok;
         NormalizedConnectionId ->
@@ -214,19 +214,6 @@ compare_count_rows({LeftId, LeftCount}, {RightId, RightCount}) ->
         false -> LeftCount > RightCount
     end.
 
--spec normalize_optional_binary(term()) -> binary() | undefined.
-normalize_optional_binary(undefined) ->
-    undefined;
-normalize_optional_binary(null) ->
-    undefined;
-normalize_optional_binary(Value) when is_binary(Value), byte_size(Value) > 0 -> Value;
-normalize_optional_binary(Value) when is_binary(Value) -> undefined;
-normalize_optional_binary(Value) when is_integer(Value) -> integer_to_binary(Value);
-normalize_optional_binary(Value) when is_list(Value) ->
-    guild_voice_connection_normalize:normalize_optional_binary(Value);
-normalize_optional_binary(_) ->
-    undefined.
-
 -spec get_optional_field(map(), term(), term()) -> term().
 get_optional_field(Map, PrimaryKey, FallbackKey) ->
     get_optional_field(Map, PrimaryKey, FallbackKey, undefined).
@@ -234,122 +221,3 @@ get_optional_field(Map, PrimaryKey, FallbackKey) ->
 -spec get_optional_field(map(), term(), term(), term()) -> term().
 get_optional_field(Map, PrimaryKey, FallbackKey, Default) ->
     maps:get(PrimaryKey, Map, maps:get(FallbackKey, Map, Default)).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
--spec reset_tables() -> ok.
-reset_tables() ->
-    try
-        ets:delete(?CONNECTION_TABLE)
-    catch
-        error:badarg -> ok
-    end,
-    try
-        ets:delete(?REGION_TABLE)
-    catch
-        error:badarg -> ok
-    end,
-    try
-        ets:delete(?SERVER_TABLE)
-    catch
-        error:badarg -> ok
-    end,
-    ok.
-
-upsert_voice_state_tracks_region_and_server_counts_test() ->
-    ok = reset_tables(),
-    VoiceState = #{
-        <<"connection_id">> => <<"conn-1">>,
-        <<"channel_id">> => <<"123">>,
-        <<"region_id">> => <<"us-east">>,
-        <<"server_id">> => <<"us-east-1">>
-    },
-    ok = upsert_voice_state(VoiceState),
-    Counts = get_local_counts(),
-    ?assertEqual(1, maps:get(<<"total_voice_states">>, Counts)),
-    ?assertEqual(
-        [#{<<"region_id">> => <<"us-east">>, <<"voice_state_count">> => 1}],
-        maps:get(<<"regions">>, Counts)
-    ),
-    ?assertEqual(
-        [#{<<"server_id">> => <<"us-east-1">>, <<"voice_state_count">> => 1}],
-        maps:get(<<"servers">>, Counts)
-    ).
-
-upsert_voice_state_replaces_existing_metadata_test() ->
-    ok = reset_tables(),
-    ok = upsert_voice_state(#{
-        <<"connection_id">> => <<"conn-1">>,
-        <<"channel_id">> => <<"123">>,
-        <<"region_id">> => <<"us-east">>,
-        <<"server_id">> => <<"us-east-1">>
-    }),
-    ok = upsert_voice_state(#{
-        <<"connection_id">> => <<"conn-1">>,
-        <<"channel_id">> => <<"456">>,
-        <<"region_id">> => <<"eu-west">>,
-        <<"server_id">> => <<"eu-west-2">>
-    }),
-    Counts = get_local_counts(),
-    ?assertEqual(1, maps:get(<<"total_voice_states">>, Counts)),
-    ?assertEqual(
-        [#{<<"region_id">> => <<"eu-west">>, <<"voice_state_count">> => 1}],
-        maps:get(<<"regions">>, Counts)
-    ),
-    ?assertEqual(
-        [#{<<"server_id">> => <<"eu-west-2">>, <<"voice_state_count">> => 1}],
-        maps:get(<<"servers">>, Counts)
-    ).
-
-remove_connection_decrements_counters_test() ->
-    ok = reset_tables(),
-    ok = upsert_voice_state(#{
-        <<"connection_id">> => <<"conn-1">>,
-        <<"channel_id">> => <<"123">>,
-        <<"region_id">> => <<"us-east">>,
-        <<"server_id">> => <<"us-east-1">>
-    }),
-    ok = remove_connection(<<"conn-1">>),
-    Counts = get_local_counts(),
-    ?assertEqual(0, maps:get(<<"total_voice_states">>, Counts)),
-    ?assertEqual([], maps:get(<<"regions">>, Counts)),
-    ?assertEqual([], maps:get(<<"servers">>, Counts)).
-
-upsert_voice_state_disconnect_removes_connection_test() ->
-    ok = reset_tables(),
-    ok = upsert_voice_state(#{
-        <<"connection_id">> => <<"conn-1">>,
-        <<"channel_id">> => <<"123">>,
-        <<"region_id">> => <<"us-east">>,
-        <<"server_id">> => <<"us-east-1">>
-    }),
-    ok = upsert_voice_state(#{
-        <<"connection_id">> => <<"conn-1">>,
-        <<"channel_id">> => null
-    }),
-    Counts = get_local_counts(),
-    ?assertEqual(0, maps:get(<<"total_voice_states">>, Counts)),
-    ?assertEqual([], maps:get(<<"regions">>, Counts)),
-    ?assertEqual([], maps:get(<<"servers">>, Counts)).
-
-upsert_voice_state_accepts_atom_keys_test() ->
-    ok = reset_tables(),
-    ok = upsert_voice_state(#{
-        connection_id => <<"conn-atom">>,
-        channel_id => 123,
-        region_id => <<"atom-region">>,
-        server_id => <<"atom-server">>
-    }),
-    Counts = get_local_counts(),
-    ?assertEqual(1, maps:get(<<"total_voice_states">>, Counts)),
-    ?assertEqual(
-        [#{<<"region_id">> => <<"atom-region">>, <<"voice_state_count">> => 1}],
-        maps:get(<<"regions">>, Counts)
-    ),
-    ?assertEqual(
-        [#{<<"server_id">> => <<"atom-server">>, <<"voice_state_count">> => 1}],
-        maps:get(<<"servers">>, Counts)
-    ).
-
--endif.

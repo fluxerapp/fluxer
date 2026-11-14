@@ -1,0 +1,70 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Build Fluxer from source
+description: Build Fluxer yourself and run it as one container or as one systemd service on Debian.
+sidebar:
+  label: Build from source
+---
+
+You can build all of Fluxer from the [repository](https://github.com/fluxerapp/fluxer) into one release tarball. You can run that tarball as a single container, or as one systemd service on Debian 13 or in a Proxmox container. Neither way needs Docker Compose or rexctl. To run the same build as one systemd service that rexctl manages, run `rexctl install --experimental-native` with sudo. If rexctl is in `~/.local/bin`, run it as `sudo ~/.local/bin/rexctl install --experimental-native`.
+
+## Build the release
+
+Build on a Debian 13 machine with the same architecture as the machine that will run Fluxer, amd64 or arm64. Run this in your clone of the repository as a normal user who can use sudo.
+
+```sh
+make toolchain native-deps dist
+```
+
+`make toolchain` installs the build packages with apt and puts the rest of the toolchain in `dist/toolchain`. The build writes `dist/fluxer-<version>-linux-<arch>.tar.zst` and `dist/SHA256SUMS`.
+
+## Run it as one container
+
+`make image` builds everything inside Docker and tags the image `fluxer:dev`. Set `IMAGE` to use another tag. If you've already run `make dist`, `make image SOURCE=fromdist` packages that tarball and doesn't build it again.
+
+With an empty Docker cache, a full build took 11 minutes on an arm64 machine with 27 CPU cores and 47 GB of memory. It used about 15 GB more disk space while it ran. Most of that space is Docker's build cache, and `docker builder prune` deletes it when you're done.
+
+Start the container with your domain.
+
+```sh
+docker run -d --name fluxer --stop-timeout 90 -p 80:80 -p 443:443 -p 443:443/udp \
+  -v fluxer-data:/var/lib/fluxer -e FLUXER_DOMAIN=chat.example.com fluxer:dev
+```
+
+The `fluxer-data` volume has all of Fluxer's data and secrets. If you use a folder on the host instead, it must belong to user ID 65532. You can pass any other [setting](/operator/environment/) with more `-e` flags or with `--env-file`.
+
+The first start creates the secrets and the database and writes the setup token to the log.
+
+```sh
+docker logs fluxer 2>&1 | grep "setup token"
+```
+
+When the container is healthy, open your domain and enter the setup token to create your admin account. `docker exec fluxer /opt/fluxer/current/bin/fluxerd help` lists the other things the container can do, such as backups.
+
+## Install on Debian or Proxmox
+
+The install script needs Debian 13 with systemd. In Proxmox, create an unprivileged container from the Debian 13 template with at least 4 GB of memory. Use a machine or container that runs only Fluxer, because some of Fluxer's internal services on 127.0.0.1 don't ask for a password.
+
+Copy the tarball, `dist/SHA256SUMS` and `packaging/install.sh` into one folder on the machine or container. Then run the script there as root with your domain.
+
+```sh
+FLUXER_DOMAIN=chat.example.com ./install.sh
+```
+
+The script installs the packages Fluxer needs, writes every `FLUXER_` variable you set into `/etc/fluxer/fluxer.env` on the first install and starts the `fluxerd` service. When it's done, it prints the setup token and the commands for logs and settings. Open your domain and enter the setup token to create your admin account.
+
+To upgrade, copy the new tarball, its `SHA256SUMS` and the new `install.sh` into the same folder and run `./install.sh --upgrade` with the new tarball. The script takes a backup first. If the new version doesn't start, it goes back to the old version and restores that backup.
+
+## What a new install runs
+
+A new install runs Fluxer's eight Rust services in one process and keeps uploaded files as plain files in `/var/lib/fluxer/objects`. Fluxer's cache, rate limits and queues are in its Postgres database, and Valkey and SeaweedFS don't run. The first start writes these choices to `/var/lib/fluxer/modes.env`, and later starts and upgrades use them.
+
+To run the Rust services one process each, set `FLUXER_RUST_PROCESS=per-service`. To keep uploads in SeaweedFS, set `FLUXER_STORAGE_BACKEND=s3`, and for Valkey, set `FLUXER_KV_MODE=standalone`. Set them before the first start. If you set `FLUXER_S3_ENDPOINT` or `FLUXER_KV_URL`, Fluxer uses that object store or that Valkey server from the first start.
+
+When you restore a backup of an instance that used SeaweedFS or Valkey, Fluxer keeps using them. You can change `FLUXER_RUST_PROCESS` at any time. Fluxer doesn't start with `FLUXER_STORAGE_BACKEND=filesystem` while SeaweedFS still has files, or with `FLUXER_KV_MODE=postgres` while Valkey still has data.
+
+## Ports
+
+Open TCP ports 80 and 443 and UDP port 443 to the machine or container. On a home network, forward them from your router to its address.
+
+Voice and video are off in both of these setups. To turn them on, set `FLUXER_LIVEKIT_ENABLED=true` and also open TCP port 7881 and UDP port 7882. For the container, add `-p 7881:7881 -p 7882:7882/udp` to `docker run`. LiveKit looks up the public address of the machine through STUN and tells apps to connect there. If people connect to another address, such as the address of the machine on your home network, set `FLUXER_LIVEKIT_NODE_IP` to that address and Fluxer skips the STUN lookup.

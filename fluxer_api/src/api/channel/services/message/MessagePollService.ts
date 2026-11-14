@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {PollMessageExpiryRepository} from '@app/api/channel/repositories/PollMessageExpiryRepository';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import type {MessageReactionService} from '@app/api/channel/services/interaction/MessageReactionService';
+import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import type {MessageSendService} from '@app/api/channel/services/message/MessageSendService';
+import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import {isGuildMemberTimedOut} from '@app/api/guild/GuildModel';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
@@ -8,9 +20,10 @@ import type {Channel} from '@app/api/models/Channel';
 import {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
 import type {PollMessageExpiryRow} from '@app/api/Tables';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {MessageTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ReactionType} from '@fluxer/constants/src/EmojiConstants';
 import {MAX_POLL_VOTES_PER_ANSWER} from '@fluxer/constants/src/LimitConstants';
 import {CannotEditOtherUserMessageError} from '@fluxer/errors/src/domains/channel/CannotEditOtherUserMessageError';
 import {CannotSelectMultipleAnswersError} from '@fluxer/errors/src/domains/channel/CannotSelectMultipleAnswersError';
@@ -19,29 +32,20 @@ import {CannotVoteOnNonPollError} from '@fluxer/errors/src/domains/channel/Canno
 import {MaxPollVotesPerAnswerError} from '@fluxer/errors/src/domains/channel/MaxPollVotesPerAnswerError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {UnknownPollAnswerError} from '@fluxer/errors/src/domains/channel/UnknownPollAnswerError';
+import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import type {PollAnswerVotersResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {ChannelID, MessageID, UserID} from '../../../BrandedTypes';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {PollMessageExpiryRepository} from '../../repositories/PollMessageExpiryRepository';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import type {MessageReactionService} from '../interaction/MessageReactionService';
-import type {MessageChannelAuthService} from './MessageChannelAuthService';
-import type {MessageDispatchService} from './MessageDispatchService';
-import type {MessageSendService} from './MessageSendService';
-import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import { ReactionType } from '@fluxer/constants/src/EmojiConstants';
-import type { ThreadViewer } from '@app/api/experiment/ChannelThreadsGate';
 
 interface MessagePollServiceDeps {
 	channelAuthService: MessageChannelAuthService;
-	channelRepository: IChannelRepositoryAggregate;
-	userRepository: IUserRepository;
-	dispatchService: MessageDispatchService;
+	channelRepository: ChannelRepository;
+	userRepository: UserRepository;
+	gatewayService: IGatewayService;
 	pollExpiryRepository: PollMessageExpiryRepository;
 	messageReactionService: MessageReactionService;
 	messageSendService: MessageSendService;
 	limitConfigService: LimitConfigService;
+	messageWriteLock: MessageWriteLock;
 }
 
 export class MessagePollService {
@@ -115,10 +119,12 @@ export class MessagePollService {
 		if (!message) throw new UnknownMessageError();
 		if (!message.poll) throw new UnknownMessageError();
 
-		const oldMessageRow = message.toRow();
-		const newMessageRow = message.toRow();
-		const poll = newMessageRow.poll;
-		if (poll) {
+		const finalized = await this.deps.messageWriteLock.withFreshMessage(channel.id, message.id, async (fresh) => {
+			if (!fresh?.poll) throw new UnknownMessageError();
+			if (fresh.poll.results?.is_finalized) return null;
+			const oldMessageRow = fresh.toRow();
+			const newMessageRow = fresh.toRow();
+			const poll = newMessageRow.poll!;
 			if (poll.results) {
 				poll.results.is_finalized = true;
 			} else {
@@ -130,69 +136,9 @@ export class MessagePollService {
 					})),
 				};
 			}
-		}
-
-		await this.deps.channelRepository.messages.upsertMessage(newMessageRow, oldMessageRow);
-
-		const answerCounts = newMessageRow.poll?.results?.answer_counts;
-		if (newMessageRow.poll?.results) newMessageRow.poll.results.answer_counts = null;
-		await this.deps.dispatchService.dispatchMessageUpdate({
-			channel,
-			message: new Message(newMessageRow),
+			await this.deps.channelRepository.messages.upsertMessage(newMessageRow, oldMessageRow);
+			return {message: fresh, row: newMessageRow};
 		});
-
-		if (message.authorId) {
-			const user = await this.deps.userRepository.findUnique(message.authorId);
-			if (user) {
-				let victorAnswerVotes = 0;
-				let totalVotes = 0;
-				for (const answerCount of answerCounts ?? []) {
-					victorAnswerVotes = Math.max(victorAnswerVotes, answerCount.count ?? 0);
-					totalVotes += answerCount.count ?? 0;
-				}
-
-				await this.deps.messageSendService.sendSimpleMessageBypassAuth({
-					channelId: channel.id,
-					user,
-					viewer,
-					data: {
-						content: '',
-						allowed_mentions: {
-							users: [message.authorId],
-						},
-						embeds: [
-							{
-								type: 'poll_result',
-								fields: [
-									{
-										name: 'poll_question_text',
-										value: poll?.question?.text ?? '',
-										inline: false,
-									},
-									{
-										name: 'victor_answer_votes',
-										value: `${victorAnswerVotes}`,
-										inline: false,
-									},
-									{
-										name: 'total_votes',
-										value: `${totalVotes}`,
-										inline: false,
-									},
-								],
-							},
-						],
-						message_reference: {
-							type: 0,
-							channel_id: message.channelId,
-							message_id: message.id,
-						},
-					},
-					mentionAuthor: true,
-					requestCache,
-				});
-			}
-		}
 
 		const row = expiryRow ? expiryRow : await this.deps.pollExpiryRepository.fetchById(message.id);
 		if (row) {
@@ -202,14 +148,83 @@ export class MessagePollService {
 				message_id: message.id,
 			});
 		}
+		if (!finalized) return;
+
+		const {message: fresh, row: newMessageRow} = finalized;
+		const poll = newMessageRow.poll;
+		const answerCounts = poll?.results?.answer_counts;
+		if (poll?.results) poll.results.answer_counts = null;
+		await dispatchMessageUpdateBroadcast({
+			gatewayService: this.deps.gatewayService,
+			channel,
+			message: new Message(newMessageRow),
+		});
+
+		if (!fresh.authorId) return;
+		if (!(await this.authorCanStillPost(channel, fresh.authorId))) return;
+		const user = await this.deps.userRepository.findUnique(fresh.authorId);
+		if (!user) return;
+
+		let victorAnswerVotes = 0;
+		let totalVotes = 0;
+		for (const answerCount of answerCounts ?? []) {
+			victorAnswerVotes = Math.max(victorAnswerVotes, answerCount.count ?? 0);
+			totalVotes += answerCount.count ?? 0;
+		}
+
+		await this.deps.messageSendService.sendSimpleMessageBypassAuth({
+			channelId: channel.id,
+			user,
+			viewer,
+			messageType: MessageTypes.POLL_RESULT,
+			data: {
+				content: '',
+				allowed_mentions: {
+					users: [fresh.authorId],
+				},
+				embeds: [
+					{
+						fields: [
+							{
+								name: 'poll_question_text',
+								value: poll?.question?.text ?? '',
+								inline: false,
+							},
+							{
+								name: 'victor_answer_votes',
+								value: `${victorAnswerVotes}`,
+								inline: false,
+							},
+							{
+								name: 'total_votes',
+								value: `${totalVotes}`,
+								inline: false,
+							},
+						],
+					},
+				],
+				message_reference: {
+					type: 0,
+					channel_id: fresh.channelId,
+					message_id: fresh.id,
+				},
+			},
+			mentionAuthor: true,
+			requestCache,
+		});
 	}
 
-	async removeAllVotes(channelId: ChannelID, messageId: MessageID): Promise<void> {
-		await this.deps.channelRepository.messageInteractions.removeAllVotes(channelId, messageId);
-	}
-
-	async removeAllVotesBulk(channelId: ChannelID, messageIds: Array<MessageID>): Promise<void> {
-		await this.deps.channelRepository.messageInteractions.removeAllVotesBulk(channelId, messageIds);
+	private async authorCanStillPost(channel: Channel, authorId: UserID): Promise<boolean> {
+		if (!channel.guildId) return true;
+		try {
+			const {success, memberData} = await this.deps.gatewayService.getGuildMember({
+				guildId: channel.guildId,
+				userId: authorId,
+			});
+			return success && memberData != null && !isGuildMemberTimedOut(memberData);
+		} catch {
+			return false;
+		}
 	}
 
 	async getVotesForAnswer({
@@ -239,8 +254,7 @@ export class MessagePollService {
 		const message = await this.deps.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) throw new UnknownMessageError();
 
-		if (!message.poll || !message.poll.answers || !message.poll.answers.find((answer) => answer.answer_id === answerId))
-			throw new UnknownPollAnswerError();
+		if (!message.poll?.answers?.find((answer) => answer.answer_id === answerId)) throw new UnknownPollAnswerError();
 
 		if (message.poll.anonymous_voting) {
 			const managesMessages = await hasPermission(Permissions.MANAGE_MESSAGES);
@@ -283,95 +297,103 @@ export class MessagePollService {
 		});
 		await this.assertMessageHistoryAccess({authChannel, messageId});
 		const {channel, guild} = authChannel;
-		const message = await this.deps.channelRepository.messages.getMessage(channel.id, messageId);
-		if (!message) throw new UnknownMessageError();
+		await this.deps.messageWriteLock.withFreshMessage(channel.id, messageId, async (message) => {
+			if (!message) throw new UnknownMessageError();
 
-		const oldMessageRow = message.toRow();
-		const newMessageRow = message.toRow();
-		const poll = newMessageRow.poll;
-		if (!poll) throw new CannotVoteOnNonPollError();
+			const oldMessageRow = message.toRow();
+			const newMessageRow = message.toRow();
+			const poll = newMessageRow.poll;
+			if (!poll) throw new CannotVoteOnNonPollError();
 
-		if (poll.results?.is_finalized) throw new CannotVoteOnFinalizedPollError();
-		if (!poll.allow_multiselect && answerIds.length > 1) throw new CannotSelectMultipleAnswersError();
+			if (poll.results?.is_finalized) throw new CannotVoteOnFinalizedPollError();
+			if (!poll.allow_multiselect && answerIds.length > 1) throw new CannotSelectMultipleAnswersError();
 
-		if (!poll.results) {
-			poll.results = {
-				is_finalized: false,
-				answer_counts: null,
-			};
-		}
-		if (!poll.results.answer_counts) {
-			poll.results.answer_counts = (poll.answers ?? []).map((answer) => ({
-				id: answer.answer_id,
-				count: 0,
-			}));
-		}
-
-		const existingAnswers = await this.deps.channelRepository.messageInteractions.getVoteAnswers(
-			channelId,
-			messageId,
-			user.id,
-		);
-		const existingAnswerIds = existingAnswers.map((answer) => answer.id);
-
-		if (answerIds.length === 0) {
-			for (const answerId of existingAnswerIds) {
-				await this.deps.messageReactionService.removeReaction({
-					authChannel,
-					messageId,
-					actorId: user.id,
-					targetId: user.id,
-					emoji: `${answerId}:${answerId}`,
-					reactionType: ReactionType.PollVote,
-				});
-				const answerCount = poll.results.answer_counts.find((ac) => ac.id === answerId);
-				if (answerCount) {
-					if (!answerCount.count) answerCount.count = 0;
-					answerCount.count--;
-				}
+			if (!poll.results) {
+				poll.results = {
+					is_finalized: false,
+					answer_counts: null,
+				};
 			}
-		} else {
-			const ctx = createLimitMatchContext({user, guildFeatures: guild?.features});
-			const evaluationContext = guild?.features ? 'guild' : 'user';
-			const configSnapshot = this.deps.limitConfigService.getConfigSnapshot();
-			const maxPollVotesCount = Math.floor(
-				resolveLimitSafe(configSnapshot, ctx, 'max_poll_votes_per_answer', MAX_POLL_VOTES_PER_ANSWER, evaluationContext),
+			if (!poll.results.answer_counts) {
+				poll.results.answer_counts = (poll.answers ?? []).map((answer) => ({
+					id: answer.answer_id,
+					count: 0,
+				}));
+			}
+
+			const existingAnswers = await this.deps.channelRepository.messageInteractions.getVoteAnswers(
+				channelId,
+				messageId,
+				user.id,
+				(poll.answers ?? []).flatMap((answer) => (answer.answer_id == null ? [] : [answer.answer_id])),
 			);
+			const existingAnswerIds = existingAnswers.map((answer) => answer.id);
 
-			for (const answerId of answerIds) {
-				if (existingAnswerIds.includes(answerId)) continue;
-				const answerCount = poll.results.answer_counts.find((ac) => ac.id === answerId);
-				if (answerCount) {
-					if (!answerCount.count) answerCount.count = 0;
-					if (answerCount.count >= maxPollVotesCount) throw new MaxPollVotesPerAnswerError(maxPollVotesCount);
-					await this.deps.messageReactionService.addReaction({
-						authChannel,
-						messageId,
-						userId: user.id,
-						emoji: `${answerId}:${answerId}`,
-						reactionType: ReactionType.PollVote,
-					});
-					answerCount.count++;
-				}
-			}
-			for (const existingAnswerId of existingAnswerIds) {
-				if (answerIds.includes(existingAnswerId)) continue;
-				const answerCount = poll.results.answer_counts.find((ac) => ac.id === existingAnswerId);
-				if (answerCount) {
-					if (!answerCount.count) answerCount.count = 0;
+			if (answerIds.length === 0) {
+				for (const answerId of existingAnswerIds) {
 					await this.deps.messageReactionService.removeReaction({
 						authChannel,
 						messageId,
 						actorId: user.id,
 						targetId: user.id,
-						emoji: `${existingAnswerId}:${existingAnswerId}`,
+						emoji: `${answerId}:${answerId}`,
 						reactionType: ReactionType.PollVote,
 					});
-					answerCount.count--;
+					const answerCount = poll.results.answer_counts.find((ac) => ac.id === answerId);
+					if (answerCount) {
+						if (!answerCount.count) answerCount.count = 0;
+						answerCount.count--;
+					}
+				}
+			} else {
+				const ctx = createLimitMatchContext({user, guildFeatures: guild?.features});
+				const evaluationContext = guild?.features ? 'guild' : 'user';
+				const configSnapshot = this.deps.limitConfigService.getConfigSnapshot();
+				const maxPollVotesCount = Math.floor(
+					resolveLimitSafe(
+						configSnapshot,
+						ctx,
+						'max_poll_votes_per_answer',
+						MAX_POLL_VOTES_PER_ANSWER,
+						evaluationContext,
+					),
+				);
+
+				for (const answerId of answerIds) {
+					if (existingAnswerIds.includes(answerId)) continue;
+					const answerCount = poll.results.answer_counts.find((ac) => ac.id === answerId);
+					if (answerCount) {
+						if (!answerCount.count) answerCount.count = 0;
+						if (answerCount.count >= maxPollVotesCount) throw new MaxPollVotesPerAnswerError(maxPollVotesCount);
+						await this.deps.messageReactionService.addReaction({
+							authChannel,
+							messageId,
+							userId: user.id,
+							emoji: `${answerId}:${answerId}`,
+							reactionType: ReactionType.PollVote,
+						});
+						answerCount.count++;
+					}
+				}
+				for (const existingAnswerId of existingAnswerIds) {
+					if (answerIds.includes(existingAnswerId)) continue;
+					const answerCount = poll.results.answer_counts.find((ac) => ac.id === existingAnswerId);
+					if (answerCount) {
+						if (!answerCount.count) answerCount.count = 0;
+						await this.deps.messageReactionService.removeReaction({
+							authChannel,
+							messageId,
+							actorId: user.id,
+							targetId: user.id,
+							emoji: `${existingAnswerId}:${existingAnswerId}`,
+							reactionType: ReactionType.PollVote,
+						});
+						answerCount.count--;
+					}
 				}
 			}
-		}
 
-		await this.deps.channelRepository.messages.upsertMessage(newMessageRow, oldMessageRow);
+			await this.deps.channelRepository.messages.upsertMessage(newMessageRow, oldMessageRow);
+		});
 	}
 }

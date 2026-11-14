@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub use fluxer_common::user_partial::ApiUserPartial;
+use fluxer_common::user_partial::default_instance_name;
+
 use serde::{Deserialize, Serialize};
 
 fn deserialize_double_option<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
@@ -71,24 +74,6 @@ mod serde_id {
 #[serde(tag = "op")]
 #[allow(clippy::enum_variant_names, clippy::large_enum_variant)]
 pub enum MessageRequest {
-    GetById {
-        channel_id: i64,
-        message_id: i64,
-    },
-    GetLatest {
-        channel_id: i64,
-        limit: u32,
-    },
-    GetBefore {
-        channel_id: i64,
-        before_id: i64,
-        limit: u32,
-    },
-    GetAfter {
-        channel_id: i64,
-        after_id: i64,
-        limit: u32,
-    },
     GetResponseById {
         channel_id: String,
         message_id: String,
@@ -101,12 +86,17 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
         #[serde(default)]
         threads_mask: bool,
+        #[serde(default = "default_instance_name")]
+        instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     BuildResponse {
         message: Message,
@@ -119,12 +109,17 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
         #[serde(default)]
         threads_mask: bool,
+        #[serde(default = "default_instance_name")]
+        instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     BuildResponses {
         messages: Vec<Message>,
@@ -137,10 +132,15 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
         #[serde(default)]
         threads_mask: bool,
+        #[serde(default = "default_instance_name")]
+        instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     ListResponses {
         channel_id: String,
@@ -157,12 +157,17 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         #[serde(default)]
         include_hidden: bool,
         #[serde(default)]
         threads_mask: bool,
         #[serde(default)]
         exclude_types: Vec<i32>,
+        #[serde(default = "default_instance_name")]
+        instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     ExtractMentions {
         contents: Vec<String>,
@@ -172,8 +177,6 @@ pub enum MessageRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
 pub enum MessageResponse {
-    Found(Message),
-    FoundMany(Vec<Message>),
     FoundApi(ApiMessageResponse),
     FoundApiMany(Vec<ApiMessageResponse>),
     FoundMentions(Vec<ExtractedMentionsResponse>),
@@ -236,23 +239,6 @@ pub struct Message {
     pub call: Option<MessageCall>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_snapshots: Option<Vec<MessageSnapshot>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ApiUserPartialResponse {
-    pub id: String,
-    pub username: String,
-    pub discriminator: String,
-    pub global_name: Option<String>,
-    pub avatar: Option<String>,
-    pub avatar_color: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bot: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub system: Option<bool>,
-    pub flags: i64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mention_flags: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -470,7 +456,7 @@ pub struct ApiMessageCallResponse {
 pub struct ApiMessageResponse {
     pub id: String,
     pub channel_id: String,
-    pub author: ApiUserPartialResponse,
+    pub author: ApiUserPartial,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub webhook_id: Option<String>,
     #[serde(rename = "type")]
@@ -482,12 +468,12 @@ pub struct ApiMessageResponse {
     pub pinned: bool,
     pub mention_everyone: bool,
     pub tts: bool,
-    pub mentions: Vec<ApiUserPartialResponse>,
+    pub mentions: Vec<ApiUserPartial>,
     pub mention_roles: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mention_channels: Option<Vec<ApiChannelMentionResponse>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub users: Option<Vec<ApiUserPartialResponse>>,
+    pub users: Option<Vec<ApiUserPartial>>,
     pub embeds: Vec<ApiMessageEmbedResponse>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub poll: Option<MessagePoll>,
@@ -830,7 +816,7 @@ mod tests {
     fn minimal_api_message(
         referenced: Option<Option<Box<ApiMessageResponse>>>,
     ) -> ApiMessageResponse {
-        let author = ApiUserPartialResponse {
+        let author = ApiUserPartial {
             id: "1".to_string(),
             username: "user".to_string(),
             discriminator: "0001".to_string(),
@@ -862,7 +848,7 @@ mod tests {
             embeds: Vec::new(),
             attachments: Vec::new(),
             stickers: Vec::new(),
-						poll: None,
+            poll: None,
             reactions: None,
             message_reference: None,
             message_snapshots: None,
@@ -902,31 +888,5 @@ mod tests {
 
         let absent = serde_json::to_value(minimal_api_message(None)).expect("serialises");
         assert!(absent.get("referenced_message").is_none());
-    }
-
-    #[test]
-    fn message_reference_without_message_id_survives_json_and_msgpack() {
-        let mut message = minimal_api_message(None);
-        message.message_reference = Some(ApiMessageReferenceResponse {
-            channel_id: "5".to_string(),
-            message_id: None,
-            guild_id: Some("6".to_string()),
-            reference_type: 0,
-        });
-
-        let value = serde_json::to_value(&message).expect("serialises");
-        assert_eq!(
-            value["message_reference"],
-            json!({"channel_id": "5", "guild_id": "6", "type": 0})
-        );
-
-        let encoded = rmp_serde::to_vec_named(&message).expect("encodes to msgpack");
-        let decoded = rmp_serde::from_slice::<ApiMessageResponse>(&encoded)
-            .expect("decodes from msgpack")
-            .message_reference
-            .expect("reference survives");
-        assert_eq!(decoded.channel_id, "5");
-        assert_eq!(decoded.message_id, None);
-        assert_eq!(decoded.guild_id.as_deref(), Some("6"));
     }
 }

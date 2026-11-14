@@ -42,14 +42,14 @@ export interface DesktopHandoffUser {
 	readonly email?: string | null;
 }
 
-export interface DesktopHandoffIncompleteResult {
+interface DesktopHandoffIncompleteResult {
 	readonly status:
 		| typeof DesktopHandoffStatus.PENDING
 		| typeof DesktopHandoffStatus.EXPIRED
 		| typeof DesktopHandoffStatus.DENIED;
 }
 
-export interface DesktopHandoffCompletedResult {
+interface DesktopHandoffCompletedResult {
 	readonly status: typeof DesktopHandoffStatus.COMPLETED;
 	readonly token: string;
 	readonly userId: string;

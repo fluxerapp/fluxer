@@ -8,7 +8,9 @@ import {
 
 export const OFFICIAL_INSTANCE_NAME = 'Fluxer';
 
-export const OFFICIAL_INSTANCE_DISPLAY_HOST = 'fluxer.app';
+export const OFFICIAL_INSTANCE_DISPLAY_HOST = 'fluxer.com';
+
+export const OFFICIAL_INSTANCE_DISPLAY_NAME = 'fluxer.com';
 
 export const OFFICIAL_STABLE_MARKETING_ORIGIN = `https://${OFFICIAL_INSTANCE_DISPLAY_HOST}`;
 
@@ -19,9 +21,23 @@ export const OFFICIAL_CLIENT_API_ENDPOINTS = Object.freeze({
 
 export type OfficialReleaseChannel = keyof typeof OFFICIAL_CLIENT_API_ENDPOINTS;
 
+const OFFICIAL_CLIENT_API_TRANSPORT_ENDPOINTS = Object.freeze({
+	stable: 'https://fluxer.com/api',
+	canary: 'https://canary.fluxer.com/api',
+} as const) satisfies Record<OfficialReleaseChannel, string>;
+
+export function officialClientApiTransportEndpoint(apiEndpoint: string): string | null {
+	for (const channel of Object.keys(OFFICIAL_CLIENT_API_ENDPOINTS) as Array<OfficialReleaseChannel>) {
+		if (OFFICIAL_CLIENT_API_ENDPOINTS[channel] === apiEndpoint) {
+			return OFFICIAL_CLIENT_API_TRANSPORT_ENDPOINTS[channel];
+		}
+	}
+	return null;
+}
+
 export const OFFICIAL_MARKETING_ORIGINS = Object.freeze({
 	stable: OFFICIAL_STABLE_MARKETING_ORIGIN,
-	canary: 'https://canary.fluxer.app',
+	canary: 'https://canary.fluxer.com',
 } as const) satisfies Record<OfficialReleaseChannel, string>;
 
 export function officialMarketingOrigin(releaseChannel: string | null | undefined): string {
@@ -65,12 +81,12 @@ export function officialClientApiEndpointForAlias(apiEndpoint: string): string |
 
 export const OFFICIAL_INSTANCE_HOSTS: ReadonlyArray<string> = Object.freeze([
 	OFFICIAL_INSTANCE_DISPLAY_HOST,
+	'fluxer.app',
 	'web.fluxer.app',
 	'api.fluxer.app',
 	'canary.fluxer.app',
 	'web.canary.fluxer.app',
 	'api.canary.fluxer.app',
-	'fluxer.com',
 	'canary.fluxer.com',
 ]);
 

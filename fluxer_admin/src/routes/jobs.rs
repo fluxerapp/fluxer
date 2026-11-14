@@ -167,10 +167,10 @@ async fn job_detail_post(
     let form: JobActionForm = match Form::from_request(request, &state).await {
         Ok(Form(f)) => f,
         Err(_) => {
-            return flash::redirect_with_flash(
+            return flash::redirect_error(
+                config,
                 &format!("{base}/jobs/{job_id}"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
+                "Invalid form data",
             );
         }
     };

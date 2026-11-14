@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
+import {hasVisibleContent as hasVisibleMessageContent} from '@fluxer/schema/src/primitives/MessageValidators';
+import {assign, initialTransition, setup, transition} from 'xstate';
 
 type MobileTextareaVisibleButton = 'send' | 'voice';
 type MobileTextareaButtonMode = 'voice' | 'sendReady' | 'sendBlocked';
 
-export interface MobileTextareaButtonSignals {
+interface MobileTextareaButtonSignals {
 	disabled: boolean;
 	canRecordVoice: boolean;
 	value: string;
@@ -18,7 +18,7 @@ export interface MobileTextareaButtonSignals {
 	hasPendingSticker: boolean;
 }
 
-export interface MobileTextareaButtonModel {
+interface MobileTextareaButtonModel {
 	mode: MobileTextareaButtonMode;
 	visibleButton: MobileTextareaVisibleButton;
 	sendButton: {
@@ -27,9 +27,7 @@ export interface MobileTextareaButtonModel {
 	voiceButton: {
 		disabled: boolean;
 	};
-	hasTypedText: boolean;
 	hasTextContent: boolean;
-	hasSubmissionContent: boolean;
 }
 
 type MobileTextareaButtonEvent = {
@@ -42,12 +40,9 @@ interface MobileTextareaButtonContext {
 	model: MobileTextareaButtonModel;
 }
 
-function hasTypedText(value: string): boolean {
-	return hasVisibleMessageContent(value.trim());
-}
-
 function selectMobileTextareaButtonModel(signals: MobileTextareaButtonSignals): MobileTextareaButtonModel {
-	const typedText = hasTypedText(signals.value);
+	const value = signals.value;
+	const typedText = hasVisibleMessageContent(value.trim());
 	const hasTextContent = signals.hasContent || typedText;
 	const hasSubmissionContent = hasTextContent || signals.hasAttachments || signals.hasPendingSticker;
 	const shouldShowVoice = signals.canRecordVoice && !signals.isEditingMessage && !hasSubmissionContent;
@@ -58,15 +53,20 @@ function selectMobileTextareaButtonModel(signals: MobileTextareaButtonSignals): 
 		(!hasSubmissionContent && !signals.isEditingMessage);
 	const voiceDisabled = signals.disabled || signals.isSlowmodeActive || signals.isOverCharacterLimit;
 	const visibleButton = shouldShowVoice ? 'voice' : 'send';
-	const mode = visibleButton === 'voice' ? 'voice' : sendDisabled ? 'sendBlocked' : 'sendReady';
+	let mode: MobileTextareaButtonMode;
+	if (visibleButton === 'voice') {
+		mode = 'voice';
+	} else if (sendDisabled) {
+		mode = 'sendBlocked';
+	} else {
+		mode = 'sendReady';
+	}
 	return {
 		mode,
 		visibleButton,
 		sendButton: {disabled: sendDisabled},
 		voiceButton: {disabled: voiceDisabled},
-		hasTypedText: typedText,
 		hasTextContent,
-		hasSubmissionContent,
 	};
 }
 
@@ -141,23 +141,11 @@ const mobileTextareaButtonStateMachine = setup({
 	},
 });
 
-type MobileTextareaButtonSnapshot = SnapshotFrom<typeof mobileTextareaButtonStateMachine>;
-
-function createMobileTextareaButtonSnapshot(): MobileTextareaButtonSnapshot {
-	return initialTransition(mobileTextareaButtonStateMachine)[0];
-}
-
-function transitionMobileTextareaButtonSnapshot(
-	snapshot: MobileTextareaButtonSnapshot,
-	event: MobileTextareaButtonEvent,
-): MobileTextareaButtonSnapshot {
-	return transition(mobileTextareaButtonStateMachine, snapshot, event)[0] as MobileTextareaButtonSnapshot;
-}
-
 export function transitionMobileTextareaButtonState(signals: MobileTextareaButtonSignals): MobileTextareaButtonModel {
-	const snapshot = transitionMobileTextareaButtonSnapshot(createMobileTextareaButtonSnapshot(), {
+	const initial = initialTransition(mobileTextareaButtonStateMachine)[0];
+	const snapshot = transition(mobileTextareaButtonStateMachine, initial, {
 		type: 'mobileTextareaButtons.evaluate',
 		signals,
-	});
+	})[0];
 	return snapshot.context.model;
 }

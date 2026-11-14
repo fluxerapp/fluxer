@@ -57,6 +57,7 @@ export interface SettingsModalSidebarItemProps {
 	expandableId?: string;
 	sectionsGroupId?: string;
 	toggleOnSelectedClick?: boolean;
+	attentionLabel?: string;
 }
 
 export interface SettingsModalSidebarItemLogicState {

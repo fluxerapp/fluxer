@@ -3,9 +3,13 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import styles from '@app/features/channel/components/VoiceMessageRecorder.module.css';
+import {MEDIA_NEEDS_HTTPS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {getReducedMotionProps} from '@app/features/ui/utils/ReducedMotionAnimation';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
+import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {
 	computeVoiceWaveformFromAudioBuffer,
 	type PreparedVoiceMessage,
@@ -86,8 +90,7 @@ function isUniversallyPlayableContainer(mimeType: string): boolean {
 }
 
 async function prepareUniversalUpload(blob: Blob, filename: string): Promise<PreparedVoiceMessage> {
-	const contextClass =
-		window.AudioContext || (window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+	const contextClass = resolveAudioContextConstructor();
 	if (!contextClass) {
 		throw new Error('AudioContext is unavailable; cannot measure voice message');
 	}
@@ -167,7 +170,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 	);
 	const maxRecordingMs = useMemo(() => maxRecordingSeconds * 1000, [maxRecordingSeconds]);
 	const formattedDuration = useMemo(
-		() => formatDuration(recordingDurationMs / 1000, i18n.locale),
+		() => formatDuration(recordingDurationMs / 1000, getFormattingLocale()),
 		[recordingDurationMs, i18n.locale],
 	);
 	const reducedMotion = Accessibility.useReducedMotion;
@@ -298,9 +301,7 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 	}, []);
 	const startWaveform = useCallback(
 		(stream: MediaStream) => {
-			const contextClass =
-				window.AudioContext ||
-				(window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+			const contextClass = resolveAudioContextConstructor();
 			if (!contextClass) return;
 			const audioContext = new contextClass();
 			const source = audioContext.createMediaStreamSource(stream);
@@ -392,7 +393,13 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 	const startRecording = useCallback(async () => {
 		if (isRecording || isSending || disabled) return;
 		if (typeof navigator.mediaDevices === 'undefined' || typeof MediaRecorder === 'undefined') {
-			showTooltip(i18n._(VOICE_RECORDING_IS_NOT_SUPPORTED_IN_THIS_BROWSER_DESCRIPTOR));
+			showTooltip(
+				i18n._(
+					isInsecureBrowserContext()
+						? MEDIA_NEEDS_HTTPS_DESCRIPTOR
+						: VOICE_RECORDING_IS_NOT_SUPPORTED_IN_THIS_BROWSER_DESCRIPTOR,
+				),
+			);
 			return;
 		}
 		const preferredType = selectRecordingMimeType((candidate) => MediaRecorder.isTypeSupported(candidate));

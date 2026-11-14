@@ -8,26 +8,23 @@ import {
 import {legacyShellHintSeed} from '@fluxer/desktop_ipc/src/LegacyShellHintSeed';
 import {DESKTOP_LOCAL_APP_PROTOCOL} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
 import {
+	ACTIVE_ACCOUNT_STORAGE_KEY,
 	GATEWAY_PREBOOT_SESSION_PRESENT,
 	GATEWAY_PREBOOT_SESSION_STORAGE_KEY,
 	SHELL_HINT_STORAGE_KEY,
 	ZOOM_PREBOOT_MIRROR_STORAGE_KEY,
 } from '@fluxer/desktop_ipc/src/StorageContract';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const LEGACY_SESSION_TOKEN_KEY = 'token';
 const LEGACY_SESSION_USER_ID_KEY = 'userId';
 const LEGACY_ZOOM_LEVEL_KEY = 'Accessibility:zoomLevel';
 const LEGACY_ACCESSIBILITY_STORE_KEY = 'Accessibility';
-const ACTIVE_ACCOUNT_KEY = 'fluxer:auth:active-account-key';
 const ZOOM_PERCENT_MIN = 50;
 const ZOOM_PERCENT_MAX = 200;
 
 interface LegacyRawStorageSeedRenderer {
 	sendSync: (channel: string, ...args: Array<unknown>) => unknown;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function parseJSON(value: unknown): unknown {
@@ -59,7 +56,7 @@ function seedPrebootMirrors(storage: Storage, raw: Record<string, unknown>, sess
 		storage.setItem(ZOOM_PREBOOT_MIRROR_STORAGE_KEY, zoomPercent);
 	}
 	if (!sessionSeeded || storage.getItem(SHELL_HINT_STORAGE_KEY) !== null) return;
-	const shellHint = legacyShellHintSeed(raw, storage.getItem(ACTIVE_ACCOUNT_KEY) ?? '', Date.now());
+	const shellHint = legacyShellHintSeed(raw, storage.getItem(ACTIVE_ACCOUNT_STORAGE_KEY) ?? '', Date.now());
 	if (shellHint !== null) {
 		storage.setItem(SHELL_HINT_STORAGE_KEY, shellHint);
 	}

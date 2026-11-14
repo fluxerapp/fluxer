@@ -16,7 +16,7 @@ export interface SoundSettings {
 	soundOverrides: Partial<Record<SoundType, number>>;
 }
 
-export interface SoundPlayOptions {
+interface SoundPlayOptions {
 	bypassSelfDeafened?: boolean;
 	ignoreGroupCooldown?: boolean;
 }
@@ -420,10 +420,6 @@ class Sound {
 				this.clearPendingOneShotSound(soundType);
 			}
 		}
-	}
-
-	setVolume(volume: number): void {
-		this.volume = Math.max(0, Math.min(1, volume));
 	}
 
 	getMasterVolume(): number {

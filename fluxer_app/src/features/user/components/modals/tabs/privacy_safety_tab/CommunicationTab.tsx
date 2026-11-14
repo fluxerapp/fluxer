@@ -74,13 +74,13 @@ interface CommunicationPermissionSpec {
 
 const INCOMING_CALL_SPEC: CommunicationPermissionSpec = {
 	flags: IncomingCallFlags,
-	read: () => UserSettings.getIncomingCallFlags(),
+	read: () => UserSettings.incomingCallFlags,
 	write: (flags) => UserSettingsCommands.update({incomingCallFlags: flags}),
 };
 
 const GROUP_DM_ADD_SPEC: CommunicationPermissionSpec = {
 	flags: GroupDmAddPermissionFlags,
-	read: () => UserSettings.getGroupDmAddPermissionFlags(),
+	read: () => UserSettings.groupDmAddPermissionFlags,
 	write: (flags) => UserSettingsCommands.update({groupDmAddPermissionFlags: flags}),
 };
 
@@ -141,8 +141,8 @@ function buildCommunicationOptions(
 
 export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = observer(({mutationController}) => {
 	const {i18n} = useLingui();
-	const incomingCallFlags = UserSettings.getIncomingCallFlags();
-	const groupDmAddPermissionFlags = UserSettings.getGroupDmAddPermissionFlags();
+	const incomingCallFlags = UserSettings.incomingCallFlags;
+	const groupDmAddPermissionFlags = UserSettings.groupDmAddPermissionFlags;
 	const hasCallFlag = (flag: number) => (incomingCallFlags & flag) === flag;
 	const hasGroupDmAddFlag = (flag: number) => (groupDmAddPermissionFlags & flag) === flag;
 	const settleBaseChange = (spec: CommunicationPermissionSpec, value: CommunicationPermissionValue) => {
@@ -153,7 +153,7 @@ export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = o
 	};
 	const handleIncomingCallModifierToggle = ({enabled, flag}: CommunicationFlagUpdate) => {
 		mutationController.settle(() => {
-			let newFlags = UserSettings.getIncomingCallFlags();
+			let newFlags = UserSettings.incomingCallFlags;
 			if (enabled) {
 				newFlags |= flag;
 			} else {
@@ -180,6 +180,7 @@ export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = o
 		<>
 			<SettingsTabSection
 				title={<Trans>Incoming calls</Trans>}
+				description={<Trans>Choose who can start a call with you.</Trans>}
 				data-flx="user.privacy-safety-tab.communication-tab.communication-tab-content.settings-tab-section"
 			>
 				<CompactComboboxRow<CommunicationPermissionValue>
@@ -214,7 +215,8 @@ export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = o
 				)}
 				{incomingCallBaseValue !== CommunicationPermissionValue.NOBODY && (
 					<Switch
-						label={<Trans>Silent calls from everyone</Trans>}
+						label={<Trans>Receive calls silently</Trans>}
+						description={<Trans>Calls you allow still come through, but they don't ring.</Trans>}
 						value={hasCallFlag(IncomingCallFlags.SILENT_EVERYONE)}
 						onChange={(value) =>
 							handleIncomingCallModifierToggle({flag: IncomingCallFlags.SILENT_EVERYONE, enabled: value})
@@ -224,7 +226,8 @@ export const CommunicationTabContent: React.FC<CommunicationTabContentProps> = o
 				)}
 			</SettingsTabSection>
 			<SettingsTabSection
-				title={<Trans>Who can add you to group chats</Trans>}
+				title={<Trans>Group chats</Trans>}
+				description={<Trans>Choose who can add you to a group chat without asking first.</Trans>}
 				data-flx="user.privacy-safety-tab.communication-tab.communication-tab-content.settings-tab-section--2"
 			>
 				<CompactComboboxRow<CommunicationPermissionValue>

@@ -1,11 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DEFAULT_FREE_LIMITS, DEFAULT_PREMIUM_LIMITS} from '@fluxer/limits/src/LimitDefaults';
+import {DEFAULT_RESTRICTED_LIMITS, DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import {resolveLimit, resolveLimits} from '@fluxer/limits/src/LimitResolver';
 import type {LimitConfigSnapshot, LimitMatchContext} from '@fluxer/limits/src/LimitTypes';
 import {describe, expect, test} from 'vitest';
 
 describe('LimitResolver', () => {
+	test('video quality limits default to 720p at 30 FPS and can be raised for everyone', () => {
+		const ctx: LimitMatchContext = {traits: new Set(), guildFeatures: new Set()};
+		const unset = resolveLimits({traitDefinitions: [], rules: []}, ctx).limits;
+		expect(unset.max_screen_share_resolution).toBe(720);
+		expect(unset.max_screen_share_frame_rate).toBe(30);
+		expect(unset.max_camera_resolution).toBe(720);
+		const snapshot: LimitConfigSnapshot = {
+			traitDefinitions: [],
+			rules: [{id: 'default', limits: {max_screen_share_resolution: 1080, feature_higher_video_quality: 0}}],
+		};
+		expect(resolveLimit(snapshot, ctx, 'max_screen_share_resolution')).toBe(1080);
+		expect(resolveLimit(snapshot, ctx, 'max_screen_share_frame_rate')).toBe(30);
+		expect(resolveLimit(snapshot, ctx, 'feature_higher_video_quality')).toBe(0);
+	});
 	test('resolveLimits returns default free limits for empty snapshot', () => {
 		const snapshot: LimitConfigSnapshot = {
 			traitDefinitions: [],
@@ -16,7 +30,7 @@ describe('LimitResolver', () => {
 			guildFeatures: new Set(),
 		};
 		const result = resolveLimits(snapshot, ctx);
-		expect(result.limits).toEqual(DEFAULT_FREE_LIMITS);
+		expect(result.limits).toEqual(DEFAULT_RESTRICTED_LIMITS);
 	});
 	test('resolveLimits applies premium limits for premium trait', () => {
 		const snapshot: LimitConfigSnapshot = {
@@ -24,12 +38,12 @@ describe('LimitResolver', () => {
 			rules: [
 				{
 					id: 'default',
-					limits: {...DEFAULT_FREE_LIMITS},
+					limits: {...DEFAULT_RESTRICTED_LIMITS},
 				},
 				{
 					id: 'premium',
 					filters: {traits: ['premium']},
-					limits: {...DEFAULT_PREMIUM_LIMITS},
+					limits: {...DEFAULT_STOCK_LIMITS},
 				},
 			],
 		};

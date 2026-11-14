@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
-import {guildIdToRoleId} from '@app/api/BrandedTypes';
-import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {type GuildID, guildIdToRoleId, type RoleID, type UserID} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildMember} from '@app/api/models/GuildMember';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {BannedFromGuildError} from '@fluxer/errors/src/domains/guild/BannedFromGuildError';
-import {IpBannedFromGuildError} from '@fluxer/errors/src/domains/guild/IpBannedFromGuildError';
 import {UnknownGuildRoleError} from '@fluxer/errors/src/domains/guild/UnknownGuildRoleError';
-import {isSameIpDecisionMatch} from '@fluxer/ip_utils/src/IpAddress';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 
 function ensureNotEveryoneRole(roleId: RoleID, guildId: GuildID, path: string): void {
@@ -23,10 +17,7 @@ function ensureNotEveryoneRole(roleId: RoleID, guildId: GuildID, path: string): 
 }
 
 export class GuildMemberValidationService {
-	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
-		private readonly userRepository: IUserRepository,
-	) {}
+	constructor(private readonly guildRepository: GuildRepository) {}
 
 	async validateAndGetRoleIds(params: {
 		userId: UserID;
@@ -86,20 +77,6 @@ export class GuildMemberValidationService {
 			}
 			if (!(await canManageRoles(targetId, roleId))) {
 				throw new MissingPermissionsError();
-			}
-		}
-	}
-
-	async checkUserBanStatus({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<void> {
-		const bans = await this.guildRepository.listBans(guildId);
-		const user = await this.userRepository.findUnique(userId);
-		const userIp = user?.lastActiveIp;
-		for (const ban of bans) {
-			if (ban.userId === userId) {
-				throw new BannedFromGuildError();
-			}
-			if (isSameIpDecisionMatch(userIp, ban.ipAddress) && !isIpBanExempt(userIp)) {
-				throw new IpBannedFromGuildError();
 			}
 		}
 	}

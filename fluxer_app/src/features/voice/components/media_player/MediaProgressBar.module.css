@@ -144,7 +144,7 @@
 
 :global(.theme-light) .fill,
 :global(.theme-light) .thumb {
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }
 
 .compact .thumb {

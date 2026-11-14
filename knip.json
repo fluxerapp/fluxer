@@ -6,29 +6,17 @@
 	"ignoreFiles": [
 		"fluxer_admin/src/styles/app.css",
 		"fluxer_admin/static/htmx.min.js",
+		"fluxer_app/inline_scripts/*.js",
+		"fluxer_app_proxy/src/routes/instance_brand_preboot.js",
+		"fluxer_app_proxy/src/routes/saturation_preboot.js",
 		"fluxer_app/src/features/voice/utils/camera-effects/models/selfie_segmentation_256x256.d.onnx.ts",
-		"fluxer_app/src/media/images/badges/bug-hunter.d.svg.ts",
-		"fluxer_app/src/media/images/badges/partner.d.svg.ts",
-		"fluxer_app/src/media/images/badges/plutonium.d.svg.ts",
-		"fluxer_app/src/media/images/badges/staff.d.svg.ts",
-		"fluxer_app/src/media/images/i-like-food.d.svg.ts",
-		"tools/ci/templates/libfluxcore_wrapper.d.ts",
-		"tools/ci/templates/libfluxcore_wrapper.js"
+		"fluxer_app/src/media/images/*.d.svg.ts"
 	],
 	"ignoreIssues": {
 		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
-		"fluxer_app/scripts/build/Config.tsx": ["exports"],
-		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
-		"fluxer_app/src/features/notification/utils/EntranceSoundScopes.ts": ["exports"],
-		"fluxer_app/src/features/platform/state/PersistentStorage.ts": ["exports"],
+		"fluxer_app/src/features/app/domain_migration/DomainMigrationAppStorage.ts": ["exports"],
 		"fluxer_app/src/features/voice/utils/CodecCapabilityDetector.ts": ["exports"],
-		"fluxer_app/src/index.tsx": ["unlisted"],
-		"fluxer_desktop/native/mac-app-audio/index.test.mjs": ["unlisted"],
-		"packages/schema/src/domains/admin/AdminUserSchemas.ts": ["exports"],
-		"packages/schema/src/domains/download/DownloadSchemas.ts": ["exports"],
-		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
-		"packages/schema/src/domains/guild/GuildAuditLogSchemas.ts": ["exports"],
-		"pnpm-workspace.yaml": ["catalog"]
+		"fluxer_app/src/index.tsx": ["unlisted"]
 	},
 	"workspaces": {
 		".": {
@@ -36,44 +24,48 @@
 		},
 		"fluxer_api": {
 			"ignoreDependencies": [
-				"@elastic/elasticsearch",
-				"@messageformat/core",
 				"@messageformat/parser",
+				"@pdf-lib/fontkit",
 				"@vvo/tzdb",
+				"bidi-js",
 				"emoji-regex",
-				"ioredis",
+				"harfbuzzjs",
 				"maxmind",
 				"nodemailer",
 				"pg",
 				"pino",
 				"undici",
 				"validator"
-			]
+			],
+			"ignoreExportsUsedInFile": false
 		},
 		"fluxer_app": {
 			"entry": [
 				"lingui.config.js",
 				"scripts/build-sw.mjs",
 				"scripts/Generate*.ts",
-				"src/features/platform/utils/BrowserAssertStrict.ts"
+				"src/features/account_engine/core/index.ts",
+				"src/features/platform/utils/BrowserAssertStrict.ts",
+				"src/app/desktop/DesktopDeferredComponents.tsx",
+				"src/app/desktop/DesktopDeferredUI.ts"
 			]
 		},
 		"fluxer_desktop": {
+			"ignoreExportsUsedInFile": false,
 			"entry": [
 				"src/main/Bootstrap.ts",
+				"src/main/DesktopTrustedCertificatesWorker.ts",
 				"src/main/index.ts",
+				"src/main/LaunchEntry.ts",
 				"src/preload/index.ts",
 				"src/preload/LegacyHarvestPreload.ts",
-				"src/main/**/*.test.{ts,mjs}",
-				"scripts/release-check.mjs",
+				"src/engine/AccountEngineMain.ts",
 				"native/*/index.{js,d.ts}",
 				"native/*/loader-diagnostics.cjs",
-				"native/*/*.test.mjs",
-				"native/*/test/**/*.mjs"
+				"scripts/generate-windows-badges.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
-			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"],
-			"ignoreDependencies": ["electron-builder"]
+			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"]
 		},
 		"fluxer_docs": {
 			"entry": ["scripts/*.ts", "src/**/*.astro"],
@@ -87,6 +79,12 @@
 		},
 		"packages/voice_engine_v2": {
 			"entry": ["src/**/*.bench.ts"]
+		},
+		"packages/constants": {
+			"ignoreExportsUsedInFile": false
+		},
+		"packages/config": {
+			"ignoreExportsUsedInFile": false
 		}
 	}
 }

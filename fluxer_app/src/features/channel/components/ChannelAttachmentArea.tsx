@@ -25,6 +25,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {useDragAutoScroll} from '@app/features/ui/hooks/useDragAutoScroll';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -377,6 +378,24 @@ const SortableAttachmentItem = observer(
 		const isMedia = hasRenderableLocalPreview(attachment);
 		const isHiddenSpoiler = isSpoiler && spoilerHidden;
 		const IconComponent = getFileIcon(attachment.file);
+		let thumbnail: React.ReactNode = null;
+		if (isEmbeddableImageFile(attachment.file)) {
+			thumbnail = (
+				<ImageThumbnail
+					attachment={attachment}
+					spoiler={isHiddenSpoiler}
+					data-flx="channel.channel-attachment-area.sortable-attachment-item.image-thumbnail"
+				/>
+			);
+		} else if (attachment.file.type.startsWith('video/')) {
+			thumbnail = (
+				<VideoThumbnail
+					attachment={attachment}
+					spoiler={isHiddenSpoiler}
+					data-flx="channel.channel-attachment-area.sortable-attachment-item.video-thumbnail"
+				/>
+			);
+		}
 		return (
 			<li
 				ref={setRefs}
@@ -434,19 +453,7 @@ const SortableAttachmentItem = observer(
 											className={styles.spoilerWrapper}
 											data-flx="channel.channel-attachment-area.sortable-attachment-item.spoiler-wrapper"
 										>
-											{isEmbeddableImageFile(attachment.file) ? (
-												<ImageThumbnail
-													attachment={attachment}
-													spoiler={isHiddenSpoiler}
-													data-flx="channel.channel-attachment-area.sortable-attachment-item.image-thumbnail"
-												/>
-											) : attachment.file.type.startsWith('video/') ? (
-												<VideoThumbnail
-													attachment={attachment}
-													spoiler={isHiddenSpoiler}
-													data-flx="channel.channel-attachment-area.sortable-attachment-item.video-thumbnail"
-												/>
-											) : null}
+											{thumbnail}
 											<div
 												className={styles.tags}
 												data-flx="channel.channel-attachment-area.sortable-attachment-item.tags"
@@ -551,7 +558,7 @@ const SortableAttachmentItem = observer(
 								className={styles.fileSize}
 								data-flx="channel.channel-attachment-area.sortable-attachment-item.file-size"
 							>
-								{formatFileSize(i18n.locale, attachment.file.size)}
+								{formatFileSize(getFormattingLocale(), attachment.file.size)}
 							</span>
 							<span
 								className={styles.fileExtension}

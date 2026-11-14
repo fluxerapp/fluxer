@@ -25,7 +25,7 @@
 	padding: var(--spacing-2) var(--spacing-3);
 	cursor: pointer;
 	width: 100%;
-	text-align: left;
+	text-align: start;
 	background: var(--settings-surface-background, var(--form-surface-background));
 	border: 0.0625rem solid var(--settings-border-color, var(--background-modifier-accent));
 	border-radius: 0.5rem;
@@ -76,7 +76,7 @@
 	background: var(--settings-hover-background, var(--surface-interactive-hover-bg));
 	border: 0.0625rem solid var(--settings-border-color, var(--background-modifier-accent));
 	border-radius: 999px;
-	margin-left: auto;
+	margin-inline-start: auto;
 	font-weight: 500;
 }
 

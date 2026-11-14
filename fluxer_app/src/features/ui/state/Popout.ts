@@ -162,21 +162,6 @@ class Popout {
 		this.focusReturnMeta.clear();
 	}
 
-	reposition(key: PopoutKey): void {
-		const normalizedKey = this.normalizeKey(key);
-		const existingPopout = this.popouts[normalizedKey];
-		if (!existingPopout) return;
-		runInAction(() => {
-			this.popouts = {
-				...this.popouts,
-				[normalizedKey]: {
-					...existingPopout,
-					shouldReposition: true,
-				},
-			};
-		});
-	}
-
 	isOpen(key: PopoutKey): boolean {
 		return this.normalizeKey(key) in this.popouts;
 	}

@@ -4,6 +4,8 @@ import {watch} from 'node:fs';
 import {userInfo} from 'node:os';
 import {getGlobalShortcutsSettings, setGlobalShortcutsSettings} from '@electron/common/DesktopConfig';
 import {LINUX_DESKTOP_ENTRY_ID, LINUX_PORTAL_SESSION_TOKEN} from '@electron/common/DesktopIdentity';
+import {errorMessage} from '@electron/common/ErrorMessage';
+import {globalShortcutEventRevealsWindow} from '@electron/common/GlobalShortcutActions';
 import {createChildLogger} from '@electron/common/Logger';
 import type {GlobalShortcutsStatus} from '@electron/common/Types';
 import {
@@ -28,7 +30,7 @@ import {LinuxPortalShortcutsManager} from '@electron/main/LinuxGlobalShortcutsPo
 import {getFlatpakAppId, isFlatpakRuntime} from '@electron/main/LinuxSandbox';
 import {getLinuxDesktop, getLinuxSessionType, isKdePlasma5Session} from '@electron/main/LinuxSession';
 import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
-import {getMainWindow} from '@electron/main/Window';
+import {getMainWindow, showWindow} from '@electron/main/Window';
 import {app, ipcMain, powerMonitor} from 'electron';
 
 const logger = createChildLogger('GlobalShortcuts');
@@ -115,7 +117,7 @@ function watchLinuxInputDevices(onChange: () => void): InputDeviceWatch | null {
 		});
 		return {close: () => watcher.close()};
 	} catch (error) {
-		log('Input device watch unavailable', {message: error instanceof Error ? error.message : String(error)});
+		log('Input device watch unavailable', {message: errorMessage(error)});
 		return null;
 	}
 }
@@ -213,7 +215,9 @@ function ensureClient(event: Electron.IpcMainInvokeEvent, channel: string): numb
 	const senderId = sender.id;
 	if (!current.hasClient(senderId)) {
 		current.attachClient(senderId, (eventChannel, payload) => {
-			if (!sender.isDestroyed()) sender.send(eventChannel, payload);
+			if (sender.isDestroyed()) return;
+			if (globalShortcutEventRevealsWindow(eventChannel, payload)) showWindow();
+			sender.send(eventChannel, payload);
 		});
 		watchSender(sender, () => engine?.detachClient(senderId));
 	}

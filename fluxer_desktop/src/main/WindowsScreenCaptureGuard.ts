@@ -21,7 +21,7 @@ function isScreenSource(source: Electron.DesktopCapturerSource): boolean {
 	return source.id.startsWith('screen:');
 }
 
-function getWindowsBuildNumber(): number | null {
+export function getWindowsBuildNumber(): number | null {
 	const build = Number.parseInt(os.release().split('.')[2] ?? '', 10);
 	return Number.isSafeInteger(build) && build > 0 ? build : null;
 }

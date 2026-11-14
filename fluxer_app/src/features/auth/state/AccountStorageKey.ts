@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
+import {isOfficialInstanceHost, OFFICIAL_INSTANCE_DISPLAY_HOST} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 
-export const ACCOUNT_STORAGE_KEY_SEPARATOR = '::';
-export const ACCOUNT_STORAGE_KEY_MAX_BYTES = 1024;
+const ACCOUNT_STORAGE_KEY_SEPARATOR = '::';
+const ACCOUNT_STORAGE_KEY_MAX_BYTES = 1024;
 
 const TEXT_ENCODER = new TextEncoder();
 
@@ -82,4 +83,34 @@ export function getAccountKey(account: AccountKeyIdentity): string {
 
 export function accountKeyUserId(accountKey: string): string {
 	return parseAccountStorageKey(accountKey)?.userId ?? accountKey;
+}
+
+function accountInstanceIdentity(account: AccountKeyIdentity): string | null {
+	const instanceKey =
+		account.instance != null
+			? runtimeInstanceKey(account.instance)
+			: (parseAccountStorageKey(account.storageKey)?.instanceKey ?? null);
+	if (instanceKey === null) {
+		return null;
+	}
+	return isOfficialInstanceHost(instanceKey) ? OFFICIAL_INSTANCE_DISPLAY_HOST : instanceKey;
+}
+
+export function supersededAccountKeys(
+	accounts: ReadonlyArray<AccountKeyIdentity & {readonly storageKey: string}>,
+	account: AccountKeyIdentity,
+): Array<string> {
+	const accountKey = getAccountKey(account);
+	const instanceIdentity = accountInstanceIdentity(account);
+	if (instanceIdentity === null) {
+		return [];
+	}
+	return accounts
+		.filter(
+			(candidate) =>
+				candidate.userId === account.userId &&
+				candidate.storageKey !== accountKey &&
+				accountInstanceIdentity(candidate) === instanceIdentity,
+		)
+		.map((candidate) => candidate.storageKey);
 }

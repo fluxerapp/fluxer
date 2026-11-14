@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {
-	type DevicePort,
-	emptyVoiceEngineV2DeviceInventory,
-	type VoiceEngineV2DeviceChangeReason,
-	type VoiceEngineV2DeviceInventory,
-	type VoiceEngineV2Error,
-} from '@fluxer/voice_engine_v2';
+import {emptyVoiceEngineV2DeviceInventory} from '@fluxer/voice_engine_v2/src/core/state';
+import type {DevicePort} from '@fluxer/voice_engine_v2/src/ports';
+import type {
+	VoiceEngineV2DeviceChangeReason,
+	VoiceEngineV2DeviceInventory,
+	VoiceEngineV2Error,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 const VOICE_ENGINE_V2_APP_DEVICES_MAX_DEVICES_PER_KIND = 256;
 
@@ -33,10 +33,6 @@ type VoiceEngineV2AppDevicesEvent = VoiceEngineV2AppDevicesChangedEvent | VoiceE
 
 type VoiceEngineV2AppDevicesListener = (event: VoiceEngineV2AppDevicesEvent) => void;
 
-export interface VoiceEngineV2AppDevicesAdapterOptions {
-	enumerator?: VoiceEngineV2AppDevicesEnumerator | null;
-}
-
 export interface VoiceEngineV2AppDevicesAdapter extends DevicePort {
 	subscribe(listener: VoiceEngineV2AppDevicesListener): () => void;
 	getLastInventory(): VoiceEngineV2DeviceInventory;
@@ -49,11 +45,8 @@ interface DevicesAdapterState {
 	listeners: Set<VoiceEngineV2AppDevicesListener>;
 }
 
-export function createVoiceEngineV2AppDevicesAdapter(
-	options: VoiceEngineV2AppDevicesAdapterOptions = {},
-): VoiceEngineV2AppDevicesAdapter {
-	assert.ok(options !== null && typeof options === 'object', 'devices adapter requires options object');
-	const enumerator = resolveEnumerator(options.enumerator);
+export function createVoiceEngineV2AppDevicesAdapter(): VoiceEngineV2AppDevicesAdapter {
+	const enumerator = resolveEnumerator();
 	const state: DevicesAdapterState = {
 		inventory: emptyVoiceEngineV2DeviceInventory(),
 		requiresPermission: false,
@@ -144,14 +137,7 @@ function emitChanged(state: DevicesAdapterState, reason: VoiceEngineV2DeviceChan
 	});
 }
 
-function resolveEnumerator(
-	candidate: VoiceEngineV2AppDevicesEnumerator | null | undefined,
-): VoiceEngineV2AppDevicesEnumerator | null {
-	if (candidate === null) return null;
-	if (candidate !== undefined) {
-		if (typeof candidate.enumerateDevices !== 'function') return null;
-		return candidate;
-	}
+function resolveEnumerator(): VoiceEngineV2AppDevicesEnumerator | null {
 	if (typeof navigator === 'undefined') return null;
 	const media = navigator.mediaDevices;
 	if (!media || typeof media.enumerateDevices !== 'function') return null;

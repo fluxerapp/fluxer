@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne} from '../../database/CassandraQueryExecution';
-import {PollMessageById, PollMessageExpiry, type PollMessageExpiryRow} from '../../Tables';
+import type {MessageID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {PollMessageById, PollMessageExpiry, type PollMessageExpiryRow} from '@app/api/Tables';
 
 export function getExpiryBucket(expiresAt: Date): number {
 	return Number(

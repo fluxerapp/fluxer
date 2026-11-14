@@ -2,22 +2,17 @@
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {acceptInvite, createChannel, createChannelInvite, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
-import {
-	ALL_THREADS_ACTIVE,
-	resetChannelThreadsConfig,
-	setChannelThreadsConfig,
-	threadsRequest,
-} from '@app/api/channel/tests/ThreadTestUtils';
+import {threadsRequest} from '@app/api/channel/tests/ThreadTestUtils';
+import {clearChannelThreadsTaintCacheForTesting} from '@app/api/experiment/ChannelThreadsGate';
 import {ensureSessionStarted, sendMessage} from '@app/api/message/tests/MessageTestUtils';
 import {clearReadStateChannelMetaCacheForTesting} from '@app/api/read_state/ReadStateChannelMeta';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ReadStateFlags} from '@fluxer/constants/src/ThreadConstants';
 import type {ThreadChannelResponse} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface ReadStateWire {
 	id: string;
@@ -42,16 +37,12 @@ describe('thread read states', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		clearReadStateChannelMetaCacheForTesting();
 	});
 
-	afterEach(() => {
-		vi.restoreAllMocks();
-	});
-
 	afterAll(async () => {
-		resetChannelThreadsConfig();
+		clearChannelThreadsTaintCacheForTesting();
 		await harness.shutdown();
 	});
 
@@ -71,7 +62,6 @@ describe('thread read states', () => {
 	}
 
 	async function activeSetup() {
-		await setChannelThreadsConfig(ALL_THREADS_ACTIVE);
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'threads');
@@ -88,38 +78,6 @@ describe('thread read states', () => {
 		return {owner, member, guildId: guild.id, channelId: channel.id, thread};
 	}
 
-	it('keeps the READY payload of a control user identical once the experiment is live elsewhere', async () => {
-		const account = await createTestAccount(harness);
-		await ensureSessionStarted(harness, account.token);
-		const guild = await createGuild(harness, account.token, 'control');
-		const channel = await createChannel(harness, account.token, guild.id, 'general');
-		const message = await sendMessage(harness, account.token, channel.id, 'hello');
-		await createBuilder(harness, account.token)
-			.post(`/channels/${channel.id}/messages/${message.id}/ack`)
-			.body({})
-			.expect(204)
-			.execute();
-		await createBuilder(harness, account.token)
-			.patch(`/users/@me/guilds/${guild.id}/settings`)
-			.body({
-				channel_overrides: {
-					[channel.id]: {collapsed: false, message_notifications: 1, muted: true, mute_config: null},
-				},
-			})
-			.expect(200)
-			.execute();
-		const baseline = await session(account);
-		const other = await createTestAccount(harness);
-		const otherGuild = await createGuild(harness, other.token, 'enrolled');
-		await setChannelThreadsConfig({
-			enabled: true,
-			enabled_guild_ids: [otherGuild.id],
-			included_user_ids: [other.userId],
-		});
-		expect(await session(account)).toEqual(baseline);
-		expect(await session(account, true)).toEqual(baseline);
-	});
-
 	it('stamps the author self-ack and shows thread read states only to capable sessions', async () => {
 		const s = await activeSetup();
 		const sent = await threadsRequest<MessageResponse>(harness, s.member.token)
@@ -133,9 +91,6 @@ describe('thread read states', () => {
 		});
 		const incapable = await session(s.member);
 		expect(incapable.read_states.some((readState) => readState.id === s.thread.id)).toBe(false);
-		await setChannelThreadsConfig({enabled: false});
-		const killed = await session(s.member, true);
-		expect(killed.read_states.some((readState) => readState.id === s.thread.id)).toBe(false);
 	});
 
 	it('stamps the actor self-ack of thread system messages', async () => {
@@ -157,21 +112,18 @@ describe('thread read states', () => {
 		expect(incapable.read_states.some((readState) => readState.id === s.thread.id)).toBe(false);
 	});
 
-	it('returns flags from the bulk ack and scopes MESSAGE_ACK to thread sessions', async () => {
+	it('returns flags from the bulk ack only to thread sessions', async () => {
 		const s = await activeSetup();
 		const sent = await threadsRequest<MessageResponse>(harness, s.member.token)
 			.post(`/channels/${s.thread.id}/messages`)
 			.body({content: 'hello'})
 			.execute();
-		const dispatch = vi.spyOn(NoopGatewayService.prototype, 'dispatchPresence');
 		const acked = await threadsRequest<{read_states: Array<ReadStateWire>}>(harness, s.owner.token)
 			.post('/read-states/ack')
 			.body({read_states: [{channel_id: s.thread.id, message_id: sent.id}]})
 			.expect(200)
 			.execute();
 		expect(acked.read_states).toEqual([expect.objectContaining({id: s.thread.id, flags: THREAD_FLAGS})]);
-		const ack = dispatch.mock.calls.find(([params]) => params.event === 'MESSAGE_ACK')?.[0];
-		expect(ack?.data).toMatchObject({flags: THREAD_FLAGS, __thread_scoped: s.guildId});
 		const incapable = await threadsRequest<{read_states: Array<ReadStateWire>}>(harness, s.owner.token, {
 			capable: false,
 		})

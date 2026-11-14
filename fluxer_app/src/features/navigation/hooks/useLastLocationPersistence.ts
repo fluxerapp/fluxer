@@ -6,12 +6,12 @@ import Authentication from '@app/features/auth/state/Authentication';
 import Location from '@app/features/ui/state/Location';
 import {useEffect} from 'react';
 
-export function useLastLocationPersistence(pathname: string): void {
+export function useLastLocationPersistence(pathname: string | null): void {
 	const isAuthenticated = Authentication.isAuthenticated;
 	const currentAccountKey = Accounts.currentAccountKey;
 	const isViewLive = Accounts.isViewLive;
 	useEffect(() => {
-		if (!isAuthenticated || currentAccountKey === null || !isViewLive) {
+		if (pathname === null || !isAuthenticated || currentAccountKey === null || !isViewLive) {
 			return;
 		}
 		if (!Routes.isChannelRoute(pathname) && !Routes.isSpecialPage(pathname)) {

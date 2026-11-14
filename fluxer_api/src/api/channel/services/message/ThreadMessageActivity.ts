@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {
 	dispatchThreadEvents,
 	type ThreadDispatchEvent,
@@ -17,8 +17,7 @@ import {getKVThreadAutoArchiveQueue} from '@app/api/middleware/ServiceSingletons
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {ThreadState} from '@app/api/models/ThreadState';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {addThreadMembersWithinCap, threadRecipients} from '@app/api/worker/tasks/ThreadMentionScope';
+import {addThreadMembersWithinCap} from '@app/api/worker/tasks/ThreadMentionScope';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {
 	MAX_ACTIVE_THREADS_PER_GUILD,
@@ -34,12 +33,11 @@ const INTERACTED_CAS_ATTEMPTS = 3;
 
 export class ThreadMessageActivity {
 	constructor(
-		private readonly channelRepository: IChannelRepositoryAggregate,
+		private readonly channelRepository: ChannelRepository,
 		private readonly gatewayService: IGatewayService,
-		private readonly userRepository: IUserRepository,
 	) {}
 
-	async assertCanUnarchive(state: ThreadState): Promise<void> {
+	private async assertCanUnarchive(state: ThreadState): Promise<void> {
 		if (!state.archived) return;
 		if ((await this.channelRepository.threads.countActiveThreads(state.guildId)) >= MAX_ACTIVE_THREADS_PER_GUILD) {
 			throw new MaxActiveThreadsError(MAX_ACTIVE_THREADS_PER_GUILD);
@@ -139,9 +137,7 @@ export class ThreadMessageActivity {
 		if (guildId === null) return;
 		const mentioned = [...new Set(params.mentionUserIds)].filter((userId) => userId !== params.authorId);
 		if (mentioned.length === 0) return;
-		const recipients = await threadRecipients(this.userRepository, guildId, mentioned);
-		const candidates = mentioned.filter((userId) => recipients.has(userId));
-		if (candidates.length === 0) return;
+		const candidates = mentioned;
 		const state = await this.channelRepository.threads.getState(channel.id);
 		if (!state || state.archived) return;
 		if (state.isPrivate && !params.isModerator && state.invitable === false) return;

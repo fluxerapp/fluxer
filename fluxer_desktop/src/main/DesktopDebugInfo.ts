@@ -12,7 +12,18 @@ import {
 	readDesktopAccountStoreTelemetry,
 } from '@electron/main/DesktopAccountStoreTelemetry';
 import {type DesktopAppStoreState, readDesktopAppStoreState} from '@electron/main/DesktopAppStoreHealth';
+import {
+	getArgValue,
+	hasFlag,
+	isSafeModeLaunch,
+	shouldDisableModuleUpdatesForLaunch,
+} from '@electron/main/LaunchOptions';
 import {getDesktopInfo} from '@electron/main/PlatformInfo';
+import {
+	formatDesktopOsName,
+	formatReleaseChannelLabel,
+	normalizeArchitectureValue,
+} from '@fluxer/desktop_ipc/src/DesktopLabels';
 import {app} from 'electron';
 import log from 'electron-log';
 
@@ -20,7 +31,6 @@ const DEBUG_INFO_ARGS = new Set(['--fluxer-debug-info', '--fluxer-client-info', 
 const DISABLE_HARDWARE_ACCELERATION_ARGS = new Set(['--fluxer-disable-gpu', '--fluxer-disable-hardware-acceleration']);
 const OPEN_DEVTOOLS_ARGS = new Set(['--fluxer-devtools', '--fluxer-open-devtools']);
 const RESET_WINDOW_STATE_ARGS = new Set(['--fluxer-reset-window-state']);
-const SAFE_MODE_ARGS = new Set(['--fluxer-safe-mode']);
 const RENDERER_CONSOLE_LOG_ARGS = new Set(['--fluxer-log-renderer-console']);
 const NET_LOG_ARGS = new Set(['--fluxer-net-log']);
 
@@ -71,7 +81,7 @@ export function shouldDisableHardwareAccelerationForLaunch(argv: ReadonlyArray<s
 	return hasFlag(argv, DISABLE_HARDWARE_ACCELERATION_ARGS) || isSafeModeLaunch(argv);
 }
 
-export function resolveEffectiveDesktopTroubleshootingSettings(
+function resolveEffectiveDesktopTroubleshootingSettings(
 	settings: DesktopTroubleshootingSettings,
 	argv: ReadonlyArray<string>,
 	platform: NodeJS.Platform,
@@ -81,6 +91,7 @@ export function resolveEffectiveDesktopTroubleshootingSettings(
 		disableHardwareAcceleration:
 			platform !== 'darwin' &&
 			(settings.disableHardwareAcceleration || shouldDisableHardwareAccelerationForLaunch(argv)),
+		disableModuleUpdates: settings.disableModuleUpdates || shouldDisableModuleUpdatesForLaunch(argv),
 	};
 }
 
@@ -93,6 +104,10 @@ export function getLaunchDesktopTroubleshootingSettings(): DesktopTroubleshootin
 		process.platform,
 	);
 	return launchTroubleshootingSettings;
+}
+
+export function isUpdateOnDemandLaunch(): boolean {
+	return getLaunchDesktopTroubleshootingSettings().disableModuleUpdates && !shouldDisableModuleUpdatesForLaunch();
 }
 
 export function shouldOpenDevToolsOnLaunch(argv: ReadonlyArray<string>): boolean {
@@ -109,30 +124,6 @@ export function shouldIgnoreWindowStateForLaunch(argv: ReadonlyArray<string>): b
 
 export function shouldForwardRendererConsoleToMainLog(argv: ReadonlyArray<string>): boolean {
 	return hasFlag(argv, RENDERER_CONSOLE_LOG_ARGS);
-}
-
-function hasFlag(argv: ReadonlyArray<string>, flags: ReadonlySet<string>): boolean {
-	return argv.some((arg) => flags.has(arg) || [...flags].some((flag) => arg.startsWith(`${flag}=`)));
-}
-
-function isSafeModeLaunch(argv: ReadonlyArray<string>): boolean {
-	return hasFlag(argv, SAFE_MODE_ARGS);
-}
-
-function getArgValue(argv: ReadonlyArray<string>, names: ReadonlySet<string>): string | null {
-	for (let index = 0; index < argv.length; index += 1) {
-		const arg = argv[index];
-		for (const name of names) {
-			if (arg === name) {
-				const next = argv[index + 1];
-				return next && !next.startsWith('--') ? next : '';
-			}
-			if (arg.startsWith(`${name}=`)) {
-				return arg.slice(name.length + 1);
-			}
-		}
-	}
-	return null;
 }
 
 export function getLaunchNetLogPath(userDataPath: string, argv: ReadonlyArray<string>): string | null {
@@ -178,16 +169,6 @@ function sanitizeLaunchArgs(argv: ReadonlyArray<string>): Array<string> {
 	return argv.map(sanitizeLaunchArg);
 }
 
-function normalizeArchitectureValue(value: string | null | undefined): string | undefined {
-	if (!value) return undefined;
-	const trimmed = value.trim();
-	if (/\barm64\b|\baarch64\b|\barmv8\b|\barm64e\b/i.test(trimmed)) return 'arm64';
-	if (/\barm\b|\barmv7\b|\barmv6\b/i.test(trimmed)) return 'arm';
-	if (/\bx86_64\b|\bx64\b|\bamd64\b|\bwin64\b|\bwow64\b/i.test(trimmed)) return 'x64';
-	if (/\bx86\b|\bi[3-6]86\b/i.test(trimmed)) return 'x86';
-	return trimmed || undefined;
-}
-
 function formatSystemArchitecture(desktopInfo: DesktopInfo): string {
 	return (
 		normalizeArchitectureValue(desktopInfo.hardwareArch || desktopInfo.arch) ??
@@ -196,42 +177,9 @@ function formatSystemArchitecture(desktopInfo: DesktopInfo): string {
 	);
 }
 
-function getWindowsVersionName(osVersion: string): string {
-	const parts = osVersion.split('.');
-	const majorVersion = parseInt(parts[0], 10);
-	const buildNumber = parseInt(parts[2], 10);
-	if (majorVersion === 10) {
-		if (buildNumber >= 22000) {
-			return 'Windows 11';
-		}
-		return 'Windows 10';
-	}
-	return 'Windows';
-}
-
-function formatOsName(desktopInfo: DesktopInfo): string {
-	switch (desktopInfo.os) {
-		case 'darwin':
-			return 'macOS';
-		case 'win32':
-			return desktopInfo.osVersion ? getWindowsVersionName(desktopInfo.osVersion) : 'Windows';
-		case 'linux':
-			return 'Linux';
-		default:
-			return desktopInfo.os;
-	}
-}
-
-function formatReleaseChannelLabel(value: string): string {
-	const normalized = value.trim().toLowerCase();
-	return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-}
-
 function getBuildString(desktopInfo: DesktopInfo): string {
-	const buildVersion = process.env.PUBLIC_BUILD_VERSION || process.env.BUILD_VERSION || desktopInfo.version || 'dev';
-	const releaseChannel = formatReleaseChannelLabel(
-		process.env.PUBLIC_RELEASE_CHANNEL || process.env.RELEASE_CHANNEL || desktopInfo.channel,
-	);
+	const buildVersion = process.env.BUILD_VERSION || desktopInfo.version || 'dev';
+	const releaseChannel = formatReleaseChannelLabel(desktopInfo.channel);
 	return `${releaseChannel} Desktop ${buildVersion}`;
 }
 
@@ -246,7 +194,7 @@ function safeGetLocale(): string {
 
 function formatDesktopClientInfo(desktopInfo: DesktopInfo, options: DesktopClientInfoOptions = {}): string {
 	const osVersion = desktopInfo.systemVersion || desktopInfo.osVersion;
-	const osDescription = `${[formatOsName(desktopInfo), osVersion].filter(Boolean).join(' ')} (${formatSystemArchitecture(
+	const osDescription = `${[formatDesktopOsName(desktopInfo), osVersion].filter(Boolean).join(' ')} (${formatSystemArchitecture(
 		desktopInfo,
 	)})`;
 	const parts = [
@@ -291,6 +239,8 @@ export async function getDesktopDebugInfo(
 function formatWindowBehavior(settings: DesktopWindowBehaviorSettings): string {
 	return [
 		`showTrayIcon=${settings.showTrayIcon}`,
+		`coloredTrayIcon=${settings.coloredTrayIcon}`,
+		`darkTaskbarBadge=${settings.darkTaskbarBadge}`,
 		`minimizeToTray=${settings.minimizeToTray}`,
 		`closeToTray=${settings.closeToTray}`,
 		`startMinimized=${settings.startMinimized}`,
@@ -324,7 +274,7 @@ export function formatDesktopDebugInfo(info: DesktopDebugInfo): string {
 		`Account store: ${formatAccountStoreState(info.accountStore)}`,
 		`Account store telemetry: ${formatDesktopAccountStoreTelemetry(info.accountStoreTelemetry)}`,
 		`Logs: ${info.logFilePath ?? info.logsPath ?? '(unavailable)'}`,
-		`Troubleshooting: disableHardwareAcceleration=${info.troubleshooting.disableHardwareAcceleration}`,
+		`Troubleshooting: disableHardwareAcceleration=${info.troubleshooting.disableHardwareAcceleration}, disableModuleUpdates=${info.troubleshooting.disableModuleUpdates}`,
 		`Window behavior: ${formatWindowBehavior(info.windowBehavior)}`,
 		`Runtime: packaged=${info.packaged}, portable=${info.portable}, pid=${info.pid}, cwd=${info.cwd}`,
 		`Sandbox: flatpak=${info.desktopInfo.flatpak}, flatpakAppId=${info.desktopInfo.flatpakAppId ?? '(none)'}`,

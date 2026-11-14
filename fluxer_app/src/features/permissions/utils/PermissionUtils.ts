@@ -19,6 +19,7 @@ import {
 	Permissions,
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
+import {GUILD_VISITOR_PERMISSIONS_MASK} from '@fluxer/constants/src/GuildVisitConstants';
 import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
 import type {RoleId, UserId} from '@fluxer/schema/src/branded/WireIds';
@@ -49,6 +50,41 @@ export interface PermissionSpec {
 		description?: string;
 		flag: bigint;
 	}>;
+}
+
+type GuildRecord = NonNullable<ReturnType<typeof Guilds.getGuild>>;
+
+interface GuildPermissionInputs {
+	readonly guild: Guild;
+	readonly roles: Record<RoleId, Role>;
+}
+
+const guildPermissionInputs = new WeakMap<GuildRecord, GuildPermissionInputs>();
+
+function guildRolesOf(guildRecord: GuildRecord): Record<RoleId, Role> {
+	return Object.fromEntries(
+		Object.entries(guildRecord.roles).map(([id, roleRecord]) => [
+			id,
+			{
+				id: roleRecord.id,
+				permissions: roleRecord.permissions,
+				position: roleRecord.position,
+			},
+		]),
+	);
+}
+
+function permissionInputsOf(guildRecord: GuildRecord): GuildPermissionInputs {
+	let inputs = guildPermissionInputs.get(guildRecord);
+	if (inputs === undefined) {
+		inputs = {guild: guildRecord.toJSON(), roles: guildRolesOf(guildRecord)};
+		guildPermissionInputs.set(guildRecord, inputs);
+	}
+	return inputs;
+}
+
+export function permissionGuildOf(guildRecord: GuildRecord): Guild {
+	return permissionInputsOf(guildRecord).guild;
 }
 
 function calculateElevatedPermissions(permissions: bigint, guild: Guild, userId: string, checkElevated = true): bigint {
@@ -93,42 +129,36 @@ export function computePermissions(
 		overwrites = overwrites != null ? {...convertedOverwrites, ...overwrites} : convertedOverwrites;
 		const guildRecord = channel.guild_id != null ? Guilds.getGuild(channel.guild_id) : null;
 		if (guildRecord) {
-			guild = guildRecord.toJSON();
-			guildRoles = Object.fromEntries(
-				Object.entries(guildRecord.roles).map(([id, roleRecord]) => [
-					id,
-					{
-						id: roleRecord.id,
-						permissions: roleRecord.permissions,
-						position: roleRecord.position,
-					},
-				]),
-			);
+			const inputs = permissionInputsOf(guildRecord);
+			guild = inputs.guild;
+			guildRoles = inputs.roles;
 		}
 	} else {
 		overwrites = overwrites || {};
 		guild = context as Guild;
 		const guildRecord = Guilds.getGuild(guild.id);
 		if (guildRecord) {
-			guildRoles = Object.fromEntries(
-				Object.entries(guildRecord.roles).map(([id, roleRecord]) => [
-					id,
-					{
-						id: roleRecord.id,
-						permissions: roleRecord.permissions,
-						position: roleRecord.position,
-					},
-				]),
-			);
+			guildRoles = permissionInputsOf(guildRecord).roles;
 		}
 	}
 	if (guild == null) {
 		return NONE;
 	}
+	roles = roles != null && guildRoles ? {...guildRoles, ...roles} : (guildRoles ?? roles ?? {});
+	if (userId === Authentication.currentUserId && Guilds.getGuild(guild.id)?.visiting === true) {
+		const everyone = roles?.[guild.id as keyof typeof roles];
+		let visitorPermissions =
+			(everyone != null ? everyone.permissions : DEFAULT_PERMISSIONS) & ~Permissions.ADMINISTRATOR;
+		const overwriteEveryone = overwrites?.[guild.id];
+		if (overwriteEveryone != null) {
+			visitorPermissions &= ~overwriteEveryone.deny;
+			visitorPermissions |= overwriteEveryone.allow;
+		}
+		return visitorPermissions & GUILD_VISITOR_PERMISSIONS_MASK;
+	}
 	if (guild.owner_id === userId) {
 		return calculateElevatedPermissions(ALL_PERMISSIONS, guild, userId, checkElevated);
 	}
-	roles = roles != null && guildRoles ? {...guildRoles, ...roles} : (guildRoles ?? roles ?? {});
 	const member = GuildMembers.getMember(guild.id, userId);
 	const roleEveryone = roles?.[guild.id as keyof typeof roles];
 	let permissions = roleEveryone != null ? roleEveryone.permissions : DEFAULT_PERMISSIONS;
@@ -278,6 +308,7 @@ function generateGuildTextPermissionSpec(i18n: I18n): PermissionSpec {
 			makePermissionEntry(i18n, Permissions.EMBED_LINKS),
 			makePermissionEntry(i18n, Permissions.ATTACH_FILES),
 			makePermissionEntry(i18n, Permissions.SEND_POLLS),
+			makePermissionEntry(i18n, Permissions.SEE_VOTES_ON_ANONYMOUS_POLLS),
 			makePermissionEntry(i18n, Permissions.READ_MESSAGE_HISTORY),
 			makePermissionEntry(i18n, Permissions.MENTION_EVERYONE),
 			makePermissionEntry(i18n, Permissions.USE_EXTERNAL_EMOJIS),
@@ -354,6 +385,7 @@ function generateChannelTextPermissionSpec(i18n: I18n): PermissionSpec {
 			makePermissionEntry(i18n, Permissions.EMBED_LINKS, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.ATTACH_FILES, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.SEND_POLLS, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.SEE_VOTES_ON_ANONYMOUS_POLLS, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.READ_MESSAGE_HISTORY, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.MENTION_EVERYONE, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.USE_EXTERNAL_EMOJIS, {scope: 'channel'}),
@@ -436,6 +468,7 @@ function generateForumPermissionSpec(i18n: I18n): PermissionSpec {
 				description: ForumDescriptors.MANAGE_POSTS_PERMISSION_DESCRIPTION_DESCRIPTOR,
 			}),
 			makePermissionEntry(i18n, Permissions.MANAGE_MESSAGES, {scope: 'channel'}),
+			makePermissionEntry(i18n, Permissions.PIN_MESSAGES, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.EMBED_LINKS, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.ATTACH_FILES, {scope: 'channel'}),
 			makePermissionEntry(i18n, Permissions.READ_MESSAGE_HISTORY, {scope: 'channel'}),
@@ -479,7 +512,7 @@ export function generatePermissionSpec(i18n: I18n, {threads = false}: {threads?:
 	];
 }
 
-export type PermissionKey = keyof typeof Permissions | keyof typeof ThreadPermissionFlags;
+type PermissionKey = keyof typeof Permissions | keyof typeof ThreadPermissionFlags;
 
 export interface BotPermissionOption {
 	id: PermissionKey;

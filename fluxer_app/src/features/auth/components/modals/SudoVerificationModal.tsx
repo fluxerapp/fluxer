@@ -3,7 +3,10 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {SudoSsoReauth} from '@app/features/auth/components/modals/SudoSsoReauth';
 import styles from '@app/features/auth/components/modals/SudoVerificationModal.module.css';
+import {EmailCodeField} from '@app/features/auth/flow/EmailCodeField';
+import {isCompleteEmailCode} from '@app/features/auth/flow/identifier_first/IdentifierFirstState';
 import {
 	isPasskeyCeremonyDismissed,
 	PasskeyBridgeSudoLink,
@@ -15,6 +18,7 @@ import Accounts from '@app/features/auth/state/Accounts';
 import Sudo from '@app/features/auth/state/AuthSudo';
 import SudoPrompt, {SUDO_MODAL_KEY, SudoVerificationMethod} from '@app/features/auth/state/SudoPrompt';
 import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
+import {isolateBidi} from '@app/features/i18n/utils/BidiIsolate';
 import {
 	AUTHENTICATOR_CODE_DESCRIPTOR,
 	BACKUP_CODE_DESCRIPTOR,
@@ -31,6 +35,8 @@ import {Form} from '@app/features/ui/components/form/Form';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import * as AccountTierCommands from '@app/features/user/commands/AccountTierCommands';
+import Users from '@app/features/user/state/Users';
 import WebAuthnCredentials from '@app/features/user/state/WebAuthnCredentials';
 import * as FormUtils from '@app/lib/forms';
 import {PASSKEY_MIGRATION_RP_ID} from '@fluxer/constants/src/PasskeyConstants';
@@ -99,6 +105,14 @@ const FINISH_IN_THE_NEW_TAB_DESCRIPTOR = msg({
 	comment:
 		'Sudo (re-auth) modal hint shown after the passkey button opened a new tab to confirm the passkey. "Continue with passkey" is the button label. Keep plain.',
 });
+const EMAIL_ME_A_CODE_DESCRIPTOR = msg({
+	message: 'Email me a code',
+	comment: 'Button in the confirm-identity dialog that sends a one-time code to the account email.',
+});
+const CODE_SENT_TO_EMAIL_DESCRIPTOR = msg({
+	message: 'Enter the code we sent to {email}.',
+	comment: 'Text in the confirm-identity dialog after a code was emailed. email is the address it went to.',
+});
 const logger = new Logger('SudoVerificationModal');
 
 interface FormInputs {
@@ -133,7 +147,41 @@ const SudoVerificationModal: React.FC = observer(() => {
 	const backupCodeOnly = !showTotp && availableMethods.backupCodes;
 	const showCode = showTotp || availableMethods.backupCodes;
 	const showPassword = availableMethods.password;
-	const noMethodsAvailable = !showPasskey && !showCode && !showPassword;
+	const showEmailCode = availableMethods.emailCode && !showCode;
+	const showSsoReauth = availableMethods.ssoReauth;
+	const noMethodsAvailable = !showPasskey && !showCode && !showPassword && !showEmailCode && !showSsoReauth;
+	const [emailTicket, setEmailTicket] = useState<string | null>(null);
+	const [emailCode, setEmailCode] = useState('');
+	const [emailCodeError, setEmailCodeError] = useState<string | null>(null);
+	const [sendingEmailCode, setSendingEmailCode] = useState(false);
+	const sendEmailCode = async () => {
+		if (sendingEmailCode) return;
+		setSendingEmailCode(true);
+		setEmailCodeError(null);
+		try {
+			const response = await AccountTierCommands.sendSudoEmailCode();
+			setEmailTicket(response.ticket);
+			setEmailCode('');
+		} catch (error) {
+			setEmailCodeError(FormUtils.extractErrorMessage(i18n, error));
+		} finally {
+			setSendingEmailCode(false);
+		}
+	};
+	const autoSentEmailCodeRef = useRef(false);
+	useEffect(() => {
+		if (autoSentEmailCodeRef.current || !showEmailCode || showPassword || showPasskey) return;
+		autoSentEmailCodeRef.current = true;
+		void sendEmailCode();
+	}, [showEmailCode, showPassword, showPasskey]);
+	const submitEmailCode = (code: string) => {
+		if (emailTicket === null || !isCompleteEmailCode(code) || isVerifying) return;
+		SudoPrompt.submit({
+			mfa_method: SudoVerificationMethod.EMAIL_CODE,
+			email_code_ticket: emailTicket,
+			email_code: code,
+		});
+	};
 	useEffect(() => {
 		form.reset({password: '', totp: ''});
 		setWebAuthnError(null);
@@ -243,6 +291,10 @@ const SudoVerificationModal: React.FC = observer(() => {
 	};
 	const onSubmit = (values: FormInputs) => {
 		form.clearErrors();
+		if (emailTicket !== null && isCompleteEmailCode(emailCode)) {
+			submitEmailCode(emailCode);
+			return;
+		}
 		if (showCode && values.totp) {
 			SudoPrompt.submit({mfa_method: SudoVerificationMethod.TOTP, mfa_code: values.totp});
 			return;
@@ -256,16 +308,83 @@ const SudoVerificationModal: React.FC = observer(() => {
 			return;
 		}
 		const target: keyof FormInputs = showCode ? 'totp' : 'password';
-		form.setError(target, {
-			type: 'manual',
-			message:
-				target === 'password'
-					? i18n._(ENTER_YOUR_PASSWORD_DESCRIPTOR)
-					: backupCodeOnly
-						? i18n._(ENTER_ONE_OF_YOUR_BACKUP_CODES_DESCRIPTOR)
-						: i18n._(ENTER_THE_CODE_FROM_YOUR_AUTHENTICATOR_APP_DESCRIPTOR),
-		});
+		let message: string;
+		if (target === 'password') {
+			message = i18n._(ENTER_YOUR_PASSWORD_DESCRIPTOR);
+		} else if (backupCodeOnly) {
+			message = i18n._(ENTER_ONE_OF_YOUR_BACKUP_CODES_DESCRIPTOR);
+		} else {
+			message = i18n._(ENTER_THE_CODE_FROM_YOUR_AUTHENTICATOR_APP_DESCRIPTOR);
+		}
+		form.setError(target, {type: 'manual', message});
 	};
+	let passkeyControl: React.ReactNode = null;
+	if (showPasskey) {
+		if (legacyLinkActive && legacyLinkUrl !== null) {
+			passkeyControl = (
+				<FocusRing offset={-2} data-flx="auth.sudo-verification-modal.focus-ring.legacy-link">
+					<a
+						href={legacyLinkUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						onClick={() => {
+							setWebAuthnError(null);
+							setLegacyLinkFollowed(true);
+						}}
+						className={clsx(
+							buttonStyles.button,
+							buttonStyles[showCode || showPassword ? 'secondary' : 'primary'],
+							buttonStyles.fitContainer,
+						)}
+						data-flx="auth.sudo-verification-modal.link.web-authn"
+					>
+						<Trans>Continue with passkey</Trans>
+					</a>
+				</FocusRing>
+			);
+		} else if (legacyLinkActive) {
+			passkeyControl = (
+				<Button
+					type="button"
+					onClick={startLegacyLink}
+					submitting={webAuthnError === null}
+					disabled={isVerifying}
+					fitContainer
+					variant={showCode || showPassword ? 'secondary' : 'primary'}
+					data-flx="auth.sudo-verification-modal.button.web-authn-starting"
+				>
+					<Trans>Continue with passkey</Trans>
+				</Button>
+			);
+		} else if (webAuthnInFlight) {
+			passkeyControl = (
+				<div
+					className={styles.passkeyVerifying}
+					role="status"
+					data-flx="auth.sudo-verification-modal.passkey-verifying"
+				>
+					<Spinner data-flx="auth.sudo-verification-modal.spinner" />
+					<span data-flx="auth.sudo-verification-modal.span">
+						<Trans>Waiting for passkey…</Trans>
+					</span>
+				</div>
+			);
+		} else {
+			passkeyControl = (
+				<Button
+					type="button"
+					onClick={handleWebAuthn}
+					disabled={isVerifying}
+					fitContainer
+					autoFocus={!showCode && !showPassword}
+					variant={showCode || showPassword ? 'secondary' : 'primary'}
+					data-flx="auth.sudo-verification-modal.button.web-authn"
+				>
+					<Trans>Continue with passkey</Trans>
+				</Button>
+			);
+		}
+	}
 	return (
 		<Modal.Root size="small" centered onClose={handleClose} data-flx="auth.sudo-verification-modal.modal-root">
 			<Form
@@ -310,6 +429,8 @@ const SudoVerificationModal: React.FC = observer(() => {
 							</div>
 						) : (
 							<>
+								{showSsoReauth && <SudoSsoReauth data-flx="auth.sudo-verification-modal.sudo-sso-reauth" />}
+
 								{showCode && (
 									<Input
 										id="totp"
@@ -331,62 +452,7 @@ const SudoVerificationModal: React.FC = observer(() => {
 
 								{showPasskey && (
 									<>
-										{legacyLinkActive && legacyLinkUrl !== null ? (
-											<FocusRing offset={-2} data-flx="auth.sudo-verification-modal.focus-ring.legacy-link">
-												<a
-													href={legacyLinkUrl}
-													target="_blank"
-													rel="noopener noreferrer"
-													onClick={() => {
-														setWebAuthnError(null);
-														setLegacyLinkFollowed(true);
-													}}
-													className={clsx(
-														buttonStyles.button,
-														buttonStyles[showCode || showPassword ? 'secondary' : 'primary'],
-														buttonStyles.fitContainer,
-													)}
-													data-flx="auth.sudo-verification-modal.link.web-authn"
-												>
-													<Trans>Continue with passkey</Trans>
-												</a>
-											</FocusRing>
-										) : legacyLinkActive ? (
-											<Button
-												type="button"
-												onClick={startLegacyLink}
-												submitting={webAuthnError === null}
-												disabled={isVerifying}
-												fitContainer
-												variant={showCode || showPassword ? 'secondary' : 'primary'}
-												data-flx="auth.sudo-verification-modal.button.web-authn-starting"
-											>
-												<Trans>Continue with passkey</Trans>
-											</Button>
-										) : webAuthnInFlight ? (
-											<div
-												className={styles.passkeyVerifying}
-												role="status"
-												data-flx="auth.sudo-verification-modal.passkey-verifying"
-											>
-												<Spinner data-flx="auth.sudo-verification-modal.spinner" />
-												<span data-flx="auth.sudo-verification-modal.span">
-													<Trans>Waiting for passkey…</Trans>
-												</span>
-											</div>
-										) : (
-											<Button
-												type="button"
-												onClick={handleWebAuthn}
-												disabled={isVerifying}
-												fitContainer
-												autoFocus={!showCode && !showPassword}
-												variant={showCode || showPassword ? 'secondary' : 'primary'}
-												data-flx="auth.sudo-verification-modal.button.web-authn"
-											>
-												<Trans>Continue with passkey</Trans>
-											</Button>
-										)}
+										{passkeyControl}
 										{legacyLinkActive && legacyLinkFollowed && !webAuthnError && (
 											<p className={styles.passkeyHint} data-flx="auth.sudo-verification-modal.passkey-hint">
 												{i18n._(FINISH_IN_THE_NEW_TAB_DESCRIPTOR)}
@@ -398,6 +464,39 @@ const SudoVerificationModal: React.FC = observer(() => {
 											</p>
 										)}
 									</>
+								)}
+
+								{showEmailCode &&
+									(emailTicket === null ? (
+										<Button
+											type="button"
+											onClick={() => void sendEmailCode()}
+											submitting={sendingEmailCode}
+											fitContainer
+											variant={showPassword || showPasskey ? 'secondary' : 'primary'}
+											data-flx="auth.sudo-verification-modal.button.email-code"
+										>
+											{i18n._(EMAIL_ME_A_CODE_DESCRIPTOR)}
+										</Button>
+									) : (
+										<>
+											<Modal.Description data-flx="auth.sudo-verification-modal.email-code-description">
+												{i18n._(CODE_SENT_TO_EMAIL_DESCRIPTOR, {email: isolateBidi(Users.currentUser?.email ?? '')})}
+											</Modal.Description>
+											<EmailCodeField
+												value={emailCode}
+												error={emailCodeError ?? (verificationFailed ? i18n._(VERIFICATION_FAILED_DESCRIPTOR) : null)}
+												disabled={isVerifying}
+												onChange={setEmailCode}
+												onComplete={submitEmailCode}
+												data-flx="auth.sudo-verification-modal.email-code-field"
+											/>
+										</>
+									))}
+								{showEmailCode && emailTicket === null && emailCodeError !== null && (
+									<p className={styles.formError} role="alert" data-flx="auth.sudo-verification-modal.email-code-error">
+										{emailCodeError}
+									</p>
 								)}
 
 								{showPassword && (
@@ -415,17 +514,17 @@ const SudoVerificationModal: React.FC = observer(() => {
 						)}
 					</Modal.ContentLayout>
 				</Modal.Content>
-				<Modal.Footer data-flx="auth.sudo-verification-modal.modal-footer">
-					<Button
-						type="button"
-						variant="secondary"
-						onClick={handleClose}
-						disabled={isVerifying}
-						data-flx="auth.sudo-verification-modal.button.close"
-					>
-						<Trans>Cancel</Trans>
-					</Button>
-					{!noMethodsAvailable && (showCode || showPassword) && (
+				{!noMethodsAvailable && (showCode || showPassword || emailTicket !== null) ? (
+					<Modal.Footer data-flx="auth.sudo-verification-modal.modal-footer">
+						<Button
+							type="button"
+							variant="secondary"
+							onClick={handleClose}
+							disabled={isVerifying}
+							data-flx="auth.sudo-verification-modal.button.close"
+						>
+							<Trans>Cancel</Trans>
+						</Button>
 						<Button
 							type="submit"
 							submitting={isVerifying}
@@ -434,8 +533,14 @@ const SudoVerificationModal: React.FC = observer(() => {
 						>
 							{i18n._(VERIFY_DESCRIPTOR)}
 						</Button>
-					)}
-				</Modal.Footer>
+					</Modal.Footer>
+				) : (
+					<Modal.DismissFooter
+						label={<Trans>Cancel</Trans>}
+						onDismiss={handleClose}
+						data-flx="auth.sudo-verification-modal.dismiss-footer"
+					/>
+				)}
 			</Form>
 		</Modal.Root>
 	);

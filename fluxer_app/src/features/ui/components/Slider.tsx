@@ -287,7 +287,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 										i === markerState.markerPositions.length - 1 && i !== 0 && styles.markEndpointEnd,
 										isFactoryDefaultValue && styles.defaultValue,
 									)}
-									style={{left: `${position}%`}}
+									style={{insetInlineStart: `${position}%`}}
 									data-flx="ui.slider.mark"
 								>
 									<div className={styles.markValue} data-flx="ui.slider.mark-value">

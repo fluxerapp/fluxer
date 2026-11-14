@@ -17,6 +17,7 @@ import type {SpectatorEntry} from '@app/features/voice/components/useStreamSpect
 import {resolveVoiceParticipantAvatarEntryVoiceState} from '@app/features/voice/components/VoiceParticipantDisplayState';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import {isParticipantVoicePermissionMuted} from '@app/features/voice/utils/VoicePermissionUtils';
+import {VIEW_PROFILE_FOR_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {
 	autoUpdate,
 	FloatingPortal,
@@ -44,10 +45,6 @@ const SPECTATORS_WITH_COUNT_DESCRIPTOR = msg({
 	message: 'Spectators - {count}',
 	comment:
 		'Header of the screen-share spectators popout. {count} is the number of people currently watching the stream.',
-});
-const VIEW_PROFILE_FOR_DESCRIPTOR = msg({
-	message: 'View profile for {displayName}',
-	comment: "Aria label on an avatar in the spectators popout. {displayName} is the participant's display name.",
 });
 
 interface StreamSpectatorsPopoutProps {

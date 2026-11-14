@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {accountRestrictionFromBody} from '@app/features/auth/state/AccountRestriction';
 import {isDesktopLocalAppDocument, isDesktopLocalAppOrigin} from '@app/features/platform/DesktopLocalAppRuntime';
 import {
 	AccountScopedWork,
@@ -11,7 +12,6 @@ import {ClientInstallationId} from '@app/features/platform/state/ClientInstallat
 import {HttpError, type HttpErrorDetail} from '@app/features/platform/types/EndpointError';
 import type {
 	HttpMethod,
-	MultipartBody,
 	RestAuthMode,
 	RestClientHooks,
 	RestInterceptor,
@@ -26,12 +26,15 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Headers} from '@fluxer/constants/src/Headers';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
+import {MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
 import type {DesktopLocalAppUploadProgress} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
 import {
 	DESKTOP_LOCAL_APP_HOST,
 	LOCAL_APP_API_PATH_PREFIX,
 	LOCAL_APP_UPLOAD_ID_HEADER,
 } from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -43,12 +46,18 @@ const RETRY_BACKOFF_FACTOR = 2;
 const RETRY_BACKOFF_JITTER = 0.25;
 const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([502, 504, 507, 522, 523, 524, 598, 599]);
 const SUDO_HEADER = 'x-fluxer-sudo-mode-jwt';
+const UNPACED_PATH_PREFIX = '/reports/';
 const SUDO_VERIFICATION_ERROR_FIELDS: ReadonlySet<string> = new Set([
 	'password',
 	'mfa_method',
 	'mfa_code',
 	'webauthn_response',
 	'webauthn_challenge',
+]);
+const SUDO_EMAIL_CODE_ERROR_CODES: ReadonlySet<string> = new Set([
+	APIErrorCodes.INVALID_SIGN_IN_CODE,
+	APIErrorCodes.SIGN_IN_CODE_EXPIRED,
+	APIErrorCodes.UNKNOWN_SIGN_IN_TICKET,
 ]);
 
 type RestMode = NonNullable<RestRequestOptions['mode']>;
@@ -89,7 +98,7 @@ interface RestRuntimeRouting {
 	readonly apiVersion: number;
 }
 
-export class RestRuntimeUnavailableError extends Error {
+class RestRuntimeUnavailableError extends Error {
 	constructor() {
 		super('A relative REST request requires an active instance runtime');
 		this.name = 'RestRuntimeUnavailableError';
@@ -101,7 +110,7 @@ interface Plan {
 	path: string;
 	routing: RestRuntimeRouting | null;
 	url: string;
-	rateLimitKey: string;
+	rateLimitKey: string | null;
 	body: BodyShape;
 	headers: Record<string, string>;
 	parse: RestResponseFormat;
@@ -183,7 +192,7 @@ function waitUntilOnline(signal?: AbortSignal): Promise<void> {
 	});
 }
 
-function withoutTrailingSlashes(value: string): string {
+export function withoutTrailingSlashes(value: string): string {
 	return value.replace(/\/+$/u, '');
 }
 
@@ -316,13 +325,12 @@ async function runWithSudoEscalation<T>(
 	} catch (err) {
 		const sudo = state.sudo;
 		const sudoRequired = isSudoRequiredFailure(err);
-		const sudoVerificationFailed = sudoApplied && isSudoVerificationFailure(err);
+		const sudoVerificationFailed = sudoApplied && isSudoVerificationFailure(err, effective.body);
 		if (!sudo || (!sudoRequired && !sudoVerificationFailed)) {
-			if (sudoApplied) sudo?.onFailure(err);
+			if (sudoApplied) sudo?.onSettled();
 			throw err;
 		}
-		if (sudoVerificationFailed) {
-			sudo.onFailure(err);
+		const reprompt = async (nextPhase: SudoPhase): Promise<RestResponse<T>> => {
 			const merged = await awaitAccountScopedInteraction(ticket, sudo.prompt(method, path, err));
 			if (!merged) throw err;
 			return runWithSudoEscalation<T>(
@@ -332,43 +340,25 @@ async function runWithSudoEscalation<T>(
 				method,
 				path,
 				options,
-				'reissued',
+				nextPhase,
 				mergeBody(options, merged),
 			);
+		};
+		if (sudoVerificationFailed) {
+			sudo.onFailure(err);
+			return reprompt('reissued');
 		}
 		switch (phase) {
 			case 'fresh': {
 				sudo.invalidate();
-				const merged = await awaitAccountScopedInteraction(ticket, sudo.prompt(method, path, err));
-				if (!merged) throw err;
-				return runWithSudoEscalation<T>(
-					state,
-					routing,
-					ticket,
-					method,
-					path,
-					options,
-					'reissued',
-					mergeBody(options, merged),
-				);
+				return reprompt('reissued');
 			}
 			case 'reissued': {
 				sudo.onFailure(err);
-				const second = await awaitAccountScopedInteraction(ticket, sudo.prompt(method, path, err));
-				if (!second) throw err;
-				return runWithSudoEscalation<T>(
-					state,
-					routing,
-					ticket,
-					method,
-					path,
-					options,
-					'reissued-twice',
-					mergeBody(options, second),
-				);
+				return reprompt('reissued-twice');
 			}
 			case 'reissued-twice': {
-				sudo.onFailure(err);
+				sudo.onSettled();
 				throw err;
 			}
 		}
@@ -376,26 +366,31 @@ async function runWithSudoEscalation<T>(
 }
 
 function isSudoRequiredFailure(err: unknown): boolean {
-	if (!(err instanceof HttpError) || err.status !== 403) return false;
+	if (!(err instanceof HttpError) || err.status !== HttpStatus.FORBIDDEN) return false;
 	const body = err.body;
-	return typeof body === 'object' && body !== null && (body as Record<string, unknown>).code === 'SUDO_MODE_REQUIRED';
+	return isRecord(body) && body.code === APIErrorCodes.SUDO_MODE_REQUIRED;
 }
 
-function isSudoVerificationFailure(err: unknown): boolean {
-	if (!(err instanceof HttpError) || err.status !== 400) return false;
+function isSudoVerificationFailure(err: unknown, sentBody: unknown): boolean {
+	if (!(err instanceof HttpError) || err.status !== HttpStatus.BAD_REQUEST) return false;
 	const body = err.body;
-	if (!isRecord(body) || body.code !== APIErrorCodes.INVALID_FORM_BODY) return false;
+	if (!isRecord(body)) return false;
+	if (typeof body.code === 'string' && SUDO_EMAIL_CODE_ERROR_CODES.has(body.code)) {
+		return isRecord(sentBody) && sentBody.mfa_method === 'email_code';
+	}
+	if (body.code !== APIErrorCodes.INVALID_FORM_BODY) return false;
 	const errors = body.errors;
 	if (!Array.isArray(errors)) return false;
 	return errors.some((error) => {
 		if (!isRecord(error)) return false;
-		const path = typeof error.path === 'string' ? error.path : typeof error.field === 'string' ? error.field : null;
+		let path: string | null = null;
+		if (typeof error.path === 'string') {
+			path = error.path;
+		} else if (typeof error.field === 'string') {
+			path = error.field;
+		}
 		return path !== null && SUDO_VERIFICATION_ERROR_FIELDS.has(path);
 	});
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
 }
 
 async function runRetryLoop<T>(
@@ -482,7 +477,7 @@ function composePlan(
 		path,
 		routing,
 		url,
-		rateLimitKey: `${method} ${path}`,
+		rateLimitKey: isUnpacedPath(path) ? null : `${method} ${path}`,
 		body,
 		headers,
 		parse: options.parse ?? 'auto',
@@ -563,9 +558,6 @@ function reportStrippedAuthorization(state: RuntimeState, apiOrigin: string, aut
 }
 
 function encodeBody(options: RestRequestOptions): BodyShape {
-	if (options.multipart) {
-		return {tag: 'form', payload: buildFormData(options.multipart)};
-	}
 	if (options.raw !== undefined) return classifyOpaque(options.raw);
 	const raw = options.body;
 	if (raw === undefined || raw === null) return {tag: 'empty'};
@@ -599,19 +591,6 @@ function copyArrayBufferView(raw: ArrayBufferView): ArrayBuffer {
 	return buffer;
 }
 
-function buildFormData(payload: MultipartBody): FormData {
-	const form = new FormData();
-	const fields = payload.fields ?? {};
-	for (const [name, value] of Object.entries(fields)) {
-		form.append(name, value);
-	}
-	const files = payload.files ?? [];
-	for (const part of files) {
-		form.append(part.name, part.file, part.filename);
-	}
-	return form;
-}
-
 interface AssembleHeadersInput {
 	state: RuntimeState;
 	callerHeaders: Record<string, string> | undefined;
@@ -625,6 +604,7 @@ function assembleHeaders(input: AssembleHeadersInput): Record<string, string> {
 	const accumulator: Record<string, string> = {};
 	if (input.sameOrigin) {
 		accumulator[Headers.X_FLUXER_FEATURES] = 'view_channel_members_permission,channel_threads';
+		accumulator[Headers.X_FLUXER_CAPABILITIES] = 'guild_visits';
 		accumulator[Headers.X_FLUXER_CLIENT_INSTALLATION_ID] = ClientInstallationId.get();
 	}
 	const contentType = inferContentType(input.body);
@@ -657,7 +637,12 @@ function inferContentType(body: BodyShape): string | null {
 	}
 }
 
-function consultPacing(pacing: Map<string, PacingEntry>, key: string): PacingEntry | null {
+function isUnpacedPath(path: string): boolean {
+	return path.startsWith(UNPACED_PATH_PREFIX);
+}
+
+function consultPacing(pacing: Map<string, PacingEntry>, key: string | null): PacingEntry | null {
+	if (key === null) return null;
 	const entry = pacing.get(key);
 	if (!entry) return null;
 	if (entry.until <= Date.now()) {
@@ -675,13 +660,12 @@ function recordPacing(
 	note?: string,
 	code?: string,
 ): void {
-	const fallbackMs = 1000;
-	const ms =
-		headerMs !== null && headerMs > 0
-			? headerMs
-			: retryAfterSeconds !== null && retryAfterSeconds > 0
-				? retryAfterSeconds * 1000
-				: fallbackMs;
+	let ms = MS_PER_SECOND;
+	if (headerMs !== null && headerMs > 0) {
+		ms = headerMs;
+	} else if (retryAfterSeconds !== null && retryAfterSeconds > 0) {
+		ms = retryAfterSeconds * MS_PER_SECOND;
+	}
 	pacing.set(key, {until: Date.now() + ms, note, code});
 }
 
@@ -763,7 +747,12 @@ function performTransport(plan: Plan, handle: RestRequestHandle): Promise<Transp
 			const headers = parseHeaderBlock(xhr.getAllResponseHeaders());
 			const reply = decodeReply(xhr, plan.parse, headers);
 			const sudoToken = headers[SUDO_HEADER];
-			const receivedSudoToken = sudoToken !== undefined ? sudoToken : plan.sudoApplied ? null : undefined;
+			let receivedSudoToken: string | null | undefined;
+			if (sudoToken !== undefined) {
+				receivedSudoToken = sudoToken;
+			} else if (plan.sudoApplied) {
+				receivedSudoToken = null;
+			}
 			resolve({status: 'reply', reply, receivedSudoToken});
 		};
 		xhr.open(plan.method, plan.url);
@@ -874,7 +863,7 @@ async function reactToOutcome(
 	if (reply.status === 429) {
 		return reactToRateLimit(state, plan, reply);
 	}
-	const interceptor = plan.options.skipIntercept ? undefined : (plan.options.intercept ?? state.globalIntercept);
+	const interceptor = plan.options.skipIntercept ? undefined : state.globalIntercept;
 	if (interceptor) {
 		const intercepted = await invokeInterceptor(state, ticket, plan, interceptor, reply);
 		if (intercepted) return intercepted;
@@ -888,6 +877,15 @@ async function reactToOutcome(
 	}
 	if (reply.status === 403 && hasContentBlockedCode(reply.body) && !plan.suppressContentBlockedModal) {
 		void import('@app/features/auth/components/ContentBlockedHandler').then((m) => m.showContentBlockedModal());
+	}
+	const restriction =
+		reply.status === 403 && plan.headers[Headers.AUTHORIZATION] !== undefined
+			? accountRestrictionFromBody(reply.body)
+			: null;
+	if (restriction?.type === 'network_blocked') {
+		void import('@app/features/auth/components/NetworkBlockedHandler').then((m) =>
+			m.showNetworkBlockedModal(restriction.block),
+		);
 	}
 	if (plan.mode === 'silent') {
 		propagateSudoToken(state, receivedSudoToken);
@@ -904,14 +902,16 @@ function reactToRateLimit(state: RuntimeState, plan: Plan, reply: RestResponse):
 	const headerMs = readNumericHeader(reply.headers['x-ratelimit-reset-after']);
 	const note = extractMessage(reply.body);
 	const code = extractCode(reply.body);
-	recordPacing(state.pacing, plan.rateLimitKey, retryAfterSeconds, headerMs, note, code);
+	if (plan.rateLimitKey !== null) {
+		recordPacing(state.pacing, plan.rateLimitKey, retryAfterSeconds, headerMs, note, code);
+	}
 	if (plan.mode === 'silent') {
 		return {next: 'deliver', reply};
 	}
 	if (plan.mode === 'strict') {
 		return {next: 'fail', error: new HttpError(failureDetail(plan, reply))};
 	}
-	const entry = state.pacing.get(plan.rateLimitKey);
+	const entry = plan.rateLimitKey !== null ? state.pacing.get(plan.rateLimitKey) : undefined;
 	const delayMs = entry ? Math.max(0, entry.until - Date.now()) : (retryAfterSeconds ?? 1) * 1000;
 	return {next: 'retry-after', delayMs, mode: 'fixed'};
 }
@@ -1096,10 +1096,10 @@ function createHandle(
 }
 
 function mergeBody(options: RestRequestOptions, augmentation: Record<string, unknown>): RestRequestOptions {
-	if (options.multipart !== undefined || options.raw !== undefined) {
-		throw new Error('RestClient: cannot fold sudo payload into a multipart or raw body');
+	if (options.raw !== undefined) {
+		throw new Error('RestClient: cannot fold sudo payload into a raw body');
 	}
-	const {body: existing, multipart: _m, raw: _r, ...rest} = options;
+	const {body: existing, raw: _r, ...rest} = options;
 	if (existing === undefined || existing === null) {
 		return {...rest, body: augmentation};
 	}

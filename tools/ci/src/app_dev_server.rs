@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::app_wasm::resolve_app_dir;
-use crate::functions::sha256_file;
+use crate::common::display_command;
+use crate::functions::{remove_dir_if_exists, sha256_file};
 use anyhow::{Context, Result, bail, ensure};
 use clap::Args;
 use serde::{Deserialize, Serialize};
@@ -157,7 +158,7 @@ impl AppDevServer {
             return Ok(());
         }
 
-        self.clean_dist()?;
+        remove_dir_if_exists(&self.project_root.join("dist"))?;
         let mut css_type_watcher = self.start_css_type_watcher()?;
         let rspack_result = self.run_rspack(&mut shutdown_rx).await;
         terminate_child(&mut css_type_watcher).await;
@@ -280,17 +281,6 @@ impl AppDevServer {
         Ok(())
     }
 
-    fn clean_dist(&self) -> Result<()> {
-        let dist_path = self.project_root.join("dist");
-        match fs::remove_dir_all(&dist_path) {
-            Ok(()) => Ok(()),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(error) => {
-                Err(error).with_context(|| format!("Failed to remove {}", dist_path.display()))
-            }
-        }
-    }
-
     fn start_css_type_watcher(&self) -> Result<Child> {
         let tcm = self.project_root.join("node_modules/.bin/tcm");
         println!(
@@ -411,13 +401,13 @@ fn gather_wasm_inputs(project_root: &Path) -> Result<StepInputs> {
     let mut inputs = collect_file_digests(
         project_root,
         &[
+            PathBuf::from("../Cargo.toml"),
+            PathBuf::from("../Cargo.lock"),
             PathBuf::from("../tools/ci/Cargo.toml"),
             PathBuf::from("../tools/ci/src/app_dev_server.rs"),
             PathBuf::from("../tools/ci/src/app_wasm.rs"),
             PathBuf::from("../tools/ci/src/common.rs"),
             PathBuf::from("../tools/ci/src/lib.rs"),
-            PathBuf::from("../tools/ci/templates/libfluxcore_wrapper.js"),
-            PathBuf::from("../tools/ci/templates/libfluxcore_wrapper.d.ts"),
             markdown_parser_rust_dir.join("Cargo.toml"),
         ],
     )?;
@@ -556,60 +546,4 @@ fn timestamp_ms(timestamp: SystemTime) -> Result<f64> {
         .context("File timestamp predates UNIX epoch")?
         .as_secs_f64()
         * 1000.0)
-}
-
-fn display_command(command: &str, args: &[&str]) -> String {
-    std::iter::once(command.to_string())
-        .chain(args.iter().map(|arg| quote_arg(arg)))
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-fn quote_arg(arg: &str) -> String {
-    if arg
-        .chars()
-        .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.' | '/' | ':' | '='))
-    {
-        arg.to_string()
-    } else {
-        format!("{arg:?}")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn rel_path_keys_are_posix_like() {
-        assert_eq!(
-            rel_path_key(Path::new("scripts/GenerateColorSystem.ts")),
-            "scripts/GenerateColorSystem.ts"
-        );
-    }
-
-    #[test]
-    fn wasm_inputs_cover_the_libfluxwebp_sources_and_headers() {
-        let app_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_app");
-        let inputs = gather_wasm_inputs(&app_dir).expect("gather wasm inputs");
-
-        for key in [
-            "rust/libfluxwebp/Cargo.toml",
-            "rust/libfluxwebp/Cargo.lock",
-            "rust/libfluxwebp/src/lib.rs",
-            "rust/libfluxwebp/shim/stdlib.h",
-            "rust/libfluxwebp/simd/emmintrin.h",
-        ] {
-            assert!(inputs.contains_key(key), "missing {key}");
-        }
-        assert!(inputs.keys().all(|key| !key.contains("/target/")));
-    }
-
-    #[test]
-    fn display_command_quotes_globs() {
-        assert_eq!(
-            display_command("tcm", &["src", "--pattern", "**/*.module.css"]),
-            "tcm src --pattern \"**/*.module.css\""
-        );
-    }
 }

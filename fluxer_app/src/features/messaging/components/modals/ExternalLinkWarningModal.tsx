@@ -4,14 +4,15 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
 import styles from '@app/features/messaging/components/modals/ExternalLinkWarningModal.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import * as TrustedDomainCommands from '@app/features/trusted_domain/commands/TrustedDomainCommands';
+import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
 import {Button} from '@app/features/ui/button/Button';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import {ArrowRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowRightIcon, WarningIcon} from '@phosphor-icons/react';
+import {WarningIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useMemo, useRef, useState} from 'react';
 
@@ -36,7 +37,7 @@ export const ExternalLinkWarningModal = observer(({url}: {url: string}) => {
 	}, [url]);
 	const handleContinue = useCallback(async () => {
 		if (trustDomain) {
-			await TrustedDomainCommands.addTrustedDomain(hostname);
+			await TrustedDomain.addTrustedDomain(hostname);
 		}
 		void openExternalUrl(url);
 		ModalCommands.pop();

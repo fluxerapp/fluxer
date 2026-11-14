@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {
-	ExtendedDocument,
-	ExtendedHTMLElement,
-	ExtendedWindow,
-	LegacyDocumentSelection,
-} from '@app/types/browser.d';
-
-export function isLegacyDocument(_document: Document): _document is Document & LegacyDocumentSelection {
-	return 'selection' in _document && typeof _document.selection === 'object' && _document.selection !== null;
-}
+import type {ExtendedDocument, ExtendedHTMLElement, ExtendedWindow} from '@app/types/browser.d';
 
 export function supportsWebkitRequestFullscreen(_element: HTMLElement): _element is ExtendedHTMLElement {
 	return 'webkitRequestFullscreen' in _element;

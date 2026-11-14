@@ -6,12 +6,16 @@ import {
 	VoiceTrackSource as VoiceTrackSourceValue,
 } from '@app/features/voice/engine/VoiceTrackSource';
 import type {LocalParticipant, LocalTrack, LocalTrackPublication} from 'livekit-client';
+import {ParticipantEvent} from 'livekit-client';
 
 interface LocalParticipantWithAudioPublications extends Pick<LocalParticipant, 'audioTrackPublications'> {}
 interface LocalParticipantWithTrackPublications extends Pick<LocalParticipant, 'trackPublications'> {}
 interface LocalParticipantWithUnpublish extends LocalParticipantWithTrackPublications {
 	unpublishTrack: LocalParticipant['unpublishTrack'];
 }
+interface LocalParticipantWithUnpublishEvents extends Pick<LocalParticipant, 'on' | 'off'> {}
+
+const republishedCaptureOwners = new WeakMap<MediaStreamTrack, LocalTrack>();
 
 export type LocalMediaPublicationSlot = 'camera' | 'screen_share';
 
@@ -245,4 +249,21 @@ export function selectLocalMediaPublicationsForConnectionRepublish(
 		selected.push(publication);
 	}
 	return selected;
+}
+
+export function releaseCaptureWithRepublishedTrack(
+	participant: LocalParticipantWithUnpublishEvents,
+	republished: LocalTrackPublication,
+	sourceTrack: LocalTrack,
+): void {
+	const publishedTrack = sourceTrack.mediaStreamTrack;
+	const captureOwner = republishedCaptureOwners.get(publishedTrack) ?? sourceTrack;
+	republishedCaptureOwners.set(publishedTrack, captureOwner);
+	const republishedTrack = republished.track;
+	const releaseCapture = (publication: LocalTrackPublication): void => {
+		if (publication.track !== republishedTrack || publishedTrack.readyState !== 'ended') return;
+		participant.off(ParticipantEvent.LocalTrackUnpublished, releaseCapture);
+		captureOwner.stop();
+	};
+	participant.on(ParticipantEvent.LocalTrackUnpublished, releaseCapture);
 }

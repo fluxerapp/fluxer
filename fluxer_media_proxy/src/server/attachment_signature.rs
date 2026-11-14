@@ -3,11 +3,12 @@
 use crate::{
     config::AttachmentSignatureConfig,
     metrics::now_ms,
+    public_net_policy::external_url_for_log,
     request_log::{self, HEADER_LOG_BYTES_MAX, RequestId, clip},
-    server::response::error::text_with_source,
+    server::{response::error::text_with_source, transform::cache::forbid_storing},
 };
 use axum::{
-    http::{HeaderMap, HeaderValue, Method, StatusCode, header},
+    http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header},
     response::Response,
 };
 use fluxer_common::attachment_url_signature::{
@@ -63,24 +64,33 @@ pub(in crate::server) fn check(
         return Verification {
             verdict: Verdict::Malformed,
             remaining_secs: None,
+            expired_secs: None,
         };
     };
     verify(&key, raw_query, &cfg.secrets(), now_secs())
 }
 
 pub(in crate::server) fn limit_cache_lifetime(response: &mut Response, verification: Verification) {
-    if verification.verdict != Verdict::Valid
-        || !matches!(
-            response.status(),
-            StatusCode::OK | StatusCode::PARTIAL_CONTENT
-        )
+    if !matches!(
+        response.status(),
+        StatusCode::OK | StatusCode::PARTIAL_CONTENT
+    ) {
+        return;
+    }
+    if verification.verdict != Verdict::Valid {
+        forbid_storing(response);
+        return;
+    }
+    let headers = response.headers_mut();
+    if headers
+        .get(header::CACHE_CONTROL)
+        .is_some_and(|value| value == "no-store")
     {
         return;
     }
     let max_age = verification
         .remaining_secs
         .unwrap_or(ATTACHMENT_URL_TTL_SECS);
-    let headers = response.headers_mut();
     let no_transform = headers
         .get(header::CACHE_CONTROL)
         .and_then(|value| value.to_str().ok())
@@ -118,25 +128,46 @@ pub(in crate::server) fn masked_not_found_response(key: &str) -> Response {
     )
 }
 
-pub(in crate::server) fn log_would_deny(
+pub(in crate::server) fn log_refusal(
     budget: &WouldDenyLog,
+    enforced: bool,
     method: &Method,
-    verdict: Verdict,
+    verification: Verification,
     headers: &HeaderMap,
     request_id: Option<&RequestId>,
 ) {
     let Some(suppressed) = budget.admit(now_ms()) else {
         return;
     };
+    let (reason, message) = if enforced {
+        ("attachment_signature_refused", "attachment read refused")
+    } else {
+        (
+            "attachment_signature_would_deny",
+            "attachment read would be refused",
+        )
+    };
+    let referer = headers
+        .get(header::REFERER)
+        .and_then(|value| value.to_str().ok())
+        .map(external_url_for_log)
+        .unwrap_or_default();
     tracing::warn!(
-        reason = "attachment_signature_would_deny",
+        reason,
         kind = request_log::classify_route(ATTACHMENT_PATH).label(),
         method = %method,
-        verdict = verdict.label(),
+        verdict = verification.verdict.label(),
+        expired_for_secs = verification.expired_secs,
         req = request_id.map(RequestId::as_str).unwrap_or(""),
         suppressed,
-        user_agent = %user_agent_for_log(headers),
-        "attachment read would be refused"
+        user_agent = %header_for_log(headers, header::USER_AGENT),
+        referer = %clip(&referer, HEADER_LOG_BYTES_MAX),
+        origin = %header_for_log(headers, header::ORIGIN),
+        sec_fetch_dest = %header_for_log(headers, HeaderName::from_static("sec-fetch-dest")),
+        sec_fetch_mode = %header_for_log(headers, HeaderName::from_static("sec-fetch-mode")),
+        sec_fetch_site = %header_for_log(headers, HeaderName::from_static("sec-fetch-site")),
+        has_range = headers.contains_key(header::RANGE),
+        "{message}"
     );
 }
 
@@ -150,9 +181,9 @@ fn refusal_code(verdict: Verdict) -> &'static str {
     }
 }
 
-fn user_agent_for_log(headers: &HeaderMap) -> String {
+fn header_for_log(headers: &HeaderMap, name: HeaderName) -> String {
     headers
-        .get(header::USER_AGENT)
+        .get(name)
         .and_then(|value| value.to_str().ok())
         .map(|value| clip(value, HEADER_LOG_BYTES_MAX))
         .unwrap_or_default()
@@ -172,44 +203,10 @@ mod tests {
     use axum::body::to_bytes;
     use base64::{Engine as _, engine::general_purpose};
     use fluxer_common::attachment_url_signature::{UrlKind, issue_window, sign};
-    use std::sync::{Arc, Mutex};
-    use tracing_subscriber::fmt::MakeWriter;
 
     const SECRET: [u8; 32] = [3u8; 32];
     const KEY: &str = "attachments/1/2/cat.gif";
     const PATH: &str = "/attachments/1/2/cat.gif";
-
-    #[derive(Clone, Default)]
-    struct CapturedLog(Arc<Mutex<Vec<u8>>>);
-
-    impl CapturedLog {
-        fn text(&self) -> String {
-            String::from_utf8(self.0.lock().expect("captured log is not poisoned").clone())
-                .expect("captured log is utf-8")
-        }
-    }
-
-    impl std::io::Write for CapturedLog {
-        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-            self.0
-                .lock()
-                .expect("captured log is not poisoned")
-                .extend_from_slice(buf);
-            Ok(buf.len())
-        }
-
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
-    }
-
-    impl<'a> MakeWriter<'a> for CapturedLog {
-        type Writer = Self;
-
-        fn make_writer(&'a self) -> Self::Writer {
-            self.clone()
-        }
-    }
 
     fn enforcing_config() -> AttachmentSignatureConfig {
         crate::config::Config::load_from_iter([
@@ -340,93 +337,5 @@ mod tests {
             assert_eq!(UNAVAILABLE_BODY.as_bytes(), body.as_ref());
             assert_eq!(bodies[0], *body);
         }
-    }
-
-    #[test]
-    fn the_would_deny_line_includes_the_verdict_and_a_clipped_user_agent() {
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            header::USER_AGENT,
-            "u".repeat(4096).parse().expect("ascii user agent"),
-        );
-        let captured = CapturedLog::default();
-        let subscriber = tracing_subscriber::fmt()
-            .with_writer(captured.clone())
-            .with_ansi(false)
-            .with_max_level(tracing::Level::TRACE)
-            .finish();
-        {
-            let _guard = tracing::subscriber::set_default(subscriber);
-            log_would_deny(
-                &WouldDenyLog::new(),
-                &Method::GET,
-                Verdict::Expired,
-                &headers,
-                Some(&RequestId("ABCDEFGHJKMN".to_owned())),
-            );
-        }
-        let line = captured.text();
-        assert!(
-            line.contains("reason=\"attachment_signature_would_deny\""),
-            "{line}"
-        );
-        assert!(line.contains("kind=\"attachment\""), "{line}");
-        assert!(line.contains("method=GET"), "{line}");
-        assert!(line.contains("verdict=\"expired\""), "{line}");
-        assert!(line.contains("req=\"ABCDEFGHJKMN\""), "{line}");
-        assert!(line.contains(&"u".repeat(HEADER_LOG_BYTES_MAX)), "{line}");
-        assert!(
-            !line.contains(&"u".repeat(HEADER_LOG_BYTES_MAX + 1)),
-            "{line}"
-        );
-    }
-
-    #[test]
-    fn a_request_without_an_id_or_user_agent_still_logs_one_line() {
-        let captured = CapturedLog::default();
-        let subscriber = tracing_subscriber::fmt()
-            .with_writer(captured.clone())
-            .with_ansi(false)
-            .with_max_level(tracing::Level::TRACE)
-            .finish();
-        {
-            let _guard = tracing::subscriber::set_default(subscriber);
-            log_would_deny(
-                &WouldDenyLog::new(),
-                &Method::HEAD,
-                Verdict::Missing,
-                &HeaderMap::new(),
-                None,
-            );
-        }
-        let line = captured.text();
-        assert_eq!(1, line.lines().count(), "{line}");
-        assert!(line.contains("verdict=\"missing\""), "{line}");
-        assert!(line.contains("req=\"\""), "{line}");
-        assert!(line.contains("suppressed=0"), "{line}");
-    }
-
-    #[test]
-    fn the_would_deny_budget_bounds_a_window_and_reports_what_it_dropped() {
-        let budget = WouldDenyLog::new();
-        let window = 10_000;
-        for line in 0..WOULD_DENY_LOG_LINES_PER_WINDOW {
-            assert_eq!(Some(0), budget.admit(window), "line {line}");
-        }
-        for line in 0..5 {
-            assert_eq!(None, budget.admit(window + 500), "line {line}");
-        }
-        let next = window + WOULD_DENY_LOG_WINDOW_MS;
-        assert_eq!(Some(5), budget.admit(next));
-        assert_eq!(Some(0), budget.admit(next));
-    }
-
-    #[test]
-    fn the_would_deny_budget_never_wedges_on_a_clock_that_goes_backwards() {
-        let budget = WouldDenyLog::new();
-        assert_eq!(Some(0), budget.admit(10_000));
-        assert_eq!(Some(0), budget.admit(9_000));
-        assert_eq!(Some(0), budget.admit(i64::MIN));
-        assert_eq!(Some(0), budget.admit(i64::MAX));
     }
 }

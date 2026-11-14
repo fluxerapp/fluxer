@@ -4,16 +4,13 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import EventEmitter from 'eventemitter3';
 
 export type ComponentActionType =
-	| 'CAMERA_DEVICE_REFRESH'
 	| 'CHANNEL_DETAILS_OPEN'
 	| 'CHANNEL_MEMBER_LIST_TOGGLE'
-	| 'CHANNEL_NOTIFICATION_SETTINGS_OPEN'
 	| 'CHANNEL_PINS_OPEN'
 	| 'THREAD_BROWSER_OPEN'
 	| 'COMPACT_VOICE_CALL_EXPANSION_TOGGLE'
 	| 'EMOJI_PICKER_OPEN'
 	| 'EMOJI_PICKER_RERENDER'
-	| 'EMOJI_SELECT'
 	| 'ESCAPE_PRESSED'
 	| 'EDITING_EXPRESSION_PICKER_TAB_TOGGLE'
 	| 'EXPRESSION_PICKER_TAB_TOGGLE'
@@ -25,13 +22,9 @@ export type ComponentActionType =
 	| 'INBOX_OPEN'
 	| 'INSERT_MENTION'
 	| 'LAYOUT_RESIZED'
-	| 'MEMES_PICKER_RERENDER'
 	| 'MESSAGE_REVEAL'
 	| 'MESSAGE_SEARCH_OPEN'
 	| 'MESSAGE_SENT'
-	| 'OPEN_MEMES_TAB'
-	| 'POPOUT_CLOSE'
-	| 'SCROLL_TO_PRESENT'
 	| 'SCROLL_PAGE_DOWN'
 	| 'SCROLL_PAGE_UP'
 	| 'SOUNDBOARD_TOGGLE'
@@ -101,10 +94,6 @@ class Dispatch extends EventEmitter<ComponentBusEvents> {
 
 	unsubscribe(type: ComponentActionType, callback: (...args: Array<unknown>) => void) {
 		this.removeListener(type, callback);
-	}
-
-	reset() {
-		this.removeAllListeners();
 	}
 }
 

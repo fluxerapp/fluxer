@@ -1,9 +1,10 @@
+import {isRecord as isPlainObject} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import path from 'node:path';
+import {writeFileAtomically} from '@electron/main/AtomicFile';
 import type {
 	DesktopLegacyHarvest,
 	DesktopLegacyHarvestMediaDevice,
@@ -39,10 +40,6 @@ interface StagedLegacyHarvestHandle {
 
 let cachedRawLocalStorage: Readonly<Record<string, string>> | null = null;
 let rawLocalStorageResolved = false;
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function parseStringRecord(value: unknown): Record<string, string> | null {
 	if (!isPlainObject(value)) return null;
@@ -180,17 +177,6 @@ async function pathExists(target: string): Promise<boolean> {
 	}
 }
 
-async function writeFileAtomically(filePath: string, contents: Uint8Array): Promise<void> {
-	const temporaryPath = `${filePath}.${crypto.randomBytes(8).toString('hex')}.tmp`;
-	await fsPromises.writeFile(temporaryPath, contents, {flag: 'wx', mode: FILE_MODE});
-	try {
-		await fsPromises.rename(temporaryPath, filePath);
-	} catch (error) {
-		await fsPromises.rm(temporaryPath, {force: true});
-		throw error;
-	}
-}
-
 export async function writeStagedHarvest(
 	harvest: StagedLegacyHarvest,
 	blobs: ReadonlyMap<string, Uint8Array>,
@@ -199,9 +185,9 @@ export async function writeStagedHarvest(
 	await fsPromises.rm(directory, {recursive: true, force: true});
 	await fsPromises.mkdir(path.join(directory, BLOB_DIRECTORY_NAME), {recursive: true, mode: DIRECTORY_MODE});
 	for (const [blobId, bytes] of blobs) {
-		await writeFileAtomically(blobPath(blobId), bytes);
+		await writeFileAtomically(blobPath(blobId), bytes, FILE_MODE);
 	}
-	await writeFileAtomically(manifestPath(), Buffer.from(JSON.stringify(harvest), 'utf8'));
+	await writeFileAtomically(manifestPath(), Buffer.from(JSON.stringify(harvest), 'utf8'), FILE_MODE);
 	cachedRawLocalStorage = null;
 	rawLocalStorageResolved = false;
 }

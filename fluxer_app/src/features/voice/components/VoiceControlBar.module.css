@@ -226,7 +226,7 @@
 .settingsButton {
 	position: absolute;
 	top: -0.125rem;
-	right: -0.125rem;
+	inset-inline-end: -0.125rem;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -359,7 +359,7 @@
 
 	.settingsButton {
 		top: -0.125rem;
-		right: -0.125rem;
+		inset-inline-end: -0.125rem;
 		width: 0.9375rem;
 		height: 0.9375rem;
 	}

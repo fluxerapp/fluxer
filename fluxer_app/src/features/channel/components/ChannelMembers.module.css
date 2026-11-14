@@ -19,8 +19,8 @@
 	align-items: flex-start;
 	padding-top: 0.75rem;
 	padding-bottom: 0.25rem;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-inline-start: 0.5rem;
+	padding-inline-end: 0.5rem;
 }
 
 .groupHeaderLabel {
@@ -28,6 +28,11 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.groupHeaderRoleIcon {
+	flex-shrink: 0;
+	margin-inline-end: 0.25rem;
 }
 
 .groupHeaderSeparator {
@@ -51,8 +56,8 @@
 
 .virtualRow {
 	position: absolute;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	display: flex;
 	align-items: center;
 	height: var(--member-list-item-height);
@@ -61,8 +66,8 @@
 
 .virtualMemberRow {
 	align-items: center;
-	padding-left: 0;
-	padding-right: 0;
+	padding-inline-start: 0;
+	padding-inline-end: 0;
 	box-sizing: border-box;
 }
 
@@ -75,8 +80,8 @@
 	height: var(--member-list-group-header-height);
 	min-height: var(--member-list-group-header-height);
 	align-items: flex-start;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-inline-start: 0.5rem;
+	padding-inline-end: 0.5rem;
 	padding-top: 0.75rem;
 	padding-bottom: 0.25rem;
 	box-sizing: border-box;

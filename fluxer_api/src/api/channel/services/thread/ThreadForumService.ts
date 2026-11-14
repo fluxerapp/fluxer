@@ -2,6 +2,7 @@
 
 import {type ChannelID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {messageResponseAccessForAuth} from '@app/api/channel/services/message/MessageResponseDataService';
 import {assertThreadAllowed} from '@app/api/channel/services/thread/ThreadDenials';
 import {mapThreadMemberToResponse, mapThreadToResponse} from '@app/api/channel/services/thread/ThreadMappers';
 import type {ThreadServiceContext} from '@app/api/channel/services/thread/ThreadServiceContext';
@@ -59,8 +60,7 @@ export class ThreadForumService {
 			channelData.listChannels(threadIds),
 			this.ctx.threadMessageResponses.getFirstMessages({
 				userId: params.userId,
-				guildId,
-				canReadMessageHistory: true,
+				access: await messageResponseAccessForAuth(parentAuth),
 				threadIds,
 			}),
 		]);
@@ -187,8 +187,7 @@ export class ThreadForumService {
 		if (THREAD_ONLY_CHANNEL_TYPES.has(parent.type)) {
 			const firstMessages = await this.ctx.threadMessageResponses.getFirstMessages({
 				userId: params.userId,
-				guildId,
-				canReadMessageHistory: true,
+				access: await messageResponseAccessForAuth(parentAuth),
 				threadIds,
 			});
 			response.first_messages = threadIds.flatMap((threadId) => {
@@ -209,6 +208,7 @@ export class ThreadForumService {
 			userId,
 			channelId,
 			viewer,
+			access: 'visitor_read',
 		});
 		const allowed = threadOnly
 			? THREAD_ONLY_CHANNEL_TYPES.has(auth.channel.type)

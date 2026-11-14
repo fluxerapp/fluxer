@@ -9,7 +9,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import Sound from '@app/features/ui/state/Sound';
 import Users from '@app/features/user/state/Users';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallInitiator from '@app/features/voice/state/CallInitiator';
 import CallState from '@app/features/voice/state/CallState';
 import RtcRegions from '@app/features/voice/state/RtcRegions';
@@ -112,8 +112,8 @@ function setupPendingRing(channelId: string, recipients: Array<string>): void {
 	clearPendingRing();
 	const dispose = reaction(
 		() => ({
-			connected: MediaEngine.connected,
-			currentChannelId: MediaEngine.channelId,
+			connected: VoiceRuntime.connected,
+			currentChannelId: VoiceRuntime.channelId,
 		}),
 		({connected, currentChannelId}) => {
 			if (connected && currentChannelId === channelId && pendingRing?.channelId === channelId) {
@@ -141,7 +141,7 @@ export function startCall(channelId: string): void {
 	const recipients = channelRecipientIds(channelId, currentUser.id);
 	CallInitiator.markInitiated(channelId, recipients);
 	setupPendingRing(channelId, recipients);
-	void MediaEngine.connectToVoiceChannel(null, channelId);
+	void VoiceRuntime.withEngine('join', (engine) => engine.connectToVoiceChannel(null, channelId));
 }
 
 export function joinCall(channelId: string): void {
@@ -151,7 +151,7 @@ export function joinCall(channelId: string): void {
 	}
 	CallState.clearPendingRinging(channelId, [currentUser.id]);
 	Sound.stopIncomingRing();
-	void MediaEngine.connectToVoiceChannel(null, channelId);
+	void VoiceRuntime.withEngine('join', (engine) => engine.connectToVoiceChannel(null, channelId));
 }
 
 export async function leaveCall(channelId: string): Promise<void> {
@@ -172,7 +172,7 @@ export async function leaveCall(channelId: string): Promise<void> {
 		}
 	}
 	CallInitiator.clearChannel(channelId);
-	void MediaEngine.disconnectFromVoiceChannel('user');
+	void VoiceRuntime.engine?.disconnectFromVoiceChannel('user');
 }
 
 export function rejectCall(channelId: string): void {
@@ -181,9 +181,9 @@ export function rejectCall(channelId: string): void {
 		return;
 	}
 	CallState.clearPendingRinging(channelId, [currentUser.id]);
-	const connectedChannelId = MediaEngine.channelId;
+	const connectedChannelId = VoiceRuntime.channelId;
 	if (connectedChannelId === channelId) {
-		void MediaEngine.disconnectFromVoiceChannel('user');
+		void VoiceRuntime.engine?.disconnectFromVoiceChannel('user');
 	}
 	void stopRingingCallRecipients(channelId).catch((error) => {
 		logger.error('Failed to stop ringing:', error);

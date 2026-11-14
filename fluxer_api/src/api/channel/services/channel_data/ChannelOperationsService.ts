@@ -1,8 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
-import {createChannelID, createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import {
+	type ChannelID,
+	createChannelID,
+	createGuildID,
+	createRoleID,
+	createUserID,
+	type GuildID,
+	type RoleID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {ChannelAccess} from '@app/api/channel/services/AuthenticatedChannel';
 import {
 	enqueueChannelFollowerRemoval,
 	scheduleDeletedChannelFollowerRemoval,
@@ -10,6 +19,8 @@ import {
 } from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelAuthService} from '@app/api/channel/services/channel_data/ChannelAuthService';
 import type {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
+import {dispatchChannelDelete, dispatchDmChannelDelete} from '@app/api/channel/services/group_dm/GroupDmHelpers';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import {dispatchThreadEvents} from '@app/api/channel/services/thread/ThreadDispatch';
 import {
 	loadConvertibleParentThreads,
@@ -24,41 +35,45 @@ import {
 	type ThreadParentSettingsInput,
 } from '@app/api/channel/services/thread/ThreadParentSettings';
 import {enqueueDeleteChannelThreads} from '@app/api/channel/threads/ThreadJobs';
+import {withRetryingLock} from '@app/api/channel/utils/RetryingLock';
+import {valuesEqual} from '@app/api/database/CassandraVersionedUpdate';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import {
-	everEnabled,
-	guildActive,
 	isTainted,
 	THREAD_FEATURE_CHANNEL_TYPES,
 	type ThreadViewer,
 	viewerActive,
 } from '@app/api/experiment/ChannelThreadsGate';
+import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {ChannelHelpers} from '@app/api/guild/services/channel/ChannelHelpers';
-import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
+import {requireGuildPermission} from '@app/api/guild/services/GuildMfaEnforcement';
 import {hasThreadPermissionBits, resolveProtectedBitActor} from '@app/api/guild/services/ThreadPermissionBits';
+import {enqueueEndGuildVisitsForCode} from '@app/api/guild/visits/GuildVisitLifecycle';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
-import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
-import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
 import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverwrite';
 import type {ThreadState} from '@app/api/models/ThreadState';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {serializeChannelForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {applyProtectedOverwriteBits, permissionWriteMask, protectedThreadBits} from '@app/api/utils/featureUtils';
 import {overwriteGrantedBits} from '@app/api/utils/PermissionUtils';
-import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import {isRegionPickable, type VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceRegionAvailability} from '@app/api/voice/VoiceModel';
-import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {
 	ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES,
@@ -68,19 +83,17 @@ import {
 	WebhookTypes,
 } from '@fluxer/constants/src/ChannelConstants';
 import {ContentWarningLevel, clampVoiceChannelBitrate, GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import {MAX_CHANNELS_PER_CATEGORY} from '@fluxer/constants/src/LimitConstants';
 import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {ChannelHasFollowedChannelsError} from '@fluxer/errors/src/domains/channel/ChannelHasFollowedChannelsError';
 import {ChannelTypeConversionNotSupportedError} from '@fluxer/errors/src/domains/channel/ChannelTypeConversionNotSupportedError';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
-import {MaxCategoryChannelsError} from '@fluxer/errors/src/domains/channel/MaxCategoryChannelsError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {CannotExecuteOnDmError} from '@fluxer/errors/src/domains/core/CannotExecuteOnDmError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
+import {resolveVoiceP2pAssignment} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {ChannelNameType} from '@fluxer/schema/src/primitives/ChannelValidators';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -105,6 +118,7 @@ export interface ChannelUpdateData {
 		deny?: bigint;
 	}> | null;
 	rtc_region?: string | null;
+	rtc_p2p?: boolean;
 	icon?: string | null;
 	owner_id?: bigint | null;
 	nicks?: Record<string, string | null> | null;
@@ -118,41 +132,96 @@ function assertOverwriteTarget(channel: Channel, viewer: ThreadViewer | undefine
 }
 
 export class ChannelOperationsService {
+	private async persistOverwritesAndDispatch(
+		channelId: ChannelID,
+		applyChange: (overwrites: Channel['permissionOverwrites']) => void,
+		requestCache: RequestCache,
+		guildId: GuildID,
+	): Promise<void> {
+		const {current, updated} = await withRetryingLock(
+			this.cacheService,
+			`channel:${channelId}:overwrites`,
+			async () => {
+				const current = await this.channelRepository.channelData.findUnique(channelId);
+				if (!current) throw new UnknownChannelError();
+				const overwrites = new Map(current.permissionOverwrites ?? []);
+				applyChange(overwrites);
+				const updated = await this.channelRepository.channelData.upsert(
+					{
+						...current.toRow(),
+						permission_overwrites: new Map(
+							Array.from(overwrites.entries()).map(([id, ow]) => [id, ow.toPermissionOverwrite()]),
+						),
+					},
+					current.toRow(),
+				);
+				return {current, updated};
+			},
+		);
+		await this.channelUtilsService.dispatchChannelUpdate({channel: updated, requestCache: requestCache});
+		if (current.type === ChannelTypes.GUILD_CATEGORY) {
+			await this.propagatePermissionsToSyncedChildren({
+				categoryChannel: updated,
+				previousPermissionOverwrites: current.permissionOverwrites,
+				guildId,
+				requestCache: requestCache,
+			});
+		}
+	}
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
+		private userCacheService: UserCacheService,
 		private channelAuthService: ChannelAuthService,
 		private channelUtilsService: ChannelUtilsService,
 		private voiceRoomStore: IVoiceRoomStore,
 		private liveKitService: ILiveKitService,
 		private voiceAvailabilityService: VoiceAvailabilityService | null,
 		private readonly guildAuditLogService: GuildAuditLogService,
-		private inviteRepository: IInviteRepository,
-		private webhookRepository: IWebhookRepository,
-		private guildRepository: IGuildRepositoryAggregate,
+		private inviteRepository: InviteRepository,
+		private webhookRepository: WebhookRepository,
+		private guildRepository: GuildRepository,
 		private limitConfigService: LimitConfigService,
 		private rateLimitService: IRateLimitService,
 		private cacheService: ICacheService,
 		private snowflakeService: ISnowflakeService,
 	) {}
 
+	private async assertVoiceP2pAssigned(userId: UserID, countryCode: string | null): Promise<void> {
+		const config = await getInstanceConfigRepository().getVoiceP2pConfig();
+		const user = config.enabled ? await this.userRepository.findUnique(userId) : null;
+		if (
+			user === null ||
+			!resolveVoiceP2pAssignment(
+				config,
+				userId.toString(),
+				await resolveExperimentTargeting(user, countryCode, [config]),
+			).enabled
+		) {
+			throw InputValidationError.fromCode('rtc_p2p', ValidationErrorCodes.GUILD_FEATURE_NOT_TOGGLEABLE);
+		}
+	}
+
 	async getChannel({
 		userId,
 		viewer,
 		channelId,
 		skipNsfwValidation,
+		access,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelId: ChannelID;
 		skipNsfwValidation?: boolean;
+		access?: ChannelAccess;
 	}): Promise<Channel> {
 		const {channel} = await this.channelAuthService.getChannelAuthenticated({
 			userId,
 			channelId,
 			viewer,
 			skipNsfwValidation,
+			access,
 		});
 		return channel;
 	}
@@ -183,6 +252,7 @@ export class ChannelOperationsService {
 		auditLogReason,
 		typeConversion,
 		threadParent,
+		countryCode,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
@@ -193,6 +263,7 @@ export class ChannelOperationsService {
 		auditLogReason: string | null;
 		typeConversion?: ChannelTypeConversion | null;
 		threadParent?: ThreadParentSettingsInput | null;
+		countryCode?: string | null;
 	}): Promise<Channel> {
 		const {channel, guild, checkPermission} = await this.channelAuthService.getChannelAuthenticated({
 			userId,
@@ -208,17 +279,16 @@ export class ChannelOperationsService {
 		const nextType = resolveNextChannelType(channel, typeConversion ?? null);
 		const guildIdValue = createGuildID(BigInt(guild.id));
 		const parentConfig = await loadThreadParentConfig(this.channelRepository.threads, channel);
-		const parentPatch =
-			threadParent && guildActive(guildIdValue)
-				? await buildThreadParentPatch({
-						channelType: channel.type,
-						guildId: guildIdValue,
-						input: threadParent,
-						current: parentConfig,
-						guildRepository: this.guildRepository,
-						generateId: () => this.snowflakeService.generate(),
-					})
-				: null;
+		const parentPatch = threadParent
+			? await buildThreadParentPatch({
+					channelType: channel.type,
+					guildId: guildIdValue,
+					input: threadParent,
+					current: parentConfig,
+					guildRepository: this.guildRepository,
+					generateId: () => this.snowflakeService.generate(),
+				})
+			: null;
 		contentModerationService.scanText(data.name ?? null, {
 			userId,
 			guildId: guildIdValue,
@@ -242,7 +312,7 @@ export class ChannelOperationsService {
 		}
 		if (data.rtc_region !== undefined && channel.type === ChannelTypes.GUILD_VOICE) {
 			await checkPermission(Permissions.UPDATE_RTC_REGION);
-			if (data.rtc_region !== null) {
+			if (data.rtc_region !== null && data.rtc_region !== channel.rtcRegion) {
 				if (this.voiceAvailabilityService !== null) {
 					const guildId = createGuildID(BigInt(guild.id));
 					const availableRegions = this.voiceAvailabilityService.getAvailableRegions({
@@ -250,14 +320,19 @@ export class ChannelOperationsService {
 						guildId,
 						guildFeatures: new Set(guild.features ?? []),
 					});
-					const regionAllowed = availableRegions.some((region) => region.id === data.rtc_region && region.isAccessible);
+					const regionAllowed = availableRegions.some(
+						(region) => region.id === data.rtc_region && isRegionPickable(region),
+					);
 					if (!regionAllowed) {
 						throw InputValidationError.fromCode('rtc_region', ValidationErrorCodes.INVALID_OR_RESTRICTED_RTC_REGION, {
 							region: data.rtc_region ?? 'unknown',
 						});
 					}
 				} else {
-					const availableRegions = this.liveKitService.getRegionMetadata().map((region) => region.id);
+					const availableRegions = this.liveKitService
+						.getRegionMetadata()
+						.filter((region) => !region.hidden)
+						.map((region) => region.id);
 					if (availableRegions.length > 0 && !availableRegions.includes(data.rtc_region)) {
 						throw InputValidationError.fromCode('rtc_region', ValidationErrorCodes.INVALID_RTC_REGION, {
 							region: data.rtc_region ?? 'unknown',
@@ -266,6 +341,9 @@ export class ChannelOperationsService {
 					}
 				}
 			}
+		}
+		if (data.rtc_p2p === true && !channel.rtcP2p && channel.type === ChannelTypes.GUILD_VOICE) {
+			await this.assertVoiceP2pAssigned(userId, countryCode ?? null);
 		}
 		const previousPermissionOverwrites = channel.permissionOverwrites;
 		let permissionOverwrites = channel.permissionOverwrites;
@@ -337,8 +415,12 @@ export class ChannelOperationsService {
 				}
 			}
 		}
-		const requestedParentId =
-			data.parent_id !== undefined ? (data.parent_id ? createChannelID(data.parent_id) : null) : channel.parentId;
+		let requestedParentId: ChannelID | null;
+		if (data.parent_id !== undefined) {
+			requestedParentId = data.parent_id ? createChannelID(data.parent_id) : null;
+		} else {
+			requestedParentId = channel.parentId;
+		}
 		if (data.parent_id !== undefined) {
 			await this.validateParentCategory({
 				guildId: guildIdValue,
@@ -378,18 +460,31 @@ export class ChannelOperationsService {
 				data.rtc_region !== undefined && channel.type === ChannelTypes.GUILD_VOICE
 					? data.rtc_region
 					: channel.rtcRegion,
-			permission_overwrites: new Map(
-				Array.from(permissionOverwrites.entries()).map(([targetId, overwrite]) => [
-					targetId,
-					overwrite.toPermissionOverwrite(),
-				]),
-			),
+			rtc_p2p: data.rtc_p2p !== undefined && channel.type === ChannelTypes.GUILD_VOICE ? data.rtc_p2p : channel.rtcP2p,
+			permission_overwrites:
+				permissionOverwrites.size > 0
+					? new Map(
+							Array.from(permissionOverwrites.entries()).map(([targetId, overwrite]) => [
+								targetId,
+								overwrite.toPermissionOverwrite(),
+							]),
+						)
+					: null,
+		};
+		const writeChannel = async (): Promise<Channel> => {
+			const current = await this.channelRepository.channelData.findUnique(channelId);
+			if (!current) throw new UnknownChannelError();
+			const currentRow = current.toRow();
+			return this.channelRepository.channelData.upsert(
+				rebaseChangedColumns(updatedChannelData, channel.toRow(), currentRow),
+				currentRow,
+			);
 		};
 		let retypedThreads: Array<ThreadState> = [];
 		const toAnnouncement =
 			nextType === ChannelTypes.GUILD_ANNOUNCEMENT && channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT;
 		const updatedChannel =
-			toAnnouncement || (nextType !== channel.type && everEnabled())
+			toAnnouncement || nextType !== channel.type
 				? await withChannelFollowLock(
 						this.cacheService,
 						channelId,
@@ -406,16 +501,19 @@ export class ChannelOperationsService {
 								channel,
 								nextType,
 							);
-							if (threads.length === 0) return this.channelRepository.channelData.upsert(updatedChannelData);
-							const {parent, active} = await retypeParentThreads(this.channelRepository, threads, nextType, () =>
-								this.channelRepository.channelData.upsert(updatedChannelData),
+							if (threads.length === 0) return writeChannel();
+							const {parent, active} = await retypeParentThreads(
+								this.channelRepository,
+								threads,
+								nextType,
+								writeChannel,
 							);
 							retypedThreads = active;
 							return parent;
 						},
-						everEnabled() ? PARENT_CONVERSION_LOCK_TTL_SECONDS : undefined,
+						PARENT_CONVERSION_LOCK_TTL_SECONDS,
 					)
-				: await this.channelRepository.channelData.upsert(updatedChannelData);
+				: await writeChannel();
 		if (channel.type === ChannelTypes.GUILD_ANNOUNCEMENT && nextType !== ChannelTypes.GUILD_ANNOUNCEMENT) {
 			await enqueueChannelFollowerRemoval({sourceChannelId: channelId, reason: 'converted'});
 		}
@@ -430,7 +528,7 @@ export class ChannelOperationsService {
 		) {
 			try {
 				await this.rateLimitService.clearLimitsByIdentifierPrefix(`slowmode:${channelId}:`);
-				if (everEnabled() && (await isTainted(guildIdValue))) {
+				if (await isTainted(guildIdValue)) {
 					await this.rateLimitService.clearLimitsByIdentifierPrefix(`slowmode-thread:${channelId}:`);
 				}
 			} catch (error) {
@@ -530,7 +628,7 @@ export class ChannelOperationsService {
 			viewer,
 			skipNsfwValidation: true,
 		});
-		if (this.channelAuthService.isPersonalNotesChannel({userId, channelId})) {
+		if (isPersonalNotesChannelId({userId, channelId})) {
 			throw new CannotExecuteOnDmError();
 		}
 		if (guild) {
@@ -540,11 +638,11 @@ export class ChannelOperationsService {
 				const guildChannels = await this.channelRepository.channelData.listGuildChannels(guildId, 'maintenance');
 				const childChannels = guildChannels.filter((ch: Channel) => ch.parentId === channelId);
 				for (const childChannel of childChannels) {
-					const updatedChild = await this.channelRepository.channelData.upsert({
-						...childChannel.toRow(),
-						parent_id: null,
-					});
-					if (THREAD_ONLY_CHANNEL_TYPES.has(updatedChild.type) && !guildActive(guildId)) continue;
+					const childRow = childChannel.toRow();
+					const updatedChild = await this.channelRepository.channelData.upsert(
+						{...childRow, parent_id: null},
+						childRow,
+					);
 					await this.channelUtilsService.dispatchChannelUpdate({channel: updatedChild, requestCache});
 				}
 			}
@@ -561,12 +659,20 @@ export class ChannelOperationsService {
 				...channelInvites.map((invite) => this.inviteRepository.delete(invite.code)),
 				...channelWebhooks.map((webhook) => this.webhookRepository.delete(webhook.id)),
 			]);
+			for (const invite of channelInvites) {
+				if (invite.guildId) await enqueueEndGuildVisitsForCode(invite.guildId, invite.code);
+			}
 			await this.channelUtilsService.purgeChannelAttachments(channel);
 			await this.channelRepository.messages.deleteAllChannelMessages(channelId);
 			await deleteChannelMessageSearchDocuments(channelId, {context: {source: 'channel_delete'}});
-			await this.channelUtilsService.dispatchChannelDelete({channel, requestCache});
+			await dispatchChannelDelete({
+				gatewayService: this.gatewayService,
+				userCacheService: this.userCacheService,
+				channel,
+				requestCache,
+			});
 			const guildIdValue = createGuildID(BigInt(guild.id));
-			const changes = this.guildAuditLogService.computeChanges(ChannelHelpers.serializeChannelForAudit(channel), null);
+			const changes = this.guildAuditLogService.computeChanges(serializeChannelForAudit(channel), null);
 			const builder = this.guildAuditLogService
 				.createBuilder(guildIdValue, userId)
 				.withAction(AuditLogActionType.CHANNEL_DELETE, channel.id.toString())
@@ -590,7 +696,7 @@ export class ChannelOperationsService {
 				);
 			}
 			await this.channelRepository.channelData.delete(channelId, guildId, channel.type);
-			if (channel.isThreadParent() && everEnabled() && (await isTainted(guildId, {fresh: true}))) {
+			if (channel.isThreadParent() && (await isTainted(guildId, {fresh: true}))) {
 				await enqueueDeleteChannelThreads(guildId, channelId);
 				await this.channelRepository.threads.deleteParentConfig(guildId, channelId);
 			}
@@ -612,7 +718,13 @@ export class ChannelOperationsService {
 			}
 		} else {
 			await this.userRepository.closeDmForUser(userId, channelId);
-			await this.channelUtilsService.dispatchDmChannelDelete({channel, userId, requestCache});
+			await dispatchDmChannelDelete({
+				gatewayService: this.gatewayService,
+				userCacheService: this.userCacheService,
+				channel,
+				userId,
+				requestCache,
+			});
 		}
 	}
 
@@ -646,8 +758,8 @@ export class ChannelOperationsService {
 			guildId,
 			guildFeatures: new Set(guild.features ?? []),
 		});
-		const accessibleRegions = regions.filter((region) => region.isAccessible);
-		return accessibleRegions.sort((a, b) => a.name.localeCompare(b.name));
+		const pickableRegions = regions.filter(isRegionPickable);
+		return pickableRegions.sort((a, b) => a.name.localeCompare(b.name));
 	}
 
 	private async propagatePermissionsToSyncedChildren({
@@ -672,16 +784,19 @@ export class ChannelOperationsService {
 		if (syncedChannels.length > 0) {
 			await Promise.all(
 				syncedChannels.map(async (child) => {
-					const updatedChild = await this.channelRepository.channelData.upsert({
-						...child.toRow(),
-						permission_overwrites: new Map(
-							Array.from(categoryChannel.permissionOverwrites.entries()).map(([targetId, overwrite]) => [
-								targetId,
-								overwrite.toPermissionOverwrite(),
-							]),
-						),
-					});
-					if (THREAD_ONLY_CHANNEL_TYPES.has(updatedChild.type) && !guildActive(guildId)) return;
+					const childRow = child.toRow();
+					const updatedChild = await this.channelRepository.channelData.upsert(
+						{
+							...childRow,
+							permission_overwrites: new Map(
+								Array.from(categoryChannel.permissionOverwrites.entries()).map(([targetId, overwrite]) => [
+									targetId,
+									overwrite.toPermissionOverwrite(),
+								]),
+							),
+						},
+						childRow,
+					);
 					await this.channelUtilsService.dispatchChannelUpdate({channel: updatedChild, requestCache});
 				}),
 			);
@@ -716,22 +831,6 @@ export class ChannelOperationsService {
 		await this.gatewayService.switchVoiceRegion({guildId, channelId});
 	}
 
-	private async ensureCategoryHasCapacity(params: {guildId: GuildID; categoryId: ChannelID}): Promise<void> {
-		const count = await this.gatewayService.getCategoryChannelCount(params);
-		let maxChannels = MAX_CHANNELS_PER_CATEGORY;
-		const guild = await this.guildRepository.findUnique(params.guildId);
-		const ctx = createLimitMatchContext({user: null, guildFeatures: guild?.features ?? null});
-		const resolved = resolveLimit(this.limitConfigService.getConfigSnapshot(), ctx, 'max_channels_per_category', {
-			evaluationContext: 'guild',
-		});
-		if (Number.isFinite(resolved) && resolved >= 0) {
-			maxChannels = Math.floor(resolved);
-		}
-		if (count >= maxChannels) {
-			throw new MaxCategoryChannelsError(maxChannels);
-		}
-	}
-
 	private async validateParentCategory(params: {
 		guildId: GuildID;
 		channel: Channel;
@@ -745,15 +844,14 @@ export class ChannelOperationsService {
 			throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.CATEGORIES_CANNOT_HAVE_PARENTS);
 		}
 		const guildChannels = await this.channelRepository.channelData.listGuildChannels(params.guildId, 'enrolled');
-		const parentChannel = guildChannels.find((channel) => channel.id === params.parentId);
-		if (!parentChannel) {
-			throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.INVALID_PARENT_CHANNEL);
-		}
-		if (parentChannel.type !== ChannelTypes.GUILD_CATEGORY) {
-			throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.PARENT_MUST_BE_CATEGORY);
-		}
+		ChannelHelpers.assertValidParentCategory(params.parentId, params.channel.type, guildChannels);
 		if (params.validateCapacity) {
-			await this.ensureCategoryHasCapacity({guildId: params.guildId, categoryId: params.parentId});
+			await ChannelHelpers.assertCategoryCapacity({
+				gatewayService: this.gatewayService,
+				guildRepository: this.guildRepository,
+				limitConfigService: this.limitConfigService,
+				...{guildId: params.guildId, categoryId: params.parentId},
+			});
 		}
 	}
 
@@ -762,20 +860,10 @@ export class ChannelOperationsService {
 		userId: UserID;
 		channelId: ChannelID;
 	}): Promise<void> {
-		const canManageRoles = await this.gatewayService.checkPermission({
-			guildId: params.guildId,
-			userId: params.userId,
-			channelId: params.channelId,
+		await requireGuildPermission(this.gatewayService, this.userRepository, {
+			...params,
 			permission: Permissions.MANAGE_ROLES,
 		});
-		if (!canManageRoles) throw new MissingPermissionsError();
-		const guildData = await this.gatewayService.getGuildData({guildId: params.guildId, userId: params.userId});
-		const enforceGuildMfa = await createGuildMfaEnforcer({
-			userRepository: this.userRepository,
-			guildData,
-			userId: params.userId,
-		});
-		enforceGuildMfa(Permissions.MANAGE_ROLES);
 	}
 
 	async setChannelPermissionOverwrite(params: {
@@ -828,32 +916,19 @@ export class ChannelOperationsService {
 		const grantedBits = overwriteGrantedBits(existing, {allow: sanitizedAllow, deny: sanitizedDeny});
 		const effectivePermissions = actor.threadBits ? withImplicitThreadBits(userPermissions) : userPermissions;
 		if (!hasAdministrator && (grantedBits & ~effectivePermissions) !== 0n) throw new MissingPermissionsError();
-		const previousPermissionOverwrites = channel.permissionOverwrites;
 		const nextOverwrite = new ChannelPermissionOverwrite({
 			type: params.overwrite.type,
 			allow_: sanitizedAllow,
 			deny_: sanitizedDeny,
 		});
-		const overwrites = new Map(channel.permissionOverwrites ?? []);
-		overwrites.set(targetId, nextOverwrite);
-		const updated = await this.channelRepository.channelData.upsert(
-			{
-				...channel.toRow(),
-				permission_overwrites: new Map(
-					Array.from(overwrites.entries()).map(([id, ow]) => [id, ow.toPermissionOverwrite()]),
-				),
+		await this.persistOverwritesAndDispatch(
+			channel.id,
+			(overwrites) => {
+				overwrites.set(targetId, nextOverwrite);
 			},
-			channel.toRow(),
+			params.requestCache,
+			channel.guildId,
 		);
-		await this.channelUtilsService.dispatchChannelUpdate({channel: updated, requestCache: params.requestCache});
-		if (channel.type === ChannelTypes.GUILD_CATEGORY) {
-			await this.propagatePermissionsToSyncedChildren({
-				categoryChannel: updated,
-				previousPermissionOverwrites,
-				guildId: channel.guildId,
-				requestCache: params.requestCache,
-			});
-		}
 		await this.guildAuditLogService.recordPermissionOverwriteDiff({
 			guildId: channel.guildId,
 			userId: params.userId,
@@ -862,6 +937,29 @@ export class ChannelOperationsService {
 			next: new Map([[targetId, nextOverwrite]]),
 			reason: params.auditLogReason,
 		});
+	}
+
+	async systemSetMemberOverwrite(params: {
+		channelId: ChannelID;
+		userId: UserID;
+		allow: bigint | null;
+		requestCache: RequestCache;
+	}): Promise<void> {
+		const channel = await this.channelRepository.channelData.findUnique(params.channelId);
+		if (!channel?.guildId) throw new UnknownChannelError();
+		const {userId, allow} = params;
+		await this.persistOverwritesAndDispatch(
+			channel.id,
+			(overwrites) => {
+				if (allow === null) {
+					overwrites.delete(userId);
+				} else {
+					overwrites.set(userId, new ChannelPermissionOverwrite({type: 1, allow_: allow, deny_: 0n}));
+				}
+			},
+			params.requestCache,
+			channel.guildId,
+		);
 	}
 
 	async deleteChannelPermissionOverwrite(params: {
@@ -877,10 +975,8 @@ export class ChannelOperationsService {
 		if (!channel?.guildId) throw new UnknownChannelError();
 		assertOverwriteTarget(channel, params.viewer);
 		await this.checkOverwritePermission({guildId: channel.guildId, userId: params.userId, channelId: channel.id});
-		const previousPermissionOverwrites = channel.permissionOverwrites;
-		const overwrites = new Map(channel.permissionOverwrites ?? []);
-		const removedRole = overwrites.get(createRoleID(params.overwriteId));
-		const removedUser = overwrites.get(createUserID(params.overwriteId));
+		const removedRole = channel.permissionOverwrites?.get(createRoleID(params.overwriteId));
+		const removedUser = channel.permissionOverwrites?.get(createUserID(params.overwriteId));
 		const removed = removedRole ?? removedUser;
 		const kept =
 			removed && (hasThreadPermissionBits(removed.allow) || hasThreadPermissionBits(removed.deny))
@@ -903,37 +999,27 @@ export class ChannelOperationsService {
 			const hasAdministrator = (userPermissions & Permissions.ADMINISTRATOR) !== 0n;
 			if (!hasAdministrator && (removed.deny & ~kept & ~userPermissions) !== 0n) throw new MissingPermissionsError();
 		}
-		overwrites.delete(createRoleID(params.overwriteId));
-		overwrites.delete(createUserID(params.overwriteId));
-		if (removed && kept !== 0n) {
-			const removedTargetId = removed.type === 0 ? createRoleID(params.overwriteId) : createUserID(params.overwriteId);
-			overwrites.set(
-				removedTargetId,
-				new ChannelPermissionOverwrite({
-					type: removed.type,
-					allow_: removed.allow & kept,
-					deny_: removed.deny & kept,
-				}),
-			);
-		}
-		const updated = await this.channelRepository.channelData.upsert(
-			{
-				...channel.toRow(),
-				permission_overwrites: new Map(
-					Array.from(overwrites.entries()).map(([id, ow]) => [id, ow.toPermissionOverwrite()]),
-				),
+		await this.persistOverwritesAndDispatch(
+			channel.id,
+			(overwrites) => {
+				overwrites.delete(createRoleID(params.overwriteId));
+				overwrites.delete(createUserID(params.overwriteId));
+				if (removed && kept !== 0n) {
+					const removedTargetId =
+						removed.type === 0 ? createRoleID(params.overwriteId) : createUserID(params.overwriteId);
+					overwrites.set(
+						removedTargetId,
+						new ChannelPermissionOverwrite({
+							type: removed.type,
+							allow_: removed.allow & kept,
+							deny_: removed.deny & kept,
+						}),
+					);
+				}
 			},
-			channel.toRow(),
+			params.requestCache,
+			channel.guildId,
 		);
-		await this.channelUtilsService.dispatchChannelUpdate({channel: updated, requestCache: params.requestCache});
-		if (channel.type === ChannelTypes.GUILD_CATEGORY) {
-			await this.propagatePermissionsToSyncedChildren({
-				categoryChannel: updated,
-				previousPermissionOverwrites,
-				guildId: channel.guildId,
-				requestCache: params.requestCache,
-			});
-		}
 		if (removed) {
 			const removedTargetId = removed.type === 0 ? createRoleID(params.overwriteId) : createUserID(params.overwriteId);
 			await this.guildAuditLogService.recordPermissionOverwriteDiff({
@@ -951,6 +1037,14 @@ export class ChannelOperationsService {
 export interface ChannelTypeConversion {
 	from: number;
 	to: number;
+}
+
+function rebaseChangedColumns(desired: ChannelRow, snapshot: ChannelRow, current: ChannelRow): ChannelRow {
+	const next = {...current};
+	for (const column of Object.keys(desired) as Array<keyof ChannelRow>) {
+		if (!valuesEqual(desired[column], snapshot[column])) Object.assign(next, {[column]: desired[column]});
+	}
+	return next;
 }
 
 function resolveNextChannelType(channel: Channel, typeConversion: ChannelTypeConversion | null): number {

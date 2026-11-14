@@ -36,10 +36,6 @@ export class AuthSession {
 			current: this.isCurrent,
 		};
 	}
-
-	equals(other: AuthSession): boolean {
-		return JSON.stringify(this) === JSON.stringify(other);
-	}
 }
 
 function getLocationLabel(location: AuthSessionLocation | null): string | null {

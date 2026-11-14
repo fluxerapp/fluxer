@@ -4,9 +4,11 @@ import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/aler
 import {MaxPollVoteCountReachedModal} from '@app/features/app/components/alerts/MaxPollVoteCountReachedModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
 import {ERROR_DESCRIPTOR} from '@app/features/channel/components/channel_search_results/ChannelSearchResultsShared';
 import {END_POLL_NOW_DESCRIPTOR, OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
+import PollVotes from '@app/features/messaging/state/PollVotes';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
@@ -17,7 +19,6 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import PollVotes from '../state/PollVotes';
 
 const logger = new Logger('PollCommands');
 
@@ -63,6 +64,7 @@ export function showEndPollConfirmation(i18n: I18n, {message, onEndPoll}: ShowEn
 }
 
 function onHttpError(i18n: I18n, error: any) {
+	if (promptForAccountTier(error)) return;
 	const errorCode = failureCode(error);
 	if (error.status === 403) {
 		if (errorCode === APIErrorCodes.FEATURE_TEMPORARILY_DISABLED) {

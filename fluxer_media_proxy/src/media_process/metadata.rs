@@ -3,7 +3,7 @@
 use super::MediaError;
 use super::av_metadata::{AVMetadata, AVProbe, NSFW_PREVIEW_MAX_DIMENSION, probe_av_metadata};
 use super::image_probe::probe_image_dims;
-use super::loaded_image::validate_dimensions_u32;
+use super::loaded_image::{validate_dimensions_u32, validate_jxl_decode_pixels};
 use super::nsfw_processing::{
     NSFWScanPreparation, NSFWScanSource, classify_nsfw_buffers, nsfw_scan_buffers,
 };
@@ -11,6 +11,7 @@ use super::placeholder::{encode_thumbhash, encoded_placeholder, optional_thumbha
 use crate::{
     constants,
     media_limits::MediaLimits,
+    media_type::MediaType,
     metrics::transform::TransformMetrics,
     mime,
     nsfw::{NSFWClassification, NSFWClient, NSFWPolicy},
@@ -22,6 +23,7 @@ use sha2::{Digest, Sha256};
 pub struct MetadataOptions {
     pub placeholder: bool,
     pub nsfw: NSFWPolicy,
+    pub deadline_ms: Option<i64>,
 }
 
 impl Default for MetadataOptions {
@@ -29,6 +31,7 @@ impl Default for MetadataOptions {
         Self {
             placeholder: true,
             nsfw: NSFWPolicy::Disabled,
+            deadline_ms: None,
         }
     }
 }
@@ -50,12 +53,12 @@ struct MetadataResponse {
     nsfw_probability: f32,
 }
 
-struct MetadataBlocking {
+pub struct PreparedMetadata {
     response: MetadataResponse,
     nsfw_scan: Option<NSFWScanPreparation>,
 }
 
-impl MetadataBlocking {
+impl PreparedMetadata {
     fn take_nsfw_scan(&mut self) -> Option<NSFWScanPreparation> {
         self.nsfw_scan.take()
     }
@@ -121,31 +124,34 @@ fn validate_metadata_image_dimensions(
 fn probe_av_metadata_without_requiring_a_frame(
     input: &[u8],
     media_limits: &MediaLimits,
+    deadline_ms: Option<i64>,
 ) -> Result<AVMetadata, MediaError> {
-    match probe_av_metadata(input, NSFW_PREVIEW_MAX_DIMENSION, media_limits, None) {
+    match probe_av_metadata(input, NSFW_PREVIEW_MAX_DIMENSION, media_limits, deadline_ms) {
         Ok(metadata) => Ok(metadata),
-        Err(error) => probe_av_metadata(input, 0, media_limits, None).map_err(|_| error),
+        Err(error) => probe_av_metadata(input, 0, media_limits, deadline_ms).map_err(|_| error),
     }
 }
 
-fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<MetadataBlocking, MediaError> {
+fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<PreparedMetadata, MediaError> {
     let MetadataBlockingRequest {
         media_limits,
         metrics,
         input,
         options,
     } = request;
-    if input.len() > constants::MAX_MEDIA_PROXY_BYTES {
-        return Err(MediaError::StreamTooLong);
-    }
     let sniffed = mime::sniff(input);
     if !mime::is_supported_media_mime(sniffed.mime) {
         return Err(MediaError::UnsupportedMediaType);
     }
     let initial_category = mime::category(sniffed.mime).ok_or(MediaError::UnsupportedMediaType)?;
     let is_image = initial_category == mime::Category::Image;
+    if is_image && input.len() > constants::MAX_MEDIA_PROXY_BYTES {
+        return Err(MediaError::StreamTooLong);
+    }
     let dims = if is_image {
-        Some(probe_image_dims(media_limits, input)?)
+        let dims = probe_image_dims(media_limits, input)?;
+        validate_jxl_decode_pixels(sniffed.mime, dims)?;
+        Some(dims)
     } else {
         None
     };
@@ -163,6 +169,7 @@ fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<MetadataBlo
         Some(probe_av_metadata_without_requiring_a_frame(
             input,
             media_limits,
+            options.deadline_ms,
         )?)
     } else {
         None
@@ -190,7 +197,7 @@ fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<MetadataBlo
     let placeholder = if options.placeholder {
         let hash = if is_image {
             optional_thumbhash(
-                encode_thumbhash(media_limits, input, None),
+                encode_thumbhash(media_limits, input, options.deadline_ms),
                 "image_metadata",
             )
         } else {
@@ -206,20 +213,23 @@ fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<MetadataBlo
         None
     };
 
-    let scan_eligible = is_image
-        || (category == mime::Category::Video
-            && av_probe.as_ref().is_some_and(|probe| probe.has_video));
+    let probe_has_video = av_probe.as_ref().is_some_and(|probe| probe.has_video);
+    let scan_eligible = is_image || probe_has_video;
     let nsfw_scan = if let Some(threshold) = options.nsfw.scan_threshold(scan_eligible) {
         nsfw_scan_buffers(NSFWScanSource {
             media_limits,
             metrics,
             threshold,
-            content_type: sniffed.mime,
+            content_type: if probe_has_video {
+                MediaType::MP4Video.mime()
+            } else {
+                sniffed.mime
+            },
             animated,
             frame_count: frames_count.max(sniffed.frames),
             input,
             duration_seconds: av_probe.as_ref().and_then(|probe| probe.duration_seconds),
-            deadline_ms: None,
+            deadline_ms: options.deadline_ms,
         })?
     } else {
         None
@@ -239,7 +249,7 @@ fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<MetadataBlo
 
     let format = metadata_format(content_type);
     let content_hash = hex::encode(Sha256::digest(input));
-    Ok(MetadataBlocking {
+    Ok(PreparedMetadata {
         response: MetadataResponse {
             content_type: content_type.to_owned(),
             size: input.len(),
@@ -257,27 +267,31 @@ fn metadata_blocking(request: MetadataBlockingRequest<'_>) -> Result<MetadataBlo
     })
 }
 
-fn metadata_finalize(prepared: MetadataBlocking, verdict: NSFWClassification) -> MetadataResponse {
+fn metadata_finalize(prepared: PreparedMetadata, verdict: NSFWClassification) -> MetadataResponse {
     let mut response = prepared.response;
     response.nsfw = verdict.is_nsfw;
     response.nsfw_probability = verdict.probability;
     response
 }
 
-pub async fn metadata_json_with_options(
+pub fn prepare_metadata(
     input: &[u8],
-    _filename: &str,
-    options: MetadataOptions,
+    options: &MetadataOptions,
     media_limits: &MediaLimits,
-    nsfw_client: &NSFWClient,
     metrics: &TransformMetrics,
-) -> Result<String, MediaError> {
-    let mut prepared = metadata_blocking(MetadataBlockingRequest {
+) -> Result<PreparedMetadata, MediaError> {
+    metadata_blocking(MetadataBlockingRequest {
         media_limits,
         metrics,
         input,
-        options: &options,
-    })?;
+        options,
+    })
+}
+
+pub async fn finish_metadata(
+    mut prepared: PreparedMetadata,
+    nsfw_client: &NSFWClient,
+) -> Result<String, MediaError> {
     let scan = prepared.take_nsfw_scan();
     let verdict = classify_nsfw_buffers(nsfw_client, scan).await?;
     let response = metadata_finalize(prepared, verdict);

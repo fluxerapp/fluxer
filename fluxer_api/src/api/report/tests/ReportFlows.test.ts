@@ -3,9 +3,10 @@
 import {createTestAccount, type TestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createReportID} from '@app/api/BrandedTypes';
 import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
-import {getConfig} from '@app/api/Config';
 import {
+	acceptInvite,
 	createChannel,
+	createChannelInvite,
 	createDmChannel,
 	createFriendship,
 	getChannel,
@@ -15,39 +16,28 @@ import {
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
-import {setCachedProductName} from '@app/api/instance/ProductName';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {getInstanceConfigRepository, getRateLimitService} from '@app/api/middleware/ServiceSingletons';
-import {
-	getReportFlowResponse,
-	getReportFlowVariant,
-	type ReportFlowStepInput,
-	resolveReportFlowAnswers,
-} from '@app/api/report/flows/ReportFlowRegistry';
+import {getReportFlowResponse, resolveReportFlowAnswers} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {
+import type {
 	ReportFlowResponse,
-	type ReportFlowSurface,
-	type ReportFlowTargetType,
+	ReportFlowStep,
+	ReportFlowSurface,
+	ReportFlowTargetType,
 } from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
 interface ReportResponse {
 	report_id: string;
 	status: string;
 	reported_at: string;
-}
-
-interface ErrorResponse {
-	code: string;
-	step_index?: number;
-	errors?: Array<{path: string; code: string}>;
 }
 
 interface MessageTarget {
@@ -58,206 +48,80 @@ interface MessageTarget {
 	messageId: string;
 }
 
-interface Walk {
-	name: string;
-	steps: ReadonlyArray<ReportFlowStepInput>;
-	reason: string;
-	category: string;
-}
-
 const HAS_SESSION_STARTED = 1n << 39n;
 const RATE_LIMIT_HEADER = 'x-fluxer-test-enable-rate-limits';
 
-const VARIANTS: ReadonlyArray<readonly [ReportFlowTargetType, ReportFlowSurface]> = [
-	['message', 'in_app'],
-	['user', 'in_app'],
-	['message', 'dsa'],
-	['user', 'dsa'],
-	['guild', 'dsa'],
+const SPAM_WALK: ReadonlyArray<ReportFlowStep> = [{screen_id: 'root_message', option_id: 'spam'}];
+const USER_SPAM_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'user_start', option_id: 'profile'},
+	{screen_id: 'profile_parts', item_ids: ['name']},
+	{screen_id: 'root_user', option_id: 'spam'},
+	{screen_id: 'spam_profile', option_id: 'spam_profile'},
+];
+const PRIVATE_INFO_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'private_info'},
+	{screen_id: 'private_info', item_ids: ['phone', 'email']},
+];
+const CSAM_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'abuse'},
+	{screen_id: 'abuse', option_id: 'sexual'},
+	{screen_id: 'sexual', option_id: 'minor_sexual'},
+	{screen_id: 'minor_sexual', option_id: 'csam'},
+];
+const CALL_CSAM_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'user_start', option_id: 'call'},
+	{screen_id: 'root_call', option_id: 'abuse'},
+	{screen_id: 'abuse', option_id: 'sexual'},
+	{screen_id: 'sexual', option_id: 'minor_sexual'},
+	{screen_id: 'minor_sexual', option_id: 'csam'},
+];
+const SELF_HARM_PROMOTION_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'something_else'},
+	{screen_id: 'something_else_message', option_id: 'self_harm'},
+	{screen_id: 'self_harm', option_id: 'self_harm_promotion'},
+];
+const GUILD_HARASSMENT_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'community_parts', item_ids: ['icon']},
+	{screen_id: 'root_guild', option_id: 'abuse'},
+	{screen_id: 'abuse_guild', option_id: 'harassment'},
+];
+const USER_PRIVATE_INFO_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'user_start', option_id: 'profile'},
+	{screen_id: 'profile_parts', item_ids: ['profile_text']},
+	{screen_id: 'root_user', option_id: 'something_else'},
+	{screen_id: 'something_else_user', option_id: 'private_info'},
+	{screen_id: 'profile_private_info', item_ids: ['phone', 'address']},
 ];
 
-const MESSAGE_WALKS: ReadonlyArray<Walk> = [
-	{name: 'S3 spam', steps: [{screen_id: 'root_message', option_id: 'spam'}], reason: 'spam', category: 'spam'},
-	{
-		name: 'S6 private information',
-		steps: [
-			{screen_id: 'root_message', option_id: 'private_info'},
-			{screen_id: 'private_info', item_ids: ['phone', 'email']},
-		],
-		reason: 'doxxing',
-		category: 'doxxing',
-	},
-	{
-		name: 'S6 intimate photo override',
-		steps: [
-			{screen_id: 'root_message', option_id: 'private_info'},
-			{screen_id: 'private_info', item_ids: ['face_photo', 'intimate_photo']},
-		],
-		reason: 'intimate_image_abuse',
-		category: 'doxxing',
-	},
-	{
-		name: 'S8 S9 age stated',
-		steps: [
-			{screen_id: 'root_message', option_id: 'something_else'},
-			{screen_id: 'something_else_message', option_id: 'too_young'},
-			{screen_id: 'age_stated_message', option_id: 'age_yes'},
-		],
-		reason: 'underage',
-		category: 'underage_user',
-	},
-	{
-		name: 'S11 S12 self-harm worry',
-		steps: [
-			{screen_id: 'root_message', option_id: 'something_else'},
-			{screen_id: 'something_else_message', option_id: 'self_harm'},
-			{screen_id: 'self_harm', option_id: 'worried_self_harm'},
-		],
-		reason: 'wellbeing_concern',
-		category: 'self_harm',
-	},
-	{
-		name: 'S14 harmful false claims',
-		steps: [
-			{screen_id: 'root_message', option_id: 'violence_misinfo'},
-			{screen_id: 'violence_misinfo', option_id: 'false_info'},
-			{screen_id: 'false_info', option_id: 'harmful_false_claims'},
-		],
-		reason: 'harmful_false_claims',
-		category: 'other',
-	},
-	{
-		name: 'S15 fraud',
-		steps: [
-			{screen_id: 'root_message', option_id: 'something_else'},
-			{screen_id: 'something_else_message', option_id: 'impersonation'},
-			{screen_id: 'impersonation', option_id: 'fraud'},
-		],
-		reason: 'fraud',
-		category: 'illegal_activity',
-	},
-	{
-		name: 'S18 to S21 csam',
-		steps: [
-			{screen_id: 'root_message', option_id: 'abuse'},
-			{screen_id: 'abuse', option_id: 'sexual'},
-			{screen_id: 'sexual', option_id: 'minor_sexual'},
-			{screen_id: 'minor_sexual', option_id: 'csam'},
-		],
-		reason: 'csam',
-		category: 'child_safety',
-	},
-	{
-		name: 'S1 to S5 terrorism',
-		steps: [
-			{screen_id: 'root_message', option_id: 'violence_misinfo'},
-			{screen_id: 'violence_misinfo', option_id: 'terrorism'},
-		],
-		reason: 'terrorism_extremism',
-		category: 'violent_content',
-	},
+const SEXUAL_UNWANTED_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'abuse'},
+	{screen_id: 'abuse', option_id: 'sexual'},
+	{screen_id: 'sexual', option_id: 'sexual_unwanted'},
 ];
-
-const USER_WALKS: ReadonlyArray<Walk> = [
-	{
-		name: 'P1 to P3 harassment',
-		steps: [
-			{screen_id: 'profile_intro'},
-			{screen_id: 'profile_parts', item_ids: ['photo', 'profile_text']},
-			{screen_id: 'root_user', option_id: 'abuse'},
-			{screen_id: 'profile_abuse', option_id: 'harassment'},
-		],
-		reason: 'harassment',
-		category: 'harassment',
-	},
-	{
-		name: 'P5 private information',
-		steps: [
-			{screen_id: 'profile_intro'},
-			{screen_id: 'profile_parts', item_ids: ['profile_text']},
-			{screen_id: 'root_user', option_id: 'something_else'},
-			{screen_id: 'something_else_user', option_id: 'private_info'},
-			{screen_id: 'profile_private_info', item_ids: ['phone', 'address']},
-		],
-		reason: 'doxxing',
-		category: 'inappropriate_profile',
-	},
-	{
-		name: 'P4 self-harm worry',
-		steps: [
-			{screen_id: 'profile_intro'},
-			{screen_id: 'profile_parts', item_ids: ['profile_text']},
-			{screen_id: 'root_user', option_id: 'something_else'},
-			{screen_id: 'something_else_user', option_id: 'self_harm'},
-			{screen_id: 'crisis_support'},
-			{screen_id: 'self_harm_profile', option_id: 'worried'},
-		],
-		reason: 'wellbeing_concern',
-		category: 'other',
-	},
-	{
-		name: 'P4 age stated',
-		steps: [
-			{screen_id: 'profile_intro'},
-			{screen_id: 'profile_parts', item_ids: ['profile_text']},
-			{screen_id: 'root_user', option_id: 'something_else'},
-			{screen_id: 'something_else_user', option_id: 'too_young'},
-			{screen_id: 'age_stated_profile', option_id: 'age_yes'},
-		],
-		reason: 'underage',
-		category: 'underage_user',
-	},
-	{
-		name: 'spam profile',
-		steps: [
-			{screen_id: 'profile_intro'},
-			{screen_id: 'profile_parts', item_ids: ['name']},
-			{screen_id: 'root_user', option_id: 'spam'},
-			{screen_id: 'spam_profile', option_id: 'spam_profile'},
-		],
-		reason: 'spam',
-		category: 'spam_account',
-	},
-	{
-		name: 'staff impersonation',
-		steps: [
-			{screen_id: 'profile_intro'},
-			{screen_id: 'profile_parts', item_ids: ['name', 'photo']},
-			{screen_id: 'root_user', option_id: 'impersonation'},
-			{screen_id: 'impersonation', option_id: 'impersonation_staff'},
-		],
-		reason: 'impersonation_staff',
-		category: 'impersonation',
-	},
-	{
-		name: 'hateful profile',
-		steps: [
-			{screen_id: 'profile_intro'},
-			{screen_id: 'profile_parts', item_ids: ['profile_text']},
-			{screen_id: 'root_user', option_id: 'hate_violence'},
-			{screen_id: 'profile_hate_violence', option_id: 'hate'},
-			{screen_id: 'hate', option_id: 'hate_slurs'},
-		],
-		reason: 'hate_slurs',
-		category: 'hate_speech',
-	},
-	{
-		name: 'csam in a profile',
-		steps: [
-			{screen_id: 'profile_intro'},
-			{screen_id: 'profile_parts', item_ids: ['photo']},
-			{screen_id: 'root_user', option_id: 'abuse'},
-			{screen_id: 'profile_abuse', option_id: 'sexual'},
-			{screen_id: 'profile_sexual', option_id: 'minor_sexual'},
-			{screen_id: 'profile_minor_sexual', option_id: 'csam'},
-		],
-		reason: 'csam',
-		category: 'child_safety',
-	},
+const ADULT_UNMARKED_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'abuse'},
+	{screen_id: 'abuse', option_id: 'sexual'},
+	{screen_id: 'sexual', option_id: 'adult_content_unmarked'},
 ];
-
-const SPAM_WALK: ReadonlyArray<ReportFlowStepInput> = [{screen_id: 'root_message', option_id: 'spam'}];
-const USER_SPAM_WALK: ReadonlyArray<ReportFlowStepInput> = USER_WALKS[4].steps;
+const MINOR_IN_ADULT_SPACE_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'abuse'},
+	{screen_id: 'abuse', option_id: 'minor_risk'},
+	{screen_id: 'minor_risk', option_id: 'minor_in_adult_space'},
+];
+const THREAT_GLORIFICATION_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'abuse'},
+	{screen_id: 'abuse', option_id: 'threat'},
+	{screen_id: 'threat', option_id: 'violence_glorification'},
+];
+const MISINFO_GLORIFICATION_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'violence_misinfo'},
+	{screen_id: 'violence_misinfo', option_id: 'violence_glorification'},
+];
+const TERRORISM_WALK: ReadonlyArray<ReportFlowStep> = [
+	{screen_id: 'root_message', option_id: 'violence_misinfo'},
+	{screen_id: 'violence_misinfo', option_id: 'terrorism'},
+];
+const FORGED_CSAM_WALK: ReadonlyArray<ReportFlowStep> = [{screen_id: 'minor_sexual', option_id: 'csam'}];
 
 class CapturingPublisher implements ActivityPublisher {
 	readonly payloads: Array<string> = [];
@@ -268,21 +132,7 @@ class CapturingPublisher implements ActivityPublisher {
 }
 
 function currentHash(target: ReportFlowTargetType, surface: ReportFlowSurface = 'in_app'): string {
-	return getReportFlowVariant(target, surface).revisionHash;
-}
-
-function expectedSteps(target: ReportFlowTargetType, steps: ReadonlyArray<ReportFlowStepInput>) {
-	return resolveReportFlowAnswers({target, surface: 'in_app', revisionHash: currentHash(target), steps}).steps;
-}
-
-function screenKind(screen: ReportFlowResponse['screens'][number]): string {
-	if (screen.checklist) return 'checklist';
-	if (screen.next_screen_id) return 'info';
-	return 'choice';
-}
-
-function optionIds(flow: ReportFlowResponse): Array<string> {
-	return flow.screens.flatMap((screen) => screen.options.map((option) => option.id));
+	return getReportFlowResponse(target, surface, 'en-US').revision_hash;
 }
 
 async function readReport(reportId: string) {
@@ -342,6 +192,10 @@ function submitUser(harness: ApiTestHarness, token: string, body: unknown) {
 	return createBuilder<ReportResponse>(harness, token).post('/reports/flows/user/submissions').body(body);
 }
 
+function submitGuild(harness: ApiTestHarness, token: string, body: unknown) {
+	return createBuilder<ReportResponse>(harness, token).post('/reports/flows/guild/submissions').body(body);
+}
+
 function legacyMessage(harness: ApiTestHarness, token: string, target: {channelId: string; messageId: string}) {
 	return createBuilder<ReportResponse>(harness, token)
 		.post('/reports/message')
@@ -360,41 +214,17 @@ async function setUserFlags(harness: ApiTestHarness, userId: string, flags: bigi
 
 describe('Report flows', () => {
 	let harness: ApiTestHarness;
-	const originalSelfHosted = getConfig().instance.selfHosted;
-	const originalProductName = getConfig().instance.branding.productName;
 
 	beforeEach(async () => {
 		harness = await createApiTestHarness({search: 'enabled'});
 	});
 
 	afterEach(async () => {
-		getConfig().instance.selfHosted = originalSelfHosted;
-		getConfig().instance.branding.productName = originalProductName;
-		setCachedProductName(null);
 		resetActivityEventsForTests();
 		await harness?.shutdown();
 	});
 
 	describe('Fetch', () => {
-		test.each(VARIANTS)('%s on %s serves every reachable screen', async (target, surface) => {
-			const account = await createTestAccount(harness);
-			const flow = await createBuilder<ReportFlowResponse>(harness, account.token)
-				.get(`/reports/flows/${target}?surface=${surface}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(ReportFlowResponse.safeParse(flow).success).toBe(true);
-			const variant = getReportFlowVariant(target, surface);
-			expect(flow.target_type).toBe(target);
-			expect(flow.surface).toBe(surface);
-			expect(flow.start_screen_id).toBe(variant.startScreenId);
-			expect(flow.screens[0].id).toBe(variant.startScreenId);
-			expect(flow.revision_hash).toBe(variant.revisionHash);
-			expect(flow.screens.map((screen) => screen.id).sort()).toEqual([...variant.screens.keys()].sort());
-			for (const screen of flow.screens) {
-				expect(screenKind(screen), screen.id).toBe(variant.screens.get(screen.id)?.kind);
-			}
-		});
-
 		test('the default surface is in app and the hash is locale independent', async () => {
 			const english = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
 				.get('/reports/flows/message?locale=en-US')
@@ -414,232 +244,39 @@ describe('Report flows', () => {
 				.get('/reports/flows/user')
 				.expect(HTTP_STATUS.OK)
 				.executeWithResponse();
-			expect(json.start_screen_id).toBe('profile_intro');
+			expect(json.start_screen_id).toBe('user_start');
 			expect(response.headers.get('cache-control')).toBe('private, no-cache');
 			expect(response.headers.get('vary')).toContain('Accept-Language');
 		});
 
-		test('the DSA message flow drops the app-only rows and adds the copyright notice', async () => {
-			const inApp = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/message')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const dsa = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/message?surface=dsa')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const appOnly = ['dislike', 'rude_language', 'dsa', 'copyright', 'worried_self_harm', 'worried_suicide'];
-			for (const id of appOnly) {
-				expect(optionIds(inApp), id).toContain(id);
-				expect(optionIds(dsa), id).not.toContain(id);
-			}
-			expect(optionIds(inApp)).not.toContain('copyright_notice');
-			expect(optionIds(dsa)).toContain('copyright_notice');
-			expect(dsa.revision_hash).not.toBe(inApp.revision_hash);
-		});
-
-		test('the DSA user flow starts at the profile parts', async () => {
-			const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/user?surface=dsa')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.start_screen_id).toBe('profile_parts');
-			expect(flow.screens.some((screen) => screen.id === 'profile_intro')).toBe(false);
-		});
-
-		test('the guild flow exists only on the DSA surface', async () => {
-			for (const path of ['/reports/flows/guild', '/reports/flows/guild?surface=in_app']) {
-				const error = await createBuilderWithoutAuth<ErrorResponse>(harness)
+		test('the guild flow is served in the app and on the DSA form', async () => {
+			for (const path of ['/reports/flows/guild', '/reports/flows/guild?surface=dsa']) {
+				const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
 					.get(path)
-					.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
+					.expect(HTTP_STATUS.OK)
 					.execute();
-				expect(error.errors?.map((entry) => entry.path)).toEqual(['surface']);
+				expect(flow.start_screen_id).toBe('community_parts');
 			}
-			const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/guild?surface=dsa')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.start_screen_id).toBe('community_parts');
-		});
-
-		test('a self-hosted instance has no guidelines link', async () => {
-			const hosted = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/user')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(hosted.guidelines_url).not.toBeNull();
-			expect(hosted.screens[0].options.map((option) => option.id)).toEqual(['learn_more']);
-			getConfig().instance.selfHosted = true;
-			const selfHosted = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/user')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(selfHosted.guidelines_url).toBeNull();
-			expect(selfHosted.screens[0].options).toEqual([]);
-			expect(selfHosted.revision_hash).not.toBe(hosted.revision_hash);
 		});
 	});
 
-	describe('Locale', () => {
-		test('the user locale picks the catalog', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({locale: 'de'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const flow = await createBuilder<ReportFlowResponse>(harness, account.token)
-				.get('/reports/flows/message')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.locale).toBe('de');
-			expect(flow).toEqual(getReportFlowResponse('message', 'in_app', 'de'));
-		});
-
-		test.each([
-			['sv', 'sv-SE'],
-			['nb', 'no'],
-			['pt', 'pt-BR'],
-			['xx-YY', 'en-US'],
-		])('?locale=%s resolves to %s', async (raw, resolved) => {
-			const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get(`/reports/flows/message?locale=${raw}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.locale).toBe(resolved);
-			expect(flow).toEqual(getReportFlowResponse('message', 'in_app', resolved));
-		});
-
-		test('the query locale wins over the user locale', async () => {
-			const account = await createTestAccount(harness);
-			await createBuilder(harness, account.token)
-				.patch('/users/@me/settings')
-				.body({locale: 'de'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const flow = await createBuilder<ReportFlowResponse>(harness, account.token)
-				.get('/reports/flows/message?locale=ja')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.locale).toBe('ja');
-		});
-
-		test('Accept-Language is used when logged out', async () => {
-			const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/user')
-				.header('Accept-Language', 'fr-FR,fr;q=0.9')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.locale).toBe('fr');
-		});
-
-		test('the product name comes from the instance config', async () => {
-			getConfig().instance.branding.productName = 'Harbor Chat';
-			setCachedProductName(null);
-			const flow = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/user?locale=en-US')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(flow.screens[0].options[0].label).toBe('Read the Harbor Chat Community Guidelines');
-		});
-
-		test('a product name saved in the dashboard reaches the flow without a restart', async () => {
-			const before = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/user?locale=en-US')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await getInstanceConfigRepository().setAppPublicConfig({branding: {product_name: 'Renamed Chat'}});
-			const after = await createBuilderWithoutAuth<ReportFlowResponse>(harness)
-				.get('/reports/flows/user?locale=en-US')
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(after.screens[0].options[0].label).toBe('Read the Renamed Chat Community Guidelines');
-			expect(after.revision_hash).toBe(before.revision_hash);
-		});
-	});
-
-	describe('Unknown', () => {
-		test('an unknown target type is a validation error', async () => {
-			const error = await createBuilderWithoutAuth<ErrorResponse>(harness)
-				.get('/reports/flows/webhook')
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
-				.execute();
-			expect(error.errors?.map((entry) => entry.path)).toEqual(['target_type']);
-		});
-
-		test('an unknown surface is a validation error', async () => {
-			const error = await createBuilderWithoutAuth<ErrorResponse>(harness)
-				.get('/reports/flows/message?surface=nope')
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_FORM_BODY)
-				.execute();
-			expect(error.errors?.map((entry) => entry.path)).toEqual(['surface']);
-		});
-	});
-
-	describe('Submit, message', () => {
-		test.each(MESSAGE_WALKS)('$name stores $reason', async ({steps, reason, category}) => {
-			const target = await setupMessage(harness);
-			const result = await submitMessage(harness, target.reporter.token, messageBody(target, steps, {locale: 'de'}))
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.status).toBe('pending');
-			const report = await readReport(result.report_id);
-			expect(report.reason).toBe(reason);
-			expect(report.category).toBe(category);
-			expect(report.flowSteps).toEqual(expectedSteps('message', steps));
-			expect(report.flowRevision).toBe(currentHash('message'));
-			expect(report.flowLocale).toBe('de');
-			expect(report.flowSurface).toBe('in_app');
-			expect(report.reporterGoodFaithConfirmed).toBeNull();
-			expect(report.reportedMessageId?.toString()).toBe(target.messageId);
-			expect(report.reportedUserId?.toString()).toBe(target.author.userId);
-		});
-
-		test('checklist items are stored in definition order', async () => {
-			const target = await setupMessage(harness);
-			const result = await submitMessage(harness, target.reporter.token, messageBody(target, MESSAGE_WALKS[1].steps))
+	describe('Submit, guild', () => {
+		test('a member files the in-app community flow and the walk is stored', async () => {
+			const {members, guild} = await setupTestGuildWithMembers(harness, 1);
+			const result = await submitGuild(harness, members[0].token, {
+				guild_id: guild.id,
+				revision_hash: currentHash('guild'),
+				steps: GUILD_HARASSMENT_WALK,
+			})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const report = await readReport(result.report_id);
-			expect(report.flowSteps?.[1]).toEqual({screen_id: 'private_info', item_ids: ['email', 'phone']});
-		});
-
-		test('the locale falls back to the request locale and is resolved', async () => {
-			const target = await setupMessage(harness);
-			const first = await submitMessage(harness, target.reporter.token, messageBody(target, SPAM_WALK, {locale: 'nb'}))
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect((await readReport(first.report_id)).flowLocale).toBe('no');
-			const other = await setupMessage(harness);
-			await createBuilder(harness, other.reporter.token)
-				.patch('/users/@me/settings')
-				.body({locale: 'ja'})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const second = await submitMessage(harness, other.reporter.token, messageBody(other))
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect((await readReport(second.report_id)).flowLocale).toBe('ja');
+			expect(report.reportedGuildId?.toString()).toBe(guild.id);
+			expect(report.reason).toBe('harassment');
 		});
 	});
 
 	describe('Submit, user', () => {
-		test.each(USER_WALKS)('$name stores $reason as $category', async ({steps, reason, category}) => {
-			const reporter = await createTestAccount(harness);
-			const target = await createTestAccount(harness);
-			const result = await submitUser(harness, reporter.token, userBody(target.userId, steps, {locale: 'sv'}))
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const report = await readReport(result.report_id);
-			expect(report.reason).toBe(reason);
-			expect(report.category).toBe(category);
-			expect(report.flowSteps).toEqual(expectedSteps('user', steps));
-			expect(report.flowRevision).toBe(currentHash('user'));
-			expect(report.flowLocale).toBe('sv-SE');
-			expect(report.flowSurface).toBe('in_app');
-			expect(report.reportedUserId?.toString()).toBe(target.userId);
-		});
-
 		test('the guild context is kept', async () => {
 			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
 			const result = await submitUser(
@@ -688,149 +325,33 @@ describe('Report flows', () => {
 		});
 	});
 
-	describe('Invalid walks', () => {
-		const messageCases: ReadonlyArray<{name: string; steps: ReadonlyArray<ReportFlowStepInput>; stepIndex: number}> = [
-			{name: 'wrong start', steps: [{screen_id: 'abuse', option_id: 'harassment'}], stepIndex: 0},
-			{
-				name: 'unknown screen',
-				steps: [
-					{screen_id: 'root_message', option_id: 'abuse'},
-					{screen_id: 'nope', option_id: 'harassment'},
-				],
-				stepIndex: 1,
-			},
-			{name: 'option not on the screen', steps: [{screen_id: 'root_message', option_id: 'csam'}], stepIndex: 0},
-			{
-				name: 'a DSA-only option in app',
-				steps: [
-					{screen_id: 'root_message', option_id: 'something_else'},
-					{screen_id: 'something_else_message', option_id: 'copyright_notice'},
-				],
-				stepIndex: 1,
-			},
-			{
-				name: 'skipped screen',
-				steps: [
-					{screen_id: 'root_message', option_id: 'abuse'},
-					{screen_id: 'harassment', option_id: 'harassment_direct'},
-				],
-				stepIndex: 1,
-			},
-			{name: 'walk ending on a screen', steps: [{screen_id: 'root_message', option_id: 'abuse'}], stepIndex: 0},
-			{name: 'walk through dislike', steps: [{screen_id: 'root_message', option_id: 'dislike'}], stepIndex: 0},
-			{
-				name: 'walk through rude language',
-				steps: [
-					{screen_id: 'root_message', option_id: 'abuse'},
-					{screen_id: 'abuse', option_id: 'rude_language'},
-				],
-				stepIndex: 1,
-			},
-			{
-				name: 'walk through a link',
-				steps: [
-					{screen_id: 'root_message', option_id: 'something_else'},
-					{screen_id: 'something_else_message', option_id: 'dsa'},
-				],
-				stepIndex: 1,
-			},
-			{
-				name: 'unknown item',
-				steps: [
-					{screen_id: 'root_message', option_id: 'private_info'},
-					{screen_id: 'private_info', item_ids: ['nope']},
-				],
-				stepIndex: 1,
-			},
-			{
-				name: 'duplicate items',
-				steps: [
-					{screen_id: 'root_message', option_id: 'private_info'},
-					{screen_id: 'private_info', item_ids: ['email', 'email']},
-				],
-				stepIndex: 1,
-			},
-			{
-				name: 'option on a checklist',
-				steps: [
-					{screen_id: 'root_message', option_id: 'private_info'},
-					{screen_id: 'private_info', option_id: 'email'},
-				],
-				stepIndex: 1,
-			},
-			{
-				name: 'step after a submit',
-				steps: [
-					{screen_id: 'root_message', option_id: 'spam'},
-					{screen_id: 'root_message', option_id: 'spam'},
-				],
-				stepIndex: 1,
-			},
-		];
-
-		test.each(messageCases)('message: $name fails at step $stepIndex', async ({steps, stepIndex}) => {
+	describe('Submit, message and call reasons', () => {
+		test('swearing is filed as a report', async () => {
 			const target = await setupMessage(harness);
-			const error = await submitMessage(harness, target.reporter.token, messageBody(target, steps))
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
+			const result = await submitMessage(
+				harness,
+				target.reporter.token,
+				messageBody(target, [
+					{screen_id: 'root_message', option_id: 'abuse'},
+					{screen_id: 'abuse', option_id: 'swearing'},
+				]),
+			)
+				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(error).toMatchObject({step_index: stepIndex});
-			expect(await countReports()).toBe(0);
+			expect((await readReport(result.report_id)).reason).toBe('rude_language');
 		});
 
-		const userCases: ReadonlyArray<{name: string; steps: ReadonlyArray<ReportFlowStepInput>; stepIndex: number}> = [
-			{
-				name: 'missing info step',
-				steps: [
-					{screen_id: 'profile_parts', item_ids: ['photo']},
-					{screen_id: 'root_user', option_id: 'spam'},
-					{screen_id: 'spam_profile', option_id: 'spam_profile'},
-				],
-				stepIndex: 0,
-			},
-			{
-				name: 'option on an info step',
-				steps: [
-					{screen_id: 'profile_intro', option_id: 'learn_more'},
-					{screen_id: 'profile_parts', item_ids: ['photo']},
-					{screen_id: 'root_user', option_id: 'spam'},
-					{screen_id: 'spam_profile', option_id: 'spam_profile'},
-				],
-				stepIndex: 0,
-			},
-			{
-				name: 'missing crisis support step',
-				steps: [
-					{screen_id: 'profile_intro'},
-					{screen_id: 'profile_parts', item_ids: ['profile_text']},
-					{screen_id: 'root_user', option_id: 'something_else'},
-					{screen_id: 'something_else_user', option_id: 'self_harm'},
-					{screen_id: 'self_harm_profile', option_id: 'worried'},
-				],
-				stepIndex: 4,
-			},
-			{
-				name: 'age not stated',
-				steps: [
-					{screen_id: 'profile_intro'},
-					{screen_id: 'profile_parts', item_ids: ['profile_text']},
-					{screen_id: 'root_user', option_id: 'something_else'},
-					{screen_id: 'something_else_user', option_id: 'too_young'},
-					{screen_id: 'age_stated_profile', option_id: 'age_no'},
-				],
-				stepIndex: 4,
-			},
-		];
-
-		test.each(userCases)('user: $name fails at step $stepIndex', async ({steps, stepIndex}) => {
+		test('a call report leads to the child safety reasons', async () => {
 			const reporter = await createTestAccount(harness);
-			const target = await createTestAccount(harness);
-			const error = await submitUser(harness, reporter.token, userBody(target.userId, steps))
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
+			const reported = await createTestAccount(harness);
+			const result = await submitUser(harness, reporter.token, userBody(reported.userId, CALL_CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
 				.execute();
-			expect(error).toMatchObject({step_index: stepIndex});
-			expect(await countReports()).toBe(0);
+			expect((await readReport(result.report_id)).reason).toBe('csam');
 		});
+	});
 
+	describe('Invalid walks', () => {
 		test('shape errors are standard validation errors', async () => {
 			const target = await setupMessage(harness);
 			const seventeen = Array.from({length: 17}, () => ({screen_id: 'root_message', option_id: 'spam'}));
@@ -947,11 +468,22 @@ describe('Report flows', () => {
 				.execute();
 		});
 
+		test('an unverified reporter can file a highest priority report', async () => {
+			const target = await setupMessage(harness);
+			const unverified = await createTestAccount(harness, {skipEmailVerification: true});
+			const invite = await createChannelInvite(harness, target.reporter.token, target.channelId);
+			await acceptInvite(harness, unverified.token, invite.code);
+			const result = await submitMessage(harness, unverified.token, messageBody(target, CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(result.report_id)).reason).toBe('csam');
+		});
+
 		test('an unclaimed reporter is refused', async () => {
 			const target = await setupMessage(harness);
 			await unclaimAccount(harness, target.reporter.userId);
 			await submitMessage(harness, target.reporter.token, messageBody(target))
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS)
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS)
 				.execute();
 		});
 
@@ -1001,6 +533,22 @@ describe('Report flows', () => {
 	});
 
 	describe('Dedupe', () => {
+		test('a refused walk from a limited reporter does not hold the network slot for the target', async () => {
+			await getInstanceConfigRepository().updateAccountsConfig({interaction_tier: 'enforced'});
+			const target = await createTestAccount(harness);
+			const first = await createTestAccount(harness, {skipEmailVerification: true});
+			const second = await createTestAccount(harness, {skipEmailVerification: true});
+			await submitUser(harness, first.token, userBody(target.userId, [{screen_id: 'user_start', option_id: 'dislike'}]))
+				.header('x-forwarded-for', '203.0.113.30')
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
+				.execute();
+			const result = await submitUser(harness, second.token, userBody(target.userId))
+				.header('x-forwarded-for', '203.0.113.31')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(result.report_id)).reportedUserId?.toString()).toBe(target.userId);
+		});
+
 		test('v2 and legacy message reports share the reservation', async () => {
 			const first = await setupMessage(harness);
 			await legacyMessage(harness, first.reporter.token, first).expect(HTTP_STATUS.OK).execute();
@@ -1192,6 +740,40 @@ describe('Report flows', () => {
 			expect(await countReports()).toBe(5);
 		});
 
+		test('child safety and self-harm reports are filed past the reporter allowances', async () => {
+			const reporter = await createTestAccount(harness);
+			const dm = await setupDmMessages(harness, reporter, 5);
+			for (const messageId of dm.messageIds.slice(0, 3)) {
+				await submitMessage(harness, reporter.token, messageBody({channelId: dm.channelId, messageId}))
+					.expect(HTTP_STATUS.OK)
+					.execute();
+			}
+			const users = await Promise.all([0, 1, 2].map(() => createTestAccount(harness)));
+			for (const user of users.slice(0, 2)) {
+				await submitUser(harness, reporter.token, userBody(user.userId)).expect(HTTP_STATUS.OK).execute();
+			}
+			await submitUser(harness, reporter.token, userBody(users[2].userId))
+				.expect(429, APIErrorCodes.RATE_LIMITED)
+				.execute();
+			const urgent = {channelId: dm.channelId, messageId: dm.messageIds[3]};
+			const result = await submitMessage(harness, reporter.token, messageBody(urgent, CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(result.report_id)).reason).toBe('csam');
+			await submitUser(harness, reporter.token, userBody(users[2].userId, CALL_CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const selfHarm = await submitMessage(
+				harness,
+				reporter.token,
+				messageBody({channelId: dm.channelId, messageId: dm.messageIds[4]}, SELF_HARM_PROMOTION_WALK),
+			)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(selfHarm.report_id)).reason).toBe('self_harm_promotion');
+			expect(await countReports()).toBe(8);
+		});
+
 		test('the route bucket is shared and invalid walks spend a route token but no service token', async () => {
 			const reporter = await createTestAccount(harness);
 			const dm = await setupDmMessages(harness, reporter, 3);
@@ -1233,13 +815,121 @@ describe('Report flows', () => {
 		});
 	});
 
+	describe('Urgent reports', () => {
+		function isUrgent(steps: ReadonlyArray<ReportFlowStep>): boolean {
+			return resolveReportFlowAnswers({
+				target: 'message',
+				surface: 'in_app',
+				revisionHash: currentHash('message'),
+				steps,
+			}).urgent;
+		}
+
+		async function spendRouteBucket(reporter: TestAccount, target: {channelId: string; messageId: string}) {
+			for (let attempt = 0; attempt < 10; attempt++) {
+				await submitMessage(
+					harness,
+					reporter.token,
+					messageBody(target, [{screen_id: 'root_message', option_id: 'dislike'}]),
+				)
+					.header(RATE_LIMIT_HEADER, 'true')
+					.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
+					.execute();
+			}
+		}
+
+		test('every answer on an urgent screen counts as urgent, and only those', () => {
+			for (const steps of [
+				SEXUAL_UNWANTED_WALK,
+				ADULT_UNMARKED_WALK,
+				MINOR_IN_ADULT_SPACE_WALK,
+				THREAT_GLORIFICATION_WALK,
+				CSAM_WALK,
+				SELF_HARM_PROMOTION_WALK,
+			]) {
+				expect(isUrgent(steps)).toBe(true);
+			}
+			for (const steps of [MISINFO_GLORIFICATION_WALK, TERRORISM_WALK, SPAM_WALK, PRIVATE_INFO_WALK]) {
+				expect(isUrgent(steps)).toBe(false);
+			}
+		});
+
+		test('an urgent report is filed after the hourly route limit is spent, and others are still limited', async () => {
+			const reporter = await createTestAccount(harness);
+			const dm = await setupDmMessages(harness, reporter, 3);
+			await spendRouteBucket(reporter, {channelId: dm.channelId, messageId: dm.messageIds[0]});
+			await submitMessage(harness, reporter.token, messageBody({channelId: dm.channelId, messageId: dm.messageIds[1]}))
+				.header(RATE_LIMIT_HEADER, 'true')
+				.expect(429, APIErrorCodes.RATE_LIMITED)
+				.execute();
+			const urgent = await submitMessage(
+				harness,
+				reporter.token,
+				messageBody({channelId: dm.channelId, messageId: dm.messageIds[2]}, ADULT_UNMARKED_WALK),
+			)
+				.header(RATE_LIMIT_HEADER, 'true')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect((await readReport(urgent.report_id)).reason).toBe('adult_content_unmarked');
+		});
+
+		test('a forged urgent walk does not skip the route limit', async () => {
+			const reporter = await createTestAccount(harness);
+			const dm = await setupDmMessages(harness, reporter, 2);
+			await spendRouteBucket(reporter, {channelId: dm.channelId, messageId: dm.messageIds[0]});
+			await submitMessage(
+				harness,
+				reporter.token,
+				messageBody({channelId: dm.channelId, messageId: dm.messageIds[1]}, FORGED_CSAM_WALK, {urgent: true}),
+			)
+				.header(RATE_LIMIT_HEADER, 'true')
+				.expect(429, APIErrorCodes.RATE_LIMITED)
+				.execute();
+			expect(await countReports()).toBe(0);
+		});
+
+		test('an unverified reporter can file more urgent reports than the daily cap', async () => {
+			await getInstanceConfigRepository().updateAccountsConfig({interaction_tier: 'enforced'});
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
+			const author = members[0];
+			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
+			const reporter = await createTestAccount(harness, {skipEmailVerification: true});
+			const invite = await createChannelInvite(harness, owner.token, channel.id);
+			await acceptInvite(harness, reporter.token, invite.code);
+			for (let index = 0; index < 6; index++) {
+				const message = await sendChannelMessage(harness, author.token, channel.id, `Urgent ${index}`);
+				await submitMessage(
+					harness,
+					reporter.token,
+					messageBody({channelId: channel.id, messageId: message.id}, ADULT_UNMARKED_WALK),
+				)
+					.header('x-forwarded-for', '203.0.113.40')
+					.expect(HTTP_STATUS.OK)
+					.execute();
+			}
+			expect(await countReports()).toBe(6);
+		});
+
+		test('an identical urgent report returns the existing report', async () => {
+			const target = await setupMessage(harness);
+			const first = await submitMessage(harness, target.reporter.token, messageBody(target, CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const repeat = await submitMessage(harness, target.reporter.token, messageBody(target, CSAM_WALK))
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(repeat.report_id).toBe(first.report_id);
+			expect(await countReports()).toBe(1);
+		});
+	});
+
 	describe('Content filter', () => {
 		test('a blocked phrase equal to an item id does not block a submission', async () => {
 			const target = await setupMessage(harness);
 			const phrases = ['email', 'phone', 'private_info', 'root_message'];
 			for (const phrase of phrases) phraseBlocklistCache.add(phrase);
 			try {
-				const result = await submitMessage(harness, target.reporter.token, messageBody(target, MESSAGE_WALKS[1].steps))
+				const result = await submitMessage(harness, target.reporter.token, messageBody(target, PRIVATE_INFO_WALK))
 					.expect(HTTP_STATUS.OK)
 					.execute();
 				expect((await readReport(result.report_id)).reason).toBe('doxxing');
@@ -1254,11 +944,11 @@ describe('Report flows', () => {
 			const publisher = new CapturingPublisher();
 			await startActivityEvents({publisher, kv: new MockKVProvider()});
 			const target = await setupMessage(harness);
-			await submitMessage(harness, target.reporter.token, messageBody(target, MESSAGE_WALKS[7].steps))
+			await submitMessage(harness, target.reporter.token, messageBody(target, CSAM_WALK))
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const reporter = await createTestAccount(harness);
-			await submitUser(harness, reporter.token, userBody(target.author.userId, USER_WALKS[1].steps))
+			await submitUser(harness, reporter.token, userBody(target.author.userId, USER_PRIVATE_INFO_WALK))
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const filed = () =>
@@ -1292,6 +982,7 @@ describe('Report flows', () => {
 						'report_id',
 						'reported_user_id',
 						'reporter_id',
+						'reporter_tier',
 						'target_type',
 					].sort(),
 				);

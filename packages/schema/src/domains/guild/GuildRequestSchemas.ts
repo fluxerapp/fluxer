@@ -8,19 +8,19 @@ import {
 	SystemChannelFlagsDescriptions,
 } from '@fluxer/constants/src/GuildConstants';
 import {
-	AVATAR_MAX_SIZE,
-	EMOJI_MAX_SIZE,
+	MAX_BIO_LENGTH_CEILING,
 	MAX_GUILD_ROLES,
 	MAX_GUILD_STICKER_TAGS,
 	MAX_TEMP_BAN_DURATION_SECONDS,
 	MIN_TEMP_BAN_DURATION_SECONDS,
-	STICKER_MAX_SIZE,
 } from '@fluxer/constants/src/LimitConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {GuildFeatureSchema} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {TemplateSerializedGuild} from '@fluxer/schema/src/domains/guild/GuildTemplateSchemas';
 import {VanityURLCodeType} from '@fluxer/schema/src/primitives/ChannelValidators';
-import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {UnicodeRoleEmojiType} from '@fluxer/schema/src/primitives/EmojiValidators';
+import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {
 	ContentWarningLevelSchema,
 	DefaultMessageNotificationsSchema,
@@ -52,9 +52,7 @@ function coerceBlankStringToNull(value: unknown): unknown {
 
 export const GuildCreateRequest = z.object({
 	name: createStringType(1, 100).describe('The name of the guild (1-100 characters)'),
-	icon: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('Base64-encoded image data for the guild icon'),
+	icon: createBase64ImageType().nullish().describe('Base64-encoded image data for the guild icon'),
 	empty_features: z.boolean().optional().describe('Whether to create the guild without default features'),
 	template: TemplateSerializedGuild.optional().describe('Serialised template data to use for guild structure'),
 });
@@ -64,9 +62,7 @@ export type GuildCreateRequest = z.infer<typeof GuildCreateRequest>;
 export const GuildUpdateRequest = z
 	.object({
 		name: createStringType(1, 100).describe('The name of the guild (1-100 characters)'),
-		icon: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-			.nullish()
-			.describe('Base64-encoded image data for the guild icon'),
+		icon: createBase64ImageType().nullish().describe('Base64-encoded image data for the guild icon'),
 		system_channel_id: SnowflakeType.nullish().describe('The ID of the channel where system messages are sent'),
 		system_channel_flags: createBitflagInt32Type(
 			SystemChannelFlags,
@@ -108,13 +104,9 @@ export const GuildUpdateRequest = z
 			GuildExplicitContentFilterSchema,
 			'Level of content filtering for explicit media',
 		),
-		banner: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-			.nullish()
-			.describe('Base64-encoded image data for the guild banner'),
-		splash: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-			.nullish()
-			.describe('Base64-encoded image data for the guild splash screen'),
-		embed_splash: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
+		banner: createBase64ImageType().nullish().describe('Base64-encoded image data for the guild banner'),
+		splash: createBase64ImageType().nullish().describe('Base64-encoded image data for the guild splash screen'),
+		embed_splash: createBase64ImageType()
 			.nullish()
 			.describe('Base64-encoded image data for the embedded invite splash'),
 		splash_card_alignment: SplashCardAlignmentSchema.optional().describe(
@@ -148,13 +140,11 @@ export const GuildMemberUpdateRequest = z.object({
 		.optional()
 		.transform((ids) => (ids ? new Set(ids) : undefined))
 		.describe(`Array of role IDs to assign to the member (max ${MAX_GUILD_ROLES})`),
-	avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
+	avatar: createBase64ImageType().nullish().describe('Base64-encoded image data for the member guild avatar'),
+	banner: createBase64ImageType().nullish().describe('Base64-encoded image data for the member guild banner'),
+	bio: createStringType(1, MAX_BIO_LENGTH_CEILING)
 		.nullish()
-		.describe('Base64-encoded image data for the member guild avatar'),
-	banner: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('Base64-encoded image data for the member guild banner'),
-	bio: createStringType(1, 320).nullish().describe('The member guild profile bio (1-320 characters)'),
+		.describe('The member guild profile bio, up to the instance max_bio_length limit (320 by default)'),
 	pronouns: createStringType(1, 40).nullish().describe('The member guild profile pronouns (1-40 characters)'),
 	accent_color: ColorType.nullish().describe('The accent color for the member guild profile as an integer'),
 	profile_flags: createBitflagInt32Type(
@@ -185,22 +175,53 @@ export const MyGuildMemberUpdateRequest = GuildMemberUpdateRequest.omit({roles: 
 
 export type MyGuildMemberUpdateRequest = z.infer<typeof MyGuildMemberUpdateRequest>;
 
-export const GuildRoleCreateRequest = z.object({
-	name: createStringType(1, 100).describe('The name of the role (1-100 characters)'),
-	color: ColorType.default(0x000000).describe('The color of the role as an integer (default: 0)'),
-	permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
-});
+const RoleIconFields = {
+	icon: createBase64ImageType().nullish().describe('Base64 data URI for the role icon image, or null to remove it'),
+	unicode_emoji: UnicodeRoleEmojiType.nullish().describe(
+		'A single Unicode emoji to use as the role icon, or null to remove it',
+	),
+};
+
+function requireExclusiveRoleIcon(value: {icon?: string | null; unicode_emoji?: string | null}, ctx: z.RefinementCtx) {
+	if (value.icon != null && value.unicode_emoji != null) {
+		ctx.addIssue({code: 'custom', message: ValidationErrorCodes.ROLE_ICON_AND_EMOJI_EXCLUSIVE, path: ['icon']});
+	}
+}
+
+export const GuildRoleCreateRequest = z
+	.object({
+		name: createStringType(1, 100).describe('The name of the role (1-100 characters)'),
+		color: ColorType.default(0x000000).describe('The color of the role as an integer (default: 0)'),
+		permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
+		...RoleIconFields,
+		icon_source_role_id: SnowflakeType.optional().describe(
+			'The ID of a role in this community whose icon the new role copies. An image is stored again for the new role',
+		),
+	})
+	.superRefine((value, ctx) => {
+		requireExclusiveRoleIcon(value, ctx);
+		if (value.icon_source_role_id !== undefined && (value.icon != null || value.unicode_emoji != null)) {
+			ctx.addIssue({
+				code: 'custom',
+				message: ValidationErrorCodes.ROLE_ICON_SOURCE_AND_ICON_EXCLUSIVE,
+				path: ['icon_source_role_id'],
+			});
+		}
+	});
 
 export type GuildRoleCreateRequest = z.infer<typeof GuildRoleCreateRequest>;
 
-export const GuildRoleUpdateRequest = z.object({
-	name: createStringType(1, 100).optional().describe('The name of the role (1-100 characters)'),
-	color: ColorType.optional().describe('The color of the role as an integer'),
-	permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
-	hoist: z.boolean().optional().describe('Whether the role should be displayed separately in the member list'),
-	hoist_position: z.number().int().nullish().describe('The position of the role in the hoisted member list'),
-	mentionable: z.boolean().optional().describe('Whether the role can be mentioned by anyone'),
-});
+export const GuildRoleUpdateRequest = z
+	.object({
+		name: createStringType(1, 100).optional().describe('The name of the role (1-100 characters)'),
+		color: ColorType.optional().describe('The color of the role as an integer'),
+		permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
+		hoist: z.boolean().optional().describe('Whether the role should be displayed separately in the member list'),
+		hoist_position: z.number().int().nullish().describe('The position of the role in the hoisted member list'),
+		mentionable: z.boolean().optional().describe('Whether the role can be mentioned by anyone'),
+		...RoleIconFields,
+	})
+	.superRefine(requireExclusiveRoleIcon);
 
 export type GuildRoleUpdateRequest = z.infer<typeof GuildRoleUpdateRequest>;
 
@@ -208,9 +229,7 @@ export const GuildEmojiCreateRequest = z.object({
 	name: createStringType(2, 32)
 		.refine((value) => /^[a-zA-Z0-9_]+$/.test(value), 'Emoji name can only contain letters, numbers, and underscores')
 		.describe('The name of the emoji (2-32 characters, alphanumeric and underscores only)'),
-	image: createBase64StringType(1, base64LengthForBytes(EMOJI_MAX_SIZE)).describe(
-		'Base64-encoded image data for the emoji',
-	),
+	image: createBase64ImageType().describe('Base64-encoded image data for the emoji'),
 });
 
 export type GuildEmojiCreateRequest = z.infer<typeof GuildEmojiCreateRequest>;
@@ -247,9 +266,7 @@ export const GuildStickerCreateRequest = z.object({
 		.optional()
 		.default([])
 		.describe(`Array of autocomplete/suggestion tags (max ${MAX_GUILD_STICKER_TAGS} tags, each 1-30 characters)`),
-	image: createBase64StringType(1, base64LengthForBytes(STICKER_MAX_SIZE)).describe(
-		'Base64-encoded image data for the sticker',
-	),
+	image: createBase64ImageType().describe('Base64-encoded image data for the sticker'),
 });
 
 export type GuildStickerCreateRequest = z.infer<typeof GuildStickerCreateRequest>;
@@ -359,7 +376,7 @@ const GuildRoleHoistPositionItem = z.object({
 	hoist_position: z.number().int().describe('The new hoist position for the role'),
 });
 
-export const GuildRoleHoistPositionsRequest = z.array(GuildRoleHoistPositionItem);
+export const GuildRoleHoistPositionsRequest = z.array(GuildRoleHoistPositionItem).max(10000);
 
 export type GuildRoleHoistPositionsRequest = z.infer<typeof GuildRoleHoistPositionsRequest>;
 
@@ -368,7 +385,7 @@ const GuildRolePositionItem = z.object({
 	position: z.number().int().optional().describe('The new position for the role'),
 });
 
-export const GuildRolePositionsRequest = z.array(GuildRolePositionItem);
+export const GuildRolePositionsRequest = z.array(GuildRolePositionItem).max(10000);
 
 export type GuildRolePositionsRequest = z.infer<typeof GuildRolePositionsRequest>;
 

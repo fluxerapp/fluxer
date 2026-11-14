@@ -2,12 +2,7 @@
 
 import {createUserID} from '@app/api/BrandedTypes';
 import type {GiftCodeDurationType, GiftCodeRow} from '@app/api/database/types/PaymentTypes';
-import {
-	addGiftCodeDuration,
-	GiftCode,
-	mapGiftCodeDurationToMonths,
-	mapGiftDurationMonthsToFields,
-} from '@app/api/models/GiftCode';
+import {addGiftCodeDuration, GiftCode} from '@app/api/models/GiftCode';
 import {describe, expect, test} from 'vitest';
 
 const TEST_USER_ID = createUserID(1n);
@@ -179,45 +174,6 @@ describe('GiftCode', () => {
 	});
 });
 
-describe('mapGiftDurationMonthsToFields', () => {
-	test('converts non-divisible-by-12 months to months type', () => {
-		expect(mapGiftDurationMonthsToFields(3)).toEqual({durationType: 'months', durationQuantity: 3});
-		expect(mapGiftDurationMonthsToFields(1)).toEqual({durationType: 'months', durationQuantity: 1});
-		expect(mapGiftDurationMonthsToFields(6)).toEqual({durationType: 'months', durationQuantity: 6});
-	});
-	test('converts multiples of 12 months to years type', () => {
-		expect(mapGiftDurationMonthsToFields(12)).toEqual({durationType: 'years', durationQuantity: 1});
-		expect(mapGiftDurationMonthsToFields(24)).toEqual({durationType: 'years', durationQuantity: 2});
-		expect(mapGiftDurationMonthsToFields(36)).toEqual({durationType: 'years', durationQuantity: 3});
-	});
-	test('converts 0 months to months/0 (lifetime sentinel)', () => {
-		expect(mapGiftDurationMonthsToFields(0)).toEqual({durationType: 'months', durationQuantity: 0});
-	});
-	test('rejects negative values', () => {
-		expect(() => mapGiftDurationMonthsToFields(-1)).toThrow('non-negative integer');
-	});
-	test('rejects non-integer values', () => {
-		expect(() => mapGiftDurationMonthsToFields(1.5)).toThrow('non-negative integer');
-	});
-});
-
-describe('mapGiftCodeDurationToMonths', () => {
-	test('returns the quantity for months type', () => {
-		expect(mapGiftCodeDurationToMonths('months', 3)).toBe(3);
-		expect(mapGiftCodeDurationToMonths('months', 1)).toBe(1);
-	});
-	test('converts years to months', () => {
-		expect(mapGiftCodeDurationToMonths('years', 1)).toBe(12);
-		expect(mapGiftCodeDurationToMonths('years', 2)).toBe(24);
-	});
-	test('returns null for days type', () => {
-		expect(mapGiftCodeDurationToMonths('days', 14)).toBeNull();
-	});
-	test('returns null for weeks type', () => {
-		expect(mapGiftCodeDurationToMonths('weeks', 2)).toBeNull();
-	});
-});
-
 describe('addGiftCodeDuration', () => {
 	test('adds days correctly', () => {
 		const result = addGiftCodeDuration(BASE_DATE, 'days', 14);
@@ -250,13 +206,6 @@ describe('addGiftCodeDuration', () => {
 		const result = addGiftCodeDuration(jan31, 'months', 1);
 		expect(result).not.toBeNull();
 		expect(result!.toISOString()).toBe('2026-02-28T00:00:00.000Z');
-	});
-	test('2 weeks equals 14 days', () => {
-		const weeksResult = addGiftCodeDuration(BASE_DATE, 'weeks', 2);
-		const daysResult = addGiftCodeDuration(BASE_DATE, 'days', 14);
-		expect(weeksResult).not.toBeNull();
-		expect(daysResult).not.toBeNull();
-		expect(weeksResult!.getTime()).toBe(daysResult!.getTime());
 	});
 	test('does not mutate the base date when adding months', () => {
 		const baseDate = new Date('2026-01-31T00:00:00.000Z');

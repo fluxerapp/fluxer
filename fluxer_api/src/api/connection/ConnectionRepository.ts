@@ -12,13 +12,6 @@ import {
 	sealConnectionMembership,
 } from '@app/api/connection/ConnectionMembership';
 import {
-	type ConnectionCreationResult,
-	type ConnectionSortOrderUpdate,
-	type CreateConnectionParams,
-	IConnectionRepository,
-	type UpdateConnectionParams,
-} from '@app/api/connection/IConnectionRepository';
-import {
 	executeConditional,
 	executeGroupedBatches,
 	fetchMany,
@@ -37,6 +30,40 @@ import {
 	ConnectionTypes,
 	MAX_CONNECTIONS_PER_USER,
 } from '@fluxer/constants/src/ConnectionConstants';
+
+export interface CreateConnectionParams {
+	user_id: UserID;
+	connection_id: string;
+	connection_type: ConnectionType;
+	identifier: string;
+	name: string;
+	visibility_flags: number;
+	sort_order?: number;
+	verification_token: string;
+	oauth_grant_id?: string | null;
+	verified?: boolean;
+	verified_at?: Date | null;
+	last_verified_at?: Date | null;
+}
+
+export interface UpdateConnectionParams {
+	name?: string;
+	visibility_flags?: number;
+	sort_order?: number;
+	oauth_grant_id?: string | null;
+	verified?: boolean;
+	verified_at?: Date | null;
+	last_verified_at?: Date | null;
+}
+
+export interface ConnectionSortOrderUpdate {
+	snapshot: RevisionedUserConnectionRow;
+	sortOrder: number;
+}
+
+export type ConnectionCreationResult =
+	| {status: 'created'; connection: RevisionedUserConnectionRow}
+	| {status: 'duplicate' | 'limit_reached' | 'conflict'};
 
 const FETCH_CONNECTIONS_BY_USER_CQL = UserConnections.selectCql({
 	columns: USER_CONNECTION_COLUMNS,
@@ -64,7 +91,7 @@ function hasConnectionRevision(connection: UserConnectionRow): connection is Rev
 	return typeof connection.revision === 'string';
 }
 
-export class ConnectionRepository extends IConnectionRepository {
+export class ConnectionRepository {
 	async findByUserId(userId: UserID): Promise<Array<UserConnectionRow>> {
 		return fetchMany<UserConnectionRow>(FETCH_CONNECTIONS_BY_USER_CQL, {
 			user_id: userId,

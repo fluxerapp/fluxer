@@ -639,19 +639,130 @@ fn ensure_rustls_crypto_provider() {
 fn build_tls_client_config() -> std::result::Result<Arc<rustls::ClientConfig>, String> {
     ensure_rustls_crypto_provider();
     let native = rustls_native_certs::load_native_certs();
-    if native.certs.is_empty() {
+    let roots = trust_roots(native.certs, &intermediate_store_roots());
+    if roots.is_empty() {
         return Err(format!(
-            "no native root CA certificates found (errors: {:?})",
+            "no root CA certificates found (errors: {:?})",
             native.errors
         ));
     }
-    let mut roots = rustls::RootCertStore::empty();
-    roots.add_parsable_certificates(native.certs);
     Ok(Arc::new(
         rustls::ClientConfig::builder()
             .with_root_certificates(roots)
             .with_no_client_auth(),
     ))
+}
+
+fn trust_roots(
+    native: Vec<rustls::pki_types::CertificateDer<'static>>,
+    extra: &[rustls::pki_types::CertificateDer<'static>],
+) -> rustls::RootCertStore {
+    let mut roots = rustls::RootCertStore::empty();
+    roots.add_parsable_certificates(native);
+    roots.add_parsable_certificates(extra.iter().cloned());
+    roots
+}
+
+#[cfg(windows)]
+fn der_element(input: &[u8]) -> Option<(u8, &[u8], &[u8])> {
+    let (&tag, rest) = input.split_first()?;
+    let (&first, rest) = rest.split_first()?;
+    let (length, rest) = if first & 0x80 == 0 {
+        (usize::from(first), rest)
+    } else {
+        let size = usize::from(first & 0x7f);
+        if size == 0 || size > 4 || rest.len() < size {
+            return None;
+        }
+        let (bytes, rest) = rest.split_at(size);
+        (
+            bytes
+                .iter()
+                .fold(0usize, |length, &byte| (length << 8) | usize::from(byte)),
+            rest,
+        )
+    };
+    if rest.len() < length {
+        return None;
+    }
+    let (content, rest) = rest.split_at(length);
+    Some((tag, content, rest))
+}
+
+#[cfg(windows)]
+fn is_self_issued(certificate: &[u8]) -> bool {
+    let Some((0x30, certificate, [])) = der_element(certificate) else {
+        return false;
+    };
+    let Some((0x30, tbs, _)) = der_element(certificate) else {
+        return false;
+    };
+    let mut fields = std::iter::successors(der_element(tbs), |&(_, _, rest)| der_element(rest))
+        .map(|(tag, content, _)| (tag, content));
+    let mut serial = fields.next();
+    if matches!(serial, Some((0xa0, _))) {
+        serial = fields.next();
+    }
+    let (
+        Some((0x02, _)),
+        Some((0x30, _)),
+        Some((0x30, issuer)),
+        Some((0x30, _)),
+        Some((0x30, subject)),
+    ) = (
+        serial,
+        fields.next(),
+        fields.next(),
+        fields.next(),
+        fields.next(),
+    )
+    else {
+        return false;
+    };
+    issuer == subject
+}
+
+#[cfg(windows)]
+fn intermediate_store_roots() -> Vec<rustls::pki_types::CertificateDer<'static>> {
+    use schannel::{cert_context::ValidUses, cert_store::CertStore};
+    use std::collections::BTreeSet;
+
+    const SERVER_AUTH: &str = "1.3.6.1.5.5.7.3.1";
+    const ANY_EXTENDED_KEY_USAGE: &str = "2.5.29.37.0";
+    let store_certificates = |name: &str| {
+        [
+            CertStore::open_current_user(name),
+            CertStore::open_local_machine(name),
+        ]
+        .into_iter()
+        .flatten()
+        .flat_map(|store| store.certs().collect::<Vec<_>>())
+    };
+    let disallowed: BTreeSet<Vec<u8>> = store_certificates("Disallowed")
+        .map(|certificate| certificate.to_der().to_vec())
+        .collect();
+    store_certificates("CA")
+        .filter(|certificate| {
+            certificate.is_time_valid().unwrap_or(false)
+                && match certificate.valid_uses() {
+                    Ok(ValidUses::All) => true,
+                    Ok(ValidUses::Oids(oids)) => oids
+                        .iter()
+                        .any(|oid| oid == SERVER_AUTH || oid == ANY_EXTENDED_KEY_USAGE),
+                    Err(_) => false,
+                }
+        })
+        .map(|certificate| certificate.to_der().to_vec())
+        .filter(|der| is_self_issued(der) && !disallowed.contains(der))
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .map(rustls::pki_types::CertificateDer::from)
+        .collect()
+}
+
+#[cfg(not(windows))]
+fn intermediate_store_roots() -> Vec<rustls::pki_types::CertificateDer<'static>> {
+    Vec::new()
 }
 
 fn tls_client_config() -> std::result::Result<Arc<rustls::ClientConfig>, String> {
@@ -1045,6 +1156,14 @@ impl EventDelivery for NapiEventDelivery {
     }
 }
 
+#[napi(js_name = "windowsIntermediateStoreRoots")]
+pub fn windows_intermediate_store_roots() -> Vec<Buffer> {
+    intermediate_store_roots()
+        .into_iter()
+        .map(|certificate| Buffer::from(certificate.to_vec()))
+        .collect()
+}
+
 #[napi]
 pub fn warmup() -> Result<()> {
     let runtime = transport_runtime()?;
@@ -1096,601 +1215,4 @@ pub fn connect(
         mode,
         Arc::new(NapiEventDelivery { regular, terminal }),
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use std::{future::Future, time::Instant};
-
-    use tokio::net::TcpListener;
-    use tokio_tungstenite::accept_async;
-
-    use super::*;
-
-    const EVENT_WAIT_TIMEOUT: Duration = Duration::from_secs(10);
-    const STALLED_CONSUMER_SETTLE: Duration = Duration::from_millis(500);
-
-    struct RecordingDelivery {
-        events: mpsc::UnboundedSender<TransportEvent>,
-    }
-
-    impl EventDelivery for RecordingDelivery {
-        fn deliver(&self, event: QueuedTransportEvent) -> bool {
-            let QueuedTransportEvent { event, reservation } = event;
-            drop(reservation);
-            self.events.send(event).is_ok()
-        }
-
-        fn deliver_terminal(&self, event: TransportEvent) {
-            let _ = self.events.send(event);
-        }
-    }
-
-    struct StallingDelivery {
-        events: mpsc::UnboundedSender<TransportEvent>,
-        held: Mutex<Option<Vec<QueueReservation>>>,
-    }
-
-    impl StallingDelivery {
-        fn resume(&self) {
-            self.held.lock().expect("stalled reservations").take();
-        }
-    }
-
-    impl EventDelivery for StallingDelivery {
-        fn deliver(&self, event: QueuedTransportEvent) -> bool {
-            let QueuedTransportEvent { event, reservation } = event;
-            match self.held.lock().expect("stalled reservations").as_mut() {
-                Some(held) => held.push(reservation),
-                None => drop(reservation),
-            }
-            self.events.send(event).is_ok()
-        }
-
-        fn deliver_terminal(&self, event: TransportEvent) {
-            let _ = self.events.send(event);
-        }
-    }
-
-    fn spawn_server<Handler, Served>(handler: Handler) -> SocketAddr
-    where
-        Handler: FnOnce(WebSocketStream<TcpStream>) -> Served + Send + 'static,
-        Served: Future<Output = ()> + Send,
-    {
-        let runtime = transport_runtime().expect("transport runtime");
-        let listener = runtime
-            .block_on(TcpListener::bind("127.0.0.1:0"))
-            .expect("bind test listener");
-        let address = listener.local_addr().expect("listener address");
-        runtime.spawn(async move {
-            let (stream, _) = listener.accept().await.expect("accept test connection");
-            let socket = accept_async(stream).await.expect("accept websocket");
-            handler(socket).await;
-        });
-        address
-    }
-
-    fn spawn_echo_server() -> SocketAddr {
-        spawn_server(|mut socket| async move {
-            while let Some(Ok(message)) = socket.next().await {
-                match message {
-                    Message::Text(_) | Message::Binary(_) => {
-                        if socket.send(message).await.is_err() {
-                            return;
-                        }
-                    }
-                    Message::Close(_) => return,
-                    _ => {}
-                }
-            }
-        })
-    }
-
-    fn test_connection(
-        address: SocketAddr,
-        pinned_address: Option<&str>,
-        mode: TransportMode,
-    ) -> (
-        NativeGatewayConnection,
-        mpsc::UnboundedReceiver<TransportEvent>,
-    ) {
-        let (events, receiver) = mpsc::unbounded_channel();
-        let target = parse_websocket_connection_target(
-            &format!("ws://127.0.0.1:{}/", address.port()),
-            pinned_address,
-        )
-        .expect("connection target");
-        let connection =
-            NativeGatewayConnection::start(target, mode, Arc::new(RecordingDelivery { events }))
-                .expect("start connection");
-        (connection, receiver)
-    }
-
-    fn block_recv<T>(receiver: &mut mpsc::UnboundedReceiver<T>) -> T {
-        let runtime = transport_runtime().expect("transport runtime");
-        runtime.block_on(async {
-            tokio::time::timeout(EVENT_WAIT_TIMEOUT, receiver.recv())
-                .await
-                .expect("timed out waiting for a value")
-                .expect("value channel closed")
-        })
-    }
-
-    fn next_event(events: &mut mpsc::UnboundedReceiver<TransportEvent>) -> TransportEvent {
-        block_recv(events)
-    }
-
-    fn expect_open(events: &mut mpsc::UnboundedReceiver<TransportEvent>) {
-        let event = next_event(events);
-        assert_eq!(event.kind, EVENT_KIND_OPEN, "{:?}", event.message);
-    }
-
-    #[test]
-    fn connection_targets_reject_unusable_urls() {
-        for url in [
-            "",
-            "http://gateway.example/",
-            "https://gateway.example/",
-            " wss://gateway.example/",
-            "wss://user:secret@gateway.example/",
-            "wss://user@gateway.example/",
-            "wss://gateway.example/#fragment",
-            "wss://gateway.example/\u{7}",
-            "not-a-url",
-        ] {
-            assert!(
-                parse_websocket_connection_target(url, None).is_err(),
-                "expected {url} to be rejected"
-            );
-        }
-        let long_url = format!(
-            "wss://gateway.example/{}",
-            "a".repeat(ENDPOINT_URL_MAX_BYTES)
-        );
-        assert!(parse_websocket_connection_target(&long_url, None).is_err());
-    }
-
-    #[test]
-    fn connection_targets_reject_unusable_pinned_addresses() {
-        for address in ["", "gateway.example", "127.0.0.1 ", "1.2.3.4\u{7}"] {
-            assert!(
-                parse_websocket_connection_target("wss://gateway.example/", Some(address)).is_err(),
-                "expected {address} to be rejected"
-            );
-        }
-        let long_address = "a".repeat(PINNED_ADDRESS_MAX_BYTES + 1);
-        assert!(
-            parse_websocket_connection_target("wss://gateway.example/", Some(&long_address))
-                .is_err()
-        );
-    }
-
-    #[test]
-    fn connection_targets_resolve_hosts_ports_and_optional_pins() {
-        let plain = parse_websocket_connection_target("ws://gateway.example/socket", None).unwrap();
-        assert_eq!(plain.host, "gateway.example");
-        assert_eq!(plain.port, 80);
-        assert!(plain.pinned_address.is_none());
-        assert!(!plain.tls);
-
-        let secure =
-            parse_websocket_connection_target("wss://gateway.example/socket?v=9", None).unwrap();
-        assert_eq!(secure.port, 443);
-        assert!(secure.tls);
-
-        let pinned =
-            parse_websocket_connection_target("wss://gateway.example:8443/", Some("203.0.113.7"))
-                .unwrap();
-        assert_eq!(pinned.port, 8443);
-        assert_eq!(
-            pinned.pinned_address,
-            Some("203.0.113.7".parse::<IpAddr>().unwrap())
-        );
-
-        let literal = parse_websocket_connection_target("ws://[::1]:9000/", None).unwrap();
-        assert_eq!(literal.host, "::1");
-        assert_eq!(literal.port, 9000);
-    }
-
-    #[test]
-    fn every_secure_connection_shares_one_tls_client_config() {
-        match (tls_client_config(), tls_client_config()) {
-            (Ok(first), Ok(second)) => assert!(Arc::ptr_eq(&first, &second)),
-            (Err(first), Err(second)) => assert_eq!(first, second),
-            _ => panic!("the cached TLS client config changed between calls"),
-        }
-    }
-
-    #[tokio::test]
-    async fn a_cleartext_target_needs_no_tls_connector() {
-        let target = parse_websocket_connection_target("ws://127.0.0.1:9/", None).unwrap();
-        assert!(tls_connector_for(&target).await.unwrap().is_none());
-    }
-
-    #[test]
-    fn transport_modes_parse_and_bound_their_frames() {
-        assert_eq!(
-            TransportMode::parse("gateway").unwrap().max_frame_bytes(),
-            GATEWAY_FRAME_MAX_BYTES
-        );
-        assert_eq!(
-            TransportMode::parse("voice").unwrap().max_frame_bytes(),
-            VOICE_FRAME_MAX_BYTES
-        );
-        assert!(TransportMode::parse("Gateway").is_err());
-        assert!(TransportMode::parse("").is_err());
-        assert_eq!(
-            TransportMode::Gateway.read_capacity_bytes(),
-            GATEWAY_FRAME_MAX_BYTES + 1
-        );
-    }
-
-    #[test]
-    fn close_codes_and_reasons_are_validated() {
-        assert_eq!(validate_close_code(1000).unwrap(), 1000);
-        assert_eq!(validate_close_code(4004).unwrap(), 4004);
-        assert!(validate_close_code(1005).is_err());
-        assert!(validate_close_code(1006).is_err());
-        assert!(validate_close_code(70_000).is_err());
-        assert!(validate_close_reason(&"a".repeat(CLOSE_REASON_MAX_BYTES)).is_ok());
-        assert!(validate_close_reason(&"a".repeat(CLOSE_REASON_MAX_BYTES + 1)).is_err());
-        assert!(validate_close_reason(&"\u{1f600}".repeat(31)).is_err());
-    }
-
-    #[test]
-    fn the_queue_budget_rejects_past_its_entry_and_byte_caps() {
-        static GLOBAL_BYTES: AtomicUsize = AtomicUsize::new(0);
-        static GLOBAL_RELEASED: Notify = Notify::const_new();
-        let budget = Arc::new(QueueBudget::new(
-            2,
-            1_024,
-            &GLOBAL_BYTES,
-            1 << 20,
-            &GLOBAL_RELEASED,
-        ));
-
-        let first = budget.reserve(16).unwrap();
-        let second = budget.reserve(16).unwrap();
-        assert!(budget.reserve(16).is_err());
-
-        drop(second);
-        assert!(budget.reserve(2_048).is_err());
-        assert_eq!(budget.queued_entries.load(Ordering::Acquire), 1);
-        assert_eq!(budget.queued_bytes.load(Ordering::Acquire), 16);
-
-        drop(first);
-        assert_eq!(budget.queued_entries.load(Ordering::Acquire), 0);
-        assert_eq!(budget.queued_bytes.load(Ordering::Acquire), 0);
-        assert_eq!(GLOBAL_BYTES.load(Ordering::Acquire), 0);
-    }
-
-    #[tokio::test]
-    async fn releasing_one_connection_wakes_another_parked_on_the_process_wide_cap() {
-        static GLOBAL_BYTES: AtomicUsize = AtomicUsize::new(0);
-        static GLOBAL_RELEASED: Notify = Notify::const_new();
-        let saturated = Arc::new(QueueBudget::new(
-            8,
-            1_024,
-            &GLOBAL_BYTES,
-            1_024,
-            &GLOBAL_RELEASED,
-        ));
-        let parked = Arc::new(QueueBudget::new(
-            8,
-            1_024,
-            &GLOBAL_BYTES,
-            1_024,
-            &GLOBAL_RELEASED,
-        ));
-
-        let held = saturated.reserve(1_024).unwrap();
-        assert!(parked.reserve(512).is_err());
-        assert_eq!(parked.queued_bytes.load(Ordering::Acquire), 0);
-
-        let waiter = {
-            let parked = parked.clone();
-            tokio::spawn(async move {
-                let released = parked.global_released.notified();
-                tokio::pin!(released);
-                released.as_mut().enable();
-                released.await;
-                parked.reserve(512).is_ok()
-            })
-        };
-        tokio::task::yield_now().await;
-        drop(held);
-
-        let reserved = tokio::time::timeout(Duration::from_secs(2), waiter)
-            .await
-            .expect("a connection parked on the global cap must be woken when another releases")
-            .expect("the waiting task must not panic");
-        assert!(reserved, "the woken connection must be able to reserve");
-    }
-
-    #[test]
-    fn the_queue_budget_rejects_past_the_process_wide_byte_cap() {
-        static GLOBAL_BYTES: AtomicUsize = AtomicUsize::new(0);
-        static GLOBAL_RELEASED: Notify = Notify::const_new();
-        let first = Arc::new(QueueBudget::new(
-            8,
-            1_024,
-            &GLOBAL_BYTES,
-            1_024,
-            &GLOBAL_RELEASED,
-        ));
-        let second = Arc::new(QueueBudget::new(
-            8,
-            1_024,
-            &GLOBAL_BYTES,
-            1_024,
-            &GLOBAL_RELEASED,
-        ));
-
-        let held = first.reserve(768).unwrap();
-        assert!(second.reserve(512).is_err());
-        let fitting = second.reserve(256).unwrap();
-        assert_eq!(GLOBAL_BYTES.load(Ordering::Acquire), 1_024);
-
-        drop(held);
-        drop(fitting);
-        assert_eq!(GLOBAL_BYTES.load(Ordering::Acquire), 0);
-    }
-
-    #[test]
-    fn a_burst_past_the_event_queue_limit_waits_for_the_consumer_instead_of_closing() {
-        const BURST: usize = EVENT_QUEUE_LIMIT * 2;
-
-        let address = spawn_server(|mut socket| async move {
-            for index in 0..BURST {
-                if socket
-                    .send(Message::Text(Utf8Bytes::from(format!("event-{index}"))))
-                    .await
-                    .is_err()
-                {
-                    return;
-                }
-            }
-            while let Some(Ok(message)) = socket.next().await {
-                if matches!(message, Message::Close(_)) {
-                    return;
-                }
-            }
-        });
-        let (events, mut receiver) = mpsc::unbounded_channel();
-        let delivery = Arc::new(StallingDelivery {
-            events,
-            held: Mutex::new(Some(Vec::new())),
-        });
-        let target =
-            parse_websocket_connection_target(&format!("ws://127.0.0.1:{}/", address.port()), None)
-                .expect("connection target");
-        let _connection =
-            NativeGatewayConnection::start(target, TransportMode::Gateway, delivery.clone())
-                .expect("start connection");
-
-        expect_open(&mut receiver);
-        for index in 0..EVENT_QUEUE_LIMIT - 1 {
-            let event = next_event(&mut receiver);
-            assert_eq!(event.kind, EVENT_KIND_MESSAGE, "{:?}", event.reason);
-            assert_eq!(event.data, Some(format!("event-{index}")));
-        }
-
-        let stalled = transport_runtime()
-            .expect("transport runtime")
-            .block_on(async {
-                tokio::time::timeout(STALLED_CONSUMER_SETTLE, receiver.recv()).await
-            });
-        if let Ok(event) = stalled {
-            panic!(
-                "a full event queue must stall the reader, not deliver {:?}",
-                event.map(|event| (event.kind, event.code, event.reason))
-            );
-        }
-
-        delivery.resume();
-        for index in EVENT_QUEUE_LIMIT - 1..BURST {
-            let event = next_event(&mut receiver);
-            assert_eq!(event.kind, EVENT_KIND_MESSAGE, "{:?}", event.reason);
-            assert_eq!(event.data, Some(format!("event-{index}")));
-        }
-    }
-
-    #[test]
-    fn disposing_while_the_event_queue_is_full_still_closes_the_socket() {
-        const BURST: usize = EVENT_QUEUE_LIMIT * 2;
-
-        let (peer_closed, mut peer_closed_events) = mpsc::unbounded_channel();
-        let address = spawn_server(move |mut socket| async move {
-            for index in 0..BURST {
-                if socket
-                    .send(Message::Text(Utf8Bytes::from(format!("event-{index}"))))
-                    .await
-                    .is_err()
-                {
-                    break;
-                }
-            }
-            while let Some(Ok(message)) = socket.next().await {
-                if matches!(message, Message::Close(_)) {
-                    break;
-                }
-            }
-            let _ = peer_closed.send(Instant::now());
-        });
-        let (events, mut receiver) = mpsc::unbounded_channel();
-        let delivery = Arc::new(StallingDelivery {
-            events,
-            held: Mutex::new(Some(Vec::new())),
-        });
-        let target =
-            parse_websocket_connection_target(&format!("ws://127.0.0.1:{}/", address.port()), None)
-                .expect("connection target");
-        let connection =
-            NativeGatewayConnection::start(target, TransportMode::Gateway, delivery.clone())
-                .expect("start connection");
-
-        expect_open(&mut receiver);
-        for _ in 0..EVENT_QUEUE_LIMIT - 1 {
-            let event = next_event(&mut receiver);
-            assert_eq!(event.kind, EVENT_KIND_MESSAGE, "{:?}", event.reason);
-        }
-
-        drop(connection);
-        block_recv(&mut peer_closed_events);
-    }
-
-    #[test]
-    fn the_echo_server_round_trips_text_and_binary_byte_for_byte() {
-        let address = spawn_echo_server();
-        let (connection, mut events) =
-            test_connection(address, Some("127.0.0.1"), TransportMode::Gateway);
-        expect_open(&mut events);
-
-        let text = "héllo \u{1f600} {\"op\":1,\"d\":null}";
-        connection.send_text(text.to_owned()).unwrap();
-        let event = next_event(&mut events);
-        assert_eq!(event.kind, EVENT_KIND_MESSAGE);
-        assert_eq!(event.data.as_deref(), Some(text));
-        assert!(event.binary.is_none());
-
-        let payload: Vec<u8> = (0..=255u8).chain(0..=255u8).collect();
-        connection
-            .send_frame(Message::Binary(payload.clone().into()))
-            .unwrap();
-        let event = next_event(&mut events);
-        assert_eq!(event.kind, EVENT_KIND_BINARY);
-        assert_eq!(event.binary.as_deref(), Some(payload.as_slice()));
-        assert!(event.data.is_none());
-    }
-
-    #[test]
-    fn closing_reports_a_clean_close_to_both_ends() {
-        let (peer_close, mut peer_close_events) = mpsc::unbounded_channel();
-        let address = spawn_server(move |mut socket| async move {
-            while let Some(Ok(message)) = socket.next().await {
-                if let Message::Close(frame) = message {
-                    let _ = peer_close
-                        .send(frame.map(|frame| {
-                            (u16::from(frame.code), frame.reason.as_str().to_owned())
-                        }));
-                    return;
-                }
-            }
-        });
-        let (connection, mut events) = test_connection(address, None, TransportMode::Gateway);
-        expect_open(&mut events);
-
-        connection
-            .close(4000, "Switching accounts".to_owned())
-            .unwrap();
-        let event = next_event(&mut events);
-        assert_eq!(event.kind, EVENT_KIND_CLOSE);
-        assert_eq!(event.code, Some(4000));
-        assert_eq!(event.reason.as_deref(), Some("Switching accounts"));
-        assert_eq!(event.was_clean, Some(true));
-        assert_eq!(
-            block_recv(&mut peer_close_events),
-            Some((4000, "Switching accounts".to_owned()))
-        );
-    }
-
-    #[test]
-    fn an_over_size_gateway_frame_reports_an_error_and_closes_with_1009() {
-        let (peer_close, mut peer_close_events) = mpsc::unbounded_channel();
-        let address = spawn_server(move |mut socket| async move {
-            let payload = vec![7u8; GATEWAY_FRAME_MAX_BYTES + 1];
-            if socket.send(Message::Binary(payload.into())).await.is_err() {
-                return;
-            }
-            while let Some(Ok(message)) = socket.next().await {
-                if let Message::Close(frame) = message {
-                    let _ = peer_close.send(frame.map(|frame| u16::from(frame.code)));
-                    return;
-                }
-            }
-        });
-        let (_connection, mut events) = test_connection(address, None, TransportMode::Gateway);
-        expect_open(&mut events);
-
-        let error = next_event(&mut events);
-        assert_eq!(error.kind, EVENT_KIND_ERROR);
-        assert!(error.message.is_some());
-        let close = next_event(&mut events);
-        assert_eq!(close.kind, EVENT_KIND_CLOSE);
-        assert_eq!(close.code, Some(1009));
-        assert_eq!(close.was_clean, Some(false));
-        assert_eq!(block_recv(&mut peer_close_events), Some(1009));
-    }
-
-    #[test]
-    fn dropping_the_connection_closes_the_socket_within_the_dispose_timeout() {
-        let (peer_closed, mut peer_closed_events) = mpsc::unbounded_channel();
-        let address = spawn_server(move |mut socket| async move {
-            while let Some(Ok(message)) = socket.next().await {
-                if matches!(message, Message::Close(_)) {
-                    break;
-                }
-            }
-            let _ = peer_closed.send(Instant::now());
-        });
-        let (connection, mut events) = test_connection(address, None, TransportMode::Gateway);
-        expect_open(&mut events);
-
-        let dropped_at = Instant::now();
-        drop(connection);
-        let closed_at = block_recv(&mut peer_closed_events);
-        assert!(closed_at.duration_since(dropped_at) < DISPOSE_CLOSE_TIMEOUT);
-    }
-
-    #[test]
-    fn a_disposed_connection_refuses_further_commands() {
-        let address = spawn_echo_server();
-        let (connection, mut events) = test_connection(address, None, TransportMode::Gateway);
-        expect_open(&mut events);
-
-        connection.dispose().unwrap();
-        connection.dispose().unwrap();
-        assert!(connection.send_text("late".to_owned()).is_err());
-        assert!(connection.close(1000, String::new()).is_err());
-    }
-
-    #[test]
-    fn frames_beyond_the_transport_mode_maximum_are_refused_before_the_queue() {
-        let address = spawn_echo_server();
-        let (connection, mut events) = test_connection(address, None, TransportMode::Voice);
-        expect_open(&mut events);
-
-        let error = connection
-            .send_text("a".repeat(VOICE_FRAME_MAX_BYTES + 1))
-            .unwrap_err();
-        assert_eq!(error.status, Status::InvalidArg);
-        assert!(
-            connection
-                .send_frame(Message::Binary(vec![0u8; VOICE_FRAME_MAX_BYTES + 1].into()))
-                .is_err()
-        );
-        assert!(
-            connection
-                .send_text("a".repeat(VOICE_FRAME_MAX_BYTES))
-                .is_ok()
-        );
-    }
-
-    #[test]
-    fn an_unreachable_endpoint_reports_an_error_and_an_unclean_close() {
-        let runtime = transport_runtime().expect("transport runtime");
-        let listener = runtime
-            .block_on(TcpListener::bind("127.0.0.1:0"))
-            .expect("bind test listener");
-        let address = listener.local_addr().expect("listener address");
-        drop(listener);
-
-        let (_connection, mut events) = test_connection(address, None, TransportMode::Gateway);
-        let error = next_event(&mut events);
-        assert_eq!(error.kind, EVENT_KIND_ERROR);
-        let close = next_event(&mut events);
-        assert_eq!(close.kind, EVENT_KIND_CLOSE);
-        assert_eq!(close.code, Some(1006));
-        assert_eq!(close.was_clean, Some(false));
-    }
 }

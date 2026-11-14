@@ -9,7 +9,6 @@
     validate_guild_id/1,
     normalize_nonce/1,
     validate_user_ids/1,
-    parse_user_id/1,
     ensure_binary/1,
     ensure_limit/1
 ]).
@@ -140,27 +139,9 @@ has_too_many_user_ids(UserIds) ->
 -spec parse_user_ids([term()]) -> [integer()].
 parse_user_ids(UserIds) ->
     lists:filtermap(
-        fun parse_user_id_filter/1,
+        fun snowflake_id:filter/1,
         UserIds
     ).
-
--spec parse_user_id_filter(term()) -> {true, integer()} | false.
-parse_user_id_filter(Id) ->
-    case parse_user_id(Id) of
-        {ok, ParsedId} -> {true, ParsedId};
-        error -> false
-    end.
-
--spec parse_user_id(term()) -> {ok, integer()} | error.
-parse_user_id(Id) when is_integer(Id), Id > 0 ->
-    {ok, Id};
-parse_user_id(Id) when is_binary(Id) ->
-    case validation:validate_snowflake(<<"user_id">>, Id) of
-        {ok, ParsedId} -> {ok, ParsedId};
-        {error, _, _} -> error
-    end;
-parse_user_id(_) ->
-    error.
 
 -spec ensure_binary(term()) -> binary().
 ensure_binary(Value) when is_binary(Value) -> Value;

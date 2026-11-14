@@ -13,7 +13,8 @@ export const GuildRoleResponse = z.object({
 	permissions: PermissionStringType.describe('The permissions bitfield for the role'),
 	hoist: z.boolean().describe('Whether this role is displayed separately in the member list'),
 	mentionable: z.boolean().describe('Whether this role can be mentioned by anyone'),
-	unicode_emoji: z.string().nullish().describe('The unicode emoji for this role'),
+	icon: z.string().nullable().describe('The hash of the role icon image, or null'),
+	unicode_emoji: z.string().nullable().describe('The Unicode emoji used as the role icon, or null'),
 });
 
 export type GuildRoleResponse = z.infer<typeof GuildRoleResponse>;

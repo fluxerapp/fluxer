@@ -7,12 +7,12 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import PollVotes from '@app/features/messaging/state/PollVotes';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import {ReactionType} from '@fluxer/constants/src/EmojiConstants';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import PollVotes from '../state/PollVotes';
 
 interface ReactionEmojiPayload {
 	id?: string | null;
@@ -43,26 +43,28 @@ export function handleMessageReactionAddMany(
 			if (data.guild_id && reaction.member) {
 				GuildMembers.hydrateIfMissing(data.guild_id, reaction.member);
 			}
-			SavedMessages.handleMessageReactionAdd(data.message_id);
+			SavedMessages.handleMessageReactionChange(data.message_id);
 			if ((reaction.reaction_type ?? ReactionType.Emoji) === ReactionType.PollVote)
 				PollVotes.handlePollVoteAdd(data.message_id, reaction.user_id, Number(emoji.id));
 			else MessageReactions.handleReactionAdd(data.message_id, reaction.user_id, emoji);
 			ChannelPins.handleMessageReactionAdd(data.channel_id, data.message_id);
-			ForumPosts.handleReaction(
-				data.channel_id,
-				data.message_id,
-				emoji,
-				true,
-				reaction.user_id === Authentication.currentUserId,
-			);
-			MentionFeed.handleMessageReactionAdd(data.message_id);
+			if ((reaction.reaction_type ?? ReactionType.Emoji) !== ReactionType.PollVote) {
+				ForumPosts.handleReaction(
+					data.channel_id,
+					data.message_id,
+					emoji,
+					true,
+					reaction.user_id === Authentication.currentUserId,
+				);
+			}
+			MentionFeed.handleMessageReactionChange(data.message_id);
 			Messages.handleReaction({
 				type: 'MESSAGE_REACTION_ADD',
 				channelId: data.channel_id,
 				messageId: data.message_id,
 				userId: reaction.user_id,
 				emoji,
-				skipReactionStore: true,
+				reactionType: reaction.reaction_type ?? ReactionType.Emoji,
 			});
 		}
 	});

@@ -4,18 +4,8 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([
-    start_link/0,
-    config_changed/2,
-    self_heal/1,
-    flip_counts/0,
-    affected_targets/3
-]).
+-export([start_link/0, config_changed/2, self_heal/1, flip_counts/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
-
--ifdef(TEST).
--export([schedule/4, take_due/3, heal/4]).
--endif.
 
 -define(REGISTRY_TABLE, process_registry_table).
 -define(FLIP_COUNTS_KEY, {channel_threads_flip, flip_counts}).
@@ -64,17 +54,6 @@ flip_counts() ->
              || Kind <- counted()
             ])
     end.
-
--spec affected_targets(
-    channel_threads_config:config(), channel_threads_config:config(), [target()]
-) -> [target()].
-affected_targets(Previous, Current, Candidates) ->
-    Changed = changed_fun(Previous, Current),
-    lists:foldr(
-        fun({Kind, Id, Pid}, Acc) -> local_target(Kind, Id, Pid, Changed, Acc) end,
-        [],
-        Candidates
-    ).
 
 -spec changed_fun(channel_threads_config:config(), channel_threads_config:config()) ->
     fun((kind(), integer()) -> boolean()).
@@ -126,7 +105,8 @@ handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
-handle_cast({config_changed, Previous, Current}, State) ->
+handle_cast({config_changed, _, _} = Msg, State) ->
+    {config_changed, Previous, Current} = eqwalizer:dynamic_cast(Msg),
     case
         (maps:get(enabled, Previous) orelse maps:get(enabled, Current)) andalso
             (channel_threads_config:guild_fields_changed(Previous, Current) orelse
@@ -166,7 +146,7 @@ code_change(_OldVsn, State, _Extra) ->
 ) -> state().
 schedule_changed(Previous, Current, State) ->
     Targets = local_targets(changed_fun(Previous, Current)),
-    Pending = schedule(Targets, now_ms(), maps:get(pending, State), fun jitter/0),
+    Pending = schedule(Targets, now_ms(), maps:get(pending, State)),
     arm_timer(State#{pending := Pending}).
 
 -spec empty_pending() -> pending().
@@ -176,15 +156,12 @@ empty_pending() ->
         keys => #{}
     }.
 
--spec schedule([target()], integer(), pending(), fun(() -> non_neg_integer())) -> pending().
-schedule(Targets, Now, Pending, Jitter) ->
-    lists:foldl(
-        fun(Target, Acc) -> schedule_target(Target, Now, Acc, Jitter) end, Pending, Targets
-    ).
+-spec schedule([target()], integer(), pending()) -> pending().
+schedule(Targets, Now, Pending) ->
+    lists:foldl(fun(Target, Acc) -> schedule_target(Target, Now, Acc) end, Pending, Targets).
 
--spec schedule_target(target(), integer(), pending(), fun(() -> non_neg_integer())) ->
-    pending().
-schedule_target({Kind, Id, Pid}, Now, #{due := Due, keys := Keys} = Pending, Jitter) ->
+-spec schedule_target(target(), integer(), pending()) -> pending().
+schedule_target({Kind, Id, Pid}, Now, #{due := Due, keys := Keys} = Pending) ->
     Key = {Kind, Id},
     KindDue = maps:get(Kind, Due),
     case maps:find(Key, Keys) of
@@ -200,7 +177,7 @@ schedule_target({Kind, Id, Pid}, Now, #{due := Due, keys := Keys} = Pending, Jit
                 keys => Keys#{Key => {At, Pid}}
             };
         error ->
-            At = Now + Jitter(),
+            At = Now + jitter(),
             count(Kind),
             #{
                 due => Due#{Kind => gb_sets:add({At, Key, Pid}, KindDue)},
@@ -224,25 +201,36 @@ take_due(Pending, Now, Limits) ->
     {[target()], pending()}.
 take_due_kind(_Kind, Pending, _Now, 0, Acc) ->
     {lists:reverse(Acc), Pending};
-take_due_kind(Kind, #{due := Due, keys := Keys} = Pending, Now, Limit, Acc) ->
+take_due_kind(Kind, #{due := Due} = Pending, Now, Limit, Acc) ->
     KindDue = maps:get(Kind, Due),
     case gb_sets:is_empty(KindDue) of
         true ->
             {lists:reverse(Acc), Pending};
         false ->
-            case gb_sets:take_smallest(KindDue) of
-                {{At, {_Kind, Id} = Key, Pid}, Rest} when At =< Now ->
-                    take_due_kind(
-                        Kind,
-                        #{due => Due#{Kind => Rest}, keys => maps:remove(Key, Keys)},
-                        Now,
-                        Limit - 1,
-                        [{Kind, Id, Pid} | Acc]
-                    );
-                _Later ->
-                    {lists:reverse(Acc), Pending}
-            end
+            take_smallest_due(Kind, gb_sets:take_smallest(KindDue), Pending, Now, Limit, Acc)
     end.
+
+-spec take_smallest_due(
+    kind(),
+    {{integer(), pending_key(), pid()}, due()},
+    pending(),
+    integer(),
+    non_neg_integer(),
+    [target()]
+) ->
+    {[target()], pending()}.
+take_smallest_due(
+    Kind, {{At, {_Kind, Id} = Key, Pid}, Rest}, #{due := Due, keys := Keys}, Now, Limit, Acc
+) when At =< Now ->
+    take_due_kind(
+        Kind,
+        #{due => Due#{Kind => Rest}, keys => maps:remove(Key, Keys)},
+        Now,
+        Limit - 1,
+        [{Kind, Id, Pid} | Acc]
+    );
+take_smallest_due(_Kind, _Later, Pending, _Now, _Limit, Acc) ->
+    {lists:reverse(Acc), Pending}.
 
 -spec heal(integer(), pid(), integer(), state()) -> {#{integer() => integer()}, pending()}.
 heal(GuildId, Pid, Now, #{healed := Healed0, pending := Pending}) ->

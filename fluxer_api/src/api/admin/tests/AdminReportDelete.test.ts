@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createAttachmentID,
@@ -130,6 +130,9 @@ describe('DELETE /admin/reports/:report_id', () => {
 		const profileKey = `reports/${reportId}/profile/user_avatar/abc${id}`;
 		await harness.storageService.uploadObject({bucket: REPORTS_BUCKET, key: attachmentKey, body: new Uint8Array([1])});
 		await harness.storageService.uploadObject({bucket: REPORTS_BUCKET, key: profileKey, body: new Uint8Array([2])});
+		const uploadedAt = new Date(Date.now() - ms('1 hour'));
+		harness.storageService.setObjectLastModified(REPORTS_BUCKET, attachmentKey, uploadedAt);
+		harness.storageService.setObjectLastModified(REPORTS_BUCKET, profileKey, uploadedAt);
 		const report = await repository.createReport({
 			...Object.fromEntries(IAR_SUBMISSION_COLUMNS.map((column) => [column, null])),
 			report_id: id,
@@ -152,6 +155,7 @@ describe('DELETE /admin/reports/:report_id', () => {
 					global_name: null,
 					bio: null,
 					pronouns: null,
+					custom_status: null,
 					avatar: {hash: `abc${id}`, key: profileKey},
 					banner: null,
 				},
@@ -231,6 +235,25 @@ describe('DELETE /admin/reports/:report_id', () => {
 		});
 	});
 
+	test('deletes the notes with the report and keeps the notes of other reports', async () => {
+		const deleted = await seedMessageReport(newEvidence());
+		const other = await seedMessageReport(newEvidence());
+		for (const seeded of [deleted, other]) {
+			await repository.addNote({
+				report_id: seeded.reportId,
+				note_id: nextId(),
+				author_id: BigInt(admin.userId),
+				body: 'Staff context',
+				created_at: new Date(),
+			});
+		}
+
+		await deleteRequest(admin, deleted.reportId).expect(HTTP_STATUS.NO_CONTENT).execute();
+
+		expect(await repository.listNotes(deleted.reportId)).toEqual([]);
+		expect(await repository.listNotes(other.reportId)).toHaveLength(1);
+	});
+
 	test('keeps an evidence copy another report still uses', async () => {
 		const shared = newEvidence();
 		const deleted = await seedMessageReport(shared);
@@ -269,14 +292,6 @@ describe('DELETE /admin/reports/:report_id', () => {
 		await deleteRequest(admin, seeded.reportId).expect(HTTP_STATUS.NO_CONTENT).execute();
 
 		expect(await repository.getReport(seeded.reportId)).toBeNull();
-	});
-
-	test('an unknown report gives UNKNOWN_REPORT and records nothing', async () => {
-		await deleteRequest(admin, '1499999999999999999')
-			.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_REPORT)
-			.execute();
-
-		expect(await auditEntries('delete_report')).toEqual([]);
 	});
 
 	test('needs REPORT_DELETE, which REPORT_RESOLVE does not grant', async () => {

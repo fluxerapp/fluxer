@@ -3,12 +3,9 @@
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {
-	openScreenShareSourceSwitcherModal,
-	type ScreenSharePickerTab,
-} from '@app/features/voice/components/modals/ScreenSharePickerModal';
-import {StreamSettingsMenuContent} from '@app/features/voice/components/StreamSettingsMenuContent';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {LazyStreamSettingsMenuContent} from '@app/features/voice/components/LazyVoiceComponents';
+import type {ScreenSharePickerTab} from '@app/features/voice/components/modals/ScreenSharePickerModal';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import type {DisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
 import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
@@ -34,12 +31,11 @@ export interface ActiveScreenShareMenuProps {
 	shareContext: StreamSettingsShareContext;
 	shareContextResolved: boolean;
 	iconClassName?: string;
-	additionalActions?: React.ReactNode;
 	tail?: React.ReactNode;
 }
 
 export async function stopActiveScreenShare(): Promise<void> {
-	await MediaEngine.setScreenShareEnabled(false);
+	await VoiceRuntime.engine?.setScreenShareEnabled(false);
 }
 
 function getSourceSwitcherTab(shareContext: StreamSettingsShareContext): ScreenSharePickerTab {
@@ -49,6 +45,9 @@ function getSourceSwitcherTab(shareContext: StreamSettingsShareContext): ScreenS
 }
 
 export async function changeActiveScreenShare(shareContext: StreamSettingsShareContext = 'display'): Promise<void> {
+	const {openScreenShareSourceSwitcherModal} = await import(
+		'@app/features/voice/components/modals/ScreenSharePickerModal'
+	);
 	await openScreenShareSourceSwitcherModal({initialTab: getSourceSwitcherTab(shareContext)});
 }
 
@@ -58,7 +57,6 @@ export const ActiveScreenShareMenu: React.FC<ActiveScreenShareMenuProps> = ({
 	shareContext,
 	shareContextResolved,
 	iconClassName,
-	additionalActions,
 	tail,
 }) => {
 	const {i18n} = useLingui();
@@ -106,9 +104,8 @@ export const ActiveScreenShareMenu: React.FC<ActiveScreenShareMenuProps> = ({
 				>
 					{i18n._(CHANGE_STREAM_DESCRIPTOR)}
 				</MenuItem>
-				{additionalActions}
 				{!isWeb && (
-					<StreamSettingsMenuContent
+					<LazyStreamSettingsMenuContent
 						applyToLiveStream
 						variant="compactLive"
 						displayShareEnvironment={displayShareEnvironment}

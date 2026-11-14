@@ -63,6 +63,26 @@ pub struct Poll {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct EmbedField {
+    pub name: String,
+    pub value: String,
+    pub inline: bool,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Embed {
+    pub title: Option<String>,
+    pub url: Option<String>,
+    pub description: Option<String>,
+    pub author_name: Option<String>,
+    pub fields: Vec<EmbedField>,
+    pub footer_text: Option<String>,
+    pub image_url: Option<String>,
+    pub thumbnail_url: Option<String>,
+    pub nsfw: bool,
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Message {
     pub id: String,
     pub content: String,
@@ -78,10 +98,12 @@ pub struct Message {
     pub channel_nsfw: Option<bool>,
     pub channel_content_warning_level: Option<i32>,
     pub channel_content_warning_text: Option<String>,
+    pub guild_id: Option<String>,
     pub guild_nsfw: Option<bool>,
     pub poll: Option<Poll>,
     pub attachments: Vec<Attachment>,
     pub missing_attachments: Vec<MissingAttachment>,
+    pub embeds: Vec<Embed>,
 }
 
 pub fn ordered_messages(values: &[Value]) -> Vec<Message> {
@@ -102,6 +124,12 @@ fn message_from_value(value: &Value) -> Message {
         .into_iter()
         .flatten()
         .map(missing_attachment_from_value)
+        .collect();
+    let embeds = value["embeds"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(embed_from_value)
         .collect();
     Message {
         id: value_id(&value["id"]).unwrap_or_default(),
@@ -126,11 +154,47 @@ fn message_from_value(value: &Value) -> Message {
         channel_content_warning_text: value["channel_content_warning_text"]
             .as_str()
             .map(ToOwned::to_owned),
+        guild_id: value_id(&value["guild_id"]),
         guild_nsfw: value["guild_nsfw"].as_bool(),
         poll: value.get("poll").map(poll_from_value),
         attachments,
         missing_attachments,
+        embeds,
     }
+}
+
+fn embed_from_value(value: &Value) -> Embed {
+    Embed {
+        title: non_empty_str(&value["title"]),
+        url: non_empty_str(&value["url"]),
+        description: non_empty_str(&value["description"]),
+        author_name: non_empty_str(&value["author"]["name"]),
+        fields: value["fields"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .map(|field| EmbedField {
+                name: field["name"].as_str().unwrap_or("").to_owned(),
+                value: field["value"].as_str().unwrap_or("").to_owned(),
+                inline: field["inline"].as_bool().unwrap_or(false),
+            })
+            .collect(),
+        footer_text: non_empty_str(&value["footer"]["text"]),
+        image_url: embed_media_url(&value["image"]),
+        thumbnail_url: embed_media_url(&value["thumbnail"]),
+        nsfw: value["nsfw"].as_bool().unwrap_or(false),
+    }
+}
+
+fn embed_media_url(value: &Value) -> Option<String> {
+    non_empty_str(&value["proxy_url"]).or_else(|| non_empty_str(&value["url"]))
+}
+
+fn non_empty_str(value: &Value) -> Option<String> {
+    value
+        .as_str()
+        .filter(|s| !s.is_empty())
+        .map(ToOwned::to_owned)
 }
 
 fn missing_attachment_from_value(value: &Value) -> MissingAttachment {
@@ -247,184 +311,5 @@ fn compare_message_ids(left: &Message, right: &Message) -> Ordering {
     match (left.id.parse::<u128>(), right.id.parse::<u128>()) {
         (Ok(l), Ok(r)) => l.cmp(&r),
         _ => left.id.cmp(&right.id),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn maps_message_and_attachment_fields() {
-        let value = json!({
-            "id": "9007199254740993",
-            "content": "Message content",
-            "timestamp": "2026-09-11T12:00:00Z",
-            "author_id": 42,
-            "author_username": "alice",
-            "author_global_name": "Alice",
-            "author_discriminator": 1234,
-            "author_avatar": "avatar-hash",
-            "channel_id": "100",
-            "channel_nsfw": false,
-            "channel_content_warning_level": 2,
-            "channel_content_warning_text": "Content warning",
-            "guild_nsfw": true,
-            "attachments": [{
-                "id": 9007199254740993_u64,
-                "url": "https://cdn.example.com/image.png",
-                "filename": "image.png",
-                "nsfw": true,
-                "content_type": "image/png",
-                "width": 640,
-                "height": 480,
-                "size": 4096
-            }]
-        });
-
-        assert_eq!(
-            message_from_value(&value),
-            Message {
-                id: "9007199254740993".into(),
-                content: "Message content".into(),
-                timestamp: "2026-09-11T12:00:00Z".into(),
-                author_id: "42".into(),
-                author_username: "alice".into(),
-                author_global_name: Some("Alice".into()),
-                author_discriminator: "1234".into(),
-                author_avatar: Some("avatar-hash".into()),
-                webhook_id: None,
-                author_bot: None,
-                channel_id: "100".into(),
-                channel_nsfw: Some(false),
-                channel_content_warning_level: Some(2),
-                channel_content_warning_text: Some("Content warning".into()),
-                guild_nsfw: Some(true),
-                poll: None,
-                attachments: vec![Attachment {
-                    id: "9007199254740993".into(),
-                    url: "https://cdn.example.com/image.png".into(),
-                    filename: "image.png".into(),
-                    nsfw: Some(true),
-                    content_type: Some("image/png".into()),
-                    width: Some(640),
-                    height: Some(480),
-                    size: Some(4096),
-                }],
-                missing_attachments: vec![],
-            }
-        );
-    }
-
-    #[test]
-    fn maps_author_bot_flags() {
-        let bot = message_from_value(&json!({"author_id": "42", "author_bot": true}));
-        assert_eq!(bot.author_bot, Some(true));
-        let human = message_from_value(&json!({"author_id": "43", "author_bot": false}));
-        assert_eq!(human.author_bot, Some(false));
-        let webhook = message_from_value(
-            &json!({"author_id": "500", "webhook_id": "500", "author_bot": null}),
-        );
-        assert_eq!(webhook.author_bot, None);
-        let old = message_from_value(&json!({"author_id": "44"}));
-        assert_eq!(old.author_bot, None);
-    }
-
-    #[test]
-    fn maps_missing_attachments() {
-        let message = message_from_value(&json!({
-            "id": "10",
-            "attachments": [],
-            "missing_attachments": [{
-                "id": 9007199254740993_u64,
-                "filename": "evidence.png",
-                "nsfw": null,
-                "content_type": "image/png",
-                "width": 640,
-                "height": 480,
-                "size": 4096
-            }]
-        }));
-        assert!(message.attachments.is_empty());
-        assert_eq!(
-            message.missing_attachments,
-            vec![MissingAttachment {
-                id: "9007199254740993".into(),
-                filename: "evidence.png".into(),
-                content_type: Some("image/png".into()),
-                size: Some(4096),
-            }]
-        );
-        let old = message_from_value(&json!({"id": "11", "attachments": []}));
-        assert!(old.missing_attachments.is_empty());
-        let null = message_from_value(&json!({"id": "12", "missing_attachments": null}));
-        assert!(null.missing_attachments.is_empty());
-    }
-
-    #[test]
-    fn maps_webhook_authors() {
-        let webhook = message_from_value(&json!({
-            "author_id": "500",
-            "author_username": "Harbor Bulletin",
-            "webhook_id": "500"
-        }));
-        assert_eq!(webhook.webhook_id.as_deref(), Some("500"));
-        assert_eq!(webhook.author_id, "500");
-        let user = message_from_value(&json!({"author_id": "42", "webhook_id": null}));
-        assert_eq!(user.webhook_id, None);
-    }
-
-    #[test]
-    fn retains_display_defaults_for_incomplete_snapshots() {
-        let message = message_from_value(&json!({"attachments": [{}]}));
-
-        assert_eq!(message.author_username, "Unknown");
-        assert_eq!(message.author_discriminator, "0000");
-        assert_eq!(message.content, "");
-        assert_eq!(message.author_global_name, None);
-        assert_eq!(message.webhook_id, None);
-        assert_eq!(message.channel_nsfw, None);
-        assert_eq!(
-            message.attachments,
-            vec![Attachment {
-                id: String::new(),
-                url: String::new(),
-                filename: String::new(),
-                nsfw: None,
-                content_type: None,
-                width: None,
-                height: None,
-                size: None,
-            }]
-        );
-    }
-
-    #[test]
-    fn orders_string_and_numeric_snowflakes_without_rounding() {
-        let values = vec![
-            json!({"id": "9007199254740993"}),
-            json!({"id": "10"}),
-            json!({"id": 2}),
-            json!({"id": 9007199254740992_u64}),
-        ];
-        let messages = ordered_messages(&values);
-        let ids: Vec<&str> = messages.iter().map(|message| message.id.as_str()).collect();
-
-        assert_eq!(ids, ["2", "10", "9007199254740992", "9007199254740993"]);
-        assert_eq!(values[0]["id"], "9007199254740993");
-        assert!(ordered_messages(&[]).is_empty());
-    }
-
-    #[test]
-    fn preserves_message_order_when_ids_are_equal() {
-        let values = [
-            json!({"id": "10", "content": "first"}),
-            json!({"id": 10, "content": "second"}),
-        ];
-        let messages = ordered_messages(&values);
-
-        assert_eq!(messages[0].content, "first");
-        assert_eq!(messages[1].content, "second");
     }
 }

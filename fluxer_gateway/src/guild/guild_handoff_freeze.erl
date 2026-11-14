@@ -3,61 +3,10 @@
 -module(guild_handoff_freeze).
 -typing([eqwalizer]).
 
--export([
-    transfer/5,
-    repair/3,
-    default_opts/0,
-    is_frozen/1,
-    shard_pid/2,
-    ensure_absent/3
-]).
+-export([transfer/5, repair/3, is_frozen/1, shard_pid/2, ensure_absent/3]).
 
 -define(SHARD_TABLE, guild_manager_shard_table).
--define(GUARD_EXPRS,
-    "R = erlang:monitor(process, C),"
-    " C ! {freeze_guard_ready, self()},"
-    " receive"
-    " {freeze_guard_release, C} -> erlang:demonitor(R, [flush]), released;"
-    " {'DOWN', R, process, C, _} ->"
-    " try sys:resume(P, 60000) of ok -> resumed catch _:Reason -> {resume_failed, Reason} end"
-    " end."
-).
--define(CAPTURE_EXPRS,
-    "F = fun({'$gen_call', _, _}) -> true;"
-    " ({'$gen_cast', _}) -> true;"
-    " ({presence, U, _}) when is_integer(U) -> true;"
-    " ({reconcile_user_presence, _}) -> true;"
-    " ({clear_stale_cached_voice_states, _}) -> true;"
-    " (_) -> false end,"
-    " case erlang:process_info(P, messages) of"
-    " {messages, Ms} ->"
-    " R = [M || M <- Ms, F(M)], L = length(R),"
-    " {L, case L >= S of true -> lists:nthtail(S, R); false -> [] end};"
-    " undefined -> undefined"
-    " end."
-).
 -define(DRAIN_POLL_MS, 10).
--define(REPAIR_EXPRS,
-    "D = erlang:monotonic_time(millisecond) + T,"
-    " case M:fetch_guild_data(G) of"
-    " {ok, Data} ->"
-    " case erlang:monotonic_time(millisecond) < D of"
-    " true ->"
-    " R = fun(S) -> case A:handle_call({reload, Data}, {self(), make_ref()}, S) of"
-    " {reply, _, S1} -> S1;"
-    " {reply, _, S1, _} -> S1"
-    " end end,"
-    " _ = sys:replace_state(P, R, max(1, D - erlang:monotonic_time(millisecond))),"
-    " reloaded;"
-    " false -> late"
-    " end;"
-    " Other -> {fetch_failed, Other}"
-    " end."
-).
--define(EXPORT_EXPRS,
-    "maps:merge(maps:update_with(data, fun(D) -> maps:without(K, D) end,"
-    " guild_handoff:export_handoff_state(sys:get_state(P, T))), X)."
-).
 
 -type guild_id() :: integer().
 -type hook() :: fun(() -> ok | {error, term()}).
@@ -83,9 +32,8 @@
 }.
 -type report() :: map().
 -type result() :: {ok, report()} | {error, report()}.
--type freeze() :: #{pid := pid(), guard := pid(), guard_ref := reference()}.
 
--export_type([opts/0, report/0, result/0]).
+-export_type([guild_id/0, opts/0, report/0, result/0]).
 
 -spec default_opts() -> opts().
 default_opts() ->
@@ -136,6 +84,8 @@ await(GuildId, TargetNode, {Pid, Ref, Tag} = Run, Committed, Opts) ->
             Result;
         {'DOWN', Ref, process, Pid, Reason} ->
             crashed(GuildId, TargetNode, Reason, Committed, Opts)
+    after infinity ->
+        erlang:error(unreachable)
     end.
 
 -spec crashed(guild_id(), node(), term(), boolean(), opts()) -> result().
@@ -153,9 +103,10 @@ repair(GuildId, SrcPid, Opts0) ->
     Opts = maps:merge(default_opts(), Opts0),
     maybe
         ok ?= await_thawed(SrcPid, now_ms() + maps:get(guard_timeout, Opts)),
-        {ok, Freeze} ?= freeze(SrcPid, Opts),
-        Reload = reload_frozen(GuildId, SrcPid, maps:get(repair_timeout, Opts)),
-        repaired(Reload, thaw(Freeze, Opts))
+        {ok, Freeze} ?= guild_handoff_freeze_remote:freeze(SrcPid, Opts),
+        RepairTimeout = maps:get(repair_timeout, Opts),
+        Reload = guild_handoff_freeze_remote:reload_frozen(GuildId, SrcPid, RepairTimeout),
+        repaired(Reload, guild_handoff_freeze_remote:thaw(Freeze, Opts))
     end.
 
 -spec await_thawed(pid(), integer()) -> ok | {error, term()}.
@@ -164,32 +115,17 @@ await_thawed(SrcPid, Deadline) ->
         false ->
             ok;
         true ->
-            case now_ms() < Deadline of
-                true ->
-                    timer:sleep(?DRAIN_POLL_MS),
-                    await_thawed(SrcPid, Deadline);
-                false ->
-                    {error, still_frozen}
-            end;
+            retry_thawed(now_ms() < Deadline, SrcPid, Deadline);
         {error, _} = Error ->
             Error
     end.
 
--spec reload_frozen(guild_id(), pid(), pos_integer()) -> ok | {error, term()}.
-reload_frozen(GuildId, SrcPid, Timeout) ->
-    Bindings = bindings([
-        {'G', GuildId},
-        {'P', SrcPid},
-        {'T', Timeout},
-        {'M', guild_manager_shard_fetch},
-        {'A', guild}
-    ]),
-    Args = [parse(?REPAIR_EXPRS), Bindings],
-    case rpc_call(node(SrcPid), erl_eval, exprs, Args, Timeout + 5000) of
-        {ok, {value, reloaded, _}} -> ok;
-        {ok, {value, Other, _}} -> {error, Other};
-        {error, _} = Error -> Error
-    end.
+-spec retry_thawed(boolean(), pid(), integer()) -> ok | {error, term()}.
+retry_thawed(true, SrcPid, Deadline) ->
+    timer:sleep(?DRAIN_POLL_MS),
+    await_thawed(SrcPid, Deadline);
+retry_thawed(false, _SrcPid, _Deadline) ->
+    {error, still_frozen}.
 
 -spec repaired(ok | {error, term()}, ok | {error, term()}) -> ok | {error, term()}.
 repaired(ok, ok) ->
@@ -199,7 +135,8 @@ repaired(Reload, Thaw) ->
 
 -spec is_frozen(pid()) -> boolean() | {error, term()}.
 is_frozen(Pid) ->
-    case rpc_call(node(Pid), erlang, process_info, [Pid, current_function], 10000) of
+    Args = [Pid, current_function],
+    case guild_handoff_freeze_remote:rpc_call(node(Pid), erlang, process_info, Args, 10000) of
         {ok, {current_function, {sys, _, _}}} -> true;
         {ok, {current_function, _}} -> false;
         {ok, undefined} -> {error, noproc};
@@ -209,7 +146,8 @@ is_frozen(Pid) ->
 
 -spec shard_pid(guild_id(), node()) -> {ok, pid()} | {error, term()}.
 shard_pid(GuildId, Node) ->
-    case rpc_call(Node, ets, lookup, [?SHARD_TABLE, shard_count], 10000) of
+    Args = [?SHARD_TABLE, shard_count],
+    case guild_handoff_freeze_remote:rpc_call(Node, ets, lookup, Args, 10000) of
         {ok, [{shard_count, Count}]} when is_integer(Count), Count > 0 ->
             Index = guild_manager_shards:select_shard(GuildId, Count),
             indexed_shard_pid(Node, Index);
@@ -225,15 +163,19 @@ ensure_absent(GuildId, Node, Opts0) ->
     StopTimeout = maps:get(start_timeout, Opts) + maps:get(stop_timeout, Opts),
     case shard_pid(GuildId, Node) of
         {ok, Shard} ->
-            _ = safe_call(Shard, {stop_guild, GuildId}, StopTimeout),
-            case safe_call(Shard, {lookup, GuildId}, maps:get(rpc_timeout, Opts)) of
-                {error, not_found} -> ok;
-                {ok, Pid} when is_pid(Pid) -> {error, {still_running, Pid}};
-                Other -> {error, {unverified, Other}}
-            end;
+            _ = guild_handoff_freeze_remote:safe_call(
+                Shard, {stop_guild, GuildId}, StopTimeout
+            ),
+            RpcTimeout = maps:get(rpc_timeout, Opts),
+            absent(guild_handoff_freeze_remote:safe_call(Shard, {lookup, GuildId}, RpcTimeout));
         {error, _} = Error ->
             Error
     end.
+
+-spec absent(term()) -> ok | {error, term()}.
+absent({error, not_found}) -> ok;
+absent({ok, Pid}) when is_pid(Pid) -> {error, {still_running, Pid}};
+absent(Other) -> {error, {unverified, Other}}.
 
 -spec run(guild_id(), pid(), pid(), node(), opts(), fun((committed) -> ok)) -> result().
 run(GuildId, SrcPid, SrcShard, TargetNode, Opts, Notify) ->
@@ -256,7 +198,7 @@ run(GuildId, SrcPid, SrcShard, TargetNode, Opts, Notify) ->
 -spec run_freeze(map()) -> result().
 run_freeze(#{src := SrcPid, opts := Opts} = Ctx) ->
     T0 = now_ms(),
-    case freeze(SrcPid, Opts) of
+    case guild_handoff_freeze_remote:freeze(SrcPid, Opts) of
         {ok, Freeze} ->
             Ctx1 = put_ms(suspend_ms, T0, Ctx#{freeze => Freeze, frozen_at => now_ms()}),
             run_export(Ctx1);
@@ -267,7 +209,7 @@ run_freeze(#{src := SrcPid, opts := Opts} = Ctx) ->
 -spec run_export(map()) -> result().
 run_export(#{src := SrcPid, opts := Opts} = Ctx) ->
     T0 = now_ms(),
-    case export(SrcPid, Opts) of
+    case guild_handoff_freeze_remote:export(SrcPid, Opts) of
         {ok, Export} ->
             Ctx1 = put_ms(export_ms, T0, Ctx),
             Ctx2 = put_report(export_measure, measure_export(Export, Opts), Ctx1),
@@ -343,15 +285,14 @@ add_forwarded(Count, Ctx) ->
 -spec forwarded_count(map()) -> non_neg_integer().
 forwarded_count(Stats) ->
     lists:foldl(
-        fun(Kind, Acc) ->
-            case maps:get(Kind, Stats, 0) of
-                Count when is_integer(Count), Count > 0 -> Acc + Count;
-                _ -> Acc
-            end
-        end,
+        fun(Kind, Acc) -> add_count(maps:get(Kind, Stats, 0), Acc) end,
         0,
         [call, cast, presence_repair, voice_cleanup]
     ).
+
+-spec add_count(term(), non_neg_integer()) -> non_neg_integer().
+add_count(Count, Acc) when is_integer(Count), Count > 0 -> Acc + Count;
+add_count(_Count, Acc) -> Acc.
 
 -spec commit_final(pid(), non_neg_integer(), map()) -> result().
 commit_final(NewPid, Seen, #{src := SrcPid} = Ctx) ->
@@ -384,37 +325,41 @@ target_exit(NewPid) ->
 
 -spec source_gone(pid(), map()) -> result().
 source_gone(NewPid, #{src := SrcPid, opts := Opts} = Ctx) ->
-    case {target_exit(NewPid), source_alive(SrcPid, Opts)} of
+    case {target_exit(NewPid), guild_handoff_freeze_remote:source_alive(SrcPid, Opts)} of
         {alive, false} -> finish(NewPid, put_report(source_gone, true, Ctx));
         Other -> abort(source_gone, {source_state, Other}, Ctx)
     end.
 
 -spec stop_and_drain(pid(), non_neg_integer(), map()) -> result().
 stop_and_drain(NewPid, Seen, #{src := SrcPid, opts := Opts} = Ctx) ->
-    case capture(SrcPid, Seen, Opts) of
+    case guild_handoff_freeze_remote:capture(SrcPid, Seen, Opts) of
         {ok, _Len, New} ->
-            Stats = forward(New, NewPid, final),
-            ok = commit(NewPid, Ctx),
-            Parent = self(),
-            Tag = make_ref(),
-            {Pid, Ref} = spawn_monitor(fun() -> Parent ! {Tag, stop_source(Ctx)} end),
-            Drain = #{
-                stopper => {Pid, Ref, Tag},
-                stop => pending,
-                stats => Stats,
-                captures => 1,
-                t0 => now_ms()
-            },
-            drain(NewPid, Seen + length(New), Drain, Ctx);
+            start_drain(NewPid, Seen, New, Ctx);
         {error, noproc} ->
             source_gone(NewPid, Ctx);
         {error, Reason} ->
             abort(final_capture, Reason, Ctx)
     end.
 
+-spec start_drain(pid(), non_neg_integer(), [term()], map()) -> result().
+start_drain(NewPid, Seen, New, Ctx) ->
+    Stats = forward(New, NewPid, final),
+    ok = commit(NewPid, Ctx),
+    Parent = self(),
+    Tag = make_ref(),
+    {Pid, Ref} = spawn_monitor(fun() -> Parent ! {Tag, stop_source(Ctx)} end),
+    Drain = #{
+        stopper => {Pid, Ref, Tag},
+        stop => pending,
+        stats => Stats,
+        captures => 1,
+        t0 => now_ms()
+    },
+    drain(NewPid, Seen + length(New), Drain, Ctx).
+
 -spec commit(pid(), map()) -> ok.
 commit(NewPid, #{freeze := Freeze, notify := Notify}) ->
-    release_guard(Freeze),
+    guild_handoff_freeze_remote:release_guard(Freeze),
     unlink(NewPid),
     receive
         {'EXIT', NewPid, _Reason} -> ok
@@ -424,7 +369,7 @@ commit(NewPid, #{freeze := Freeze, notify := Notify}) ->
 
 -spec drain(pid(), non_neg_integer(), map(), map()) -> result().
 drain(NewPid, Seen, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
-    case capture(SrcPid, Seen, Opts) of
+    case guild_handoff_freeze_remote:capture(SrcPid, Seen, Opts) of
         {ok, _Len, New} ->
             Stats = merge_counts(maps:get(stats, Drain), forward(New, NewPid, final)),
             Drain1 = Drain#{stats => Stats, captures => maps:get(captures, Drain) + 1},
@@ -450,7 +395,7 @@ drain_alive(NewPid, Seen, #{stop := Reason} = Drain, Ctx) ->
 
 -spec drain_unknown(pid(), non_neg_integer(), term(), map(), map()) -> result().
 drain_unknown(NewPid, Seen, Reason, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
-    case source_alive(SrcPid, Opts) of
+    case guild_handoff_freeze_remote:source_alive(SrcPid, Opts) of
         false ->
             drained(NewPid, Drain, Ctx);
         _ ->
@@ -511,7 +456,7 @@ merge_counts(Left, Right) ->
 
 -spec finish(pid(), map()) -> result().
 finish(NewPid, #{freeze := Freeze, frozen_at := FrozenAt} = Ctx) ->
-    release_guard(Freeze),
+    guild_handoff_freeze_remote:release_guard(Freeze),
     unlink(NewPid),
     Report = maps:get(report, Ctx),
     {ok, Report#{
@@ -529,7 +474,7 @@ fail(Phase, Reason, Ctx) ->
 abort(Phase, Reason, #{opts := Opts} = Ctx) ->
     Routes = abort_routes(Ctx, maps:get(on_abort, Opts)),
     Target = abort_target(Ctx),
-    Thaw = thaw(maps:get(freeze, Ctx), Opts),
+    Thaw = guild_handoff_freeze_remote:thaw(maps:get(freeze, Ctx), Opts),
     Report = maps:get(report, Ctx),
     {error, Report#{
         phase => Phase,
@@ -569,92 +514,6 @@ unlink_and_kill_if({error, _} = Error, Pid) ->
     exit(Pid, kill),
     Error.
 
--spec freeze(pid(), opts()) -> {ok, freeze()} | {error, term()}.
-freeze(SrcPid, Opts) ->
-    case spawn_guard(SrcPid, maps:get(guard_timeout, Opts)) of
-        {ok, Guard, GuardRef} ->
-            Freeze = #{pid => SrcPid, guard => Guard, guard_ref => GuardRef},
-            case suspend(SrcPid, maps:get(suspend_timeout, Opts)) of
-                ok ->
-                    {ok, Freeze};
-                {error, Reason} ->
-                    _ = thaw(Freeze, Opts),
-                    {error, {suspend_failed, Reason}}
-            end;
-        {error, Reason} ->
-            {error, {guard_failed, Reason}}
-    end.
-
--spec thaw(freeze(), opts()) -> ok | {error, term()}.
-thaw(#{pid := SrcPid} = Freeze, Opts) ->
-    Result =
-        try sys:resume(SrcPid, maps:get(suspend_timeout, Opts)) of
-            ok -> ok
-        catch
-            exit:Reason -> {error, Reason}
-        end,
-    release_guard(Freeze),
-    Result.
-
--spec suspend(pid(), pos_integer()) -> ok | {error, term()}.
-suspend(SrcPid, Timeout) ->
-    try sys:suspend(SrcPid, Timeout) of
-        ok -> ok
-    catch
-        exit:Reason -> {error, Reason}
-    end.
-
--spec spawn_guard(pid(), pos_integer()) -> {ok, pid(), reference()} | {error, term()}.
-spawn_guard(SrcPid, Timeout) ->
-    Bindings = bindings([{'C', self()}, {'P', SrcPid}]),
-    Guard = erlang:spawn(node(SrcPid), erl_eval, exprs, [parse(?GUARD_EXPRS), Bindings]),
-    Ref = erlang:monitor(process, Guard),
-    receive
-        {freeze_guard_ready, Guard} -> {ok, Guard, Ref};
-        {'DOWN', Ref, process, Guard, Reason} -> {error, Reason}
-    after Timeout ->
-        erlang:demonitor(Ref, [flush]),
-        exit(Guard, kill),
-        {error, guard_timeout}
-    end.
-
--spec release_guard(freeze()) -> ok.
-release_guard(#{guard := Guard, guard_ref := Ref}) ->
-    erlang:demonitor(Ref, [flush]),
-    Guard ! {freeze_guard_release, self()},
-    ok.
-
--spec export(pid(), opts()) -> {ok, map()} | {error, term()}.
-export(SrcPid, Opts) ->
-    Timeout = maps:get(export_timeout, Opts),
-    Bindings = bindings([
-        {'P', SrcPid},
-        {'T', Timeout},
-        {'K', guild_handoff:derived_data_keys()},
-        {'X', export_overrides(Opts)}
-    ]),
-    Args = [parse(?EXPORT_EXPRS), Bindings],
-    case rpc_call(node(SrcPid), erl_eval, exprs, Args, Timeout + 5000) of
-        {ok, {value, Export, _}} -> validate_export(Export);
-        {ok, Other} -> {error, {unexpected_export, Other}};
-        {error, _} = Error -> Error
-    end.
-
--spec export_overrides(opts()) -> map().
-export_overrides(#{transfer_sessions := false}) ->
-    #{sessions => #{}};
-export_overrides(_Opts) ->
-    #{}.
-
--spec validate_export(term()) -> {ok, map()} | {error, term()}.
-validate_export(Export) when is_map(Export) ->
-    case guild_handoff:validate_handoff_state(Export) of
-        ok -> {ok, Export};
-        {error, Missing} -> {error, {invalid_export, Missing}}
-    end;
-validate_export(Other) ->
-    {error, {invalid_export, Other}}.
-
 -spec measure_export(map(), opts()) -> map() | skipped.
 measure_export(Export, #{measure := true}) ->
     T0 = now_ms(),
@@ -667,25 +526,27 @@ measure_export(_Export, _Opts) ->
 start_on(GuildId, Target, Export, Timeout) ->
     case shard_pid(GuildId, Target) of
         {ok, Shard} ->
-            case safe_call(Shard, {start_transferred, GuildId, Export}, Timeout) of
-                {ok, NewPid} when is_pid(NewPid) ->
-                    link(NewPid),
-                    {ok, NewPid};
-                {error, Reason} ->
-                    {error, Reason};
-                Other ->
-                    {error, {unexpected_start_reply, Other}}
-            end;
+            Request = {start_transferred, GuildId, Export},
+            started(guild_handoff_freeze_remote:safe_call(Shard, Request, Timeout));
         {error, _} = Error ->
             Error
     end.
+
+-spec started(term()) -> {ok, pid()} | {error, term()}.
+started({ok, NewPid}) when is_pid(NewPid) ->
+    link(NewPid),
+    {ok, NewPid};
+started({error, Reason}) ->
+    {error, Reason};
+started(Other) ->
+    {error, {unexpected_start_reply, Other}}.
 
 -spec forward_rounds(pid(), pid(), non_neg_integer(), non_neg_integer(), [map()], opts()) ->
     {ok, non_neg_integer(), [map()]} | {error, term(), non_neg_integer(), [map()]}.
 forward_rounds(_SrcPid, _NewPid, 0, Seen, Rounds, _Opts) ->
     {ok, Seen, Rounds};
 forward_rounds(SrcPid, NewPid, Left, Seen, Rounds, Opts) ->
-    case capture(SrcPid, Seen, Opts) of
+    case guild_handoff_freeze_remote:capture(SrcPid, Seen, Opts) of
         {ok, Len, _New} when Len < Seen ->
             {error, mailbox_shrank, Seen, Rounds};
         {ok, _Len, []} ->
@@ -693,7 +554,9 @@ forward_rounds(SrcPid, NewPid, Left, Seen, Rounds, Opts) ->
         {ok, _Len, New} ->
             Stats = forward(New, NewPid, rounds),
             T0 = now_ms(),
-            Barrier = barrier(NewPid, maps:get(barrier_timeout, Opts)),
+            Barrier = guild_handoff_freeze_remote:barrier(
+                NewPid, maps:get(barrier_timeout, Opts)
+            ),
             Round = Stats#{
                 captured => length(New), barrier => Barrier, barrier_ms => now_ms() - T0
             },
@@ -709,7 +572,7 @@ forward(Msgs, NewPid, Phase) ->
     lists:foldl(
         fun(Msg, Acc) ->
             Kind = forward_msg(Msg, NewPid, Phase),
-            maps:update_with(Kind, fun(N) -> N + 1 end, 1, Acc)
+            Acc#{Kind => maps:get(Kind, Acc, 0) + 1}
         end,
         #{},
         Msgs
@@ -738,39 +601,12 @@ forward_msg({clear_stale_cached_voice_states, _Ids} = Msg, NewPid, _Phase) ->
     NewPid ! Msg,
     voice_cleanup.
 
--spec barrier(pid(), pos_integer()) -> ok | {error, term()}.
-barrier(NewPid, Timeout) ->
-    case safe_call(NewPid, {get_guild_id}, Timeout) of
-        Id when is_integer(Id) -> ok;
-        Other -> {error, Other}
-    end.
-
--spec capture(pid(), non_neg_integer(), opts()) ->
-    {ok, non_neg_integer(), [term()]} | {error, term()}.
-capture(SrcPid, Seen, Opts) ->
-    Args = [parse(?CAPTURE_EXPRS), bindings([{'P', SrcPid}, {'S', Seen}])],
-    case rpc_call(node(SrcPid), erl_eval, exprs, Args, maps:get(rpc_timeout, Opts)) of
-        {ok, {value, {Len, New}, _}} when is_integer(Len), is_list(New) -> {ok, Len, New};
-        {ok, {value, undefined, _}} -> {error, noproc};
-        {ok, Other} -> {error, {unexpected, Other}};
-        {error, _} = Error -> Error
-    end.
-
 -spec stop_source(map()) -> ok | {error, term()}.
 stop_source(#{guild_id := GuildId, src_shard := Shard, opts := Opts}) ->
     Request = {stop_guild, GuildId, {shutdown, handoff}},
-    case safe_call(Shard, Request, maps:get(stop_timeout, Opts)) of
+    case guild_handoff_freeze_remote:safe_call(Shard, Request, maps:get(stop_timeout, Opts)) of
         ok -> ok;
         Other -> {error, Other}
-    end.
-
--spec source_alive(pid(), opts()) -> boolean() | {error, term()}.
-source_alive(SrcPid, Opts) ->
-    Args = [SrcPid],
-    case rpc_call(node(SrcPid), erlang, is_process_alive, Args, maps:get(rpc_timeout, Opts)) of
-        {ok, Alive} when is_boolean(Alive) -> Alive;
-        {ok, Other} -> {error, {unexpected, Other}};
-        {error, _} = Error -> Error
     end.
 
 -spec within_budget(map()) -> boolean().
@@ -779,7 +615,8 @@ within_budget(#{frozen_at := FrozenAt, opts := Opts}) ->
 
 -spec indexed_shard_pid(node(), non_neg_integer()) -> {ok, pid()} | {error, term()}.
 indexed_shard_pid(Node, Index) ->
-    case rpc_call(Node, ets, lookup, [?SHARD_TABLE, {shard_pid, Index}], 10000) of
+    Args = [?SHARD_TABLE, {shard_pid, Index}],
+    case guild_handoff_freeze_remote:rpc_call(Node, ets, lookup, Args, 10000) of
         {ok, [{{shard_pid, Index}, Pid}]} when is_pid(Pid) -> {ok, Pid};
         {ok, _} -> {error, shard_unavailable};
         {error, _} = Error -> Error
@@ -803,38 +640,6 @@ safe_started_hook(Hook, NewPid) ->
         Class:Reason -> {error, {hook_crashed, Class, Reason}}
     end.
 
--spec safe_call(pid(), term(), pos_integer()) -> term().
-safe_call(Server, Request, Timeout) ->
-    try
-        gen_server:call(Server, Request, Timeout)
-    catch
-        exit:{timeout, _} -> {error, timeout};
-        exit:Reason -> {error, {exit, Reason}}
-    end.
-
--spec rpc_call(node(), module(), atom(), [term()], pos_integer()) ->
-    {ok, term()} | {error, term()}.
-rpc_call(Node, Module, Function, Args, Timeout) ->
-    try erpc:call(Node, Module, Function, Args, Timeout) of
-        Result -> {ok, Result}
-    catch
-        Class:Reason -> {error, {Class, Reason}}
-    end.
-
--spec parse(string()) -> [erl_parse:abstract_expr()].
-parse(Source) ->
-    {ok, Tokens, _} = erl_scan:string(Source),
-    {ok, Exprs} = erl_parse:parse_exprs(Tokens),
-    Exprs.
-
--spec bindings([{atom(), term()}]) -> erl_eval:binding_struct().
-bindings(Pairs) ->
-    lists:foldl(
-        fun({Name, Value}, Acc) -> erl_eval:add_binding(Name, Value, Acc) end,
-        erl_eval:new_bindings(),
-        Pairs
-    ).
-
 -spec maybe_limit_heap(non_neg_integer()) -> ok.
 maybe_limit_heap(0) ->
     ok;
@@ -853,89 +658,3 @@ put_report(Key, Value, #{report := Report} = Ctx) ->
 -spec now_ms() -> integer().
 now_ms() ->
     erlang:monotonic_time(millisecond).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-capture_returns_only_new_forwardable_messages_test() ->
-    Pid = spawn(fun() ->
-        receive
-            stop -> ok
-        end
-    end),
-    Msgs = [
-        {'$gen_cast', a},
-        {'DOWN', make_ref(), process, self(), normal},
-        {'$gen_call', {self(), make_ref()}, b},
-        {presence, not_a_user, x},
-        {presence, 7, x},
-        {reconcile_user_presence, 7},
-        {clear_stale_cached_voice_states, []}
-    ],
-    [Pid ! Msg || Msg <- Msgs],
-    Opts = default_opts(),
-    try
-        ?assertMatch({ok, 5, [_, _, _, _, _]}, capture(Pid, 0, Opts)),
-        ?assertEqual(
-            {ok, 5, [
-                {presence, 7, x},
-                {reconcile_user_presence, 7},
-                {clear_stale_cached_voice_states, []}
-            ]},
-            capture(Pid, 2, Opts)
-        ),
-        ?assertEqual({ok, 5, []}, capture(Pid, 5, Opts)),
-        ?assertEqual({ok, 5, []}, capture(Pid, 9, Opts))
-    after
-        Pid ! stop
-    end,
-    ok = wait_exit(Pid),
-    ?assertEqual({error, noproc}, capture(Pid, 0, Opts)).
-
-repair_applies_the_reload_before_dispatches_queued_during_the_fetch_test() ->
-    Test = self(),
-    meck:new(guild_repair_stub, [non_strict]),
-    meck:expect(guild_repair_stub, init, fun(State) -> {ok, State} end),
-    meck:expect(guild_repair_stub, handle_cast, fun({set, Value}, _State) ->
-        {noreply, Value}
-    end),
-    meck:new(guild_manager_shard_fetch, [passthrough]),
-    meck:expect(guild_manager_shard_fetch, fetch_guild_data, fun(42) ->
-        Test ! {fetching, self()},
-        receive
-            go -> {ok, fetched}
-        end
-    end),
-    meck:new(guild, [passthrough]),
-    meck:expect(guild, handle_call, fun({reload, Data}, _From, _State) -> {reply, ok, Data} end),
-    {ok, Pid} = gen_server:start(guild_repair_stub, before, []),
-    try
-        spawn(fun() -> Test ! {repaired, repair(42, Pid, #{})} end),
-        receive
-            {fetching, Fetcher} ->
-                ?assert(is_frozen(Pid)),
-                gen_server:cast(Pid, {set, dispatched}),
-                Fetcher ! go
-        after 5000 -> error(no_fetch)
-        end,
-        ?assertEqual(
-            ok,
-            receive
-                {repaired, Result} -> Result
-            after 5000 -> timeout
-            end
-        ),
-        ?assertEqual(dispatched, sys:get_state(Pid))
-    after
-        exit(Pid, kill),
-        meck:unload([guild, guild_manager_shard_fetch, guild_repair_stub])
-    end.
-
-wait_exit(Pid) ->
-    Ref = erlang:monitor(process, Pid),
-    receive
-        {'DOWN', Ref, process, Pid, _} -> ok
-    after 5000 -> timeout
-    end.
-
--endif.

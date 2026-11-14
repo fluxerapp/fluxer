@@ -1,29 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createChannelID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import type {UserID} from '@app/api/BrandedTypes';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
-import {
-	assertAttachmentFileSizesWithinLimit,
-	MESSAGE_NONCE_TTL,
-} from '@app/api/channel/services/message/MessageHelpers';
+import {assertAttachmentFileSizesWithinLimit} from '@app/api/channel/services/message/MessageHelpers';
 import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import {resolveAttachmentMaxFileSize} from '@app/api/limits/AttachmentFileSizeLimit';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
-import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
-import {hasVisibleContent} from '@app/api/utils/StringUtils';
 import {
 	isMessageTypeDeletable,
 	MessageFlags,
 	MessageTypes,
 	Permissions,
 	SENDABLE_MESSAGE_FLAGS,
-	TEXT_BASED_CHANNEL_TYPES,
 } from '@fluxer/constants/src/ChannelConstants';
 import {
-	ATTACHMENT_MAX_SIZE_NON_PREMIUM,
 	MAX_ATTACHMENTS_PER_MESSAGE,
 	MAX_EMBEDS_PER_MESSAGE,
 	MAX_MESSAGE_LENGTH_NON_PREMIUM,
@@ -34,29 +28,17 @@ import {
 	MAX_POLL_QUESTION_LENGTH,
 	MAX_VOICE_MESSAGE_DURATION,
 } from '@fluxer/constants/src/LimitConstants';
-import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {CannotEditSystemMessageError} from '@fluxer/errors/src/domains/channel/CannotEditSystemMessageError';
 import {CannotEditPollError} from '@fluxer/errors/src/domains/channel/CannotEditPollError';
+import {CannotEditSystemMessageError} from '@fluxer/errors/src/domains/channel/CannotEditSystemMessageError';
 import {CannotSendEmptyMessageError} from '@fluxer/errors/src/domains/channel/CannotSendEmptyMessageError';
-import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
-import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {MessagePollRequest} from '@fluxer/schema/src/domains/message/PollSchemas';
-import type {ICacheService} from '@pkgs/cache/src/ICacheService';
+import {hasVisibleContent} from '@fluxer/schema/src/primitives/MessageValidators';
 
 export class MessageValidationService {
-	constructor(
-		private cacheService: ICacheService,
-		private limitConfigService: LimitConfigService,
-	) {}
-
-	ensureTextChannel(channel: Channel): void {
-		if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_CHANNEL_TYPES.has(channel.type)) {
-			throw new CannotSendMessageToNonTextChannelError();
-		}
-	}
+	constructor(private limitConfigService: LimitConfigService) {}
 
 	validateMessageContent(
 		data: MessageRequest | MessageUpdateRequest,
@@ -122,16 +104,39 @@ export class MessageValidationService {
 				if (embed.url) contentModerationService.scanUrl(embed.url, modCtx);
 				contentModerationService.scanText(embed.title ?? null, modCtx);
 				contentModerationService.scanText(embed.description ?? null, modCtx);
-				if (embed.footer) contentModerationService.scanText(embed.footer.text ?? null, modCtx);
+				if (embed.footer) {
+					contentModerationService.scanText(embed.footer.text ?? null, modCtx);
+					if (embed.footer.icon_url) contentModerationService.scanUrl(embed.footer.icon_url, modCtx);
+				}
 				if (embed.author) {
 					contentModerationService.scanText(embed.author.name ?? null, modCtx);
 					if (embed.author.url) contentModerationService.scanUrl(embed.author.url, modCtx);
+					if (embed.author.icon_url) contentModerationService.scanUrl(embed.author.icon_url, modCtx);
+				}
+				for (const media of [embed.image, embed.thumbnail]) {
+					if (!media) continue;
+					contentModerationService.scanUrl(media.url, modCtx);
+					contentModerationService.scanText(media.description ?? null, modCtx);
 				}
 				if (embed.fields) {
 					for (const field of embed.fields) {
 						contentModerationService.scanText(field.name ?? null, modCtx);
 						contentModerationService.scanText(field.value ?? null, modCtx);
 					}
+				}
+			}
+		}
+		if (data.attachments) {
+			for (const attachment of data.attachments) {
+				contentModerationService.scanText(attachment.title ?? null, modCtx);
+				contentModerationService.scanText(attachment.description ?? null, modCtx);
+			}
+		}
+		if ('message_snapshots' in data && data.message_snapshots) {
+			for (const snapshot of data.message_snapshots) {
+				for (const attachment of snapshot.attachments ?? []) {
+					contentModerationService.scanText(attachment.title ?? null, modCtx);
+					contentModerationService.scanText(attachment.description ?? null, modCtx);
 				}
 			}
 		}
@@ -156,7 +161,7 @@ export class MessageValidationService {
 		}
 	}
 
-	validateContentLength(
+	private validateContentLength(
 		content: string | null | undefined,
 		user: User | null,
 		guildFeatures?: Iterable<string> | null,
@@ -267,64 +272,13 @@ export class MessageValidationService {
 		user: User,
 		guildFeatures?: Iterable<string> | null,
 	): void {
-		const ctx = createLimitMatchContext({user, guildFeatures});
-		const evaluationContext = guildFeatures ? 'guild' : 'user';
-		const fallbackMaxSize = ATTACHMENT_MAX_SIZE_NON_PREMIUM;
-		const maxFileSize = Math.floor(
-			resolveLimitSafe(
-				this.limitConfigService.getConfigSnapshot(),
-				ctx,
-				'max_attachment_file_size',
-				fallbackMaxSize,
-				evaluationContext,
-			),
-		);
+		const maxFileSize = resolveAttachmentMaxFileSize(this.limitConfigService.getConfigSnapshot(), {
+			user,
+			guildFeatures,
+		});
 		assertAttachmentFileSizesWithinLimit(
 			attachments.map(({size}) => size),
 			maxFileSize,
-		);
-	}
-
-	async findExistingMessage({
-		userId,
-		nonce,
-		expectedChannelId,
-	}: {
-		userId: UserID;
-		nonce?: string;
-		expectedChannelId: ChannelID;
-	}): Promise<Message | null> {
-		if (!nonce) return null;
-		const existingNonce = await this.cacheService.get<{
-			channel_id: string;
-			message_id: string;
-		}>(`message-nonce:${userId}:${nonce}`);
-		if (!existingNonce) return null;
-		const cachedChannelId = createChannelID(BigInt(existingNonce.channel_id));
-		if (cachedChannelId !== expectedChannelId) {
-			throw new UnknownMessageError();
-		}
-		return null;
-	}
-
-	async cacheMessageNonce({
-		userId,
-		nonce,
-		channelId,
-		messageId,
-	}: {
-		userId: UserID;
-		nonce: string;
-		channelId: ChannelID;
-		messageId: MessageID;
-	}): Promise<void> {
-		await this.cacheService.set(
-			`message-nonce:${userId}:${nonce}`,
-			{
-				channel_id: channelId.toString(),
-				message_id: messageId.toString(),
-			},
-			MESSAGE_NONCE_TTL,
 		);
 	}
 

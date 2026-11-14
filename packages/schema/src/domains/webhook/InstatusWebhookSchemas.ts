@@ -43,11 +43,11 @@ const InstatusIncident = z.object({
 	created_at: createStringType(0, 64).nullish(),
 	updated_at: createStringType(0, 64).nullish(),
 	resolved_at: createStringType(0, 64).nullish(),
-	incident_updates: z.array(InstatusIncidentIncidentUpdate).nullish(),
+	incident_updates: z.array(InstatusIncidentIncidentUpdate).max(1000).nullish(),
 	/**
 	 * @remarks Undocumented.
 	 */
-	affected_components: z.array(InstatusAffectedComponent).nullish(),
+	affected_components: z.array(InstatusAffectedComponent).max(1000).nullish(),
 });
 
 const InstatusMaintenanceMaintenanceUpdate = z.object({
@@ -69,8 +69,8 @@ const InstatusMaintenance = z.object({
 	created_at: createStringType(0, 64).nullish(),
 	updated_at: createStringType(0, 64).nullish(),
 	resolved_at: createStringType(0, 64).nullish(),
-	maintenance_updates: z.array(InstatusMaintenanceMaintenanceUpdate).nullish(),
-	affected_components: z.array(InstatusAffectedComponent).nullish(),
+	maintenance_updates: z.array(InstatusMaintenanceMaintenanceUpdate).max(1000).nullish(),
+	affected_components: z.array(InstatusAffectedComponent).max(1000).nullish(),
 });
 
 const InstatusComponentUpdate = z.object({

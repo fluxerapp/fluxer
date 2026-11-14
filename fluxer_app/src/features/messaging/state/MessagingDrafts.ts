@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeAutoObservable} from 'mobx';
@@ -30,7 +30,7 @@ function normalizeDraftSegments(
 		.sort((a, b) => a.start - b.start);
 }
 
-function segmentsEqual(a: ReadonlyArray<MentionSegment>, b: ReadonlyArray<MentionSegment>): boolean {
+export function segmentsEqual(a: ReadonlyArray<MentionSegment>, b: ReadonlyArray<MentionSegment>): boolean {
 	if (a.length !== b.length) return false;
 	for (let i = 0; i < a.length; i++) {
 		const left = a[i];
@@ -50,16 +50,17 @@ function segmentsEqual(a: ReadonlyArray<MentionSegment>, b: ReadonlyArray<Mentio
 }
 
 class Drafts {
+	readonly ready: Promise<void>;
 	drafts: Record<string, string> = {};
 	draftSegments: Record<string, Array<MentionSegment>> = {};
 
 	constructor() {
-		makeAutoObservable(this, {}, {autoBind: true});
-		initializeStore(this, () => this.initPersistence());
+		makeAutoObservable(this, {ready: false}, {autoBind: true});
+		this.ready = initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
-		await makePersistent(this, 'Drafts', ['drafts', 'draftSegments']);
+		await makePersistent(this, AppStorageKey.MESSAGING_DRAFTS, ['drafts', 'draftSegments']);
 	}
 
 	createDraft(channelId: string, content: string, segments?: ReadonlyArray<MentionSegment> | null): void {
@@ -86,7 +87,6 @@ class Drafts {
 		}
 		delete this.drafts[channelId];
 		delete this.draftSegments[channelId];
-		TextareaSelection.clearChannelSelection(channelId);
 	}
 
 	deleteChannelDraft(channelId: string): void {
@@ -101,31 +101,8 @@ class Drafts {
 		return this.draftSegments[channelId] ?? EMPTY_SEGMENTS;
 	}
 
-	cleanupEmptyDrafts(): void {
-		for (const channelId of Object.keys(this.drafts)) {
-			const content = this.drafts[channelId];
-			if (!content || content.trim().length === 0) {
-				delete this.drafts[channelId];
-				delete this.draftSegments[channelId];
-			}
-		}
-		for (const channelId of Object.keys(this.draftSegments)) {
-			if (!(channelId in this.drafts)) {
-				delete this.draftSegments[channelId];
-			}
-		}
-	}
-
 	getAllDrafts(): ReadonlyArray<[string, string]> {
 		return Object.entries(this.drafts);
-	}
-
-	hasDraft(channelId: string): boolean {
-		return channelId in this.drafts;
-	}
-
-	getDraftCount(): number {
-		return Object.keys(this.drafts).length;
 	}
 }
 

@@ -8,10 +8,12 @@ import {applyPatchToRow, buildPatchFromData, executeVersionedUpdate} from '@app/
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {EMPTY_USER_ROW, USER_COLUMNS} from '@app/api/database/types/UserTypes';
 import {emitAccountChangedIfRelevant} from '@app/api/infrastructure/activity/AccountChangeEvents';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {User} from '@app/api/models/User';
 import {Users} from '@app/api/Tables';
 import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
 import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
+import {isAccountClosed} from '@app/api/user/UserHelpers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DELETED_USER_ID, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
@@ -32,16 +34,11 @@ const FETCH_ACTIVITY_TRACKING_CQL = Users.selectCql({
 	where: Users.where.eq('user_id'),
 	limit: 1,
 });
-
-function createFetchAllUsersFirstPageQuery(limit: number) {
-	return Users.select({limit});
-}
-
-const createFetchAllUsersPaginatedQuery = (limit: number) =>
-	Users.select({
-		where: Users.where.tokenGt('user_id', 'last_user_id'),
-		limit,
-	});
+const FETCH_ACTIVITY_TARGET_CQL = Users.selectCql({
+	columns: ['username', 'flags', 'bot', 'deletion_started_at', 'last_active_at', 'last_active_ip'],
+	where: Users.where.eq('user_id'),
+	limit: 1,
+});
 
 type UserPatch = Partial<{
 	[K in Exclude<keyof UserRow, 'user_id'> & string]: DbOp<UserRow[K]>;
@@ -53,6 +50,12 @@ function assertOrdinaryUserPatch(patch: UserPatch): void {
 	if (patch.pending_deletion_at || patch.deletion_started_at) {
 		throw new Error('User deletion state must be changed through the deletion lifecycle');
 	}
+}
+
+function withWholeTag(patch: UserPatch, row: UserRow | null): UserPatch {
+	if (!row || (patch.username === undefined) === (patch.discriminator === undefined)) return patch;
+	if (patch.username === undefined) return {...patch, username: Db.set(row.username)};
+	return {...patch, discriminator: Db.set(row.discriminator)};
 }
 
 function assertWritableUserId(userId: UserID): void {
@@ -67,7 +70,7 @@ export class UserDataRepository {
 			return new User({
 				...EMPTY_USER_ROW,
 				user_id: createUserID(FLUXER_BOT_USER_ID),
-				username: 'Fluxer',
+				username: getInstanceProductName(),
 				discriminator: 0,
 				bot: true,
 				system: true,
@@ -94,18 +97,6 @@ export class UserDataRepository {
 			throw new UnknownUserError();
 		}
 		return user;
-	}
-
-	async listAllUsersPaginated(limit: number, lastUserId?: UserID): Promise<Array<User>> {
-		let users: Array<UserRow>;
-		if (lastUserId) {
-			const query = createFetchAllUsersPaginatedQuery(limit);
-			users = await fetchMany<UserRow>(query.bind({last_user_id: lastUserId}));
-		} else {
-			const query = createFetchAllUsersFirstPageQuery(limit);
-			users = await fetchMany<UserRow>(query.bind({}));
-		}
-		return users.map((user) => new User(user));
 	}
 
 	async scanAllUsersPage(
@@ -170,20 +161,21 @@ export class UserDataRepository {
 	}> {
 		assertWritableUserId(userId);
 		assertOrdinaryUserPatch(patch);
+		let written = patch;
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
 				return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
 			},
-			(_current) => ({
-				pk: {user_id: userId},
-				patch,
-			}),
+			(current) => {
+				written = withWholeTag(patch, current);
+				return {pk: {user_id: userId}, patch: written};
+			},
 			Users,
 			{initialData: oldData},
 		);
 		const previousData = result.previousData;
 		const updatedData = {
-			...(applyPatchToRow<UserRow>(previousData, patch) as UserRow),
+			...(applyPatchToRow<UserRow>(previousData, written) as UserRow),
 			user_id: userId,
 			version: result.finalVersion ?? nextVersion(previousData?.version),
 		};
@@ -254,6 +246,75 @@ export class UserDataRepository {
 		return null;
 	}
 
+	async compareAndClearSuspension(
+		user: User,
+		flags: bigint,
+	): Promise<{previousData: UserRow; updatedData: UserRow} | null> {
+		assertWritableUserId(user.id);
+		const previousData = user.toRow();
+		const version = nextVersion(user.version);
+		const suspension = {
+			temp_banned_until: previousData.temp_banned_until ?? null,
+			enforcement_decision_id: previousData.enforcement_decision_id ?? null,
+		};
+		const expected = previousData.flags ?? 0n;
+		const conditions: Array<Partial<UserRow>> = [{flags: expected, ...suspension}];
+		if (expected === 0n && previousData.version != null) {
+			conditions.push({flags: null, ...suspension, version: previousData.version});
+		}
+		for (const condition of conditions) {
+			const applied = await executeConditional(
+				Users.conditionalPatchByPk(
+					{user_id: user.id},
+					{
+						flags: Db.set(flags),
+						temp_banned_until: Db.clear(),
+						enforcement_decision_id: Db.clear(),
+						version: Db.set(version),
+					},
+					condition,
+				),
+			);
+			if (!applied) continue;
+			const updatedData = {...previousData, flags, temp_banned_until: null, enforcement_decision_id: null, version};
+			await emitAccountChangedIfRelevant(previousData, updatedData);
+			return {previousData, updatedData};
+		}
+		return null;
+	}
+
+	async findRow(userId: UserID): Promise<UserRow | null> {
+		return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
+	}
+
+	async compareAndSetBadgeHideState(
+		previousData: UserRow,
+		next: Pick<UserRow, 'flags' | 'premium_flags' | 'hidden_profile_badges'>,
+	): Promise<UserRow | null> {
+		assertWritableUserId(previousData.user_id);
+		const version = nextVersion(previousData.version);
+		const applied = await executeConditional(
+			Users.conditionalPatchByPk(
+				{user_id: previousData.user_id},
+				{
+					flags: Db.set(next.flags ?? 0n),
+					premium_flags: Db.set(next.premium_flags ?? 0),
+					hidden_profile_badges: next.hidden_profile_badges ? Db.set(next.hidden_profile_badges) : Db.clear(),
+					version: Db.set(version),
+				},
+				{
+					flags: previousData.flags ?? null,
+					premium_flags: previousData.premium_flags ?? null,
+					version: previousData.version ?? null,
+				},
+			),
+		);
+		if (!applied) return null;
+		const updatedData = {...previousData, ...next, version};
+		await emitAccountChangedIfRelevant(previousData, updatedData);
+		return updatedData;
+	}
+
 	async startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null> {
 		assertWritableUserId(userId);
 		const scheduledAt = pendingDeletionAt.getTime();
@@ -278,6 +339,7 @@ export class UserDataRepository {
 	}
 
 	async updateLastActiveAt(params: {userId: UserID; lastActiveAt: Date; lastActiveIp?: string}): Promise<{
+		isBot: boolean;
 		previousData: {
 			last_active_at: Date | null;
 			last_active_ip: string | null;
@@ -286,22 +348,34 @@ export class UserDataRepository {
 			last_active_at: Date | null;
 			last_active_ip: string | null;
 		};
-	}> {
+	} | null> {
 		const {userId, lastActiveAt, lastActiveIp} = params;
 		assertWritableUserId(userId);
-		const previousData = (await this.getActivityTracking(userId)) ?? {last_active_at: null, last_active_ip: null};
+		const current = await fetchOne<
+			Pick<UserRow, 'username' | 'flags' | 'bot' | 'deletion_started_at' | 'last_active_at' | 'last_active_ip'>
+		>(FETCH_ACTIVITY_TARGET_CQL, {user_id: userId});
+		if (
+			!current?.username ||
+			isAccountClosed({flags: current.flags ?? 0n, deletionStartedAt: current.deletion_started_at ?? null})
+		) {
+			return null;
+		}
+		const previousData = {
+			last_active_at: current.last_active_at ?? null,
+			last_active_ip: current.last_active_ip ?? null,
+		};
 		await upsertOne(
 			Users.patchByPk(
 				{user_id: userId},
-				{
-					last_active_at: Db.set(lastActiveAt),
-					last_active_ip: lastActiveIp !== undefined ? Db.set(lastActiveIp) : Db.clear(),
-				},
+				lastActiveIp !== undefined
+					? {last_active_at: Db.set(lastActiveAt), last_active_ip: Db.set(lastActiveIp)}
+					: {last_active_at: Db.set(lastActiveAt)},
 			),
 		);
 		return {
+			isBot: current.bot ?? false,
 			previousData,
-			updatedData: {last_active_at: lastActiveAt, last_active_ip: lastActiveIp ?? null},
+			updatedData: {last_active_at: lastActiveAt, last_active_ip: lastActiveIp ?? previousData.last_active_ip},
 		};
 	}
 

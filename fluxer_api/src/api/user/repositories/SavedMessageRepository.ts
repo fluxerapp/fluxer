@@ -10,6 +10,7 @@ import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
 const createFetchSavedMessagesQuery = (limit: number) =>
 	SavedMessages.select({
 		where: [SavedMessages.where.eq('user_id'), SavedMessages.where.lt('message_id', 'before_message_id')],
+		orderBy: {col: 'message_id', direction: 'DESC'},
 		limit,
 	});
 

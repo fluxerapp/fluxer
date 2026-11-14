@@ -13,7 +13,7 @@ export const ReportFlowTargetType = withOpenApiType(
 		[
 			['message', 'message', 'A message'],
 			['user', 'user', 'A user profile'],
-			['guild', 'guild', 'A community, on the DSA form only'],
+			['guild', 'guild', 'A community'],
 		],
 		'Kind of entity a report flow is about',
 	),
@@ -156,3 +156,11 @@ export const ReportFlowUserSubmissionRequest = z.object({
 });
 
 export type ReportFlowUserSubmissionRequest = z.infer<typeof ReportFlowUserSubmissionRequest>;
+
+export const ReportFlowGuildSubmissionRequest = z.object({
+	...ReportFlowAnswerFields,
+	guild_id: SnowflakeType,
+	invite_code: z.optional(createStringType(1, 64)).describe('Invite code used to access the guild'),
+});
+
+export type ReportFlowGuildSubmissionRequest = z.infer<typeof ReportFlowGuildSubmissionRequest>;

@@ -86,10 +86,6 @@ class SearchHistory {
 		if (!channelId) return;
 		delete this.entriesByChannel[channelId];
 	}
-
-	clearAll(): void {
-		this.entriesByChannel = {};
-	}
 }
 
 export default new SearchHistory();

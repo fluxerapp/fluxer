@@ -20,7 +20,19 @@ import {
 	relaunchDesktopApp,
 	setDesktopWindowBehaviorSettings,
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
-import {getNativePlatformSync, isDesktop, isNativeLinux, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
+import {
+	getNativePlatformSync,
+	isDesktop,
+	isNativeLinux,
+	isNativeMacOS,
+	isNativeWindows,
+} from '@app/features/ui/utils/NativeUtils';
+import {
+	LATER_DESCRIPTOR,
+	LAUNCH_AT_LOGIN_DESCRIPTOR as LAUNCH_PRODUCT_AT_LOGIN_DESCRIPTOR,
+	RESTART_DESCRIPTOR,
+	RESTART_NOW_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {DesktopWindowBehaviorSettings} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -28,27 +40,34 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useLayoutEffect, useState} from 'react';
 
-const LAUNCH_PRODUCT_AT_LOGIN_DESCRIPTOR = msg({
-	message: 'Launch {productName} at login',
-	comment: 'Desktop setting label for starting the app automatically after OS sign-in.',
-});
 const RESTART_PRODUCT_FOR_TRAY_CHANGE_DESCRIPTOR = msg({
 	message:
 		"Restart {productName} for this change to take effect because Linux desktops can't reliably add or remove tray icons at runtime.",
 	comment: 'Desktop setting description shown when a tray-icon change on Linux requires restart.',
 });
-const RESTART_NOW_DESCRIPTOR = msg({
-	message: 'Restart now',
-	comment: 'Short label in the desktop settings tab. Keep it concise.',
+
+const USE_COLORED_TRAY_ICON_DESCRIPTOR = msg({
+	message: 'Use colored tray icon',
+	comment:
+		'Desktop setting toggle label on Windows and Linux. Switches the system tray icon from monochrome to the full-color app icon.',
 });
-const RESTART_DESCRIPTOR = msg({
-	message: 'Restart {productName}?',
-	comment: 'Confirmation prompt in the desktop settings tab. Preserve {productName}; it is inserted by code.',
+
+const USE_COLORED_TRAY_ICON_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Show the full-color {productName} icon instead of a monochrome one that matches your taskbar.',
+	comment: 'Desktop setting description under the colored tray icon toggle on Windows and Linux.',
 });
-const LATER_DESCRIPTOR = msg({
-	message: 'Later',
-	comment: 'Short label in the desktop settings tab. Keep it concise.',
+
+const USE_DARK_TASKBAR_BADGE_DESCRIPTOR = msg({
+	message: 'Use dark taskbar badge',
+	comment:
+		'Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.',
 });
+
+const USE_DARK_TASKBAR_BADGE_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Draw the unread badge on the {productName} taskbar button in dark gray instead of red.',
+	comment: 'Desktop setting description under the dark taskbar badge toggle on Windows.',
+});
+
 const DesktopSettingsTab: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const cachedAutostart = getCachedAutostartStatus();
@@ -63,6 +82,7 @@ const DesktopSettingsTab: React.FC = observer(() => {
 	const platform = getNativePlatformSync();
 	const isMac = isNativeMacOS(platform);
 	const isLinux = isNativeLinux(platform);
+	const isWindows = isNativeWindows(platform);
 	useLayoutEffect(() => {
 		let mounted = true;
 		const initDesktopSettings = async () => {
@@ -197,6 +217,30 @@ const DesktopSettingsTab: React.FC = observer(() => {
 							onChange={handleShowTrayIconChange}
 							data-flx="user.desktop-settings-tab.switch.show-tray-icon-change"
 						/>
+						{!isMac && desktopWindowBehavior.coloredTrayIcon !== undefined && (
+							<Switch
+								label={i18n._(USE_COLORED_TRAY_ICON_DESCRIPTOR)}
+								description={i18n._(USE_COLORED_TRAY_ICON_DESCRIPTION_DESCRIPTOR, {
+									productName: RuntimeConfig.productName,
+								})}
+								value={desktopWindowBehavior.coloredTrayIcon}
+								disabled={desktopWindowBehaviorBusy || !desktopWindowBehavior.showTrayIcon}
+								onChange={(value) => handleDesktopWindowBehaviorChange({coloredTrayIcon: value})}
+								data-flx="user.desktop-settings-tab.switch.colored-tray-icon-change"
+							/>
+						)}
+						{isWindows && desktopWindowBehavior.darkTaskbarBadge !== undefined && (
+							<Switch
+								label={i18n._(USE_DARK_TASKBAR_BADGE_DESCRIPTOR)}
+								description={i18n._(USE_DARK_TASKBAR_BADGE_DESCRIPTION_DESCRIPTOR, {
+									productName: RuntimeConfig.productName,
+								})}
+								value={desktopWindowBehavior.darkTaskbarBadge}
+								disabled={desktopWindowBehaviorBusy}
+								onChange={(value) => handleDesktopWindowBehaviorChange({darkTaskbarBadge: value})}
+								data-flx="user.desktop-settings-tab.switch.dark-taskbar-badge-change"
+							/>
+						)}
 						<Switch
 							label={isMac ? <Trans>Minimize to menu bar</Trans> : <Trans>Minimize to tray</Trans>}
 							value={desktopWindowBehavior.minimizeToTray}

@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDateOfBirthStepOpen} from '@app/features/auth/state/DateOfBirthStep';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
-import {registerKeyboardModeRestoreCallback, registerKeyboardModeStateResolver} from '@app/features/ui/state/Modal';
+import ModalState, {
+	registerKeyboardModeRestoreCallback,
+	registerKeyboardModeStateResolver,
+} from '@app/features/ui/state/Modal';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {KeyboardModeIntroStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable, runInAction} from 'mobx';
@@ -35,7 +39,7 @@ class KeyboardMode {
 		runInAction(() => {
 			this.keyboardModeEnabled = true;
 		});
-		if (showIntro && !this.introSeen) {
+		if (showIntro && !this.introSeen && !ModalState.hasModalOpen() && !isDateOfBirthStepOpen()) {
 			this.introSeen = true;
 			void Promise.all([
 				import('@app/features/ui/commands/ModalCommands'),

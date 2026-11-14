@@ -43,11 +43,6 @@
 	padding-inline-start: 1rem;
 }
 
-:global([dir='rtl']) .topicInput {
-	--composer-placeholder-right: 1rem;
-	--composer-placeholder-left: 0px;
-}
-
 .topicInput :global([data-channel-textarea]) {
 	box-sizing: border-box;
 	flex: 1 1 0%;
@@ -140,7 +135,7 @@
 
 .settingsControlDescription {
 	margin: 0;
-	padding-right: 1rem;
+	padding-inline-end: 1rem;
 	font-size: 0.8125rem;
 	line-height: 1.25rem;
 	color: var(--text-primary-muted);
@@ -162,7 +157,7 @@
 }
 
 .settingsControlRowStacked .settingsControlDescription {
-	padding-right: 0;
+	padding-inline-end: 0;
 }
 
 .settingsControlRowStacked .settingsSliderControl {
@@ -177,7 +172,7 @@
 	}
 
 	.settingsControlDescription {
-		padding-right: 0;
+		padding-inline-end: 0;
 	}
 
 	.settingsSliderControl {

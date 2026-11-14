@@ -4,7 +4,7 @@ import type {UserID} from '@app/api/BrandedTypes';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
-import {getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
+
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {
 	ChannelOverwriteResponse,
@@ -17,9 +17,6 @@ interface MapChannelToResponseParams {
 	currentUserId: UserID | null;
 	userCacheService: UserCacheService;
 	requestCache: RequestCache;
-	effectiveNsfw?: boolean;
-	effectiveContentWarningLevel?: number;
-	effectiveContentWarningText?: string | null;
 }
 
 function serializeBaseChannelFields(channel: Channel) {
@@ -77,14 +74,11 @@ interface ContentWarningCtx {
 	effectiveContentWarningText: string | null;
 }
 
-function deriveContentWarningCtx(channel: Channel, params: MapChannelToResponseParams): ContentWarningCtx {
+function deriveContentWarningCtx(channel: Channel): ContentWarningCtx {
 	return {
-		effectiveNsfw: params.effectiveNsfw ?? channel.isNsfw,
-		effectiveContentWarningLevel: params.effectiveContentWarningLevel ?? channel.contentWarningLevel,
-		effectiveContentWarningText:
-			params.effectiveContentWarningText !== undefined
-				? params.effectiveContentWarningText
-				: channel.contentWarningText,
+		effectiveNsfw: channel.isNsfw,
+		effectiveContentWarningLevel: channel.contentWarningLevel,
+		effectiveContentWarningText: channel.contentWarningText,
 	};
 }
 
@@ -120,6 +114,7 @@ function serializeGuildVoiceChannel(channel: Channel, ctx: ContentWarningCtx): C
 		user_limit: channel.userLimit,
 		voice_connection_limit: channel.voiceConnectionLimit,
 		rtc_region: channel.rtcRegion,
+		rtc_p2p: channel.rtcP2p,
 		...serializeContentWarningFields(channel, ctx),
 		rate_limit_per_user: channel.rateLimitPerUser,
 	};
@@ -192,11 +187,7 @@ async function addDMRecipients(
 	) {
 		const recipientIds = Array.from(channel.recipientIds).filter((id) => id !== currentUserId);
 		if (recipientIds.length > 0) {
-			const userPartials = await getCachedUserPartialResponses({
-				userIds: recipientIds,
-				userCacheService,
-				requestCache,
-			});
+			const userPartials = await userCacheService.getUserPartialResponses(recipientIds, requestCache);
 			response.recipients = recipientIds.map((userId) => userPartials.get(userId)!);
 		}
 	}
@@ -204,7 +195,7 @@ async function addDMRecipients(
 
 export async function mapChannelToResponse(params: MapChannelToResponseParams): Promise<ChannelResponse> {
 	const {channel, currentUserId, userCacheService, requestCache} = params;
-	const ctx = deriveContentWarningCtx(channel, params);
+	const ctx = deriveContentWarningCtx(channel);
 	let response: ChannelResponse;
 	switch (channel.type) {
 		case ChannelTypes.GUILD_TEXT:

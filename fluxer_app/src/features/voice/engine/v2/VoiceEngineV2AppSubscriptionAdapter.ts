@@ -13,7 +13,7 @@ import {isScreenShareAudioPublicationLike, VoiceTrackSource} from '@app/features
 import type {
 	VoiceEngineV2ParticipantVolumeOptions,
 	VoiceEngineV2RemoteTrackSubscriptionOptions,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {RemoteTrackPublication, Room} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppSubscriptionAdapter');
@@ -62,9 +62,9 @@ class VoiceEngineV2AppSubscriptionAdapter extends Store {
 		this.videoManager.setRoom(room);
 		this.screenShareManager.setRoom(room);
 		if (room) {
-			logger.info('Room set', {participantCount: room.remoteParticipants.size});
+			logger.debug('Room set', {participantCount: room.remoteParticipants.size});
 		} else {
-			logger.info('Room cleared');
+			logger.debug('Room cleared');
 		}
 	}
 
@@ -135,7 +135,7 @@ class VoiceEngineV2AppSubscriptionAdapter extends Store {
 		});
 		this.videoManager.setRoom(null);
 		this.screenShareManager.setRoom(null);
-		logger.info('All subscriptions cleaned up');
+		logger.debug('All subscriptions cleaned up');
 	}
 
 	subscribeToVideo(

@@ -3,6 +3,7 @@
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {makeAutoObservable} from 'mobx';
 
 const MAX_TRACKED_CHANNELS = 512;
@@ -27,10 +28,6 @@ class InvalidSlowmodeRateLimitError extends RangeError {
 		super(`Invalid slowmode rate limit: ${rateLimitPerUser} seconds`);
 		this.name = 'InvalidSlowmodeRateLimitError';
 	}
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function isValidTimestamp(value: unknown, now: number): value is number {

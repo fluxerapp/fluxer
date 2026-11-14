@@ -2,7 +2,6 @@
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ALL_PERMISSIONS, ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 
 export const ThreadPermissionFlags = {
 	MANAGE_THREADS: 1n << 34n,
@@ -32,7 +31,7 @@ export interface ThreadActor {
 	timedOut: boolean;
 }
 
-export interface ThreadFacts {
+interface ThreadFacts {
 	type: number;
 	archived: boolean;
 	locked: boolean;
@@ -89,10 +88,6 @@ export function threadViewPermissions(parentPerms: bigint): bigint {
 		: withoutSend;
 }
 
-export function messageSendPermissionFor(type: number): bigint {
-	return THREAD_CHANNEL_TYPES.has(type) ? ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS : Permissions.SEND_MESSAGES;
-}
-
 export function canViewThread(ctx: ThreadActorContext): ThreadDenial | null {
 	const perms = withImplicitThreadBits(ctx.permissions);
 	if (!ctx.isOwner && !has(perms, Permissions.VIEW_CHANNEL)) return APIErrorCodes.MISSING_ACCESS;
@@ -134,26 +129,33 @@ export function threadPatchRequirement(
 		if (unarchive !== null) return unarchive;
 	}
 	const staysArchived = ctx.thread.archived && patch.archived !== false;
+	const changesFlags = patch.flags !== undefined && patch.flags !== currentFlags;
 	const touchesOtherFields =
 		patch.name !== undefined ||
 		patch.auto_archive_duration !== undefined ||
 		patch.locked !== undefined ||
 		patch.invitable !== undefined ||
 		patch.rate_limit_per_user !== undefined ||
-		(patch.flags !== undefined && patch.flags !== currentFlags) ||
+		changesFlags ||
 		patch.applied_tags !== undefined;
 	if (staysArchived && touchesOtherFields) return APIErrorCodes.THREAD_ARCHIVED;
-	if (patch.locked !== undefined && patch.locked !== ctx.thread.locked && !moderator) {
-		if (!(patch.locked && ctx.isThreadOwner)) return APIErrorCodes.MISSING_PERMISSIONS;
-	}
-	if (ctx.thread.locked && !moderator) return APIErrorCodes.THREAD_LOCKED;
-	if ((patch.name !== undefined || patch.auto_archive_duration !== undefined) && !ownerOrModerator) {
+	const changesLock = patch.locked !== undefined && patch.locked !== ctx.thread.locked;
+	const ownerLocksThread = patch.locked && ctx.isThreadOwner;
+	if (changesLock && !moderator && !ownerLocksThread) {
 		return APIErrorCodes.MISSING_PERMISSIONS;
 	}
-	if (patch.archived === true && !ctx.thread.archived && !ownerOrModerator) return APIErrorCodes.MISSING_PERMISSIONS;
-	if (patch.invitable !== undefined && !ownerOrModerator) return APIErrorCodes.MISSING_PERMISSIONS;
-	if (patch.rate_limit_per_user !== undefined && !moderator) return APIErrorCodes.MISSING_PERMISSIONS;
-	if (patch.flags !== undefined && patch.flags !== currentFlags && !moderator) return APIErrorCodes.MISSING_PERMISSIONS;
+	if (ctx.thread.locked && !moderator) return APIErrorCodes.THREAD_LOCKED;
+	const requiresOwnership =
+		patch.name !== undefined ||
+		patch.auto_archive_duration !== undefined ||
+		(patch.archived === true && !ctx.thread.archived) ||
+		patch.invitable !== undefined;
+	if (requiresOwnership && !ownerOrModerator) {
+		return APIErrorCodes.MISSING_PERMISSIONS;
+	}
+	if ((patch.rate_limit_per_user !== undefined || changesFlags) && !moderator) {
+		return APIErrorCodes.MISSING_PERMISSIONS;
+	}
 	return null;
 }
 

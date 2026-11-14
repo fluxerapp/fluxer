@@ -3,15 +3,14 @@
 import {type ApplicationID, createApplicationID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
-import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {ApplicationByOwnerRow, ApplicationRow} from '@app/api/database/types/OAuth2Types';
 import {APPLICATION_COLUMNS} from '@app/api/database/types/OAuth2Types';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Application} from '@app/api/models/Application';
-import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import {Applications, ApplicationsByOwner} from '@app/api/Tables';
-import {hashPassword} from '@app/api/utils/PasswordUtils';
+import {hashStoredSecret} from '@app/api/utils/StoredSecret';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
@@ -33,13 +32,13 @@ export function resetAdminSecretHashForTesting(): void {
 	cachedAdminSecretHash = null;
 }
 
-async function getAdminSecretHash(): Promise<string | null> {
+function getAdminSecretHash(): string | null {
 	const secret = Config.admin.oauthClientSecret;
 	if (!secret) {
 		return null;
 	}
 	if (cachedAdminSecretHash === null) {
-		cachedAdminSecretHash = await hashPassword(secret);
+		cachedAdminSecretHash = hashStoredSecret(secret);
 	}
 	return cachedAdminSecretHash;
 }
@@ -67,10 +66,10 @@ function buildAdminApplication(secretHash: string | null): Application {
 	return new Application(row);
 }
 
-export class ApplicationRepository implements IApplicationRepository {
+export class ApplicationRepository {
 	async getApplication(applicationId: ApplicationID): Promise<Application | null> {
 		if (applicationId === createApplicationID(ADMIN_OAUTH2_APPLICATION_ID)) {
-			const secretHash = await getAdminSecretHash();
+			const secretHash = getAdminSecretHash();
 			if (secretHash === null) {
 				return null;
 			}
@@ -87,9 +86,15 @@ export class ApplicationRepository implements IApplicationRepository {
 		if (ids.length === 0) {
 			return [];
 		}
-		const rows = await fetchMany<ApplicationRow>(FETCH_APPLICATIONS_BY_IDS_CQL, {
-			application_ids: ids.map((r) => r.application_id),
-		});
+		return this.listApplicationsByIds(ids.map((r) => r.application_id));
+	}
+
+	async listApplicationsByIds(applicationIds: Array<ApplicationID>): Promise<Array<Application>> {
+		const rows = await fetchManyInChunks<ApplicationRow, ApplicationID>(
+			FETCH_APPLICATIONS_BY_IDS_CQL,
+			applicationIds,
+			(chunk) => ({application_ids: chunk}),
+		);
 		return rows.map((r) => new Application(r));
 	}
 

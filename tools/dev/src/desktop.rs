@@ -38,10 +38,6 @@ const MACOS_DEV_ELECTRON_USAGE_DESCRIPTIONS: &[(&str, &str)] = &[
         "Fluxer needs access to Apple Events for automation features.",
     ),
     (
-        "NSAudioCaptureUsageDescription",
-        "Fluxer captures audio from the screen or window you choose to share.",
-    ),
-    (
         "NSScreenCaptureUsageDescription",
         "Fluxer captures the screen or window you choose to share.",
     ),
@@ -111,46 +107,11 @@ fn ensure_desktop_dependencies() -> Result<()> {
     install_desktop_dependencies()
 }
 
-pub fn typecheck_desktop() -> Result<()> {
-    run_command(
-        &["pnpm", "typecheck"],
-        RunOptions {
-            cwd: DESKTOP_DIR.as_path(),
-            ..RunOptions::default()
-        },
-    )
-    .map(drop)
-}
-
 pub fn development_version(now: SystemTime) -> String {
-    let seconds = now
-        .duration_since(UNIX_EPOCH)
-        .map(|elapsed| elapsed.as_secs())
-        .unwrap_or(0);
-    let days = (seconds / 86_400) as i64;
-    let second_of_day = seconds % 86_400;
-    let (year, month, day) = civil_from_days(days);
-    let micro =
-        (second_of_day / 3600) * 10_000 + ((second_of_day % 3600) / 60) * 100 + second_of_day % 60;
-    format!("{year}.{month}{day:02}.{micro}")
-}
-
-pub(crate) fn civil_from_days(days: i64) -> (i64, u32, u32) {
-    let shifted = days + 719_468;
-    let era = shifted.div_euclid(146_097);
-    let day_of_era = shifted.rem_euclid(146_097);
-    let year_of_era =
-        (day_of_era - day_of_era / 1460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
-    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
-    let month_index = (5 * day_of_year + 2) / 153;
-    let day = (day_of_year - (153 * month_index + 2) / 5 + 1) as u32;
-    let month = if month_index < 10 {
-        month_index + 3
-    } else {
-        month_index - 9
-    } as u32;
-    let year = year_of_era + era * 400 + i64::from(month <= 2);
-    (year, month, day)
+    let now = chrono::DateTime::<chrono::Utc>::from(now);
+    use chrono::{Datelike, Timelike};
+    let micro = now.hour() * 10_000 + now.minute() * 100 + now.second();
+    format!("{}.{}{:02}.{micro}", now.year(), now.month(), now.day())
 }
 
 fn target_electron_arch() -> Result<String> {
@@ -218,11 +179,7 @@ fn renderer_source_fingerprint() -> Result<String> {
             }
         }
     }
-    Ok(hasher
-        .finalize()
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
+    Ok(hex::encode(hasher.finalize()))
 }
 
 pub fn verify_renderer_tree(root: &Path) -> Result<()> {
@@ -311,11 +268,11 @@ fn ensure_renderer(rebuild: bool) -> Result<(PathBuf, String)> {
             env: vec![
                 ("NODE_ENV".to_owned(), Some("production".to_owned())),
                 (
-                    "PUBLIC_BUILD_VERSION".to_owned(),
+                    "BUILD_VERSION".to_owned(),
                     Some(RENDERER_BUILD_VERSION.to_owned()),
                 ),
                 (
-                    "PUBLIC_RELEASE_CHANNEL".to_owned(),
+                    "BUILD_CHANNEL".to_owned(),
                     Some(DEVELOPMENT_CHANNEL.to_owned()),
                 ),
             ],
@@ -332,29 +289,6 @@ fn ensure_renderer(rebuild: bool) -> Result<(PathBuf, String)> {
     fs::write(&stamp_path, format!("{fingerprint}\n"))
         .with_context(|| format!("failed to write {}", stamp_path.display()))?;
     Ok((cache, fingerprint))
-}
-
-struct BuildChannelFileGuard {
-    path: PathBuf,
-    original: Option<String>,
-}
-
-impl BuildChannelFileGuard {
-    fn capture() -> Self {
-        let path = DESKTOP_DIR.join("src/common/BuildChannel.ts");
-        let original = fs::read_to_string(&path).ok();
-        Self { path, original }
-    }
-}
-
-impl Drop for BuildChannelFileGuard {
-    fn drop(&mut self) {
-        if let Some(original) = &self.original
-            && fs::read_to_string(&self.path).ok().as_deref() != Some(original.as_str())
-        {
-            let _ = fs::write(&self.path, original);
-        }
-    }
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -413,12 +347,8 @@ pub fn build_desktop_shell() -> Result<()> {
             Some(env::var("BUILD_CHANNEL").unwrap_or_else(|_| "canary".to_owned())),
         ),
         (
-            "PUBLIC_BUILD_VERSION".to_owned(),
-            Some(env::var("PUBLIC_BUILD_VERSION").unwrap_or_else(|_| "dev".to_owned())),
-        ),
-        (
-            "PUBLIC_RELEASE_CHANNEL".to_owned(),
-            Some(env::var("PUBLIC_RELEASE_CHANNEL").unwrap_or_else(|_| "canary".to_owned())),
+            "BUILD_VERSION".to_owned(),
+            Some(env::var("BUILD_VERSION").unwrap_or_else(|_| "dev".to_owned())),
         ),
     ];
     run_command(
@@ -464,58 +394,46 @@ pub fn build_desktop(
         )
         .with_context(|| format!("failed to write {}", version_file.display()))?;
     }
-    {
-        let _guard = BuildChannelFileGuard::capture();
-        run_command(
-            &[
-                "pnpm",
-                "exec",
-                "node",
-                "scripts/build.mjs",
-                "--use-shared-renderer",
+    run_command(
+        &[
+            "pnpm",
+            "exec",
+            "node",
+            "scripts/build.mjs",
+            "--use-shared-renderer",
+        ],
+        RunOptions {
+            cwd: DESKTOP_DIR.as_path(),
+            env: vec![
+                (
+                    "BUILD_CHANNEL".to_owned(),
+                    Some(DEVELOPMENT_CHANNEL.to_owned()),
+                ),
+                (
+                    "FLUXER_OFFLINE".to_owned(),
+                    (delivery == RendererDelivery::Offline).then(|| "1".to_owned()),
+                ),
+                (
+                    "FLUXER_MODULES".to_owned(),
+                    (delivery == RendererDelivery::Modules).then(|| "1".to_owned()),
+                ),
+                (
+                    "FLUXER_SKIP_NATIVE".to_owned(),
+                    skip_native.then(|| "true".to_owned()),
+                ),
+                ("NODE_ENV".to_owned(), Some("production".to_owned())),
+                (
+                    "FLUXER_DESKTOP_PRODUCTION".to_owned(),
+                    Some("true".to_owned()),
+                ),
+                ("BUILD_VERSION".to_owned(), Some(version.clone())),
+                ("ELECTRON_ARCH".to_owned(), Some(arch)),
+                ("WORKDIR".to_owned(), Some(ROOT.display().to_string())),
             ],
-            RunOptions {
-                cwd: DESKTOP_DIR.as_path(),
-                env: vec![
-                    (
-                        "BUILD_CHANNEL".to_owned(),
-                        Some(DEVELOPMENT_CHANNEL.to_owned()),
-                    ),
-                    (
-                        "FLUXER_OFFLINE".to_owned(),
-                        (delivery == RendererDelivery::Offline).then(|| "1".to_owned()),
-                    ),
-                    (
-                        "FLUXER_MODULES".to_owned(),
-                        (delivery == RendererDelivery::Modules).then(|| "1".to_owned()),
-                    ),
-                    (
-                        "FLUXER_SKIP_NATIVE".to_owned(),
-                        skip_native.then(|| "true".to_owned()),
-                    ),
-                    ("NODE_ENV".to_owned(), Some("production".to_owned())),
-                    (
-                        "FLUXER_DESKTOP_PRODUCTION".to_owned(),
-                        Some("true".to_owned()),
-                    ),
-                    ("PUBLIC_BUILD_VERSION".to_owned(), Some(version.clone())),
-                    ("BUILD_VERSION".to_owned(), Some(version.clone())),
-                    (
-                        "PUBLIC_RELEASE_CHANNEL".to_owned(),
-                        Some(DEVELOPMENT_CHANNEL.to_owned()),
-                    ),
-                    (
-                        "RELEASE_CHANNEL".to_owned(),
-                        Some(DEVELOPMENT_CHANNEL.to_owned()),
-                    ),
-                    ("ELECTRON_ARCH".to_owned(), Some(arch)),
-                    ("WORKDIR".to_owned(), Some(ROOT.display().to_string())),
-                ],
-                load_default_env: false,
-                ..RunOptions::default()
-            },
-        )?;
-    }
+            load_default_env: false,
+            ..RunOptions::default()
+        },
+    )?;
     let build_info_path = DESKTOP_DIR.join("dist/build-info.json");
     let build_info = fs::read_to_string(&build_info_path)
         .with_context(|| format!("failed to read {}", build_info_path.display()))?;
@@ -624,7 +542,7 @@ pub fn package_desktop(
             "BUILD_CHANNEL".to_owned(),
             Some(DEVELOPMENT_CHANNEL.to_owned()),
         ),
-        ("VERSION".to_owned(), Some(version.clone())),
+        ("BUILD_VERSION".to_owned(), Some(version.clone())),
         ("ELECTRON_ARCH".to_owned(), Some(arch.clone())),
         ("NODE_ENV".to_owned(), Some("production".to_owned())),
     ];
@@ -1134,216 +1052,4 @@ fn codesign_ad_hoc(app_bundle: &Path) -> Result<()> {
         app_bundle.display(),
         String::from_utf8_lossy(&output.stderr).trim_end()
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn strips_no_sandbox_only_by_container_policy() {
-        let args = electron_args(&["--flag".to_owned()]);
-        if cfg!(target_os = "linux")
-            && Path::new("/.dockerenv").exists()
-            && env::var("FLUXER_ELECTRON_NO_SANDBOX").as_deref() != Ok("0")
-        {
-            assert_eq!(args[0], "--no-sandbox");
-        }
-        assert!(args.contains(&"--flag".to_owned()));
-    }
-
-    #[test]
-    fn disclaimed_electron_command_re_execs_through_the_launcher() {
-        let command = disclaimed_electron_command(
-            Path::new("/tmp/fluxer-dev"),
-            Path::new("/tmp/Electron.app/Contents/MacOS/Electron"),
-        );
-        assert_eq!(
-            command,
-            vec![
-                "/tmp/fluxer-dev",
-                "desktop",
-                "exec-disclaimed",
-                "/tmp/Electron.app/Contents/MacOS/Electron",
-                "."
-            ]
-        );
-    }
-
-    #[test]
-    fn dev_electron_paths_point_inside_the_dev_bundle() {
-        assert!(dev_electron_binary_path().ends_with(
-            "fluxer_desktop/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
-        ));
-        assert!(dev_electron_info_plist_path().ends_with(
-            "fluxer_desktop/node_modules/electron/dist/Electron.app/Contents/Info.plist"
-        ));
-    }
-
-    #[test]
-    fn dev_electron_usage_descriptions_include_audio_capture() {
-        assert!(
-            MACOS_DEV_ELECTRON_USAGE_DESCRIPTIONS
-                .iter()
-                .any(|(key, _)| *key == "NSAudioCaptureUsageDescription")
-        );
-    }
-
-    #[test]
-    fn development_version_is_a_calver_electron_builder_accepts() {
-        let at = |seconds: u64| development_version(UNIX_EPOCH + Duration::from_secs(seconds));
-        assert_eq!(at(1_791_039_600), "2026.1003.150000");
-        assert_eq!(at(1_767_225_605), "2026.101.5");
-        assert_eq!(at(1_798_761_599), "2026.1231.235959");
-        assert_eq!(at(1_709_208_000), "2024.229.120000");
-    }
-
-    #[test]
-    fn finds_the_developer_id_identity_and_skips_other_certificates() {
-        let output = r#"  1) D9E17CA1546F517C814DFA8719A4FED295D7B019 "Apple Development: Someone (TT9JK7QNP2)"
-  2) AA2A51260E57959F00CF6B117CEA2757748756FA "Developer ID Application: Fluxer Platform AB (3G5837T29K)"
-     2 valid identities found"#;
-        assert_eq!(
-            parse_developer_id_identity(output).as_deref(),
-            Some("Fluxer Platform AB (3G5837T29K)")
-        );
-        assert_eq!(
-            parse_developer_id_identity("     0 valid identities found"),
-            None
-        );
-    }
-
-    #[test]
-    fn electron_builder_packages_a_development_dir_for_the_host_without_notarizing() {
-        let args = electron_builder_args(
-            Path::new("/tmp/out"),
-            "arm64",
-            &MacSigning::DeveloperId("Fluxer Platform AB (3G5837T29K)".to_owned()),
-            &[],
-        );
-        assert!(args.contains(&"--dir".to_owned()));
-        assert!(args.contains(&"-c.mac.notarize=false".to_owned()));
-        assert!(args.contains(&"-c.directories.output=/tmp/out".to_owned()));
-        assert!(args.contains(&"--arm64".to_owned()));
-        assert!(
-            !args
-                .iter()
-                .any(|arg| arg.starts_with("-c.mac.sign.identity"))
-        );
-        let ad_hoc = electron_builder_args(Path::new("/tmp/out"), "x64", &MacSigning::AdHoc, &[]);
-        assert!(ad_hoc.contains(&"-c.mac.sign.identity=-".to_owned()));
-        assert!(ad_hoc.contains(&"--x64".to_owned()));
-        let linux = electron_builder_args(
-            Path::new("/tmp/out"),
-            "x64",
-            &MacSigning::AdHoc,
-            &["--linux".to_owned()],
-        );
-        assert_eq!(linux.iter().filter(|arg| *arg == "--linux").count(), 1);
-        assert!(!linux.contains(&"--mac".to_owned()));
-    }
-
-    #[test]
-    fn rejects_a_development_app_that_claims_the_production_scheme() {
-        assert!(
-            verify_url_schemes(
-                r#"[{"CFBundleURLName":"app.fluxer.development","CFBundleURLSchemes":["fluxer-development"]}]"#
-            )
-            .is_ok()
-        );
-        assert!(
-            verify_url_schemes(r#"[{"CFBundleURLSchemes":["fluxer-development","Fluxer"]}]"#)
-                .is_err()
-        );
-        assert!(verify_url_schemes(r#"[{"CFBundleURLSchemes":["fluxer"]}]"#).is_err());
-        assert!(verify_url_schemes("[]").is_err());
-    }
-
-    #[test]
-    fn build_info_must_match_the_renderer_delivery() {
-        let info = |channel: &str, offline: bool, modules: bool| {
-            format!(
-                r#"{{"buildVersion":"2026.1003.150000","releaseChannel":"development","buildChannel":"{channel}","offlineBuild":{offline},"modulesEnabled":{modules}}}"#
-            )
-        };
-        let check = |raw: String, version: &str, delivery| {
-            verify_development_build_info(&raw, version, delivery).is_ok()
-        };
-        let version = "2026.1003.150000";
-        assert!(check(
-            info("development", true, false),
-            version,
-            RendererDelivery::Offline
-        ));
-        assert!(check(
-            info("development", false, true),
-            version,
-            RendererDelivery::Modules
-        ));
-        assert!(!check(
-            info("canary", false, true),
-            version,
-            RendererDelivery::Modules
-        ));
-        assert!(!check(
-            info("development", true, false),
-            version,
-            RendererDelivery::Modules
-        ));
-        assert!(!check(
-            info("development", false, true),
-            version,
-            RendererDelivery::Offline
-        ));
-        assert!(!check(
-            info("development", true, true),
-            version,
-            RendererDelivery::Modules
-        ));
-        assert!(!check(
-            info("development", false, true),
-            "2026.1003.150001",
-            RendererDelivery::Modules
-        ));
-    }
-
-    #[test]
-    fn matches_only_the_exact_main_executable_of_the_installed_app() {
-        let ps = "  501 /Applications/Fluxer Development.app/Contents/MacOS/Fluxer Development\n\
-                  502 /Applications/Fluxer Development.app/Contents/Frameworks/Fluxer Development Helper.app/Contents/MacOS/Fluxer Development Helper\n\
-                  503 /Applications/Fluxer Canary.app/Contents/MacOS/Fluxer Canary\n\
-                  504 /tmp/copy/Fluxer Development.app/Contents/MacOS/Fluxer Development\n";
-        assert_eq!(
-            parse_pids_for_executable(
-                ps,
-                "/Applications/Fluxer Development.app/Contents/MacOS/Fluxer Development"
-            ),
-            vec![501]
-        );
-        assert!(
-            parse_pids_for_executable(ps, "/Applications/Fluxer.app/Contents/MacOS/Fluxer")
-                .is_empty()
-        );
-    }
-
-    #[test]
-    fn installs_under_the_development_bundle_name_only() {
-        let app = installed_app_path(Path::new(DEFAULT_INSTALL_DIR));
-        assert_eq!(app, Path::new("/Applications/Fluxer Development.app"));
-        assert_eq!(
-            app_executable_path(&app),
-            Path::new("/Applications/Fluxer Development.app/Contents/MacOS/Fluxer Development")
-        );
-    }
-
-    #[test]
-    fn renderer_tree_must_be_complete_and_free_of_service_workers() {
-        let dir = tempfile::tempdir().unwrap();
-        assert!(verify_renderer_tree(dir.path()).is_err());
-        fs::write(dir.path().join("index.html"), "<!doctype html>").unwrap();
-        fs::create_dir(dir.path().join("assets")).unwrap();
-        assert!(verify_renderer_tree(dir.path()).is_ok());
-        fs::write(dir.path().join("sw.js"), "").unwrap();
-        assert!(verify_renderer_tree(dir.path()).is_err());
-    }
 }

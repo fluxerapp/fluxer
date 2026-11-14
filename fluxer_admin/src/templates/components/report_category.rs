@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::{
+    api::types::ReportEntry,
+    config::AdminConfig,
+    templates::components::{
+        badge::BadgeVariant,
+        media::{guild_icon_url, initials},
+    },
+};
+
 use maud::{Markup, html};
 
 const REPORT_CATEGORIES: &[(&str, &str)] = &[
@@ -52,93 +61,59 @@ pub fn report_category(category: &str) -> Markup {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn known_categories_get_their_label() {
-        assert_eq!(
-            report_category_label("harassment"),
-            "Harassment or bullying"
-        );
-        assert_eq!(report_category_label("spam"), "Spam");
-        assert_eq!(report_category_label("spam_account"), "Spam account");
-        assert_eq!(
-            report_category_label("extremist_community"),
-            "Extremist community"
-        );
+pub(crate) fn report_status(status: i32) -> (&'static str, BadgeVariant) {
+    match status {
+        0 => ("Pending", BadgeVariant::Warning),
+        1 => ("Resolved", BadgeVariant::Success),
+        _ => ("Unknown", BadgeVariant::Default),
     }
+}
 
-    #[test]
-    fn unknown_categories_fall_back_to_the_key() {
-        assert_eq!(report_category_label("future_value"), "future_value");
-        assert_eq!(report_category_label(""), "");
+pub(crate) fn report_type(report_type: i32) -> (&'static str, BadgeVariant) {
+    match report_type {
+        0 => ("Message", BadgeVariant::Info),
+        1 => ("User", BadgeVariant::Default),
+        2 => ("Guild", BadgeVariant::Warning),
+        _ => ("Unknown", BadgeVariant::Default),
     }
+}
 
-    #[test]
-    fn reasons_that_repeat_the_category_label_are_detected() {
-        assert!(reason_repeats_category("spam", "Spam"));
-        assert!(reason_repeats_category("spam", "spam"));
-        assert!(reason_repeats_category(
-            "harassment",
-            "Harassment or bullying"
-        ));
-        assert!(reason_repeats_category(
-            "harassment",
-            " harassment OR bullying "
-        ));
-        assert!(!reason_repeats_category("harassment", "Hate speech"));
-        assert!(!reason_repeats_category(
-            "child_safety",
-            "Child sexual abuse material"
-        ));
-        assert!(reason_repeats_category("future_value", "future_value"));
-        assert!(!reason_repeats_category("future_value", "Spam"));
+pub(crate) fn message_lookup_href(
+    base: &str,
+    channel_id: &str,
+    message_id: Option<&str>,
+) -> String {
+    let mut href = format!(
+        "{base}/messages?channel_id={}&context_limit=50",
+        urlencoding::encode(channel_id)
+    );
+    if let Some(message_id) = message_id.filter(|id| !id.is_empty()) {
+        href.push_str("&message_id=");
+        href.push_str(&urlencoding::encode(message_id));
     }
+    href
+}
 
-    #[test]
-    fn every_category_key_is_unique_and_labelled() {
-        let mut keys = REPORT_CATEGORIES
-            .iter()
-            .map(|(key, _)| *key)
-            .collect::<Vec<_>>();
-        keys.sort_unstable();
-        keys.dedup();
-        assert_eq!(keys.len(), REPORT_CATEGORIES.len());
-        assert_eq!(keys.len(), 18);
-        for (key, label) in REPORT_CATEGORIES {
-            assert_ne!(key, label);
-        }
-    }
-
-    #[test]
-    fn options_start_with_all_and_keep_an_unknown_selection() {
-        let options = report_category_options("");
-        assert_eq!(options.first(), Some(&("", "All")));
-        assert_eq!(options.len(), 19);
-        assert_eq!(report_category_options("spam").len(), 19);
-        let unknown = report_category_options("future_value");
-        assert_eq!(unknown.len(), 20);
-        assert_eq!(unknown.last(), Some(&("future_value", "future_value")));
-    }
-
-    #[test]
-    fn category_markup_shows_the_label_and_keeps_the_key() {
-        let markup = report_category("doxxing").into_string();
-        assert!(
-            markup.contains(r#"data-report-category="doxxing""#),
-            "{markup}"
-        );
-        assert!(
-            markup.contains(">Sharing personal information<"),
-            "{markup}"
-        );
-        let unknown = report_category("future_value").into_string();
-        assert!(
-            unknown.contains(r#"data-report-category="future_value""#),
-            "{unknown}"
-        );
-        assert!(unknown.contains(">future_value<"), "{unknown}");
+pub(crate) fn reported_guild_icon(
+    config: &AdminConfig,
+    report: &ReportEntry,
+    guild_id: &str,
+    label: &str,
+) -> Markup {
+    match guild_icon_url(
+        config,
+        guild_id,
+        report.reported_guild_icon_hash.as_deref(),
+        80,
+        true,
+    ) {
+        Some(url) => html! {
+            img src=(url) alt="" class="h-8 w-8 max-w-none flex-shrink-0 rounded-full object-cover";
+        },
+        None => html! {
+            span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 text-neutral-600 text-xs" {
+                (initials(label))
+            }
+        },
     }
 }

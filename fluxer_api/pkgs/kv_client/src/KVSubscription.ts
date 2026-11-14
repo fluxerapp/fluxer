@@ -200,20 +200,6 @@ export class KVSubscription implements IKVSubscription {
 		this.assertCurrentClient(client);
 	}
 
-	async unsubscribe(...channels: Array<string>): Promise<void> {
-		this.assertNotClosing();
-		const requestedChannels = [...new Set(channels)];
-		for (const channel of requestedChannels) {
-			this.desiredChannels.delete(channel);
-		}
-		const client = this.client;
-		if (requestedChannels.length === 0 || client === null) {
-			return;
-		}
-		await client.unsubscribe(...requestedChannels);
-		this.assertCurrentClient(client);
-	}
-
 	async quit(): Promise<void> {
 		if (this.closing !== null) {
 			return await this.closing;
@@ -257,15 +243,6 @@ export class KVSubscription implements IKVSubscription {
 			return;
 		}
 		client.disconnect(false);
-	}
-
-	removeAllListeners(event?: 'message' | 'error'): void {
-		if (!event || event === 'message') {
-			this.messageCallbacks.clear();
-		}
-		if (!event || event === 'error') {
-			this.errorCallbacks.clear();
-		}
 	}
 }
 

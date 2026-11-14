@@ -95,9 +95,22 @@
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--text-primary-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
 	margin-bottom: 0.35rem;
+}
+
+.sectionHeaderAccount {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	text-transform: none;
+	letter-spacing: normal;
+}
+
+.sectionHeaderAccountName {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .sectionList {
@@ -116,7 +129,7 @@
 	border-radius: var(--radius-md);
 	padding: 0.25rem 0.25rem;
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 }
 
 .optionContent {

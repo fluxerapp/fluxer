@@ -14,7 +14,7 @@ use axum::{
 };
 use serde::Deserialize;
 
-use super::system_actions;
+use super::{limit_config_actions, system_actions};
 
 #[derive(Deserialize)]
 struct GatewayQuery {
@@ -62,7 +62,7 @@ pub fn router() -> Router<AppState> {
         )
         .route(
             "/limit-config",
-            get(limit_config_page).post(system_actions::limit_config_post),
+            get(limit_config_page).post(limit_config_actions::limit_config_post),
         )
 }
 
@@ -157,8 +157,10 @@ async fn search_index_page(
     let job_id_str = query.job_id.unwrap_or_default();
 
     let mut status: Option<String> = None;
+    let mut phase: Option<String> = None;
     let mut total: Option<u64> = None;
     let mut indexed: Option<u64> = None;
+    let mut error: Option<String> = None;
 
     if !job_id_str.is_empty() {
         let client =
@@ -170,13 +172,17 @@ async fn search_index_page(
                 }
                 crate::api::types::IndexRefreshStatusResponse::Progress {
                     status: s,
+                    phase: p,
                     total: t,
                     indexed: i,
+                    error: e,
                     ..
                 } => {
                     status = Some(s);
+                    phase = p;
                     total = t;
                     indexed = i;
+                    error = e;
                 }
             },
             Err(error) => {
@@ -189,11 +195,12 @@ async fn search_index_page(
         Some(templates::pages::search_index::RefreshStatus {
             job_id: &job_id_str,
             status: status.as_deref(),
+            phase: phase.as_deref(),
             total,
             indexed,
             started_at: None,
             completed_at: None,
-            error: None,
+            error: error.as_deref(),
         })
     } else {
         None
@@ -221,9 +228,7 @@ async fn instance_config_page(
         .await
         .log_error("load instance config");
     if let Some(instance_config) = &instance_config {
-        state.remember_premium_branding(crate::api::types::PremiumBranding::from_instance_config(
-            instance_config,
-        ));
+        state.remember_instance_config_branding(instance_config);
     }
     let limit_config = client
         .get_limit_config()

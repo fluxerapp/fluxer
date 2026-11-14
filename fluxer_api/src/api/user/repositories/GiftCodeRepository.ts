@@ -8,7 +8,7 @@ import {
 	fetchOne,
 	upsertOne,
 } from '@app/api/database/CassandraQueryExecution';
-import {Db, type DbOp} from '@app/api/database/CassandraTypes';
+import {Db} from '@app/api/database/CassandraTypes';
 import type {GiftCodeRow} from '@app/api/database/types/PaymentTypes';
 import {GiftCode, mapGiftCodeDurationToMonths, mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
 import {GiftCodes, GiftCodesByCreator, GiftCodesByPaymentIntent, GiftCodesByRedeemer} from '@app/api/Tables';
@@ -61,8 +61,8 @@ function normaliseGiftCodeRowForWrite(data: GiftCodeRow): GiftCodeRow {
 export class GiftCodeRepository {
 	async createGiftCode(data: GiftCodeRow): Promise<void> {
 		const normalisedData = normaliseGiftCodeRowForWrite(data);
-		await upsertOne(GiftCodes.insert(normalisedData));
 		const batch = new BatchBuilder();
+		batch.addPrepared(GiftCodes.insert(normalisedData));
 		batch.addPrepared(
 			GiftCodesByCreator.upsertAll({
 				created_by_user_id: normalisedData.created_by_user_id,
@@ -109,33 +109,16 @@ export class GiftCodeRepository {
 	}
 
 	async findGiftCodesByCreator(userId: UserID): Promise<Array<GiftCode>> {
-		const codes = await fetchMany<{
-			code: string;
-		}>(FETCH_GIFT_CODES_BY_CREATOR_QUERY, {
-			created_by_user_id: userId,
-		});
-		if (codes.length === 0) {
-			return [];
-		}
-		const gifts: Array<GiftCode> = [];
-		for (const {code} of codes) {
-			const gift = await this.findGiftCode(code);
-			if (gift) {
-				gifts.push(gift);
-			}
-		}
-		return gifts;
+		const codes = await fetchMany<{code: string}>(FETCH_GIFT_CODES_BY_CREATOR_QUERY, {created_by_user_id: userId});
+		return this.loadGiftCodes(codes);
 	}
 
 	async findGiftCodesByRedeemer(userId: UserID): Promise<Array<GiftCode>> {
-		const codes = await fetchMany<{
-			code: string;
-		}>(FETCH_GIFT_CODES_BY_REDEEMER_QUERY, {
-			redeemed_by_user_id: userId,
-		});
-		if (codes.length === 0) {
-			return [];
-		}
+		const codes = await fetchMany<{code: string}>(FETCH_GIFT_CODES_BY_REDEEMER_QUERY, {redeemed_by_user_id: userId});
+		return this.loadGiftCodes(codes);
+	}
+
+	private async loadGiftCodes(codes: Array<{code: string}>): Promise<Array<GiftCode>> {
 		const gifts: Array<GiftCode> = [];
 		for (const {code} of codes) {
 			const gift = await this.findGiftCode(code);
@@ -147,7 +130,8 @@ export class GiftCodeRepository {
 	}
 
 	async redeemGiftCode(code: string, userId: UserID): Promise<void> {
-		await upsertOne(
+		const batch = new BatchBuilder();
+		batch.addPrepared(
 			GiftCodes.patchByPk(
 				{code},
 				{
@@ -156,12 +140,13 @@ export class GiftCodeRepository {
 				},
 			),
 		);
-		await upsertOne(
+		batch.addPrepared(
 			GiftCodesByRedeemer.upsertAll({
 				redeemed_by_user_id: userId,
 				code,
 			}),
 		);
+		await batch.execute();
 	}
 
 	async unredeemGiftCode(code: string, userId: UserID): Promise<void> {
@@ -205,29 +190,6 @@ export class GiftCodeRepository {
 				{premium_reversed_seconds: seconds},
 			),
 		);
-	}
-
-	async updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void> {
-		const batch = new BatchBuilder();
-		const patch: Record<string, DbOp<unknown>> = {};
-		if (data['redeemed_at'] !== undefined) {
-			patch['redeemed_at'] = Db.set(data['redeemed_at']);
-		}
-		if (data['redeemed_by_user_id'] !== undefined) {
-			patch['redeemed_by_user_id'] = Db.set(data['redeemed_by_user_id']);
-		}
-		if (Object.keys(patch).length > 0) {
-			batch.addPrepared(GiftCodes.patchByPk({code}, patch));
-		}
-		if (data.redeemed_by_user_id) {
-			batch.addPrepared(
-				GiftCodesByRedeemer.upsertAll({
-					redeemed_by_user_id: data.redeemed_by_user_id,
-					code,
-				}),
-			);
-		}
-		await batch.execute();
 	}
 
 	async linkGiftCodeToCheckoutSession(code: string, checkoutSessionId: string): Promise<void> {

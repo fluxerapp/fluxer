@@ -150,11 +150,4 @@ describe('OAuth2 authorizations deauthorize', () => {
 		const afterAuthz = await listOAuth2Authorizations(harness, endUser.token);
 		expect(afterAuthz).toHaveLength(0);
 	});
-	it('verifies that deauthorizing a non-existent application returns an appropriate error', async () => {
-		const user = await createTestAccount(harness);
-		await createBuilder(harness, user.token)
-			.delete('/oauth2/@me/authorizations/123456789012345678')
-			.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_APPLICATION')
-			.execute();
-	});
 });

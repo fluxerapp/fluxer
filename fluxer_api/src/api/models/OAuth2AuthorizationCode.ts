@@ -39,8 +39,4 @@ export class OAuth2AuthorizationCode {
 			created_at: this.createdAt,
 		};
 	}
-
-	hasScope(scope: string): boolean {
-		return this.scope.has(scope);
-	}
 }

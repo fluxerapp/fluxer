@@ -40,7 +40,7 @@ function filterIgnoredGuildVoiceStates(
 	return {...guild, voice_states: filteredVoiceStates};
 }
 
-export class VoiceEngineV2AppVoiceStateAdapter extends Store {
+class VoiceEngineV2AppVoiceStateAdapter extends Store {
 	private snapshot: VoiceGatewayStateSnapshot = createVoiceGatewayStateSnapshot();
 	private voiceStates: VoiceGatewayVoiceStates = {};
 	private userVoiceStates: VoiceGatewayUserVoiceStates = {};
@@ -80,10 +80,6 @@ export class VoiceEngineV2AppVoiceStateAdapter extends Store {
 			return;
 		}
 		this.send({type: 'voiceState.update', guildId, voiceState});
-	}
-
-	handleGatewayVoiceStateDelete(guildId: string, userId: string): void {
-		this.send({type: 'voiceState.delete', guildId, userId});
 	}
 
 	removeVoiceStateConnection(connectionId: string): void {

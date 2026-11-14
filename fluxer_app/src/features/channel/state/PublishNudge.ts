@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessagingMessages from '@app/features/messaging/state/MessagingMessages';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
@@ -59,6 +60,14 @@ class PublishNudge {
 		const newestOwn = MessagingMessages.getCachedMessages(message.channelId)?.searchFromNewest(isPublishCandidate);
 		return newestOwn?.id === message.id;
 	}
+
+	reset(): void {
+		this.dismissedMessageIds = new Set();
+	}
 }
 
-export default new PublishNudge();
+const publishNudge = new PublishNudge();
+
+ResettableStates.register(publishNudge, () => publishNudge.reset());
+
+export default publishNudge;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SPEAKING_REMOTE_ATTACK_MS, SPEAKING_REMOTE_RELEASE_MS} from '@app/features/voice/engine/VoiceSpeakingThreshold';
+import {advanceSpeakingHysteresis, type SpeakingHysteresis} from '@app/features/voice/engine/VoiceSpeakingThreshold';
 import type {VoiceConnectionQuality} from '@app/features/voice/engine/VoiceTrackSource';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
@@ -25,12 +25,9 @@ export type LivekitParticipantSnapshot = Readonly<{
 	lastSpokeAt: number | null;
 }>;
 
-interface RemoteSpeakingAnalyserState {
+interface RemoteSpeakingAnalyserState extends SpeakingHysteresis {
 	identity: string;
 	track: unknown;
-	speaking: boolean;
-	belowSinceMs: number | null;
-	aboveSinceMs: number | null;
 	playbackBoost: number;
 	appliedBoost: number;
 }
@@ -38,12 +35,10 @@ interface RemoteSpeakingAnalyserState {
 export type VoiceRemoteSpeakingCommand =
 	| {type: 'setAudioLevelSpeaking'; identity: string; speaking: boolean}
 	| {type: 'setPlaybackBoost'; identity: string; boost: number}
-	| {type: 'clearPlaybackBoost'; identity: string}
-	| {type: 'rehydrateRemoteAnalysers'};
+	| {type: 'clearPlaybackBoost'; identity: string};
 
 interface VoiceRemoteSpeakingMachineContext {
 	analysers: ReadonlyMap<string, RemoteSpeakingAnalyserState>;
-	analyserSuspendedByVisibility: boolean;
 	commands: ReadonlyArray<VoiceRemoteSpeakingCommand>;
 }
 
@@ -51,8 +46,6 @@ export type VoiceRemoteSpeakingEvent =
 	| {type: 'remote.attach'; identity: string; track: unknown}
 	| {type: 'remote.detach'; identity: string}
 	| {type: 'remote.tick'; identity: string; rms: number; threshold: number; nowMs: number; trackEnded?: boolean}
-	| {type: 'remote.visibilityHidden'}
-	| {type: 'remote.visibilityVisible'}
 	| {type: 'remote.clear'}
 	| {type: 'remote.clearCommands'};
 const EMPTY_REMOTE_COMMANDS: ReadonlyArray<VoiceRemoteSpeakingCommand> = [];
@@ -68,10 +61,9 @@ const REMOTE_PLAYBACK_UNITY_EPSILON = 0.01;
 
 function remoteContext(
 	analysers: ReadonlyMap<string, RemoteSpeakingAnalyserState> = new Map(),
-	analyserSuspendedByVisibility = false,
 	commands: ReadonlyArray<VoiceRemoteSpeakingCommand> = EMPTY_REMOTE_COMMANDS,
 ): VoiceRemoteSpeakingMachineContext {
-	return {analysers, analyserSuspendedByVisibility, commands};
+	return {analysers, commands};
 }
 
 function appendRemoteCommands(
@@ -177,29 +169,12 @@ function tickRemoteAnalyser(
 	if (event.trackEnded) return detachRemoteAnalyser(context, event.identity);
 
 	const commands: Array<VoiceRemoteSpeakingCommand> = [];
-	let entry = existing;
-	if (event.rms >= event.threshold) {
-		const aboveSinceMs = entry.aboveSinceMs ?? event.nowMs;
-		entry = {
-			...entry,
-			belowSinceMs: null,
-			aboveSinceMs,
-		};
-		if (!entry.speaking && event.nowMs - aboveSinceMs >= SPEAKING_REMOTE_ATTACK_MS) {
-			entry = {...entry, speaking: true};
-			commands.push({type: 'setAudioLevelSpeaking', identity: event.identity, speaking: true});
-		}
-	} else {
-		const belowSinceMs = entry.belowSinceMs ?? event.nowMs;
-		entry = {
-			...entry,
-			aboveSinceMs: null,
-			belowSinceMs,
-		};
-		if (entry.speaking && event.nowMs - belowSinceMs >= SPEAKING_REMOTE_RELEASE_MS) {
-			entry = {...entry, speaking: false};
-			commands.push({type: 'setAudioLevelSpeaking', identity: event.identity, speaking: false});
-		}
+	let entry: RemoteSpeakingAnalyserState = {
+		...existing,
+		...advanceSpeakingHysteresis(existing, event.rms, event.threshold, event.nowMs),
+	};
+	if (entry.speaking !== existing.speaking) {
+		commands.push({type: 'setAudioLevelSpeaking', identity: event.identity, speaking: entry.speaking});
 	}
 	const boostUpdate = updateRemotePlaybackBoost(entry, event.rms, event.threshold, event.nowMs);
 	entry = boostUpdate.entry;
@@ -210,26 +185,14 @@ function tickRemoteAnalyser(
 	return appendRemoteCommands({...context, analysers}, commands);
 }
 
-function detachAllRemoteAnalysers(
-	context: VoiceRemoteSpeakingMachineContext,
-	analyserSuspendedByVisibility: boolean,
-): VoiceRemoteSpeakingMachineContext {
-	if (context.analysers.size === 0) {
-		return context.analyserSuspendedByVisibility === analyserSuspendedByVisibility
-			? context
-			: {...context, analyserSuspendedByVisibility};
-	}
+function detachAllRemoteAnalysers(context: VoiceRemoteSpeakingMachineContext): VoiceRemoteSpeakingMachineContext {
+	if (context.analysers.size === 0) return context;
 	const commands: Array<VoiceRemoteSpeakingCommand> = [];
 	for (const identity of context.analysers.keys()) {
 		commands.push({type: 'setAudioLevelSpeaking', identity, speaking: false});
 		commands.push({type: 'clearPlaybackBoost', identity});
 	}
-	return appendRemoteCommands(remoteContext(new Map(), analyserSuspendedByVisibility, context.commands), commands);
-}
-
-function showRemoteAnalysers(context: VoiceRemoteSpeakingMachineContext): VoiceRemoteSpeakingMachineContext {
-	if (!context.analyserSuspendedByVisibility) return context;
-	return appendRemoteCommands({...context, analyserSuspendedByVisibility: false}, [{type: 'rehydrateRemoteAnalysers'}]);
+	return appendRemoteCommands(remoteContext(new Map(), context.commands), commands);
 }
 
 const voiceRemoteSpeakingStateMachine = setup({
@@ -245,9 +208,7 @@ const voiceRemoteSpeakingStateMachine = setup({
 			event.type === 'remote.detach' ? detachRemoteAnalyser(context, event.identity) : context,
 		),
 		tick: assign(({context, event}) => (event.type === 'remote.tick' ? tickRemoteAnalyser(context, event) : context)),
-		hide: assign(({context}) => detachAllRemoteAnalysers(context, true)),
-		show: assign(({context}) => showRemoteAnalysers(context)),
-		clear: assign(({context}) => detachAllRemoteAnalysers(context, false)),
+		clear: assign(({context}) => detachAllRemoteAnalysers(context)),
 		clearCommands: assign(({context}) => ({...context, commands: EMPTY_REMOTE_COMMANDS})),
 	},
 }).createMachine({
@@ -257,8 +218,6 @@ const voiceRemoteSpeakingStateMachine = setup({
 		'remote.attach': {actions: 'attach'},
 		'remote.detach': {actions: 'detach'},
 		'remote.tick': {actions: 'tick'},
-		'remote.visibilityHidden': {actions: 'hide'},
-		'remote.visibilityVisible': {actions: 'show'},
 		'remote.clear': {actions: 'clear'},
 		'remote.clearCommands': {actions: 'clearCommands'},
 	},

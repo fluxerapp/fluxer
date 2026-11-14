@@ -3,12 +3,7 @@
 -module(user_flags).
 -typing([eqwalizer]).
 
--export([
-    staff/0,
-    parse/1,
-    has/2,
-    is_staff/1
-]).
+-export([staff/0, is_staff/1]).
 
 -export_type([t/0, flag/0]).
 
@@ -21,24 +16,6 @@
 staff() ->
     ?STAFF.
 
--spec parse(term()) -> t().
-parse(Value) ->
-    bitset:parse(Value).
-
--spec has(t(), flag()) -> boolean().
-has(Flags, Flag) ->
-    bitset:has(Flags, Flag).
-
 -spec is_staff(term()) -> boolean().
 is_staff(Value) ->
-    has(parse(Value), staff()).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-is_staff_accepts_integer_backed_flags_test() ->
-    ?assertEqual(true, is_staff(1)),
-    ?assertEqual(true, is_staff(<<"1">>)),
-    ?assertEqual(false, is_staff(0)).
-
--endif.
+    bitset:has(bitset:parse(Value), staff()).

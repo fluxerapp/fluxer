@@ -2,25 +2,51 @@
 
 import {mapGuildToAdminResponse} from '@app/api/admin/models/GuildTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {assertCustomBadgeAssignmentLimit, assertCustomBadgeIdsOfType} from '@app/api/admin/services/AdminBadgeService';
 import type {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
-import {createGuildID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import {createGuildID, createRoleID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {hasDiscoveryAutoApproval} from '@app/api/guild/services/GuildDiscoveryService';
+import {
+	GUILD_PLANNED_JOIN_WAVES_KEY,
+	GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY,
+	staffEditTouchesInvitePause,
+} from '@app/api/guild/services/GuildInvitePauseApplier';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import {onGuildVisitSettingsChanged} from '@app/api/guild/visits/GuildVisitLifecycle';
+import {emitGuildFeaturesChanged} from '@app/api/infrastructure/activity/GuildEvents';
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import type {CustomBadgeCatalog} from '@app/api/instance/custom_badges/CustomBadgeCatalog';
 import {Logger} from '@app/api/Logger';
+import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import {UnknownGuildRoleError} from '@fluxer/errors/src/domains/guild/UnknownGuildRoleError';
 import type {
 	ClearGuildFieldsRequest,
 	TransferGuildOwnershipRequest,
 	UpdateGuildNameRequest,
 	UpdateGuildSettingsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 interface AdminGuildUpdateServiceDeps {
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
+	discoveryRepository: GuildDiscoveryRepository;
 	entityAssetService: EntityAssetService;
 	auditService: AdminAuditService;
 	updatePropagator: AdminGuildUpdatePropagator;
+	guildService: Pick<GuildService, 'withUpdateLock'>;
+	customBadgeCatalog: Pick<CustomBadgeCatalog, 'getByIds' | 'state'>;
+	schedule: Pick<IKVProvider, 'zadd' | 'zrem' | 'sadd' | 'srem'>;
+}
+
+function sameMinute(a: Date, b: Date | null): boolean {
+	return b !== null && Math.floor(a.getTime() / 60_000) === Math.floor(b.getTime() / 60_000);
 }
 
 export class AdminGuildUpdateService {
@@ -30,31 +56,93 @@ export class AdminGuildUpdateService {
 		guildId,
 		addFeatures,
 		removeFeatures,
+		plannedJoinWavesUntil,
 		adminUserId,
 		auditLogReason,
 	}: {
 		guildId: GuildID;
 		addFeatures: Array<string>;
 		removeFeatures: Array<string>;
+		plannedJoinWavesUntil?: Date | null;
 		adminUserId: UserID;
 		auditLogReason: string | null;
 	}) {
-		const {guildRepository, auditService, updatePropagator} = this.deps;
-		const guild = await guildRepository.findUnique(guildId);
-		if (!guild) {
-			throw new UnknownGuildError();
-		}
-		const newFeatures = new Set(guild.features);
-		for (const feature of addFeatures) {
-			newFeatures.add(feature);
-		}
-		for (const feature of removeFeatures) {
-			newFeatures.delete(feature);
-		}
-		const updatedGuild = await guildRepository.upsertPartial(guildId, {features: newFeatures}, guild.toRow());
+		const {guildRepository, discoveryRepository, auditService, updatePropagator, guildService, schedule} = this.deps;
+		const {guild, newFeatures, updatedGuild} = await guildService.withUpdateLock(guildId, async () => {
+			const guild = await guildRepository.findUnique(guildId);
+			if (!guild) {
+				throw new UnknownGuildError();
+			}
+			let wavesUntil = plannedJoinWavesUntil;
+			if (wavesUntil && wavesUntil.getTime() <= Date.now()) {
+				if (!sameMinute(wavesUntil, guild.plannedJoinWavesUntil)) {
+					throw InputValidationError.create('planned_join_waves_until', 'The end date must be in the future');
+				}
+				wavesUntil = undefined;
+			}
+			const newFeatures = new Set(guild.features);
+			for (const feature of addFeatures) {
+				newFeatures.add(feature);
+			}
+			for (const feature of removeFeatures) {
+				newFeatures.delete(feature);
+			}
+			if (
+				hasDiscoveryAutoApproval(newFeatures) &&
+				!newFeatures.has(GuildFeatures.DISCOVERABLE) &&
+				!removeFeatures.includes(GuildFeatures.DISCOVERABLE) &&
+				guild.memberCount >= Config.discovery.minMemberCount
+			) {
+				const application = await discoveryRepository.findByGuildId(guildId);
+				if (application?.status === DiscoveryApplicationStatus.PENDING) {
+					newFeatures.add(GuildFeatures.DISCOVERABLE);
+					newFeatures.add(GuildFeatures.VISITS_ENABLED);
+				}
+			}
+			const patch: Partial<GuildRow> = {features: newFeatures};
+			if (staffEditTouchesInvitePause(guild, [...addFeatures, ...removeFeatures])) {
+				patch.invites_paused_until = null;
+			}
+			const hasWaves = newFeatures.has(GuildFeatures.PLANNED_JOIN_WAVES);
+			if (hasWaves) {
+				if (wavesUntil !== undefined) patch.planned_join_waves_until = wavesUntil;
+			} else if (wavesUntil != null) {
+				throw InputValidationError.create(
+					'planned_join_waves_until',
+					'Planned join waves must be on to set an end date',
+				);
+			} else if (guild.plannedJoinWavesUntil !== null) {
+				patch.planned_join_waves_until = null;
+			}
+			if (hasWaves) {
+				await schedule.sadd(GUILD_PLANNED_JOIN_WAVES_KEY, guildId.toString());
+			}
+			if (patch.planned_join_waves_until) {
+				await schedule.zadd(
+					GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY,
+					patch.planned_join_waves_until.getTime(),
+					guildId.toString(),
+				);
+			}
+			const updatedGuild = await guildRepository.upsertPartial(guildId, patch, guild.toRow());
+			if (patch.planned_join_waves_until === null && guild.plannedJoinWavesUntil !== null) {
+				await schedule.zrem(GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY, guildId.toString());
+			}
+			if (!hasWaves && guild.features.has(GuildFeatures.PLANNED_JOIN_WAVES)) {
+				await schedule.srem(GUILD_PLANNED_JOIN_WAVES_KEY, guildId.toString());
+			}
+			return {guild, newFeatures, updatedGuild};
+		});
+		await onGuildVisitSettingsChanged({guildId, before: guild, after: updatedGuild});
 		await updatePropagator.dispatchGuildUpdate(guildId, updatedGuild, {
 			adminUserId,
 			reconcileDiscoveryFeature: true,
+		});
+		await emitGuildFeaturesChanged({
+			previous: guild,
+			updated: updatedGuild,
+			actorId: adminUserId,
+			source: 'staff',
 		});
 		await auditService.createAuditLog({
 			adminUserId,
@@ -66,11 +154,46 @@ export class AdminGuildUpdateService {
 				['add_features', addFeatures.join(',')],
 				['remove_features', removeFeatures.join(',')],
 				['new_features', Array.from(newFeatures).join(',')],
+				['planned_join_waves_until', updatedGuild.plannedJoinWavesUntil?.toISOString() ?? ''],
 			]),
 		});
 		return {
 			guild: mapGuildToAdminResponse(updatedGuild),
 		};
+	}
+
+	async updateGuildBadges({
+		guildId,
+		badgeIds,
+		adminUserId,
+		auditLogReason,
+	}: {
+		guildId: GuildID;
+		badgeIds: ReadonlyArray<bigint>;
+		adminUserId: UserID;
+		auditLogReason: string | null;
+	}) {
+		const {guildRepository, auditService, updatePropagator, guildService, customBadgeCatalog} = this.deps;
+		await assertCustomBadgeIdsOfType(customBadgeCatalog, 'guild', badgeIds);
+		const assigned = new Set(badgeIds);
+		const {max_per_guild: maxPerGuild} = await customBadgeCatalog.state();
+		const updatedGuild = await guildService.withUpdateLock(guildId, async () => {
+			const guild = await guildRepository.findUnique(guildId);
+			if (!guild) {
+				throw new UnknownGuildError();
+			}
+			assertCustomBadgeAssignmentLimit(guild.badgeIds, assigned, maxPerGuild);
+			return guildRepository.upsertPartial(guildId, {badge_ids: assigned.size > 0 ? assigned : null}, guild.toRow());
+		});
+		await updatePropagator.dispatchGuildUpdate(guildId, updatedGuild);
+		await auditService.createAuditLog({
+			adminUserId,
+			targetType: 'guild',
+			targetId: BigInt(guildId),
+			action: 'update_guild_badges',
+			auditLogReason,
+			metadata: new Map([['badge_ids', Array.from(assigned).join(',')]]),
+		});
 	}
 
 	async clearGuildFields(data: ClearGuildFieldsRequest, adminUserId: UserID, auditLogReason: string | null) {
@@ -121,6 +244,56 @@ export class AdminGuildUpdateService {
 			action: 'clear_fields',
 			auditLogReason,
 			metadata: new Map([['fields', data.fields.join(',')]]),
+		});
+	}
+
+	async clearRoleIcon(
+		data: {guild_id: bigint; role_id: bigint},
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	): Promise<void> {
+		const {guildRepository, entityAssetService, auditService, updatePropagator} = this.deps;
+		const guildId = createGuildID(data.guild_id);
+		const roleId = createRoleID(data.role_id);
+		const role = await guildRepository.getRole(roleId, guildId);
+		if (!role) {
+			throw new UnknownGuildRoleError();
+		}
+		const prepared = await entityAssetService.prepareAssetUpload({
+			assetType: 'role_icon',
+			entityType: 'role',
+			entityId: roleId,
+			guildId,
+			previousHash: role.iconHash,
+			base64Image: null,
+			errorPath: 'icon',
+		});
+		const updatedRole = await guildRepository.upsertRole(
+			{...role.toRow(), icon_hash: null, unicode_emoji: null},
+			role.toRow(),
+		);
+		try {
+			await entityAssetService.commitAssetChange(prepared);
+		} catch (error) {
+			Logger.error(
+				{error, guildId, previousS3Key: prepared.previousS3Key},
+				'Failed to queue cleared role icon for deletion after successful DB update',
+			);
+		}
+		await updatePropagator.dispatchGuildRoleUpdate(guildId, updatedRole);
+		await auditService.createAuditLog({
+			adminUserId,
+			targetType: 'guild',
+			targetId: BigInt(guildId),
+			action: 'clear_role_icon',
+			auditLogReason,
+			metadata: new Map(
+				[
+					['role_id', roleId.toString()],
+					['icon_hash', role.iconHash],
+					['unicode_emoji', role.unicodeEmoji],
+				].filter((entry): entry is [string, string] => entry[1] !== null),
+			),
 		});
 	}
 
@@ -197,6 +370,9 @@ export class AdminGuildUpdateService {
 		}
 		const updatedGuild =
 			Object.keys(patch).length === 0 ? guild : await guildRepository.upsertPartial(guildId, patch, guild.toRow());
+		if (updatedGuild !== guild) {
+			await onGuildVisitSettingsChanged({guildId, before: guild, after: updatedGuild});
+		}
 		await updatePropagator.dispatchGuildUpdate(guildId, updatedGuild);
 		await auditService.createAuditLog({
 			adminUserId,

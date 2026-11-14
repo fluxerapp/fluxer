@@ -3,9 +3,14 @@
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {isPendingMigratedDeviceId} from '@app/features/app/domain_migration/DomainMigrationDeviceRemap';
-import {CAMERA_DESCRIPTOR, SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CAMERA_DESCRIPTOR,
+	MEDIA_NEEDS_HTTPS_DESCRIPTOR,
+	SOMETHING_WENT_WRONG_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import BackgroundImageGalleryModal from '@app/features/theme/components/modals/BackgroundImageGalleryModal';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -19,6 +24,7 @@ import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/compo
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import styles from '@app/features/voice/components/modals/CameraPreviewModal.module.css';
 import {useMaybeVoiceRoom} from '@app/features/voice/components/VoiceRoomContext';
@@ -41,11 +47,17 @@ import {
 	formatFallbackCameraLabel,
 	VOICE_TURN_ON_CAMERA_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {
+	DEFAULT_3_DESCRIPTOR as DEFAULT_CAMERA_DESCRIPTOR,
+	MIRROR_CAMERA_DESCRIPTOR,
+	YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CameraIcon, ImageIcon} from '@phosphor-icons/react';
+import {clsx} from 'clsx';
 import type {LocalParticipant, LocalVideoTrack, Room} from 'livekit-client';
 import {createLocalVideoTrack, RoomEvent} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
@@ -65,20 +77,7 @@ const CAMERA_PREVIEW_DESCRIPTOR = msg({
 	message: 'Camera preview',
 	comment: 'Title of the camera preview modal.',
 });
-const DEFAULT_CAMERA_DESCRIPTOR = msg({
-	message: 'Default',
-	context: 'device-option',
-	comment: 'Default camera device option.',
-});
-const MIRROR_CAMERA_DESCRIPTOR = msg({
-	message: 'Mirror camera',
-	comment: 'Switch label in the camera preview modal for flipping the local camera preview horizontally.',
-});
-const YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR = msg({
-	message: "You can't turn on your camera in this channel",
-	comment:
-		'Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.',
-});
+
 const BLUR_STRENGTH_DESCRIPTOR = msg({
 	message: 'Blur strength',
 	comment: 'Slider label in the camera preview modal controlling how strong the background blur effect is.',
@@ -86,7 +85,6 @@ const BLUR_STRENGTH_DESCRIPTOR = msg({
 const logger = new Logger('CameraPreviewModal');
 
 interface CameraPreviewModalProps {
-	onEnabled?: () => void;
 	onEnableCamera?: () => void | Promise<void>;
 	showEnableCameraButton?: boolean;
 	localParticipant?: LocalParticipant;
@@ -110,7 +108,6 @@ interface CameraPreviewConfig {
 	videoDeviceId: string;
 	backgroundImageId: string;
 	backgroundBlurStrength: number;
-	mirrorCamera: boolean;
 	cameraResolution: 'low' | 'medium' | 'high';
 	videoFrameRate: number;
 }
@@ -177,7 +174,6 @@ function hasSameCameraPreviewTopology(previous: CameraPreviewConfig | null, next
 	return (
 		previous != null &&
 		previous.videoDeviceId === next.videoDeviceId &&
-		previous.mirrorCamera === next.mirrorCamera &&
 		previous.cameraResolution === next.cameraResolution &&
 		previous.videoFrameRate === next.videoFrameRate
 	);
@@ -254,7 +250,6 @@ interface CameraPreviewTrackSetupArgs {
 	videoElement: HTMLVideoElement;
 	effectiveVideoDeviceId: string | null;
 	backgroundImageId: string;
-	mirrorCamera: boolean;
 	cameraResolution: 'low' | 'medium' | 'high';
 	videoFrameRate: number;
 	isCurrentInitialization: () => boolean;
@@ -304,10 +299,7 @@ async function setupPreviewTrackAndProcessor(args: CameraPreviewTrackSetupArgs):
 	args.onResolutionNegotiated(negotiatedResolution);
 	let processor: CameraPreviewProcessor | null = null;
 	try {
-		processor = await applyBackgroundProcessor(track, {
-			backgroundImageId: args.backgroundImageId,
-			mirrorCamera: args.mirrorCamera,
-		});
+		processor = await applyBackgroundProcessor(track, {backgroundImageId: args.backgroundImageId});
 	} catch (error) {
 		logger.warn('Camera background processing failed; falling back to basic camera', {error});
 	}
@@ -335,7 +327,7 @@ interface CameraEffectStrengthSliderProps {
 const CameraEffectStrengthSlider = ({label, value, onChange, resetLabel, dataFlx}: CameraEffectStrengthSliderProps) => {
 	const {i18n} = useLingui();
 	const formatPercentage = useCallback(
-		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		(value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 		[i18n, i18n.locale],
 	);
 	const [draftValue, setDraftValueState] = useState(value);
@@ -408,13 +400,22 @@ const CameraEffectStrengthSlider = ({label, value, onChange, resetLabel, dataFlx
 const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 	const {i18n} = useLingui();
 	useMediaEngineVersion();
-	const {localParticipant, onEnabled, onEnableCamera, isCameraEnabled, showEnableCameraButton = true} = props;
+	const {localParticipant, onEnableCamera, isCameraEnabled, showEnableCameraButton = true} = props;
 	const cameraAlreadyOn = isCameraEnabled === true;
 	const voiceBackgroundsAvailable = areVoiceBackgroundsAvailable();
 	const channelId = MediaEngine.channelId;
 	const guildId = MediaEngine.guildId;
 	const canStream = !localParticipant || !guildId || !channelId || Permission.can(Permissions.STREAM, {channelId});
+	const insecureContext = isInsecureBrowserContext();
 	const cameraCapBlocked = useCameraUserCapBlocked(cameraAlreadyOn);
+	let cameraBlockedReason = i18n._(YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR);
+	if (insecureContext) {
+		cameraBlockedReason = i18n._(MEDIA_NEEDS_HTTPS_DESCRIPTOR);
+	} else if (canStream) {
+		cameraBlockedReason = i18n._(VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR, {
+			voiceChannelCameraUserLimit: VOICE_CHANNEL_CAMERA_USER_LIMIT,
+		});
+	}
 	const selectedBackgroundImageId = voiceBackgroundsAvailable ? VoiceSettings.backgroundImageId : NONE_BACKGROUND_ID;
 	const [videoDevices, setVideoDevices] = useState<Array<MediaDeviceInfo>>([]);
 	const [status, setStatus] = useState<
@@ -503,7 +504,6 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 				videoDeviceId: effectiveVideoDeviceId ?? 'default',
 				backgroundImageId,
 				backgroundBlurStrength: voiceSettings.backgroundBlurStrength,
-				mirrorCamera: voiceSettings.mirrorCamera,
 				cameraResolution: voiceSettings.getCameraResolution(),
 				videoFrameRate: voiceSettings.getVideoFrameRate(),
 			};
@@ -521,10 +521,7 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 			const activeProcessor = processorRef.current;
 			if (activeTrack && activeProcessor && hasSameCameraPreviewTopology(prevConfigRef.current, currentConfig)) {
 				try {
-					const updatedProcessor = await applyBackgroundProcessor(activeTrack, {
-						backgroundImageId,
-						mirrorCamera: currentConfig.mirrorCamera,
-					});
+					const updatedProcessor = await applyBackgroundProcessor(activeTrack, {backgroundImageId});
 					if (!isCurrentInitialization()) {
 						return;
 					}
@@ -545,7 +542,6 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 				videoElement,
 				effectiveVideoDeviceId,
 				backgroundImageId,
-				mirrorCamera: currentConfig.mirrorCamera,
 				cameraResolution: voiceSettings.getCameraResolution(),
 				videoFrameRate: voiceSettings.getVideoFrameRate(),
 				isCurrentInitialization,
@@ -595,7 +591,6 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 		try {
 			if (!localParticipant) {
 				await onEnableCamera?.();
-				onEnabled?.();
 				ModalCommands.pop();
 				return;
 			}
@@ -609,7 +604,6 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 							effectiveVideoDeviceId && effectiveVideoDeviceId !== 'default' ? effectiveVideoDeviceId : undefined,
 					}));
 			await enableCamera();
-			onEnabled?.();
 			ModalCommands.pop();
 		} catch (_err) {
 			showGenericErrorModal({
@@ -618,7 +612,7 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 				dataFlx: 'voice.camera-preview-modal.enable-camera-error-modal',
 			});
 		}
-	}, [i18n, localParticipant, onEnabled, onEnableCamera, videoDevices]);
+	}, [i18n, localParticipant, onEnableCamera, videoDevices]);
 	useEffect(() => {
 		isMountedRef.current = true;
 		const unsubscribeDevices = VoiceDevicePermissionState.subscribe(handleDeviceUpdate);
@@ -629,7 +623,13 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 				if (!granted) {
 					logger.warn('Camera permission was not granted for preview');
 					setStatus('error');
-					setError(i18n._(FAILED_TO_START_CAMERA_PREVIEW_PLEASE_CHECK_YOUR_DESCRIPTOR));
+					setError(
+						i18n._(
+							isInsecureBrowserContext()
+								? MEDIA_NEEDS_HTTPS_DESCRIPTOR
+								: FAILED_TO_START_CAMERA_PREVIEW_PLEASE_CHECK_YOUR_DESCRIPTOR,
+						),
+					);
 				}
 			})
 			.catch((error) => {
@@ -671,7 +671,6 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 			videoDeviceId: voiceSettings.videoDeviceId,
 			backgroundImageId,
 			backgroundBlurStrength: voiceSettings.backgroundBlurStrength,
-			mirrorCamera: voiceSettings.mirrorCamera,
 			cameraResolution: voiceSettings.getCameraResolution(),
 			videoFrameRate: voiceSettings.getVideoFrameRate(),
 		};
@@ -685,14 +684,13 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 		VoiceSettings.videoDeviceId,
 		VoiceSettings.backgroundImageId,
 		VoiceSettings.backgroundBlurStrength,
-		VoiceSettings.mirrorCamera,
 		VoiceSettings.getCameraResolution(),
 		VoiceSettings.getVideoFrameRate(),
 		voiceBackgroundsAvailable,
 	]);
 	const voiceSettings = VoiceSettings;
 	const effectiveVideoDeviceId = resolveEffectiveDeviceId(voiceSettings.videoDeviceId, videoDevices) ?? 'default';
-	const previewVideoClassName = styles.video;
+	const previewVideoClassName = clsx(styles.video, voiceSettings.mirrorCamera && styles.mirroredVideo);
 	const videoDeviceOptions =
 		videoDevices.length > 0
 			? videoDevices.map((device) => ({
@@ -703,6 +701,14 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 							: device.label || formatFallbackCameraLabel(i18n),
 				}))
 			: [{value: 'default', label: i18n._(DEFAULT_CAMERA_DESCRIPTOR)}];
+	let overlayStatusText: React.ReactNode;
+	if (status === 'fixing') {
+		overlayStatusText = <Trans>Optimizing camera...</Trans>;
+	} else if (status === 'fix-switching-back') {
+		overlayStatusText = <Trans>Finalizing camera...</Trans>;
+	} else {
+		overlayStatusText = <Trans>Initializing camera...</Trans>;
+	}
 	return (
 		<Modal.Root size="medium" data-flx="voice.camera-preview-modal.camera-preview-modal-content.modal-root">
 			<Modal.Header
@@ -783,13 +789,7 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 										className={styles.overlayTextMedium}
 										data-flx="voice.camera-preview-modal.camera-preview-modal-content.overlay-text-medium"
 									>
-										{status === 'fixing' ? (
-											<Trans>Optimizing camera...</Trans>
-										) : status === 'fix-switching-back' ? (
-											<Trans>Finalizing camera...</Trans>
-										) : (
-											<Trans>Initializing camera...</Trans>
-										)}
+										{overlayStatusText}
 									</div>
 								</div>
 							</div>
@@ -847,7 +847,7 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 				</Button>
 				{showEnableCameraButton &&
 					!cameraAlreadyOn &&
-					(canStream && !cameraCapBlocked ? (
+					(canStream && !cameraCapBlocked && !insecureContext ? (
 						<Button
 							onClick={handleEnableCamera}
 							leftIcon={
@@ -862,13 +862,7 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 						</Button>
 					) : (
 						<Tooltip
-							text={
-								canStream
-									? i18n._(VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR, {
-											voiceChannelCameraUserLimit: VOICE_CHANNEL_CAMERA_USER_LIMIT,
-										})
-									: i18n._(YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR)
-							}
+							text={cameraBlockedReason}
 							data-flx="voice.camera-preview-modal.camera-preview-modal-content.tooltip"
 						>
 							<Button

@@ -140,8 +140,11 @@ export function selectChannelMessagesLoadRestoresTrust(input: {
 	return input.isAfter && !input.hasMoreAfter;
 }
 
-export function selectChannelMessagesWindowBar(status: ChannelMessagesWindowStatus): ChannelMessagesWindowBar {
+export function selectChannelMessagesWindowBar(
+	status: ChannelMessagesWindowStatus,
+	restoredPending = false,
+): ChannelMessagesWindowBar {
 	if (status.phase === 'placeholder') return 'none';
 	if (status.phase === 'retry' || status.retryVisible) return 'retry';
-	return status.newerPageAvailable ? 'present' : 'none';
+	return status.newerPageAvailable && !restoredPending ? 'present' : 'none';
 }

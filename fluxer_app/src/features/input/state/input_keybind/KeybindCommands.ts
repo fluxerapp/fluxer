@@ -89,10 +89,16 @@ const KEYBIND_COMMAND_VALUES = [
 	'system_toggle_settings',
 	'system_toggle_shortcuts_overlay',
 	'system_open_theme_studio_popout',
+	'system_toggle_custom_css',
 	'system_zoom_in',
 	'system_zoom_out',
 	'system_zoom_reset',
 	'system_open_account_switcher',
+	'system_switch_account_next',
+	'system_switch_account_prev',
+	'system_switch_account_recent',
+	'system_jump_account_mention',
+	'nav_quick_switcher_accounts',
 	'system_switch_account_slot_1',
 	'system_switch_account_slot_2',
 	'system_switch_account_slot_3',
@@ -117,6 +123,20 @@ export const ACCOUNT_SWITCHER_SLOT_ACTIONS: ReadonlyArray<KeybindCommand> = Obje
 	'system_switch_account_slot_8',
 	'system_switch_account_slot_9',
 ]);
+
+const ACCOUNT_KEYBIND_ACTIONS: ReadonlyArray<KeybindCommand> = Object.freeze([
+	'system_open_account_switcher',
+	'system_switch_account_next',
+	'system_switch_account_prev',
+	'system_switch_account_recent',
+	'system_jump_account_mention',
+	'nav_quick_switcher_accounts',
+	...ACCOUNT_SWITCHER_SLOT_ACTIONS,
+]);
+
+const ACCOUNT_KEYBIND_ACTION_SET = new Set<string>(ACCOUNT_KEYBIND_ACTIONS);
+export const isAccountKeybindCommand = (value: unknown): value is KeybindCommand =>
+	typeof value === 'string' && ACCOUNT_KEYBIND_ACTION_SET.has(value);
 
 const KEYBIND_COMMAND_SET = new Set<string>(KEYBIND_COMMAND_VALUES);
 export const isKeybindCommand = (value: unknown): value is KeybindCommand =>

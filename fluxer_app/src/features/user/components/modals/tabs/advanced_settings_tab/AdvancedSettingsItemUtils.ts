@@ -13,3 +13,7 @@ export function getAdvancedSettingSourceTab(item: SearchableSettingItem): UserSe
 export function getAdvancedSettingSourceSection(item: SearchableSettingItem): UserSettingsSubtabType | undefined {
 	return (item.sourceSectionId ?? item.sectionId) as UserSettingsSubtabType | undefined;
 }
+
+export function getAdvancedSettingRowElementId(itemId: string): string {
+	return `advanced-setting-${itemId}`;
+}

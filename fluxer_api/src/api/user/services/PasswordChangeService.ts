@@ -11,6 +11,7 @@ import {
 	generateChangeVerificationCode,
 	getActiveChangeTicketForUser,
 } from '@app/api/user/services/UserChangeChallengeUtils';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {ms} from 'itty-time';
@@ -48,7 +49,7 @@ export class PasswordChangeService {
 		const now = new Date();
 		const code = generateChangeVerificationCode();
 		const codeExpiresAt = new Date(now.getTime() + this.CODE_TTL_MS);
-		await email.sendPasswordChangeVerification(user.email, user.username, code, user.locale);
+		await email.send('password_change_verification', user.email, {code}, user.locale);
 		await this.repo.createTicket({
 			ticket,
 			user_id: user.id,
@@ -83,7 +84,7 @@ export class PasswordChangeService {
 		const now = new Date();
 		const code = generateChangeVerificationCode();
 		const codeExpiresAt = new Date(now.getTime() + this.CODE_TTL_MS);
-		await email.sendPasswordChangeVerification(user.email, user.username, code, user.locale);
+		await email.send('password_change_verification', user.email, {code}, user.locale);
 		row.code = code;
 		row.code_sent_at = now;
 		row.code_expires_at = codeExpiresAt;
@@ -127,7 +128,7 @@ export class PasswordChangeService {
 		if (await AuthPassword.isPasswordPwned(this.apiContext, newPassword)) {
 			throw InputValidationError.fromCode('new_password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 		}
-		const newPasswordHash = await AuthPassword.hashPassword(this.apiContext, newPassword);
+		const newPasswordHash = await hashPassword(newPassword);
 		await users.patchUpsert(user.id, {
 			password_hash: newPasswordHash,
 			password_last_changed_at: new Date(),
@@ -143,7 +144,7 @@ export class PasswordChangeService {
 		if (await AuthPassword.isPasswordPwned(this.apiContext, newPassword)) {
 			throw InputValidationError.fromCode('new_password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 		}
-		const newPasswordHash = await AuthPassword.hashPassword(this.apiContext, newPassword);
+		const newPasswordHash = await hashPassword(newPassword);
 		return await users.patchUpsert(
 			user.id,
 			{

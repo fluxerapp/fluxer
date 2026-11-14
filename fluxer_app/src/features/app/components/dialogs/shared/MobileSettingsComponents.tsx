@@ -10,10 +10,10 @@ import {usePressable} from '@app/features/app/hooks/usePressable';
 import {GO_BACK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import type {TabData} from '@app/features/ui/state/UnsavedChanges';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type {Icon, IconWeight} from '@phosphor-icons/react';
-import {ArrowLeftIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
@@ -107,7 +107,6 @@ export const MobileHeaderWithBanner: React.FC<MobileHeaderWithBannerProps> = obs
 									flashBanner ? headerStyles.bannerTextWhite : headerStyles.bannerTextPrimary
 								}`}
 								actionsClassName={headerStyles.bannerActions}
-								smallActions={true}
 								defaultSaveLabel={<Trans>Save</Trans>}
 								dataFlx={{
 									textContainer: 'app.mobile-settings-components.mobile-header-with-banner.div--2',
@@ -266,7 +265,6 @@ interface MobileSettingsListProps<T extends SettingsTab> {
 	footer?: React.ReactNode;
 	categoryLabels?: Record<string, string>;
 	hiddenCategories?: Array<string>;
-	additionalContent?: React.ReactNode;
 	dangerContent?: React.ReactNode;
 	scrollRef?: React.Ref<ScrollerHandle>;
 	onScroll?: (event: UIEvent<HTMLDivElement>) => void;
@@ -278,7 +276,6 @@ export const MobileSettingsList = observer(function MobileSettingsList<T extends
 	footer,
 	categoryLabels = {},
 	hiddenCategories = [],
-	additionalContent,
 	dangerContent,
 	scrollRef,
 	onScroll,
@@ -360,14 +357,6 @@ export const MobileSettingsList = observer(function MobileSettingsList<T extends
 					>
 						{dangerContent}
 					</div>
-				</div>
-			)}
-			{additionalContent && (
-				<div
-					className={styles.extraContent}
-					data-flx="app.mobile-settings-components.mobile-settings-list.additional-content"
-				>
-					{additionalContent}
 				</div>
 			)}
 			{footer && (

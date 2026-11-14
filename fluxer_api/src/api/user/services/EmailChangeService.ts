@@ -2,10 +2,14 @@
 
 import {randomUUID} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
+import {assertEmailSendAllowed, budgetEnvFor, recordEmailSend} from '@app/api/auth/AccountBudgets';
+import {normalizeEmailKey} from '@app/api/auth/AccountCodes';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
+import {assertInstanceAcceptsEmailDomain} from '@app/api/auth/AuthRegistration';
 import {assertEmailNotBlocklisted} from '@app/api/auth/EmailBlocklist';
 import type {User} from '@app/api/models/User';
 import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
+import {getAccountTier} from '@app/api/user/AccountTier';
 import type {EmailChangeRepository} from '@app/api/user/repositories/auth/EmailChangeRepository';
 import {
 	assertChangeCooldown,
@@ -13,6 +17,7 @@ import {
 	generateChangeVerificationCode,
 	getActiveChangeTicketForUser,
 } from '@app/api/user/services/UserChangeChallengeUtils';
+import {AccountTiers} from '@fluxer/constants/src/AccountTierConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -51,7 +56,7 @@ export class EmailChangeService {
 
 	async start(user: User): Promise<StartEmailChangeResult> {
 		const {email, rateLimit} = this.apiContext.services;
-		const isUnclaimed = user.isUnclaimedAccount();
+		const isUnclaimed = getAccountTier(user) === AccountTiers.UNCLAIMED;
 		const hasEmail = !!user.email;
 		if (!hasEmail && !isUnclaimed) {
 			throw InputValidationError.fromCode('email', ValidationErrorCodes.MUST_HAVE_EMAIL_TO_CHANGE_IT);
@@ -71,7 +76,7 @@ export class EmailChangeService {
 			originalCode = generateChangeVerificationCode();
 			originalCodeExpiresAt = new Date(now.getTime() + this.ORIGINAL_CODE_TTL_MS);
 			originalCodeSentAt = now;
-			await email.sendEmailChangeOriginal(user.email!, user.username, originalCode, user.locale);
+			await email.send('email_change_original', user.email, {code: originalCode}, user.locale);
 		}
 		const originalProof = requireOriginal ? null : randomUUID();
 		await this.repo.createTicket({
@@ -120,7 +125,7 @@ export class EmailChangeService {
 		const now = new Date();
 		const originalCode = generateChangeVerificationCode();
 		const originalCodeExpiresAt = new Date(now.getTime() + this.ORIGINAL_CODE_TTL_MS);
-		await email.sendEmailChangeOriginal(row.original_email, user.username, originalCode, user.locale);
+		await email.send('email_change_original', row.original_email, {code: originalCode}, user.locale);
 		row.original_code = originalCode;
 		row.original_code_sent_at = now;
 		row.original_code_expires_at = originalCodeExpiresAt;
@@ -160,9 +165,10 @@ export class EmailChangeService {
 		ticket: string,
 		newEmail: string,
 		originalProof: string,
+		clientIp: string,
 		newPassword?: string,
 	): Promise<RequestNewEmailResult> {
-		const {email, emailDnsValidation, users, rateLimit} = this.apiContext.services;
+		const {emailDnsValidation, users, rateLimit} = this.apiContext.services;
 		const row = await getActiveChangeTicketForUser(this.repo, ticket, user.id);
 		if (!row.original_verified || !row.original_proof) {
 			throw InputValidationError.fromCode('ticket', ValidationErrorCodes.ORIGINAL_EMAIL_MUST_BE_VERIFIED_FIRST);
@@ -178,6 +184,7 @@ export class EmailChangeService {
 			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.NEW_EMAIL_MUST_BE_DIFFERENT);
 		}
 		await assertEmailNotBlocklisted(trimmedEmail, 'new_email');
+		await assertInstanceAcceptsEmailDomain(trimmedEmail, 'new_email');
 		const hasValidDns = await emailDnsValidation.hasValidDnsRecords(trimmedEmail);
 		if (!hasValidDns) {
 			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
@@ -198,7 +205,7 @@ export class EmailChangeService {
 		const now = new Date();
 		const newCode = generateChangeVerificationCode();
 		const newCodeExpiresAt = new Date(now.getTime() + this.NEW_CODE_TTL_MS);
-		await email.sendEmailChangeNew(trimmedEmail, user.username, newCode, user.locale);
+		await this.sendNewEmailCode(user, trimmedEmail, newCode, clientIp);
 		row.new_email = trimmedEmail;
 		row.new_code = newCode;
 		row.new_code_sent_at = now;
@@ -214,8 +221,8 @@ export class EmailChangeService {
 		};
 	}
 
-	async resendNew(user: User, ticket: string): Promise<void> {
-		const {email, rateLimit} = this.apiContext.services;
+	async resendNew(user: User, ticket: string, clientIp: string): Promise<void> {
+		const {rateLimit} = this.apiContext.services;
 		const row = await getActiveChangeTicketForUser(this.repo, ticket, user.id);
 		if (!row.new_email) {
 			throw InputValidationError.fromCode('ticket', ValidationErrorCodes.NO_NEW_EMAIL_REQUESTED);
@@ -229,12 +236,25 @@ export class EmailChangeService {
 		const now = new Date();
 		const newCode = generateChangeVerificationCode();
 		const newCodeExpiresAt = new Date(now.getTime() + this.NEW_CODE_TTL_MS);
-		await email.sendEmailChangeNew(row.new_email, user.username, newCode, user.locale);
+		await this.sendNewEmailCode(user, row.new_email, newCode, clientIp);
 		row.new_code = newCode;
 		row.new_code_sent_at = now;
 		row.new_code_expires_at = newCodeExpiresAt;
 		row.updated_at = now;
 		await this.repo.updateTicket(row);
+	}
+
+	private async sendNewEmailCode(user: User, newEmail: string, code: string, clientIp: string): Promise<void> {
+		const {email} = this.apiContext.services;
+		const budget = budgetEnvFor(this.apiContext.services, null);
+		const emailKey = normalizeEmailKey(newEmail);
+		await assertEmailSendAllowed(budget, {
+			emailKey,
+			requester: 'unknown',
+			clientIp,
+		});
+		await email.send('email_change_new', newEmail, {code}, user.locale);
+		await recordEmailSend(budget, {emailKey, requester: 'unknown'});
 	}
 
 	async verifyNew(user: User, ticket: string, code: string, originalProof: string): Promise<string> {
@@ -286,18 +306,18 @@ export class EmailChangeService {
 		await this.repo.deleteToken(token);
 	}
 
-	async requestBouncedNewEmail(user: User, newEmail: string): Promise<RequestNewEmailResult> {
+	async requestBouncedNewEmail(user: User, newEmail: string, clientIp: string): Promise<RequestNewEmailResult> {
 		this.ensureBouncedEmailRecoveryAllowed(user);
 		const startResult = await this.start(user);
 		if (startResult.require_original || !startResult.original_proof) {
 			throw InputValidationError.fromCode('ticket', ValidationErrorCodes.ORIGINAL_EMAIL_MUST_BE_VERIFIED_FIRST);
 		}
-		return await this.requestNewEmail(user, startResult.ticket, newEmail, startResult.original_proof);
+		return await this.requestNewEmail(user, startResult.ticket, newEmail, startResult.original_proof, clientIp);
 	}
 
-	async resendBouncedNew(user: User, ticket: string): Promise<void> {
+	async resendBouncedNew(user: User, ticket: string, clientIp: string): Promise<void> {
 		this.ensureBouncedEmailRecoveryAllowed(user);
-		await this.resendNew(user, ticket);
+		await this.resendNew(user, ticket, clientIp);
 	}
 
 	async verifyBouncedNew(user: User, ticket: string, code: string): Promise<User> {

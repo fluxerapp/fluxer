@@ -16,7 +16,7 @@
 	padding: 0 var(--input-container-padding);
 	background: transparent;
 	border: none;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	transition: background-color var(--transition-fast);
 }
@@ -168,8 +168,6 @@
 	font-weight: 600;
 	color: var(--text-primary-muted);
 	font-size: 0.75rem;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
 }
 
 .avatarPreview {

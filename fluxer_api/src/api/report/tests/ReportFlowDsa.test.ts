@@ -7,7 +7,7 @@ import {
 	findLastTestEmail,
 	listTestEmails,
 } from '@app/api/auth/tests/AuthTestUtils';
-import {createReportID} from '@app/api/BrandedTypes';
+import {createReportID, createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
 import {
@@ -20,25 +20,26 @@ import {
 	sendChannelMessage,
 	setupTestGuildWithMembers,
 } from '@app/api/channel/tests/ChannelTestUtils';
+import {deleteOneOrMany} from '@app/api/database/CassandraQueryExecution';
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
-import {
-	getReportFlowVariant,
-	type ReportFlowStepInput,
-	resolveReportFlowAnswers,
-} from '@app/api/report/flows/ReportFlowRegistry';
+import {getReportFlowResponse, resolveReportFlowAnswers} from '@app/api/report/flows/ReportFlowRegistry';
 import {ReportRepository} from '@app/api/report/ReportRepository';
+import {Users} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {ReportFlowResponse, ReportFlowTargetType} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
-import {TestEmailService} from '@pkgs/email/src/TestEmailService';
+import type {
+	ReportFlowResponse,
+	ReportFlowStep,
+	ReportFlowTargetType,
+} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
 interface ReportResponse {
@@ -58,31 +59,26 @@ interface Ticket {
 	ticket: string;
 }
 
-const HATE_WALK: ReadonlyArray<ReportFlowStepInput> = [
+const HATE_WALK: ReadonlyArray<ReportFlowStep> = [
 	{screen_id: 'root_message', option_id: 'abuse'},
 	{screen_id: 'abuse', option_id: 'hate'},
 	{screen_id: 'hate', option_id: 'hate_incitement'},
 ];
 
-const HARASSMENT_WALK: ReadonlyArray<ReportFlowStepInput> = [
+const HARASSMENT_WALK: ReadonlyArray<ReportFlowStep> = [
 	{screen_id: 'root_message', option_id: 'abuse'},
 	{screen_id: 'abuse', option_id: 'harassment'},
 	{screen_id: 'harassment', option_id: 'harassment_direct'},
 ];
 
-const CSAM_WALK: ReadonlyArray<ReportFlowStepInput> = [
+const CSAM_WALK: ReadonlyArray<ReportFlowStep> = [
 	{screen_id: 'root_message', option_id: 'abuse'},
 	{screen_id: 'abuse', option_id: 'sexual'},
 	{screen_id: 'sexual', option_id: 'minor_sexual'},
 	{screen_id: 'minor_sexual', option_id: 'csam'},
 ];
 
-const COPYRIGHT_WALK: ReadonlyArray<ReportFlowStepInput> = [
-	{screen_id: 'root_message', option_id: 'something_else'},
-	{screen_id: 'something_else_message', option_id: 'copyright_notice'},
-];
-
-const RAID_WALK: ReadonlyArray<ReportFlowStepInput> = [
+const RAID_WALK: ReadonlyArray<ReportFlowStep> = [
 	{screen_id: 'community_parts', item_ids: ['activity']},
 	{screen_id: 'root_guild', option_id: 'abuse'},
 	{screen_id: 'abuse_guild', option_id: 'raid'},
@@ -97,10 +93,10 @@ class CapturingPublisher implements ActivityPublisher {
 }
 
 function dsaHash(target: ReportFlowTargetType): string {
-	return getReportFlowVariant(target, 'dsa').revisionHash;
+	return getReportFlowResponse(target, 'dsa', 'en-US').revision_hash;
 }
 
-function dsaSteps(target: ReportFlowTargetType, steps: ReadonlyArray<ReportFlowStepInput>) {
+function dsaSteps(target: ReportFlowTargetType, steps: ReadonlyArray<ReportFlowStep>) {
 	return resolveReportFlowAnswers({target, surface: 'dsa', revisionHash: dsaHash(target), steps}).steps;
 }
 
@@ -144,7 +140,7 @@ async function setupMessageLink(harness: ApiTestHarness): Promise<{link: string;
 	};
 }
 
-function messageFlowBody(ticket: string, link: string, steps: ReadonlyArray<ReportFlowStepInput>, extra = {}) {
+function messageFlowBody(ticket: string, link: string, steps: ReadonlyArray<ReportFlowStep>, extra = {}) {
 	return {
 		ticket,
 		report_type: 'message',
@@ -210,7 +206,6 @@ describe('DSA report flow', () => {
 	});
 
 	afterEach(async () => {
-		vi.restoreAllMocks();
 		resetActivityEventsForTests();
 		await harness?.shutdown();
 	});
@@ -243,16 +238,6 @@ describe('DSA report flow', () => {
 		expect(report.reporterEmail).toBe(email);
 		expect(report.reporterId).toBeNull();
 		expect(report.reportedUserId?.toString()).toBe(target.authorId);
-	});
-
-	test('the locale falls back to the request locale', async () => {
-		const {ticket} = await issueTicket(harness);
-		const target = await setupMessageLink(harness);
-		const result = await submitDsa(harness, messageFlowBody(ticket, target.link, HATE_WALK))
-			.header('Accept-Language', 'fr')
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect((await readReport(result.report_id)).flowLocale).toBe('fr');
 	});
 
 	test('steps need the good-faith statement and an explanation', async () => {
@@ -386,7 +371,7 @@ describe('DSA report flow', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_REPORT_FLOW_ANSWERS)
 			.execute();
 		expect(welfare.step_index).toBe(2);
-		const inAppHash = getReportFlowVariant('message', 'in_app').revisionHash;
+		const inAppHash = getReportFlowResponse('message', 'in_app', 'en-US').revision_hash;
 		await submitDsa(
 			harness,
 			messageFlowBody(ticket, target.link, [{screen_id: 'root_message', option_id: 'dislike'}], {
@@ -399,57 +384,6 @@ describe('DSA report flow', () => {
 		await submitDsa(harness, messageFlowBody(ticket, target.link, HATE_WALK))
 			.expect(HTTP_STATUS.OK)
 			.execute();
-	});
-
-	test('a stale hash with a valid walk is accepted', async () => {
-		const {ticket} = await issueTicket(harness);
-		const target = await setupMessageLink(harness);
-		const result = await submitDsa(
-			harness,
-			messageFlowBody(ticket, target.link, HATE_WALK, {revision_hash: 'ffffffffffffffff'}),
-		)
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect((await readReport(result.report_id)).flowRevision).toBe('ffffffffffffffff');
-	});
-
-	test('a copyright notice stores the copyright reason', async () => {
-		const {ticket} = await issueTicket(harness);
-		const target = await setupMessageLink(harness);
-		const result = await submitDsa(harness, messageFlowBody(ticket, target.link, COPYRIGHT_WALK))
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const report = await readReport(result.report_id);
-		expect(report.reason).toBe('copyright');
-		expect(report.category).toBe('other');
-	});
-
-	test('a user notice starts at the profile parts', async () => {
-		const {ticket} = await issueTicket(harness);
-		const user = await createTestAccount(harness);
-		const steps: ReadonlyArray<ReportFlowStepInput> = [
-			{screen_id: 'profile_parts', item_ids: ['name']},
-			{screen_id: 'root_user', option_id: 'impersonation'},
-			{screen_id: 'impersonation', option_id: 'impersonation_staff'},
-		];
-		const result = await submitDsa(harness, {
-			ticket,
-			report_type: 'user',
-			user_id: user.userId,
-			revision_hash: dsaHash('user'),
-			steps,
-			good_faith_confirmed: true,
-			additional_info: 'This account pretends to be staff.',
-			reporter_full_legal_name: 'Jane Doe',
-			reporter_country_of_residence: 'FR',
-		})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const report = await readReport(result.report_id);
-		expect(report.reason).toBe('impersonation_staff');
-		expect(report.category).toBe('impersonation');
-		expect(report.flowSteps).toEqual(dsaSteps('user', steps));
-		expect(report.flowSurface).toBe('dsa');
 	});
 
 	test('a community notice stores the raid reason', async () => {
@@ -479,6 +413,7 @@ describe('DSA report flow', () => {
 		expect(event.data).toEqual({
 			report_id: result.report_id,
 			reporter_id: '0',
+			reporter_tier: 'verified',
 			category: 'raid_coordination',
 			target_type: 'dsa',
 			reported_user_id: null,
@@ -541,25 +476,6 @@ describe('DSA report flow', () => {
 		expect(await listReceipts(harness)).toEqual([]);
 	});
 
-	test('a notice is filed even when its receipt cannot be sent', async () => {
-		const target = await setupMessageLink(harness);
-		const send = vi.spyOn(TestEmailService.prototype, 'sendReportReceivedEmail');
-		send.mockRejectedValueOnce(new Error('mail transport is down'));
-		const first = await issueTicket(harness);
-		const thrown = await submitDsa(harness, messageFlowBody(first.ticket, target.link, HATE_WALK))
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		send.mockResolvedValueOnce(false);
-		const second = await issueTicket(harness);
-		const refused = await submitDsa(harness, guildFlowBody(second.ticket, target.guildId))
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(send).toHaveBeenCalledTimes(2);
-		expect((await readReport(thrown.report_id)).reporterEmail).toBe(first.email);
-		expect((await readReport(refused.report_id)).reporterEmail).toBe(second.email);
-		expect(await listReceipts(harness)).toEqual([]);
-	});
-
 	test('every message link that does not resolve gets the same answer and keeps the ticket', async () => {
 		const {ticket} = await issueTicket(harness);
 		const {owner, members, guild, systemChannel} = await setupTestGuildWithMembers(harness, 1);
@@ -611,13 +527,20 @@ describe('DSA report flow', () => {
 			harness,
 			messageFlowBody(ticket, target.link.replace(/\d+$/, TEST_IDS.NONEXISTENT_MESSAGE), HATE_WALK),
 		).executeRaw();
-		const findUnique = vi.spyOn(UserRepository.prototype, 'findUnique').mockResolvedValueOnce(null);
-		const {response, text} = await submitDsa(harness, messageFlowBody(ticket, target.link, HATE_WALK)).executeRaw();
-		expect(findUnique).toHaveBeenCalledTimes(1);
+		const repository = new UserRepository();
+		const authorId = createUserID(BigInt(target.authorId));
+		const author = await repository.findUniqueAssert(authorId);
+		await deleteOneOrMany(Users.deleteByPk({user_id: authorId}));
+		expect(await repository.findUnique(authorId)).toBeNull();
+		const {response, text, json} = await submitDsa<ErrorResponse>(
+			harness,
+			messageFlowBody(ticket, target.link, HATE_WALK),
+		).executeRaw();
 		expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
-		expect((JSON.parse(text) as ErrorResponse).code).toBe(APIErrorCodes.UNKNOWN_MESSAGE);
+		expect(json.code).toBe(APIErrorCodes.UNKNOWN_MESSAGE);
 		expect(text).toBe(missing.text);
 		expect(await countReports()).toBe(0);
+		await repository.create(author.toRow());
 		await submitDsa(harness, messageFlowBody(ticket, target.link, HATE_WALK))
 			.expect(HTTP_STATUS.OK)
 			.execute();

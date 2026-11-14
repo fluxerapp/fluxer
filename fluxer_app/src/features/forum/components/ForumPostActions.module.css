@@ -8,6 +8,6 @@
 	align-items: center;
 	gap: 0.5rem;
 	padding: 0.5rem 0 0.75rem;
-	margin-right: 1rem;
+	margin-inline-end: 1rem;
 	border-bottom: 0.0625rem solid var(--background-modifier-accent);
 }

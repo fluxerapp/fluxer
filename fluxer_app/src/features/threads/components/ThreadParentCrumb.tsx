@@ -6,7 +6,7 @@ import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import styles from '@app/features/threads/components/ThreadParentCrumb.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {CaretRightIcon} from '@phosphor-icons/react';
+import {CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {observer} from 'mobx-react-lite';
 
 export const ThreadParentCrumb = observer(({thread, iconClassName}: {thread: Channel; iconClassName?: string}) => {

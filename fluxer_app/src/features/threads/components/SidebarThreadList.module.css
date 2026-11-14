@@ -15,19 +15,19 @@
 .threadRow {
 	position: relative;
 	padding-top: 0.0625rem;
-	padding-left: 1.75rem;
+	padding-inline-start: 1.75rem;
 }
 
 .spine {
 	position: absolute;
 	top: 0;
 	bottom: calc(1rem - var(--thread-spine-width) / 2);
-	left: var(--thread-spine-left);
+	inset-inline-start: var(--thread-spine-left);
 	box-sizing: border-box;
 	width: calc(var(--thread-spine-reach) + var(--thread-spine-width));
-	border-left: var(--thread-spine-width) solid var(--thread-spine-color);
+	border-inline-start: var(--thread-spine-width) solid var(--thread-spine-color);
 	border-bottom: var(--thread-spine-width) solid var(--thread-spine-color);
-	border-bottom-left-radius: var(--thread-spine-radius);
+	border-end-start-radius: var(--thread-spine-radius);
 	pointer-events: none;
 }
 
@@ -35,14 +35,14 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	left: var(--thread-spine-left);
+	inset-inline-start: var(--thread-spine-left);
 	width: var(--thread-spine-width);
 	background-color: var(--thread-spine-color);
 	pointer-events: none;
 }
 
 .threadRow .threadItem {
-	padding-left: 0.375rem;
+	padding-inline-start: 0.375rem;
 }
 
 .threadRow .threadName {

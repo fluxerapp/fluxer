@@ -3,10 +3,11 @@
 import styles from '@app/features/ui/action_menu/MenuItem.module.css';
 import {Slider} from '@app/features/ui/components/Slider';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {ContextMenu as BaseContextMenu} from '@base-ui/react/context-menu';
-import {useLingui} from '@lingui/react/macro';
+import {useLingui} from '@lingui/react';
 import {clsx} from 'clsx';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 interface MenuItemSliderProps {
 	label: string;
@@ -21,14 +22,17 @@ interface MenuItemSliderProps {
 
 export const MenuItemSlider = React.forwardRef<HTMLDivElement, MenuItemSliderProps>(
 	({label, value, minValue = 0, maxValue = 100, disabled = false, onChange, onFormat, step = 1}, forwardedRef) => {
-		const {i18n} = useLingui();
+		useLingui();
 		const [localValue, setLocalValue] = useState(value);
+		const localValueRef = useRef(value);
+		localValueRef.current = localValue;
 		useEffect(() => {
 			setLocalValue(value);
 		}, [value]);
-		const formattedValue = onFormat ? onFormat(localValue) : formatRoundedPercentage(i18n.locale, localValue);
+		const formattedValue = onFormat ? onFormat(localValue) : formatRoundedPercentage(getFormattingLocale(), localValue);
 		const handleValueChange = useCallback(
 			(newValue: number) => {
+				localValueRef.current = newValue;
 				setLocalValue(newValue);
 				onChange?.(newValue);
 			},
@@ -43,6 +47,39 @@ export const MenuItemSlider = React.forwardRef<HTMLDivElement, MenuItemSliderPro
 		const stopPropagation = useCallback((e: React.SyntheticEvent) => {
 			e.stopPropagation();
 		}, []);
+		const handleKeyDown = useCallback(
+			(event: React.KeyboardEvent<HTMLDivElement>) => {
+				if (disabled) return;
+				const current = localValueRef.current;
+				let next: number;
+				switch (event.key) {
+					case 'ArrowRight':
+						next = current + step;
+						break;
+					case 'ArrowLeft':
+						next = current - step;
+						break;
+					case 'PageUp':
+						next = current + step * 10;
+						break;
+					case 'PageDown':
+						next = current - step * 10;
+						break;
+					case 'Home':
+						next = minValue;
+						break;
+					case 'End':
+						next = maxValue;
+						break;
+					default:
+						return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				handleValueChange(Math.min(maxValue, Math.max(minValue, next)));
+			},
+			[disabled, step, minValue, maxValue, handleValueChange],
+		);
 		return (
 			<BaseContextMenu.Item
 				ref={forwardedRef}
@@ -52,6 +89,14 @@ export const MenuItemSlider = React.forwardRef<HTMLDivElement, MenuItemSliderPro
 				disabled={disabled}
 				closeOnClick={false}
 				label={label}
+				role="slider"
+				aria-label={label}
+				aria-valuemin={minValue}
+				aria-valuemax={maxValue}
+				aria-valuenow={localValue}
+				aria-valuetext={formattedValue}
+				aria-orientation="horizontal"
+				onKeyDown={handleKeyDown}
 				data-flx="ui.action-menu.menu-item-slider.slider-item"
 			>
 				{/* biome-ignore lint/a11y/noStaticElementInteractions: presentational wrapper that only stops propagation of focus-stealing events. */}

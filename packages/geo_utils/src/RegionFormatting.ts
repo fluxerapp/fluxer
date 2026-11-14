@@ -1,33 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {normalizeRegionCode} from '@fluxer/geo_utils/src/RegionCodeValidation';
-import {resolveRegionDisplayName} from '@fluxer/geo_utils/src/RegionDisplayNameResolver';
+import {Locales} from '@fluxer/constants/src/Locales';
 
-interface RegionDisplayNameOptions {
-	locale?: string;
-	fallbackToRegionCode?: boolean;
+const displayNamesByLocale = new Map<string, Intl.DisplayNames>();
+
+function getDisplayNames(locale?: string): Intl.DisplayNames {
+	const localeCode = locale?.trim() || Locales.EN_US;
+	let displayNames = displayNamesByLocale.get(localeCode);
+	if (!displayNames) {
+		displayNames = new Intl.DisplayNames([localeCode], {type: 'region', fallback: 'none'});
+		displayNamesByLocale.set(localeCode, displayNames);
+	}
+	return displayNames;
 }
 
-function applyRegionCodeFallback(
-	regionCode: string,
-	displayName: string | undefined,
-	options?: RegionDisplayNameOptions,
-): string | undefined {
-	if (displayName) {
-		return displayName;
-	}
-	if (!options?.fallbackToRegionCode) {
+export function getRegionDisplayName(regionCode: string, options?: {locale?: string}): string | undefined {
+	const displayNames = getDisplayNames(options?.locale);
+	const trimmedRegionCode = regionCode.trim();
+	if (trimmedRegionCode.length !== 2) {
 		return undefined;
 	}
-	const normalizedRegionCode = normalizeRegionCode(regionCode);
-	if (normalizedRegionCode) {
-		return normalizedRegionCode;
+	const upperRegionCode = trimmedRegionCode.toUpperCase();
+	if (!/^[A-Z]{2}$/.test(upperRegionCode)) {
+		return undefined;
 	}
-	const trimmedRegionCode = regionCode.trim();
-	return trimmedRegionCode.length > 0 ? trimmedRegionCode : undefined;
-}
-
-export function getRegionDisplayName(regionCode: string, options?: RegionDisplayNameOptions): string | undefined {
-	const displayName = resolveRegionDisplayName(regionCode, options?.locale);
-	return applyRegionCodeFallback(regionCode, displayName, options);
+	return displayNames.of(upperRegionCode) || undefined;
 }

@@ -2,18 +2,16 @@
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
+import {clearBootState} from '@app/features/boot_state/BootStateBridge';
 import type {AccountScopedWorkSuspension} from '@app/features/platform/state/AccountScopedWork';
 import {AuthSessionAccountCatalog} from '@app/features/platform/state/auth_session/AuthSessionAccountCatalog';
 import {
 	AuthSessionAccountPersistence,
 	type PersistableSessionAccount,
 } from '@app/features/platform/state/auth_session/AuthSessionAccountPersistence';
-import {
-	AuthSessionCheckpointManager,
-	AuthSessionRuntimeUnavailableError,
-} from '@app/features/platform/state/auth_session/AuthSessionCheckpoint';
+import {AuthSessionCheckpointManager} from '@app/features/platform/state/auth_session/AuthSessionCheckpoint';
 import {AuthSessionCleanup} from '@app/features/platform/state/auth_session/AuthSessionCleanup';
 import {
 	type AuthSessionDependencies,
@@ -25,6 +23,7 @@ import {
 	type AuthSessionSwitchOptions,
 	type AuthSessionTokenValidation,
 	type AuthSessionValidatedSwitchOptions,
+	requireRuntimeSnapshot,
 } from '@app/features/platform/state/auth_session/AuthSessionLifecycle';
 import {AuthSessionRestorer} from '@app/features/platform/state/auth_session/AuthSessionRestorer';
 import {AuthSessionRuntimeCommitter} from '@app/features/platform/state/auth_session/AuthSessionRuntimeCommitter';
@@ -44,13 +43,14 @@ import {AuthSessionStoredAccountResolver} from '@app/features/platform/state/aut
 import {AuthSessionTransitionGate} from '@app/features/platform/state/auth_session/AuthSessionTransitionGate';
 import {
 	emptyStoredSessionMirror,
+	readDesktopSessionMirror,
 	type StoredSessionMirror,
 } from '@app/features/platform/state/auth_session/SessionCredentialMirror';
+import {getPersistentStorageBackend} from '@app/features/platform/state/PersistentStorageBackend';
 import {mirrorGatewayPrebootSession} from '@app/features/platform/state/PrebootMirror';
 import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {setSyncedFieldSessionManager} from '@app/features/user/state/SyncedField';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import type {UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {actionBound, makeAutoObservable} from 'mobx';
@@ -72,13 +72,6 @@ const AUTH_SESSION_TOKEN_VALIDATION_TIMEOUT_MS = 10_000;
 
 export interface AuthSessionConnectionCloseResult {
 	readonly invalidatedCurrentSession: boolean;
-}
-
-function requireRuntimeSnapshot(snapshot: RuntimeConfigSnapshot | null, operation: string): RuntimeConfigSnapshot {
-	if (snapshot == null) {
-		throw new AuthSessionRuntimeUnavailableError(operation);
-	}
-	return snapshot;
 }
 
 export class AuthSessionManager {
@@ -156,7 +149,6 @@ export class AuthSessionManager {
 				send: actionBound,
 				setToken: actionBound,
 				setUserId: actionBound,
-				setError: actionBound,
 				transitionGate: false,
 				validateToken: false,
 			},
@@ -174,10 +166,6 @@ export class AuthSessionManager {
 
 	get userId(): string | null {
 		return this._snapshot.context.userId;
-	}
-
-	get error(): Error | null {
-		return this._snapshot.context.error;
 	}
 
 	get isAuthenticated(): boolean {
@@ -214,6 +202,18 @@ export class AuthSessionManager {
 
 	get currentAccountKey(): string | null {
 		return selectAuthSessionAccountKey(this._snapshot);
+	}
+
+	get restoringAccountKey(): string | null {
+		return this.currentCredentialMirror().storageKey;
+	}
+
+	async restoreAccountOnNextStart(accountKey: string): Promise<void> {
+		const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+		if (resolved === null) {
+			throw new Error(`No stored account found for ${accountKey}`);
+		}
+		await this.deps.credentialMirror.persist(this.accountPersistence.pointer(resolved.account));
 	}
 
 	get currentAccount(): Account | null {
@@ -368,13 +368,6 @@ export class AuthSessionManager {
 			.catch((error) => logger.error('Failed to persist the session user ID mirror', error));
 	}
 
-	async setError(error: Error | null): Promise<void> {
-		if (error) {
-			await this.deps.deactivateRuntime();
-			this.send({type: 'initialize.failed', error});
-		}
-	}
-
 	private activeSessionPointer(): StoredSessionMirror | null {
 		const {token, userId, accountKey} = this._snapshot.context;
 		if (token === null || userId === null) {
@@ -423,6 +416,8 @@ export class AuthSessionManager {
 					logger.warn(
 						`The active session could not be restored (${initialization.reason}), keeping its credential mirror intact`,
 					);
+				} else {
+					void this.reportSessionLostByWebStorage(catalog.source);
 				}
 				mirrorGatewayPrebootSession(false);
 				this.send({type: 'initialize.noToken'});
@@ -430,7 +425,7 @@ export class AuthSessionManager {
 			}
 			const {mirror, resolution} = initialization;
 			if (resolution.usedMirroredCredential) {
-				logger.info(`Recovered the durable credential for ${resolution.accountKey} from the session mirror`);
+				logger.debug(`Recovered the durable credential for ${resolution.accountKey} from the session mirror`);
 			}
 			await this.restorer.activate(resolution, mirror, () => {
 				this.send({
@@ -447,6 +442,20 @@ export class AuthSessionManager {
 			this.send({type: 'initialize.failed', error: failure});
 			this._initPromise = null;
 			throw failure;
+		}
+	}
+
+	private async reportSessionLostByWebStorage(accountSource: string): Promise<void> {
+		try {
+			const desktop = await readDesktopSessionMirror();
+			if (desktop === null || desktop.storageKey === null || desktop.token === null) {
+				return;
+			}
+			logger.warn(
+				`Booting signed out although the desktop store still holds the session for ${desktop.storageKey} (account source: ${accountSource}, app storage backend: ${getPersistentStorageBackend().kind})`,
+			);
+		} catch (error) {
+			logger.warn('The desktop session mirror could not be read for diagnostics', error);
 		}
 	}
 
@@ -477,6 +486,32 @@ export class AuthSessionManager {
 		});
 	}
 
+	async addStoredAccount({
+		userId,
+		token,
+		userData,
+		instance,
+	}: {
+		userId: string;
+		token: string;
+		userData?: UserData;
+		instance: RuntimeConfigSnapshot;
+	}): Promise<void> {
+		await this.initialize();
+		const account = {
+			storageKey: getAccountKey({userId, instance}),
+			userId,
+			token,
+			userData,
+			presenceIntent: null,
+			lastActive: this.deps.now(),
+			instance,
+			isValid: true,
+		} satisfies PersistableSessionAccount;
+		await this.accountPersistence.stash(account);
+		this.send({type: 'account.upsert', account});
+	}
+
 	async validateToken(
 		token: string,
 		userId: string,
@@ -505,6 +540,7 @@ export class AuthSessionManager {
 			return;
 		}
 		this.send({type: 'account.markInvalid', accountKey: resolved.accountKey});
+		void clearBootState(resolved.accountKey);
 		void this.deps.accountStorage
 			.updateAccountValidity(resolved.accountKey, false, expectedToken)
 			.catch((error: unknown) => {
@@ -537,6 +573,30 @@ export class AuthSessionManager {
 		const prepared = await this.restorer.prepareAccount(resolved.accountKey);
 		this.send({type: 'account.upsert', account: prepared});
 		return prepared;
+	}
+
+	async reloadStoredAccount(accountKey: string): Promise<void> {
+		await this.initialize();
+		const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+		if (resolved === null || resolved.accountKey === this.currentAccountKey) {
+			return;
+		}
+		await this.adoptStoredAccountToken(resolved.account);
+	}
+
+	async adoptRotatedAccountToken(accountKey: string, expectedToken: string, token: string): Promise<void> {
+		await this.initialize();
+		const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+		if (
+			resolved === null ||
+			resolved.accountKey === this.currentAccountKey ||
+			resolved.account.token !== expectedToken ||
+			token.length === 0
+		) {
+			return;
+		}
+		await this.deps.accountStorage.updateAccountToken(resolved.accountKey, expectedToken, token);
+		await this.adoptStoredAccountToken(resolved.account);
 	}
 
 	private async adoptStoredAccountToken(account: Account): Promise<Account> {
@@ -574,15 +634,24 @@ export class AuthSessionManager {
 		await this.lifecycle.switchAccountWithinAccountActivation(accountKey, options, suspension);
 	}
 
-	async logout(): Promise<void> {
+	async logout(options: {notifyServer?: boolean} = {}): Promise<void> {
 		await this.initialize();
-		await this.lifecycle.logout();
+		const accountKey = this.currentAccountKey;
+		if (accountKey !== null) {
+			await clearBootState(accountKey);
+		}
+		await this.lifecycle.logout(options);
 	}
 
 	async removeAccount(accountKey: string): Promise<void> {
 		await this.initialize();
+		const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+		if (resolved !== null) {
+			await clearBootState(resolved.accountKey);
+		}
 		await this.lifecycle.removeAccount(accountKey);
 	}
+
 	handleConnectionReady(): void {
 		this.send({type: 'connection.ready'});
 	}
@@ -623,7 +692,10 @@ export class AuthSessionManager {
 		const cleanupErrors: Array<unknown> = [];
 		if (resolved !== null) {
 			try {
-				await this.deps.accountStorage.updateAccountValidity(resolved.accountKey, false);
+				await Promise.all([
+					this.deps.accountStorage.updateAccountValidity(resolved.accountKey, false),
+					clearBootState(resolved.accountKey),
+				]);
 			} catch (error) {
 				cleanupErrors.push(error);
 			}
@@ -665,6 +737,21 @@ export class AuthSessionManager {
 		this.send({type: 'account.userDataUpdated', accountKey: resolved.accountKey, userData});
 	}
 
+	async reorderAccounts(orderedAccountKeys: ReadonlyArray<string>): Promise<void> {
+		const positions = new Map<string, number>();
+		for (const accountKey of orderedAccountKeys) {
+			const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+			if (resolved !== null && !positions.has(resolved.accountKey)) {
+				positions.set(resolved.accountKey, positions.size);
+			}
+		}
+		if (positions.size === 0) {
+			return;
+		}
+		this.send({type: 'accounts.reordered', positions});
+		await this.deps.accountStorage.updateAccountSwitcherPositions(positions);
+	}
+
 	async reset(): Promise<void> {
 		await this.deps.deactivateRuntime();
 		this.send({type: 'reset'});
@@ -677,6 +764,5 @@ export function createSessionManager(dependencies?: AuthSessionDependencies): Au
 }
 
 const SessionManager = createSessionManager();
-setSyncedFieldSessionManager(SessionManager);
 
 export default SessionManager;

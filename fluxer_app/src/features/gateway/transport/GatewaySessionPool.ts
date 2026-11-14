@@ -1,31 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Initialization from '@app/features/app/state/Initialization';
+import AccountEngine from '@app/features/account_engine/state/AccountEngine';
 import {
-	BackgroundGatewaySessionManager,
-	MAX_BACKGROUND_GATEWAY_CONNECTIONS,
-	readMaxBackgroundGatewayConnections,
-} from '@app/features/gateway/transport/BackgroundGatewaySessionManager';
+	EngineForegroundHandoff,
+	type ForegroundDemotionOutcome,
+} from '@app/features/account_engine/state/EngineForegroundHandoff';
+import Initialization from '@app/features/app/state/Initialization';
+import {hydrateStoresFromSnapshotScope} from '@app/features/gateway/snapshot/SnapshotHydration';
+import SnapshotSync from '@app/features/gateway/snapshot/SnapshotSync';
 import {installDeferredReaction} from '@app/features/gateway/transport/DeferredReaction';
 import {
 	ForegroundGatewayConnectionRecoverableError,
 	ForegroundGatewayRecoveryExhaustedError,
 } from '@app/features/gateway/transport/ForegroundGatewayConnectionFailure';
 import {
-	type ForegroundDemotionOutcome,
-	ForegroundGatewayHandoff,
-} from '@app/features/gateway/transport/ForegroundGatewayHandoff';
-import {
+	GatewaySessionStartStatus,
 	PooledGatewayConnection,
 	selectForegroundActivationGuildId,
 } from '@app/features/gateway/transport/PooledGatewayConnection';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
+import {AccountScopedWorkTransitionReason} from '@app/features/platform/state/AccountScopedWork';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
+import ReadStates from '@app/features/read_state/state/ReadStates';
 import {reaction} from 'mobx';
-
-export {MAX_BACKGROUND_GATEWAY_CONNECTIONS, readMaxBackgroundGatewayConnections};
 
 const logger = new Logger('GatewaySessionPool');
 const FOREGROUND_RECOVERY_RETRY_DELAYS_MS = [1_000, 3_000, 10_000] as const;
@@ -38,14 +37,57 @@ type ForegroundRecoveryState =
 
 class GatewaySessionPool {
 	readonly foregroundConnection = new PooledGatewayConnection();
-	private readonly backgroundSessions = new BackgroundGatewaySessionManager();
-	private readonly handoff = new ForegroundGatewayHandoff(this.foregroundConnection, this.backgroundSessions);
+	private readonly handoff: EngineForegroundHandoff;
 	private started = false;
 	private disposers: Array<() => void> = [];
 	private foregroundRecoveryRevision = 0;
 	private foregroundRecoveryTimer: number | null = null;
 	private foregroundRecovery: ForegroundRecoveryState = {kind: 'idle'};
 	private failedRecoveryDisposer: (() => void) | null = null;
+
+	constructor() {
+		const connection = this.foregroundConnection;
+		this.handoff = new EngineForegroundHandoff({
+			engine: AccountEngine,
+			foreground: {
+				get foregroundAccountKey() {
+					return connection.foregroundAccountKey;
+				},
+				beginForegroundDemotionHandover: (accountKey) =>
+					this.foregroundConnection.beginForegroundDemotionHandover(accountKey),
+				finishForegroundDemotionHandover: (accountKey) =>
+					this.foregroundConnection.finishForegroundDemotionHandover(accountKey),
+				rollbackForegroundDemotionHandover: (accountKey) =>
+					this.foregroundConnection.rollbackForegroundDemotionHandover(accountKey),
+				retireForAccountSwitch: () => this.foregroundConnection.retireForAccountSwitch(),
+				preparePromotedForegroundReplay: () => this.foregroundConnection.preparePromotedForegroundReplay(),
+				startResumedSession: async (accountKey, seed) => {
+					const result = await this.foregroundConnection.startSession(accountKey, {resume: seed});
+					return result.status === GatewaySessionStartStatus.STARTED;
+				},
+			},
+			snapshots: SnapshotSync,
+			getAccount: (accountKey) => {
+				const account = SessionManager.getAccount(accountKey);
+				return account === null
+					? null
+					: {userId: account.userId, gatewayEndpoint: account.instance?.gatewayEndpoint ?? null};
+			},
+			isCurrentAccount: (accountKey) => SessionManager.currentAccountKey === accountKey,
+			captureMentionCounts: () => ReadStates.captureMentionCounts(),
+			hydrate: (accountKey, mentionCounts) => hydrateStoresFromSnapshotScope(accountKey, mentionCounts),
+			whenForegroundLive: (accountKey) => this.whenForegroundLive(accountKey),
+			whenEngineConfigured: () => AccountEngine.whenConfigured(),
+		});
+	}
+
+	async retireForAccountTransition(reason: AccountScopedWorkTransitionReason): Promise<void> {
+		if (reason === AccountScopedWorkTransitionReason.ACCOUNT_SWITCH) {
+			await this.demoteForegroundForAccountSwitch();
+			return;
+		}
+		this.foregroundConnection.logout();
+	}
 
 	start(): void {
 		if (this.started) {
@@ -79,7 +121,6 @@ class GatewaySessionPool {
 				),
 			),
 		);
-		this.backgroundSessions.start();
 	}
 
 	startRestoredSession(): void {
@@ -87,7 +128,25 @@ class GatewaySessionPool {
 		if (accountKey === null) {
 			return;
 		}
-		this.startForegroundRecovery(accountKey);
+		if (!AccountEngine.available) {
+			this.startForegroundRecovery(accountKey);
+			return;
+		}
+		this.start();
+		const storesRestored = Initialization.isStale;
+		if (storesRestored) {
+			this.startForegroundRecovery(accountKey);
+		}
+		void this.handoff
+			.bootForeground(accountKey, {storesRestored})
+			.catch((error: unknown) => {
+				logger.warn('Failed to restore the foreground account from the account engine', {accountKey, error});
+			})
+			.finally(() => {
+				if (this.started && SessionManager.currentAccountKey === accountKey) {
+					this.startForegroundRecovery(accountKey);
+				}
+			});
 	}
 
 	recoverForegroundSession(accountKey: string): void {
@@ -107,7 +166,6 @@ class GatewaySessionPool {
 		for (const dispose of disposers) {
 			dispose();
 		}
-		this.backgroundSessions.shutdown();
 	}
 
 	private startForegroundRecovery(accountKey: string): void {
@@ -222,7 +280,7 @@ class GatewaySessionPool {
 				this.stopForegroundRecovery();
 				return;
 			}
-			logger.info('Retrying foreground gateway recovery after it was exhausted', {accountKey});
+			logger.warn('Retrying foreground gateway recovery after it was exhausted', {accountKey});
 			this.startForegroundRecovery(accountKey);
 		};
 		const handleVisibilityChange = (): void => {
@@ -254,41 +312,44 @@ class GatewaySessionPool {
 		await this.foregroundConnection.startSessionAndWaitForReady(targetAccountKey);
 	}
 
-	beginPromote(accountKey: string): Promise<void> {
+	async beginPromote(accountKey: string): Promise<void> {
 		this.stopForegroundRecovery();
-		return this.handoff.beginPromotion(accountKey);
+		this.handoff.beginPromotion(accountKey);
 	}
 
-	completePromote(accountKey: string): Promise<void> {
-		return this.handoff.completePromotion(accountKey);
+	async completePromote(accountKey: string): Promise<void> {
+		const startedAtMs = Date.now();
+		const mode = await this.handoff.completePromotion(accountKey);
+		logger.debug('Foreground promotion completed', {accountKey, mode, elapsedMs: Date.now() - startedAtMs});
 	}
 
 	rollbackPromote(accountKey: string): Promise<void> {
 		return this.handoff.rollbackPromotion(accountKey);
 	}
 
-	demoteForegroundForAccountSwitch(): Promise<ForegroundDemotionOutcome> {
-		return this.handoff.demoteForegroundForAccountSwitch();
+	async demoteForegroundForAccountSwitch(): Promise<ForegroundDemotionOutcome> {
+		const startedAtMs = Date.now();
+		const outcome = await this.handoff.demoteForeground();
+		logger.debug('Foreground demotion completed', {...outcome, elapsedMs: Date.now() - startedAtMs});
+		return outcome;
 	}
 
-	isBackgroundTransportAvailable(): boolean {
-		return this.backgroundSessions.isTransportAvailable();
-	}
-
-	bootstrapBackground(): void {
-		this.backgroundSessions.start();
-	}
-
-	get isBackgroundBootstrapped(): boolean {
-		return this.backgroundSessions.isBootstrapped;
-	}
-
-	get backgroundConnectionCount(): number {
-		return this.backgroundSessions.connectionCount;
-	}
-
-	shutdownBackground(): void {
-		this.backgroundSessions.shutdown();
+	private whenForegroundLive(accountKey: string): Promise<boolean | null> {
+		const socket = this.foregroundConnection.foregroundSocketForAccount(accountKey);
+		if (socket === null) {
+			return Promise.resolve(null);
+		}
+		return new Promise((resolve) => {
+			const settle = (resumed: boolean): void => {
+				socket.off('resumed', onResumed);
+				socket.off('ready', onReady);
+				resolve(resumed);
+			};
+			const onResumed = (): void => settle(true);
+			const onReady = (): void => settle(false);
+			socket.on('resumed', onResumed);
+			socket.on('ready', onReady);
+		});
 	}
 
 	private syncForegroundPresence(): void {

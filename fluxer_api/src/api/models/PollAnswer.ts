@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessagePollAnswer} from '../database/types/PollTypes';
-import {PollMedia} from './PollMedia';
+import type {MessagePollAnswer} from '@app/api/database/types/PollTypes';
+import {PollMedia} from '@app/api/models/PollMedia';
 
 export class PollAnswer {
 	readonly answer_id: number | null;

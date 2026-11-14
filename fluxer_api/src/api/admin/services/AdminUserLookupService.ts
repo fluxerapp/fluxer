@@ -17,13 +17,13 @@ interface AdminUserLookupServiceDeps {
 export class AdminUserLookupService {
 	constructor(private readonly deps: AdminUserLookupServiceDeps) {}
 
-	async lookupUser(data: LookupUserRequest, acls: ReadonlySet<string>) {
+	async lookupUser(data: LookupUserRequest, acls: ReadonlySet<string>, locale?: string) {
 		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
 		if ('user_ids' in data) {
 			const userIds = data.user_ids.map((id) => createUserID(id));
 			const users = await userRepository.listUsers(userIds);
 			return {
-				users: await Promise.all(users.map((user) => mapUserToAdminResponse(user, cacheService, acls))),
+				users: await Promise.all(users.map((user) => mapUserToAdminResponse(user, cacheService, acls, locale))),
 			};
 		}
 		let user = null;
@@ -47,7 +47,7 @@ export class AdminUserLookupService {
 			user = (await this.findPersonByBareUsername(query)) ?? (await userRepository.findByStripeSubscriptionId(query));
 		}
 		return {
-			users: user ? [await mapUserToAdminResponse(user, cacheService, acls)] : [],
+			users: user ? [await mapUserToAdminResponse(user, cacheService, acls, locale)] : [],
 		};
 	}
 

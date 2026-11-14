@@ -4,10 +4,10 @@ import {type RuntimeConfigSnapshot, runtimeConfigSnapshotsAreSameInstance} from 
 import type {
 	QualifiedStoredAccount,
 	StoredAccountData,
-	StoredAccountInventory,
 	StoredAccountSource,
-} from '@app/features/auth/state/AccountStorage';
+} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey, parseAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
+import type {StoredAccountInventory} from '@app/features/auth/state/StoredAccountInventoryContract';
 import type {Account} from '@app/features/platform/state/auth_session/AuthSessionStateMachine';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 
@@ -43,7 +43,7 @@ export interface ResolvedAccountRestoration {
 	readonly usedMirroredCredential: boolean;
 }
 
-export interface UnresolvedAccountRestoration {
+interface UnresolvedAccountRestoration {
 	readonly kind: 'unresolved';
 	readonly reason: 'missing-account';
 }
@@ -172,6 +172,7 @@ export class AuthSessionAccountCatalog {
 			presenceIntent: data.presenceIntent,
 			lastActive: data.lastActive,
 			isValid: data.isValid ?? true,
+			...(data.switcherPosition === undefined ? {} : {switcherPosition: data.switcherPosition}),
 		};
 	}
 

@@ -2,7 +2,7 @@
 
 import type {ReportID} from '@app/api/BrandedTypes';
 import {Logger} from '@app/api/Logger';
-import type {IReportRepository} from '@app/api/report/IReportRepository';
+import type {ReportRepository} from '@app/api/report/ReportRepository';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 
@@ -16,7 +16,7 @@ export interface ClearAuthenticatedReporterEmailsSummary {
 }
 
 export async function clearAuthenticatedReporterEmails(
-	reportRepository: IReportRepository,
+	reportRepository: ReportRepository,
 	pageSize = DEFAULT_SCAN_PAGE_SIZE,
 ): Promise<ClearAuthenticatedReporterEmailsSummary> {
 	const summary: ClearAuthenticatedReporterEmailsSummary = {scanned: 0, cleared: 0, skipped: 0, failed: 0};

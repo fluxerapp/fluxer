@@ -4,6 +4,7 @@ import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
@@ -16,6 +17,7 @@ import {
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	GuildBanListResponse,
+	GuildBanResponse,
 	GuildMemberListResponse,
 	GuildMemberResponse,
 } from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
@@ -49,14 +51,12 @@ export function GuildMemberController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const {limit, after} = ctx.req.valid('query');
-			const requestCache = ctx.get('requestCache');
 			return ctx.json(
 				await ctx.get('guildService').members.getMembers({
 					userId,
 					guildId,
 					limit,
 					after: after != null ? createUserID(after) : undefined,
-					requestCache,
 				}),
 			);
 		},
@@ -111,6 +111,7 @@ export function GuildMemberController(app: HonoApp) {
 	);
 	app.patch(
 		'/guilds/:guild_id/members/@me',
+		RequestBodyLimit(jsonAssetBodyLimit({avatar: 1, banner: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_MEMBER_UPDATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),
@@ -138,6 +139,7 @@ export function GuildMemberController(app: HonoApp) {
 	);
 	app.patch(
 		'/guilds/:guild_id/members/:user_id',
+		RequestBodyLimit(jsonAssetBodyLimit({avatar: 1, banner: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_MEMBER_UPDATE),
 		LoginRequired,
 		Validator('param', GuildIdUserIdParam),
@@ -217,7 +219,7 @@ export function GuildMemberController(app: HonoApp) {
 			const newOwnerId = createUserID(new_owner_id);
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			return ctx.json(
-				await ctx.get('guildService').data.transferOwnership({userId, guildId, newOwnerId}, auditLogReason),
+				await ctx.get('guildService').data.ownership.transferOwnership({userId, guildId, newOwnerId}, auditLogReason),
 			);
 		},
 	);
@@ -241,6 +243,30 @@ export function GuildMemberController(app: HonoApp) {
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const requestCache = ctx.get('requestCache');
 			return ctx.json(await ctx.get('guildService').moderation.listBans({userId, guildId, requestCache}));
+		},
+	);
+	app.get(
+		'/guilds/:guild_id/bans/:user_id',
+		RateLimitMiddleware(RateLimitConfigs.GUILD_MEMBERS),
+		LoginRequired,
+		Validator('param', GuildIdUserIdParam),
+		OpenAPI({
+			operationId: 'get_guild_ban',
+			summary: 'Get guild ban',
+			responseSchema: GuildBanResponse,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Guilds'],
+			description:
+				'Get guild ban. Requires ban_members permission. Returns the ban for the specified user including the ban reason and expiry time.',
+		}),
+		async (ctx) => {
+			const {guild_id, user_id} = ctx.req.valid('param');
+			const userId = ctx.get('user').id;
+			const guildId = createGuildID(guild_id);
+			const targetId = createUserID(user_id);
+			const requestCache = ctx.get('requestCache');
+			return ctx.json(await ctx.get('guildService').moderation.getBan({userId, guildId, targetId, requestCache}));
 		},
 	);
 	app.put(

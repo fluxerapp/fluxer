@@ -27,6 +27,7 @@ export const AuthRuntimeTargetGate = observer(function AuthRuntimeTargetGate({ch
 	return (
 		<AuthLoginInstanceStep
 			extraTopContent={null}
+			showTitle={true}
 			title={i18n._(CHOOSE_INSTANCE_DESCRIPTOR)}
 			initialInstanceUrl={null}
 			onContinue={runtimeTarget.select}

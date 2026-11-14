@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditLog} from '@app/api/admin/AdminRepository';
 import type {
 	ISearchAdapter as SchemaISearchAdapter,
 	SearchResult as SchemaSearchResult,
@@ -10,7 +10,6 @@ import type {AuditLogSearchFilters, SearchableAuditLog} from '@fluxer/schema/src
 export interface IAuditLogSearchService extends SchemaISearchAdapter<AuditLogSearchFilters, SearchableAuditLog> {
 	indexAuditLog(log: AdminAuditLog): Promise<void>;
 	indexAuditLogs(logs: Array<AdminAuditLog>): Promise<void>;
-	deleteAuditLog(logId: bigint): Promise<void>;
 	searchAuditLogs(
 		query: string,
 		filters: AuditLogSearchFilters,

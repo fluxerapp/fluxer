@@ -10,7 +10,7 @@
 	background: none;
 	border: none;
 	color: var(--text-primary);
-	text-align: left;
+	text-align: start;
 	text-decoration: underline;
 	padding: 0;
 	font: inherit;

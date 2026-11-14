@@ -4,8 +4,14 @@ import {randomUUID} from 'node:crypto';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
-import {getStoreBillingRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {
+	getPaymentDisputeRepository,
+	getStoreBillingRepository,
+	getUserRepository,
+} from '@app/api/middleware/ServiceSingletons';
 import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
 import {setInjectedAppleRootCertificates} from '@app/api/store_billing/app_store/AppleRootCertificates';
@@ -17,17 +23,19 @@ import {
 	findUser,
 	getStoreContext,
 	installStoreBillingWorker,
+	seedOpenPaymentDisputeReview,
 	setTestPremium,
 	uninstallStoreBillingWorker,
 } from '@app/api/store_billing/tests/StoreBillingTestUtils';
+import {GiftCodes} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {
 	type AppStoreFakePayload,
 	type AppStoreServerApiFake,
 	createAppStoreServerApiFake,
 } from '@app/api/test/msw/handlers/AppStoreServerApiHandlers';
 import {server} from '@app/api/test/msw/server';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import pollAppStoreNotificationHistory from '@app/api/worker/tasks/PollAppStoreNotificationHistory';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -37,7 +45,6 @@ import type {
 	StorePurchaseClaimResponse,
 	StorePurchaseResponse,
 } from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -57,20 +64,10 @@ interface SubscriptionSeed {
 	gracePeriodExpiresDate?: number;
 	recentSubscriptionStartDate?: number;
 	productId?: string;
+	purchaseDate?: number;
 }
 
 let transactionCounter = 0;
-
-function createWorkerHelpers(): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 1n,
-		addJob: async () => 0n,
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
-}
 
 function expectAccessCut(user: User): void {
 	expect(user.premiumUntil!.getTime()).toBeLessThanOrEqual(Date.now());
@@ -125,7 +122,7 @@ describe('App Store purchases', () => {
 			transactionId: originalTransactionId,
 			originalTransactionId,
 			productId: seed.productId ?? MONTHLY,
-			purchaseDate: now - ms('1 day'),
+			purchaseDate: seed.purchaseDate ?? now - ms('1 day'),
 			expiresDate: seed.expiresDate,
 			...(seed.appAccountToken ? {appAccountToken: seed.appAccountToken} : {}),
 		});
@@ -261,6 +258,27 @@ describe('App Store purchases', () => {
 			hintAccountToken: null,
 		};
 	}
+
+	it('applies a claim made while a payment dispute is open and flags the review once', async () => {
+		const account = await createTestAccount(harness);
+		const userId = createUserID(BigInt(account.userId));
+		await seedOpenPaymentDisputeReview(userId, 'dp_store_claim_open');
+		await seedOpenPaymentDisputeReview(userId, 'dp_store_claim_closed');
+		const closed = await getPaymentDisputeRepository().findReview('dp_store_claim_closed');
+		await getPaymentDisputeRepository().updateReview(closed!, {closed_at: Db.set(new Date()), outcome: Db.set('won')});
+		const token = await accountToken(account);
+		const originalTransactionId = seedSubscription({expiresDate: Date.now() + ms('30 days'), appAccountToken: token});
+		const jws = await signStoredTransaction('production', originalTransactionId);
+		const first = await claim(account, jws);
+		expect(first.purchase.entitled).toBe(true);
+		const flagged = await getPaymentDisputeRepository().findReview('dp_store_claim_open');
+		expect(flagged?.dispute_purchase_at).toBeInstanceOf(Date);
+		expect((await getPaymentDisputeRepository().findReview('dp_store_claim_closed'))?.dispute_purchase_at).toBeNull();
+		await claim(account, jws);
+		expect((await getPaymentDisputeRepository().findReview('dp_store_claim_open'))?.dispute_purchase_at).toEqual(
+			flagged?.dispute_purchase_at,
+		);
+	});
 
 	it('grants premium for a claim that includes the account token and answers repeats the same way', async () => {
 		const account = await createTestAccount(harness);
@@ -473,7 +491,29 @@ describe('App Store purchases', () => {
 		expect(purchaser.isPremium()).toBe(false);
 	});
 
-	it('records a sandbox purchase without entitlement unless the account is allowed', async () => {
+	it('entitles any account to a sandbox subscription bought in the last week', async () => {
+		Config.storeBilling.sandboxSubscriptions = true;
+		const tester = await createTestAccount(harness);
+		const originalTransactionId = seedSubscription({environment: 'sandbox', expiresDate: Date.now() + ms('1 day')});
+		const result = await claim(tester, await signStoredTransaction('sandbox', originalTransactionId));
+		expect(result.purchase).toMatchObject({environment: 'sandbox', entitled: true});
+		expect((await findUser(tester.userId)).isPremium()).toBe(true);
+	});
+
+	it('refuses a sandbox gift for an unlisted account and mints no code', async () => {
+		Config.storeBilling.sandboxSubscriptions = true;
+		const tester = await createTestAccount(harness);
+		const giftTransactionId = seedGift('sandbox');
+		await claim(
+			tester,
+			await signStoredTransaction('sandbox', giftTransactionId),
+			403,
+			APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED,
+		);
+		expect(await getUserRepository().findGiftCodesByCreator((await findUser(tester.userId)).id)).toHaveLength(0);
+	});
+
+	it('refuses a sandbox subscription when sandbox subscriptions are off', async () => {
 		const tester = await createTestAccount(harness);
 		const originalTransactionId = seedSubscription({environment: 'sandbox', expiresDate: Date.now() + ms('1 day')});
 		await claim(
@@ -488,26 +528,28 @@ describe('App Store purchases', () => {
 		expect(purchases).toHaveLength(1);
 		expect(purchases[0]).toMatchObject({environment: 'sandbox', entitled: false, state: 'active'});
 		expect((await findUser(tester.userId)).isPremium()).toBe(false);
-		const giftTransactionId = seedGift('sandbox');
+	});
+
+	it('refuses a sandbox subscription bought more than a week ago', async () => {
+		Config.storeBilling.sandboxSubscriptions = true;
+		const tester = await createTestAccount(harness);
+		const originalTransactionId = seedSubscription({
+			environment: 'sandbox',
+			purchaseDate: Date.now() - ms('8 days'),
+			expiresDate: Date.now() + ms('1 day'),
+		});
 		await claim(
 			tester,
-			await signStoredTransaction('sandbox', giftTransactionId),
+			await signStoredTransaction('sandbox', originalTransactionId),
 			403,
 			APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED,
 		);
-		expect(await getUserRepository().findGiftCodesByCreator((await findUser(tester.userId)).id)).toHaveLength(0);
-
-		const allowed = await createTestAccount(harness);
-		Config.storeBilling.sandboxUserIds = [allowed.userId];
-		const allowedTransactionId = seedSubscription({environment: 'sandbox', expiresDate: Date.now() + ms('1 day')});
-		const result = await claim(allowed, await signStoredTransaction('sandbox', allowedTransactionId));
-		expect(result.purchase).toMatchObject({environment: 'sandbox', entitled: true});
-		expect((await findUser(allowed.userId)).isPremium()).toBe(true);
+		expect((await findUser(tester.userId)).isPremium()).toBe(false);
 	});
 
-	it('moves a sandbox purchase to an allowed account that restores it after another account bought it', async () => {
+	it('moves a sandbox purchase to the account that claims it after another account bought it', async () => {
 		const tester = await createTestAccount(harness);
-		const allowed = await createTestAccount(harness);
+		const claimer = await createTestAccount(harness);
 		const originalTransactionId = seedSubscription({
 			environment: 'sandbox',
 			expiresDate: Date.now() + ms('1 day'),
@@ -515,13 +557,32 @@ describe('App Store purchases', () => {
 		});
 		const jws = await signStoredTransaction('sandbox', originalTransactionId);
 		await claim(tester, jws, 403, APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED);
-		Config.storeBilling.sandboxUserIds = [allowed.userId];
-		const result = await claim(allowed, jws);
+		Config.storeBilling.sandboxSubscriptions = true;
+		const result = await claim(claimer, jws);
 		expect(result.purchase).toMatchObject({environment: 'sandbox', entitled: true});
-		expect((await findUser(allowed.userId)).isPremium()).toBe(true);
-		expect(fake.getTransaction('sandbox', originalTransactionId)?.appAccountToken).toBe(await accountToken(allowed));
+		expect((await findUser(claimer.userId)).isPremium()).toBe(true);
+		expect(fake.getTransaction('sandbox', originalTransactionId)?.appAccountToken).toBe(await accountToken(claimer));
 		expect(await service.listStorePurchases((await findUser(tester.userId)).id)).toHaveLength(0);
 		expect((await findUser(tester.userId)).isPremium()).toBe(false);
+	});
+
+	it('moves a sandbox purchase even when it is signed with another live account token', async () => {
+		const tester = await createTestAccount(harness);
+		const tokenHolder = await createTestAccount(harness);
+		const claimer = await createTestAccount(harness);
+		const originalTransactionId = seedSubscription({environment: 'sandbox', expiresDate: Date.now() + ms('1 day')});
+		await claim(
+			tester,
+			await signStoredTransaction('sandbox', originalTransactionId),
+			403,
+			APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED,
+		);
+		fake.updateTransaction('sandbox', originalTransactionId, {appAccountToken: await accountToken(tokenHolder)});
+		Config.storeBilling.sandboxSubscriptions = true;
+		const result = await claim(claimer, await signStoredTransaction('sandbox', originalTransactionId));
+		expect(result.purchase).toMatchObject({environment: 'sandbox', entitled: true});
+		expect((await findUser(claimer.userId)).isPremium()).toBe(true);
+		expect(await service.listStorePurchases((await findUser(tester.userId)).id)).toHaveLength(0);
 	});
 
 	it('blocks a lifetime account from a subscription without granting anything', async () => {
@@ -912,7 +973,7 @@ describe('App Store purchases', () => {
 		const result = await claim(purchaser, await signStoredTransaction('production', transactionId));
 		const giftCode = result.gift_code!;
 		await redeem(redeemer, giftCode);
-		await getUserRepository().updateGiftCode(giftCode, {redeemed_at: new Date(Date.now() - ms('40 days'))});
+		await upsertOne(GiftCodes.patchByPk({code: giftCode}, {redeemed_at: Db.set(new Date(Date.now() - ms('40 days')))}));
 		const redeemed = await findUser(redeemer.userId);
 		await getUserRepository().patchUpsert(
 			redeemed.id,
@@ -968,7 +1029,7 @@ describe('App Store purchases', () => {
 			sentAt: Date.now() - ms('3 days'),
 			failed: true,
 		});
-		await pollAppStoreNotificationHistory({}, createWorkerHelpers());
+		await pollAppStoreNotificationHistory({}, createTestWorkerHelpers());
 		expect((await getUserRepository().findGiftCode(result.gift_code!))?.revokedAt).not.toBeNull();
 		expect((await getStoreBillingRepository().findPurchase(`app_store:production:${transactionId}`))?.state).toBe(
 			'refunded',
@@ -977,7 +1038,7 @@ describe('App Store purchases', () => {
 		expect(historyRequests.map((request) => request.body)).toContainEqual(
 			expect.objectContaining({onlyFailures: true}),
 		);
-		await pollAppStoreNotificationHistory({}, createWorkerHelpers());
+		await pollAppStoreNotificationHistory({}, createTestWorkerHelpers());
 	});
 
 	describe('restore', () => {

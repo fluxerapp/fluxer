@@ -3,7 +3,7 @@
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GiftCode} from '@app/api/models/GiftCode';
-import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+
 import type {GiftCodeMetadataResponse, GiftCodeResponse} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 
 interface MapGiftCodeToResponseParams {
@@ -27,11 +27,7 @@ export async function mapGiftCodeToResponse({
 }: MapGiftCodeToResponseParams): Promise<GiftCodeResponse> {
 	let createdBy = null;
 	if (includeCreator) {
-		createdBy = await getCachedUserPartialResponse({
-			userId: giftCode.createdByUserId,
-			userCacheService,
-			requestCache,
-		});
+		createdBy = await userCacheService.getUserPartialResponse(giftCode.createdByUserId, requestCache);
 	}
 	return {
 		code: giftCode.code,
@@ -48,18 +44,8 @@ export async function mapGiftCodeToMetadataResponse({
 	requestCache,
 }: MapGiftCodeToMetadataResponseParams): Promise<GiftCodeMetadataResponse> {
 	const [createdBy, redeemedBy] = await Promise.all([
-		getCachedUserPartialResponse({
-			userId: giftCode.createdByUserId,
-			userCacheService,
-			requestCache,
-		}),
-		giftCode.redeemedByUserId
-			? getCachedUserPartialResponse({
-					userId: giftCode.redeemedByUserId,
-					userCacheService,
-					requestCache,
-				})
-			: null,
+		userCacheService.getUserPartialResponse(giftCode.createdByUserId, requestCache),
+		giftCode.redeemedByUserId ? userCacheService.getUserPartialResponse(giftCode.redeemedByUserId, requestCache) : null,
 	]);
 	return {
 		code: giftCode.code,

@@ -1,20 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ThemeLibraryTheme} from '@app/features/theme/state/ThemeLibrary';
-import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {THEME_VARIABLE_NAMES} from '@app/features/theme/variables/ThemeVariableManifest';
 
-function escapeRegExp(value: string): string {
-	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const ROOT_BLOCK_PATTERN = /:root\s*\{([^{}]*)\}/g;
+const DECLARATION_PATTERN = /(?<![a-zA-Z0-9_-])(--[a-zA-Z0-9_-]+)\s*:\s*([^;{}]+)(;|$)/g;
+const THEME_VARIABLES: ReadonlySet<string> = new Set(THEME_VARIABLE_NAMES);
+
+function replaceThemeDeclarations(css: string, replace: (declaration: string, name: string) => string): string {
+	return css.replace(ROOT_BLOCK_PATTERN, (block: string, body: string) => {
+		const nextBody = body.replace(
+			DECLARATION_PATTERN,
+			(declaration: string, name: string, _value: string, terminator: string) =>
+				terminator === ';' && THEME_VARIABLES.has(name) ? replace(declaration, name) : declaration,
+		);
+		return `${block.slice(0, block.length - body.length - 1)}${nextBody}}`;
+	});
 }
 
 export function extractThemeVariableOverrides(css: string): Record<string, string> {
 	const overrides: Record<string, string> = {};
-	const variablePattern = /--([a-zA-Z0-9_-]+)\s*:\s*([^;]+);/g;
-	let match: RegExpExecArray | null;
-	while ((match = variablePattern.exec(css)) !== null) {
-		const variableName = `--${match[1] as string}`;
-		const value = match[2] as string;
-		overrides[variableName] = value.trim();
+	for (const block of css.matchAll(ROOT_BLOCK_PATTERN)) {
+		for (const [, name, value, terminator] of (block[1] ?? '').matchAll(DECLARATION_PATTERN)) {
+			if (terminator === ';' && name && value && THEME_VARIABLES.has(name)) overrides[name] = value.trim();
+		}
 	}
 	return overrides;
 }
@@ -26,14 +35,24 @@ function removeEmptyRootBlocks(css: string): string {
 		.trim();
 }
 
+export function removeThemeVariableOverrides(css: string): string {
+	return removeEmptyRootBlocks(replaceThemeDeclarations(css, () => ''));
+}
+
 export function updateCssForVariable(css: string, variableName: string, newValue: string | null): string {
-	const variableNamePattern = escapeRegExp(variableName);
-	const propertyPattern = new RegExp(`(--${variableNamePattern.replace(/^--/, '')}\\s*:[^;]*;)`);
 	if (newValue === null) {
-		return removeEmptyRootBlocks(css.replace(propertyPattern, ''));
+		return removeEmptyRootBlocks(
+			replaceThemeDeclarations(css, (declaration, name) => (name === variableName ? '' : declaration)),
+		);
 	}
-	if (propertyPattern.test(css)) {
-		return css.replace(propertyPattern, `${variableName}: ${newValue};`);
+	let replaced = false;
+	const updated = replaceThemeDeclarations(css, (declaration, name) => {
+		if (replaced || name !== variableName) return declaration;
+		replaced = true;
+		return `${variableName}: ${newValue};`;
+	});
+	if (replaced) {
+		return updated;
 	}
 	const trimmedCss = removeEmptyRootBlocks(css);
 	const prefix = trimmedCss.length > 0 && !trimmedCss.endsWith('\n') ? '\n' : '';
@@ -167,19 +186,6 @@ export function cssColorStringToHex(color: string): string | null {
 	return parsed !== null ? numberToHex(parsed) : null;
 }
 
-export function downloadTextFile(text: string, fileName: string, mimeType: string): void {
-	const blob = new Blob([text], {type: mimeType});
-	const url = URL.createObjectURL(blob);
-	const anchor = document.createElement('a');
-	anchor.href = url;
-	anchor.download = fileName;
-	anchor.rel = 'noopener';
-	document.body.appendChild(anchor);
-	anchor.click();
-	anchor.remove();
-	URL.revokeObjectURL(url);
-}
-
 export function readFileText(file: File): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -187,15 +193,6 @@ export function readFileText(file: File): Promise<string> {
 		reader.onload = () => resolve(String(reader.result ?? ''));
 		reader.readAsText(file);
 	});
-}
-
-export async function copyText(text: string): Promise<void> {
-	const electronApi = getElectronAPI();
-	if (electronApi?.clipboardWriteText) {
-		await electronApi.clipboardWriteText(text);
-		return;
-	}
-	await navigator.clipboard.writeText(text);
 }
 
 export function parseTagInput(value: string): Array<string> {

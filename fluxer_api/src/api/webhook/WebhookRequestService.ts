@@ -3,7 +3,7 @@
 import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {maskThreadArtifactsFor} from '@app/api/channel/services/message/ThreadMessageResponses';
@@ -24,8 +24,6 @@ import {
 } from '@app/api/webhook/WebhookModel';
 import type {WebhookExecuteMessageData, WebhookService} from '@app/api/webhook/WebhookService';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
-import type {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
 import type {
 	SlackWebhookRequest,
 	WebhookCreateRequest,
@@ -132,36 +130,11 @@ interface WebhookEditMessageParams {
 	requestCache: RequestCache;
 }
 
-interface WebhookDeleteMessageParams {
-	webhookId: WebhookID;
-	token: WebhookToken;
-	threadId?: string;
-	messageId: MessageID;
-	requestCache: RequestCache;
-}
-
-interface WebhookExecuteGitHubParams {
-	webhookId: WebhookID;
-	token: WebhookToken;
-	threadId?: string;
-	event: string;
-	delivery: string;
-	data: GitHubWebhook;
-	requestCache: RequestCache;
-}
-
 interface WebhookExecuteSlackParams {
 	webhookId: WebhookID;
 	token: WebhookToken;
 	threadId?: string;
 	data: SlackWebhookRequest;
-	requestCache: RequestCache;
-}
-
-interface WebhookExecuteInstatusParams {
-	webhookId: WebhookID;
-	token: WebhookToken;
-	data: InstatusWebhook;
 	requestCache: RequestCache;
 }
 
@@ -180,7 +153,7 @@ interface SweegoWebhookParams {
 export class WebhookRequestService {
 	constructor(
 		private readonly webhookService: WebhookService,
-		private readonly channelRepository: IChannelRepository,
+		private readonly channelRepository: ChannelRepository,
 		private readonly userCacheService: UserCacheService,
 		private readonly liveKitWebhookService: LiveKitWebhookService | null,
 		private readonly sweegoWebhookService: SweegoWebhookService,
@@ -314,7 +287,7 @@ export class WebhookRequestService {
 		if (!params.wait) {
 			return null;
 		}
-		return this.mapMessageResponse(message, params.requestCache);
+		return this.mapMessageResponse(message);
 	}
 
 	async getWebhookMessage(params: WebhookGetMessageParams): Promise<MessageResponse> {
@@ -324,7 +297,7 @@ export class WebhookRequestService {
 			threadId: params.threadId,
 			messageId: params.messageId,
 		});
-		return this.mapMessageResponse(message, params.requestCache);
+		return this.mapMessageResponse(message);
 	}
 
 	async editWebhookMessage(params: WebhookEditMessageParams): Promise<MessageResponse> {
@@ -336,38 +309,7 @@ export class WebhookRequestService {
 			data: params.data,
 			requestCache: params.requestCache,
 		});
-		return this.mapMessageResponse(message, params.requestCache);
-	}
-
-	async deleteWebhookMessage(params: WebhookDeleteMessageParams): Promise<void> {
-		await this.webhookService.deleteWebhookMessage({
-			webhookId: params.webhookId,
-			token: params.token,
-			threadId: params.threadId,
-			messageId: params.messageId,
-			requestCache: params.requestCache,
-		});
-	}
-
-	async executeGitHubWebhook(params: WebhookExecuteGitHubParams): Promise<void> {
-		await this.webhookService.executeGitHubWebhook({
-			webhookId: params.webhookId,
-			token: params.token,
-			threadId: params.threadId,
-			event: params.event,
-			delivery: params.delivery,
-			data: params.data,
-			requestCache: params.requestCache,
-		});
-	}
-
-	async executeInstatusWebhook(params: WebhookExecuteInstatusParams): Promise<void> {
-		await this.webhookService.executeInstatusWebhook({
-			webhookId: params.webhookId,
-			token: params.token,
-			data: params.data,
-			requestCache: params.requestCache,
-		});
+		return this.mapMessageResponse(message);
 	}
 
 	async executeSlackWebhook(params: WebhookExecuteSlackParams): Promise<void> {
@@ -409,8 +351,8 @@ export class WebhookRequestService {
 		return new Response(response.body, {status: response.status});
 	}
 
-	private async mapMessageResponse(message: Message, _requestCache: RequestCache): Promise<MessageResponse> {
-		const channel = await this.channelRepository.findUnique(message.channelId);
+	private async mapMessageResponse(message: Message): Promise<MessageResponse> {
+		const channel = await this.channelRepository.channelData.findUnique(message.channelId);
 		const response = await createMessageResponseDataService().buildMessage({
 			userId: createUserID(0n),
 			message,

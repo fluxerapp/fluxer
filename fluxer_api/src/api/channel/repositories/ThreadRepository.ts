@@ -2,19 +2,7 @@
 
 import {type ChannelID, channelIdToMessageId, type GuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import type {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
-import type {IMessageRepository} from '@app/api/channel/repositories/IMessageRepository';
-import {
-	type ArchivedThreadPage,
-	type CreateThreadMember,
-	type CreateThreadParams,
-	IThreadRepository,
-	type ThreadMemberAddResult,
-	type ThreadMemberRemoveResult,
-	type ThreadMemberSettingsPatch,
-	type ThreadParentConfigPatch,
-	type ThreadStatePatch,
-	type ThreadStateTransition,
-} from '@app/api/channel/repositories/IThreadRepository';
+import type {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
 import {
 	BatchBuilder,
 	deleteOneOrMany,
@@ -37,6 +25,7 @@ import type {
 	ThreadStatsRow,
 	ThreadsByParentRow,
 } from '@app/api/database/types/ThreadTypes';
+import type {MuteConfig} from '@app/api/database/types/UserTypes';
 import {insertGuildThreadMarker, isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
 import {ThreadMember} from '@app/api/models/ThreadMember';
@@ -69,6 +58,58 @@ import {MaxThreadMembersError} from '@fluxer/errors/src/domains/channel/MaxThrea
 import {ThreadAlreadyCreatedForMessageError} from '@fluxer/errors/src/domains/channel/ThreadAlreadyCreatedForMessageError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+
+export interface CreateThreadMember {
+	userId: UserID;
+	flags: number;
+}
+
+export interface CreateThreadParams {
+	channel: ChannelRow;
+	parentType: number;
+	autoArchiveDuration: number;
+	invitable: boolean | null;
+	flags: number;
+	appliedTags: Array<bigint>;
+	hasStarter: boolean;
+	createdAt: Date;
+	members: Array<CreateThreadMember>;
+}
+
+export type ThreadStatePatch = Partial<
+	Pick<
+		ThreadStateRow,
+		'archived' | 'locked' | 'invitable' | 'auto_archive_duration' | 'archive_timestamp' | 'flags' | 'applied_tags'
+	>
+>;
+
+export interface ThreadStateTransition {
+	previous: ThreadState;
+	state: ThreadState;
+}
+
+export interface ArchivedThreadPage {
+	threads: Array<ThreadState>;
+	hasMore: boolean;
+}
+
+export interface ThreadMemberSettingsPatch {
+	flags?: number;
+	muted?: boolean;
+	muteConfig?: MuteConfig | null;
+}
+
+export interface ThreadMemberAddResult {
+	added: Array<ThreadMember>;
+	state: ThreadState;
+}
+
+export interface ThreadMemberRemoveResult {
+	removed: Array<ThreadMember>;
+	state: ThreadState | null;
+}
+
+export type ThreadParentConfigPatch = Partial<Omit<ThreadParentConfigRow, 'guild_id' | 'channel_id'>>;
 
 const STATE_CAS_ATTEMPTS = 3;
 const DANGLING_CREATE_REPAIR_MS = 30_000;
@@ -197,14 +238,12 @@ function toStateOps(patch: ThreadStatePatch): StatePatchOps {
 	return ops;
 }
 
-export class ThreadRepository extends IThreadRepository {
+export class ThreadRepository {
 	constructor(
 		private readonly channelData: ChannelDataRepository,
-		private readonly messages: IMessageRepository,
+		private readonly messages: MessageRepository,
 		private readonly onIndexDrift?: (threadIds: Array<ChannelID>) => void,
-	) {
-		super();
-	}
+	) {}
 
 	async getState(threadId: ChannelID): Promise<ThreadState | null> {
 		const row = await fetchOne<ThreadStateRow>(FETCH_STATE.bind({thread_id: threadId}));
@@ -669,13 +708,9 @@ export class ThreadRepository extends IThreadRepository {
 		return rows.map((row) => new ThreadMember(row));
 	}
 
-	async addMembers(
-		threadId: ChannelID,
-		members: Array<CreateThreadMember>,
-		opts?: {joinTimestamp?: Date},
-	): Promise<ThreadMemberAddResult | null> {
+	async addMembers(threadId: ChannelID, members: Array<CreateThreadMember>): Promise<ThreadMemberAddResult | null> {
 		const unique = [...new Map(members.map((member) => [member.userId, member])).values()];
-		const joinTimestamp = opts?.joinTimestamp ?? new Date();
+		const joinTimestamp = new Date();
 		for (let attempt = 0; attempt < STATE_CAS_ATTEMPTS; attempt++) {
 			const state = await this.getState(threadId);
 			if (!state) return null;
@@ -719,6 +754,16 @@ export class ThreadRepository extends IThreadRepository {
 			for (const row of rows)
 				byUser.addPrepared(ThreadMembersByUser.upsertAll(this.memberByUserRow(stateRow, row.user_id)));
 			await byUser.execute(false);
+			const present = new Set(
+				(
+					await this.getMembers(
+						threadId,
+						rows.map((row) => row.user_id),
+					)
+				).map((m) => m.userId),
+			);
+			const gone = rows.filter((row) => !present.has(row.user_id)).map((row) => row.user_id);
+			if (gone.length > 0) await this.reconcileMembersByUser(stateRow, gone);
 			return {added: rows.map((row) => new ThreadMember(row)), state: next ?? state};
 		}
 		throw new ServiceUnavailableError();
@@ -728,7 +773,11 @@ export class ThreadRepository extends IThreadRepository {
 		const unique = [...new Set(userIds)];
 		for (let attempt = 0; attempt < STATE_CAS_ATTEMPTS; attempt++) {
 			const existing = await this.getMembers(threadId, unique);
-			if (existing.length === 0) return {removed: [], state: await this.getState(threadId)};
+			if (existing.length === 0) {
+				const state = await this.getState(threadId);
+				if (state) await this.reconcileMembersByUser(state.toRow(), unique);
+				return {removed: [], state};
+			}
 			const removed = await executeConditional(
 				ThreadMembers.conditionalBatch(
 					existing.map((member) => ({
@@ -767,6 +816,20 @@ export class ThreadRepository extends IThreadRepository {
 			return {removed: existing, state};
 		}
 		throw new ServiceUnavailableError();
+	}
+
+	private async reconcileMembersByUser(stateRow: ThreadStateRow, userIds: Array<UserID>): Promise<void> {
+		if (userIds.length === 0) return;
+		const cleanup = new BatchBuilder();
+		for (const userId of userIds)
+			cleanup.addPrepared(ThreadMembersByUser.deleteByPk(this.memberByUserRow(stateRow, userId)));
+		await cleanup.execute(false);
+		const present = await this.getMembers(stateRow.thread_id, userIds);
+		if (present.length === 0) return;
+		const restore = new BatchBuilder();
+		for (const member of present)
+			restore.addPrepared(ThreadMembersByUser.upsertAll(this.memberByUserRow(stateRow, member.userId)));
+		await restore.execute(false);
 	}
 
 	private async bumpMembership(

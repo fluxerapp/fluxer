@@ -23,7 +23,9 @@ export const GeolocationResponse = z.object({
 		.describe('ISO 3166-2 subdivision code resolved for the client, or null when it cannot be resolved'),
 	latitude: z.string().nullable().describe('Approximate latitude of the client, or null when it cannot be resolved'),
 	longitude: z.string().nullable().describe('Approximate longitude of the client, or null when it cannot be resolved'),
-	ageRestrictedGeos: z.array(GeoEntry).describe('Locations where age restricted content requires an age check'),
+	ageRestrictedGeos: z
+		.array(GeoEntry)
+		.describe('Locations where a date of birth typed in is not enough for mature content'),
 	ageBlockedGeos: z.array(GeoEntry).describe('Locations where age restricted content is unavailable'),
 });
 

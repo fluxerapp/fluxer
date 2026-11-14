@@ -17,7 +17,7 @@ function parseResourceId(path: string, resourceName: 'guilds' | 'channels'): str
 	if (segments.length < 2 || segments[0] !== resourceName) {
 		return null;
 	}
-	const id = segments[1];
+	const id = segments[1].trim();
 	if (!/^\d+$/.test(id)) {
 		return null;
 	}
@@ -63,9 +63,28 @@ async function resolveGuildIdForRequest(ctx: Context<HonoEnv>, path: string): Pr
 	if (channelId === null) {
 		return null;
 	}
-	const channel = await ctx.get('channelRepository').findUnique(channelId);
+	const channel = await ctx.get('channelRepository').channelData.findUnique(channelId);
 	ctx.get('requestCache')?.channels.set(channelId, channel);
 	return channel?.guildId ?? null;
+}
+
+export async function assertGuildAvailableForRequest(
+	ctx: Context<HonoEnv>,
+	guildId: GuildID,
+	user: User,
+): Promise<void> {
+	try {
+		const guild = await ctx.get('guildService').data.operations.getGuildSystem(guildId);
+		ctx.get('requestCache')?.guilds.set(guildId, guild);
+		if (isGuildUnavailableForUser(guild, user)) {
+			throw new MissingAccessError();
+		}
+	} catch (error) {
+		if (error instanceof UnknownGuildError) {
+			return;
+		}
+		throw error;
+	}
 }
 
 export const GuildAvailabilityMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
@@ -76,22 +95,8 @@ export const GuildAvailabilityMiddleware = createMiddleware<HonoEnv>(async (ctx,
 	}
 	const normalizedPath = normalizeRequestPath(ctx.req.path);
 	const guildId = await resolveGuildIdForRequest(ctx, normalizedPath);
-	if (guildId === null) {
-		await next();
-		return;
-	}
-	try {
-		const guild = await ctx.get('guildService').data.getGuildSystem(guildId);
-		ctx.get('requestCache')?.guilds.set(guildId, guild);
-		if (isGuildUnavailableForUser(guild, user)) {
-			throw new MissingAccessError();
-		}
-	} catch (error) {
-		if (error instanceof UnknownGuildError) {
-			await next();
-			return;
-		}
-		throw error;
+	if (guildId !== null) {
+		await assertGuildAvailableForRequest(ctx, guildId, user);
 	}
 	await next();
 });

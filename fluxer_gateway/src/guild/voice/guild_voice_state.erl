@@ -11,7 +11,6 @@
 -export([user_matches_voice_state/2]).
 -export([create_voice_state/2]).
 -export([extract_session_info_from_voice_state/2]).
--export([has_voice_state_change/2]).
 
 -export_type([
     guild_state/0,

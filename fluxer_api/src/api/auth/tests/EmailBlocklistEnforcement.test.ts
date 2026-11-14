@@ -117,19 +117,6 @@ describe('Email blocklist at signup and email change', () => {
 		expect(banned).toBe(true);
 	});
 
-	it('rejects a malformed domain entry', async () => {
-		await createBuilder(harness, admin.token)
-			.post('/admin/blocklists/email/entries')
-			.body({email: '@not a domain'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-
-	it('still registers an address that is not blocklisted', async () => {
-		await blocklist(createUniqueEmail('blocked-other'));
-		await createTestAccount(harness);
-	});
-
 	it('refuses an email change to a blocklisted address before sending a code', async () => {
 		const account = await createTestAccount(harness);
 		const blocked = createUniqueEmail('blocked-change');

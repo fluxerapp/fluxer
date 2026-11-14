@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
+use crate::templates::components::report_category::{report_status, report_type};
+
 use crate::{
     api::types::{ReportEntry, SearchReportsResponse},
     config::AdminConfig,
@@ -119,44 +123,10 @@ fn report_section(
                 }
 
                 @if has_previous || next_page.is_some() {
-                    div class="flex justify-center gap-2" {
-                        @if has_previous {
-                            a href={(base) "/users/" (user_id) "?tab=reports&reports_limit=" (limit) "&reports_sent_page=" (if kind == "sent" { current_page - 1 } else { sent_page }) "&reports_received_page=" (if kind == "received" { current_page - 1 } else { received_page })}
-                                class="inline-flex items-center rounded-md border \
-                                       border-neutral-300 bg-white px-3 py-2 text-sm \
-                                       font-medium text-neutral-700 hover:bg-neutral-50" {
-                                "Previous"
-                            }
-                        }
-                        @if let Some(next_page) = next_page {
-                            a href={(base) "/users/" (user_id) "?tab=reports&reports_limit=" (limit) "&reports_sent_page=" (if kind == "sent" { next_page } else { sent_page }) "&reports_received_page=" (if kind == "received" { next_page } else { received_page })}
-                                class="inline-flex items-center rounded-md border \
-                                       border-neutral-300 bg-white px-3 py-2 text-sm \
-                                       font-medium text-neutral-700 hover:bg-neutral-50" {
-                                "Next"
-                            }
-                        }
-                    }
+                    (pager_with_missing(has_previous.then(|| format!("{base}/users/{user_id}?tab=reports&reports_limit={limit}&reports_sent_page={}&reports_received_page={}", if kind == "sent" {current_page - 1} else {sent_page}, if kind == "received" {current_page - 1} else {received_page})), None, next_page.map(|page| format!("{base}/users/{user_id}?tab=reports&reports_limit={limit}&reports_sent_page={}&reports_received_page={}", if kind == "sent" {page} else {sent_page}, if kind == "received" {page} else {received_page})), true))
                 }
             }
         }))
-    }
-}
-
-fn format_report_type(report_type: i32) -> &'static str {
-    match report_type {
-        0 => "Message",
-        1 => "User",
-        2 => "Guild",
-        _ => "Unknown",
-    }
-}
-
-pub(crate) fn format_status(status: i32) -> &'static str {
-    match status {
-        0 => "Pending",
-        1 => "Resolved",
-        _ => "Unknown",
     }
 }
 
@@ -252,7 +222,7 @@ fn type_and_category_lines(report: &ReportEntry) -> Markup {
         .zip(reason_label)
         .is_some_and(|(category, label)| reason_repeats_category(category, label));
     html! {
-        div class="text-neutral-500 text-xs" { (format_report_type(report.report_type)) }
+        div class="text-neutral-500 text-xs" { (report_type(report.report_type).0) }
         @if let Some(category) = &report.category {
             div class="break-words" data-report-reason=[report.reason.as_deref().filter(|_| repeats)] {
                 (report_category(category))
@@ -319,7 +289,7 @@ fn report_row(config: &AdminConfig, base: &str, kind: &str, report: &ReportEntry
                 }
             }
             td class="whitespace-nowrap px-2 py-3 text-sm text-neutral-900 xl:px-4" {
-                (format_status(report.status))
+                (report_status(report.status).0)
             }
         }
     }
@@ -374,169 +344,4 @@ fn reported_entity_icon(config: &AdminConfig, report: &ReportEntry) -> Markup {
         };
     }
     html! {}
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::config::{ProxyConfig, RuntimeEnv};
-    use serde_json::json;
-
-    fn test_config() -> AdminConfig {
-        AdminConfig {
-            env: RuntimeEnv::Test,
-            host: String::new(),
-            port: 0,
-            secret_key_base: "test-secret".to_owned(),
-            base_path: "/admin".to_owned(),
-            api_endpoint: String::new(),
-            media_endpoint: "https://media.example.test".to_owned(),
-            static_cdn_endpoint: String::new(),
-            reports_bucket_origin: String::new(),
-            admin_endpoint: String::new(),
-            web_app_endpoint: String::new(),
-            oauth_client_id: String::new(),
-            oauth_client_secret: String::new(),
-            oauth_redirect_uri: String::new(),
-            build_version: "test".to_owned(),
-            self_hosted: false,
-            proxy: ProxyConfig {
-                trust_client_ip_header: false,
-                client_ip_header_name: String::new(),
-            },
-        }
-    }
-
-    #[test]
-    fn sent_webhook_reports_name_the_webhook_instead_of_the_guild() {
-        let report: ReportEntry = serde_json::from_value(json!({
-            "report_id": "1800000000000000004",
-            "reporter_id": "1500000000000000000",
-            "reported_at": "2026-10-04T10:00:00.000Z",
-            "status": 0,
-            "report_type": 0,
-            "category": "spam",
-            "reported_user_id": null,
-            "reported_webhook_id": "1700000000000000500",
-            "reported_webhook_name": "Harbor Bulletin",
-            "reported_guild_id": "1700000000000000800",
-            "reported_guild_name": "Harbor"
-        }))
-        .expect("valid report");
-        let config = test_config();
-        let sent = report_row(&config, "/admin", "sent", &report).into_string();
-        assert!(
-            sent.contains(r#"href="/admin/reports?reported_webhook_id=1700000000000000500""#),
-            "{sent}"
-        );
-        assert!(
-            sent.contains(r#"data-report-webhook="1700000000000000500""#),
-            "{sent}"
-        );
-        assert!(sent.contains("Harbor Bulletin"), "{sent}");
-        assert!(!sent.contains("/admin/guilds/"), "{sent}");
-        let received = report_row(&config, "/admin", "received", &report).into_string();
-        assert!(!received.contains("data-report-webhook"), "{received}");
-        assert!(
-            received.contains(r#"href="/admin/users/1500000000000000000""#),
-            "{received}"
-        );
-    }
-
-    #[test]
-    fn report_rows_label_the_category_and_keep_the_key() {
-        let config = test_config();
-        let report: ReportEntry = serde_json::from_value(json!({
-            "report_id": "1800000000000000005",
-            "reporter_id": "1500000000000000000",
-            "reported_at": "2026-10-04T10:00:00.000Z",
-            "status": 0,
-            "report_type": 1,
-            "category": "inappropriate_profile",
-            "reported_user_id": "1500000000000000001",
-            "reason": "harassment",
-            "reason_label": "Harassment or bullying"
-        }))
-        .expect("valid report");
-        for kind in ["sent", "received"] {
-            let markup = report_row(&config, "/admin", kind, &report).into_string();
-            assert!(
-                markup.contains(r#"data-report-category="inappropriate_profile""#),
-                "{markup}"
-            );
-            assert!(markup.contains(">Inappropriate profile<"), "{markup}");
-            assert!(!markup.contains(">inappropriate_profile<"), "{markup}");
-            assert!(
-                markup.contains(r#"data-report-reason="harassment""#),
-                "{markup}"
-            );
-            assert!(markup.contains("Oct 4, 2026, 10:00 AM UTC"), "{markup}");
-            assert!(!markup.contains("2026-10-04T10:00:00.000Z"), "{markup}");
-            assert_eq!(
-                markup
-                    .matches(r#"href="/admin/reports/1800000000000000005""#)
-                    .count(),
-                1,
-                "{markup}"
-            );
-            assert!(!markup.contains(">View<"), "{markup}");
-        }
-        let mut unknown = report.clone();
-        unknown.category = Some("future_value".to_owned());
-        let markup = report_row(&config, "/admin", "sent", &unknown).into_string();
-        assert!(markup.contains(">future_value<"), "{markup}");
-    }
-
-    #[test]
-    fn report_rows_skip_a_reason_that_repeats_the_category() {
-        let config = test_config();
-        let report: ReportEntry = serde_json::from_value(json!({
-            "report_id": "1800000000000000007",
-            "reporter_id": "1500000000000000000",
-            "reporter_username": "reporter_0423a7212d56",
-            "reporter_discriminator": "8650",
-            "reporter_global_name": "Avery Reporter",
-            "reported_at": "2026-10-04T10:00:00.000Z",
-            "status": 0,
-            "report_type": 0,
-            "category": "harassment",
-            "reported_user_id": "1500000000000000001",
-            "reason": "harassment",
-            "reason_label": "Harassment or bullying"
-        }))
-        .expect("valid report");
-        let markup = report_row(&config, "/admin", "received", &report).into_string();
-        assert_eq!(
-            markup.matches("Harassment or bullying").count(),
-            2,
-            "{markup}"
-        );
-        assert_eq!(
-            markup.matches(r#"data-report-reason="harassment""#).count(),
-            2,
-            "{markup}"
-        );
-        assert!(
-            markup.contains(
-                r#"<div class="mt-1 xl:hidden" data-report-type-compact="1800000000000000007">"#
-            ),
-            "{markup}"
-        );
-        assert!(
-            markup.contains(
-                r#"<td class="hidden px-4 py-3 text-sm text-neutral-900 xl:table-cell">"#
-            ),
-            "{markup}"
-        );
-        assert!(
-            markup.contains(r#"data-report-category="harassment""#),
-            "{markup}"
-        );
-        assert!(markup.contains(">Message<"), "{markup}");
-        assert!(
-            markup.contains(r#"Avery Reporter <span class="whitespace-nowrap text-neutral-500 text-xs">(reporter_0423a7212d56#8650)</span>"#),
-            "{markup}"
-        );
-        assert!(markup.contains(">Pending<"), "{markup}");
-    }
 }

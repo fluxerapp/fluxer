@@ -3,7 +3,6 @@
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {CONTENT_WARNING_TEXT_MAX_LENGTH} from '@fluxer/constants/src/GuildConstants';
 import {
-	AVATAR_MAX_SIZE,
 	CHANNEL_RATE_LIMIT_PER_USER_MAX,
 	CHANNEL_RATE_LIMIT_PER_USER_MIN,
 	CHANNEL_TOPIC_MAX_LENGTH,
@@ -32,8 +31,9 @@ import {
 } from '@fluxer/schema/src/domains/channel/ForumRequestSchemas';
 import {ThreadAutoArchiveDurationSchema} from '@fluxer/schema/src/domains/channel/ThreadRequestSchemas';
 import {ReadStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
+import {withBase64Binary} from '@fluxer/schema/src/primitives/Base64BinaryFields';
 import {ChannelOverwriteTypeSchema, GeneralChannelNameType} from '@fluxer/schema/src/primitives/ChannelValidators';
-import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {createBase64ImageType} from '@fluxer/schema/src/primitives/FileValidators';
 import {ContentWarningLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
 import {QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
@@ -96,6 +96,7 @@ const ChannelCommonBase = z.object({
 		),
 	permission_overwrites: z
 		.array(ChannelOverwriteRequest)
+		.max(10000)
 		.optional()
 		.describe('Permission overwrites for roles and members'),
 	rate_limit_per_user: z
@@ -134,9 +135,7 @@ const ChannelUpdateCommon = ChannelCommonBase.extend({
 			'Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.',
 		),
 	...ChannelContentWarningFields,
-	icon: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('Base64-encoded icon image for group DM channels'),
+	icon: createBase64ImageType().nullish().describe('Base64-encoded icon image for group DM channels'),
 	owner_id: SnowflakeType.nullish().describe('ID of the new owner for group DM channels'),
 	nicks: ChannelNicknameOverrides.optional().describe('Custom nicknames for users in this channel'),
 	rtc_region: createStringType(RTC_REGION_ID_MIN_LENGTH, RTC_REGION_ID_MAX_LENGTH)
@@ -144,6 +143,10 @@ const ChannelUpdateCommon = ChannelCommonBase.extend({
 		.describe(
 			`Voice region ID for the voice channel (${RTC_REGION_ID_MIN_LENGTH}-${RTC_REGION_ID_MAX_LENGTH} characters)`,
 		),
+	rtc_p2p: z
+		.boolean()
+		.optional()
+		.describe('Whether calls in the voice channel connect participants directly instead of through a voice server'),
 });
 const ChannelCreateTextRequest = ChannelCreateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'Channel type (text channel)'),
@@ -172,6 +175,7 @@ const ChannelCreateCategoryRequest = ChannelCreateCommon.extend({
 const ChannelCreateLinkRequest = ChannelCreateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_LINK, 'GUILD_LINK', 'Channel type (link channel)'),
 	name: GeneralChannelNameType.describe('The name of the channel'),
+	url: URLType.describe('External URL for link channels'),
 });
 
 const EXPERIMENT = {experiment: 'channel_threads'} as const;
@@ -248,14 +252,13 @@ const ChannelUpdateCategoryRequest = ChannelUpdateCommon.extend({
 const ChannelUpdateLinkRequest = ChannelUpdateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_LINK, 'GUILD_LINK', 'Channel type (link channel)'),
 	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+	url: URLType.optional().describe('External URL for link channels'),
 });
 
 const ChannelUpdateGroupDmRequest = z.object({
 	type: createNamedLiteral(ChannelTypes.GROUP_DM, 'GROUP_DM', 'Channel type (group DM)'),
 	name: GeneralChannelNameType.nullish().describe('The name of the group DM'),
-	icon: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
-		.nullish()
-		.describe('Base64-encoded icon image for the group DM'),
+	icon: createBase64ImageType().nullish().describe('Base64-encoded icon image for the group DM'),
 	owner_id: SnowflakeType.nullish().describe('ID of the new owner of the group DM'),
 	nicks: ChannelNicknameOverrides.nullish().describe('Custom nicknames for users in this group DM'),
 	nsfw: z.boolean().nullish().describe('Whether the group DM is marked for mature content (owner only)'),
@@ -461,17 +464,19 @@ export const ReadStateAckResponse = z.object({
 
 export type ReadStateAckResponse = z.infer<typeof ReadStateAckResponse>;
 
-export const ChannelPositionUpdateRequest = z.array(
-	z.object({
-		id: SnowflakeType.describe('The ID of the channel to reposition'),
-		position: z.number().int().nonnegative().optional().describe('New position for the channel'),
-		parent_id: SnowflakeType.nullish().describe('New parent category ID'),
-		preceding_sibling_id: SnowflakeType.nullish().describe(
-			'ID of the sibling channel that should directly precede this channel after reordering',
-		),
-		lock_permissions: z.boolean().optional().describe('Whether to sync permissions with the new parent'),
-	}),
-);
+export const ChannelPositionUpdateRequest = z
+	.array(
+		z.object({
+			id: SnowflakeType.describe('The ID of the channel to reposition'),
+			position: z.number().int().nonnegative().optional().describe('New position for the channel'),
+			parent_id: SnowflakeType.nullish().describe('New parent category ID'),
+			preceding_sibling_id: SnowflakeType.nullish().describe(
+				'ID of the sibling channel that should directly precede this channel after reordering',
+			),
+			lock_permissions: z.boolean().optional().describe('Whether to sync permissions with the new parent'),
+		}),
+	)
+	.max(10000);
 
 export type ChannelPositionUpdateRequest = z.infer<typeof ChannelPositionUpdateRequest>;
 
@@ -489,7 +494,7 @@ export const CallUpdateBodySchema = z.object({
 export type CallUpdateBodySchema = z.infer<typeof CallUpdateBodySchema>;
 
 export const CallRingBodySchema = z.object({
-	recipients: z.array(SnowflakeType).optional().describe('User IDs to ring for the call'),
+	recipients: z.array(SnowflakeType).max(1000).optional().describe('User IDs to ring for the call'),
 	latitude: GeoCoordinateString.optional().describe('Client latitude used for automatic region selection'),
 	longitude: GeoCoordinateString.optional().describe('Client longitude used for automatic region selection'),
 });
@@ -508,7 +513,7 @@ export type StreamUpdateBodySchema = z.infer<typeof StreamUpdateBodySchema>;
 
 export const StreamPreviewUploadBodySchema = z.object({
 	channel_id: SnowflakeType.describe('The ID of the channel where the stream is active'),
-	thumbnail: createStringType(1, 2000000).describe('Base64-encoded thumbnail image data'),
+	thumbnail: withBase64Binary(createStringType(1, 2000000)).describe('Base64-encoded thumbnail image data'),
 	content_type: createStringType(1, 64).optional().describe('MIME type of the thumbnail image'),
 });
 

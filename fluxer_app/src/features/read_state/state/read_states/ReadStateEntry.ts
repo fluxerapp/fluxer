@@ -39,14 +39,6 @@ export class ReadStateEntry {
 	private storedMentionCount = 0;
 	inFlightAckMessageId: string | null = null;
 	serverVersion: string | null = null;
-	snapshot?: {
-		unread: boolean;
-		mentionCount: number;
-		guildUnread: boolean | null;
-		guildMentionCount: number | null;
-		takenAt: number;
-	};
-
 	constructor(channelId: string) {
 		this.channelId = channelId;
 	}
@@ -146,7 +138,10 @@ export class ReadStateEntry {
 	}
 
 	supportsUnreadTracking(): boolean {
-		return Channels.getChannel(this.channelId) != null || this.storedGuildId != null;
+		const channel = Channels.getChannel(this.channelId);
+		const guildId = channel?.guildId ?? this.storedGuildId;
+		if (guildId != null && Guilds.getGuild(guildId)?.visiting === true) return false;
+		return channel != null || this.storedGuildId != null;
 	}
 
 	private get statusModel() {
@@ -218,7 +213,7 @@ export class ReadStateEntry {
 		if (currentUser == null) {
 			return;
 		}
-		const messages = Messages.getMessages(this.channelId);
+		const messages = Messages.getMessagesIncludingDeferred(this.channelId) ?? Messages.getMessages(this.channelId);
 		const isPrivate = this.isPrivate;
 		const userId = currentUser.id;
 		const guildId = this.guildId;
@@ -281,7 +276,7 @@ export class ReadStateEntry {
 		if (!this.isPrivate) {
 			return null;
 		}
-		const messages = Messages.getMessages(this.channelId);
+		const messages = Messages.getMessagesIncludingDeferred(this.channelId) ?? Messages.getMessages(this.channelId);
 		if (!messages.hasNewestMessages()) {
 			return null;
 		}
@@ -346,7 +341,7 @@ export class ReadStateEntry {
 		if (ackTimestamp === 0 || Number.isNaN(ackTimestamp)) {
 			return 0;
 		}
-		const messages = Messages.getMessages(this.channelId);
+		const messages = Messages.getMessagesIncludingDeferred(this.channelId) ?? Messages.getMessages(this.channelId);
 		const isPrivate = this.isPrivate;
 		let mentionCount = 0;
 		messages.forEachBuffered((message) => {

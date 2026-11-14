@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
+
 import styles from '@app/features/voice/components/AudioWaveform.module.css';
 import {resolveDevicePixelRatio} from '@app/features/voice/DevicePixelRatio';
 import {msg} from '@lingui/core/macro';
@@ -72,10 +74,6 @@ interface DragState {
 	originX: number;
 	originStart: number;
 	originEnd: number;
-}
-
-function clamp(value: number, min: number, max: number): number {
-	return value < min ? min : value > max ? max : value;
 }
 
 function computePeakNormalizer(peaks: AudioWaveformPeaks): number {
@@ -260,7 +258,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
 				data-flx="voice.audio-waveform.selection.region-pointer-down"
 			/>
 			<div
-				className={clsx(styles.handle, styles.handleStart)}
+				className={styles.handle}
 				style={{left: `${startPct}%`}}
 				onPointerDown={handleStartPointerDown}
 				role="slider"
@@ -272,7 +270,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
 				data-flx="voice.audio-waveform.handle.start-pointer-down"
 			/>
 			<div
-				className={clsx(styles.handle, styles.handleEnd)}
+				className={styles.handle}
 				style={{left: `${endPct}%`}}
 				onPointerDown={handleEndPointerDown}
 				role="slider"

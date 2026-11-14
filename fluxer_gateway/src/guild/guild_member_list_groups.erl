@@ -5,8 +5,7 @@
 
 -export([
     get_hoisted_roles_sorted/2,
-    get_effective_hoist_position/1,
-    find_top_hoisted_role/2
+    get_effective_hoist_position/1
 ]).
 
 -spec get_hoisted_roles_sorted([map()], integer() | undefined) -> [map()].
@@ -36,18 +35,6 @@ get_effective_hoist_position(Role) ->
         HoistPos when is_integer(HoistPos) -> HoistPos;
         _ -> maps:get(<<"position">>, Role, 0)
     end.
-
--spec find_top_hoisted_role([integer()], [integer()]) -> integer() | undefined.
-find_top_hoisted_role(MemberRoleIds, HoistedRoleIds) ->
-    Shared = [RId || RId <- HoistedRoleIds, role_is_member(RId, MemberRoleIds)],
-    case Shared of
-        [] -> undefined;
-        [Top | _] -> Top
-    end.
-
--spec role_is_member(integer(), [integer()]) -> boolean().
-role_is_member(RoleId, MemberRoleIds) ->
-    lists:member(RoleId, MemberRoleIds).
 
 -spec role_id(map()) -> integer() | undefined.
 role_id(Role) ->

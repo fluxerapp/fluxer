@@ -28,6 +28,10 @@
 -define(FETCH_DELAY_MS, 2000).
 -define(NATS_SUBSCRIBE_RETRY_MS, 2000).
 -define(NATS_SUBJECT, <<"config.gateway.rollout">>).
+-define(SESSION_START_CEILING_KEY, {?MODULE, session_start_ceiling}).
+-define(MEMORY_BYTES_PER_SESSION_START, 6291456).
+-define(MIN_SESSION_START_CEILING, 8).
+-define(CGROUP_ROOT, <<"/sys/fs/cgroup">>).
 
 -type state() :: #{
     subscribers := [{pid(), reference()}],
@@ -83,7 +87,8 @@ rpc_request_timeout_ms() ->
 
 -spec max_concurrent_session_starts() -> integer().
 max_concurrent_session_starts() ->
-    maps:get(<<"max_concurrent_session_starts">>, get(), 512).
+    Configured = maps:get(<<"max_concurrent_session_starts">>, get(), 512),
+    min(Configured, persistent_term:get(?SESSION_START_CEILING_KEY, Configured)).
 
 -spec max_concurrent_guild_starts() -> integer().
 max_concurrent_guild_starts() ->
@@ -108,6 +113,7 @@ unsubscribe_changes(Pid) ->
 -spec init([]) -> {ok, state()}.
 init([]) ->
     erlang:process_flag(fullsweep_after, 50),
+    ok = init_session_start_ceiling(cgroup_memory_limit()),
     persistent_term:put(?PERSISTENT_TERM_KEY, initial_config()),
     self() ! subscribe_nats,
     erlang:send_after(?FETCH_DELAY_MS, self(), fetch_initial_config),
@@ -163,6 +169,71 @@ code_change(_OldVsn, State, _Extra) ->
     erlang:garbage_collect(),
     {ok, State}.
 
+-spec init_session_start_ceiling(pos_integer() | undefined) -> ok.
+init_session_start_ceiling(undefined) ->
+    _ = persistent_term:erase(?SESSION_START_CEILING_KEY),
+    logger:notice("Session start ceiling: no memory limit detected"),
+    ok;
+init_session_start_ceiling(LimitBytes) ->
+    Ceiling = max(?MIN_SESSION_START_CEILING, LimitBytes div ?MEMORY_BYTES_PER_SESSION_START),
+    persistent_term:put(?SESSION_START_CEILING_KEY, Ceiling),
+    logger:notice(
+        "Session start ceiling: memory_limit_bytes=~b max_concurrent_session_starts=~b",
+        [LimitBytes, min(Ceiling, max_concurrent_session_starts())]
+    ),
+    ok.
+
+-spec cgroup_memory_limit() -> pos_integer() | undefined.
+cgroup_memory_limit() ->
+    case file:read_file("/proc/self/cgroup") of
+        {ok, Contents} -> own_cgroup_memory_limit(Contents);
+        {error, _Reason} -> undefined
+    end.
+
+-spec own_cgroup_memory_limit(binary()) -> pos_integer() | undefined.
+own_cgroup_memory_limit(Contents) ->
+    case [Path || <<"0::", Path/binary>> <- binary:split(Contents, <<"\n">>, [global])] of
+        [Path | _] -> lowest_memory_limit(cgroup_dirs(Path), undefined);
+        [] -> undefined
+    end.
+
+-spec cgroup_dirs(binary()) -> [binary()].
+cgroup_dirs(Path) ->
+    Parts = [Part || Part <- binary:split(Path, <<"/">>, [global]), Part =/= <<>>],
+    [cgroup_dir(lists:sublist(Parts, N)) || N <- lists:seq(0, length(Parts))].
+
+-spec cgroup_dir([binary()]) -> binary().
+cgroup_dir(Parts) ->
+    iolist_to_binary([?CGROUP_ROOT | [[<<"/">>, Part] || Part <- Parts]]).
+
+-spec lowest_memory_limit([binary()], pos_integer() | undefined) -> pos_integer() | undefined.
+lowest_memory_limit([], Lowest) ->
+    Lowest;
+lowest_memory_limit([Dir | Rest], Lowest) ->
+    lowest_memory_limit(Rest, lower_limit(read_memory_max(Dir), Lowest)).
+
+-spec read_memory_max(binary()) -> pos_integer() | undefined.
+read_memory_max(Dir) ->
+    case file:read_file(<<Dir/binary, "/memory.max">>) of
+        {ok, Contents} -> parse_memory_max(hd(binary:split(Contents, <<"\n">>)));
+        {error, _Reason} -> undefined
+    end.
+
+-spec parse_memory_max(binary()) -> pos_integer() | undefined.
+parse_memory_max(Value) ->
+    try binary_to_integer(Value) of
+        Bytes when Bytes > 0 -> Bytes;
+        _ -> undefined
+    catch
+        error:badarg -> undefined
+    end.
+
+-spec lower_limit(pos_integer() | undefined, pos_integer() | undefined) ->
+    pos_integer() | undefined.
+lower_limit(undefined, Lowest) -> Lowest;
+lower_limit(Limit, undefined) -> Limit;
+lower_limit(Limit, Lowest) -> min(Limit, Lowest).
+
 -spec check_eligibility(binary(), number(), modulo | random) -> boolean().
 check_eligibility(_Id, Percentage, _Mode) when Percentage >= 100 ->
     true;
@@ -206,7 +277,7 @@ validate_config(Config) ->
 -spec fetch_config_from_api() -> store_result().
 fetch_config_from_api() ->
     RpcRequest = #{<<"type">> => <<"get_gateway_rollout_config">>},
-    case api_rpc_client:call(RpcRequest) of
+    case rpc_client:call(RpcRequest) of
         {ok, #{<<"config">> := Config}} when is_map(Config) ->
             store_valid_config(Config, api);
         {ok, _Other} ->

@@ -17,6 +17,8 @@
 -type permission() :: non_neg_integer().
 -type guild_state() :: map().
 
+-export_type([permission/0, guild_state/0]).
+
 -spec resolve(integer(), map(), map() | undefined, guild_state()) -> permission().
 resolve(UserId, Thread, Member, State) ->
     case parent_channel(Thread, State) of
@@ -24,21 +26,24 @@ resolve(UserId, Thread, Member, State) ->
             note_unknown_parent(),
             0;
         ParentId ->
-            ParentPerms = guild_permissions:compute_member_permissions(
-                UserId, ParentId, Member, State
-            ),
-            Perms = alias_permissions(ParentPerms),
-            case can_view_thread_from_parent(UserId, Thread, Perms, Member, State) of
-                true -> Perms;
-                false -> Perms band bnot constants:view_channel_permission()
-            end
+            parent_permissions(UserId, ParentId, Thread, Member, State)
+    end.
+
+-spec parent_permissions(integer(), integer(), map(), map() | undefined, guild_state()) ->
+    permission().
+parent_permissions(UserId, ParentId, Thread, Member, State) ->
+    ParentPerms = guild_permissions:compute_member_permissions(UserId, ParentId, Member, State),
+    Perms = alias_permissions(ParentPerms),
+    case can_view_thread_from_parent(UserId, Thread, Perms, Member, State) of
+        true -> Perms;
+        false -> Perms band bnot constants:view_channel_permission()
     end.
 
 -spec alias_permissions(permission()) -> permission().
 alias_permissions(?ALL_PERMISSIONS) ->
     ?ALL_PERMISSIONS;
 alias_permissions(Perms) ->
-    case permission_bits:has(Perms, constants:send_messages_in_threads_permission()) of
+    case bitset:has(Perms, constants:send_messages_in_threads_permission()) of
         true -> Perms bor ?SEND_MESSAGES;
         false -> Perms band bnot ?SEND_MESSAGES
     end.
@@ -47,8 +52,8 @@ alias_permissions(Perms) ->
 is_moderator(?ALL_PERMISSIONS, _Member) ->
     true;
 is_moderator(Perms, Member) ->
-    permission_bits:has(Perms, constants:administrator_permission()) orelse
-        (permission_bits:has(Perms, constants:manage_threads_permission()) andalso
+    bitset:has(Perms, constants:administrator_permission()) orelse
+        (bitset:has(Perms, constants:manage_threads_permission()) andalso
             not timed_out(Member)).
 
 -spec can_view_thread_from_parent(
@@ -56,7 +61,7 @@ is_moderator(Perms, Member) ->
 ) ->
     boolean().
 can_view_thread_from_parent(UserId, Thread, Perms, Member, State) ->
-    permission_bits:has(Perms, constants:view_channel_permission()) andalso
+    bitset:has(Perms, constants:view_channel_permission()) andalso
         (not is_private(Thread) orelse is_moderator(Perms, Member) orelse
             is_thread_member(UserId, Thread, State)).
 
@@ -72,12 +77,16 @@ parent_id(Thread) ->
 parent_channel(Thread, State) ->
     case parent_id(Thread) of
         ParentId when is_integer(ParentId) ->
-            case guild_permissions:find_channel_by_id(ParentId, State) of
-                undefined -> undefined;
-                _Channel -> ParentId
-            end;
+            existing_channel(ParentId, State);
         _ ->
             undefined
+    end.
+
+-spec existing_channel(integer(), guild_state()) -> integer() | undefined.
+existing_channel(ChannelId, State) ->
+    case guild_permissions_check:find_channel_by_id(ChannelId, State) of
+        undefined -> undefined;
+        _Channel -> ChannelId
     end.
 
 -spec is_thread_member(integer(), map(), guild_state()) -> boolean().
@@ -89,12 +98,17 @@ is_thread_member(UserId, Thread, State) ->
         }
     of
         {Tab, ThreadId} when Tab =/= undefined, is_integer(ThreadId) ->
-            case guild_thread_store:get_thread(Tab, ThreadId) of
-                undefined -> listed_member(UserId, Thread);
-                _ -> guild_thread_store:is_member(Tab, ThreadId, UserId)
-            end;
+            stored_or_listed_member(Tab, ThreadId, UserId, Thread);
         _ ->
             listed_member(UserId, Thread)
+    end.
+
+-spec stored_or_listed_member(guild_thread_store:tab(), integer(), integer(), map()) ->
+    boolean().
+stored_or_listed_member(Tab, ThreadId, UserId, Thread) ->
+    case guild_thread_store:get_thread(Tab, ThreadId) of
+        undefined -> listed_member(UserId, Thread);
+        _ -> guild_thread_store:is_member(Tab, ThreadId, UserId)
     end.
 
 -spec listed_member(integer(), map()) -> boolean().
@@ -127,83 +141,3 @@ unknown_parent_count() ->
         undefined -> 0;
         Counter -> counters:get(Counter, 1)
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-alias_maps_send_messages_to_threads_bit_test() ->
-    InThreads = constants:send_messages_in_threads_permission(),
-    ?assertEqual(InThreads bor ?SEND_MESSAGES, alias_permissions(InThreads)),
-    ?assertEqual(1024, alias_permissions(1024 bor ?SEND_MESSAGES)),
-    ?assertEqual(?ALL_PERMISSIONS, alias_permissions(?ALL_PERMISSIONS)).
-
-moderator_rules_test() ->
-    Manage = constants:manage_threads_permission(),
-    ?assert(is_moderator(Manage, #{})),
-    ?assert(is_moderator(constants:administrator_permission(), #{})),
-    ?assertNot(is_moderator(1024, #{})),
-    ?assertNot(
-        is_moderator(Manage, #{<<"communication_disabled_until">> => <<"2999-01-01T00:00:00Z">>})
-    ),
-    ?assert(
-        is_moderator(Manage, #{<<"communication_disabled_until">> => <<"2000-01-01T00:00:00Z">>})
-    ).
-
-shared_case_table_test() ->
-    {ok, Contents} = file:read_file("test/thread_permission_cases.json"),
-    Cases = [
-        Case
-     || #{<<"fn">> := Fn} = Case <- json:decode(Contents),
-        Fn =:= <<"isThreadModerator">> orelse Fn =:= <<"canViewThread">>
-    ],
-    ?assertEqual(16, length(Cases)),
-    lists:foreach(fun run_case/1, Cases).
-
-run_case(
-    #{<<"name">> := Name, <<"fn">> := Fn, <<"actor">> := Actor, <<"expect">> := Expect} = Case
-) ->
-    Perms = case_perms(Actor),
-    Member = case_member(Actor),
-    Thread = case_thread(Actor, maps:get(<<"thread">>, Case, #{})),
-    Actual =
-        case Fn of
-            <<"isThreadModerator">> -> is_moderator(Perms, Member);
-            <<"canViewThread">> -> can_view_thread_from_parent(1, Thread, Perms, Member, #{})
-        end,
-    ?assertEqual({Name, case_expect(Expect)}, {Name, Actual}).
-
-case_perms(#{<<"isOwner">> := true}) ->
-    ?ALL_PERMISSIONS;
-case_perms(#{<<"perms">> := Names}) ->
-    case lists:member(<<"ADMINISTRATOR">>, Names) of
-        true -> ?ALL_PERMISSIONS;
-        false -> lists:foldl(fun(N, Acc) -> Acc bor case_bit(N) end, 0, Names)
-    end.
-
-case_bit(<<"VIEW_CHANNEL">>) -> constants:view_channel_permission();
-case_bit(<<"READ_MESSAGE_HISTORY">>) -> 65536;
-case_bit(<<"MANAGE_THREADS">>) -> constants:manage_threads_permission();
-case_bit(<<"SEND_MESSAGES_IN_THREADS">>) -> constants:send_messages_in_threads_permission().
-
-case_member(#{<<"timedOut">> := true}) ->
-    #{<<"communication_disabled_until">> => <<"2999-01-01T00:00:00Z">>};
-case_member(_) ->
-    #{}.
-
-case_thread(Actor, Thread) ->
-    MemberIds =
-        case maps:get(<<"isMember">>, Actor, false) of
-            true -> [<<"1">>];
-            false -> []
-        end,
-    #{
-        <<"id">> => <<"2">>,
-        <<"type">> => maps:get(<<"type">>, Thread, 11),
-        <<"_fluxer_member_ids">> => MemberIds
-    }.
-
-case_expect(Bool) when is_boolean(Bool) -> Bool;
-case_expect(null) -> true;
-case_expect(<<"MISSING_ACCESS">>) -> false.
-
--endif.

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {EmptySlate} from '@app/features/app/components/dialogs/shared/EmptySlate';
+import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {
 	AUDIT_LOG_ACTIONS,
 	AUDIT_LOG_TARGET_TYPES,
@@ -35,7 +35,6 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {ingestSearchThreads} from '@app/features/threads/commands/ThreadCommands';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
-import {Button} from '@app/features/ui/button/Button';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {MockAvatar} from '@app/features/ui/components/MockAvatar';
@@ -664,7 +663,7 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				)}
 				{shouldShowEmptyState && (
 					<div className={styles.emptyState} data-flx="guild.guild-tabs.guild-audit-log-tab.empty-state">
-						<EmptySlate
+						<StatusSlate
 							Icon={ClipboardTextIcon}
 							title={i18n._(NO_LOGS_YET_DESCRIPTOR)}
 							description={i18n._(MODERATION_ACTIONS_AND_COMMUNITY_CHANGES_WILL_APPEAR_HERE_DESCRIPTOR)}
@@ -674,21 +673,15 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				)}
 				{!isLoading && shouldShowErrorState && (
 					<div className={styles.errorState} data-flx="guild.guild-tabs.guild-audit-log-tab.error-state">
-						<EmptySlate
+						<StatusSlate
 							Icon={WarningCircleIcon}
 							title={i18n._(UNABLE_TO_LOAD_ACTIVITY_LOGS_DESCRIPTOR)}
 							description={errorDescription}
+							actions={[
+								{text: i18n._(TRY_AGAIN_DESCRIPTOR), onClick: () => loadLogs({reset: true}), variant: 'secondary'},
+							]}
 							data-flx="guild.guild-tabs.guild-audit-log-tab.empty-slate--2"
 						/>
-						<div className={styles.statusActions} data-flx="guild.guild-tabs.guild-audit-log-tab.status-actions">
-							<Button
-								variant="secondary"
-								onClick={() => loadLogs({reset: true})}
-								data-flx="guild.guild-tabs.guild-audit-log-tab.button.load-logs"
-							>
-								{i18n._(TRY_AGAIN_DESCRIPTOR)}
-							</Button>
-						</div>
 					</div>
 				)}
 				{hasMore && entries.length > 0 && !shouldShowErrorState && (

@@ -1,32 +1,79 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import fs from 'node:fs';
 import {createRequire} from 'node:module';
-import path from 'node:path';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {loadDesktopConfig} from '@electron/common/DesktopConfig';
 import {WINDOWS_APP_USER_MODEL_ID, WINDOWS_TOAST_ACTIVATOR_CLSID} from '@electron/common/DesktopIdentity';
-import {type ModulePollPlan, nextModulePollDelay, resolveModulePollPlan} from '@electron/common/ModulePollPlan';
+import {createChildLogger, writeLogFilesUnder} from '@electron/common/Logger';
+import {resolveModulePollPlan} from '@electron/common/ModulePollPlan';
 import {
-	decideModuleSystemDisableRequest,
 	hasOfflineRenderer,
-	ModuleSystemDisableDecision,
 	ModuleSystemLaunchDecision,
 	readBundledRendererVersion,
 	resolveModuleSystemLaunch,
 } from '@electron/common/ModuleSystem';
-import {checkDesktopUpdateNow} from '@electron/main/DesktopUpdateGate';
+import {configureUserDataPath} from '@electron/common/UserDataPath';
+import {isStartMinimizedLaunch} from '@electron/main/AutostartLaunch';
+import {decryptBootStatePrewarm, prewarmBootState, whenBootStatePrewarmed} from '@electron/main/BootState';
+import {appendWindowsGpuDriverWorkaroundSwitches} from '@electron/main/ChromiumRuntime';
+import {isUpdateOnDemandLaunch} from '@electron/main/DesktopDebugInfo';
+import {prewarmSystemCertificateStore} from '@electron/main/DesktopTrustedCertificates';
+import {armDesktopUpdate, checkDesktopUpdateNow} from '@electron/main/DesktopUpdateGate';
+import {armDesktopUpdatePoll, wakeDesktopUpdatePoll} from '@electron/main/DesktopUpdatePoll';
 import {DesktopUpdateRun, type DesktopUpdateTakeover} from '@electron/main/DesktopUpdateRun';
-import {armOpenUrlForwarding, observeRendererLaunchConfirmed} from '@electron/main/ModuleBootHandoff';
-import type {ModuleLaunchAttempt, ModuleStore as ModuleStoreInstance} from '@electron/main/ModuleStore';
-import type {
-	ModuleUpdater as ModuleUpdaterInstance,
-	ModuleUpdaterOutcome,
-	ModuleUpdaterSplashState,
+import {isDesktopUpdateRequested, shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
+import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
+import {getDesktopLocalAppProtocol} from '@electron/main/LocalAppProtocol';
+import {LocalNetworkSplashHint} from '@electron/main/LocalNetworkSplashHint';
+import {MAIN_WINDOW_LIVE_FRAME_WAIT_MS} from '@electron/main/MainWindowReveal';
+import {
+	armOpenUrlForwarding,
+	armSecondInstanceForwarding,
+	getMainWindowFactory,
+	hasQuitStarted,
+	markModuleLaunchGranted,
+	observeRendererLaunchConfirmed,
+	onMainWindowCreated,
+	onMainWindowReady,
+	setCommittedModuleFiles,
+	setOnDemandModuleInstaller,
+	setSecondInstanceSink,
+	settleStartupWindow,
+} from '@electron/main/ModuleBootHandoff';
+import {moduleNetworkFetch} from '@electron/main/ModuleNetworkFetch';
+import {createOnDemandModuleInstaller} from '@electron/main/ModuleOnDemand';
+import {getModuleStoreRoot, type ModuleLaunchAttempt, ModuleStore} from '@electron/main/ModuleStore';
+import {
+	ModuleUpdater,
+	type ModuleUpdaterOutcome,
+	type ModuleUpdaterSplashState,
 	ModuleUpdaterStatus,
 } from '@electron/main/ModuleUpdater';
-import type {SplashState, SplashStatus} from '@electron/main/SplashWindow';
+import {armNativeProbeCache} from '@electron/main/NativeProbeCache';
+import {applyPreReadyChromiumConfiguration} from '@electron/main/PreReadyChromium';
+import {resolveDesktopPackageOrigin} from '@electron/main/ShellDownloadFormats';
+import {resolveShellUpdatePlan, ShellUpdateCapability} from '@electron/main/ShellUpdateCapability';
+import {armBlockedShellUpdate} from '@electron/main/ShellUpdateSplash';
+import {buildSplashDiagnosticsText} from '@electron/main/SplashDiagnostics';
+import {
+	closeSplashWindow,
+	focusSplashWindow,
+	onSplashCopyDiagnostics,
+	onSplashNetworkOnline,
+	onSplashOpenLogs,
+	onSplashQuit,
+	onSplashRetry,
+	openSplashWindow,
+	releaseSplashAffordance,
+	SplashAction,
+	type SplashState,
+	type SplashStatus,
+	setSplashState,
+} from '@electron/main/SplashWindow';
+import {UpdateServerRetry} from '@electron/main/UpdateServerRetry';
+import {createWindow, getMainWindow} from '@electron/main/Window';
 import {repairWindowsShortcuts} from '@electron/main/WindowsShortcuts';
-import {type BrowserWindow, app as electronApp} from 'electron';
+import {app, clipboard, session, shell} from 'electron';
 
 declare const __FLUXER_MAIN_APP_OUTPUT_FILE__: string;
 
@@ -49,8 +96,8 @@ if (process.platform === 'win32') {
 		})
 		.run();
 	repairWindowsShortcuts();
-	electronApp.setToastActivatorCLSID(WINDOWS_TOAST_ACTIVATOR_CLSID);
-	electronApp.setAppUserModelId(WINDOWS_APP_USER_MODEL_ID);
+	app.setToastActivatorCLSID(WINDOWS_TOAST_ACTIVATOR_CLSID);
+	app.setAppUserModelId(WINDOWS_APP_USER_MODEL_ID);
 }
 
 armOpenUrlForwarding();
@@ -72,10 +119,8 @@ const MODULE_SYSTEM_LAUNCH = resolveModuleSystemLaunch({hasOfflineRenderer: CAN_
 
 const MODULE_LAUNCH_PERMIT = Symbol('fluxer.desktop.moduleLaunchPermit');
 
-const PENDING_UPDATE_MARKER_NAME = 'update-pending';
 const IN_PLACE_RELOAD_CONFIRM_TIMEOUT_MS = 45_000;
-const UPDATE_TAKEOVER_SPLASH_WAIT_MS = 250;
-const UPDATE_SPLASH_PRELOAD_DELAY_MS = 5000;
+const NETWORK_SPLASH_GRACE_MS = 500;
 
 const UPDATE_SERVER_UNREACHABLE_MESSAGE =
 	"Fluxer couldn't reach its update server to download app files. Check your internet connection, proxy or firewall. Fluxer keeps retrying.";
@@ -88,7 +133,7 @@ interface ModuleLaunchPermit {
 	readonly launchAttempt: ModuleLaunchAttempt;
 }
 
-type BootstrapLogger = typeof import('@electron/common/Logger').Logger;
+type BootstrapLogger = ReturnType<typeof createChildLogger>;
 
 const SPLASH_STATUS_BY_UPDATER_STATUS: Readonly<Record<ModuleUpdaterStatus, SplashStatus>> = Object.freeze({
 	checking: 'checking-for-updates',
@@ -105,7 +150,6 @@ const SPLASH_STATUS_BY_UPDATER_STATUS: Readonly<Record<ModuleUpdaterStatus, Spla
 function toSplashState(state: ModuleUpdaterSplashState): SplashState {
 	return {
 		status: state.stalled ? 'download-stalled' : SPLASH_STATUS_BY_UPDATER_STATUS[state.status],
-		requiredSecurityUpdate: state.requiredSecurityUpdate,
 		current: state.current,
 		total: state.total,
 		progress: state.progress,
@@ -121,7 +165,7 @@ function unhandledModuleUpdaterOutcome(outcome: never): never {
 	throw new Error(`Unhandled module updater outcome: ${JSON.stringify(outcome)}`);
 }
 
-async function launchMainApp(permit: ModuleLaunchPermit, logger: BootstrapLogger): Promise<void> {
+function reportModuleLaunch(permit: ModuleLaunchPermit, logger: BootstrapLogger): void {
 	logger.info('Module convergence granted a launch permit', {
 		unreachable: permit.unreachable,
 		rolledBack: permit.rolledBack,
@@ -133,58 +177,134 @@ async function launchMainApp(permit: ModuleLaunchPermit, logger: BootstrapLogger
 			{modules: permit.belowFloor},
 		);
 	}
-	await import(MAIN_PROCESS_ENTRY_URL);
 }
 
-function armModulePoll(plan: ModulePollPlan, logger: BootstrapLogger): void {
-	let inFlight = false;
-	let failing = false;
-	logger.info('Polling the module manifest', {
-		intervalMs: plan.intervalMs,
-		jitterRatio: plan.jitterRatio,
-	});
-	const schedule = (): void => {
-		const timer = setTimeout(tick, nextModulePollDelay(plan));
-		timer.unref();
-	};
-	const tick = (): void => {
-		if (inFlight) {
-			schedule();
-			return;
-		}
-		inFlight = true;
-		void checkDesktopUpdateNow()
-			.then((state) => {
-				if (failing) {
-					failing = false;
-					logger.info('The module poll recovered');
-				}
-				if (state.available) {
-					logger.info('A desktop update is available, waiting for the user to start it');
-				}
-			})
-			.catch((error: unknown) => {
-				if (!failing) {
-					failing = true;
-					logger.warn('The module poll failed, staying quiet until it recovers', error);
-				}
-			})
-			.finally(() => {
-				inFlight = false;
-				schedule();
-			});
-	};
-	if (process.platform === 'linux') {
-		tick();
-	} else {
-		schedule();
+async function runBootstrap(): Promise<void> {
+	const logger = createChildLogger('Bootstrap');
+	const userDataConfig = configureProcessStorage();
+	if (!app.requestSingleInstanceLock()) {
+		logger.info('Another instance already holds the single instance lock, forwarding this launch and quitting');
+		app.quit();
+		return;
 	}
+	armSecondInstanceForwarding();
+	prewarmBootState(userDataConfig.base);
+	loadDesktopConfig(userDataConfig.base);
+	applyPreReadyChromiumConfiguration(userDataConfig.channel, process.argv);
+	getDesktopLocalAppProtocol().registerSchemes();
+	const modulesEnabled =
+		MODULE_SYSTEM_LAUNCH.kind === ModuleSystemLaunchDecision.ENABLED ||
+		MODULE_SYSTEM_LAUNCH.kind === ModuleSystemLaunchDecision.ENABLED_WITH_IGNORED_DISABLE_REQUEST;
+	const storeOpening = modulesEnabled
+		? ModuleStore.open({
+				root: getModuleStoreRoot(userDataConfig.base),
+				shellVersion: app.getVersion(),
+				releaseChannel: BUILD_CHANNEL,
+			})
+		: null;
+	void storeOpening?.catch(() => undefined);
+	const mainApp: typeof import('@electron/main/index') = await import(MAIN_PROCESS_ENTRY_URL);
+	if (!mainApp.prepareMainProcess() || hasQuitStarted()) return;
+	if (!modulesEnabled && !HAS_OFFLINE_RENDERER) {
+		await refuseUnsupportedBuild('the module system is turned off and this build has no offline renderer');
+		return;
+	}
+	let launchBlocked = false;
+	const moduleReady =
+		storeOpening === null
+			? Promise.resolve()
+			: runModuleBootstrap(userDataConfig, storeOpening, () => {
+					launchBlocked = true;
+					getMainWindow()?.destroy();
+				});
+	let resolveStorageReady!: (accountKey: Promise<string | null>) => void;
+	const storageReady = new Promise<string | null>((resolve) => {
+		resolveStorageReady = resolve;
+	});
+	const bootStateReady = whenBootStatePrewarmed(null);
+	const localProtocol = getDesktopLocalAppProtocol();
+	const windowCreated = new Promise<void>((resolve) => onMainWindowCreated(() => resolve()));
+	const frameAdmission = localProtocol
+		.prepareBootFrame(moduleReady, async (format) => {
+			await Promise.all([bootStateReady, storageReady, windowCreated]);
+			void mainApp.prepareStartupBootFrame(format, storageReady).catch((error: unknown) => {
+				if (!hasQuitStarted()) logger.warn('Failed to prepare the native boot frame', {error});
+			});
+		})
+		.catch((error: unknown) => {
+			if (!hasQuitStarted()) logger.warn('Failed to admit the served renderer boot frame', {error});
+		});
+	await appendWindowsGpuDriverWorkaroundSwitches();
+	await app.whenReady();
+	const whenReadyMs = process.uptime() * 1000;
+	if (hasQuitStarted()) return;
+	mainApp.initializeMainWindowStartup();
+	decryptBootStatePrewarm();
+	prewarmSystemCertificateStore();
+
+	let resolveRendererReady!: (bootSession: boolean | null) => void;
+	let rejectRendererReady!: (error: unknown) => void;
+	const rendererReadiness = new Promise<boolean | null>((resolve, reject) => {
+		resolveRendererReady = resolve;
+		rejectRendererReady = reject;
+	});
+	void rendererReadiness.catch(() => undefined);
+	let startupIndexServed = false;
+	localProtocol.register({
+		rendererReadiness,
+		bootStatePrewarmed: () => {
+			if (startupIndexServed) return whenBootStatePrewarmed();
+			startupIndexServed = true;
+			return bootStateReady;
+		},
+		admitBootFrame: mainApp.admitStartupBootFrame,
+		readBootSession: mainApp.readBootSession,
+	});
+	const createStartupWindow = (): void => {
+		if (hasQuitStarted() || launchBlocked || getMainWindow() !== null) return;
+		const startedAt = Date.now();
+		try {
+			createWindow({
+				startHidden: isStartMinimizedLaunch(),
+				rendererReadiness,
+				liveFrameDeadlineMs: whenReadyMs + MAIN_WINDOW_LIVE_FRAME_WAIT_MS,
+			});
+		} finally {
+			logger.info('[Startup] Phase completed', {phase: 'create-window', durationMs: Date.now() - startedAt});
+		}
+	};
+	let initialWindowDispatched = false;
+	void moduleReady
+		.then(() => {
+			launchBlocked = false;
+			if (initialWindowDispatched) createStartupWindow();
+		})
+		.catch(rejectRendererReady);
+	if (hasQuitStarted()) return;
+	initialWindowDispatched = true;
+	createStartupWindow();
+	resolveStorageReady(mainApp.openStartupAppStorage());
+	void mainApp.startMainApp(moduleReady, storageReady, frameAdmission).then(
+		(bootSession) => {
+			if (hasQuitStarted()) return;
+			createStartupWindow();
+			resolveRendererReady(bootSession);
+			settleStartupWindow();
+			void mainApp.finishMainAppStartup().catch((error: unknown) => {
+				if (!hasQuitStarted()) logger.error('Deferred main initialization failed', error);
+			});
+		},
+		(error: unknown) => {
+			rejectRendererReady(error);
+			if (hasQuitStarted()) return;
+			logger.error('Failed to initialize the main app', error);
+			getMainWindow()?.destroy();
+			app.quit();
+		},
+	);
 }
 
 async function refuseUnsupportedBuild(reason: string): Promise<never> {
-	const {app} = await import('electron');
-	const {createChildLogger} = await import('@electron/common/Logger');
-	const {onSplashQuit, openSplashWindow, setSplashState, SplashAction} = await import('@electron/main/SplashWindow');
 	const logger = createChildLogger('Bootstrap');
 	logger.error('This build cannot start a renderer, refusing to launch', {reason});
 	process.stderr.write(`Fluxer cannot start: ${reason}\n`);
@@ -197,136 +317,80 @@ async function refuseUnsupportedBuild(reason: string): Promise<never> {
 	return new Promise<never>(() => {});
 }
 
-async function runModuleBootstrap(): Promise<void> {
-	const {app, clipboard, session, shell} = await import('electron');
-	const {createChildLogger, writeLogFilesUnder} = await import('@electron/common/Logger');
-	const {loadDesktopConfig} = await import('@electron/common/DesktopConfig');
-	const {appendWindowsGpuDriverWorkaroundSwitches} = await import('@electron/main/ChromiumRuntime');
-	const {applyPreReadyChromiumConfiguration} = await import('@electron/main/PreReadyChromium');
-	const {configureUserDataPath} = await import('@electron/common/UserDataPath');
-	const {armNativeProbeCache} = await import('@electron/main/NativeProbeCache');
-	const {isStartMinimizedLaunch} = await import('@electron/main/AutostartLaunch');
-	const {isDesktopUpdateRequested} = await import('@electron/main/LaunchOptions');
-	const {relaunchStableLaunchPath} = await import('@electron/main/LinuxLaunchPath');
-	const {getDesktopLocalAppProtocol} = await import('@electron/main/LocalAppProtocol');
-	const {
-		armSecondInstanceForwarding,
-		getMainWindowFactory,
-		onMainWindowCreated,
-		onMainWindowReady,
-		setCommittedModuleFiles,
-		setOnDemandModuleInstaller,
-		setSecondInstanceSink,
-	} = await import('@electron/main/ModuleBootHandoff');
-	const {armDesktopUpdate, publishDesktopUpdateCheck} = await import('@electron/main/DesktopUpdateGate');
-	const {instanceTurnedModulesOff} = await import('@electron/main/InstanceModulePreference');
-	const {createOnDemandModuleInstaller} = await import('@electron/main/ModuleOnDemand');
-	const {getModuleStoreRoot, ModuleStore} = await import('@electron/main/ModuleStore');
-	const {ModuleUpdater} = await import('@electron/main/ModuleUpdater');
-	const {moduleNetworkFetch} = await import('@electron/main/ModuleNetworkFetch');
-	const {resolveDesktopPackageOrigin} = await import('@electron/main/ShellDownloadFormats');
-	const {LocalNetworkSplashHint} = await import('@electron/main/LocalNetworkSplashHint');
-	const {resolveShellUpdatePlan, ShellUpdateCapability} = await import('@electron/main/ShellUpdateCapability');
-	const {armBlockedShellUpdate} = await import('@electron/main/ShellUpdateSplash');
-	const {UpdateServerRetry} = await import('@electron/main/UpdateServerRetry');
-	const {buildSplashDiagnosticsText} = await import('@electron/main/SplashDiagnostics');
-	const {
-		closeSplashWindow,
-		focusSplashWindow,
-		markSplashLaunching,
-		onSplashCopyDiagnostics,
-		onSplashNetworkOnline,
-		onSplashOpenLogs,
-		onSplashQuit,
-		onSplashReady,
-		onSplashRetry,
-		openSplashWindow,
-		preloadSplashWindow,
-		releaseSplashAffordance,
-		revealPreloadedSplashWindow,
-		setSplashState,
-		SplashAction,
-	} = await import('@electron/main/SplashWindow');
+function configureProcessStorage(): ReturnType<typeof configureUserDataPath> {
+	const userDataConfig = configureUserDataPath();
+	if (userDataConfig.portable) {
+		writeLogFilesUnder(app.getPath('logs'));
+	}
+	armNativeProbeCache(userDataConfig.base);
+	return userDataConfig;
+}
 
+async function runModuleBootstrap(
+	userDataConfig: ReturnType<typeof configureUserDataPath>,
+	storeOpening: Promise<ModuleStore>,
+	onLaunchBlocked: () => void,
+): Promise<void> {
 	const logger = createChildLogger('Bootstrap');
 	if (MODULE_SYSTEM_LAUNCH.kind === ModuleSystemLaunchDecision.ENABLED_WITH_IGNORED_DISABLE_REQUEST) {
 		logger.warn(
 			'Ignoring the --fluxer-no-module-system override, only a development build with a bundled renderer may turn the module system off',
 		);
 	}
-	const userDataConfig = configureUserDataPath();
-	if (userDataConfig.portable) {
-		writeLogFilesUnder(app.getPath('logs'));
-	}
-	armNativeProbeCache(userDataConfig.base);
 
-	if (!app.requestSingleInstanceLock()) {
-		logger.info('Another instance already holds the single instance lock, forwarding this launch and quitting');
-		app.quit();
-		return;
-	}
-	armSecondInstanceForwarding();
-
-	const instancePreference = decideModuleSystemDisableRequest(
-		instanceTurnedModulesOff(userDataConfig.base),
-		CAN_TURN_MODULE_SYSTEM_OFF,
-	);
-	switch (instancePreference.kind) {
-		case ModuleSystemDisableDecision.NOT_REQUESTED:
-			break;
-		case ModuleSystemDisableDecision.IGNORED_WITHOUT_OFFLINE_RENDERER:
-			logger.warn(
-				'Ignoring the instance desktop module preference, only a development build with a bundled renderer may turn the module system off',
-			);
-			break;
-		case ModuleSystemDisableDecision.HONOURED:
-			logger.warn(
-				'The instance turned the desktop module system off on an earlier boot, launching the offline renderer instead',
-			);
-			await import(MAIN_PROCESS_ENTRY_URL);
-			return;
-	}
-
-	loadDesktopConfig(userDataConfig.base);
-	applyPreReadyChromiumConfiguration(userDataConfig.channel, process.argv);
-
-	try {
-		getDesktopLocalAppProtocol().registerSchemes();
-	} catch (error) {
-		logger.error('Failed to register the local app scheme privileges', error);
-		app.exit(1);
-		process.exit(1);
-	}
-
-	await appendWindowsGpuDriverWorkaroundSwitches();
-	await app.whenReady();
-
-	if (isStartMinimizedLaunch()) {
-		logger.info('Launched at login with start minimized, converging the modules without the splash');
-	} else {
-		openSplashWindow();
-	}
-	setSplashState({status: 'checking-for-updates'});
+	const startMinimized = isStartMinimizedLaunch();
+	let networkSplashTimer: NodeJS.Timeout | null = null;
+	let launchGranted = false;
+	let splashOpenedAt: number | null = null;
+	const openLaunchSplash = (): void => {
+		splashOpenedAt ??= Date.now();
+		if (app.isReady()) {
+			if (!hasQuitStarted()) openSplashWindow();
+		} else {
+			void app.whenReady().then(() => {
+				if (!hasQuitStarted() && !launchGranted) openSplashWindow();
+			});
+		}
+	};
+	const armNetworkSplash = (): void => {
+		if (hasQuitStarted() || startMinimized || launchGranted || networkSplashTimer != null) return;
+		networkSplashTimer = setTimeout(() => {
+			networkSplashTimer = null;
+			if (hasQuitStarted() || launchGranted) return;
+			logger.info('The launch is waiting on the update server, opening the splash');
+			openLaunchSplash();
+		}, NETWORK_SPLASH_GRACE_MS);
+	};
+	const disarmNetworkSplash = (): void => {
+		if (networkSplashTimer != null) {
+			clearTimeout(networkSplashTimer);
+			networkSplashTimer = null;
+		}
+	};
 
 	const updateServerRetry = new UpdateServerRetry();
 
 	const shellUpdatePlan = resolveShellUpdatePlan();
-	if (shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE && shellUpdatePlan.updater === 'appimage') {
-		const {sweepAbandonedAppImageUpdates} = await import('@electron/main/AppImageUpdate');
-		try {
-			const reclaimed = sweepAbandonedAppImageUpdates(shellUpdatePlan.target);
-			if (reclaimed.length > 0) {
-				logger.info('Reclaimed abandoned AppImage staging directories', {count: reclaimed.length});
-			}
-		} catch (error) {
-			logger.warn('Failed to reclaim abandoned AppImage staging directories', error);
-		}
-	}
 
-	let splashOpenedAt = Date.now();
+	onMainWindowReady(() => {
+		void (async () => {
+			if (shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE && shellUpdatePlan.updater === 'appimage') {
+				const {sweepAbandonedAppImageUpdates} = await import('@electron/main/AppImageUpdate');
+				try {
+					const reclaimed = sweepAbandonedAppImageUpdates(shellUpdatePlan.target);
+					if (reclaimed.length > 0) {
+						logger.info('Reclaimed abandoned AppImage staging directories', {count: reclaimed.length});
+					}
+				} catch (error) {
+					logger.warn('Failed to reclaim abandoned AppImage staging directories', error);
+				}
+			}
+		})().catch((error: unknown) => logger.warn('Failed to reclaim abandoned AppImage updates', error));
+	});
+
 	let diagnosticsSource: {
-		readonly store: ModuleStoreInstance;
-		readonly updater: ModuleUpdaterInstance;
+		readonly store: ModuleStore;
+		readonly updater: ModuleUpdater;
 	} | null = null;
 	const resolveLogsPath = (): string | null => {
 		try {
@@ -405,25 +469,25 @@ async function runModuleBootstrap(): Promise<void> {
 	};
 	armSplashActions();
 
-	const runShellSelfUpdateOnSplash = async (
-		requiredSecurityUpdate: boolean,
-	): Promise<{readonly reason: string; readonly detail: string | null}> => {
+	const runShellSelfUpdateOnSplash = async (): Promise<{readonly reason: string; readonly detail: string | null}> => {
 		if (shellUpdatePlan.capability !== ShellUpdateCapability.SELF_UPDATE) {
 			return {reason: 'unsupported', detail: null};
 		}
 		const {runShellSelfUpdate} = await import('@electron/main/ShellSelfUpdate');
 		return await runShellSelfUpdate(shellUpdatePlan, {
 			onDownloading: (progress) => {
-				setSplashState({status: 'shell-update-downloading', requiredSecurityUpdate, progress});
+				setSplashState({status: 'shell-update-downloading', progress});
 			},
 			onRestarting: () => {
-				setSplashState({status: 'shell-update-restarting', requiredSecurityUpdate});
+				setSplashState({status: 'shell-update-restarting'});
 			},
 		});
 	};
 
 	const showBlockedSplash = (status: SplashStatus, message: string | null = null): void => {
-		openSplashWindow();
+		disarmNetworkSplash();
+		onLaunchBlocked();
+		openLaunchSplash();
 		setSplashState({status, action: SplashAction.RETRY, message});
 		setSecondInstanceSink(focusSplashWindow);
 	};
@@ -433,19 +497,16 @@ async function runModuleBootstrap(): Promise<void> {
 	};
 
 	try {
-		let store: ModuleStoreInstance;
+		let store: ModuleStore;
 		try {
-			store = await ModuleStore.open({
-				root: getModuleStoreRoot(userDataConfig.base),
-				shellVersion: app.getVersion(),
-				releaseChannel: BUILD_CHANNEL,
-			});
+			store = await storeOpening;
 		} catch (error) {
 			logger.error('Failed to open the module store', error);
 			await blockUntilRelaunch('blocked-update-required');
 			return;
 		}
 
+		if (hasQuitStarted()) return;
 		const localNetworkHint = new LocalNetworkSplashHint({
 			apiBaseUrl: resolveDesktopPackageOrigin(),
 			platform: process.platform,
@@ -460,46 +521,47 @@ async function runModuleBootstrap(): Promise<void> {
 				setAside: store.recoveredUnreadableState,
 			});
 		}
-		if (store.shellVersionChanged) {
-			logger.info('The shell version changed since the last boot, converging the modules before launch');
+		const moduleUpdatesForcedOff = shouldDisableModuleUpdatesForLaunch();
+		const updateOnDemand = isUpdateOnDemandLaunch();
+		const updateWasRequested = isDesktopUpdateRequested();
+		if (moduleUpdatesForcedOff) {
+			logger.info('Module updates are disabled for this launch');
+		} else if (updateWasRequested) {
+			logger.info('The user asked for an update, installing it before launch');
+		} else if (updateOnDemand) {
+			logger.info('Updates install on demand, launching the installed modules');
 		}
-		const pendingUpdateMarker = path.join(store.root, PENDING_UPDATE_MARKER_NAME);
-		const updateWasPending = fs.existsSync(pendingUpdateMarker);
-		if (updateWasPending) {
-			logger.info('An update was waiting when the app last quit, installing it before launch');
-		}
-		const recordPendingUpdate = (check: {readonly shellNewer: boolean; readonly modulesChanged: boolean}): void => {
-			try {
-				if (check.modulesChanged) {
-					fs.writeFileSync(pendingUpdateMarker, '');
-				} else {
-					fs.rmSync(pendingUpdateMarker, {force: true});
-				}
-			} catch (error) {
-				logger.warn('Failed to record whether an update is waiting', error);
-			}
-		};
 		const updater = new ModuleUpdater({
 			store,
 			shellVersion: app.getVersion(),
 			hasOfflineRenderer: HAS_OFFLINE_RENDERER,
 			bundledRendererVersion: BUNDLED_RENDERER_VERSION,
 			preferUnversionedBundle: app.isPackaged,
-			forceStartupUpdate: store.shellVersionChanged || updateWasPending || isDesktopUpdateRequested(),
+			startupUpdateRequested: updateWasRequested,
+			moduleUpdatesDisabled: moduleUpdatesForcedOff,
+			updateOnDemand,
 			selfUpdateShellFirst:
 				shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE
-					? async (latestVersion, requiredSecurityUpdate) => {
+					? async (latestVersion) => {
 							logger.info('A newer shell is available, updating it before the modules', {latestVersion});
-							const result = await runShellSelfUpdateOnSplash(requiredSecurityUpdate);
+							const result = await runShellSelfUpdateOnSplash();
 							logger.warn('The shell self update did not restart the app, converging the modules for this shell', {
 								latestVersion,
 								...result,
 							});
+							return result;
 						}
 					: undefined,
-			fetch: moduleNetworkFetch,
+			fetch: async (input, init) => {
+				await app.whenReady();
+				return moduleNetworkFetch(input, init);
+			},
 			sleep: updateServerRetry.sleep,
 			onState: (state) => {
+				if (hasQuitStarted()) return;
+				if (state.status !== ModuleUpdaterStatus.LAUNCHING && state.status !== ModuleUpdaterStatus.UNREACHABLE_LAUNCH) {
+					armNetworkSplash();
+				}
 				localNetworkHint.armWhileChecking(state.status === 'checking');
 				if (updateServerRetry.holding) {
 					if (!updateServerRetry.endsHold(state.status)) {
@@ -524,14 +586,10 @@ async function runModuleBootstrap(): Promise<void> {
 		const runModuleUpdateAttempt = async (): Promise<ModuleLaunchPermit | null> => {
 			let outcome: ModuleUpdaterOutcome;
 			try {
-				outcome = await updater.run();
+				outcome = await updater.launchLocal();
 			} catch (error) {
 				logger.error('The module updater failed', error);
-				return await blockUntilRelaunch(
-					updater.getLastState().requiredSecurityUpdate
-						? 'blocked-security-update-required'
-						: 'blocked-update-required',
-				);
+				return await blockUntilRelaunch('blocked-update-required');
 			}
 			switch (outcome.status) {
 				case 'launching':
@@ -556,12 +614,10 @@ async function runModuleBootstrap(): Promise<void> {
 						minimumVersion: outcome.minimumVersion,
 						capability: shellUpdatePlan.capability,
 					});
-					if (shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE) {
-						const failure = await runShellSelfUpdateOnSplash(outcome.requiredSecurityUpdate);
-						logger.error('The shell self update failed, falling back to a manual download', failure);
-					}
-					openSplashWindow();
-					armBlockedShellUpdate(shellUpdatePlan, outcome.latestVersion, outcome.requiredSecurityUpdate);
+					disarmNetworkSplash();
+					onLaunchBlocked();
+					openLaunchSplash();
+					armBlockedShellUpdate();
 					setSecondInstanceSink(focusSplashWindow);
 					return await new Promise<never>(() => {});
 				}
@@ -573,17 +629,12 @@ async function runModuleBootstrap(): Promise<void> {
 						updateServerUnreachable: outcome.updateServerUnreachable,
 					});
 					if (outcome.updateServerUnreachable) {
-						showBlockedSplash(
-							outcome.requiredSecurityUpdate ? 'blocked-security-update-required' : 'blocked-update-unreachable',
-							UPDATE_SERVER_UNREACHABLE_MESSAGE,
-						);
+						showBlockedSplash('blocked-update-unreachable', UPDATE_SERVER_UNREACHABLE_MESSAGE);
 						await updateServerRetry.holdUntilNextAttempt();
 						logger.info('Retrying the update server');
 						return null;
 					}
-					return await blockUntilRelaunch(
-						outcome.requiredSecurityUpdate ? 'blocked-security-update-required' : 'blocked-update-required',
-					);
+					return await blockUntilRelaunch('blocked-update-required');
 				default:
 					return unhandledModuleUpdaterOutcome(outcome);
 			}
@@ -591,6 +642,7 @@ async function runModuleBootstrap(): Promise<void> {
 
 		const runModuleUpdateLoop = async (): Promise<ModuleLaunchPermit> => {
 			for (;;) {
+				if (hasQuitStarted()) return await new Promise<never>(() => {});
 				const permit = await runModuleUpdateAttempt();
 				if (permit !== null) {
 					return permit;
@@ -622,7 +674,7 @@ async function runModuleBootstrap(): Promise<void> {
 			});
 
 		const armMainWindowHandoff = (
-			updaterInstance: ModuleUpdaterInstance,
+			updaterInstance: ModuleUpdater,
 			launchAttempt: ModuleLaunchAttempt,
 			onLaunchSettled: () => void,
 		): void => {
@@ -653,7 +705,7 @@ async function runModuleBootstrap(): Promise<void> {
 			});
 		};
 
-		const reopenMainWindow = (launchAttempt: ModuleLaunchAttempt | null): void => {
+		const reopenMainWindow = (): void => {
 			const createMainWindow = getMainWindowFactory();
 			if (createMainWindow == null) {
 				logger.error('No main window factory is registered, relaunching to recover');
@@ -661,94 +713,12 @@ async function runModuleBootstrap(): Promise<void> {
 				app.exit(0);
 				return;
 			}
-			if (launchAttempt != null) {
-				const stopObservingLaunch = observeRendererLaunchConfirmed(() => {
-					stopObservingLaunch();
-					void updater.markLaunchSucceeded(launchAttempt).catch((error: unknown) => {
-						logger.error('Failed to record a successful module update launch', error);
-					});
-				});
-			}
-			setSplashState({status: 'launching'});
-			const window = createMainWindow();
-			window.once('show', () => {
-				logger.info('The updated main window is showing, closing the splash');
-				closeSplashWindow();
-			});
-			window.once('closed', closeSplashWindow);
+			createMainWindow();
 		};
 
-		let takeoverWindows: typeof import('@electron/main/Window') | null = null;
-		let takeoverSplash: BrowserWindow | null = null;
-		let takeoverHidden: ReadonlyArray<BrowserWindow> = [];
-		let takeoverActive = false;
-		const preloadUpdateSplash = (): void => {
-			const timer = setTimeout(() => {
-				if (takeoverActive) return;
-				void import('@electron/main/Window').then((windows) => {
-					takeoverWindows = windows;
-					if (!takeoverActive) preloadSplashWindow();
-				});
-			}, UPDATE_SPLASH_PRELOAD_DELAY_MS);
-			timer.unref();
-		};
 		const updateTakeover: DesktopUpdateTakeover = {
-			begin: async () => {
-				takeoverActive = true;
-				const windows = takeoverWindows ?? (await import('@electron/main/Window'));
-				takeoverWindows = windows;
-				splashOpenedAt = Date.now();
-				setSplashState({status: 'checking-for-updates'});
-				armSplashActions();
-				const preloaded = revealPreloadedSplashWindow();
-				if (preloaded != null) {
-					takeoverSplash = preloaded;
-					takeoverHidden = windows.hideAppWindowsForUpdate(preloaded);
-					windows.beginMainWindowTakeover(focusSplashWindow);
-					logger.info('Revealed the preloaded update splash and hid the app windows in the same tick');
-					return;
-				}
-				const splash = openSplashWindow({darkThemeOnShow: true});
-				takeoverSplash = splash;
-				windows.beginMainWindowTakeover(focusSplashWindow);
-				await new Promise<void>((resolve) => {
-					let settled = false;
-					const takeOver = (): void => {
-						if (settled) return;
-						settled = true;
-						stopWaitingForSplash();
-						clearTimeout(deadline);
-						focusSplashWindow();
-						takeoverHidden = windows.hideAppWindowsForUpdate(splash);
-						resolve();
-					};
-					const stopWaitingForSplash = onSplashReady(takeOver);
-					const deadline = setTimeout(takeOver, UPDATE_TAKEOVER_SPLASH_WAIT_MS);
-				});
-			},
-			restore: () => {
-				takeoverWindows?.endMainWindowTakeover();
-				takeoverWindows?.restoreAppWindowsAfterUpdate(takeoverHidden);
-				takeoverHidden = [];
-				closeSplashWindow();
-				takeoverActive = false;
-				preloadUpdateSplash();
-			},
-			closeApp: async () => {
-				if (takeoverSplash != null) {
-					await takeoverWindows?.closeAppWindowsForUpdate(takeoverSplash);
-				}
-				takeoverHidden = [];
-			},
-			reopen: (launchAttempt) => {
-				takeoverWindows?.endMainWindowTakeover();
-				takeoverActive = false;
-				reopenMainWindow(launchAttempt);
-				preloadUpdateSplash();
-			},
 			reloadInPlace: async (launchAttempt) => {
-				const windows = takeoverWindows ?? (await import('@electron/main/Window'));
-				takeoverWindows = windows;
+				const windows = await import('@electron/main/Window');
 				let settled = false;
 				const stopObservingLaunch = observeRendererLaunchConfirmed(() => {
 					if (settled) return;
@@ -771,109 +741,94 @@ async function runModuleBootstrap(): Promise<void> {
 						});
 						await refreshModuleRoots(reverted);
 						if (!(await windows.reloadMainWindowForUpdate())) {
-							reopenMainWindow(null);
+							reopenMainWindow();
 						}
 					})().catch((error: unknown) => {
 						logger.error('Failed to go back to the renderer before the update', error);
 					});
 				}, IN_PLACE_RELOAD_CONFIRM_TIMEOUT_MS);
 				watchdog.unref();
+				await refreshModuleRoots(launchAttempt.committed);
 				const reloaded = await windows.reloadMainWindowForUpdate();
 				logger.info('Reloaded the main window onto the updated renderer', {reloaded});
 				if (!reloaded) {
-					reopenMainWindow(null);
+					reopenMainWindow();
 				}
 			},
 		};
 
-		const desktopUpdate = new DesktopUpdateRun({
-			probe: () => updater.checkForUpdate(),
-			canSelfUpdateShell: shellUpdatePlan.capability === ShellUpdateCapability.SELF_UPDATE,
-			runShellSelfUpdate: () => runShellSelfUpdateOnSplash(false),
-			installModules: async () => {
-				const launchAttempt = await updater.installPending();
-				if (launchAttempt != null) {
-					await refreshModuleRoots(launchAttempt.committed);
-				}
-				return launchAttempt;
-			},
-			takeover: updateTakeover,
-			publish: (check) => {
-				recordPendingUpdate(check);
-				publishDesktopUpdateCheck(check);
-			},
-			reportFailure: (failure) => {
-				void import('@electron/main/DesktopUpdatePrompt')
-					.then(({reportDesktopUpdateFailure}) => reportDesktopUpdateFailure(failure))
-					.catch((error: unknown) => {
-						logger.error('Failed to report the desktop update failure', error);
-					});
-			},
-			openDownloadsPage: async () => {
-				const {DOWNLOAD_PAGE_URL} = await import('@electron/main/UpdaterDownloads');
-				await shell.openExternal(DOWNLOAD_PAGE_URL);
-			},
-			logger,
-		});
+		const desktopUpdate = moduleUpdatesForcedOff
+			? null
+			: new DesktopUpdateRun({
+					probe: () => updater.checkForUpdate(),
+					stageModules: () => updater.stageModules(),
+					activateStagedModules: () => updater.activateStagedForReload(),
+					shellUpdatePlan,
+					takeover: updateTakeover,
+					reportFailure: (failure) => {
+						void import('@electron/main/DesktopUpdatePrompt')
+							.then(({reportDesktopUpdateFailure}) => reportDesktopUpdateFailure(failure))
+							.catch((error: unknown) => {
+								logger.error('Failed to report the desktop update failure', error);
+							});
+					},
+					openDownloadsPage: async () => {
+						const {DOWNLOAD_PAGE_URL} = await import('@electron/main/UpdaterDownloads');
+						await shell.openExternal(DOWNLOAD_PAGE_URL);
+					},
+					logger,
+				});
 
 		const permit = await runModuleUpdateLoop();
+		if (hasQuitStarted()) return;
+		launchGranted = true;
+		disarmNetworkSplash();
+		markModuleLaunchGranted();
 		localNetworkHint.disarm();
-		if (!permit.unreachable) {
-			recordPendingUpdate({shellNewer: false, modulesChanged: false});
-		}
 		await refreshModuleRoots(permit.launchAttempt.committed);
-		setOnDemandModuleInstaller(
-			createOnDemandModuleInstaller({
-				ensure: (moduleName) => updater.ensureModule(moduleName),
-				refresh: serveOnDemandModules,
-				onFailure: (moduleName, error) => {
-					logger.error('Failed to install a module on demand', {module: moduleName, error});
-				},
-			}),
-		);
-		markSplashLaunching();
-		armDesktopUpdate({
-			check: async () => {
-				const check = await desktopUpdate.check();
-				recordPendingUpdate(check);
-				return check;
-			},
-			start: () => desktopUpdate.start(),
-		});
+		if (hasQuitStarted()) return;
+		if (desktopUpdate != null) {
+			setOnDemandModuleInstaller(
+				createOnDemandModuleInstaller({
+					ensure: (moduleName) => updater.ensureModule(moduleName),
+					refresh: serveOnDemandModules,
+					onFailure: (moduleName, error) => {
+						logger.error('Failed to install a module on demand', {module: moduleName, error});
+					},
+				}),
+			);
+			armDesktopUpdate({
+				check: (manual) => desktopUpdate.check({manual}),
+				start: () => desktopUpdate.start(),
+			});
+		}
 		armMainWindowHandoff(updater, permit.launchAttempt, () => {
+			if (desktopUpdate == null) {
+				return;
+			}
 			desktopUpdate.markLaunchSettled();
-			preloadUpdateSplash();
-			armModulePoll(resolveModulePollPlan(readDevModulePollInterval()), logger);
+			armDesktopUpdatePoll({
+				plan: resolveModulePollPlan(readDevModulePollInterval()),
+				check: () => checkDesktopUpdateNow(),
+				logger,
+			});
+			observeRendererLaunchConfirmed(wakeDesktopUpdatePoll);
 		});
 		app.once('before-quit', () => {
 			closeSplashWindow();
 		});
-		await launchMainApp(permit, logger);
+		if (hasQuitStarted()) {
+			logger.info('The app started quitting during module convergence, not launching the main app');
+			return;
+		}
+		reportModuleLaunch(permit, logger);
 	} catch (error) {
 		logger.error('The module bootstrap failed unexpectedly', error);
 		await blockUntilRelaunch('blocked-update-required');
 	}
 }
 
-switch (MODULE_SYSTEM_LAUNCH.kind) {
-	case ModuleSystemLaunchDecision.ENABLED:
-	case ModuleSystemLaunchDecision.ENABLED_WITH_IGNORED_DISABLE_REQUEST:
-		void runModuleBootstrap().catch((error: unknown) => {
-			process.stderr.write(`The module bootstrap rejected before it could report: ${String(error)}\n`);
-			process.exit(1);
-		});
-		break;
-	case ModuleSystemLaunchDecision.DISABLED_BY_BUILD:
-	case ModuleSystemLaunchDecision.DISABLED_BY_REQUEST:
-		if (HAS_OFFLINE_RENDERER) {
-			await import(MAIN_PROCESS_ENTRY_URL);
-		} else {
-			void refuseUnsupportedBuild('the module system is turned off and this build carries no offline renderer').catch(
-				(error: unknown) => {
-					process.stderr.write(`The module bootstrap rejected before it could report: ${String(error)}\n`);
-					process.exit(1);
-				},
-			);
-		}
-		break;
-}
+void runBootstrap().catch((error: unknown) => {
+	process.stderr.write(`The module bootstrap rejected before it could report: ${String(error)}\n`);
+	process.exit(1);
+});

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {selectVoiceEngineV2Model} from '@fluxer/voice_engine_v2/src/core';
-import type {VoiceEngineV2Implementation} from '@fluxer/voice_engine_v2/src/implementations';
-import {createVoiceEngineV2MemoryEventLogSpillSink, VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime';
+import {selectVoiceEngineV2Model} from '@fluxer/voice_engine_v2/src/core/selectors';
+import type {VoiceEngineV2Implementation} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
+import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
+import {VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
 import type {FakeVoiceEngineV2Driver} from '@fluxer/voice_engine_v2/src/testing/FakeVoiceEngineV2Driver';
 import {describe, expect, it} from 'vitest';
 
@@ -119,12 +120,12 @@ export function runVoiceEngineV2ConformanceSuite(
 			await waitForRuntime();
 			runtime.dispatch({
 				type: 'camera.publishRequested',
-				options: {deviceId: 'camera-1', width: 1280, height: 720, mirror: false},
+				options: {deviceId: 'camera-1', width: 1280, height: 720},
 			});
 			await waitForRuntime();
 			runtime.dispatch({
 				type: 'camera.updateEncodingRequested',
-				options: {width: 1920, height: 1080, frameRate: 60, mirror: true, backgroundMode: 'blur'},
+				options: {width: 1920, height: 1080, frameRate: 60, backgroundMode: 'blur'},
 			});
 			await waitForRuntime();
 
@@ -134,7 +135,6 @@ export function runVoiceEngineV2ConformanceSuite(
 				width: 1920,
 				height: 1080,
 				frameRate: 60,
-				mirror: true,
 				backgroundMode: 'blur',
 			});
 		});

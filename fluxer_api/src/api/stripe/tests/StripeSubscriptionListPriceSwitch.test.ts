@@ -202,7 +202,7 @@ describe('StripeSubscriptionListPriceSwitch', () => {
 	beforeEach(async () => {
 		await harness.resetData();
 		Config.stripe.prices = MOCK_PRICES;
-		stripeHandlers.resetAll();
+		stripeHandlers.reset();
 		server.use(...stripeHandlers.handlers, createPwnedPasswordsRangeHandler());
 	});
 

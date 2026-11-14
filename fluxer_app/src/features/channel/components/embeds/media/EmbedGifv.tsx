@@ -19,6 +19,7 @@ import {safePause, safePlay} from '@app/features/channel/components/GifVideoPool
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
@@ -27,6 +28,7 @@ import {useMediaLoading} from '@app/features/messaging/hooks/useMediaLoading';
 import {useMediaViewerHoverWarm} from '@app/features/messaging/hooks/useMediaViewerHoverWarm';
 import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import apiAttachmentMedia, {fetchedApiAttachmentKey} from '@app/features/messaging/state/ApiAttachmentMedia';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
@@ -146,6 +148,7 @@ interface ThumbHashCurtainState {
 	curtainLifted: boolean;
 	fastFade: boolean;
 	posterRevealed: boolean;
+	onPosterError: () => void;
 }
 
 function useThumbHashCurtain(source: string, enabled: boolean): ThumbHashCurtainState {
@@ -153,18 +156,28 @@ function useThumbHashCurtain(source: string, enabled: boolean): ThumbHashCurtain
 	const [cachedAtMount] = useState(() => ImageCacheUtils.hasImage(source));
 	const [curtainLifted, setCurtainLifted] = useState(false);
 	const [fastFade, setFastFade] = useState(false);
+	const [failedSource, setFailedSource] = useState<string | null>(null);
+	const onPosterError = useAttachmentRefreshOnError(source);
 	useLayoutEffect(() => {
 		if (!enabled || source.length === 0) return;
-		return ImageCacheUtils.loadImage(source, () => {
-			setFastFade(Date.now() - mountedAt < PLACEHOLDER_FAST_FADE_WINDOW_MS);
-			setCurtainLifted(true);
-		});
-	}, [enabled, mountedAt, source]);
+		return ImageCacheUtils.loadImage(
+			source,
+			() => {
+				setFastFade(Date.now() - mountedAt < PLACEHOLDER_FAST_FADE_WINDOW_MS);
+				setCurtainLifted(true);
+			},
+			() => {
+				onPosterError();
+				setFailedSource(source);
+			},
+		);
+	}, [enabled, mountedAt, onPosterError, source]);
 	return {
 		shouldMount: !cachedAtMount,
 		curtainLifted,
 		fastFade,
-		posterRevealed: source.length === 0 || cachedAtMount || curtainLifted,
+		posterRevealed: source.length === 0 || cachedAtMount || curtainLifted || failedSource === source,
+		onPosterError,
 	};
 }
 
@@ -354,470 +367,66 @@ const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
 		);
 	},
 );
-export const EmbedGifv: FC<
-	GifvEmbedProps & {
-		videoProxyURL: string;
-		videoURL: string;
-		videoConfig?: VideoConfig;
-		isPreview?: boolean;
-		snapshotIndex?: number;
-		providerName?: string;
-	}
-> = observer(
+type GifEmbedShellProps = Pick<
+	GifvEmbedProps,
+	'embedURL' | 'alt' | 'naturalWidth' | 'naturalHeight' | 'message' | 'attachmentId' | 'contentHash' | 'onDelete'
+> & {
+	type: 'gif' | 'gifv';
+	proxyURL: string;
+	isPreview?: boolean;
+	snapshotIndex?: number;
+	dimensions: {width: number; height: number};
+	aspectRatioStyle: React.CSSProperties | undefined;
+	visibilityRef: React.RefCallback<HTMLDivElement>;
+	setContainerRef: React.RefCallback<HTMLDivElement>;
+	shouldBlur: boolean;
+	gateReason: ReturnType<typeof useMatureMedia>['gateReason'];
+	canReveal: boolean;
+	revealSensitiveMedia: () => void;
+	thumbHashURL?: string;
+	effectiveDefaultName: string;
+	canFavorite: boolean;
+	isFavorited: boolean;
+	toggleFavorite: ReturnType<typeof useMediaFavorite>['toggleFavorite'];
+	previewProps: Omit<ImagePreviewHandlerProps, 'children'>;
+	showDownloadButton?: boolean;
+	onDownloadClick: (event: React.MouseEvent) => void;
+	children: React.ReactNode;
+};
+const GifEmbedShell = observer(
 	({
-		embedURL,
-		videoProxyURL,
-		thumbnailProxyURL,
-		alt,
-		naturalWidth,
-		naturalHeight,
-		placeholder,
-		videoConfig,
-		nsfw,
-		channelId,
-		messageId,
-		attachmentId,
-		embedIndex,
-		message,
-		contentHash,
-		onDelete,
-		isPreview,
-		snapshotIndex,
-		providerName,
-	}) => {
-		const {i18n} = useLingui();
-		const messageViewContext = useMaybeMessageViewContext();
-		const mediaCalculator = useEmbedMediaCalculator();
-		const videoRef = useRef<HTMLVideoElement>(null);
-		const handleVideoError = useAttachmentRefreshOnError(videoProxyURL);
-		const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
-		const {isPointerInside, hasFocusInside} = useMediaSurfaceInteraction(containerElement);
-		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
-		const {
-			ref: visibilityRef,
-			loadMedia: shouldLoadMedia,
-			animate: shouldAnimate,
-		} = useGifViewportGate<HTMLDivElement>({
-			element: containerElement,
-			rememberKey: videoProxyURL,
-			shouldBlur,
-		});
-		const setContainerRef = useCallback(
-			(node: HTMLDivElement | null) => {
-				setContainerElement(node);
-				visibilityRef(node);
-			},
-			[visibilityRef],
-		);
-		const {dimensions} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight});
-		const canPlayInline = isInlinePlayableVideoSize({width: naturalWidth, height: naturalHeight});
-		const posterSource = thumbnailProxyURL && thumbnailProxyURL.length > 0 ? thumbnailProxyURL : videoProxyURL;
-		const posterURL = useMemo(() => {
-			const requestedSize = resolveProxyRequestSize(dimensions.width, dimensions.height, naturalWidth, naturalHeight);
-			return buildFittedStaticGifPreviewURL(
-				stripMediaProxyParams(posterSource),
-				requestedSize?.width,
-				requestedSize?.height,
-			);
-		}, [dimensions.width, naturalHeight, naturalWidth, posterSource]);
-		const thumbHashURL = useMemo(() => decodeThumbHashDataURL(placeholder), [placeholder]);
-		const thumbHashCurtain = useThumbHashCurtain(posterURL, shouldLoadMedia);
-		const aspectRatioStyle = useAspectRatioStyle(dimensions.width, dimensions.height);
-		const defaultName = deriveDefaultNameFromMessage({
-			message,
-			attachmentId,
-			embedIndex,
-			url: embedURL,
-			proxyUrl: videoProxyURL,
-		});
-		const effectiveDefaultName = alt?.trim() ? alt.trim() : defaultName || 'GIF';
-		const {toggleFavorite, isFavorited, canFavorite} = useMediaFavorite({
-			channelId,
-			messageId,
-			attachmentId,
-			embedIndex,
-			defaultName: effectiveDefaultName,
-			contentHash,
-			isGifv: true,
-			embedURL,
-			proxyURL: videoProxyURL,
-			naturalWidth,
-			naturalHeight,
-		});
-		const animationPolicyAllowed = useShouldAnimate({
-			kind: 'gif',
-			isHovering: isPointerInside,
-			isFocused: hasFocusInside,
-		});
-		const animatedMediaPlaybackAllowed = useAnimatedMediaPlaybackAllowed();
-		const isMediaViewerOpen = MediaViewer.isOpen;
-		const {openPreview: openImagePreview} = useImagePreview({
-			proxyUrl: videoProxyURL,
-			embedUrl: embedURL,
-			naturalWidth,
-			naturalHeight,
-			type: 'gifv',
-			channelId,
-			messageId,
-			attachmentId,
-			embedIndex,
-			contentHash,
-			message,
-			sourceChannel: messageViewContext?.channel,
-			providerName,
-			allowAttachmentDelete: !isPreview && snapshotIndex === undefined,
-		});
-		const handleDeleteClick = useDeleteAttachment(message, attachmentId);
-		const handleDownloadClick = useCallback(
-			(e: React.MouseEvent) => {
-				e.stopPropagation();
-				createDownloadHandler(videoProxyURL, 'video')();
-			},
-			[videoProxyURL],
-		);
-		const handleContextMenu = useCallback(
-			(e: React.MouseEvent) => {
-				if (!message) return;
-				if (isPreview && snapshotIndex === undefined) return;
-				e.preventDefault();
-				e.stopPropagation();
-				ContextMenuCommands.openFromEvent(e, ({onClose}) => (
-					<MediaContextMenu
-						message={message}
-						sourceChannel={messageViewContext?.channel}
-						originalSrc={embedURL}
-						proxyURL={videoProxyURL}
-						type="gifv"
-						contentHash={contentHash}
-						attachmentId={attachmentId}
-						defaultName={effectiveDefaultName}
-						defaultAltText={alt ?? undefined}
-						naturalWidth={naturalWidth}
-						naturalHeight={naturalHeight}
-						snapshotIndex={snapshotIndex}
-						onClose={onClose}
-						onDelete={onDelete || (() => {})}
-						data-flx="channel.embeds.media.embed-gifv.handle-context-menu.media-context-menu.gifv"
-					/>
-				));
-			},
-			[
-				message,
-				messageViewContext?.channel,
-				embedURL,
-				videoProxyURL,
-				contentHash,
-				attachmentId,
-				effectiveDefaultName,
-				alt,
-				naturalWidth,
-				naturalHeight,
-				onDelete,
-				isPreview,
-				snapshotIndex,
-			],
-		);
-		const shouldPlay =
-			shouldAnimate &&
-			animationPolicyAllowed &&
-			animatedMediaPlaybackAllowed &&
-			!isMediaViewerOpen &&
-			thumbHashCurtain.posterRevealed;
-		useEffect(() => {
-			const video = videoRef.current;
-			if (video == null) return;
-			if (shouldPlay) {
-				video.autoplay = true;
-				void safePlay(video);
-				return;
-			}
-			video.autoplay = false;
-			safePause(video);
-		}, [shouldPlay]);
-		if (shouldBlur) {
-			const blurContainerStyle: React.CSSProperties = {
-				maxWidth: '100%',
-				width: remFromPx(dimensions.width),
-				...aspectRatioStyle,
-			};
-			return (
-				<div
-					ref={visibilityRef}
-					className={styles.blurContainer}
-					data-flx="channel.embeds.media.embed-gifv.blur-container"
-				>
-					<div
-						className={styles.blurContent}
-						style={blurContainerStyle}
-						data-flx="channel.embeds.media.embed-gifv.blur-content"
-					>
-						<div className={styles.blurInnerContainer} data-flx="channel.embeds.media.embed-gifv.blur-inner-container">
-							{thumbHashURL && (
-								<img
-									src={thumbHashURL}
-									className={styles.thumbHashPlaceholder}
-									alt=""
-									aria-hidden={true}
-									style={{filter: 'blur(40px)'}}
-									data-flx="channel.embeds.media.embed-gifv.thumb-hash-placeholder"
-								/>
-							)}
-						</div>
-						<MatureMediaBlurOverlay
-							reason={gateReason}
-							canReveal={canReveal}
-							onReveal={revealSensitiveMedia}
-							data-flx="channel.embeds.media.embed-gifv.mature-media-blur-overlay"
-						/>
-					</div>
-				</div>
-			);
-		}
-		const {showFavoriteButton, showDeleteButton} = getMediaButtonVisibility(
-			canFavorite,
-			isPreview ? undefined : message,
-			attachmentId,
-			{disableDelete: !!isPreview || snapshotIndex !== undefined},
-		);
-		const showGifIndicator = Accessibility.showGifIndicator && shouldShowOverlays(dimensions.width, dimensions.height);
-		const containerStyle: React.CSSProperties = {
-			maxWidth: '100%',
-			width: remFromPx(dimensions.width),
-			...aspectRatioStyle,
-		};
-		return (
-			<MediaContainer
-				ref={setContainerRef}
-				className={clsx(embedStyles.embedGifvContainer, styles.mediaContainer)}
-				style={containerStyle}
-				showFavoriteButton={showFavoriteButton}
-				isFavorited={isFavorited}
-				onFavoriteClick={toggleFavorite}
-				showDownloadButton={false}
-				onDownloadClick={handleDownloadClick}
-				showDeleteButton={showDeleteButton}
-				onDeleteClick={handleDeleteClick}
-				onContextMenu={handleContextMenu}
-				renderedWidth={dimensions.width}
-				renderedHeight={dimensions.height}
-				forceShowFavoriteButton={true}
-				data-flx="channel.embeds.media.embed-gifv.media-container.context-menu"
-			>
-				{showGifIndicator && <GifIndicator data-flx="channel.embeds.media.embed-gifv.gif-indicator" />}
-				<ImagePreviewHandler
-					src={videoProxyURL}
-					originalSrc={embedURL}
-					naturalWidth={naturalWidth}
-					naturalHeight={naturalHeight}
-					type="gifv"
-					handlePress={openImagePreview}
-					data-flx="channel.embeds.media.embed-gifv.image-preview-handler.gifv"
-				>
-					<div
-						className={styles.videoWrapper}
-						style={aspectRatioStyle}
-						data-flx="channel.embeds.media.embed-gifv.video-wrapper"
-					>
-						{canPlayInline ? (
-							<video
-								ref={videoRef}
-								className={styles.videoElement}
-								src={shouldLoadMedia ? videoProxyURL : undefined}
-								poster={shouldLoadMedia ? posterURL : thumbHashURL}
-								preload={videoConfig?.preload ?? 'none'}
-								loop={videoConfig?.loop ?? true}
-								muted={videoConfig?.muted ?? true}
-								playsInline={videoConfig?.playsInline ?? true}
-								controls={videoConfig?.controls ?? false}
-								width={dimensions.width}
-								height={dimensions.height}
-								tabIndex={-1}
-								aria-label={i18n._(ANIMATED_GIF_VIDEO_DESCRIPTOR)}
-								onError={handleVideoError}
-								data-embed-media="gifv"
-								data-flx="channel.embeds.media.embed-gifv.video-element"
-							/>
-						) : (
-							<img
-								className={styles.videoElement}
-								src={shouldLoadMedia ? posterURL : thumbHashURL}
-								alt=""
-								width={dimensions.width}
-								height={dimensions.height}
-								loading="eager"
-								tabIndex={-1}
-								data-embed-media="gifv-still"
-								data-flx="channel.embeds.media.embed-gifv.still-element"
-							/>
-						)}
-						{thumbHashCurtain.shouldMount && thumbHashURL && (
-							<img
-								src={thumbHashURL}
-								className={clsx(
-									styles.placeholder,
-									thumbHashCurtain.curtainLifted ? styles.placeholderHidden : styles.placeholderVisible,
-									thumbHashCurtain.fastFade && styles.placeholderFastFade,
-								)}
-								alt=""
-								aria-hidden="true"
-								data-flx="channel.embeds.media.embed-gifv.image-placeholder"
-							/>
-						)}
-					</div>
-				</ImagePreviewHandler>
-				<AltTextBadge
-					altText={alt}
-					onPopoutToggle={messageViewContext?.onPopoutToggle}
-					data-flx="channel.embeds.media.embed-gifv.alt-text-badge"
-				/>
-			</MediaContainer>
-		);
-	},
-);
-export const EmbedGif: FC<
-	GifvEmbedProps & {
-		proxyURL: string;
-		includeButton?: boolean;
-		isPreview?: boolean;
-		snapshotIndex?: number;
-		layoutConstraints?: {maxWidth: number; maxHeight: number};
-	}
-> = observer(
-	({
-		embedURL,
+		type,
 		proxyURL,
+		embedURL,
 		alt,
 		naturalWidth,
 		naturalHeight,
-		placeholder,
-		nsfw,
-		channelId,
-		messageId,
-		attachmentId,
-		embedIndex,
 		message,
+		attachmentId,
 		contentHash,
 		onDelete,
 		isPreview,
 		snapshotIndex,
-		layoutConstraints,
-	}) => {
-		const {i18n} = useLingui();
+		dimensions,
+		aspectRatioStyle,
+		visibilityRef,
+		setContainerRef,
+		shouldBlur,
+		gateReason,
+		canReveal,
+		revealSensitiveMedia,
+		thumbHashURL,
+		effectiveDefaultName,
+		canFavorite,
+		isFavorited,
+		toggleFavorite,
+		previewProps,
+		showDownloadButton,
+		onDownloadClick,
+		children,
+	}: GifEmbedShellProps) => {
 		const messageViewContext = useMaybeMessageViewContext();
-		const mediaCalculator = useEmbedMediaCalculator(layoutConstraints);
-		const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
-		const {isPointerInside, hasFocusInside} = useMediaSurfaceInteraction(containerElement);
-		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
-		const {
-			ref: visibilityRef,
-			loadMedia: shouldLoadMedia,
-			animate: shouldAnimate,
-		} = useGifViewportGate<HTMLDivElement>({
-			element: containerElement,
-			rememberKey: proxyURL,
-			shouldBlur,
-		});
-		const setContainerRef = useCallback(
-			(node: HTMLDivElement | null) => {
-				setContainerElement(node);
-				visibilityRef(node);
-			},
-			[visibilityRef],
-		);
-		const {dimensions} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight});
-		const {width: displayWidth, height: displayHeight} = dimensions;
-		const gifAutoPlay = useShouldAnimate({kind: 'gif'});
-		const animationPolicyAllowed = useShouldAnimate({
-			kind: 'gif',
-			isHovering: isPointerInside,
-			isFocused: hasFocusInside,
-		});
-		const baseProxyURL = stripMediaProxyParams(proxyURL);
-		const requestedSize = resolveProxyRequestSize(displayWidth, displayHeight, naturalWidth, naturalHeight);
-		const optimizedAnimatedURL = buildFittedAnimatedImageProxyURL(
-			baseProxyURL,
-			requestedSize?.width,
-			requestedSize?.height,
-		);
-		const optimizedStaticURL = buildFittedStaticGifPreviewURL(
-			baseProxyURL,
-			requestedSize?.width,
-			requestedSize?.height,
-		);
-		const shouldShowAnimated = shouldAnimate && animationPolicyAllowed;
-		const activeSource = shouldShowAnimated ? optimizedAnimatedURL : optimizedStaticURL;
-		const {
-			loaded,
-			cachedOnMount,
-			thumbHashURL,
-			ref: mediaRef,
-			onLoad: handleImageLoad,
-			onError: handleImageError,
-		} = useMediaLoading(activeSource, placeholder, {enabled: shouldLoadMedia});
-		const [mountedAt] = useState(() => Date.now());
-		const [placeholderMounted] = useState(!cachedOnMount);
-		const [placeholderHidden, setPlaceholderHidden] = useState(loaded);
-		const [placeholderFastFade, setPlaceholderFastFade] = useState(false);
-		const aspectRatioStyle = useAspectRatioStyle(dimensions.width, dimensions.height);
-		useEffect(() => {
-			if (!loaded) return;
-			setPlaceholderFastFade(Date.now() - mountedAt < PLACEHOLDER_FAST_FADE_WINDOW_MS);
-			setPlaceholderHidden(true);
-		}, [loaded, mountedAt]);
-		useEffect(() => {
-			if (!shouldLoadMedia) return;
-			if (!animationPolicyAllowed) return;
-			if (activeSource === optimizedAnimatedURL) return;
-			return ImageCacheUtils.pinImage(optimizedAnimatedURL);
-		}, [activeSource, animationPolicyAllowed, optimizedAnimatedURL, shouldLoadMedia]);
-		const defaultName = deriveDefaultNameFromMessage({
-			message,
-			attachmentId,
-			embedIndex,
-			url: embedURL,
-			proxyUrl: proxyURL,
-		});
-		const effectiveDefaultName = alt?.trim() ? alt.trim() : defaultName || 'GIF';
-		const {toggleFavorite, isFavorited, canFavorite} = useMediaFavorite({
-			channelId,
-			messageId,
-			attachmentId,
-			embedIndex,
-			defaultName: effectiveDefaultName,
-			contentHash,
-			isGifv: true,
-			embedURL,
-			proxyURL,
-			naturalWidth,
-			naturalHeight,
-		});
-		const {viewerItem, openPreview: openImagePreview} = useImagePreview({
-			proxyUrl: optimizedAnimatedURL,
-			embedUrl: embedURL,
-			naturalWidth,
-			naturalHeight,
-			type: 'gif',
-			channelId,
-			messageId,
-			attachmentId,
-			embedIndex,
-			contentHash,
-			message,
-			sourceChannel: messageViewContext?.channel,
-			allowAttachmentDelete: !isPreview && snapshotIndex === undefined,
-		});
-		const {scheduleViewerWarm, cancelViewerWarm} = useMediaViewerHoverWarm(viewerItem, {
-			allowAnimated: gifAutoPlay,
-			enabled: !shouldBlur,
-		});
 		const handleDeleteClick = useDeleteAttachment(message, attachmentId);
-		const handleDownloadClickGif = useCallback(
-			(e: React.MouseEvent) => {
-				e.stopPropagation();
-				createDownloadHandler(baseProxyURL, 'gif')();
-			},
-			[baseProxyURL],
-		);
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
 				if (!message) return;
@@ -830,7 +439,7 @@ export const EmbedGif: FC<
 						sourceChannel={messageViewContext?.channel}
 						originalSrc={embedURL}
 						proxyURL={proxyURL}
-						type="gif"
+						type={type}
 						contentHash={contentHash}
 						attachmentId={attachmentId}
 						defaultName={effectiveDefaultName}
@@ -902,12 +511,13 @@ export const EmbedGif: FC<
 				</div>
 			);
 		}
-		const {showFavoriteButton, showDownloadButton, showDeleteButton} = getMediaButtonVisibility(
-			canFavorite,
-			isPreview ? undefined : message,
-			attachmentId,
-			{disableDelete: !!isPreview || snapshotIndex !== undefined},
-		);
+		const {
+			showFavoriteButton,
+			showDownloadButton: canDownload,
+			showDeleteButton,
+		} = getMediaButtonVisibility(canFavorite, isPreview ? undefined : message, attachmentId, {
+			disableDelete: !!isPreview || snapshotIndex !== undefined,
+		});
 		const showGifIndicator = Accessibility.showGifIndicator && shouldShowOverlays(dimensions.width, dimensions.height);
 		const containerStyle: React.CSSProperties = {
 			maxWidth: '100%',
@@ -922,8 +532,8 @@ export const EmbedGif: FC<
 				showFavoriteButton={showFavoriteButton}
 				isFavorited={isFavorited}
 				onFavoriteClick={toggleFavorite}
-				showDownloadButton={showDownloadButton}
-				onDownloadClick={handleDownloadClickGif}
+				showDownloadButton={showDownloadButton ?? canDownload}
+				onDownloadClick={onDownloadClick}
 				showDeleteButton={showDeleteButton}
 				onDeleteClick={handleDeleteClick}
 				onContextMenu={handleContextMenu}
@@ -934,56 +544,10 @@ export const EmbedGif: FC<
 			>
 				{showGifIndicator && <GifIndicator data-flx="channel.embeds.media.embed-gifv.embed-gif.gif-indicator" />}
 				<ImagePreviewHandler
-					src={optimizedAnimatedURL}
-					originalSrc={embedURL}
-					naturalWidth={naturalWidth}
-					naturalHeight={naturalHeight}
-					type="gif"
-					handlePress={openImagePreview}
-					channelId={channelId}
-					messageId={messageId}
-					attachmentId={attachmentId}
-					embedIndex={embedIndex}
-					contentHash={contentHash}
-					message={message}
-					sourceChannel={messageViewContext?.channel}
-					onViewerWarmEnter={scheduleViewerWarm}
-					onViewerWarmLeave={cancelViewerWarm}
-					data-flx="channel.embeds.media.embed-gifv.embed-gif.image-preview-handler.gif"
+					{...previewProps}
+					data-flx="channel.embeds.media.embed-gifv.gif-embed-shell.image-preview-handler"
 				>
-					<div
-						className={styles.videoWrapper}
-						style={aspectRatioStyle}
-						data-flx="channel.embeds.media.embed-gifv.embed-gif.video-wrapper"
-					>
-						<img
-							ref={mediaRef}
-							alt={i18n._(ANIMATED_GIF_DESCRIPTOR)}
-							src={shouldLoadMedia ? activeSource : undefined}
-							className={styles.videoElement}
-							data-embed-media="gif"
-							loading="eager"
-							tabIndex={-1}
-							width={dimensions.width}
-							height={dimensions.height}
-							onLoad={handleImageLoad}
-							onError={handleImageError}
-							data-flx="channel.embeds.media.embed-gifv.embed-gif.video-element"
-						/>
-						{placeholderMounted && thumbHashURL && (
-							<img
-								src={thumbHashURL}
-								className={clsx(
-									styles.placeholder,
-									placeholderHidden ? styles.placeholderHidden : styles.placeholderVisible,
-									placeholderFastFade && styles.placeholderFastFade,
-								)}
-								alt=""
-								aria-hidden="true"
-								data-flx="channel.embeds.media.embed-gifv.embed-gif.image-placeholder"
-							/>
-						)}
-					</div>
+					{children}
 				</ImagePreviewHandler>
 				<AltTextBadge
 					altText={alt}
@@ -991,6 +555,496 @@ export const EmbedGif: FC<
 					data-flx="channel.embeds.media.embed-gifv.embed-gif.alt-text-badge"
 				/>
 			</MediaContainer>
+		);
+	},
+);
+export const EmbedGifv: FC<
+	GifvEmbedProps & {
+		videoProxyURL: string;
+		videoURL: string;
+		videoConfig?: VideoConfig;
+		isPreview?: boolean;
+		snapshotIndex?: number;
+		providerName?: string;
+	}
+> = observer(
+	({
+		embedURL,
+		videoProxyURL,
+		thumbnailProxyURL,
+		alt,
+		naturalWidth,
+		naturalHeight,
+		placeholder,
+		videoConfig,
+		nsfw,
+		channelId,
+		messageId,
+		attachmentId,
+		embedIndex,
+		message,
+		contentHash,
+		onDelete,
+		isPreview,
+		snapshotIndex,
+		providerName,
+	}) => {
+		const {i18n} = useLingui();
+		const messageViewContext = useMaybeMessageViewContext();
+		const mediaCalculator = useEmbedMediaCalculator();
+		const videoRef = useRef<HTMLVideoElement>(null);
+		const handleVideoError = useAttachmentRefreshOnError(videoProxyURL);
+		const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
+		const {isPointerInside, hasFocusInside} = useMediaSurfaceInteraction(containerElement);
+		const {
+			shouldBlur,
+			shouldBlock,
+			gateReason,
+			canReveal,
+			reveal: revealSensitiveMedia,
+		} = useMatureMedia(nsfw, channelId);
+		const {
+			ref: visibilityRef,
+			loadMedia: shouldLoadMedia,
+			animate: shouldAnimate,
+		} = useGifViewportGate<HTMLDivElement>({
+			element: containerElement,
+			rememberKey: videoProxyURL,
+			shouldBlur,
+		});
+		const setContainerRef = useCallback(
+			(node: HTMLDivElement | null) => {
+				setContainerElement(node);
+				visibilityRef(node);
+			},
+			[visibilityRef],
+		);
+		const {dimensions} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight});
+		const canPlayInline = isInlinePlayableVideoSize({width: naturalWidth, height: naturalHeight});
+		const posterSource = thumbnailProxyURL && thumbnailProxyURL.length > 0 ? thumbnailProxyURL : videoProxyURL;
+		const posterURL = useMemo(() => {
+			const requestedSize = resolveProxyRequestSize(dimensions.width, dimensions.height, naturalWidth, naturalHeight);
+			return buildFittedStaticGifPreviewURL(
+				stripMediaProxyParams(posterSource),
+				requestedSize?.width,
+				requestedSize?.height,
+			);
+		}, [dimensions.width, naturalHeight, naturalWidth, posterSource]);
+		const thumbHashURL = useMemo(() => decodeThumbHashDataURL(placeholder), [placeholder]);
+		const posterDisplayURL = useApiAttachmentSrc(posterURL, shouldLoadMedia);
+		const videoDisplayURL = useApiAttachmentSrc(shouldLoadMedia ? videoProxyURL : '', shouldLoadMedia);
+		const videoPlaybackURL = shouldLoadMedia ? videoDisplayURL : undefined;
+		const thumbHashCurtain = useThumbHashCurtain(posterDisplayURL ?? '', shouldLoadMedia);
+		const aspectRatioStyle = useAspectRatioStyle(dimensions.width, dimensions.height);
+		const defaultName = deriveDefaultNameFromMessage({
+			message,
+			attachmentId,
+			embedIndex,
+			url: embedURL,
+			proxyUrl: videoProxyURL,
+		});
+		const effectiveDefaultName = alt?.trim() ? alt.trim() : defaultName || 'GIF';
+		const {toggleFavorite, isFavorited, canFavorite} = useMediaFavorite({
+			channelId,
+			messageId,
+			attachmentId,
+			embedIndex,
+			defaultName: effectiveDefaultName,
+			contentHash,
+			isGifv: true,
+			embedURL,
+			proxyURL: videoProxyURL,
+			naturalWidth,
+			naturalHeight,
+		});
+		const animationPolicyAllowed = useShouldAnimate({
+			kind: 'gif',
+			isHovering: isPointerInside,
+			isFocused: hasFocusInside,
+		});
+		const animatedMediaPlaybackAllowed = useAnimatedMediaPlaybackAllowed();
+		const isMediaViewerOpen = MediaViewer.isOpen;
+		const {openPreview: openImagePreview} = useImagePreview({
+			proxyUrl: videoProxyURL,
+			embedUrl: embedURL,
+			naturalWidth,
+			naturalHeight,
+			type: 'gifv',
+			channelId,
+			messageId,
+			attachmentId,
+			embedIndex,
+			contentHash,
+			message,
+			sourceChannel: messageViewContext?.channel,
+			providerName,
+			allowAttachmentDelete: !isPreview && snapshotIndex === undefined,
+		});
+
+		const handleDownloadClick = useCallback(
+			(e: React.MouseEvent) => {
+				e.stopPropagation();
+				createDownloadHandler(videoProxyURL, 'video')();
+			},
+			[videoProxyURL],
+		);
+
+		const shouldPlay =
+			shouldAnimate &&
+			animationPolicyAllowed &&
+			animatedMediaPlaybackAllowed &&
+			!isMediaViewerOpen &&
+			thumbHashCurtain.posterRevealed;
+		useEffect(() => {
+			const video = videoRef.current;
+			if (video == null) return;
+			if (shouldPlay) {
+				video.autoplay = true;
+				void safePlay(video);
+				return;
+			}
+			video.autoplay = false;
+			safePause(video);
+		}, [shouldPlay]);
+
+		if (shouldBlock) {
+			return null;
+		}
+
+		return (
+			<GifEmbedShell
+				type="gifv"
+				proxyURL={videoProxyURL}
+				embedURL={embedURL}
+				alt={alt}
+				naturalWidth={naturalWidth}
+				naturalHeight={naturalHeight}
+				message={message}
+				attachmentId={attachmentId}
+				contentHash={contentHash}
+				onDelete={onDelete}
+				isPreview={isPreview}
+				snapshotIndex={snapshotIndex}
+				dimensions={dimensions}
+				aspectRatioStyle={aspectRatioStyle}
+				visibilityRef={visibilityRef}
+				setContainerRef={setContainerRef}
+				shouldBlur={shouldBlur}
+				gateReason={gateReason}
+				canReveal={canReveal}
+				revealSensitiveMedia={revealSensitiveMedia}
+				thumbHashURL={thumbHashURL}
+				effectiveDefaultName={effectiveDefaultName}
+				canFavorite={canFavorite}
+				isFavorited={isFavorited}
+				toggleFavorite={toggleFavorite}
+				previewProps={{
+					src: videoProxyURL,
+					originalSrc: embedURL,
+					naturalWidth: naturalWidth,
+					naturalHeight: naturalHeight,
+					type: 'gifv',
+					handlePress: openImagePreview,
+				}}
+				onDownloadClick={handleDownloadClick}
+				showDownloadButton={false}
+				data-flx="channel.embeds.media.embed-gifv.gif-embed-shell"
+			>
+				<div
+					className={styles.videoWrapper}
+					style={aspectRatioStyle}
+					data-flx="channel.embeds.media.embed-gifv.video-wrapper"
+				>
+					{canPlayInline ? (
+						<video
+							ref={videoRef}
+							className={styles.videoElement}
+							src={videoPlaybackURL}
+							poster={shouldLoadMedia ? posterDisplayURL : thumbHashURL}
+							preload={videoConfig?.preload ?? 'none'}
+							loop={videoConfig?.loop ?? true}
+							muted={videoConfig?.muted ?? true}
+							playsInline={videoConfig?.playsInline ?? true}
+							controls={videoConfig?.controls ?? false}
+							width={dimensions.width}
+							height={dimensions.height}
+							tabIndex={-1}
+							aria-label={i18n._(ANIMATED_GIF_VIDEO_DESCRIPTOR)}
+							onError={handleVideoError}
+							data-embed-media="gifv"
+							data-flx="channel.embeds.media.embed-gifv.video-element"
+						/>
+					) : (
+						<img
+							className={styles.videoElement}
+							src={shouldLoadMedia ? posterDisplayURL : thumbHashURL}
+							alt=""
+							width={dimensions.width}
+							height={dimensions.height}
+							loading="eager"
+							tabIndex={-1}
+							onError={thumbHashCurtain.onPosterError}
+							data-embed-media="gifv-still"
+							data-flx="channel.embeds.media.embed-gifv.still-element"
+						/>
+					)}
+					{thumbHashCurtain.shouldMount && thumbHashURL && (
+						<img
+							src={thumbHashURL}
+							className={clsx(
+								styles.placeholder,
+								thumbHashCurtain.curtainLifted ? styles.placeholderHidden : styles.placeholderVisible,
+								thumbHashCurtain.fastFade && styles.placeholderFastFade,
+							)}
+							alt=""
+							aria-hidden="true"
+							data-flx="channel.embeds.media.embed-gifv.image-placeholder"
+						/>
+					)}
+				</div>
+			</GifEmbedShell>
+		);
+	},
+);
+export const EmbedGif: FC<
+	GifvEmbedProps & {
+		proxyURL: string;
+		isPreview?: boolean;
+		snapshotIndex?: number;
+		layoutConstraints?: {maxWidth: number; maxHeight: number};
+	}
+> = observer(
+	({
+		embedURL,
+		proxyURL,
+		alt,
+		naturalWidth,
+		naturalHeight,
+		placeholder,
+		nsfw,
+		channelId,
+		messageId,
+		attachmentId,
+		embedIndex,
+		message,
+		contentHash,
+		onDelete,
+		isPreview,
+		snapshotIndex,
+		layoutConstraints,
+	}) => {
+		const {i18n} = useLingui();
+		const messageViewContext = useMaybeMessageViewContext();
+		const mediaCalculator = useEmbedMediaCalculator(layoutConstraints);
+		const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
+		const {isPointerInside, hasFocusInside} = useMediaSurfaceInteraction(containerElement);
+		const {
+			shouldBlur,
+			shouldBlock,
+			gateReason,
+			canReveal,
+			reveal: revealSensitiveMedia,
+		} = useMatureMedia(nsfw, channelId);
+		const {
+			ref: visibilityRef,
+			loadMedia: shouldLoadMedia,
+			animate: shouldAnimate,
+		} = useGifViewportGate<HTMLDivElement>({
+			element: containerElement,
+			rememberKey: proxyURL,
+			shouldBlur,
+		});
+		const setContainerRef = useCallback(
+			(node: HTMLDivElement | null) => {
+				setContainerElement(node);
+				visibilityRef(node);
+			},
+			[visibilityRef],
+		);
+		const {dimensions} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight});
+		const {width: displayWidth, height: displayHeight} = dimensions;
+		const gifAutoPlay = useShouldAnimate({kind: 'gif'});
+		const animationPolicyAllowed = useShouldAnimate({
+			kind: 'gif',
+			isHovering: isPointerInside,
+			isFocused: hasFocusInside,
+		});
+		const baseProxyURL = stripMediaProxyParams(proxyURL);
+		const requestedSize = resolveProxyRequestSize(displayWidth, displayHeight, naturalWidth, naturalHeight);
+		const optimizedAnimatedURL = buildFittedAnimatedImageProxyURL(
+			baseProxyURL,
+			requestedSize?.width,
+			requestedSize?.height,
+		);
+		const optimizedStaticURL = buildFittedStaticGifPreviewURL(
+			baseProxyURL,
+			requestedSize?.width,
+			requestedSize?.height,
+		);
+		const shouldShowAnimated = shouldAnimate && animationPolicyAllowed;
+		const activeSource = shouldShowAnimated ? optimizedAnimatedURL : optimizedStaticURL;
+		const {
+			src: activeDisplaySrc,
+			loaded,
+			cachedOnMount,
+			thumbHashURL,
+			ref: mediaRef,
+			onLoad: handleImageLoad,
+			onError: handleImageError,
+		} = useMediaLoading(activeSource, placeholder, {enabled: shouldLoadMedia});
+		const [mountedAt] = useState(() => Date.now());
+		const [placeholderMounted] = useState(!cachedOnMount);
+		const [placeholderHidden, setPlaceholderHidden] = useState(loaded);
+		const [placeholderFastFade, setPlaceholderFastFade] = useState(false);
+		const aspectRatioStyle = useAspectRatioStyle(dimensions.width, dimensions.height);
+		useEffect(() => {
+			if (!loaded) return;
+			setPlaceholderFastFade(Date.now() - mountedAt < PLACEHOLDER_FAST_FADE_WINDOW_MS);
+			setPlaceholderHidden(true);
+		}, [loaded, mountedAt]);
+		useEffect(() => {
+			if (!shouldLoadMedia) return;
+			if (!animationPolicyAllowed) return;
+			if (activeSource === optimizedAnimatedURL) return;
+			const fetchedKey = fetchedApiAttachmentKey(optimizedAnimatedURL);
+			return fetchedKey === null
+				? ImageCacheUtils.pinImage(optimizedAnimatedURL)
+				: apiAttachmentMedia.retain(fetchedKey);
+		}, [activeSource, animationPolicyAllowed, optimizedAnimatedURL, shouldLoadMedia]);
+		const defaultName = deriveDefaultNameFromMessage({
+			message,
+			attachmentId,
+			embedIndex,
+			url: embedURL,
+			proxyUrl: proxyURL,
+		});
+		const effectiveDefaultName = alt?.trim() ? alt.trim() : defaultName || 'GIF';
+		const {toggleFavorite, isFavorited, canFavorite} = useMediaFavorite({
+			channelId,
+			messageId,
+			attachmentId,
+			embedIndex,
+			defaultName: effectiveDefaultName,
+			contentHash,
+			isGifv: true,
+			embedURL,
+			proxyURL,
+			naturalWidth,
+			naturalHeight,
+		});
+		const {viewerItem, openPreview: openImagePreview} = useImagePreview({
+			proxyUrl: optimizedAnimatedURL,
+			embedUrl: embedURL,
+			naturalWidth,
+			naturalHeight,
+			type: 'gif',
+			channelId,
+			messageId,
+			attachmentId,
+			embedIndex,
+			contentHash,
+			message,
+			sourceChannel: messageViewContext?.channel,
+			allowAttachmentDelete: !isPreview && snapshotIndex === undefined,
+		});
+		const {scheduleViewerWarm, cancelViewerWarm} = useMediaViewerHoverWarm(viewerItem, {
+			allowAnimated: gifAutoPlay,
+			enabled: !shouldBlur,
+		});
+
+		const handleDownloadClickGif = useCallback(
+			(e: React.MouseEvent) => {
+				e.stopPropagation();
+				createDownloadHandler(baseProxyURL, 'gif')();
+			},
+			[baseProxyURL],
+		);
+
+		if (shouldBlock) {
+			return null;
+		}
+
+		return (
+			<GifEmbedShell
+				type="gif"
+				proxyURL={proxyURL}
+				embedURL={embedURL}
+				alt={alt}
+				naturalWidth={naturalWidth}
+				naturalHeight={naturalHeight}
+				message={message}
+				attachmentId={attachmentId}
+				contentHash={contentHash}
+				onDelete={onDelete}
+				isPreview={isPreview}
+				snapshotIndex={snapshotIndex}
+				dimensions={dimensions}
+				aspectRatioStyle={aspectRatioStyle}
+				visibilityRef={visibilityRef}
+				setContainerRef={setContainerRef}
+				shouldBlur={shouldBlur}
+				gateReason={gateReason}
+				canReveal={canReveal}
+				revealSensitiveMedia={revealSensitiveMedia}
+				thumbHashURL={thumbHashURL}
+				effectiveDefaultName={effectiveDefaultName}
+				canFavorite={canFavorite}
+				isFavorited={isFavorited}
+				toggleFavorite={toggleFavorite}
+				previewProps={{
+					src: optimizedAnimatedURL,
+					originalSrc: embedURL,
+					naturalWidth: naturalWidth,
+					naturalHeight: naturalHeight,
+					type: 'gif',
+					handlePress: openImagePreview,
+					channelId: channelId,
+					messageId: messageId,
+					attachmentId: attachmentId,
+					embedIndex: embedIndex,
+					contentHash: contentHash,
+					message: message,
+					sourceChannel: messageViewContext?.channel,
+					onViewerWarmEnter: scheduleViewerWarm,
+					onViewerWarmLeave: cancelViewerWarm,
+				}}
+				onDownloadClick={handleDownloadClickGif}
+				data-flx="channel.embeds.media.embed-gifv.gif-embed-shell--2"
+			>
+				<div
+					className={styles.videoWrapper}
+					style={aspectRatioStyle}
+					data-flx="channel.embeds.media.embed-gifv.embed-gif.video-wrapper"
+				>
+					<img
+						ref={mediaRef}
+						alt={i18n._(ANIMATED_GIF_DESCRIPTOR)}
+						src={shouldLoadMedia ? activeDisplaySrc : undefined}
+						className={styles.videoElement}
+						data-embed-media="gif"
+						loading="eager"
+						tabIndex={-1}
+						width={dimensions.width}
+						height={dimensions.height}
+						onLoad={handleImageLoad}
+						onError={handleImageError}
+						data-flx="channel.embeds.media.embed-gifv.embed-gif.video-element"
+					/>
+					{placeholderMounted && thumbHashURL && (
+						<img
+							src={thumbHashURL}
+							className={clsx(
+								styles.placeholder,
+								placeholderHidden ? styles.placeholderHidden : styles.placeholderVisible,
+								placeholderFastFade && styles.placeholderFastFade,
+							)}
+							alt=""
+							aria-hidden="true"
+							data-flx="channel.embeds.media.embed-gifv.embed-gif.image-placeholder"
+						/>
+					)}
+				</div>
+			</GifEmbedShell>
 		);
 	},
 );

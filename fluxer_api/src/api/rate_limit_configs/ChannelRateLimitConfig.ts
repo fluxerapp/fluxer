@@ -64,21 +64,17 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:message:crosspost_source::channel_id',
 		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	CHANNEL_SEARCH: {
-		bucket: 'channel:search::channel_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
 	CHANNEL_ATTACHMENT_UPLOAD: {
 		bucket: 'channel:attachment:upload::channel_id',
 		config: {limit: 10, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	ATTACHMENT_DELETE: {
-		bucket: 'attachment:delete',
-		config: {limit: 40, windowMs: ms('10 seconds')},
+	CHANNEL_ATTACHMENT_GET: {
+		bucket: 'channel:attachment:read',
+		config: {limit: 600, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	ATTACHMENT_URLS_REFRESH: {
 		bucket: 'attachment:refresh_urls',
-		config: {limit: 20, windowMs: ms('10 seconds')},
+		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	CHANNEL_TYPING: {
 		bucket: 'channel:typing::channel_id',
@@ -179,5 +175,9 @@ export const ChannelRateLimitConfigs = {
 	VOICE_ENTRANCE_SOUND_PLAY: {
 		bucket: 'voice:entrance_sound:play::user_id::channel_id',
 		config: {limit: 3, windowMs: ms('30 seconds')},
+	} as RouteRateLimitConfig,
+	VOICE_P2P_CONNECTION_REPORTS: {
+		bucket: 'voice:p2p:connection_reports',
+		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 } as const;

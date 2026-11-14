@@ -379,7 +379,7 @@ export const Attachment: FC<AttachmentProps> = observer(
 				),
 			);
 		}
-		const inlineAttachmentMedia = UserSettings.getInlineAttachmentMedia();
+		const inlineAttachmentMedia = UserSettings.inlineAttachmentMedia;
 		if (renderInMosaic && isMediaAttachment(att)) {
 			return null;
 		}

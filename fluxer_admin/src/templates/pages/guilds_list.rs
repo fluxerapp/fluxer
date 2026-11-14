@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager;
+
 use crate::utils::plural::count_noun;
 use crate::{
     api::types::GuildInfo,
@@ -15,9 +17,11 @@ use crate::{
         },
         layout::admin_layout,
     },
-    utils::{forms::parse_comma_separated, user_tag::user_tag},
+    utils::{forms::parse_comma_separated, user_tag::display_with_tag},
 };
 use maud::{Markup, html};
+
+const MAX_GUILD_ID_LOOKUP: usize = 200;
 
 pub struct GuildsListParams {
     pub q: String,
@@ -36,7 +40,7 @@ impl GuildsListParams {
         let ids = ids.unwrap_or_default();
         Self {
             q: q.unwrap_or_default().trim().to_owned(),
-            requested_ids: parse_comma_separated(&ids),
+            requested_ids: parse_guild_ids(&ids),
             limit: match limit.unwrap_or(50) {
                 25 => 25,
                 100 => 100,
@@ -58,6 +62,19 @@ impl GuildsListParams {
     pub fn search_query(&self) -> &str {
         &self.q
     }
+}
+
+fn parse_guild_ids(ids: &str) -> Vec<String> {
+    let mut parsed: Vec<String> = Vec::new();
+    for id in parse_comma_separated(ids) {
+        if parsed.len() == MAX_GUILD_ID_LOOKUP {
+            break;
+        }
+        if id.chars().all(|ch| ch.is_ascii_digit()) && !parsed.contains(&id) {
+            parsed.push(id);
+        }
+    }
+    parsed
 }
 
 pub struct GuildsListResults<'a> {
@@ -164,38 +181,14 @@ fn pagination(config: &AdminConfig, params: &GuildsListParams, total: u64) -> Ma
         .page
         .checked_add(1)
         .filter(|page| u64::from(*page) < total_pages);
-    html! {
-        div class="mt-6 flex items-center justify-center gap-3" {
-            @if has_previous {
-                a href=(pagination_url(&config.base_path, params, params.page - 1))
-                    class="rounded-lg border border-neutral-300 bg-white px-6 py-2 \
-                           font-medium text-neutral-900 text-sm no-underline \
-                           transition-colors hover:bg-neutral-50" {
-                    "\u{2190} Previous"
-                }
-            } @else {
-                div class="cursor-not-allowed rounded-lg border border-neutral-200 \
-                           bg-neutral-100 px-6 py-2 font-medium text-neutral-400 text-sm" {
-                    "\u{2190} Previous"
-                }
-            }
-            span class="text-neutral-600 text-sm" {
-                "Page " (u64::from(params.page) + 1) " of " (total_pages)
-            }
-            @if let Some(next_page) = next_page {
-                a href=(pagination_url(&config.base_path, params, next_page))
-                    class="rounded-lg bg-neutral-900 px-6 py-2 font-medium text-sm \
-                           text-white no-underline transition-colors hover:bg-neutral-800" {
-                    "Next \u{2192}"
-                }
-            } @else {
-                div class="cursor-not-allowed rounded-lg bg-neutral-100 px-6 py-2 \
-                           font-medium text-neutral-400 text-sm" {
-                    "Next \u{2192}"
-                }
-            }
-        }
-    }
+    pager(
+        has_previous.then(|| pagination_url(&config.base_path, params, params.page - 1)),
+        Some(format!(
+            "Page {} of {total_pages}",
+            u64::from(params.page) + 1
+        )),
+        next_page.map(|page| pagination_url(&config.base_path, params, page)),
+    )
 }
 
 fn pagination_url(base: &str, params: &GuildsListParams, page: u32) -> String {
@@ -262,23 +255,19 @@ fn render_guilds_cards(config: &AdminConfig, guilds: &[GuildInfo]) -> Markup {
     }
 }
 
-fn owner_display(guild: &GuildInfo) -> String {
-    let Some(username) = guild.owner_username.as_deref() else {
+pub(crate) fn owner_display(guild: &GuildInfo) -> String {
+    let (Some(username), Some(discriminator)) = (
+        guild.owner_username.as_deref(),
+        guild.owner_discriminator.as_deref(),
+    ) else {
         return guild.owner_id.clone();
     };
-    let Some(discriminator) = guild.owner_discriminator.as_deref() else {
-        return guild.owner_id.clone();
-    };
-    let tag = user_tag(username, discriminator, false);
-    if let Some(global_name) = guild
-        .owner_global_name
-        .as_deref()
-        .filter(|name| !name.trim().is_empty())
-    {
-        format!("{global_name} ({tag})")
-    } else {
-        tag
-    }
+    display_with_tag(
+        guild.owner_global_name.as_deref(),
+        username,
+        discriminator,
+        false,
+    )
 }
 
 fn guild_icon(config: &AdminConfig, guild: &GuildInfo) -> Markup {

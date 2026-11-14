@@ -54,12 +54,3 @@ export async function createTestServer(): Promise<TestServer> {
 		});
 	});
 }
-
-export function readRequestBody(req: IncomingMessage): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const chunks: Array<Buffer> = [];
-		req.on('data', (chunk: Buffer) => chunks.push(chunk));
-		req.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
-		req.on('error', reject);
-	});
-}

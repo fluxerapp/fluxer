@@ -3,6 +3,7 @@
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 
 const logger = new Logger('AccountReadyWork');
 
@@ -19,6 +20,20 @@ function runAccountReadyWork(userId: string): void {
 		.catch((error) => {
 			logger.warn('Failed to refresh premium state after READY', error);
 		});
+	void import('@app/features/premium/utils/OperatorPassUtils')
+		.then(async (utils) => {
+			if (!utils.isOperatorPassAvailable()) return;
+			const commands = await import('@app/features/premium/commands/OperatorPassCommands');
+			await commands.loadPassesForAccount(userId);
+		})
+		.catch((error) => {
+			logger.warn('Failed to load Operator Passes after READY', error);
+		});
+	void import('@app/features/user/commands/OwnProfileBadgesCommands')
+		.then((module) => module.refresh())
+		.catch((error) => {
+			logger.warn('Failed to load your badges after READY', error);
+		});
 	void import('@app/features/platform/state/LegacySharedContentReview')
 		.then((module) => module.reviewLegacySharedContent())
 		.catch((error) => {
@@ -29,6 +44,13 @@ function runAccountReadyWork(userId: string): void {
 		.catch((error) => {
 			logger.warn('Failed to run the passkey migration check after READY', error);
 		});
+	if (isDesktop()) {
+		void import('@app/features/voice/utils/GpuEncoderCapabilities')
+			.then((module) => module.prewarmGpuEncoderReport())
+			.catch((error) => {
+				logger.warn('Failed to schedule the GPU encoder probe after READY', error);
+			});
+	}
 }
 
 export function scheduleAccountReadyWork(userId: string): void {

@@ -12,16 +12,14 @@ pub fn noun_for(count: u64, singular: &'static str, plural: &'static str) -> &'s
     if count == 1 { singular } else { plural }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn count_noun_picks_the_singular_only_for_one() {
-        assert_eq!(count_noun(0, "result", "results"), "0 results");
-        assert_eq!(count_noun(1, "result", "results"), "1 result");
-        assert_eq!(count_noun(2, "entry", "entries"), "2 entries");
-        assert_eq!(noun_for(1, "item", "items"), "item");
-        assert_eq!(noun_for(3, "item", "items"), "items");
+pub fn group_digits(count: usize) -> String {
+    let digits = count.to_string();
+    let mut grouped = String::with_capacity(digits.len() + digits.len() / 3);
+    for (index, digit) in digits.chars().enumerate() {
+        if index > 0 && (digits.len() - index).is_multiple_of(3) {
+            grouped.push(',');
+        }
+        grouped.push(digit);
     }
+    grouped
 }

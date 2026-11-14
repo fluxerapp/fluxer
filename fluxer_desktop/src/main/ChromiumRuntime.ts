@@ -1,7 +1,7 @@
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs';
-import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import type {BuildChannel} from '@electron/common/BuildChannel';
@@ -10,7 +10,6 @@ import log from 'electron-log';
 
 const RUNTIME_CACHE_STATE_FILE = 'chromium-runtime-cache-state-v1.json';
 const RUNTIME_CACHE_DIRECTORIES = [
-	'Code Cache',
 	'GPUCache',
 	'DawnCache',
 	'DawnGraphiteCache',
@@ -18,7 +17,6 @@ const RUNTIME_CACHE_DIRECTORIES = [
 	'GrShaderCache',
 	'GraphiteDawnCache',
 	'ShaderCache',
-	'Default/Code Cache',
 	'Default/GPUCache',
 	'Default/DawnCache',
 	'Default/DawnGraphiteCache',
@@ -96,33 +94,12 @@ interface RuntimeCacheState {
 	key?: string;
 }
 
-function statWithoutAsarRedirection(filePath: string): fs.Stats {
-	if (process.versions.electron == null) {
-		return fs.statSync(filePath);
-	}
-	return (createRequire(import.meta.url)('original-fs') as typeof fs).statSync(filePath);
-}
-
-function safeFileFingerprint(filePath: string): {mtimeMs: number | null; size: number | null} {
-	try {
-		const stat = statWithoutAsarRedirection(filePath);
-		return {mtimeMs: Math.trunc(stat.mtimeMs), size: stat.size};
-	} catch {
-		return {mtimeMs: null, size: null};
-	}
-}
-
 function getRuntimeCacheKey(): string {
-	const executable = safeFileFingerprint(process.execPath);
-	const appBundle = safeFileFingerprint(path.join(process.resourcesPath, 'app.asar'));
 	return JSON.stringify({
-		appVersion: app.getVersion(),
 		electronVersion: process.versions.electron ?? null,
 		chromeVersion: process.versions.chrome ?? null,
 		nodeVersion: process.versions.node ?? null,
 		v8Version: process.versions.v8 ?? null,
-		executable,
-		appBundle,
 	});
 }
 
@@ -145,10 +122,6 @@ function resolveUserDataChild(userDataPath: string, relativePath: string): strin
 		return target;
 	}
 	return null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
 }
 
 function splitChromiumFeatureList(value: string): Array<string> {
@@ -253,7 +226,12 @@ export function hasEnabledBlinkFeature(feature: string): boolean {
 }
 
 export function appendConfiguredChromiumSwitches(rawSwitches: unknown): void {
-	const switches = Array.isArray(rawSwitches) ? rawSwitches : isRecord(rawSwitches) ? Object.keys(rawSwitches) : [];
+	let switches: Array<unknown> = [];
+	if (Array.isArray(rawSwitches)) {
+		switches = rawSwitches;
+	} else if (isRecord(rawSwitches)) {
+		switches = Object.keys(rawSwitches);
+	}
 	for (const chromiumSwitch of switches) {
 		if (typeof chromiumSwitch !== 'string') continue;
 		if (!CONFIGURED_CHROMIUM_SWITCH_ALLOWLIST.has(chromiumSwitch)) continue;
@@ -295,6 +273,11 @@ export function appendLinuxChromiumFlagsConfig(channel: BuildChannel): void {
 			log.warn('[ChromiumRuntime] Failed to load Linux Chromium flags config', {path: filePath, error});
 		}
 	}
+}
+
+export function addLinuxHardwareVideoDecodeFeatures(features: Set<string>): void {
+	if (process.platform !== 'linux') return;
+	features.add('VaapiOnNvidiaGPUs');
 }
 
 export function addLinuxHardwareVideoEncodeFeatures(features: Set<string>): void {

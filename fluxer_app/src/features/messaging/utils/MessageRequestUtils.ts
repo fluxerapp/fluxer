@@ -4,7 +4,6 @@ import ChatInputSettings from '@app/features/messaging/state/ChatInputSettings';
 import {convertEmoticonsToEmoji} from '@app/features/messaging/utils/EmoticonConversionUtils';
 import {parseSilentMessagePrefix} from '@app/features/messaging/utils/SilentMessagePrefix';
 import {maybeSanitizeOutgoingMessage} from '@app/features/messaging/utils/UrlSanitizationUtils';
-import {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {
 	AllowedMentions,
@@ -12,10 +11,11 @@ import type {
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
+import {hasVisibleContent as hasVisibleMessageContent} from '@fluxer/schema/src/primitives/MessageValidators';
 
 const DEFAULT_ALLOWED_MENTIONS: AllowedMentions = {replied_user: true};
 
-export {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
+export {hasVisibleContent as hasVisibleMessageContent} from '@fluxer/schema/src/primitives/MessageValidators';
 
 export interface ApiAttachmentMetadata {
 	id: string;

@@ -72,10 +72,6 @@ export const GuildRateLimitConfigs = {
 		bucket: 'guild:channel:positions::guild_id',
 		config: {limit: 30, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	GUILD_SEARCH: {
-		bucket: 'guild:search::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
 	GUILD_AUDIT_LOGS: {
 		bucket: 'guild:audit_logs::guild_id',
 		config: {limit: 20, windowMs: ms('10 seconds')},

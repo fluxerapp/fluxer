@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Authentication from '@app/features/auth/state/Authentication';
 import {
 	emptyMap,
@@ -405,4 +406,8 @@ export class MessagePollVotesManager {
 	}
 }
 
-export default new MessagePollVotesManager();
+const pollVotes = new MessagePollVotesManager();
+
+ResettableStates.register(pollVotes, () => pollVotes.handleGatewayReady());
+
+export default pollVotes;

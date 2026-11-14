@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2MicrophoneOptions} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2MicrophoneOptions} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {LocalAudioTrack, Room} from 'livekit-client';
 
 export interface MicrophoneEnableContext {

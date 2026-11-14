@@ -69,10 +69,11 @@ const FALLBACK_STRINGS: Readonly<Record<string, string>> = Object.freeze({
 	'desktop.tray.disconnectFrom': 'Disconnect from {channel}',
 	'desktop.tray.disconnectVoice': 'Disconnect from voice',
 	'desktop.tray.checkForUpdates': 'Check for updates',
-	'desktop.tray.updateNow': 'Update {appName} now',
+	'desktop.tray.reloadToUpdate': 'Reload {appName} to update',
+	'desktop.tray.restartToUpdate': 'Restart {appName} to update',
 	'desktop.appMenu.checkForUpdates': 'Check for updates...',
-	'desktop.update.availableMessage': 'An update for {appName} is available.',
-	'desktop.update.availableDetail': '{appName} will close, install the update and open again.',
+	'desktop.update.availableMessage': 'An update for {appName} is ready to install.',
+	'desktop.update.availableDetail': '{appName} will restart to finish updating.',
 	'desktop.update.reloadDetail': '{appName} will reload to finish updating.',
 	'desktop.update.install': 'Update now',
 	'desktop.update.later': 'Later',
@@ -80,6 +81,9 @@ const FALLBACK_STRINGS: Readonly<Record<string, string>> = Object.freeze({
 	'desktop.update.download': 'Download',
 	'desktop.update.manualMessage': '{appName} {version} is available.',
 	'desktop.update.manualDetail': 'Download the new version to update {appName}.',
+	'desktop.update.managedDetail': 'Update {appName} with your package manager, or download the new version.',
+	'desktop.update.flatpakDetail': 'Update {appName} from your software center.',
+	'desktop.update.openSoftwareCenter': 'Open software center',
 	'desktop.update.upToDateMessage': '{appName} is up to date.',
 	'desktop.update.upToDateDetail': 'You have version {version}.',
 	'desktop.update.checkFailedMessage': "{appName} couldn't check for updates.",
@@ -88,6 +92,8 @@ const FALLBACK_STRINGS: Readonly<Record<string, string>> = Object.freeze({
 	'desktop.update.failedDetail': 'The update did not download or install. Try again or download it yourself.',
 	'desktop.update.stillDownloadingDetail': 'The update is still downloading. Try again in a few minutes.',
 	'desktop.tray.copyBuildInfo': 'Copy build info',
+	'desktop.tray.turnOffCustomCss': 'Turn off custom CSS',
+	'desktop.tray.turnOnCustomCss': 'Turn on custom CSS',
 	'desktop.tray.restart': 'Restart {appName}',
 	'desktop.tray.quit': 'Quit {appName}',
 	'desktop.autostart.portalReason': 'Start {appName} automatically when you sign in.',
@@ -95,6 +101,13 @@ const FALLBACK_STRINGS: Readonly<Record<string, string>> = Object.freeze({
 	'desktop.jumpList.openSettingsDescription': 'Open {appName} settings',
 	'desktop.jumpList.newDirectMessage': 'New direct message',
 	'desktop.jumpList.newDirectMessageDescription': 'Compose a new direct message',
+	'desktop.jumpList.chooseAccount': 'Choose an account',
+	'desktop.jumpList.chooseAccountDescription': 'Switch to another signed-in account',
+	'desktop.tray.accounts': 'Accounts',
+	'desktop.tray.chooseAccount': 'Choose an account…',
+	'desktop.tray.accountWithHost': '{name} ({host})',
+	'desktop.tray.accountWithMentions': '{label} · {count}',
+	'desktop.tray.accountNumbered': 'Account {number}',
 	'desktop.notifications.open': 'Open',
 	'desktop.themes.addLocalFiles': 'Add local files',
 	'desktop.themes.importFolder': 'Import folder',
@@ -121,6 +134,7 @@ const FALLBACK_STRINGS: Readonly<Record<string, string>> = Object.freeze({
 	'desktop.linuxEntry.comment': 'Instant messaging and VoIP',
 });
 const STORAGE_FILE_NAME = 'native-strings.json';
+const LOCALE_TAG_PATTERN = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$/;
 
 interface PersistedStrings {
 	locale: string;
@@ -157,13 +171,14 @@ function writePersisted(payload: PersistedStrings): void {
 
 export function initializeMainI18n(): void {
 	const persisted = readPersisted();
-	if (!persisted) return;
+	if (!persisted || !LOCALE_TAG_PATTERN.test(persisted.locale)) return;
 	currentLocale = persisted.locale;
 	currentStrings = {...FALLBACK_STRINGS, ...persisted.strings};
 	logger.info('Loaded persisted native strings', {locale: currentLocale, count: Object.keys(persisted.strings).length});
 }
 
 export function setNativeStrings(locale: string, strings: Record<string, string>): void {
+	if (!LOCALE_TAG_PATTERN.test(locale)) return;
 	const next = {...FALLBACK_STRINGS, ...strings};
 	if (locale === currentLocale && shallowEqualStrings(currentStrings, next)) {
 		return;

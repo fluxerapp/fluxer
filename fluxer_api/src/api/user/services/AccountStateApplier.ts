@@ -5,7 +5,9 @@ import type {AdminRepository} from '@app/api/admin/AdminRepository';
 import type {AdminArchiveService} from '@app/api/admin/services/AdminArchiveService';
 import {type ChannelID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
+import type {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
@@ -19,18 +21,16 @@ import type {
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
 import type {User} from '@app/api/models/User';
+import type {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {isAccountLimitExempt} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {
-	clearNewConversationLimit,
-	isNewConversationLimitExempt,
-	setNewConversationLimit,
-} from '@app/api/user/NewConversationLimit';
+import {clearNewConversationLimit, setNewConversationLimit} from '@app/api/user/NewConversationLimit';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {
 	type PartialUserChangePropagationDeps,
 	propagatePartialUserChange,
 } from '@app/api/user/services/PartialUserChangePropagation';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {isDeletionComplete} from '@app/api/user/UserHelpers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {getSameIpDecisionKey, isPublicIpAddress, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
@@ -47,14 +47,15 @@ interface AccountUpdateDispatch {
 }
 
 export interface AccountStateDeps {
-	users: Pick<IUserRepository, 'findUnique' | 'compareAndSetFlags' | 'patchUpsert'>;
+	users: Pick<UserRepository, 'findUnique' | 'compareAndSetFlags' | 'patchUpsert'>;
 	dispatch: AccountUpdateDispatch;
 	ipBans: Pick<AdminRepository, 'isIpBanned' | 'banIpTemp'>;
 	cache: Pick<ICacheService, 'publish' | 'get' | 'set' | 'delete'>;
 	archives: Pick<AdminArchiveService, 'triggerUserArchive' | 'listArchives'>;
 	messageDeletionQueue: Pick<KVBulkMessageDeletionQueueService, 'scheduleDeletion' | 'removeFromQueue'>;
 	messageDeletionDelayMs: number;
-	authored: Pick<IChannelRepository, 'listMessagesByAuthor'>;
+	authored: Pick<MessageRepository, 'listMessagesByAuthor'>;
+	labsRoles: Pick<OperatorPassLabsRoleService, 'resyncLabsRoles'>;
 	now?: () => number;
 }
 
@@ -69,11 +70,11 @@ type ProfilePropagation = Omit<PartialUserChangePropagationDeps, 'gatewayService
 function gatewayDispatch(
 	gateway: IGatewayService,
 	profile: ProfilePropagation,
-	channels: Pick<IChannelRepository, 'findUnique'>,
+	channels: Pick<ChannelDataRepository, 'findUnique'>,
 ): AccountUpdateDispatch {
 	return {
 		async userUpdated(user) {
-			await gateway.dispatchPresence({userId: user.id, event: 'USER_UPDATE', data: mapUserToPrivateResponse(user)});
+			await dispatchUserUpdate(gateway, user);
 		},
 		async profileChanged(user) {
 			await propagatePartialUserChange({...profile, gatewayService: gateway}, user);
@@ -101,15 +102,21 @@ export function accountStateDepsFromContext(
 	ipBans: AccountStateDeps['ipBans'],
 	profile: Omit<ProfilePropagation, 'userRepository'>,
 	messageDeletion: Pick<AccountStateDeps, 'archives' | 'messageDeletionQueue' | 'messageDeletionDelayMs'>,
-	channels: Pick<IChannelRepository, 'findUnique' | 'listMessagesByAuthor'>,
+	channels: Pick<ChannelRepository, 'channelData' | 'messages'>,
+	labsRoles: AccountStateDeps['labsRoles'],
 ): AccountStateDeps {
 	return {
 		users: ctx.services.users,
-		dispatch: gatewayDispatch(ctx.services.gateway, {...profile, userRepository: ctx.services.users}, channels),
+		dispatch: gatewayDispatch(
+			ctx.services.gateway,
+			{...profile, userRepository: ctx.services.users},
+			channels.channelData,
+		),
 		ipBans,
 		cache: ctx.services.cache,
 		...messageDeletion,
-		authored: channels,
+		authored: channels.messages,
+		labsRoles,
 	};
 }
 
@@ -121,7 +128,7 @@ function observedOf(user: User): Observed {
 }
 
 export function outcomeOf(
-	env: Pick<ActionEnvelope, 'id'> & {type: string; user_id?: string},
+	env: Pick<ActionEnvelope, 'id'> & {type: string; user_id?: string; guild_id?: string},
 	status: OutcomeStatus,
 	user: User | null = null,
 	detail: string | null = null,
@@ -134,15 +141,12 @@ export function outcomeOf(
 		observed: user ? observedOf(user) : null,
 	};
 	if (env.user_id) outcome.user_id = env.user_id;
+	if (env.guild_id) outcome.guild_id = env.guild_id;
 	return outcome;
 }
 
 function isIneligible(user: User): boolean {
 	return user.isBot || (user.flags & UserFlags.DELETED) !== 0n;
-}
-
-function isDeletionComplete(user: User): boolean {
-	return (user.flags & UserFlags.DELETED) !== 0n && user.pendingDeletionAt === null;
 }
 
 export async function applySetAccountLimit(
@@ -179,12 +183,18 @@ export async function applyHideProfile(deps: AccountStateDeps, env: ActionOf<'hi
 			if (isIneligible(user)) return outcomeOf(env, 'ineligible', user);
 			if (env.on && isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
 			const hidden = (user.flags & UserFlags.PROFILE_HIDDEN) !== 0n;
-			if (hidden === env.on) return outcomeOf(env, 'noop', user);
+			if (hidden === env.on) {
+				await deps.dispatch.userUpdated(user);
+				await deps.dispatch.profileChanged(user);
+				await deps.labsRoles.resyncLabsRoles(user.id);
+				return outcomeOf(env, 'noop', user);
+			}
 			const target = env.on ? user.flags | UserFlags.PROFILE_HIDDEN : user.flags & ~UserFlags.PROFILE_HIDDEN;
 			const updated = await deps.users.compareAndSetFlags(user, target);
 			if (updated) {
 				await deps.dispatch.userUpdated(updated);
 				await deps.dispatch.profileChanged(updated);
+				await deps.labsRoles.resyncLabsRoles(updated.id);
 				return outcomeOf(env, 'applied', updated);
 			}
 			user = await deps.users.findUnique(userId);
@@ -203,18 +213,21 @@ export async function applyHideRecentMessages(
 		if (user.isBot || isDeletionComplete(user)) return outcomeOf(env, 'ineligible', user);
 		const current = user.contentHiddenSince?.getTime() ?? null;
 		if (!env.on) {
-			if (current === null) return outcomeOf(env, 'noop', user);
+			if (current === null) {
+				await deps.dispatch.contentVisibilityChanged(user);
+				return outcomeOf(env, 'noop', user);
+			}
 			const shown = await deps.users.patchUpsert(user.id, {content_hidden_since: null}, user.toRow());
 			await deps.dispatch.contentVisibilityChanged(shown);
 			return outcomeOf(env, 'applied', shown);
 		}
 		if (isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
 		const since = current === null ? env.since_ms : Math.min(current, env.since_ms);
-		let hidden = user;
-		if (since !== current) {
-			hidden = await deps.users.patchUpsert(user.id, {content_hidden_since: new Date(since)}, user.toRow());
-			await deps.dispatch.contentVisibilityChanged(hidden);
-		}
+		const hidden =
+			since === current
+				? user
+				: await deps.users.patchUpsert(user.id, {content_hidden_since: new Date(since)}, user.toRow());
+		await deps.dispatch.contentVisibilityChanged(hidden);
 		const removed = await removeAuthoredMessagesSince(deps, user.id, since);
 		return outcomeOf(env, since === current ? 'noop' : 'applied', hidden, `messages=${removed}`);
 	});
@@ -341,7 +354,7 @@ export async function applyLimitNewConversations(
 		const lifted = await clearNewConversationLimit(user.id, store);
 		return outcomeOf(env, lifted ? 'applied' : 'noop', user);
 	}
-	if (isNewConversationLimitExempt(user)) return outcomeOf(env, 'exempt', user);
+	if (isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
 	const applied = await setNewConversationLimit(user.id, env.until_ms, store);
 	return outcomeOf(env, applied ? 'applied' : 'noop', user);
 }

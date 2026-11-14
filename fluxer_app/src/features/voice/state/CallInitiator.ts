@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {makeAutoObservable} from 'mobx';
 
 class CallInitiator {
@@ -30,6 +31,14 @@ class CallInitiator {
 	clearChannel(channelId: string): void {
 		this.initiatedRecipients.delete(channelId);
 	}
+
+	reset(): void {
+		this.initiatedRecipients.clear();
+	}
 }
 
-export default new CallInitiator();
+const callInitiator = new CallInitiator();
+
+ResettableStates.register(callInitiator, () => callInitiator.reset());
+
+export default callInitiator;

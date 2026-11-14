@@ -92,6 +92,9 @@ export const UnsignedInt64StringType = z
 export const SnowflakeStringType = z
 	.string()
 	.regex(SNOWFLAKE_REGEX)
+	.refine((value) => !SNOWFLAKE_REGEX.test(value) || BigInt(value) <= MAX_INT64_VALUE, {
+		message: ValidationErrorCodes.SNOWFLAKE_OUT_OF_RANGE,
+	})
 	.register(schemaMetadata, {name: 'SnowflakeStringType', format: 'snowflake'});
 const BitflagStringType = z
 	.string()
@@ -189,6 +192,7 @@ export function createUnboundedStringType() {
 // biome-ignore lint/complexity/useRegexLiterals: The literal form trips noControlCharactersInRegex for C0/C1 controls.
 const C0_C1_CTRL_REGEX = new RegExp('[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F\\u0080-\\u009F]', 'g');
 const JOIN_CONTROLS_REGEX = /(?:\u200C|\u200D)/g;
+const STRAY_JOIN_CONTROLS_REGEX = /(?<![^\s\u200C\u200D])[\u200C\u200D]|[\u200C\u200D](?![^\s\u200C\u200D])/gu;
 const WJ_BOM_REGEX = /(?:\u2060|\uFEFF)/g;
 const BIDI_CTRL_REGEX = /[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g;
 const MISC_INVISIBLES_REGEX = /[\u00AD\u180E\uFFFE\uFFFF]/g;
@@ -219,17 +223,17 @@ export function normalizeWhitespace(s: string): string {
 	return s.replace(UNICODE_SPACES_REGEX, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export function stripInvisibles(s: string): string {
+export function stripInvisibles(s: string, {keepInnerJoinControls = false} = {}): string {
 	if (s.length > MAX_STRING_PROCESSING_LENGTH) {
 		throw new Error(ValidationErrorCodes.STRING_LENGTH_INVALID);
 	}
 	return s
 		.replace(C0_C1_CTRL_REGEX, '')
-		.replace(JOIN_CONTROLS_REGEX, '')
 		.replace(WJ_BOM_REGEX, '')
 		.replace(BIDI_CTRL_REGEX, '')
 		.replace(MISC_INVISIBLES_REGEX, '')
-		.replace(TAG_CHARS_REGEX, '');
+		.replace(TAG_CHARS_REGEX, '')
+		.replace(keepInnerJoinControls ? STRAY_JOIN_CONTROLS_REGEX : JOIN_CONTROLS_REGEX, '');
 }
 
 export function stripVariationSelectors(s: string): string {

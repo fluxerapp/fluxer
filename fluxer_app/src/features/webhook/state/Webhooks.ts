@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {Webhook} from '@app/features/webhook/models/Webhook';
 import type {Webhook as WireWebhook} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
 import {makeAutoObservable} from 'mobx';
@@ -237,6 +238,18 @@ class Webhooks {
 		this.channelFetchStatus = nextChannelFetchStatus;
 		this.guildFetchStatus = nextGuildFetchStatus;
 	}
+
+	reset(): void {
+		this.webhooks = new Map();
+		this.channelWebhooks = new Map();
+		this.channelGuildMap = new Map();
+		this.channelFetchStatus = new Map();
+		this.guildFetchStatus = new Map();
+	}
 }
 
-export default new Webhooks();
+const webhooks = new Webhooks();
+
+ResettableStates.register(webhooks, () => webhooks.reset());
+
+export default webhooks;

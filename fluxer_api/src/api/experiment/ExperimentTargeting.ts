@@ -13,11 +13,12 @@ const NO_GUILDS: ReadonlySet<string> = new Set();
 
 export async function resolveExperimentTargeting(
 	user: User,
-	config: TargetableExperimentConfig,
+	countryCode: string | null,
+	configs: ReadonlyArray<TargetableExperimentConfig>,
 ): Promise<ExperimentTargeting> {
-	const needsGuilds = config.enabled && config.included_guild_ids.length > 0;
+	const needsGuilds = configs.some((config) => config.enabled && config.included_guild_ids.length > 0);
 	const memberGuildIds = needsGuilds
 		? new Set((await getUserRepository().getUserGuildIds(user.id)).map((guildId) => guildId.toString()))
 		: NO_GUILDS;
-	return {memberGuildIds, premium: !user.isBot && user.isPremium()};
+	return {memberGuildIds, premium: !user.isBot && user.isPremium(), countryCode};
 }

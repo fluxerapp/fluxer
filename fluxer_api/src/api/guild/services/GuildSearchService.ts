@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {threadSearchIndexEnqueueCappedTotal} from '@app/api/channel/threads/ThreadMetrics';
+import {guildResponseToContentWarningView} from '@app/api/channel/utils/EffectiveContentWarning';
 import {
-	guildActive,
 	THREAD_FEATURE_CHANNEL_TYPES,
 	THREAD_PARENT_CHANNEL_TYPES,
 	type ThreadViewer,
@@ -15,14 +15,12 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import {getMessageSearchService} from '@app/api/SearchFactory';
-import {buildMessageSearchFilters} from '@app/api/search/BuildMessageSearchFilters';
-import {channelNeedsReindexing} from '@app/api/search/ChannelIndexingUtils';
+import {channelNeedsReindexing, queueIndexingChannels} from '@app/api/search/ChannelIndexingUtils';
 import {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponseMapper';
-import {searchExistingMessages} from '@app/api/search/MessageSearchResultReconciler';
-import {channelRequiresAgeVerification} from '@app/api/search/SearchNsfwUtils';
+import {emptyMessageSearchResponse, runMessageSearch} from '@app/api/search/MessageSearchResultReconciler';
+import {channelIsAgeRestricted, getSearchNsfwAccess} from '@app/api/search/SearchNsfwUtils';
 import {accessibleRequestedThreadIds, accessibleThreadIds} from '@app/api/search/ThreadSearchScope';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -32,24 +30,22 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import {NsfwContentAgeRestrictedError} from '@fluxer/errors/src/domains/moderation/NsfwContentAgeRestrictedError';
 import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 const GUILD_FANOUT_CONCURRENCY = 16;
 const PERMISSION_CHECK_CONCURRENCY = 64;
-const CHANNEL_INDEX_JOB_ENQUEUE_CONCURRENCY = 16;
 
 export class GuildSearchService {
 	private readonly responseMapper: MessageSearchResponseMapper;
 
 	constructor(
-		private readonly channelRepository: IChannelRepository,
+		private readonly channelRepository: ChannelRepository,
 		private readonly userCacheService: UserCacheService,
 		private readonly gatewayService: IGatewayService,
-		private readonly userRepository: IUserRepository,
+		private readonly userRepository: UserRepository,
 		private readonly workerService: IWorkerService<WorkerTaskName>,
 	) {
 		this.responseMapper = new MessageSearchResponseMapper(this.channelRepository, this.userCacheService);
@@ -60,10 +56,11 @@ export class GuildSearchService {
 		viewer: ThreadViewer;
 		guildId: GuildID;
 		channelIds: Array<ChannelID>;
+		iosApp: boolean;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageSearchResponse> {
-		const {userId, viewer, guildId, searchParams, requestCache} = params;
+		const {userId, viewer, guildId, iosApp, searchParams, requestCache} = params;
 		let {channelIds} = params;
 		const guildData = await this.gatewayService.getGuildData({guildId, userId});
 		const guildIsAgeRestricted = guildData?.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
@@ -74,18 +71,23 @@ export class GuildSearchService {
 		const threadsVisible = viewerActive(viewer, guildId);
 		const explicitChannelIds = channelIds.length > 0;
 		if (!explicitChannelIds) {
-			const channels = await this.channelRepository.listGuildChannels(guildId, 'enrolled');
+			const channels = await this.channelRepository.channelData.listGuildChannels(guildId, 'enrolled');
 			channelIds = channels.filter((c) => threadsVisible || !c.isThreadOnly()).map((c) => c.id);
 		}
 		const includeNsfwRequested = searchParams.include_nsfw ?? false;
-		const canUserAccessNsfw =
-			guildIsAgeRestricted || includeNsfwRequested ? await this.getCanUserAccessNsfw(userId) : false;
-		if (guildIsAgeRestricted && !canUserAccessNsfw) {
-			throw new NsfwContentRequiresAgeVerificationError();
+		const nsfwAccess =
+			guildIsAgeRestricted || includeNsfwRequested
+				? await getSearchNsfwAccess(this.userRepository, userId, iosApp)
+				: {adult: false, allowed: false};
+		if (guildIsAgeRestricted && !nsfwAccess.adult) {
+			throw new NsfwContentAgeRestrictedError();
 		}
-		const canIncludeNsfw = canUserAccessNsfw && (includeNsfwRequested || guildIsAgeRestricted);
+		if (guildIsAgeRestricted && !nsfwAccess.allowed) {
+			return emptyMessageSearchResponse(searchParams);
+		}
+		const canIncludeNsfw = nsfwAccess.allowed && (includeNsfwRequested || guildIsAgeRestricted);
 		const guildNsfw = guildData?.nsfw ?? false;
-		const channels = await this.channelRepository.listChannels(channelIds);
+		const channels = await this.channelRepository.channelData.listChannels(channelIds);
 		const channelMap = new Map<string, Channel>();
 		for (const channel of channels) {
 			if (channel.guildId === guildId && (threadsVisible || !THREAD_FEATURE_CHANNEL_TYPES.has(channel.type))) {
@@ -103,7 +105,7 @@ export class GuildSearchService {
 		if (requestedThreads.length > 0) {
 			const threadIds = new Set(requestedThreads.map((thread) => thread.id.toString()));
 			const parentIds = requestedThreads.flatMap((thread) => (thread.parentId ? [thread.parentId] : []));
-			for (const parent of await this.channelRepository.listChannels(
+			for (const parent of await this.channelRepository.channelData.listChannels(
 				parentIds.filter((id) => !channelMap.has(id.toString())),
 			)) {
 				if (parent.guildId === guildId) channelMap.set(parent.id.toString(), parent);
@@ -119,7 +121,7 @@ export class GuildSearchService {
 		const categoryLookup = await this.buildParentCategoryLookup(channelMap);
 		const nsfwFilteredIds = channelIds.filter((id) => {
 			const channel = channelMap.get(id.toString())!;
-			return !(channelRequiresAgeVerification(channel, categoryLookup, guildNsfw) && !canIncludeNsfw);
+			return !(channelIsAgeRestricted(channel, categoryLookup, guildNsfw) && !canIncludeNsfw);
 		});
 		const permissionResults = await mapWithConcurrency(nsfwFilteredIds, PERMISSION_CHECK_CONCURRENCY, (channelId) =>
 			this.gatewayService.checkPermission({
@@ -140,15 +142,7 @@ export class GuildSearchService {
 			validChannelIds.push(nsfwFilteredIds[i]!);
 		}
 		if (validChannelIds.length === 0) {
-			const hitsPerPage = searchParams.hits_per_page ?? 25;
-			const page = searchParams.page ?? 1;
-			return {
-				channels: [],
-				messages: [],
-				total: 0,
-				hits_per_page: hitsPerPage,
-				page,
-			};
+			return emptyMessageSearchResponse(searchParams);
 		}
 		let channelsToIndex = validChannelIds
 			.filter((channelId) => {
@@ -156,80 +150,59 @@ export class GuildSearchService {
 				return channel && !channel.isThread() && !channel.isThreadOnly() && channelNeedsReindexing(channel.indexedAt);
 			})
 			.map((id) => id.toString());
-		if (channelsToIndex.length > SEARCH_INDEX_ENQUEUE_MAX && guildActive(guildId)) {
+		if (channelsToIndex.length > SEARCH_INDEX_ENQUEUE_MAX) {
 			channelsToIndex = channelsToIndex.slice(0, SEARCH_INDEX_ENQUEUE_MAX);
 			threadSearchIndexEnqueueCappedTotal.inc();
 		}
 		if (channelsToIndex.length > 0) {
-			await mapWithConcurrency(channelsToIndex, CHANNEL_INDEX_JOB_ENQUEUE_CONCURRENCY, (channelId) =>
-				this.workerService.addJob(
-					'indexChannelMessages',
-					{
-						channelId,
-					},
-					{
-						jobKey: `indexChannelMessages-${channelId}`,
-						maxAttempts: 3,
-					},
-				),
-			);
+			await queueIndexingChannels(this.workerService, channelsToIndex);
 			return {indexing: true};
 		}
-		const searchChannelIds = threadsVisible
-			? await this.threadSearchChannelIds({
-					userId,
-					guildId,
-					validChannelIds,
-					channelMap,
-					requestedIds: explicitChannelIds ? new Set(params.channelIds.map((id) => id.toString())) : null,
-				})
-			: validChannelIds.map((id) => id.toString());
-		const filters = buildMessageSearchFilters(searchParams, searchChannelIds);
-		const hitsPerPage = searchParams.hits_per_page ?? 25;
-		const page = searchParams.page ?? 1;
-		const cursor = searchParams.cursor;
-		const result = await searchExistingMessages({
+		let searchChannelIds: Array<string>;
+		if (threadsVisible) {
+			searchChannelIds = await this.threadSearchChannelIds({
+				userId,
+				guildId,
+				validChannelIds,
+				channelMap,
+				requestedIds: explicitChannelIds ? new Set(params.channelIds.map((id) => id.toString())) : null,
+			});
+		} else {
+			searchChannelIds = validChannelIds.map((id) => id.toString());
+		}
+		if (searchChannelIds.length === 0) {
+			return emptyMessageSearchResponse(searchParams);
+		}
+		return runMessageSearch({
 			searchService,
 			messageRepository: this.channelRepository,
-			query: searchParams.content ?? '',
-			filters,
-			hitsPerPage,
-			page,
-			cursor,
-		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(
-			result.messages,
+			responseMapper: this.responseMapper,
+			filterParams: searchParams,
+			searchParams,
+			channelIds: searchChannelIds,
 			userId,
 			viewer,
 			requestCache,
-		);
-		return {
-			messages: mappedResponses.messages,
-			channels: mappedResponses.channels,
-			total: result.total,
-			hits_per_page: hitsPerPage,
-			page,
-			cursor: result.cursor,
-			...(mappedResponses.threads ? {threads: mappedResponses.threads, members: mappedResponses.members} : {}),
-		};
+		});
 	}
 
 	async searchAllGuilds(params: {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelIds: Array<ChannelID>;
+		iosApp: boolean;
 		searchParams: MessageSearchRequest;
 		requestCache: RequestCache;
 	}): Promise<MessageSearchResponse> {
-		const {userId, viewer, channelIds, searchParams, requestCache} = params;
+		const {userId, viewer, channelIds, iosApp, searchParams, requestCache} = params;
 		const searchService = getMessageSearchService();
 		if (!searchService) {
 			throw new FeatureTemporarilyDisabledError();
 		}
-		const {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories, threadParents} =
+		const {accessibleChannels, unindexedChannelIds, nsfwGuildIds, parentCategories, threadParents} =
 			await this.collectAccessibleGuildChannels(userId, viewer, channelIds);
 		if (unindexedChannelIds.size > 0) {
-			await this.queueIndexingChannels(unindexedChannelIds);
+			await queueIndexingChannels(this.workerService, unindexedChannelIds);
 			return {indexing: true};
 		}
 		let searchChannelIds = [...accessibleChannels.keys(), ...threadParents.keys()];
@@ -245,62 +218,36 @@ export class GuildSearchService {
 		const includeNsfwRequested = searchParams.include_nsfw ?? false;
 		let canIncludeNsfw = false;
 		if (includeNsfwRequested) {
-			canIncludeNsfw = await this.getCanUserAccessNsfw(userId);
+			canIncludeNsfw = (await getSearchNsfwAccess(this.userRepository, userId, iosApp)).allowed;
 		}
 		searchChannelIds = searchChannelIds.filter((channelIdStr) => {
 			const channel = accessibleChannels.get(channelIdStr) ?? threadParents.get(channelIdStr);
 			if (!channel) {
 				return false;
 			}
-			const guildId = channel.guildId?.toString();
-			const guildIsAgeRestricted = guildId != null && guildNsfwLevels.get(guildId) === GuildNSFWLevel.AGE_RESTRICTED;
-			if (guildIsAgeRestricted) {
+			const guildNsfw = channel.guildId != null && nsfwGuildIds.has(channel.guildId.toString());
+			if (guildNsfw) {
 				return canIncludeNsfw;
 			}
-			if (channelRequiresAgeVerification(channel, parentCategories, false)) {
+			if (channelIsAgeRestricted(channel, parentCategories, false)) {
 				return canIncludeNsfw;
 			}
 			return true;
 		});
 		if (searchChannelIds.length === 0) {
-			const hitsPerPage = searchParams.hits_per_page ?? 25;
-			const page = searchParams.page ?? 1;
-			return {
-				channels: [],
-				messages: [],
-				total: 0,
-				hits_per_page: hitsPerPage,
-				page,
-			};
+			return emptyMessageSearchResponse(searchParams);
 		}
-		const filters = buildMessageSearchFilters(searchParams, searchChannelIds);
-		const hitsPerPage = searchParams.hits_per_page ?? 25;
-		const page = searchParams.page ?? 1;
-		const cursor = searchParams.cursor;
-		const result = await searchExistingMessages({
+		return runMessageSearch({
 			searchService,
 			messageRepository: this.channelRepository,
-			query: searchParams.content ?? '',
-			filters,
-			hitsPerPage,
-			page,
-			cursor,
-		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(
-			result.messages,
+			responseMapper: this.responseMapper,
+			filterParams: searchParams,
+			searchParams,
+			channelIds: searchChannelIds,
 			userId,
 			viewer,
 			requestCache,
-		);
-		return {
-			messages: mappedResponses.messages,
-			channels: mappedResponses.channels,
-			total: result.total,
-			hits_per_page: hitsPerPage,
-			page,
-			cursor: result.cursor,
-			...(mappedResponses.threads ? {threads: mappedResponses.threads, members: mappedResponses.members} : {}),
-		};
+		});
 	}
 
 	private async threadSearchChannelIds(params: {
@@ -357,33 +304,12 @@ export class GuildSearchService {
 			}
 		}
 		if (missingParentIds.length > 0) {
-			const parents = await this.channelRepository.listChannels(missingParentIds);
+			const parents = await this.channelRepository.channelData.listChannels(missingParentIds);
 			for (const parent of parents) {
 				lookup.set(parent.id.toString(), parent);
 			}
 		}
 		return lookup;
-	}
-
-	private async getCanUserAccessNsfw(userId: UserID): Promise<boolean> {
-		const user = await this.userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		return canUserAccessNsfwContent(user);
-	}
-
-	private async queueIndexingChannels(channelIds: Iterable<string>): Promise<void> {
-		await mapWithConcurrency(Array.from(channelIds), CHANNEL_INDEX_JOB_ENQUEUE_CONCURRENCY, (channelId) =>
-			this.workerService.addJob(
-				'indexChannelMessages',
-				{channelId},
-				{
-					jobKey: `indexChannelMessages-${channelId}`,
-					maxAttempts: 3,
-				},
-			),
-		);
 	}
 
 	private async addRequestedThreads(
@@ -393,7 +319,7 @@ export class GuildSearchService {
 		threadParents: Map<string, Channel>,
 	): Promise<void> {
 		const threadsByGuild = new Map<string, Array<Channel>>();
-		for (const thread of await this.channelRepository.listChannels([...threadIds])) {
+		for (const thread of await this.channelRepository.channelData.listChannels([...threadIds])) {
 			const parent = thread.parentId === null ? undefined : parentById.get(thread.parentId.toString());
 			if (!thread.isThread() || !parent || thread.guildId === null || parent.guildId !== thread.guildId) continue;
 			const threads = threadsByGuild.get(thread.guildId.toString());
@@ -422,14 +348,14 @@ export class GuildSearchService {
 	): Promise<{
 		accessibleChannels: Map<string, Channel>;
 		unindexedChannelIds: Set<string>;
-		guildNsfwLevels: Map<string, number>;
+		nsfwGuildIds: Set<string>;
 		parentCategories: Map<string, Channel>;
 		threadParents: Map<string, Channel>;
 	}> {
 		const guildIds = await this.userRepository.getUserGuildIds(userId);
 		const accessibleChannels = new Map<string, Channel>();
 		const unindexedChannelIds = new Set<string>();
-		const guildNsfwLevels = new Map<string, number>();
+		const nsfwGuildIds = new Set<string>();
 		const parentCategories = new Map<string, Channel>();
 		const permissionChecks: Array<{
 			channel: Channel;
@@ -438,7 +364,7 @@ export class GuildSearchService {
 		await mapWithConcurrency(guildIds, GUILD_FANOUT_CONCURRENCY, async (guildId) => {
 			const [guildData, guildChannels, viewableChannels] = await Promise.all([
 				this.gatewayService.getGuildData({guildId, userId}),
-				this.channelRepository
+				this.channelRepository.channelData
 					.listGuildChannels(guildId, 'enrolled')
 					.then((channels) =>
 						channels.filter(
@@ -447,8 +373,8 @@ export class GuildSearchService {
 					),
 				this.gatewayService.getViewableChannels({guildId, userId}),
 			]);
-			if (guildData) {
-				guildNsfwLevels.set(guildId.toString(), guildData.nsfw_level);
+			if (guildData && guildResponseToContentWarningView(guildData).nsfw) {
+				nsfwGuildIds.add(guildId.toString());
 			}
 			const viewableChannelIds = new Set(viewableChannels.map((channelId) => channelId.toString()));
 			for (const channel of guildChannels) {
@@ -510,6 +436,6 @@ export class GuildSearchService {
 		if (missingThreadIds.length > 0) {
 			await this.addRequestedThreads(userId, missingThreadIds, parentById, threadParents);
 		}
-		return {accessibleChannels, unindexedChannelIds, guildNsfwLevels, parentCategories, threadParents};
+		return {accessibleChannels, unindexedChannelIds, nsfwGuildIds, parentCategories, threadParents};
 	}
 }

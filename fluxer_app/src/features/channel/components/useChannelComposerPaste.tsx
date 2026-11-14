@@ -184,8 +184,8 @@ export function useChannelComposerPaste({
 				void handlePasteFiles(pastedFiles);
 				return true;
 			}
-			const rawPastedText = clipboardData.getData('text/plain');
-			if (!rawPastedText) {
+			const pastedText = clipboardData.getData('text/plain');
+			if (!pastedText) {
 				void readClipboardImageFiles().then((files) => {
 					if (files.length > 0) {
 						void handlePasteFiles(files);
@@ -206,7 +206,6 @@ export function useChannelComposerPaste({
 					return false;
 				}
 			}
-			const pastedText = rawPastedText.replace(/\t/g, '    ');
 			if (pastedText.length > maxMessageLength) {
 				event.preventDefault();
 				void handlePasteExceedsLimit(pastedText);

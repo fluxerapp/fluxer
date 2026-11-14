@@ -7,7 +7,8 @@ use crate::{
     server::{
         asset_path::{
             StorageKeyDecodeError, decode_storage_key, parse_entrance_sound_path,
-            parse_guild_member_asset_path, parse_simple_asset_path, parse_standard_asset_path,
+            parse_guild_member_asset_path, parse_operator_wall_avatar_path,
+            parse_simple_asset_path, parse_standard_asset_path,
         },
         attachment_signature,
         cors::{self, OriginCheck},
@@ -20,7 +21,7 @@ use crate::{
 use axum::{
     body::Body,
     extract::{Query, State},
-    http::{HeaderMap, Method, Request, StatusCode},
+    http::{HeaderMap, HeaderValue, Method, Request, StatusCode, header},
     response::Response,
 };
 use fluxer_common::attachment_url_signature::{SIGNATURE_PARAMETER_NAMES, Verdict};
@@ -133,16 +134,18 @@ async fn serve_public_read(app: &Arc<AppState>, read: PublicRead<'_>) -> Respons
                 .attachment_signature()
                 .record(verification.verdict);
             if verification.verdict != Verdict::Valid {
-                if signature_mode == PolicyMode::Enforce {
-                    return attachment_signature::denied_response(verification.verdict);
-                }
-                attachment_signature::log_would_deny(
+                let enforced = signature_mode == PolicyMode::Enforce;
+                attachment_signature::log_refusal(
                     &app.signature_log,
+                    enforced,
                     &method,
-                    verification.verdict,
+                    verification,
                     headers,
                     request_id,
                 );
+                if enforced {
+                    return attachment_signature::denied_response(verification.verdict);
+                }
             }
             checked = Some(verification);
         }
@@ -168,6 +171,9 @@ async fn serve_public_read(app: &Arc<AppState>, read: PublicRead<'_>) -> Respons
         )
         .await;
     }
+    if let Some(key) = parse_operator_wall_avatar_path(path) {
+        return serve_operator_wall_avatar(app, method, &key, headers).await;
+    }
     if let Some(key) = parse_entrance_sound_path(path) {
         return stored::serve_stored_raw(app, method, &app.cfg.storage.bucket_cdn, &key, headers)
             .await;
@@ -187,6 +193,34 @@ async fn serve_public_read(app: &Arc<AppState>, read: PublicRead<'_>) -> Respons
     text(StatusCode::NOT_FOUND, "Not Found")
 }
 
+const OPERATOR_WALL_CACHE_CONTROL: &str = "public, max-age=31536000, immutable";
+
+async fn serve_operator_wall_avatar(
+    app: &Arc<AppState>,
+    method: Method,
+    key: &str,
+    headers: &HeaderMap,
+) -> Response {
+    let mut response =
+        stored::serve_stored_raw(app, method, &app.cfg.storage.bucket_cdn, key, headers).await;
+    if matches!(
+        response.status(),
+        StatusCode::OK | StatusCode::PARTIAL_CONTENT
+    ) {
+        let response_headers = response.headers_mut();
+        response_headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("image/webp"));
+        response_headers.insert(
+            header::CACHE_CONTROL,
+            HeaderValue::from_static(OPERATOR_WALL_CACHE_CONTROL),
+        );
+        response_headers.insert(
+            "CDN-Cache-Control",
+            HeaderValue::from_static(OPERATOR_WALL_CACHE_CONTROL),
+        );
+    }
+    response
+}
+
 fn storage_key_decode_response(err: StorageKeyDecodeError) -> Response {
     text_with_source(
         StatusCode::BAD_REQUEST,
@@ -196,7 +230,9 @@ fn storage_key_decode_response(err: StorageKeyDecodeError) -> Response {
     )
 }
 
-fn without_signature_parameters(params: &HashMap<String, String>) -> HashMap<String, String> {
+pub(in crate::server) fn without_signature_parameters(
+    params: &HashMap<String, String>,
+) -> HashMap<String, String> {
     params
         .iter()
         .filter(|(name, _)| !SIGNATURE_PARAMETER_NAMES.contains(&name.as_str()))
@@ -207,7 +243,7 @@ fn without_signature_parameters(params: &HashMap<String, String>) -> HashMap<Str
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{config::Config, constants::DESKTOP_APP_ORIGIN};
+    use crate::config::Config;
     use axum::{
         body::to_bytes,
         http::{HeaderValue, header},
@@ -220,42 +256,8 @@ mod tests {
     };
     use std::{
         path::Path,
-        sync::Mutex,
         time::{SystemTime, UNIX_EPOCH},
     };
-    use tracing_subscriber::fmt::MakeWriter;
-
-    #[derive(Clone, Default)]
-    struct CapturedLog(Arc<Mutex<Vec<u8>>>);
-
-    impl CapturedLog {
-        fn text(&self) -> String {
-            String::from_utf8(self.0.lock().expect("captured log is not poisoned").clone())
-                .expect("captured log is utf-8")
-        }
-    }
-
-    impl std::io::Write for CapturedLog {
-        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-            self.0
-                .lock()
-                .expect("captured log is not poisoned")
-                .extend_from_slice(buf);
-            Ok(buf.len())
-        }
-
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
-    }
-
-    impl<'a> MakeWriter<'a> for CapturedLog {
-        type Writer = Self;
-
-        fn make_writer(&'a self) -> Self::Writer {
-            self.clone()
-        }
-    }
 
     const STORED_BYTES: &[u8] = b"raw-stored-bytes";
     const THEME_BYTES: &[u8] = b"body{color:#fff}";
@@ -270,10 +272,6 @@ mod tests {
     const BAD_SIGNATURE_PATH: &str = "/external/badsig/https/example.test/a.png";
     const ENFORCE: &[(&str, &str)] = &[
         ("FLUXER_MEDIA_PROXY_CORS_MODE", "enforce"),
-        ("FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS", WEB),
-    ];
-    const REPORT: &[(&str, &str)] = &[
-        ("FLUXER_MEDIA_PROXY_CORS_MODE", "report"),
         ("FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS", WEB),
     ];
 
@@ -352,18 +350,6 @@ mod tests {
         catch_all(State(Arc::clone(app)), Query(HashMap::new()), request).await
     }
 
-    async fn dispatch(app: &Arc<AppState>, method: Method, path: &str) -> Response {
-        dispatch_request(app, read_request(method, path, &[], None)).await
-    }
-
-    async fn dispatch_body(app: &Arc<AppState>, path: &str) -> Bytes {
-        let response = dispatch(app, Method::GET, path).await;
-        assert_eq!(StatusCode::OK, response.status(), "{path} must be served");
-        to_bytes(response.into_body(), usize::MAX)
-            .await
-            .expect("dispatch body")
-    }
-
     async fn body_of(response: Response) -> Bytes {
         to_bytes(response.into_body(), usize::MAX)
             .await
@@ -388,355 +374,11 @@ mod tests {
         ]
     }
 
-    fn stored_representation_cases() -> [(Method, &'static str, Option<&'static str>, StatusCode); 7]
-    {
-        [
-            (Method::GET, ATTACHMENT_PATH, None, StatusCode::OK),
-            (
-                Method::GET,
-                ATTACHMENT_PATH,
-                Some("bytes=0-3"),
-                StatusCode::PARTIAL_CONTENT,
-            ),
-            (
-                Method::GET,
-                ATTACHMENT_PATH,
-                Some("bytes=100-200"),
-                StatusCode::RANGE_NOT_SATISFIABLE,
-            ),
-            (Method::HEAD, ATTACHMENT_PATH, None, StatusCode::OK),
-            (
-                Method::HEAD,
-                ATTACHMENT_PATH,
-                Some("bytes=0-3"),
-                StatusCode::PARTIAL_CONTENT,
-            ),
-            (Method::GET, THEME_PATH, None, StatusCode::OK),
-            (
-                Method::GET,
-                THEME_PATH,
-                Some("bytes=999-"),
-                StatusCode::RANGE_NOT_SATISFIABLE,
-            ),
-        ]
-    }
-
-    #[tokio::test]
-    async fn static_mode_short_circuits_every_path_to_the_static_bucket() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_object(root, "static", "external/v2/signed.png", STORED_BYTES);
-        write_object(
-            root,
-            "static",
-            "avatars/1216100949629702144/a1b2c3d4e5f6.png",
-            STORED_BYTES,
-        );
-        write_object(root, "cdn", "themes/only-in-cdn.css", STORED_BYTES);
-        let app = dispatch_app("static", root, &[]);
-
-        assert_eq!(
-            STORED_BYTES,
-            dispatch_body(&app, "/external/v2/signed.png").await
-        );
-        assert_eq!(
-            STORED_BYTES,
-            dispatch_body(&app, "/avatars/1216100949629702144/a1b2c3d4e5f6.png").await
-        );
-        assert_eq!(
-            StatusCode::NOT_FOUND,
-            dispatch(&app, Method::GET, "/themes/only-in-cdn.css")
-                .await
-                .status(),
-            "static mode never reaches the cdn bucket"
-        );
-        assert_eq!(
-            StatusCode::NOT_FOUND,
-            dispatch(&app, Method::GET, "/attachments/1/2/file.bin")
-                .await
-                .status()
-        );
-    }
-
-    const STATIC_CACHE_CONTROL: &str = "public, max-age=31536000";
-
-    const STATIC_KEYS: [&str; 4] = [
-        "avatars/0.png",
-        "web/favicon.ico",
-        "emoji/1f600.svg",
-        "web/NOTICE.md",
-    ];
-
-    fn static_mode_app(root: &Path, extra: &[(&str, &str)]) -> Arc<AppState> {
-        for key in STATIC_KEYS {
-            write_object(root, "static", key, STORED_BYTES);
-        }
-        dispatch_app("static", root, extra)
-    }
-
     fn header_value(response: &Response, name: impl header::AsHeaderName) -> Option<String> {
         response
             .headers()
             .get(name)
             .map(|value| value.to_str().expect("header is ascii").to_owned())
-    }
-
-    #[tokio::test]
-    async fn static_mode_caches_every_asset_forever() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let app = static_mode_app(root.as_path(), &[]);
-        for key in STATIC_KEYS {
-            let response = dispatch(&app, Method::GET, &format!("/{key}")).await;
-            assert_eq!(StatusCode::OK, response.status(), "key={key}");
-            assert_eq!(
-                Some(STATIC_CACHE_CONTROL.to_owned()),
-                header_value(&response, header::CACHE_CONTROL),
-                "key={key}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn static_mode_omits_expires_and_relies_on_cache_control() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let app = static_mode_app(root.as_path(), &[]);
-        let response = dispatch(&app, Method::GET, "/avatars/0.png").await;
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(None, header_value(&response, header::EXPIRES));
-        assert_eq!(
-            Some(STATIC_CACHE_CONTROL.to_owned()),
-            header_value(&response, "CDN-Cache-Control")
-        );
-    }
-
-    #[tokio::test]
-    async fn media_mode_matches_the_v1_route_order() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_object(root, "cdn", "themes/dark.css", THEME_BYTES);
-        write_object(
-            root,
-            "cdn",
-            "entrance-sounds/42/abc123def456.wav",
-            STORED_BYTES,
-        );
-        write_object(root, "static", "themes/dark.css", STORED_BYTES);
-        let app = dispatch_app("mp", root, &[]);
-
-        let response = dispatch(&app, Method::GET, "/themes/dark.css").await;
-        assert_eq!(StatusCode::OK, response.status());
-        assert_eq!(
-            "text/css; charset=utf-8",
-            response
-                .headers()
-                .get(header::CONTENT_TYPE)
-                .expect("content type")
-                .to_str()
-                .expect("ascii content type")
-        );
-        assert_eq!(
-            THEME_BYTES,
-            to_bytes(response.into_body(), usize::MAX)
-                .await
-                .expect("theme body")
-        );
-
-        assert_eq!(
-            STORED_BYTES,
-            dispatch_body(&app, "/entrance-sounds/42/abc123def456.wav").await
-        );
-        assert_eq!(
-            StatusCode::NOT_FOUND,
-            dispatch(&app, Method::GET, "/themes/dark.png")
-                .await
-                .status(),
-            "the themes branch only matches .css"
-        );
-        assert_eq!(
-            StatusCode::NOT_FOUND,
-            dispatch(&app, Method::GET, "/nothing/here").await.status()
-        );
-        assert_eq!(
-            StatusCode::METHOD_NOT_ALLOWED,
-            dispatch(&app, Method::POST, "/themes/dark.css")
-                .await
-                .status()
-        );
-    }
-
-    #[tokio::test]
-    async fn relay_mode_answers_every_read_path_with_404() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_object(root, "cdn", "attachments/1/2/stream.js", STORED_BYTES);
-        write_object(root, "cdn", "themes/dark.css", THEME_BYTES);
-        write_object(
-            root,
-            "cdn",
-            "entrance-sounds/42/abc123def456.wav",
-            STORED_BYTES,
-        );
-        let app = dispatch_app("relay", root, &[]);
-        for path in [
-            "/attachments/1/2/stream.js",
-            "/external/sig/https/example.com/a.png",
-            THEME_PATH,
-            ENTRANCE_SOUND_PATH,
-            ASSET_PATH,
-            "/emojis/1.png",
-            "/stickers/1.webp",
-            "/",
-            "/nothing/here",
-        ] {
-            for method in [Method::GET, Method::HEAD] {
-                let response = dispatch(&app, method.clone(), path).await;
-                assert_eq!(StatusCode::NOT_FOUND, response.status(), "{method} {path}");
-                assert_eq!(
-                    Some("text/plain; charset=utf-8".to_owned()),
-                    header_value(&response, header::CONTENT_TYPE),
-                    "{method} {path}"
-                );
-                assert_eq!(
-                    Some("no-store".to_owned()),
-                    header_value(&response, header::CACHE_CONTROL),
-                    "{method} {path}"
-                );
-                assert_eq!(
-                    None,
-                    header_value(&response, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                    "{method} {path}"
-                );
-            }
-        }
-        assert!(
-            app.metrics
-                .render()
-                .contains("fluxer_media_proxy_storage_hits_total 0\n")
-        );
-    }
-
-    #[tokio::test]
-    async fn upload_mode_serves_what_relay_mode_refuses() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_object(root, "cdn", "attachments/1/2/stream.js", STORED_BYTES);
-        let upload = dispatch_app("upload", root, &[]);
-        let relay = dispatch_app("relay", root, &[]);
-
-        assert_eq!(
-            STORED_BYTES,
-            dispatch_body(&upload, "/attachments/1/2/stream.js").await
-        );
-        assert_eq!(
-            StatusCode::NOT_FOUND,
-            dispatch(&relay, Method::GET, "/attachments/1/2/stream.js")
-                .await
-                .status()
-        );
-    }
-
-    #[tokio::test]
-    async fn relay_mode_rejects_a_bad_storage_key_as_404_not_400() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        let upload = dispatch_app("upload", root, &[]);
-        let relay = dispatch_app("relay", root, &[]);
-
-        assert_eq!(
-            StatusCode::BAD_REQUEST,
-            dispatch(&upload, Method::GET, "/attachments/%2e%2e/x")
-                .await
-                .status()
-        );
-        assert_eq!(
-            StatusCode::NOT_FOUND,
-            dispatch(&relay, Method::GET, "/attachments/%2e%2e/x")
-                .await
-                .status()
-        );
-    }
-
-    #[tokio::test]
-    async fn relay_mode_keeps_405_for_other_methods() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let app = dispatch_app("relay", root.as_path(), &[]);
-        for path in ["/attachments/1/2/stream.js", "/nothing/here"] {
-            for method in [
-                Method::POST,
-                Method::PUT,
-                Method::DELETE,
-                Method::PATCH,
-                Method::OPTIONS,
-            ] {
-                assert_eq!(
-                    StatusCode::METHOD_NOT_ALLOWED,
-                    dispatch(&app, method.clone(), path).await.status(),
-                    "{method} {path}"
-                );
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn enforce_echoes_an_allowed_origin_on_every_stored_representation() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_stored_representations(root);
-        let app = dispatch_app("mp", root, ENFORCE);
-        for (method, path, range, status) in stored_representation_cases() {
-            let label = format!("{method} {path} range={range:?}");
-            let response =
-                dispatch_request(&app, read_request(method, path, &[WEB.as_bytes()], range)).await;
-            assert_eq!(status, response.status(), "{label}");
-            assert_eq!(
-                Some(WEB.to_owned()),
-                header_value(&response, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                "{label}"
-            );
-            assert_eq!(
-                vec![ORIGIN_VARY.to_owned()],
-                vary_values(&response),
-                "{label}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn enforce_serves_origin_less_reads_without_allow_origin() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_stored_representations(root);
-        let off = dispatch_app("mp", root, &[]);
-        let enforce = dispatch_app("mp", root, ENFORCE);
-        for (method, path, range, status) in stored_representation_cases() {
-            let label = format!("{method} {path} range={range:?}");
-            let expected =
-                dispatch_request(&off, read_request(method.clone(), path, &[], range)).await;
-            let actual = dispatch_request(&enforce, read_request(method, path, &[], range)).await;
-            assert_eq!(status, expected.status(), "{label}");
-            assert_eq!(status, actual.status(), "{label}");
-            assert_eq!(
-                None,
-                header_value(&actual, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                "{label}"
-            );
-            assert_eq!(
-                vec![ORIGIN_VARY.to_owned()],
-                vary_values(&actual),
-                "{label}"
-            );
-            assert_eq!(body_of(expected).await, body_of(actual).await, "{label}");
-        }
     }
 
     #[tokio::test]
@@ -789,40 +431,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn enforce_leaves_read_errors_without_cors_but_varies_them_on_origin() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let app = dispatch_app("mp", root.as_path(), ENFORCE);
-        let with_origin: &[&[u8]] = &[WEB.as_bytes()];
-        let without_origin: &[&[u8]] = &[];
-        for origins in [with_origin, without_origin] {
-            for (path, status) in [
-                ("/attachments/1/2/missing.bin", StatusCode::NOT_FOUND),
-                ("/attachments/%2e%2e/x", StatusCode::BAD_REQUEST),
-                ("/external/nosignature", StatusCode::BAD_REQUEST),
-                (BAD_SIGNATURE_PATH, StatusCode::UNAUTHORIZED),
-            ] {
-                for method in [Method::GET, Method::HEAD] {
-                    let label = format!("{method} {path} origins={}", origins.len());
-                    let response =
-                        dispatch_request(&app, read_request(method, path, origins, None)).await;
-                    assert_eq!(status, response.status(), "{label}");
-                    assert_eq!(
-                        None,
-                        header_value(&response, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                        "{label}"
-                    );
-                    assert_eq!(
-                        vec![ORIGIN_VARY.to_owned()],
-                        vary_values(&response),
-                        "{label}"
-                    );
-                }
-            }
-        }
-    }
-
-    #[tokio::test]
     async fn enforce_refuses_a_foreign_origin_on_a_transform_cache_hit() {
         let tmp = tempfile::tempdir().expect("storage root");
         let root = tmp.path().canonicalize().expect("canonical storage root");
@@ -870,354 +478,10 @@ mod tests {
         );
     }
 
-    fn preflight_request(path: &str, origin: &str, requested: Option<&str>) -> Request<Body> {
-        let mut builder = Request::builder()
-            .method(Method::OPTIONS)
-            .uri(path)
-            .header(header::ORIGIN, origin);
-        if let Some(requested) = requested {
-            builder = builder.header(header::ACCESS_CONTROL_REQUEST_METHOD, requested);
-        }
-        builder.body(Body::empty()).expect("preflight request")
-    }
-
-    #[tokio::test]
-    async fn enforce_serves_the_desktop_app_origin_without_configuring_it() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_stored_representations(root);
-        let app = dispatch_app("mp", root, ENFORCE);
-        for method in [Method::GET, Method::HEAD] {
-            let response = dispatch_request(
-                &app,
-                read_request(
-                    method.clone(),
-                    THEME_PATH,
-                    &[DESKTOP_APP_ORIGIN.as_bytes()],
-                    None,
-                ),
-            )
-            .await;
-            assert_eq!(StatusCode::OK, response.status(), "{method}");
-            assert_eq!(
-                Some(DESKTOP_APP_ORIGIN.to_owned()),
-                header_value(&response, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                "{method}"
-            );
-            assert_eq!(vec![ORIGIN_VARY.to_owned()], vary_values(&response));
-        }
-        for lookalike in [
-            "fluxer-app://app/",
-            "fluxer-app://evil",
-            "fluxer-app://app.evil.example",
-            "fluxer-app://app:443",
-            "FLUXER-APP://APP",
-            "fluxer-app:app",
-        ] {
-            let response = dispatch_request(
-                &app,
-                read_request(Method::GET, THEME_PATH, &[lookalike.as_bytes()], None),
-            )
-            .await;
-            assert_eq!(StatusCode::FORBIDDEN, response.status(), "{lookalike}");
-            assert_eq!(
-                None,
-                header_value(&response, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                "{lookalike}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn preflight_answers_allowed_origins_and_refuses_the_rest() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        let enforce = dispatch_app("mp", root, ENFORCE);
-        for origin in [WEB, DESKTOP_APP_ORIGIN] {
-            for requested in ["GET", "HEAD"] {
-                let response = dispatch_request(
-                    &enforce,
-                    preflight_request(THEME_PATH, origin, Some(requested)),
-                )
-                .await;
-                let label = format!("{origin} {requested}");
-                assert_eq!(StatusCode::NO_CONTENT, response.status(), "{label}");
-                assert_eq!(
-                    Some(origin.to_owned()),
-                    header_value(&response, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                    "{label}"
-                );
-                assert_eq!(
-                    Some("GET, HEAD, OPTIONS".to_owned()),
-                    header_value(&response, header::ACCESS_CONTROL_ALLOW_METHODS),
-                    "{label}"
-                );
-                assert_eq!(
-                    Some("Range".to_owned()),
-                    header_value(&response, header::ACCESS_CONTROL_ALLOW_HEADERS),
-                    "{label}"
-                );
-                assert_eq!(
-                    vec![
-                        "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
-                            .to_owned()
-                    ],
-                    vary_values(&response),
-                    "{label}"
-                );
-                assert!(body_of(response).await.is_empty(), "{label}");
-            }
-        }
-
-        let refused =
-            dispatch_request(&enforce, preflight_request(THEME_PATH, EVIL, Some("GET"))).await;
-        assert_eq!(StatusCode::FORBIDDEN, refused.status());
-        assert_eq!(
-            None,
-            header_value(&refused, header::ACCESS_CONTROL_ALLOW_ORIGIN)
-        );
-
-        let not_a_preflight =
-            dispatch_request(&enforce, preflight_request(THEME_PATH, WEB, None)).await;
-        assert_eq!(StatusCode::METHOD_NOT_ALLOWED, not_a_preflight.status());
-
-        for (mode, extra) in [("mp", &[][..]), ("mp", REPORT), ("static", &[][..])] {
-            let app = dispatch_app(mode, root, extra);
-            let response =
-                dispatch_request(&app, preflight_request(THEME_PATH, EVIL, Some("GET"))).await;
-            assert_eq!(StatusCode::NO_CONTENT, response.status(), "{mode}");
-            assert_eq!(
-                Some("*".to_owned()),
-                header_value(&response, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                "{mode}"
-            );
-        }
-
-        let relay = dispatch_app("relay", root, &[]);
-        assert_eq!(
-            StatusCode::METHOD_NOT_ALLOWED,
-            dispatch_request(&relay, preflight_request(THEME_PATH, WEB, Some("GET")))
-                .await
-                .status()
-        );
-    }
-
-    #[tokio::test]
-    async fn enforce_applies_to_upload_mode_reads() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_stored_representations(root);
-        let app = dispatch_app("upload", root, ENFORCE);
-
-        let allowed = dispatch_request(
-            &app,
-            read_request(Method::GET, ATTACHMENT_PATH, &[WEB.as_bytes()], None),
-        )
-        .await;
-        assert_eq!(StatusCode::OK, allowed.status());
-        assert_eq!(
-            Some(WEB.to_owned()),
-            header_value(&allowed, header::ACCESS_CONTROL_ALLOW_ORIGIN)
-        );
-
-        let foreign = dispatch_request(
-            &app,
-            read_request(Method::GET, ATTACHMENT_PATH, &[EVIL.as_bytes()], None),
-        )
-        .await;
-        assert_eq!(StatusCode::FORBIDDEN, foreign.status());
-
-        let origin_less = dispatch(&app, Method::GET, ATTACHMENT_PATH).await;
-        assert_eq!(StatusCode::OK, origin_less.status());
-        assert_eq!(
-            None,
-            header_value(&origin_less, header::ACCESS_CONTROL_ALLOW_ORIGIN)
-        );
-        assert_eq!(STORED_BYTES, body_of(origin_less).await);
-    }
-
-    #[tokio::test]
-    async fn report_mode_changes_no_response_byte() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_stored_representations(root);
-        let off = dispatch_app("mp", root, &[]);
-        let report = dispatch_app("mp", root, REPORT);
-        let origin_shapes: [&[&[u8]]; 4] = [
-            &[EVIL.as_bytes()],
-            &[b"null".as_slice()],
-            &[WEB.as_bytes()],
-            &[],
-        ];
-        for origins in origin_shapes {
-            for (method, path, range, status) in [
-                (Method::GET, ATTACHMENT_PATH, None, StatusCode::OK),
-                (
-                    Method::GET,
-                    ATTACHMENT_PATH,
-                    Some("bytes=0-3"),
-                    StatusCode::PARTIAL_CONTENT,
-                ),
-                (
-                    Method::GET,
-                    ATTACHMENT_PATH,
-                    Some("bytes=100-200"),
-                    StatusCode::RANGE_NOT_SATISFIABLE,
-                ),
-                (Method::HEAD, ATTACHMENT_PATH, None, StatusCode::OK),
-                (
-                    Method::GET,
-                    "/attachments/1/2/missing.bin",
-                    None,
-                    StatusCode::NOT_FOUND,
-                ),
-            ] {
-                let label = format!("{method} {path} range={range:?} origins={origins:?}");
-                let expected =
-                    dispatch_request(&off, read_request(method.clone(), path, origins, range))
-                        .await;
-                let actual =
-                    dispatch_request(&report, read_request(method, path, origins, range)).await;
-                assert_eq!(status, expected.status(), "{label}");
-                assert_eq!(expected.status(), actual.status(), "{label}");
-                assert_eq!(expected.headers(), actual.headers(), "{label}");
-                assert_eq!(body_of(expected).await, body_of(actual).await, "{label}");
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn report_mode_logs_one_would_deny_line_for_each_refused_origin_only() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_stored_representations(root);
-        let report = dispatch_app("mp", root, REPORT);
-        let cases: [(&[&[u8]], Option<&str>); 4] = [
-            (&[EVIL.as_bytes()], Some("origin=https://evil.example")),
-            (&[b"null".as_slice()], Some("origin=null")),
-            (&[WEB.as_bytes()], None),
-            (&[], None),
-        ];
-        for (origins, expected_origin) in cases {
-            let label = format!("origins={origins:?}");
-            let captured = CapturedLog::default();
-            let subscriber = tracing_subscriber::fmt()
-                .with_writer(captured.clone())
-                .with_ansi(false)
-                .with_max_level(tracing::Level::TRACE)
-                .finish();
-            let response = {
-                let _guard = tracing::subscriber::set_default(subscriber);
-                dispatch_request(
-                    &report,
-                    read_request(Method::GET, ATTACHMENT_PATH, origins, None),
-                )
-                .await
-            };
-            assert_eq!(StatusCode::OK, response.status(), "{label}");
-            let log = captured.text();
-            let would_deny: Vec<&str> = log
-                .lines()
-                .filter(|line| line.contains("reason=\"cors_origin_would_deny\""))
-                .collect();
-            match expected_origin {
-                Some(origin) => {
-                    assert_eq!(1, would_deny.len(), "{label}\n{log}");
-                    assert!(would_deny[0].contains(" WARN "), "{label}\n{log}");
-                    assert!(would_deny[0].trim_end().ends_with(origin), "{label}\n{log}");
-                }
-                None => assert!(would_deny.is_empty(), "{label}\n{log}"),
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn off_mode_never_inspects_origin() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_stored_representations(root);
-        let app = dispatch_app("mp", root, &[]);
-        for (shape, origins) in refused_origin_shapes() {
-            let response = dispatch_request(
-                &app,
-                read_request(Method::GET, ATTACHMENT_PATH, &origins, None),
-            )
-            .await;
-            assert_eq!(StatusCode::OK, response.status(), "{shape}");
-            assert_eq!(
-                Some("*".to_owned()),
-                header_value(&response, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                "{shape}"
-            );
-            assert_eq!(
-                vec!["Accept-Encoding".to_owned()],
-                vary_values(&response),
-                "{shape}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn static_mode_is_unchanged_with_every_cors_key_set() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let app = static_mode_app(root.as_path(), ENFORCE);
-        let origin_shapes: [&[&[u8]]; 4] = [
-            &[EVIL.as_bytes()],
-            &[b"null".as_slice()],
-            &[WEB.as_bytes()],
-            &[],
-        ];
-        for origins in origin_shapes {
-            let label = format!("origins={origins:?}");
-            let response = dispatch_request(
-                &app,
-                read_request(Method::GET, "/avatars/0.png", origins, None),
-            )
-            .await;
-            assert_eq!(StatusCode::OK, response.status(), "{label}");
-            assert_eq!(
-                Some("*".to_owned()),
-                header_value(&response, header::ACCESS_CONTROL_ALLOW_ORIGIN),
-                "{label}"
-            );
-            assert_eq!(
-                vec!["Accept-Encoding".to_owned()],
-                vary_values(&response),
-                "{label}"
-            );
-            assert_eq!(
-                Some(STATIC_CACHE_CONTROL.to_owned()),
-                header_value(&response, header::CACHE_CONTROL),
-                "{label}"
-            );
-        }
-    }
-
     const SIGNATURE_SECRET: [u8; 32] = [11u8; 32];
     const OTHER_SIGNATURE_SECRET: [u8; 32] = [12u8; 32];
     const SIGNATURE_ENFORCE: &[(&str, &str)] = &[
         ("FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE", "enforce"),
-        (
-            "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64",
-            "CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws=",
-        ),
-    ];
-    const SIGNATURE_REPORT: &[(&str, &str)] = &[
-        ("FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE", "report"),
-        (
-            "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64",
-            "CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws=",
-        ),
-    ];
-    const SIGNATURE_OFF_WITH_KEYS: &[(&str, &str)] = &[
-        ("FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE", "off"),
         (
             "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64",
             "CwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCws=",
@@ -1352,161 +616,6 @@ mod tests {
         );
     }
 
-    struct SignedReadCase {
-        method: Method,
-        path: &'static str,
-        key: &'static str,
-        range: Option<&'static str>,
-        extra: &'static str,
-        status: StatusCode,
-    }
-
-    fn signed_read_case(
-        method: Method,
-        path: &'static str,
-        key: &'static str,
-        range: Option<&'static str>,
-        extra: &'static str,
-        status: StatusCode,
-    ) -> SignedReadCase {
-        SignedReadCase {
-            method,
-            path,
-            key,
-            range,
-            extra,
-            status,
-        }
-    }
-
-    fn signed_read_cases() -> [SignedReadCase; 7] {
-        [
-            signed_read_case(
-                Method::GET,
-                ATTACHMENT_PATH,
-                ATTACHMENT_KEY,
-                None,
-                "",
-                StatusCode::OK,
-            ),
-            signed_read_case(
-                Method::GET,
-                ATTACHMENT_PATH,
-                ATTACHMENT_KEY,
-                Some("bytes=0-3"),
-                "",
-                StatusCode::PARTIAL_CONTENT,
-            ),
-            signed_read_case(
-                Method::GET,
-                ATTACHMENT_PATH,
-                ATTACHMENT_KEY,
-                Some("bytes=100-200"),
-                "",
-                StatusCode::RANGE_NOT_SATISFIABLE,
-            ),
-            signed_read_case(
-                Method::HEAD,
-                ATTACHMENT_PATH,
-                ATTACHMENT_KEY,
-                None,
-                "",
-                StatusCode::OK,
-            ),
-            signed_read_case(
-                Method::HEAD,
-                ATTACHMENT_PATH,
-                ATTACHMENT_KEY,
-                Some("bytes=0-3"),
-                "",
-                StatusCode::PARTIAL_CONTENT,
-            ),
-            signed_read_case(
-                Method::GET,
-                ATTACHMENT_PATH,
-                ATTACHMENT_KEY,
-                None,
-                "download=1",
-                StatusCode::OK,
-            ),
-            signed_read_case(
-                Method::GET,
-                IMAGE_PATH,
-                IMAGE_KEY,
-                None,
-                "width=64",
-                StatusCode::OK,
-            ),
-        ]
-    }
-
-    fn without_cache_policy(headers: &HeaderMap) -> HeaderMap {
-        let mut headers = headers.clone();
-        headers.remove(header::CACHE_CONTROL);
-        headers.remove("cdn-cache-control");
-        headers
-    }
-
-    #[tokio::test]
-    async fn enforce_serves_a_signed_attachment_on_every_read_shape() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        let off = dispatch_app("mp", root, &[]);
-        let enforce = dispatch_app("mp", root, SIGNATURE_ENFORCE);
-
-        for case in signed_read_cases() {
-            let SignedReadCase {
-                method,
-                path,
-                key,
-                range,
-                extra,
-                status,
-            } = case;
-            let unsigned = if extra.is_empty() {
-                path.to_owned()
-            } else {
-                format!("{path}?{extra}")
-            };
-            for signed in [
-                signed_uri(path, key, extra),
-                data_package_uri(path, key, extra),
-            ] {
-                let label = format!("{method} {signed} range={range:?}");
-                let expected = dispatch_uri(&off, method.clone(), &unsigned, &[], range).await;
-                let actual = dispatch_uri(&enforce, method.clone(), &signed, &[], range).await;
-                assert_eq!(status, expected.status(), "{label}");
-                assert_eq!(expected.status(), actual.status(), "{label}");
-                assert_eq!(
-                    without_cache_policy(expected.headers()),
-                    without_cache_policy(actual.headers()),
-                    "{label}"
-                );
-                match (
-                    header_value(&expected, header::CACHE_CONTROL),
-                    header_value(&actual, header::CACHE_CONTROL),
-                ) {
-                    (None, None) => {}
-                    (Some(unsigned_policy), Some(signed_policy)) => {
-                        assert!(unsigned_policy.contains("max-age=31536000"), "{label}");
-                        assert!(signed_policy.starts_with("public, max-age="), "{label}");
-                        assert!(!signed_policy.contains("max-age=31536000"), "{label}");
-                        assert!(
-                            !header_value(&actual, "cdn-cache-control")
-                                .expect("a signed read pairs the cdn cache policy")
-                                .contains("max-age=31536000"),
-                            "{label}"
-                        );
-                    }
-                    mismatch => panic!("{label} {mismatch:?}"),
-                }
-                assert_eq!(body_of(expected).await, body_of(actual).await, "{label}");
-            }
-        }
-    }
-
     #[tokio::test]
     async fn enforce_answers_every_refusal_with_the_same_bytes() {
         let tmp = tempfile::tempdir().expect("storage root");
@@ -1608,16 +717,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn enforce_keeps_a_bad_storage_key_a_bad_request() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let app = dispatch_app("mp", root.as_path(), SIGNATURE_ENFORCE);
-        let response = dispatch_uri(&app, Method::GET, "/attachments/%2e%2e/x", &[], None).await;
-        assert_eq!(StatusCode::BAD_REQUEST, response.status());
-        assert_eq!(b"Bad Request".as_slice(), body_of(response).await);
-    }
-
-    #[tokio::test]
     async fn enforce_refuses_before_any_object_read() {
         let tmp = tempfile::tempdir().expect("storage root");
         let root = tmp.path().canonicalize().expect("canonical storage root");
@@ -1677,248 +776,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn enforce_accepts_every_spelling_of_the_signed_key() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_object(root, "cdn", "attachments/1/2/café.gif", STORED_BYTES);
-        write_object(root, "cdn", "attachments/1/2/a/b.gif", STORED_BYTES);
-        let app = dispatch_app("mp", root, SIGNATURE_ENFORCE);
-        for (path, key) in [
-            ("/attachments/1/2/caf%C3%A9.gif", "attachments/1/2/café.gif"),
-            ("/attachments/1/2/café.gif", "attachments/1/2/café.gif"),
-            ("/attachments/1/2/a%2Fb.gif", "attachments/1/2/a/b.gif"),
-            ("/attachments/1/2/a/b.gif", "attachments/1/2/a/b.gif"),
-        ] {
-            let now = now_secs();
-            let (issued, expires) = issue_window(now, now);
-            let uri = format!(
-                "{path}?ex={expires:08x}&is={issued:08x}&hm={}",
-                sign(key, expires, issued, UrlKind::Ordinary, &SIGNATURE_SECRET)
-            );
-            for spelling in [uri.clone(), format!("{uri}&")] {
-                let response = dispatch_uri(&app, Method::GET, &spelling, &[], None).await;
-                assert_eq!(StatusCode::OK, response.status(), "{spelling}");
-                assert_eq!(STORED_BYTES, body_of(response).await, "{spelling}");
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn enforce_leaves_every_other_read_route_unsigned() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        write_object(
-            root,
-            "cdn",
-            "entrance-sounds/42/abc123def456.wav",
-            STORED_BYTES,
-        );
-        let asset = parse_standard_asset_path(ASSET_PATH).expect("asset path");
-        write_object(
-            root,
-            "cdn",
-            &asset.storage_key,
-            &crate::test_fixtures::synthetic_png(64, 64),
-        );
-        let off = dispatch_app("mp", root, &[]);
-        let enforce = dispatch_app("mp", root, SIGNATURE_ENFORCE);
-        for path in [THEME_PATH, ENTRANCE_SOUND_PATH, ASSET_PATH, "/nothing/here"] {
-            for method in [Method::GET, Method::HEAD] {
-                let label = format!("{method} {path}");
-                let expected = dispatch_uri(&off, method.clone(), path, &[], None).await;
-                let actual = dispatch_uri(&enforce, method, path, &[], None).await;
-                assert_eq!(expected.status(), actual.status(), "{label}");
-                assert_eq!(expected.headers(), actual.headers(), "{label}");
-                assert_eq!(body_of(expected).await, body_of(actual).await, "{label}");
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn static_and_relay_modes_are_unchanged_with_the_signature_keys_set() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_object(root, "static", "avatars/0.png", STORED_BYTES);
-        write_object(root, "cdn", ATTACHMENT_KEY, STORED_BYTES);
-
-        let plain_static = dispatch_app("static", root, &[]);
-        let signed_static = dispatch_app("static", root, SIGNATURE_ENFORCE);
-        let expected = dispatch_uri(&plain_static, Method::GET, "/avatars/0.png", &[], None).await;
-        let actual = dispatch_uri(&signed_static, Method::GET, "/avatars/0.png", &[], None).await;
-        assert_eq!(StatusCode::OK, expected.status());
-        assert_eq!(expected.status(), actual.status());
-        assert_eq!(expected.headers(), actual.headers());
-        assert_eq!(body_of(expected).await, body_of(actual).await);
-
-        let relay = dispatch_app("relay", root, SIGNATURE_ENFORCE);
-        let response = dispatch_uri(&relay, Method::GET, ATTACHMENT_PATH, &[], None).await;
-        assert_eq!(StatusCode::NOT_FOUND, response.status());
-        assert_eq!(b"Not Found".as_slice(), body_of(response).await);
-
-        let upload = dispatch_app("upload", root, SIGNATURE_ENFORCE);
-        let refused = dispatch_uri(&upload, Method::GET, ATTACHMENT_PATH, &[], None).await;
-        assert_eq!(StatusCode::NOT_FOUND, refused.status());
-        assert_eq!(UNAVAILABLE, body_of(refused).await.as_ref());
-        let allowed = dispatch_uri(
-            &upload,
-            Method::GET,
-            &signed_uri(ATTACHMENT_PATH, ATTACHMENT_KEY, ""),
-            &[],
-            None,
-        )
-        .await;
-        assert_eq!(StatusCode::OK, allowed.status());
-        assert_eq!(STORED_BYTES, body_of(allowed).await);
-    }
-
-    #[tokio::test]
-    async fn a_cors_refusal_precedes_the_signature_check() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        let mut env: Vec<(&str, &str)> = ENFORCE.to_vec();
-        env.extend_from_slice(SIGNATURE_ENFORCE);
-        let app = dispatch_app("mp", root, &env);
-        for uri in [
-            ATTACHMENT_PATH.to_owned(),
-            signed_uri(ATTACHMENT_PATH, ATTACHMENT_KEY, ""),
-            expired_uri(ATTACHMENT_PATH, ATTACHMENT_KEY),
-        ] {
-            let response = dispatch_uri(&app, Method::GET, &uri, &[EVIL.as_bytes()], None).await;
-            assert_eq!(StatusCode::FORBIDDEN, response.status(), "{uri}");
-            assert_eq!(b"Forbidden".as_slice(), body_of(response).await, "{uri}");
-        }
-        assert_eq!(0, counter(&app, "fluxer_media_proxy_storage_hits_total"));
-    }
-
-    #[tokio::test]
-    async fn report_mode_changes_no_response_byte_for_a_stored_object() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        let off = dispatch_app("mp", root, &[]);
-        let report = dispatch_app("mp", root, SIGNATURE_REPORT);
-        for uri in [
-            ATTACHMENT_PATH.to_owned(),
-            format!("{ATTACHMENT_PATH}?download=1"),
-            expired_uri(ATTACHMENT_PATH, ATTACHMENT_KEY),
-            foreign_key_uri(ATTACHMENT_PATH),
-            format!("{IMAGE_PATH}?width=64"),
-        ] {
-            for method in [Method::GET, Method::HEAD] {
-                for range in [None, Some("bytes=0-3"), Some("bytes=100-200")] {
-                    let label = format!("{method} {uri} range={range:?}");
-                    let expected = dispatch_uri(&off, method.clone(), &uri, &[], range).await;
-                    let actual = dispatch_uri(&report, method.clone(), &uri, &[], range).await;
-                    assert_eq!(expected.status(), actual.status(), "{label}");
-                    assert_eq!(expected.headers(), actual.headers(), "{label}");
-                    assert_eq!(body_of(expected).await, body_of(actual).await, "{label}");
-                }
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn report_mode_changes_only_the_cache_lifetime_of_a_valid_signature() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        let off = dispatch_app("mp", root, &[]);
-        let report = dispatch_app("mp", root, SIGNATURE_REPORT);
-        for uri in [
-            signed_uri(ATTACHMENT_PATH, ATTACHMENT_KEY, ""),
-            data_package_uri(ATTACHMENT_PATH, ATTACHMENT_KEY, ""),
-            signed_uri(IMAGE_PATH, IMAGE_KEY, "width=64"),
-        ] {
-            for method in [Method::GET, Method::HEAD] {
-                for range in [None, Some("bytes=0-3")] {
-                    let label = format!("{method} {uri} range={range:?}");
-                    let expected = dispatch_uri(&off, method.clone(), &uri, &[], range).await;
-                    let actual = dispatch_uri(&report, method.clone(), &uri, &[], range).await;
-                    assert_eq!(expected.status(), actual.status(), "{label}");
-                    assert_eq!(
-                        without_cache_policy(expected.headers()),
-                        without_cache_policy(actual.headers()),
-                        "{label}"
-                    );
-                    assert_eq!(
-                        Some(STATIC_CACHE_CONTROL.to_owned()),
-                        header_value(&expected, header::CACHE_CONTROL),
-                        "{label}"
-                    );
-                    let capped = header_value(&actual, header::CACHE_CONTROL)
-                        .expect("a report read of a valid signature states its own max age");
-                    let max_age: u64 = capped
-                        .strip_prefix("public, max-age=")
-                        .expect("the capped policy is a plain max age")
-                        .parse()
-                        .expect("a max age is a number");
-                    assert!(max_age <= ATTACHMENT_URL_TTL_SECS, "{label} {capped}");
-                    assert_eq!(
-                        Some(capped),
-                        header_value(&actual, "cdn-cache-control"),
-                        "{label}"
-                    );
-                    assert_eq!(body_of(expected).await, body_of(actual).await, "{label}");
-                }
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn report_leaves_a_refusable_read_caching_forever() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        let report = dispatch_app("mp", root, SIGNATURE_REPORT);
-        for uri in [
-            ATTACHMENT_PATH.to_owned(),
-            expired_uri(ATTACHMENT_PATH, ATTACHMENT_KEY),
-            foreign_key_uri(ATTACHMENT_PATH),
-        ] {
-            let response = dispatch_uri(&report, Method::GET, &uri, &[], None).await;
-            assert_eq!(StatusCode::OK, response.status(), "{uri}");
-            assert_eq!(
-                Some(STATIC_CACHE_CONTROL.to_owned()),
-                header_value(&response, header::CACHE_CONTROL),
-                "{uri}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn only_enforce_masks_a_missing_object_so_it_matches_a_refusal() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        let off = dispatch_app("mp", root, &[]);
-        let report = dispatch_app("mp", root, SIGNATURE_REPORT);
-        let enforce = dispatch_app("mp", root, SIGNATURE_ENFORCE);
-        let uri = "/attachments/1/2/absent.bin";
-        let plain = dispatch_uri(&off, Method::GET, uri, &[], None).await;
-        assert_eq!(StatusCode::NOT_FOUND, plain.status());
-        assert_eq!(b"Not Found".as_slice(), body_of(plain).await);
-
-        let dry_run = dispatch_uri(&report, Method::GET, uri, &[], None).await;
-        assert_eq!(StatusCode::NOT_FOUND, dry_run.status());
-        assert_eq!(b"Not Found".as_slice(), body_of(dry_run).await);
-
-        let signed = signed_uri(uri, "attachments/1/2/absent.bin", "");
-        let masked = dispatch_uri(&enforce, Method::GET, &signed, &[], None).await;
-        assert_eq!(StatusCode::NOT_FOUND, masked.status());
-        assert_eq!(UNAVAILABLE, body_of(masked).await.as_ref());
-    }
-
-    #[tokio::test]
     async fn an_enforced_attachment_is_never_cached_past_its_signature() {
         let tmp = tempfile::tempdir().expect("storage root");
         let root = tmp.path().canonicalize().expect("canonical storage root");
@@ -1960,158 +817,6 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn an_unenforced_read_and_every_other_route_cache_forever() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        for env in [&[][..], SIGNATURE_OFF_WITH_KEYS] {
-            let app = dispatch_app("mp", root, env);
-            let response = dispatch_uri(
-                &app,
-                Method::GET,
-                &signed_uri(ATTACHMENT_PATH, ATTACHMENT_KEY, ""),
-                &[],
-                None,
-            )
-            .await;
-            assert_eq!(StatusCode::OK, response.status());
-            assert_eq!(
-                Some(STATIC_CACHE_CONTROL.to_owned()),
-                header_value(&response, header::CACHE_CONTROL)
-            );
-        }
-        let enforcing = dispatch_app("mp", root, SIGNATURE_ENFORCE);
-        let theme = dispatch_uri(&enforcing, Method::GET, THEME_PATH, &[], None).await;
-        assert_eq!(StatusCode::OK, theme.status());
-        assert_eq!(
-            Some(STATIC_CACHE_CONTROL.to_owned()),
-            header_value(&theme, header::CACHE_CONTROL)
-        );
-    }
-
-    #[tokio::test]
-    async fn report_mode_logs_one_line_for_each_refused_verdict_only() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        let report = dispatch_app("mp", root, SIGNATURE_REPORT);
-        let cases: [(&str, String); 8] = [
-            ("missing", ATTACHMENT_PATH.to_owned()),
-            ("malformed", malformed_uri(ATTACHMENT_PATH, ATTACHMENT_KEY)),
-            ("mismatch", foreign_key_uri(ATTACHMENT_PATH)),
-            ("expired", expired_uri(ATTACHMENT_PATH, ATTACHMENT_KEY)),
-            ("", signed_uri(ATTACHMENT_PATH, ATTACHMENT_KEY, "")),
-            ("", data_package_uri(ATTACHMENT_PATH, ATTACHMENT_KEY, "")),
-            (
-                "malformed",
-                data_package_uri(ATTACHMENT_PATH, ATTACHMENT_KEY, "").replace("&uc=dp", ""),
-            ),
-            (
-                "mismatch",
-                foreign_secret_data_package_uri(ATTACHMENT_PATH, ATTACHMENT_KEY),
-            ),
-        ];
-        for (verdict, uri) in cases {
-            let captured = CapturedLog::default();
-            let subscriber = tracing_subscriber::fmt()
-                .with_writer(captured.clone())
-                .with_ansi(false)
-                .with_max_level(tracing::Level::TRACE)
-                .finish();
-            let response = {
-                let _guard = tracing::subscriber::set_default(subscriber);
-                dispatch_uri(&report, Method::GET, &uri, &[], None).await
-            };
-            assert_eq!(StatusCode::OK, response.status(), "{verdict} {uri}");
-            let log = captured.text();
-            let lines: Vec<&str> = log
-                .lines()
-                .filter(|line| line.contains("reason=\"attachment_signature_would_deny\""))
-                .collect();
-            if verdict.is_empty() {
-                assert!(lines.is_empty(), "{uri}\n{log}");
-                continue;
-            }
-            assert_eq!(1, lines.len(), "{verdict} {uri}\n{log}");
-            assert!(lines[0].contains(" WARN "), "{verdict}\n{log}");
-            assert!(
-                lines[0].contains(&format!("verdict=\"{verdict}\"")),
-                "{verdict}\n{log}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn off_mode_serves_a_signed_request_unchanged() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        let plain = dispatch_app("mp", root, &[]);
-        let staged = dispatch_app("mp", root, SIGNATURE_OFF_WITH_KEYS);
-        for uri in [
-            ATTACHMENT_PATH.to_owned(),
-            expired_uri(ATTACHMENT_PATH, ATTACHMENT_KEY),
-            foreign_key_uri(ATTACHMENT_PATH),
-            format!("{ATTACHMENT_PATH}?ex=zzz&is=&hm="),
-            "/attachments/1/2/absent.bin".to_owned(),
-        ] {
-            let expected = dispatch_uri(&plain, Method::GET, &uri, &[], None).await;
-            let actual = dispatch_uri(&staged, Method::GET, &uri, &[], None).await;
-            assert_eq!(expected.status(), actual.status(), "{uri}");
-            assert_eq!(expected.headers(), actual.headers(), "{uri}");
-            assert_eq!(body_of(expected).await, body_of(actual).await, "{uri}");
-        }
-    }
-
-    #[tokio::test]
-    async fn off_mode_serves_a_signed_read_byte_identical_to_an_unsigned_read() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        for env in [&[][..], SIGNATURE_OFF_WITH_KEYS] {
-            let unsigned_app = dispatch_app("mp", root, &[]);
-            let signed_app = dispatch_app("mp", root, env);
-            for case in signed_read_cases() {
-                let SignedReadCase {
-                    method,
-                    path,
-                    key,
-                    range,
-                    extra,
-                    status,
-                } = case;
-                let separator = if extra.is_empty() { "" } else { "&" };
-                let unsigned = if extra.is_empty() {
-                    path.to_owned()
-                } else {
-                    format!("{path}?{extra}")
-                };
-                for signed in [
-                    signed_uri(path, key, extra),
-                    data_package_uri(path, key, extra),
-                    with_extra(expired_uri(path, key), extra),
-                    format!("{path}?ex=zzz&is=&hm=&uc=xx{separator}{extra}"),
-                    format!("{path}?uc=dp{separator}{extra}"),
-                ] {
-                    let label = format!("{method} {signed} range={range:?} env={env:?}");
-                    let expected =
-                        dispatch_uri(&unsigned_app, method.clone(), &unsigned, &[], range).await;
-                    let actual =
-                        dispatch_uri(&signed_app, method.clone(), &signed, &[], range).await;
-                    assert_eq!(status, expected.status(), "{label}");
-                    assert_eq!(expected.status(), actual.status(), "{label}");
-                    assert_eq!(expected.headers(), actual.headers(), "{label}");
-                    assert_eq!(body_of(expected).await, body_of(actual).await, "{label}");
-                }
-            }
-        }
-    }
-
     #[test]
     fn signature_parameters_never_reach_the_attachment_reader() {
         let params: HashMap<String, String> = [
@@ -2136,113 +841,45 @@ mod tests {
         assert_eq!(Some("1"), filtered.get("download").map(String::as_str));
     }
 
-    const SIGNATURE_VERDICTS: &str = "fluxer_media_proxy_attachment_signature_verdicts_total";
-
-    fn verdict_counter(app: &Arc<AppState>, verdict: &str) -> u64 {
-        counter(
-            app,
-            &format!("{SIGNATURE_VERDICTS}{{verdict=\"{verdict}\"}}"),
+    #[tokio::test]
+    async fn a_proxy_re_encoded_external_path_is_authorised_only_by_its_signature() {
+        use fluxer_common::external_media_path::{
+            build_external_media_proxy_path, create_signature,
+        };
+        let tmp = tempfile::tempdir().expect("storage root");
+        let app = dispatch_app("mp", tmp.path(), &[]);
+        let signed_path = build_external_media_proxy_path("http://127.0.0.1/emojis/1.png?size=48")
+            .expect("path builds");
+        let received = signed_path.replace("%3D", "=");
+        assert_ne!(signed_path, received);
+        let signature = create_signature(&signed_path, b"secret");
+        let other = create_signature(&signed_path, b"other");
+        let query = "?format=webp&width=72&height=71";
+        let refused = dispatch_uri(
+            &app,
+            Method::GET,
+            &format!("/external/{other}/{received}{query}"),
+            &[],
+            None,
         )
-    }
-
-    fn verdict_cases() -> [(&'static str, String); 5] {
-        [
-            ("missing", ATTACHMENT_PATH.to_owned()),
-            ("malformed", malformed_uri(ATTACHMENT_PATH, ATTACHMENT_KEY)),
-            ("mismatch", foreign_key_uri(ATTACHMENT_PATH)),
-            ("expired", expired_uri(ATTACHMENT_PATH, ATTACHMENT_KEY)),
-            ("valid", signed_uri(ATTACHMENT_PATH, ATTACHMENT_KEY, "")),
-        ]
-    }
-
-    #[tokio::test]
-    async fn report_and_enforce_count_the_verdict_of_every_attachment_read() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        for env in [SIGNATURE_REPORT, SIGNATURE_ENFORCE] {
-            let app = dispatch_app("mp", root, env);
-            for (verdict, uri) in verdict_cases() {
-                dispatch_uri(&app, Method::GET, &uri, &[], None).await;
-                assert_eq!(1, verdict_counter(&app, verdict), "{verdict} {uri} {env:?}");
-            }
-            for (verdict, _) in verdict_cases() {
-                assert_eq!(1, verdict_counter(&app, verdict), "{verdict} {env:?}");
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn off_mode_counts_no_verdict_at_all() {
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        for env in [&[][..], SIGNATURE_OFF_WITH_KEYS] {
-            let app = dispatch_app("mp", root, env);
-            for (_, uri) in verdict_cases() {
-                dispatch_uri(&app, Method::GET, &uri, &[], None).await;
-            }
-            for (verdict, _) in verdict_cases() {
-                assert_eq!(0, verdict_counter(&app, verdict), "{verdict} {env:?}");
-            }
-        }
-    }
-
-    #[tokio::test]
-    async fn a_report_burst_bounds_its_log_lines_and_still_counts_every_read() {
-        const BURST: usize = 50;
-        let tmp = tempfile::tempdir().expect("storage root");
-        let root = tmp.path().canonicalize().expect("canonical storage root");
-        let root = root.as_path();
-        write_signed_representations(root);
-        let report = dispatch_app("mp", root, SIGNATURE_REPORT);
-        let captured = CapturedLog::default();
-        let subscriber = tracing_subscriber::fmt()
-            .with_writer(captured.clone())
-            .with_ansi(false)
-            .with_max_level(tracing::Level::TRACE)
-            .finish();
-        {
-            let _guard = tracing::subscriber::set_default(subscriber);
-            for _ in 0..BURST {
-                let response = dispatch_uri(&report, Method::GET, ATTACHMENT_PATH, &[], None).await;
-                assert_eq!(StatusCode::OK, response.status());
-            }
-            tokio::time::sleep(std::time::Duration::from_millis(1_100)).await;
-            dispatch_uri(&report, Method::GET, ATTACHMENT_PATH, &[], None).await;
-        }
-        let log = captured.text();
-        let lines: Vec<&str> = log
-            .lines()
-            .filter(|line| line.contains("reason=\"attachment_signature_would_deny\""))
-            .collect();
-        assert!(
-            lines.len() < BURST,
-            "{} lines for {BURST} refusable reads\n{log}",
-            lines.len()
-        );
+        .await;
+        assert_eq!(StatusCode::UNAUTHORIZED, refused.status());
         assert_eq!(
-            (BURST + 1) as u64,
-            verdict_counter(&report, "missing"),
-            "every refusable read is counted"
+            0,
+            counter(&app, "fluxer_media_proxy_blocked_url_attempts_total")
         );
-        let suppressed: u64 = lines
-            .last()
-            .expect("the burst logs at least one line")
-            .split("suppressed=")
-            .nth(1)
-            .expect("an emitted line reports the lines it stands in for")
-            .split_whitespace()
-            .next()
-            .expect("a suppressed count")
-            .parse()
-            .expect("a suppressed count is a number");
-        assert!(suppressed > 0, "{log}");
-        assert!(
-            lines.len() as u64 + suppressed <= (BURST + 1) as u64,
-            "{log}"
+        let authorised = dispatch_uri(
+            &app,
+            Method::GET,
+            &format!("/external/{signature}/{received}{query}"),
+            &[],
+            None,
+        )
+        .await;
+        assert_eq!(StatusCode::BAD_REQUEST, authorised.status());
+        assert_eq!(
+            1,
+            counter(&app, "fluxer_media_proxy_blocked_url_attempts_total")
         );
     }
 }

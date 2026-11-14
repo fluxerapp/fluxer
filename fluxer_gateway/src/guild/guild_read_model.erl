@@ -42,7 +42,7 @@ store(GuildId, State, Data) ->
     Members =
         case maps:get(members_ets, Data, undefined) of
             Tab when is_reference(Tab) -> #{};
-            _ -> guild_data_index:member_map(Data)
+            _ -> guild_data_index_members:member_map(Data)
         end,
     Snapshot = (maps:with(?STATE_KEYS, State))#{
         data => ReadData#{<<"members">> => Members, members_normalized => Members}
@@ -52,20 +52,21 @@ store(GuildId, State, Data) ->
 
 -spec update(map(), map()) -> ok.
 update(OldState, NewState) ->
-    Keys = [data | ?STATE_KEYS],
-    case
-        lists:all(
-            fun(Key) ->
-                erts_debug:same(
-                    maps:get(Key, OldState, undefined), maps:get(Key, NewState, undefined)
-                )
-            end,
-            Keys
-        )
-    of
+    case same_keys([data | ?STATE_KEYS], OldState, NewState) of
         true -> ok;
         false -> put_state(NewState)
     end.
+
+-spec same_keys([atom()], map(), map()) -> boolean().
+same_keys(Keys, OldState, NewState) ->
+    lists:all(
+        fun(Key) ->
+            erts_debug:same(
+                maps:get(Key, OldState, undefined), maps:get(Key, NewState, undefined)
+            )
+        end,
+        Keys
+    ).
 
 -spec delete(term()) -> ok.
 delete(GuildId) ->
@@ -84,10 +85,7 @@ query(GuildId, Request) ->
     try
         case ets:lookup(?TABLE, GuildId) of
             [{GuildId, Owner, Snapshot}] ->
-                case is_process_alive(Owner) of
-                    true -> read(Request, Snapshot);
-                    false -> miss
-                end;
+                read_live(Owner, Request, Snapshot);
             [] ->
                 miss
         end
@@ -96,14 +94,21 @@ query(GuildId, Request) ->
         error:{badmatch, false} -> miss
     end.
 
+-spec read_live(pid(), {atom(), map()}, map()) -> {ok, map()} | miss.
+read_live(Owner, Request, Snapshot) ->
+    case is_process_alive(Owner) of
+        true -> read(Request, Snapshot);
+        false -> miss
+    end.
+
 -spec read({atom(), map()}, map()) -> {ok, map()} | miss.
 read({Tag, Request}, Snapshot) ->
     State = materialize_member(maps:get(user_id, Request, null), Snapshot),
     case Tag of
         get_guild_data -> reply(guild_data:get_guild_data(Request, State));
         get_guild_auth_context -> reply(guild_data:get_auth_context(Request, State));
-        get_guild_member -> reply(guild_data:get_guild_member(Request, State));
-        has_member -> reply(guild_data:has_member(Request, State));
+        get_guild_member -> reply(guild_data_members:get_guild_member(Request, State));
+        has_member -> reply(guild_data_members:has_member(Request, State));
         _ -> miss
     end.
 

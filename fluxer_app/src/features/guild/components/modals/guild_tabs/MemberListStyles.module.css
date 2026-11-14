@@ -64,7 +64,7 @@
 	justify-content: space-between;
 	gap: 0.75rem;
 	padding: 0.875rem 1rem;
-	text-align: left;
+	text-align: start;
 	transition: background-color 0.15s;
 	-webkit-tap-highlight-color: transparent;
 	user-select: none;
@@ -202,8 +202,8 @@
 }
 
 .divider {
-	margin-left: 1rem;
-	margin-right: 1rem;
+	margin-inline-start: 1rem;
+	margin-inline-end: 1rem;
 	height: 0.0625rem;
 	background-color: var(--background-header-secondary);
 	opacity: 0.3;

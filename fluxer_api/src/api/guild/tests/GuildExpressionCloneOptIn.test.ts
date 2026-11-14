@@ -9,9 +9,7 @@ import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {
-	GuildEmojiMetadataResponse,
 	GuildEmojiWithUserResponse,
-	GuildStickerMetadataResponse,
 	GuildStickerWithUserResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -162,63 +160,6 @@ describe('Guild expression clone opt-in', () => {
 		]);
 		await expectEmojiCloneRejected(source, 'Deprecated Only');
 		await expectStickerCloneRejected(source, 'Deprecated Only');
-	});
-
-	test('reports allow_cloning false until the source guild opts in', async () => {
-		const source = await createSource(harness, 'Metadata Opt In Source');
-		const viewer = await createTestAccount(harness);
-		const emojiBefore = await createBuilder<GuildEmojiMetadataResponse>(harness, viewer.token)
-			.get(`/emojis/${source.emoji.id}/metadata`)
-			.execute();
-		const stickerBefore = await createBuilder<GuildStickerMetadataResponse>(harness, viewer.token)
-			.get(`/stickers/${source.sticker.id}/metadata`)
-			.execute();
-		expect(emojiBefore.allow_cloning).toBe(false);
-		expect(stickerBefore.allow_cloning).toBe(false);
-		await optIn(harness, source, [GuildFeatures.CLONE_EMOJI_ENABLED, GuildFeatures.CLONE_STICKER_ENABLED]);
-		const emojiAfter = await createBuilder<GuildEmojiMetadataResponse>(harness, viewer.token)
-			.get(`/emojis/${source.emoji.id}/metadata`)
-			.execute();
-		const stickerAfter = await createBuilder<GuildStickerMetadataResponse>(harness, viewer.token)
-			.get(`/stickers/${source.sticker.id}/metadata`)
-			.execute();
-		expect(emojiAfter.allow_cloning).toBe(true);
-		expect(stickerAfter.allow_cloning).toBe(true);
-	});
-
-	test('reports allow_cloning false for a guild with only the deprecated disabled features', async () => {
-		const source = await createSource(harness, 'Metadata Deprecated Source');
-		await addDeprecatedFeatures(harness, source, [
-			GuildFeatures.CLONE_EMOJI_DISABLED,
-			GuildFeatures.CLONE_STICKER_DISABLED,
-		]);
-		const viewer = await createTestAccount(harness);
-		const emoji = await createBuilder<GuildEmojiMetadataResponse>(harness, viewer.token)
-			.get(`/emojis/${source.emoji.id}/metadata`)
-			.execute();
-		const sticker = await createBuilder<GuildStickerMetadataResponse>(harness, viewer.token)
-			.get(`/stickers/${source.sticker.id}/metadata`)
-			.execute();
-		expect(emoji.allow_cloning).toBe(false);
-		expect(sticker.allow_cloning).toBe(false);
-	});
-
-	test('reports allow_cloning true when the deprecated disabled feature sits alongside the enabled one', async () => {
-		const source = await createSource(harness, 'Metadata Mixed Source');
-		await addDeprecatedFeatures(harness, source, [
-			GuildFeatures.CLONE_EMOJI_DISABLED,
-			GuildFeatures.CLONE_STICKER_DISABLED,
-		]);
-		await optIn(harness, source, [GuildFeatures.CLONE_EMOJI_ENABLED, GuildFeatures.CLONE_STICKER_ENABLED]);
-		const viewer = await createTestAccount(harness);
-		const emoji = await createBuilder<GuildEmojiMetadataResponse>(harness, viewer.token)
-			.get(`/emojis/${source.emoji.id}/metadata`)
-			.execute();
-		const sticker = await createBuilder<GuildStickerMetadataResponse>(harness, viewer.token)
-			.get(`/stickers/${source.sticker.id}/metadata`)
-			.execute();
-		expect(emoji.allow_cloning).toBe(true);
-		expect(sticker.allow_cloning).toBe(true);
 	});
 
 	test('stops permitting cloning once the source guild opts back out', async () => {

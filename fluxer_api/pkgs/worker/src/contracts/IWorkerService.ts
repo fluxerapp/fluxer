@@ -9,5 +9,4 @@ export interface IWorkerService<TTaskName extends string = string> {
 		options?: WorkerJobOptions,
 	): Promise<bigint>;
 	cancelJob(jobId: bigint): Promise<boolean>;
-	retryDeadLetterJob(jobId: bigint): Promise<boolean>;
 }

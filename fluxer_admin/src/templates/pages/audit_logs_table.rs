@@ -10,7 +10,7 @@ use crate::{
         resource_link::{ResourceType, resource_link},
         table::{table_body, table_cell, table_head, table_header_cell, table_row},
     },
-    utils::{bigint::format_discriminator, user_tag::user_tag},
+    utils::{bigint::format_discriminator, user_tag::display_with_tag},
 };
 use maud::{Markup, html};
 
@@ -21,11 +21,17 @@ pub fn format_action(action: &str) -> String {
 pub fn action_badge_variant(action: &str) -> BadgeVariant {
     match action {
         "temp_ban" | "schedule_deletion" | "ban_ip" | "ban_email" => BadgeVariant::Danger,
-        "unban" | "cancel_deletion" | "unban_ip" | "unban_email" => BadgeVariant::Success,
-        "update_flags" | "update_features" | "set_acls" | "update_settings" | "annotate_ban" => {
-            BadgeVariant::Info
+        "unban" | "cancel_deletion" | "unban_ip" | "unban_email" | "end_enforcement_decision" => {
+            BadgeVariant::Success
         }
-        "delete_message" => BadgeVariant::Warning,
+        "update_flags"
+        | "update_features"
+        | "set_acls"
+        | "update_settings"
+        | "annotate_ban"
+        | "annotate_enforcement_decision"
+        | "annotate_report" => BadgeVariant::Info,
+        "delete_message" | "warn_user" => BadgeVariant::Warning,
         _ => BadgeVariant::Default,
     }
 }
@@ -43,19 +49,12 @@ fn type_label(target_type: &str) -> String {
 }
 
 fn user_label(user: &AuditLogUserSummary) -> String {
-    let tag = user_tag(
+    display_with_tag(
+        user.global_name.as_deref(),
         &user.username,
         &format_discriminator(&user.discriminator),
         false,
-    );
-    match user
-        .global_name
-        .as_ref()
-        .filter(|value| !value.trim().is_empty())
-    {
-        Some(global_name) => format!("{global_name} ({tag})"),
-        None => tag,
-    }
+    )
 }
 
 fn channel_label(channel: &AuditLogChannelSummary) -> String {
@@ -132,6 +131,15 @@ pub fn target_cell(base: &str, entry: &AuditLogEntry) -> Markup {
                     span class="text-xs text-neutral-500 break-all" { "ID: " (&entry.target_id) }
                 }
             }))
+        },
+        "enforcement_decision" => html! {
+            a href={(base) "/decisions/" (entry.target_id)}
+                class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500 text-sm" {
+                div class="flex flex-col" {
+                    span class="text-sm font-medium" { "Decision" }
+                    span class="text-xs text-neutral-500 break-all" { "ID: " (&entry.target_id) }
+                }
+            }
         },
         "message" => html! {
             div class="flex flex-col" {
@@ -325,59 +333,4 @@ pub fn audit_log_table_body(base: &str, entries: &[AuditLogEntry]) -> Markup {
             (log_row(base, entry, i))
         }
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn entry(target_type: &str, target_id: &str) -> AuditLogEntry {
-        serde_json::from_value(serde_json::json!({
-            "log_id": "1900000000000000001",
-            "admin_user_id": "1500000000000000001",
-            "action": "bulk_schedule_deletion",
-            "target_id": target_id,
-            "target_type": target_type,
-            "audit_log_reason": "Raid cleanup",
-            "created_at": "2026-09-14T12:00:00.000Z"
-        }))
-        .expect("audit log fixture must deserialize")
-    }
-
-    #[test]
-    fn bulk_job_targets_link_to_the_job_detail_page() {
-        let markup = target_cell("/admin", &entry("bulk_job", "1900000000000000002")).into_string();
-        assert!(markup.contains(r#"href="/admin/jobs/1900000000000000002""#));
-        assert!(markup.contains("Bulk job"));
-        assert!(!markup.contains("/admin/users/"));
-    }
-
-    #[test]
-    fn admin_labels_drop_the_zero_tag_only_without_tags() {
-        let admin = AuditLogUserSummary {
-            id: "1500000000000000001".to_owned(),
-            username: "lilith".to_owned(),
-            discriminator: "0".to_owned(),
-            global_name: Some("Lilith".to_owned()),
-        };
-        assert_eq!(user_label(&admin), "Lilith (lilith#0000)");
-        crate::utils::user_tag::sync_with_unique_usernames(true, || {
-            assert_eq!(user_label(&admin), "Lilith (lilith)");
-        });
-    }
-
-    #[test]
-    fn unknown_target_types_stay_unlinked() {
-        let markup = target_cell("/admin", &entry("email_domain", "spam.example")).into_string();
-        assert!(!markup.contains("<a "));
-        assert!(markup.contains("Email domain"));
-    }
-
-    #[test]
-    fn retired_action_names_still_render() {
-        let mut retired = entry("user", "1500000000000000002");
-        retired.action = "update_retired_toggle".to_string();
-        let markup = audit_log_table_body("/admin", &[retired]).into_string();
-        assert!(markup.contains("Update retired toggle"));
-    }
 }

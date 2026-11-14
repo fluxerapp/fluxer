@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-FROM rust:1-trixie AS builder
+FROM rust:1.98.1-trixie@sha256:a8a5f0a1e5fe7dfe1d352591e4a1c7dd2c08fd70475cae872cf3458ba0df0546 AS builder
 
 ARG TARGETARCH
 
@@ -47,11 +47,12 @@ RUN printf '%s\n' \
 RUN cargo build --release -p fluxer_admin \
 	&& cp target/release/fluxer_admin /usr/local/bin/fluxer-admin
 
-RUN test -s target/release/build/fluxer_admin-*/out/static/app.css \
-	&& echo "Tailwind CSS compiled successfully"
-
-RUN test "$(ls target/release/build/fluxer_admin-*/out/static/fonts/*.woff2 | wc -l)" -eq 16 \
-	&& ls target/release/build/fluxer_admin-*/out/static/fonts/fonts.*.css \
+RUN static="$(find target/release/build -type d -path '*fluxer_admin*/out/static')" \
+	&& test "$(printf '%s\n' "$static" | wc -l)" -eq 1 \
+	&& test -s "$static/app.css" \
+	&& echo "Tailwind CSS compiled successfully" \
+	&& test "$(ls "$static"/fonts/*.woff2 | wc -l)" -eq 16 \
+	&& ls "$static"/fonts/fonts.*.css \
 	&& echo "Latin-core fonts bundled successfully"
 
 FROM debian:trixie-slim AS runtime
@@ -64,8 +65,8 @@ LABEL org.opencontainers.image.title="fluxer-admin"
 LABEL org.opencontainers.image.description="Fluxer admin console"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
 LABEL org.opencontainers.image.vendor="Fluxer"
-LABEL org.opencontainers.image.url="https://fluxer.app"
-LABEL org.opencontainers.image.documentation="https://docs.fluxer.app"
+LABEL org.opencontainers.image.url="https://fluxer.com"
+LABEL org.opencontainers.image.documentation="https://docs.fluxer.com"
 LABEL org.opencontainers.image.source="https://github.com/fluxerapp/fluxer"
 LABEL org.opencontainers.image.version="${BUILD_VERSION}"
 LABEL org.opencontainers.image.revision="${SOURCE_SHA}"
@@ -74,9 +75,7 @@ LABEL app.fluxer.build-version="${BUILD_VERSION}"
 
 WORKDIR /usr/local/bin
 
-RUN apt-get update \
-	&& apt-get install -y --no-install-recommends ca-certificates \
-	&& rm -rf /var/lib/apt/lists/*
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 COPY --from=builder /usr/local/bin/fluxer-admin /usr/local/bin/fluxer-admin
 

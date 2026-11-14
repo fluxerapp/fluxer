@@ -4,6 +4,7 @@ import Channels from '@app/features/channel/state/Channels';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {chunkEntries} from '@app/features/read_state/state/read_states/shared';
 import {atPreviousMillisecond} from '@fluxer/snowflake/src/SnowflakeUtils';
 
 const logger = new Logger('ReadStateCommands');
@@ -24,14 +25,6 @@ function previousReadableMessageId(channelId: string, messageId: string): string
 		return null;
 	}
 	return messageIndex > 0 ? messagesArray[messageIndex - 1].id : atPreviousMillisecond(messageId);
-}
-
-function chunkEntries<T>(entries: Array<T>, size: number): Array<Array<T>> {
-	const chunks: Array<Array<T>> = [];
-	for (let i = 0; i < entries.length; i += size) {
-		chunks.push(entries.slice(i, i + size));
-	}
-	return chunks;
 }
 
 function latestBulkAckEntry(channelId: string): BulkAckEntry | null {

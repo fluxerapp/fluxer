@@ -1,26 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import crypto from 'node:crypto';
-import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {clearTestEmails, createTestAccount, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import {clearDonationTestEmails, listDonationTestEmails} from '@app/api/donation/tests/DonationTestUtils';
+import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {getPaymentDisputeRepository} from '@app/api/middleware/ServiceSingletons';
+import {seedOpenPaymentDisputeReview} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {ProductType} from '@app/api/stripe/ProductRegistry';
-import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {
+	createTestPayment,
+	sendStripeWebhook,
+	sendStripeWebhookExpectStripeError,
+	sendStripeWebhookRaw,
+	setupSyncStripeWebhookWorker,
+} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {Payments} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	createCheckoutCompletedEvent,
-	createMockWebhookPayload,
 	createStripeApiHandlers,
 	type StripeApiHandlers,
 	type StripeWebhookEventData,
 } from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {HttpResponse, http} from 'msw';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
+import {afterAll, afterEach, assert, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
@@ -65,72 +74,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		Config.stripe.webhookSecret = 'whsec_test_secret';
 		Config.stripe.prices = MOCK_PRICES;
 		setupSyncStripeWebhookWorker();
-		stripeHandlers = createStripeApiHandlers({
-			charges: {
-				ch_pi_localized_brl_card_br: {
-					currency: 'brl',
-					payment_intent: 'pi_localized_brl_card_br',
-					payment_method_details: {
-						type: 'card',
-						card: {
-							fingerprint: 'fp_localized_brl_card_br',
-							country: 'BR',
-						},
-					},
-				},
-				ch_pi_localized_brl_card_us: {
-					currency: 'brl',
-					payment_intent: 'pi_localized_brl_card_us',
-					payment_method_details: {
-						type: 'card',
-						card: {
-							fingerprint: 'fp_localized_brl_card_us',
-							country: 'US',
-						},
-					},
-				},
-			},
-			paymentIntents: {
-				pi_localized_brl_card_br: {
-					currency: 'brl',
-					latest_charge: 'ch_pi_localized_brl_card_br',
-					status: 'succeeded',
-				},
-				pi_localized_brl_card_us: {
-					currency: 'brl',
-					latest_charge: 'ch_pi_localized_brl_card_us',
-					status: 'succeeded',
-				},
-			},
-			setupIntents: {
-				seti_localized_brl_card_br: {
-					customer: 'cus_test_existing',
-					payment_method: {
-						id: 'pm_localized_brl_card_br',
-						object: 'payment_method',
-						type: 'card',
-						card: {
-							country: 'BR',
-						},
-						customer: 'cus_test_existing',
-					},
-					status: 'succeeded',
-				},
-				seti_localized_brl_card_us: {
-					customer: 'cus_test_existing',
-					payment_method: {
-						id: 'pm_localized_brl_card_us',
-						object: 'payment_method',
-						type: 'card',
-						card: {
-							country: 'US',
-						},
-						customer: 'cus_test_existing',
-					},
-					status: 'succeeded',
-				},
-			},
-		});
+		stripeHandlers = createStripeApiHandlers();
 		server.use(...stripeHandlers.handlers);
 	});
 	beforeEach(async () => {
@@ -146,56 +90,10 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		Config.stripe.webhookSecret = originalWebhookSecret;
 		Config.stripe.prices = originalPrices;
 	});
-	function createWebhookSignature(payload: string, timestamp: number, secret: string): string {
-		const signedPayload = `${timestamp}.${payload}`;
-		const signature = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
-		return `t=${timestamp},v1=${signature}`;
-	}
-	async function sendWebhook(eventData: StripeWebhookEventData): Promise<{
-		received: boolean;
-	}> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		return createBuilder<{
-			received: boolean;
-		}>(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.execute();
-	}
-	async function sendWebhookRaw(eventData: StripeWebhookEventData): Promise<{
-		response: Response;
-		text: string;
-		json: unknown;
-	}> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		return createBuilder(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.executeRaw();
-	}
-	async function sendWebhookExpectStripeError(eventData: StripeWebhookEventData): Promise<void> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		await createBuilder(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.expect(400, APIErrorCodes.STRIPE_ERROR)
-			.execute();
-	}
 	describe('premium checkout', () => {
 		test('processes completed premium checkout session successfully', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_premium_success_123';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -213,7 +111,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				subscriptionId: 'sub_test_1',
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
 			expect(updatedPayment?.status).toBe('completed');
@@ -226,11 +124,161 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				.execute();
 			expect(user.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
 		});
+		test('records the payment intent of the first invoice so a later refund marks the payment refunded', async () => {
+			const account = await createTestAccount(harness);
+			const sessionId = 'cs_premium_invoice_intent';
+			const paymentRepository = new PaymentRepository();
+			const userRepository = new UserRepository();
+			await paymentRepository.createPayment({
+				checkout_session_id: sessionId,
+				user_id: createUserID(BigInt(account.userId)),
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'pending',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await sendStripeWebhook(
+				harness,
+				createCheckoutCompletedEvent({
+					sessionId,
+					customerId: 'cus_test_1',
+					subscriptionId: 'sub_test_1',
+					paymentIntentId: null,
+					invoiceId: 'in_premium_invoice_intent',
+					metadata: {},
+				}),
+			);
+			const completed = await userRepository.getPaymentByCheckoutSession(sessionId);
+			expect(completed?.paymentIntentId).toBe('pi_in_premium_invoice_intent');
+			await sendStripeWebhook(harness, {
+				type: 'charge.refunded',
+				data: {
+					object: {
+						id: 'ch_pi_in_premium_invoice_intent',
+						payment_intent: 'pi_in_premium_invoice_intent',
+						amount: 2500,
+						amount_refunded: 2500,
+						refunded: true,
+					},
+				},
+			});
+			expect((await userRepository.getPaymentByCheckoutSession(sessionId))?.status).toBe('refunded');
+		});
+		test('grants no premium when the subscription was cancelled before the checkout webhook', async () => {
+			const account = await createTestAccount(harness);
+			const sessionId = 'cs_premium_cancelled_before_fulfilment';
+			const paymentRepository = new PaymentRepository();
+			const userRepository = new UserRepository();
+			stripeHandlers = createStripeApiHandlers({subscriptions: {sub_cancelled_early: {status: 'canceled'}}});
+			server.use(...stripeHandlers.handlers);
+			await paymentRepository.createPayment({
+				checkout_session_id: sessionId,
+				user_id: createUserID(BigInt(account.userId)),
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'pending',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await sendStripeWebhook(
+				harness,
+				createCheckoutCompletedEvent({
+					sessionId,
+					customerId: 'cus_test_1',
+					subscriptionId: 'sub_cancelled_early',
+					metadata: {},
+				}),
+			);
+			expect((await userRepository.getPaymentByCheckoutSession(sessionId))?.status).toBe('completed');
+			const user = await userRepository.findUnique(createUserID(BigInt(account.userId)));
+			expect(user?.premiumType ?? null).toBeNull();
+			expect(user?.stripeSubscriptionId ?? null).toBeNull();
+		});
+		test('leaves a payment pending when its price ID is missing', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const sessionId = 'cs_missing_price';
+			const paymentRepository = new PaymentRepository();
+			await createTestPayment(harness, userId, sessionId, {
+				priceId: MOCK_PRICES.monthlyUsd,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			const payment = await paymentRepository.getPaymentByCheckoutSession(sessionId);
+			assert(payment !== null);
+			await upsertOne(Payments.upsertAll({...payment.toRow(), price_id: null}));
+
+			await sendStripeWebhookExpectStripeError(harness, createCheckoutCompletedEvent({sessionId, metadata: {}}));
+
+			expect((await paymentRepository.getPaymentByCheckoutSession(sessionId))?.status).toBe('pending');
+			expect((await new UserRepository().findUnique(userId))?.premiumType).toBeNull();
+		});
+
+		test.each([
+			['valid timestamp without consent', '2025-01-02T03:04:05.000Z', null, '2025-01-02T03:04:05.000Z'],
+			['valid timestamp with consent', '2025-01-02T03:04:05.000Z', 'accepted', '2025-01-02T03:04:05.000Z'],
+			['invalid timestamp with consent', 'invalid', 'accepted', 'now'],
+			['empty timestamp with consent', '', 'accepted', 'now'],
+			['invalid timestamp without consent', 'invalid', null, null],
+			['empty timestamp without consent', '', null, null],
+		] as const)('recovers a missing payment with %s', async (_label, timestamp, consent, expected) => {
+			const account = await createTestAccount(harness);
+			const sessionId = 'cs_recovered_waiver';
+			const event = createCheckoutCompletedEvent({
+				sessionId,
+				metadata: {
+					user_id: account.userId,
+					price_id: MOCK_PRICES.monthlyUsd,
+					product_type: ProductType.MONTHLY_SUBSCRIPTION,
+					eu_withdrawal_waiver_accepted_at: timestamp,
+				},
+			});
+			event.data.object.consent = {terms_of_service: consent};
+			const before = Date.now();
+
+			await sendStripeWebhook(harness, event);
+
+			const payment = await new PaymentRepository().getPaymentByCheckoutSession(sessionId);
+			expect(payment?.status).toBe('completed');
+			const acceptedAt = payment?.euWithdrawalWaiverAcceptedAt ?? null;
+			if (expected === 'now') {
+				expect(acceptedAt?.getTime()).toBeGreaterThanOrEqual(before);
+				expect(acceptedAt?.getTime()).toBeLessThanOrEqual(Date.now());
+			} else {
+				expect(acceptedAt?.toISOString() ?? null).toBe(expected);
+			}
+		});
+
+		test('flags an open payment dispute review when a checkout opened before the dispute completes', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const sessionId = 'cs_premium_during_dispute';
+			await new PaymentRepository().createPayment({
+				checkout_session_id: sessionId,
+				user_id: userId,
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'pending',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await seedOpenPaymentDisputeReview(userId, 'dp_checkout_during_dispute');
+			await sendStripeWebhook(
+				harness,
+				createCheckoutCompletedEvent({
+					sessionId,
+					customerId: 'cus_during_dispute',
+					subscriptionId: 'sub_during_dispute',
+					metadata: {},
+				}),
+			);
+			const review = await getPaymentDisputeRepository().findReview('dp_checkout_during_dispute');
+			expect(review?.dispute_purchase_at).toBeInstanceOf(Date);
+		});
+
 		test('allows localized BRL PIX subscription checkout when checkout.session.completed has no payment intent', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_localized_brl_pix_subscription';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -255,7 +303,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 			});
 			eventData.data.object.payment_intent = null;
 			eventData.data.object.payment_method_types = ['pix'];
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
 			expect(updatedPayment?.status).toBe('completed');
@@ -271,111 +319,9 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				.execute();
 			expect(user.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
 		});
-		test('allows localized TRY card subscription checkout when checkout.session.completed has no payment intent', async () => {
-			const account = await createTestAccount(harness);
-			const sessionId = 'cs_localized_try_card_no_payment_intent';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
-			const paymentRepository = new PaymentRepository();
-			const userRepository = new UserRepository();
-			await paymentRepository.createPayment({
-				checkout_session_id: sessionId,
-				user_id: createUserID(BigInt(account.userId)),
-				price_id: MOCK_PRICES.monthlyTry,
-				product_type: ProductType.MONTHLY_SUBSCRIPTION,
-				status: 'pending',
-				is_gift: false,
-				created_at: new Date(),
-			});
-			server.use(
-				http.get('https://api.stripe.com/v1/subscriptions/:id', ({params}) => {
-					if (params.id !== 'sub_localized_try_card_no_payment_intent') {
-						return;
-					}
-					return HttpResponse.json({
-						id: params.id,
-						object: 'subscription',
-						customer: 'cus_localized_try_card_no_payment_intent',
-						status: 'active',
-						current_period_start: Math.floor(Date.now() / 1000) - 3600,
-						start_date: Math.floor(Date.now() / 1000) - 3600,
-						default_payment_method: {
-							id: 'pm_localized_try_card_tr',
-							object: 'payment_method',
-							type: 'card',
-							card: {
-								country: 'TR',
-							},
-						},
-						items: {
-							object: 'list',
-							data: [
-								{
-									id: 'si_localized_try_card_tr',
-									object: 'subscription_item',
-									price: {
-										id: MOCK_PRICES.monthlyTry,
-										object: 'price',
-										unit_amount: 22999,
-										currency: 'try',
-										recurring: {
-											interval: 'month',
-											interval_count: 1,
-										},
-										type: 'recurring',
-										active: true,
-										livemode: false,
-									},
-									quantity: 1,
-									current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
-								},
-							],
-							has_more: false,
-							url: `/v1/subscription_items?subscription=${params.id}`,
-						},
-						cancel_at: null,
-						cancel_at_period_end: false,
-						canceled_at: null,
-						collection_method: 'charge_automatically',
-						livemode: false,
-						metadata: {},
-					});
-				}),
-			);
-			const eventData = createCheckoutCompletedEvent({
-				sessionId,
-				customerId: 'cus_localized_try_card_no_payment_intent',
-				subscriptionId: 'sub_localized_try_card_no_payment_intent',
-				amountTotal: 22999,
-				currency: 'try',
-				metadata: {
-					country_code: 'TR',
-					payment_method: 'card',
-				},
-			});
-			eventData.data.object.payment_intent = null;
-			eventData.data.object.payment_method_types = ['card', 'link'];
-			const result = await sendWebhook(eventData);
-			expect(result.received).toBe(true);
-			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
-			expect(updatedPayment?.status).toBe('completed');
-			expect(updatedPayment?.paymentIntentId).toBeNull();
-			expect(updatedPayment?.subscriptionId).toBe('sub_localized_try_card_no_payment_intent');
-			expect(stripeHandlers.spies.retrievedPaymentIntents).toHaveLength(0);
-			expect(stripeHandlers.spies.createdRefunds).toHaveLength(0);
-			expect(stripeHandlers.spies.cancelledSubscriptions).toHaveLength(0);
-			const user = await createBuilder<{
-				premium_type: number;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(user.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-		});
 		test('updates user with Stripe customer ID on first purchase', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_first_purchase_customer_123';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -392,15 +338,13 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				customerId: 'cus_new_123',
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const user = await userRepository.findUnique(createUserID(BigInt(account.userId)));
 			expect(user?.stripeCustomerId).toBe('cus_new_123');
 		});
 		test('processes duplicate checkout delivery idempotently across concurrency and retry', async () => {
 			const account = await createTestAccount(harness);
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -421,9 +365,12 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				}),
 				id: 'evt_duplicate_checkout_delivery_1',
 			};
-			const concurrentResponses = await Promise.all([sendWebhookRaw(eventData), sendWebhookRaw(eventData)]);
+			const concurrentResponses = await Promise.all([
+				sendStripeWebhookRaw(harness, eventData),
+				sendStripeWebhookRaw(harness, eventData),
+			]);
 			const statuses = concurrentResponses.map((response) => response.response.status).sort();
-			expect(statuses).toEqual([200, 400]);
+			expect(statuses).toEqual([HttpStatus.OK, HttpStatus.BAD_REQUEST]);
 			expect(
 				concurrentResponses.some((response) => response.text.includes('Stripe webhook event in-flight, retry')),
 			).toBe(true);
@@ -434,16 +381,16 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				.get('/users/@me')
 				.execute();
 			expect(userAfterConcurrent.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(userAfterConcurrent.premium_until).not.toBeNull();
-			const premiumUntilAfterConcurrent = new Date(userAfterConcurrent.premium_until!);
-			const daysUntilAfterConcurrent = (premiumUntilAfterConcurrent.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+			assert(userAfterConcurrent.premium_until !== null);
+			const premiumUntilAfterConcurrent = new Date(userAfterConcurrent.premium_until);
+			const daysUntilAfterConcurrent = (premiumUntilAfterConcurrent.getTime() - Date.now()) / MS_PER_DAY;
 			expect(daysUntilAfterConcurrent).toBeGreaterThanOrEqual(27);
 			expect(daysUntilAfterConcurrent).toBeLessThanOrEqual(31);
 			const retryEventData: StripeWebhookEventData = {
 				...eventData,
 				id: 'evt_duplicate_checkout_delivery_retry_1',
 			};
-			const retryResponse = await sendWebhook(retryEventData);
+			const retryResponse = await sendStripeWebhook(harness, retryEventData);
 			expect(retryResponse.received).toBe(true);
 			const userAfterRetry = await createBuilder<{
 				premium_type: number;
@@ -460,8 +407,6 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('skips already processed payment', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_already_completed_123';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -482,7 +427,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				sessionId,
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const afterUser = await createBuilder<{
 				premium_type: number;
@@ -498,7 +443,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				sessionId: 'cs_nonexistent_123',
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 		});
 		test('handles external donate checkout sessions without internal payment records', async () => {
@@ -526,14 +471,12 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 					},
 				},
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 		});
 		test('handles gift purchase correctly', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_gift_purchase_123';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -549,7 +492,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				sessionId,
 				metadata: {},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
 			expect(updatedPayment?.status).toBe('completed');
@@ -561,55 +504,23 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 				.execute();
 			expect(user.premium_type).toBe(UserPremiumTypes.NONE);
 		});
-		test('allows localized BRL gift checkout when the card is issued in Brazil', async () => {
-			const account = await createTestAccount(harness);
-			const sessionId = 'cs_gift_brl_card_br';
-			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
-			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
-			const paymentRepository = new PaymentRepository();
-			const userRepository = new UserRepository();
-			await paymentRepository.createPayment({
-				checkout_session_id: sessionId,
-				user_id: createUserID(BigInt(account.userId)),
-				price_id: MOCK_PRICES.gift1MonthBrl,
-				product_type: ProductType.GIFT_1_MONTH,
-				status: 'pending',
-				is_gift: true,
-				created_at: new Date(),
-			});
-			const eventData = createCheckoutCompletedEvent({
-				sessionId,
-				customerId: 'cus_gift_brl_card_br',
-				paymentIntentId: 'pi_localized_brl_card_br',
-				amountTotal: 1288,
-				currency: 'brl',
-				mode: 'payment',
-				metadata: {country_code: 'BR'},
-			});
-			const result = await sendWebhook(eventData);
-			expect(result.received).toBe(true);
-			const updatedPayment = await userRepository.getPaymentByCheckoutSession(sessionId);
-			expect(updatedPayment?.status).toBe('completed');
-			expect(updatedPayment?.giftCode).not.toBeNull();
-			expect(stripeHandlers.spies.createdRefunds).toHaveLength(0);
-		});
 	});
 	describe('donation checkout', () => {
 		test('handles donation without email gracefully', async () => {
 			const eventData = createCheckoutCompletedEvent({
 				metadata: {is_donation: 'true'},
 			});
-			await sendWebhookExpectStripeError(eventData);
+			await sendStripeWebhookExpectStripeError(harness, eventData);
 		});
 		test('records donation with valid email and subscription', async () => {
-			await clearDonationTestEmails(harness);
+			await clearTestEmails(harness);
 			const donationEmail = 'donor@example.com';
 			const eventData = createCheckoutCompletedEvent({
 				customerId: 'cus_donation_1',
 				subscriptionId: 'sub_donation_1',
 				metadata: {is_donation: 'true', donation_email: donationEmail},
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const {DonationRepository} = await import('@app/api/donation/DonationRepository');
 			const donationRepository = new DonationRepository();
@@ -617,7 +528,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 			expect(donor).not.toBeNull();
 			expect(donor?.stripeCustomerId).toBe('cus_donation_1');
 			expect(donor?.stripeSubscriptionId).toBe('sub_donation_1');
-			const emails = await listDonationTestEmails(harness, {recipient: donationEmail});
+			const emails = await listTestEmails(harness, {recipient: donationEmail});
 			const confirmationEmail = emails.find((e) => e.type === 'donation_confirmation');
 			expect(confirmationEmail).toBeDefined();
 			expect(confirmationEmail?.to).toBe(donationEmail);

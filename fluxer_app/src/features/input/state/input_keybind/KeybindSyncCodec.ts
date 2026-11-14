@@ -63,7 +63,7 @@ const fromSyncedKeyCombo = (combo: SyncedKeybindCombo | undefined): KeyCombo => 
 	};
 };
 
-export const toSyncedCustomKeybind = (entry: CustomKeybindEntry): SyncedCustomKeybindInit => ({
+const toSyncedCustomKeybind = (entry: CustomKeybindEntry): SyncedCustomKeybindInit => ({
 	id: entry.id,
 	action: entry.action ?? undefined,
 	combo: toSyncedKeyCombo(entry.combo),

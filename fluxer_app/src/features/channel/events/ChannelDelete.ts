@@ -17,7 +17,7 @@ import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import * as PiPCommands from '@app/features/ui/commands/PiPCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import Webhooks from '@app/features/webhook/state/Webhooks';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 
@@ -30,7 +30,7 @@ export interface ChannelDeletePayload {
 export function cleanupChannelLocalState(channel: Channel): void {
 	const guildId = channel.guild_id;
 	PiPCommands.clearPiPForChannel(channel.id);
-	MediaEngine.handleChannelDelete(channel.id);
+	VoiceRuntime.handleChannelDelete(channel.id);
 	Slowmode.deleteChannel(channel.id);
 	Drafts.deleteChannelDraft(channel.id);
 	SavedMessages.handleChannelDelete(channel);

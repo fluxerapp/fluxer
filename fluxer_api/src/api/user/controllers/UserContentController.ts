@@ -56,7 +56,6 @@ export function UserContentController(app: HonoApp) {
 				roles,
 				guilds,
 				before: before ? createMessageID(before) : undefined,
-				requestCache: ctx.get('requestCache'),
 			});
 			return ctx.json(response);
 		},
@@ -133,7 +132,6 @@ export function UserContentController(app: HonoApp) {
 				userId: ctx.get('user').id,
 				limit,
 				before: before ? createMessageID(before) : undefined,
-				requestCache: ctx.get('requestCache'),
 			});
 			return ctx.json(response, 200);
 		},
@@ -161,7 +159,6 @@ export function UserContentController(app: HonoApp) {
 				userId: ctx.get('user').id,
 				channelId: createChannelID(channel_id),
 				messageId: createMessageID(message_id),
-				requestCache: ctx.get('requestCache'),
 			});
 			return ctx.body(null, 204);
 		},

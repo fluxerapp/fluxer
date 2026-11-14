@@ -91,14 +91,33 @@ const ARIA_LABEL_ANSWER_QUALIFIER_SEPARATOR = msg({
 		'Separator that goes between answer qualifiers that are only readable for screenreaders. Example: "Winning answer[, ]Selected answer".',
 });
 
+function refreshDelayMs(secondsLeft: number): number {
+	if (secondsLeft < 1.5 * 3600) return 60_000;
+	if (secondsLeft < 1.5 * 86400) return 3600_000;
+	return 86400_000;
+}
+
+function toggleAnswer(selected: Array<number>, answerId: number, allowMultiselect?: boolean): Array<number> {
+	if (!allowMultiselect) return [answerId];
+	if (selected.includes(answerId)) return selected.filter((id) => id !== answerId);
+	return [...selected, answerId];
+}
+
+function answerVariant(winner: boolean, me: boolean | undefined, isFinalized: boolean | undefined): string | undefined {
+	if (winner) return 'winner';
+	if (!me) return undefined;
+	return isFinalized ? 'me-finalized' : 'me';
+}
+
 function renderPollEmoji(pollEmoji?: MessagePollEmoji) {
 	if (!pollEmoji) return undefined;
 
-	const emoji = pollEmoji.id
-		? Emoji.getEmojiById(pollEmoji.id)
-		: pollEmoji.name
-			? UnicodeEmojis.getByName(pollEmoji.name)
-			: undefined;
+	let emoji: ReturnType<typeof Emoji.getEmojiById> | ReturnType<typeof UnicodeEmojis.getByName>;
+	if (pollEmoji.id) {
+		emoji = Emoji.getEmojiById(pollEmoji.id);
+	} else if (pollEmoji.name) {
+		emoji = UnicodeEmojis.getByName(pollEmoji.name);
+	}
 
 	if (!emoji) return undefined;
 	return <img src={emoji.url} alt={emoji.name} width="24" height="24" data-flx="poll.answer.emoji.img" />;
@@ -178,10 +197,13 @@ export const Poll = observer(({guild, channelId, messageId, isMobile, poll, mess
 	);
 
 	if (secondsLeft > 0 && !isFinalized) {
-		setTimeout(
-			() => setNow(Date.now()),
-			secondsLeft < 1.5 * 3600 ? 60_000 : secondsLeft < 1.5 * 86400 ? 3600_000 : 86400_000,
-		);
+		setTimeout(() => setNow(Date.now()), refreshDelayMs(secondsLeft));
+	}
+
+	function footerStatus(): React.ReactNode {
+		if (isFinalized) return i18n._(POLL_CLOSED_DESCRIPTOR);
+		if (poll.expiry) return timeLeft(secondsLeft);
+		return i18n._(POLL_NOT_SENT_DESCRIPTOR);
 	}
 
 	function timeLeft(secondsLeft: number): React.ReactNode {
@@ -234,6 +256,7 @@ export const Poll = observer(({guild, channelId, messageId, isMobile, poll, mess
 					poll={poll}
 					openToAnswerId={initialAnswerId}
 					key={`poll-answers-modal-${messageId}`}
+					data-flx="channel.poll.open-poll-answer-voters-modal.poll-answer-voters-modal"
 				/>
 			)),
 		);
@@ -250,7 +273,7 @@ export const Poll = observer(({guild, channelId, messageId, isMobile, poll, mess
 		<div data-flx="poll" className={styles.pollContainer} data-open={!isFinalized} data-state={messageState}>
 			<h2 data-flx="poll.question">{poll.question?.text ?? ''}</h2>
 			<p data-flx="poll.description">
-				<small>
+				<small data-flx="channel.poll.small">
 					{i18n._(poll.allow_multiselect ? SELECT_ONE_OR_MULTIPLE_ANSWERS_DESCRIPTOR : SELECT_ONE_ANSWER_DESCRIPTOR)}
 				</small>
 			</p>
@@ -264,14 +287,10 @@ export const Poll = observer(({guild, channelId, messageId, isMobile, poll, mess
 						onClick={() => {
 							if (!inVoteScreen) return;
 							setSelectedAnswers((prevSelectedAnswers) =>
-								poll.allow_multiselect
-									? prevSelectedAnswers.find((prevId) => prevId === answer.id) !== undefined
-										? prevSelectedAnswers.filter((prevId) => prevId !== answer.id)
-										: [...prevSelectedAnswers, answer.id]
-									: [answer.id],
+								toggleAnswer(prevSelectedAnswers, answer.id, poll.allow_multiselect),
 							);
 						}}
-						data-variant={answer.winner ? 'winner' : answer.me ? (isFinalized ? 'me-finalized' : 'me') : undefined}
+						data-variant={answerVariant(answer.winner, answer.me, isFinalized)}
 						data-voting={inVoteScreen}
 						data-checked={answer.me}
 						aria-label={answerAriaLabel(answer)}
@@ -286,7 +305,7 @@ export const Poll = observer(({guild, channelId, messageId, isMobile, poll, mess
 								data-flx="poll.answer.bar"
 							/>
 						)}
-						<div className={styles.answerLayout}>
+						<div className={styles.answerLayout} data-flx="channel.poll.answer-layout">
 							{inVoteScreen ? (
 								<Checkbox
 									className={styles.answerCheckbox}
@@ -308,6 +327,12 @@ export const Poll = observer(({guild, channelId, messageId, isMobile, poll, mess
 										onClick={() => {
 											if (canSeeVotes) openPollAnswerVotersModal(answer.id);
 										}}
+										onKeyDown={(event) => {
+											if (event.key !== 'Enter' && event.key !== ' ') return;
+											event.preventDefault();
+											event.stopPropagation();
+											if (canSeeVotes) openPollAnswerVotersModal(answer.id);
+										}}
 										aria-disabled={!canSeeVotes}
 										className={styles.answerVotes}
 										data-flx="poll.answer.vote-count"
@@ -327,9 +352,9 @@ export const Poll = observer(({guild, channelId, messageId, isMobile, poll, mess
 				</FocusRing>
 			))}
 			{poll.anonymous_voting && (
-				<section>
-					<p>
-						<small>
+				<section data-flx="channel.poll.section">
+					<p data-flx="channel.poll.p">
+						<small data-flx="channel.poll.small--2">
 							{i18n._(
 								canSeeVotes
 									? THIS_POLL_IS_ANONYMOUS_BUT_YOU_CAN_SEE_VOTES_DESCRIPTOR
@@ -340,9 +365,9 @@ export const Poll = observer(({guild, channelId, messageId, isMobile, poll, mess
 				</section>
 			)}
 			{isVerified || isFinalized ? undefined : (
-				<section>
-					<p>
-						<small>{i18n._(VERIFY_YOU_EMAIL_ADDRESS_DESCRIPTOR)}</small>
+				<section data-flx="channel.poll.section--2">
+					<p data-flx="channel.poll.p--2">
+						<small data-flx="channel.poll.small--3">{i18n._(VERIFY_YOU_EMAIL_ADDRESS_DESCRIPTOR)}</small>
 					</p>
 				</section>
 			)}
@@ -362,13 +387,9 @@ export const Poll = observer(({guild, channelId, messageId, isMobile, poll, mess
 						</Button>
 					</FocusRing>
 				)}
-				<section>
+				<section data-flx="channel.poll.section--3">
 					<div className={styles.answerTotalVotes} data-flx="poll.footer.total-vote-count">
-						{isFinalized
-							? i18n._(POLL_CLOSED_DESCRIPTOR)
-							: poll.expiry
-								? timeLeft(secondsLeft)
-								: i18n._(POLL_NOT_SENT_DESCRIPTOR)}
+						{footerStatus()}
 						{' · '}
 						<button
 							type="button"

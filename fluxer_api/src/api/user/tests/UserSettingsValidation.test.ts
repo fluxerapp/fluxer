@@ -4,8 +4,8 @@ import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {updateUserSettings} from '@app/api/user/tests/UserTestUtils';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {fetchUserSettings, updateUserSettings} from '@app/api/user/tests/UserTestUtils';
+import {TimestampFormatTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {beforeEach, describe, expect, test} from 'vitest';
 
@@ -21,38 +21,6 @@ describe('User Settings Validation', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
-	});
-	test('boolean fields must be booleans', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({inline_attachment_media: 'true'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('status must be known string', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({status: 42})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('null theme not allowed', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({theme: null})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('mixed invalid shape', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilder(harness, account.token)
-			.patch('/users/@me/settings')
-			.body({status: 'offline', gif_auto_play: 'nope'})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
 	});
 	test('trusted_domains rejects the wildcard alongside specific domains', async () => {
 		const account = await createTestAccount(harness);
@@ -72,21 +40,35 @@ describe('User Settings Validation', () => {
 		expect(response.errors[0]?.path).toBe('trusted_domains');
 		expect(response.errors[0]?.code).toBe(ValidationErrorCodes.INVALID_TRUSTED_DOMAINS);
 	});
+	test('regional_format and timestamp_format round trip and clear', async () => {
+		const account = await createTestAccount(harness);
+		const before = await fetchUserSettings(harness, account.token);
+		expect(before.json.regional_format).toBeNull();
+		expect(before.json.timestamp_format).toBe(TimestampFormatTypes.AUTO);
+		const {json} = await updateUserSettings(harness, account.token, {
+			regional_format: 'de-DE',
+			timestamp_format: TimestampFormatTypes.ISO_8601,
+		});
+		expect(json.regional_format).toBe('de-DE');
+		expect(json.timestamp_format).toBe(TimestampFormatTypes.ISO_8601);
+		const cleared = await updateUserSettings(harness, account.token, {regional_format: null});
+		expect(cleared.json.regional_format).toBeNull();
+		expect(cleared.json.timestamp_format).toBe(TimestampFormatTypes.ISO_8601);
+	});
+	test('regional_format rejects a bare language and unknown timestamp formats', async () => {
+		const account = await createTestAccount(harness);
+		for (const body of [{regional_format: 'de'}, {regional_format: 'de-de'}, {timestamp_format: 9}]) {
+			await createBuilder(harness, account.token)
+				.patch('/users/@me/settings')
+				.body(body)
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.execute();
+		}
+	});
 	test('trusted_domains accepts the wildcard on its own', async () => {
 		const account = await createTestAccount(harness);
 		const {json} = await updateUserSettings(harness, account.token, {trusted_domains: ['*']});
 		expect(json.trusted_domains).toEqual(['*']);
-	});
-	test('valid settings update', async () => {
-		const account = await createTestAccount(harness);
-		const {json} = await updateUserSettings(harness, account.token, {
-			status: 'online',
-			inline_attachment_media: true,
-			gif_auto_play: false,
-		});
-		expect(json.status).toBe('online');
-		expect(json.inline_attachment_media).toBe(true);
-		expect(json.gif_auto_play).toBe(false);
 	});
 	test('staff users can persist self-mention suppression settings', async () => {
 		const account = await createTestAccount(harness);

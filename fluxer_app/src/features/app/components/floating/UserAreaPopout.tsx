@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {UserAreaAccountSwitchMenu} from '@app/features/app/components/floating/UserAreaAccountSwitchMenu';
 import styles from '@app/features/app/components/floating/UserAreaPopout.module.css';
@@ -31,8 +30,10 @@ import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import {StatusIndicator} from '@app/features/ui/components/StatusIndicator';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
+import {CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {openProfileBadgeSettings} from '@app/features/user/commands/UserSettingsModalCommands';
 import {CustomStatusModal} from '@app/features/user/components/modals/CustomStatusModal';
 import {UserProfileModal} from '@app/features/user/components/modals/UserProfileModal';
 import {UserProfileBadges} from '@app/features/user/components/popouts/UserProfileBadges';
@@ -44,6 +45,7 @@ import {ProfileCardFooter} from '@app/features/user/components/profile/profile_c
 import {ProfileCardLayout} from '@app/features/user/components/profile/profile_card/ProfileCardLayout';
 import {ProfileCardUserInfo} from '@app/features/user/components/profile/profile_card/ProfileCardUserInfo';
 import {useAutoplayExpandedProfileAnimations} from '@app/features/user/hooks/useAutoplayExpandedProfileAnimations';
+import {useOwnProfileBadges} from '@app/features/user/hooks/useOwnProfileBadges';
 import {normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import StatusExpiry from '@app/features/user/state/StatusExpiry';
 import UserProfile from '@app/features/user/state/UserProfile';
@@ -51,15 +53,15 @@ import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as ProfileDisplayUtils from '@app/features/user/utils/ProfileDisplayUtils';
+import {canEditOwnProfileBadges, canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
 import {copyVoiceDiagnostics} from '@app/features/voice/commands/VoiceDiagnosticsCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {MEDIA_PROXY_PROFILE_BANNER_SIZE_POPOUT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {MessageDescriptor} from '@lingui/core';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {
-	CaretRightIcon,
 	ChartLineIcon,
 	CopyIcon,
 	IdentificationBadgeIcon,
@@ -286,7 +288,6 @@ export const UserAreaPopout = observer(() => {
 				closeCurrentAccountOnSelect: true,
 				initialReloginAccount: reloginAccount,
 				redirectAfterLogin: null,
-				redirectAfterSwitch: Routes.ME,
 				switchAccount: null,
 				'data-flx': 'app.floating.user-area-popout.open-manage-accounts.account-switcher-modal',
 			},
@@ -305,7 +306,6 @@ export const UserAreaPopout = observer(() => {
 	);
 	const accountLogic = useAccountSwitcherLogic({
 		onSessionExpired: startAccountRelogin,
-		redirectAfterSwitch: Routes.ME,
 		switchAccount: null,
 	});
 	const currentUser = Users.getCurrentUser();
@@ -323,6 +323,10 @@ export const UserAreaPopout = observer(() => {
 				'user-settings',
 			),
 		);
+		PopoutCommands.close();
+	}, []);
+	const openBadgeSettings = useCallback(() => {
+		openProfileBadgeSettings();
 		PopoutCommands.close();
 	}, []);
 	const openUserProfile = useCallback(() => {
@@ -375,12 +379,13 @@ export const UserAreaPopout = observer(() => {
 		}
 		TextCopyCommands.copy(i18n, currentUser.tag);
 	}, [currentUser, i18n]);
+	const profileBadges = useOwnProfileBadges(currentUser?.id ?? null);
 	const profile = useMemo(() => {
 		if (!currentUser) {
 			return null;
 		}
-		return UserProfile.getProfile(currentUser.id) ?? createMockProfile(currentUser);
-	}, [currentUserId, currentUser]);
+		return UserProfile.getProfile(currentUser.id) ?? createMockProfile(currentUser, {profileBadges});
+	}, [currentUserId, currentUser, profileBadges]);
 	const profileData = useMemo(() => profile?.getEffectiveProfile() ?? null, [profile]);
 	const profileContext = useMemo<ProfileDisplayUtils.ProfileDisplayContext | null>(() => {
 		if (!currentUser || !profile) {
@@ -420,7 +425,11 @@ export const UserAreaPopout = observer(() => {
 	return (
 		<FocusRingScope containerRef={popoutContainerRef} data-flx="app.floating.user-area-popout.focus-ring-scope">
 			<div ref={popoutContainerRef} className={styles.container} data-flx="app.floating.user-area-popout.container">
-				<ProfileCardLayout borderColor={borderColor} data-flx="app.floating.user-area-popout.profile-card-layout">
+				<ProfileCardLayout
+					borderColor={borderColor}
+					className={userProfilePopoutStyles.profilePopoutCard}
+					data-flx="app.floating.user-area-popout.profile-card-layout"
+				>
 					<ProfileCardBanner
 						bannerUrl={bannerUrl}
 						hoverBannerUrl={hoverBannerUrl}
@@ -434,8 +443,8 @@ export const UserAreaPopout = observer(() => {
 						data-flx="app.floating.user-area-popout.profile-card-banner"
 					/>
 					<UserProfileBadges
-						user={currentUser}
-						profile={profile}
+						badges={profile?.profileBadges ?? []}
+						onEditBadges={canEditOwnProfileBadges(currentUser.id, profile) ? openBadgeSettings : undefined}
 						data-flx="app.floating.user-area-popout.user-profile-badges"
 					/>
 					<ProfileCardContent isWebhook={false} data-flx="app.floating.user-area-popout.profile-card-content">
@@ -555,10 +564,6 @@ export const UserAreaPopout = observer(() => {
 											accounts={accountLogic.accounts}
 											currentAccountKey={accountLogic.currentAccountKey}
 											onSelect={(account) => {
-												if (account.isValid === false) {
-													startAccountRelogin(account);
-													return;
-												}
 												void accountLogic.handleSwitchAccount(getAccountKey(account));
 											}}
 											onManage={openManageAccounts}
@@ -620,14 +625,14 @@ export const UserAreaPopout = observer(() => {
 												/>
 											}
 											label={<Trans>Copy voice diagnostics</Trans>}
-											hint={MediaEngine.connected ? <Trans>In a call</Trans> : undefined}
+											hint={VoiceRuntime.connected ? <Trans>In a call</Trans> : undefined}
 											onClick={handleCopyStats}
 											data-flx="app.floating.user-area-popout.action-button.copy-voice-diagnostics"
 										/>
 									</>
 								)}
 							</div>
-							{currentUser.isClaimed() && (
+							{canOpenProfileEditor(currentUser) && (
 								<Button
 									variant="primary"
 									fitContainer

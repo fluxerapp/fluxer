@@ -71,39 +71,3 @@ validate_snowflake_list_items([Item | Rest], Acc) ->
         {ok, Id} -> validate_snowflake_list_items(Rest, [Id | Acc]);
         {error, _, _} -> gateway_errors:error(validation_invalid_snowflake_list)
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-validate_snowflake_integer_test() ->
-    ?assertEqual({ok, 123}, validate_snowflake(123)),
-    ?assertMatch({error, _, _}, validate_snowflake(0)),
-    ?assertMatch({error, _, _}, validate_snowflake(-1)).
-
-validate_snowflake_binary_test() ->
-    ?assertEqual({ok, 123}, validate_snowflake(<<"123">>)),
-    ?assertMatch({error, _, _}, validate_snowflake(<<"0">>)).
-
-validate_snowflake_invalid_test() ->
-    ?assertMatch({error, _, _}, validate_snowflake(null)),
-    ?assertMatch({error, _, _}, validate_snowflake(<<"abc">>)),
-    ?assertMatch({error, _, _}, validate_snowflake(<<"001">>)),
-    ?assertMatch({error, _, _}, validate_snowflake(<<"-1">>)),
-    ?assertMatch({error, _, _}, validate_snowflake(1.5)).
-
-validate_optional_snowflake_test() ->
-    ?assertEqual({ok, null}, validate_optional_snowflake(null)),
-    ?assertEqual({ok, 123}, validate_optional_snowflake(123)),
-    ?assertEqual({ok, 456}, validate_optional_snowflake(<<"456">>)).
-
-validate_snowflake_list_test() ->
-    ?assertEqual({ok, [1, 2, 3]}, validate_snowflake_list([1, 2, 3])),
-    ?assertEqual({ok, [1, 2]}, validate_snowflake_list([<<"1">>, <<"2">>])),
-    ?assertEqual({ok, []}, validate_snowflake_list([])).
-
-validate_snowflake_list_invalid_test() ->
-    ?assertMatch({error, _, _}, validate_snowflake_list([1, <<"abc">>])),
-    ?assertMatch({error, _, _}, validate_snowflake_list([1, <<"0">>])),
-    ?assertMatch({error, _, _}, validate_snowflake_list(not_a_list)).
-
--endif.

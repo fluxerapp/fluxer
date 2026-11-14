@@ -11,7 +11,7 @@ import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils'
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {GuildContextMenu} from '@app/features/ui/action_menu/GuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
-import * as AvatarSourceUtils from '@app/features/user/utils/AvatarSourceUtils';
+import * as AvatarSourceUtils from '@app/features/user/utils/AvatarUtils';
 import type React from 'react';
 import {useCallback, useEffect, useState} from 'react';
 
@@ -71,8 +71,8 @@ export function useGuildListItemInteraction({
 		isMobileExperience,
 		isSortingList,
 	});
-	const iconURL = AvatarSourceUtils.getGuildIconURL(guild, false);
-	const hoverIconURL = AvatarSourceUtils.getGuildIconURL(guild, true);
+	const iconURL = AvatarSourceUtils.getGuildRailIconURL(guild, false);
+	const hoverIconURL = AvatarSourceUtils.getGuildRailIconURL(guild, true);
 	const isAnimatableIcon = hoverIconURL !== iconURL;
 	const [loadedAnimatedURL, setLoadedAnimatedURL] = useState<string | null>(null);
 	const [bottomSheetOpen, setBottomSheetOpen] = useState(false);

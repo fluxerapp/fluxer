@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import modalI18n from '@app/app/I18n';
 import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Authentication from '@app/features/auth/state/Authentication';
+import {promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
 import ForumPosts from '@app/features/forum/state/ForumPosts';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
-import {TooManyReactionsModal} from '@app/features/messaging/components/alerts/TooManyReactionsModal';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
@@ -25,6 +27,16 @@ import type {ReactionUsersPageResponse} from '@fluxer/schema/src/domains/message
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
+
+const TooManyReactionsModal_WHOA_THIS_IS_HEAVY_DESCRIPTOR = msg({
+	message: 'Whoa, this is heavy',
+	comment: 'Label in the too many reactions modal.',
+});
+
+const TooManyReactionsModal_THIS_IS_ONE_HEAVY_MESSAGE_SOME_REACTIONS_NEED_DESCRIPTOR = msg({
+	message: 'This is one heavy message. Some reactions need to be removed before you can add more.',
+	comment: 'Description text in the too many reactions modal. Keep the tone plain and specific.',
+});
 
 const YOU_CAN_T_ADD_NEW_REACTIONS_WHILE_YOU_DESCRIPTOR = msg({
 	message: "You can't add new reactions while you're timed out.",
@@ -47,6 +59,9 @@ type ReactionOptimisticType =
 
 const checkReactionResponse = (i18n: I18n, error: HttpError): boolean => {
 	const errorCode = failureCode(error);
+	if (promptForAccountTier(error)) {
+		return true;
+	}
 	if (error.status === 403) {
 		if (errorCode === APIErrorCodes.FEATURE_TEMPORARILY_DISABLED) {
 			logger.debug('Feature temporarily disabled, not retrying');
@@ -79,11 +94,11 @@ const checkReactionResponse = (i18n: I18n, error: HttpError): boolean => {
 		switch (errorCode) {
 			case APIErrorCodes.MAX_REACTIONS:
 				logger.debug(`Reaction limit reached: ${errorCode}`);
-				ModalCommands.push(
-					modal(() => (
-						<TooManyReactionsModal data-flx="messaging.reaction-commands.check-reaction-response.too-many-reactions-modal" />
-					)),
-				);
+				showGenericErrorModal({
+					title: () => modalI18n._(TooManyReactionsModal_WHOA_THIS_IS_HEAVY_DESCRIPTOR),
+					message: () => modalI18n._(TooManyReactionsModal_THIS_IS_ONE_HEAVY_MESSAGE_SOME_REACTIONS_NEED_DESCRIPTOR),
+					dataFlx: 'messaging.too-many-reactions-modal.confirm-modal',
+				});
 				break;
 		}
 	}
@@ -118,7 +133,6 @@ const optimisticUpdate = (
 			userId: actualUserId,
 			emoji,
 			optimistic: true,
-			skipReactionStore: true,
 		});
 		if (actualUserId === Authentication.currentUserId) {
 			ForumPosts.handleReaction(channelId, messageId, emoji, type === 'MESSAGE_REACTION_ADD', true);
@@ -166,7 +180,7 @@ function makeUsersUrl({
 }
 
 function sessionQuery(): {session_id: string | null} {
-	return {session_id: GatewayConnection.sessionId ?? null};
+	return {session_id: GatewaySessions.foregroundConnection.sessionId ?? null};
 }
 
 function reactionFetchQuery(options: ReactionFetchOptions): Record<string, number | string> | undefined {
@@ -186,20 +200,17 @@ function applyReactionFetchResult(
 	nextAfter?: string | null,
 ): void {
 	const {limit, after, totalCount} = options;
-	if (after !== undefined) {
-		MessageReactions.handleFetchAppend(
-			messageId,
-			data,
-			emoji,
-			limit,
-			responseHasMore,
-			totalCount,
-			requestId,
-			nextAfter,
-		);
-		return;
-	}
-	MessageReactions.handleFetchSuccess(messageId, data, emoji, limit, responseHasMore, totalCount, requestId, nextAfter);
+	MessageReactions.handleFetchSuccess(
+		after !== undefined ? 'append' : 'replace',
+		messageId,
+		data,
+		emoji,
+		limit,
+		responseHasMore,
+		totalCount,
+		requestId,
+		nextAfter,
+	);
 }
 
 function addReactionRequest(channelId: string, messageId: string, emoji: ReactionEmoji): Promise<unknown> {

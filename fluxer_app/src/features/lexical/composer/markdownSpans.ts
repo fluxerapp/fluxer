@@ -2,11 +2,15 @@
 
 import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
 import {MAX_LINE_LENGTH} from '@app/features/messaging/utils/markdown/parser/MarkdownConstants';
-import {parseMarkdownAstWithWasm} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
+import {
+	isMarkdownParserReady,
+	parseMarkdownAstWithWasm,
+} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {normalizeUrl} from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 import {findUrlEnd} from '@app/features/messaging/utils/markdown/UrlSpanUtils';
 import {parseSilentMessagePrefix} from '@app/features/messaging/utils/SilentMessagePrefix';
+import {LRUMap} from '@app/lib/list/ListLruMap';
 
 export const MarkdownHl = {
 	none: 0,
@@ -76,12 +80,51 @@ type AlignAttempt = {type: 'aligned'; spans: Array<MarkdownSpan>} | {type: 'desy
 
 const MAX_ALIGN_ATTEMPTS = 64;
 const MAX_URL_REALIGN_STEPS = 256;
+const HIGHLIGHT_CACHE_CAPACITY = 32;
+
+const highlightCache = new LRUMap<string, ReadonlyArray<MarkdownSpan>>(HIGHLIGHT_CACHE_CAPACITY);
 
 export function computeMarkdownHighlightSpans(
 	source: string,
 	parserFlags = DEFAULT_COMPOSER_MARKDOWN_FLAGS,
-): Array<MarkdownSpan> {
-	return computeMarkdownHighlightResult(source, parserFlags).spans;
+): ReadonlyArray<MarkdownSpan> {
+	const key = `${parserFlags}\u0000${source}`;
+	const cached = highlightCache.get(key);
+	if (cached !== undefined) {
+		return cached;
+	}
+	const spans = computeMarkdownHighlightResult(source, parserFlags).spans;
+	if (isMarkdownParserReady()) {
+		highlightCache.set(key, spans);
+	}
+	return spans;
+}
+
+export function splitSpansByLine(
+	spans: ReadonlyArray<MarkdownSpan>,
+	lineSources: ReadonlyArray<string>,
+): Array<Array<MarkdownSpan>> {
+	const result: Array<Array<MarkdownSpan>> = [];
+	let first = 0;
+	let lineStart = 0;
+	for (const lineSource of lineSources) {
+		const lineEnd = lineStart + lineSource.length;
+		while (first < spans.length && spans[first]!.end <= lineStart) {
+			first += 1;
+		}
+		const lineSpans: Array<MarkdownSpan> = [];
+		for (let index = first; index < spans.length && spans[index]!.start < lineEnd; index += 1) {
+			const span = spans[index]!;
+			const start = Math.max(span.start, lineStart) - lineStart;
+			const end = Math.min(span.end, lineEnd) - lineStart;
+			if (end > start) {
+				lineSpans.push({...span, start, end});
+			}
+		}
+		result.push(lineSpans);
+		lineStart = lineEnd + 1;
+	}
+	return result;
 }
 
 function computeMarkdownHighlightResult(
@@ -126,7 +169,10 @@ function computeMarkdownHighlightResult(
 	return {spans: coalesce(spans), recovered};
 }
 
-export function markSilentMessagePrefix(spans: Array<MarkdownSpan>, source: string): Array<MarkdownSpan> {
+export function markSilentMessagePrefix(
+	spans: ReadonlyArray<MarkdownSpan>,
+	source: string,
+): ReadonlyArray<MarkdownSpan> {
 	const prefix = parseSilentMessagePrefix(source);
 	if (prefix == null) {
 		return spans;
@@ -284,12 +330,12 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			return;
 		}
 		case 'Strong': {
-			const delimiter = ctx.source.startsWith('**', ctx.pos)
-				? '**'
-				: ctx.source.startsWith('__', ctx.pos)
-					? '__'
-					: null;
-			if (delimiter == null) {
+			let delimiter: '**' | '__';
+			if (ctx.source.startsWith('**', ctx.pos)) {
+				delimiter = '**';
+			} else if (ctx.source.startsWith('__', ctx.pos)) {
+				delimiter = '__';
+			} else {
 				ctx.failed = true;
 				return;
 			}
@@ -367,6 +413,10 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 			return;
 		}
 		case 'Emoji': {
+			if (node.kind.kind === 'Standard' && ctx.source.startsWith(`:${node.kind.name}:`, ctx.pos)) {
+				pushContent(ctx, ctx.pos + node.kind.name.length + 2, format);
+				return;
+			}
 			alignOpaque(EMOJI_TOKEN_RE, node.kind.kind === 'Standard' ? node.kind.raw : null, format, ctx);
 			return;
 		}
@@ -1109,6 +1159,12 @@ const DROPPED_WHITESPACE_RE = /^[ \t\r]+\n/;
 const LINE_WHITESPACE_RE = /^[ \t\r]+/;
 
 const REPLACEMENT_CHARACTER = '\uFFFD';
+const TEXT_PRESENTATION_SELECTOR = '\uFE0F';
+const PLAINTEXT_SYMBOL_SHORTCODES: Readonly<Record<string, string>> = {
+	'\u2122': ':tm:',
+	'\u00A9': ':copyright:',
+	'\u00AE': ':registered:',
+};
 const UNPAIRED_SURROGATE_RE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
 function isUnpairedSurrogateAt(text: string, index: number): boolean {
@@ -1168,6 +1224,15 @@ function advancePastText(
 		}
 		if (source[pos] === content[ci]) {
 			pos += 1;
+			ci += 1;
+			if (source[pos] === TEXT_PRESENTATION_SELECTOR && PLAINTEXT_SYMBOL_SHORTCODES[source[pos - 1]!] != null) {
+				pos += 1;
+			}
+			continue;
+		}
+		const symbolShortcode = PLAINTEXT_SYMBOL_SHORTCODES[content[ci]!];
+		if (symbolShortcode != null && source.startsWith(symbolShortcode, pos)) {
+			pos += symbolShortcode.length;
 			ci += 1;
 			continue;
 		}

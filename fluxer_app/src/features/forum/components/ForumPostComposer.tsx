@@ -20,54 +20,26 @@ import type {SendMessageFunction} from '@app/features/messaging/hooks/useMessage
 import Drafts from '@app/features/messaging/state/MessagingDrafts';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
-import {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
-import Permission from '@app/features/permissions/state/Permission';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {openThread} from '@app/features/threads/commands/ThreadNavigation';
 import ThreadPanel from '@app/features/threads/state/ThreadPanel';
 import * as ThreadD from '@app/features/threads/utils/ThreadMessageDescriptors';
+import {resolveStarterArgs, useThreadCreateCooldownSeconds} from '@app/features/threads/utils/ThreadStarterSend';
 import {Button} from '@app/features/ui/button/Button';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import Users from '@app/features/user/state/Users';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {THREAD_NAME_MAX_LENGTH} from '@fluxer/constants/src/ThreadConstants';
-import type {MessageStickerItem} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {hasVisibleContent as hasVisibleMessageContent} from '@fluxer/schema/src/primitives/MessageValidators';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {useLingui} from '@lingui/react/macro';
 import {EyeIcon, ImageSquareIcon, SmileyIcon, XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useRef, useState} from 'react';
-
-function useCooldownSeconds(until: number): number {
-	const [now, setNow] = useState(() => Date.now());
-	useEffect(() => {
-		if (until <= Date.now()) return;
-		const timer = window.setInterval(() => setNow(Date.now()), 1000);
-		return () => window.clearInterval(timer);
-	}, [until]);
-	return Math.max(0, Math.ceil((until - now) / 1000));
-}
-
-function resolvePostArgs(
-	stickersOrTts?: Array<MessageStickerItem> | boolean,
-	favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
-	maybeFavoriteMemeId?: string,
-): {stickers: Array<MessageStickerItem>; favoriteMemeId?: string} {
-	if (typeof stickersOrTts === 'boolean') {
-		return {
-			stickers: Array.isArray(favoriteMemeIdOrStickers) ? favoriteMemeIdOrStickers : [],
-			favoriteMemeId: maybeFavoriteMemeId,
-		};
-	}
-	return {
-		stickers: stickersOrTts ?? [],
-		favoriteMemeId: typeof favoriteMemeIdOrStickers === 'string' ? favoriteMemeIdOrStickers : undefined,
-	};
-}
 
 interface ForumPostComposerProps {
 	forum: Channel;
@@ -93,11 +65,15 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 	const accountKey = Users.viewAccountKey;
 	const media = isMediaChannel(forum);
 	const attachments = useTextareaAttachments(draftKey);
-	const bypassesSlowmode = Permission.can(Permissions.BYPASS_SLOWMODE, forum);
-	const cooldownSeconds = useCooldownSeconds(bypassesSlowmode ? 0 : ThreadPanel.getCreateCooldownUntil(forum.id));
+
+	const cooldownSeconds = useThreadCreateCooldownSeconds(forum);
 	const handleSubmit: SendMessageFunction = useCallback(
 		(content, _hasAttachments, stickersOrTts, favoriteMemeIdOrStickers, maybeFavoriteMemeId) => {
-			const {stickers, favoriteMemeId} = resolvePostArgs(stickersOrTts, favoriteMemeIdOrStickers, maybeFavoriteMemeId);
+			const {stickers, favoriteMemeId} = resolveStarterArgs(
+				stickersOrTts,
+				favoriteMemeIdOrStickers,
+				maybeFavoriteMemeId,
+			);
 			if (favoriteMemeId) {
 				setError(i18n._(D.POST_FAVORITE_MEDIA_UNSUPPORTED_DESCRIPTOR));
 				return false;
@@ -195,6 +171,7 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 					enableReply={false}
 					enableEditLast={false}
 					enableSlashCommands={false}
+					submitOnEnter={false}
 					draftChannelId={draftKey}
 					placeholder={i18n._(media ? D.POST_MEDIA_PLACEHOLDER_DESCRIPTOR : D.POST_MESSAGE_PLACEHOLDER_DESCRIPTOR)}
 					bare
@@ -209,11 +186,13 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 						{i18n._(D.PREVIEW_DESCRIPTOR)}
 					</span>
 					{hasVisibleMessageContent(body) ? (
-						<SafeMarkdown
-							content={body}
-							options={{context: MarkdownContext.STANDARD_WITHOUT_JUMBO, channelId: forum.id}}
-							data-flx="forum.forum-post-composer.safe-markdown"
-						/>
+						<div className={markupStyles.markup} data-flx="forum.forum-post-composer.preview-markup">
+							<SafeMarkdown
+								content={body}
+								options={{context: MarkdownContext.STANDARD_WITHOUT_JUMBO, channelId: forum.id}}
+								data-flx="forum.forum-post-composer.safe-markdown"
+							/>
+						</div>
 					) : (
 						<span className={styles.hint} data-flx="forum.forum-post-composer.preview-empty">
 							{i18n._(D.PREVIEW_EMPTY_DESCRIPTOR)}
@@ -257,20 +236,19 @@ export const ForumPostComposer = observer(({forum, initialTitle, onClose}: Forum
 									data-flx="forum.forum-post-composer.emoji-picker-popout"
 								/>
 							)}
+							tooltip={i18n._(D.ADD_EMOJI_DESCRIPTOR)}
 							data-flx="forum.forum-post-composer.emoji-popout"
 						>
-							<Tooltip text={i18n._(D.ADD_EMOJI_DESCRIPTOR)} data-flx="forum.forum-post-composer.emoji-tooltip">
-								<FocusRing offset={-2} data-flx="forum.forum-post-composer.emoji.focus-ring">
-									<button
-										type="button"
-										className={styles.composerIconButton}
-										aria-label={i18n._(D.ADD_EMOJI_DESCRIPTOR)}
-										data-flx="forum.forum-post-composer.emoji-button"
-									>
-										<SmileyIcon size={remFromPx(20)} weight="bold" data-flx="forum.forum-post-composer.smiley-icon" />
-									</button>
-								</FocusRing>
-							</Tooltip>
+							<FocusRing offset={-2} data-flx="forum.forum-post-composer.emoji.focus-ring">
+								<button
+									type="button"
+									className={styles.composerIconButton}
+									aria-label={i18n._(D.ADD_EMOJI_DESCRIPTOR)}
+									data-flx="forum.forum-post-composer.emoji-button"
+								>
+									<SmileyIcon size={remFromPx(20)} weight="bold" data-flx="forum.forum-post-composer.smiley-icon" />
+								</button>
+							</FocusRing>
 						</Popout>
 					)}
 					{forum.availableTags.length > 0 && (

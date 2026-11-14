@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {InMemorySnapshotStore} from '@app/features/gateway/snapshot/InMemorySnapshotStore';
 import type {SnapshotEmit} from '@app/features/gateway/snapshot/SnapshotEntities';
+import type {SnapshotRowStore} from '@app/features/gateway/snapshot/SnapshotRowStore';
 import type {StateSyncCursor} from '@app/features/gateway/snapshot/SnapshotTypes';
 
 export interface SnapshotWriterOptions {
 	readonly storageKey: string;
-	readonly store: InMemorySnapshotStore;
+	readonly store: SnapshotRowStore;
 	readonly onInvalid: (error: Error) => void;
 }
 
@@ -19,7 +19,7 @@ function snapshotWriterError(error: unknown): Error {
 
 export class SnapshotWriter {
 	private readonly storageKey: string;
-	private readonly store: InMemorySnapshotStore;
+	private readonly store: SnapshotRowStore;
 	private readonly onInvalid: (error: Error) => void;
 	private invalidationError: Error | null = null;
 	private disposed = false;

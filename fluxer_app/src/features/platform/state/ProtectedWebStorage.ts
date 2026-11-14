@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
+
 function captureStorageBackend<T>(readStorage: () => T): T | null {
 	if (typeof window === 'undefined') {
 		return null;
@@ -47,6 +49,15 @@ function deleteWindowStorageProperty(property: 'localStorage' | 'sessionStorage'
 	} catch {}
 }
 
+function detachDesktopDocumentCookie(): void {
+	if (!isDesktopLocalAppDocument()) {
+		return;
+	}
+	try {
+		Object.defineProperty(document, 'cookie', {configurable: true, get: () => '', set: () => {}});
+	} catch {}
+}
+
 export function installBrowserStorageAccessProtection(): void {
 	if (browserStorageAccessProtected || !import.meta.env.PROD || typeof window === 'undefined') {
 		return;
@@ -56,6 +67,7 @@ export function installBrowserStorageAccessProtection(): void {
 	deleteWindowStorageProperty('sessionStorage');
 	deleteWindowStorageProperty('indexedDB');
 	deleteWindowStorageProperty('caches');
+	detachDesktopDocumentCookie();
 }
 
 installBrowserStorageAccessProtection();

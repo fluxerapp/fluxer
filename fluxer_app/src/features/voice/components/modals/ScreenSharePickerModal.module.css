@@ -104,7 +104,7 @@
 	border-radius: 0;
 	background: transparent;
 	color: var(--text-primary);
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 }
 
@@ -339,7 +339,7 @@
 	background:
 		linear-gradient(135deg, rgb(255 255 255 / 0.04), transparent 55%),
 		color-mix(in srgb, var(--background-tertiary) 76%, transparent);
-	text-align: left;
+	text-align: start;
 }
 
 .downloadCopy {

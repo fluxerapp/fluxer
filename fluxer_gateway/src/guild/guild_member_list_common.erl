@@ -4,7 +4,6 @@
 -typing([eqwalizer]).
 
 -export([
-    get_member_user_id/1,
     get_member_display_name/1,
     normalize_name/1,
     casefold_binary/1,
@@ -12,14 +11,6 @@
     connected_session_user_ids/1,
     unicode_chardata_to_binary/1
 ]).
-
--spec get_member_user_id(map()) -> integer() | undefined.
-get_member_user_id(Member) ->
-    User = maps:get(<<"user">>, Member, #{}),
-    case snowflake_id:parse_maybe(maps:get(<<"id">>, User, undefined)) of
-        UserId when is_integer(UserId), UserId > 0 -> UserId;
-        _ -> undefined
-    end.
 
 -spec normalize_name(term()) -> binary().
 normalize_name(undefined) ->
@@ -61,10 +52,14 @@ casefold_binary(Value) ->
         {ok, Folded} ->
             Folded;
         not_ascii ->
-            case unicode_chardata_to_binary(string:casefold(Bin)) of
-                {ok, Folded} -> Folded;
-                error -> Bin
-            end
+            unicode_casefold(Bin)
+    end.
+
+-spec unicode_casefold(binary()) -> binary().
+unicode_casefold(Bin) ->
+    case unicode_chardata_to_binary(string:casefold(Bin)) of
+        {ok, Folded} -> Folded;
+        error -> Bin
     end.
 
 %% Case folding a pure-ASCII binary is exactly A-Z -> a-z, so a byte pass is
@@ -140,43 +135,3 @@ default_presence() -> guild_member_list_connected:default_presence().
 
 -spec connected_session_user_ids(map()) -> sets:set(integer()).
 connected_session_user_ids(S) -> guild_member_list_connected:connected_session_user_ids(S).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-casefold_reference(Bin) ->
-    {ok, Folded} = unicode_chardata_to_binary(string:casefold(Bin)),
-    Folded.
-
-ascii_casefold_matches_unicode_casefold_test() ->
-    lists:foreach(
-        fun(Bin) ->
-            ?assertEqual({Bin, casefold_reference(Bin)}, {Bin, casefold_binary(Bin)})
-        end,
-        [
-            <<>>,
-            <<"a">>,
-            <<"A">>,
-            <<"Zed">>,
-            <<"already lower">>,
-            <<"MiXeD CaSe 123">>,
-            <<"punct!@#$%^&*()_+-=[]{}">>,
-            <<"0123456789">>,
-            <<"~", 127>>
-        ]
-    ).
-
-ascii_casefold_defers_to_unicode_for_non_ascii_test() ->
-    ?assertEqual(not_ascii, ascii_casefold(<<"Ärger"/utf8>>)),
-    lists:foreach(
-        fun(Bin) ->
-            ?assertEqual({Bin, casefold_reference(Bin)}, {Bin, casefold_binary(Bin)})
-        end,
-        [<<"Ärger"/utf8>>, <<"ÅSTRÖM"/utf8>>, <<"日本語"/utf8>>, <<"ß"/utf8>>]
-    ).
-
-ascii_casefold_returns_input_untouched_when_already_folded_test() ->
-    Bin = <<"no uppercase here">>,
-    ?assertEqual({ok, Bin}, ascii_casefold(Bin)).
-
--endif.

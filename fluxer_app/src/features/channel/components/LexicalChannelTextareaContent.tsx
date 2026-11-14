@@ -7,6 +7,7 @@ import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHo
 import {useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
+import {registerBootFrameComposer} from '@app/features/boot_state/BootDomFrame';
 import {fetchSlowmodeState} from '@app/features/channel/commands/ChannelCommands';
 import {ChannelAttachmentArea} from '@app/features/channel/components/ChannelAttachmentArea';
 import {
@@ -48,9 +49,8 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import ChannelSearch from '@app/features/channel/state/ChannelSearch';
 import ChannelSticker from '@app/features/channel/state/ChannelSticker';
 import Channels from '@app/features/channel/state/Channels';
-import * as ChannelDisplayUtils from '@app/features/channel/utils/ChannelDisplayUtils';
-import * as CommandUtils from '@app/features/devtools/utils/CommandUtils';
-import * as ExpressionPickerCommands from '@app/features/emoji/commands/ExpressionPickerCommands';
+import * as ChannelDisplayUtils from '@app/features/channel/utils/ChannelUtils';
+import ExpressionPicker from '@app/features/emoji/state/ExpressionPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import GuildGuilds from '@app/features/guild/state/Guilds';
@@ -70,6 +70,8 @@ import * as MessageCommands from '@app/features/messaging/commands/MessageComman
 import {showAttachmentPermissionDeniedModal} from '@app/features/messaging/components/alerts/AttachmentPermissionDeniedModal';
 import {FileSizeTooLargeModal} from '@app/features/messaging/components/alerts/FileSizeTooLargeModal';
 import {TooManyAttachmentsModal} from '@app/features/messaging/components/alerts/TooManyAttachmentsModal';
+import {CreatePollBottomSheet} from '@app/features/messaging/components/modals/poll_modal/CreatePollBottomSheet';
+import {CreatePollModal, type PollForm} from '@app/features/messaging/components/modals/poll_modal/CreatePollModal';
 import {useTextareaAttachments} from '@app/features/messaging/hooks/useCloudUpload';
 import {useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
 import {type SendMessageFunction, useMessageSubmission} from '@app/features/messaging/hooks/useMessageSubmission';
@@ -78,7 +80,7 @@ import {useTextareaEditing} from '@app/features/messaging/hooks/useTextareaEditi
 import {useTextareaExpressionHandlers} from '@app/features/messaging/hooks/useTextareaExpressionHandlers';
 import {useTextareaExpressionPicker} from '@app/features/messaging/hooks/useTextareaExpressionPicker';
 import {useTextareaSegments} from '@app/features/messaging/hooks/useTextareaSegments';
-import {useTextareaSubmit} from '@app/features/messaging/hooks/useTextareaSubmit';
+import {shouldBlockSubmissionForSlowmode, useTextareaSubmit} from '@app/features/messaging/hooks/useTextareaSubmit';
 import {
 	createMentionConfirmationSnapshot,
 	type MentionConfirmationEvent,
@@ -99,12 +101,16 @@ import {
 	getComposerMessageContent,
 	hasVisibleMessageContent,
 } from '@app/features/messaging/utils/MessageRequestUtils';
+import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {
 	resolveTypedEmojiShortcodes,
 	resolveTypedEmojiToken,
 } from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
+import Permission from '@app/features/permissions/state/Permission';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {awaitHydration} from '@app/features/platform/utils/MobXPersistence';
 import {useSlowmode} from '@app/features/slowmode/hooks/useSlowmode';
 import {openCreateThread} from '@app/features/threads/commands/ThreadNavigation';
 import ActiveComposer from '@app/features/threads/state/ActiveComposer';
@@ -121,17 +127,14 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Users from '@app/features/user/state/Users';
 import {openVoiceMessageComposerModal} from '@app/features/voice/components/VoiceMessageComposerModal';
 import {flxElementClassName} from '@app/lib/react';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {MessageCreatePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {PlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import Permission from '@app/features/permissions/state/Permission';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {CreatePollModal, type PollForm} from '@app/features/messaging/components/modals/poll_modal/CreatePollModal';
-import type {MessageCreatePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
-import {CreatePollBottomSheet} from '@app/features/messaging/components/modals/poll_modal/CreatePollBottomSheet';
 
 const PLUS_MENU_DOUBLE_CLICK_MS = 500;
 const MESSAGE_SCROLLER_SELECTOR = '[data-flx="channel.messages.scroller"][data-fluxer-scroll-container="true"]';
@@ -164,12 +167,12 @@ export const LexicalChannelTextareaContent = observer(
 		draftSegments,
 		disabled,
 		inputSuppressed = false,
-		messageSafetyGateActive = false,
 		typingEnabled = true,
 		onSubmit: onSubmitOverride,
 		enableReply = true,
 		enableEditLast = true,
 		enableSlashCommands = true,
+		submitOnEnter = true,
 		draftChannelId,
 		placeholder,
 		bare = false,
@@ -182,12 +185,12 @@ export const LexicalChannelTextareaContent = observer(
 		draftSegments: ReadonlyArray<MentionSegment>;
 		disabled: boolean;
 		inputSuppressed?: boolean;
-		messageSafetyGateActive?: boolean;
 		typingEnabled?: boolean;
 		onSubmit?: SendMessageFunction;
 		enableReply?: boolean;
 		enableEditLast?: boolean;
 		enableSlashCommands?: boolean;
+		submitOnEnter?: boolean;
 		draftChannelId?: string;
 		placeholder?: string;
 		bare?: boolean;
@@ -196,8 +199,9 @@ export const LexicalChannelTextareaContent = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const composerKey = draftChannelId ?? channel.id;
-		const editingMessageId = MessageEdit.getEditingMessageId(channel.id);
-		const editingMobileMessageId = MessageEditMobile.getEditingMobileMessageId(channel.id);
+		const ownsChannelEdits = draftChannelId == null;
+		const editingMessageId = ownsChannelEdits ? MessageEdit.getEditingMessageId(channel.id) : null;
+		const editingMobileMessageId = ownsChannelEdits ? MessageEditMobile.getEditingMobileMessageId(channel.id) : null;
 		const isEditingMessageInComposer = editingMobileMessageId != null;
 		let initialDraftDisplay = '';
 		if (!disabled && !isEditingMessageInComposer && draft !== null) {
@@ -221,14 +225,13 @@ export const LexicalChannelTextareaContent = observer(
 		const mentionModalKey = useMemo(() => `mention-everyone-modal-${channel.id}`, [channel.id]);
 		const [mobilePlusSheetOpen, setMobilePlusSheetOpen] = useState(false);
 		const [createPollSheetOpen, setCreatePollSheetOpen] = useState(false);
-		const canSendPolls = channel.isPrivate()
-			? !channel.isPersonalNotes()
-			: Permission.can(Permissions.SEND_POLLS, channel);
+		const canSendPolls =
+			onSubmitOverride == null &&
+			(channel.isPrivate() ? !channel.isPersonalNotes() : Permission.can(Permissions.SEND_POLLS, channel));
 		const autocompleteListId = useId();
 		const handleRef = useRef<ComposerHandle | null>(null);
 		const editorDisplayRef = useRef(initialDraftRef.current.display);
 		const editableRef = useRef<HTMLDivElement | null>(null);
-		const nullTextareaRef = useRef<HTMLTextAreaElement>(null);
 		const expressionPickerTriggerRef = useRef<HTMLButtonElement>(null);
 		const invisibleExpressionPickerTriggerRef = useRef<HTMLDivElement>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
@@ -239,7 +242,7 @@ export const LexicalChannelTextareaContent = observer(
 		const plusMenuOpenedAtRef = useRef(0);
 		const plusBackdropPressHandledAtRef = useRef(0);
 		const plusPressRef = useRef<{wasOpen: boolean; openedAt: number}>({wasOpen: false, openedAt: 0});
-		const textareaInputDisabled = disabled || inputSuppressed || messageSafetyGateActive;
+		const textareaInputDisabled = disabled || inputSuppressed;
 		useMarkdownKeybinds(isFocused && !textareaInputDisabled, {preserveEditableFocusActions: true});
 		const plusContextMenuOpen = useContextMenuHoverState(plusButtonRef);
 		useEffect(() => {
@@ -247,6 +250,29 @@ export const LexicalChannelTextareaContent = observer(
 				? containerRef.current.querySelector<HTMLDivElement>('[data-channel-textarea]')
 				: null;
 		}, []);
+		const bootFrameDraftRef = useRef(false);
+		useLayoutEffect(() => {
+			let active = true;
+			bootFrameDraftRef.current = false;
+			const unregister = registerBootFrameComposer(
+				() => handleRef.current,
+				(text) => {
+					bootFrameDraftRef.current = true;
+					DraftCommands.createDraft(accountKey, composerKey, text);
+					void awaitHydration(AppStorageKey.MESSAGING_DRAFTS).then(() => {
+						const handle = handleRef.current;
+						if (active && handle !== null) {
+							DraftCommands.createDraft(accountKey, composerKey, handle.getDisplayValue(), handle.getSegments());
+							bootFrameDraftRef.current = false;
+						}
+					});
+				},
+			);
+			return () => {
+				active = false;
+				unregister();
+			};
+		}, [accountKey, composerKey]);
 		useChannelComposerDraftFocusRestore({
 			handleRef,
 			editableRef,
@@ -328,21 +354,12 @@ export const LexicalChannelTextareaContent = observer(
 			if (!shouldFetchSlowmode) return;
 			void fetchSlowmodeState(channel.id);
 		}, [channel.id, shouldFetchSlowmode]);
-		const {
-			segmentManagerRef,
-			previousValueRef,
-			displayToActual,
-			rememberSegmentsForValue,
-			prepareTextChange,
-			insertSegment,
-			clearSegments,
-		} = useTextareaSegments();
+		const {segmentManagerRef, previousValueRef, displayToActual, clearSegments} = useTextareaSegments();
 		const segmentsSeededRef = useRef(false);
 		if (!segmentsSeededRef.current) {
 			segmentsSeededRef.current = true;
 			segmentManagerRef.current.setSegments(initialDraftRef.current.segments.map((segment) => ({...segment})));
 			previousValueRef.current = initialDraftRef.current.display;
-			rememberSegmentsForValue(initialDraftRef.current.display, initialDraftRef.current.segments);
 		}
 		const [wireValue, setWireValue] = useState(() =>
 			segmentManagerRef.current.displayToActual(initialDraftRef.current.display),
@@ -352,11 +369,10 @@ export const LexicalChannelTextareaContent = observer(
 				editorDisplayRef.current = display;
 				segmentManagerRef.current.setSegments(segments);
 				previousValueRef.current = display;
-				rememberSegmentsForValue(display, segments);
 				setValue(display);
 				setWireValue(wire);
 			},
-			[previousValueRef, rememberSegmentsForValue, segmentManagerRef],
+			[previousValueRef, segmentManagerRef],
 		);
 		useLayoutEffect(() => {
 			if (value === editorDisplayRef.current) {
@@ -372,7 +388,7 @@ export const LexicalChannelTextareaContent = observer(
 			(emoji: FlatEmoji, shiftKey?: boolean): boolean => {
 				const didInsert = insertComposerEmoji(handleRef.current, emoji, {reactionShorthand: true});
 				if (didInsert && !shiftKey) {
-					ExpressionPickerCommands.close();
+					ExpressionPicker.close();
 					PopoutCommands.close(`expression-picker-${channel.id}`);
 				}
 				return didInsert;
@@ -391,7 +407,6 @@ export const LexicalChannelTextareaContent = observer(
 				if (!(onSubmitOverride ?? sendMessage)(...args)) {
 					return false;
 				}
-				rememberSegmentsForValue(value);
 				const handle = handleRef.current;
 				if (handle !== null) {
 					handle.clear();
@@ -400,7 +415,7 @@ export const LexicalChannelTextareaContent = observer(
 				clearSegments();
 				return true;
 			},
-			[onSubmitOverride, sendMessage, clearSegments, rememberSegmentsForValue, value],
+			[onSubmitOverride, sendMessage, clearSegments, value],
 		);
 		const sendExpressionMessage: typeof sendOptimisticMessage = useCallback(
 			(messageData, sendOptions) => {
@@ -599,22 +614,17 @@ export const LexicalChannelTextareaContent = observer(
 			[isEditingMessageOnMobile, trimmedMessageContent],
 		);
 		const hasMessageContent = useMemo(() => hasVisibleMessageContent(composerMessageContent), [composerMessageContent]);
-		const isSubmissionBlockedBySlowmode = useMemo(() => {
-			if (!isSlowmodeActive || isEditingMessageInComposer) {
-				return false;
-			}
-			if (!enableSlashCommands) {
-				return true;
-			}
-			const resolution = LexicalMessageCommandResolver.resolve(handleRef.current);
-			if (resolution.status === LexicalMessageCommandResolutionStatus.NO_COMMAND) {
-				return true;
-			}
-			if (resolution.status === LexicalMessageCommandResolutionStatus.INVALID_COMMAND) {
-				return false;
-			}
-			return CommandUtils.doesCommandSendCurrentChannelMessage(resolution.command);
-		}, [enableSlashCommands, handleRef, isEditingMessageInComposer, isSlowmodeActive, value]);
+		const isSubmissionBlockedBySlowmode = useMemo(
+			() =>
+				shouldBlockSubmissionForSlowmode(
+					isSlowmodeActive,
+					isEditingMessageInComposer,
+					null,
+					enableSlashCommands ? LexicalMessageCommandResolver.resolve(handleRef.current) : null,
+					enableSlashCommands && ReplaceCommandUtils.isReplaceCommand(wireValue),
+				),
+			[enableSlashCommands, handleRef, isEditingMessageInComposer, isSlowmodeActive, value, wireValue],
+		);
 		useChannelComposerPaste({
 			channel,
 			attachmentKey: composerKey,
@@ -724,26 +734,29 @@ export const LexicalChannelTextareaContent = observer(
 				handle.focus();
 			}
 		}, [accountKey, textareaInputDisabled, value, channel, uploadAttachments.length, maxAttachments, composerKey]);
-		const handlePollSubmit = useCallback((pollForm: PollForm) => {
-			if (mobileLayout.enabled) setCreatePollSheetOpen(false);
-			const messagePoll: MessageCreatePoll = {
-				question: {
-					text: pollForm.question,
-				},
-				answers: pollForm.answers.map((answer) => ({
-					answer_id: answer.id,
-					poll_media: {
-						emoji: answer.emoji,
-						text: answer.text,
+		const handlePollSubmit = useCallback(
+			(pollForm: PollForm) => {
+				if (mobileLayout.enabled) setCreatePollSheetOpen(false);
+				const messagePoll: MessageCreatePoll = {
+					question: {
+						text: pollForm.question,
 					},
-				})),
-				duration: pollForm.duration,
-				anonymous_voting: pollForm.anonymousVoting,
-				allow_multiselect: pollForm.allowMultipleAnswers,
-				layout_type: 1,
-			};
-			handleSendMessage('', false, messagePoll);
-		}, []);
+					answers: pollForm.answers.map((answer) => ({
+						answer_id: answer.id,
+						poll_media: {
+							emoji: answer.emoji,
+							text: answer.text,
+						},
+					})),
+					duration: pollForm.duration,
+					anonymous_voting: pollForm.anonymousVoting,
+					allow_multiselect: pollForm.allowMultipleAnswers,
+					layout_type: 1,
+				};
+				handleSendMessage('', false, messagePoll);
+			},
+			[handleSendMessage],
+		);
 		const handleSendPoll = useCallback(async () => {
 			if (textareaInputDisabled || !canSendPolls) return;
 
@@ -760,14 +773,10 @@ export const LexicalChannelTextareaContent = observer(
 					)),
 				);
 			}
-		}, [textareaInputDisabled, canSendPolls]);
+		}, [textareaInputDisabled, canSendPolls, handlePollSubmit, channel.id]);
 		useTextareaExpressionHandlers({
 			setValue,
-			textareaRef: nullTextareaRef,
-			canSendFavoriteMemeId: true,
-			insertSegment,
 			previousValueRef,
-			prepareTextChange,
 			segmentManagerRef,
 			sendOptimisticMessage: sendExpressionMessage,
 			enabled: !textareaInputDisabled,
@@ -783,13 +792,10 @@ export const LexicalChannelTextareaContent = observer(
 				enabled: !textareaInputDisabled,
 			});
 		useTextareaEditing({
-			channelId: channel.id,
-			editingMessageId,
 			editingMessage: editingMessageForComposer,
 			isMobileEditMode: mobileLayout.enabled,
-			value,
+
 			setValue,
-			textareaRef: nullTextareaRef,
 			previousValueRef,
 		});
 		const hasPendingSticker = ChannelSticker.getPendingSticker(channel.id) !== null;
@@ -880,8 +886,7 @@ export const LexicalChannelTextareaContent = observer(
 			}
 		}, []);
 		const dismissTopmostComposerAffordance = useCallback((): boolean => {
-			const editingInline = MessageEdit.getEditingMessageId(channel.id) !== null;
-			if (editingInline) {
+			if (editingMessageId !== null) {
 				MessageCommands.stopEdit(channel.id);
 				return true;
 			}
@@ -916,6 +921,7 @@ export const LexicalChannelTextareaContent = observer(
 			channel.id,
 			composerKey,
 			editingMessageForComposer,
+			editingMessageId,
 			focusComposer,
 			handleCancelEdit,
 			handleClearSlashCommand,
@@ -1032,6 +1038,7 @@ export const LexicalChannelTextareaContent = observer(
 			return true;
 		}, [channel.id, enableEditLast]);
 		useTextareaDraftAndTyping({
+			bootFrameDraftRef,
 			draftOwner: accountKey,
 			channelId: draftChannelId ?? channel.id,
 			value,
@@ -1052,15 +1059,18 @@ export const LexicalChannelTextareaContent = observer(
 			isFocused,
 			handleArrowUpEmpty,
 		});
-		const placeholderText = placeholder
-			? placeholder
-			: disabled
-				? i18n._(YOU_DO_NOT_HAVE_PERMISSION_TO_SEND_MESSAGES_DESCRIPTOR)
-				: channel.guildId != null
-					? i18n._(MESSAGE_CHANNEL_DESCRIPTOR, {channelName: channel.name || i18n._(CHANNEL_DESCRIPTOR)})
-					: channel.isDM()
-						? i18n._(MESSAGE_USER_DESCRIPTOR, {userName: ChannelDisplayUtils.getDMDisplayName(channel)})
-						: i18n._(MESSAGE_GROUP_DESCRIPTOR, {groupName: ChannelDisplayUtils.getDMDisplayName(channel)});
+		let placeholderText: string;
+		if (placeholder) {
+			placeholderText = placeholder;
+		} else if (disabled) {
+			placeholderText = i18n._(YOU_DO_NOT_HAVE_PERMISSION_TO_SEND_MESSAGES_DESCRIPTOR);
+		} else if (channel.guildId != null) {
+			placeholderText = i18n._(MESSAGE_CHANNEL_DESCRIPTOR, {channelName: channel.name || i18n._(CHANNEL_DESCRIPTOR)});
+		} else if (channel.isDM()) {
+			placeholderText = i18n._(MESSAGE_USER_DESCRIPTOR, {userName: ChannelDisplayUtils.getDMDisplayName(channel)});
+		} else {
+			placeholderText = i18n._(MESSAGE_GROUP_DESCRIPTOR, {groupName: ChannelDisplayUtils.getDMDisplayName(channel)});
+		}
 		useEffect(() => ActiveComposer.register(draftChannelId ?? channel.id), [channel.id, draftChannelId]);
 		useEffect(() => {
 			const unsubscribe = ComponentBus.subscribe('FOCUS_TEXTAREA', (payload?: unknown) => {
@@ -1187,13 +1197,14 @@ export const LexicalChannelTextareaContent = observer(
 					plusButton,
 					() => (
 						<TextareaPlusMenu
+							giftChannelId={draftChannelId == null ? channel.id : undefined}
 							onUploadFile={handleFileButtonClick}
 							canAttachFiles={canAttachFilesInChannel(channel)}
 							canSendMessages={!textareaInputDisabled}
 							canSendPolls={canSendPolls}
 							textareaValue={value}
 							onUploadAsFile={handleUploadMessageAsFile}
-							onSendPoll={handleSendPoll}
+							onSendPoll={onSubmitOverride == null ? handleSendPoll : undefined}
 							onSendVoiceMessage={
 								mobileLayout.enabled || draftChannelId != null
 									? undefined
@@ -1467,7 +1478,7 @@ export const LexicalChannelTextareaContent = observer(
 										specialMentionsAllowed={specialMentionsAllowed}
 										channelId={channel.id}
 										guildId={channel.guildId}
-										submitOnEnter={!mobileLayout.enabled}
+										submitOnEnter={submitOnEnter && !mobileLayout.enabled}
 										maxWireLength={maxMessageLength}
 										silentMessagePrefix={!isEditingMessageOnMobile}
 										focusRingTarget={containerRef}
@@ -1551,6 +1562,7 @@ export const LexicalChannelTextareaContent = observer(
 						/>
 						<MobileTextareaPlusBottomSheet
 							canSendPolls={canSendPolls}
+							giftChannelId={draftChannelId == null ? channel.id : undefined}
 							isOpen={mobilePlusSheetOpen}
 							onClose={handleCloseMobilePlusSheet}
 							onUploadFile={handleFileButtonClick}
@@ -1564,6 +1576,7 @@ export const LexicalChannelTextareaContent = observer(
 							onClose={handleCloseCreatePollSheet}
 							onSubmit={handlePollSubmit}
 							channelId={channel.id}
+							data-flx="channel.lexical-channel-textarea-content.create-poll-bottom-sheet.poll-submit"
 						/>
 					</>
 				)}

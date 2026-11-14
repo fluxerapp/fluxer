@@ -8,6 +8,7 @@ import {INCOMING_CALL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDe
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Avatar as UserAvatar} from '@app/features/ui/components/Avatar';
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {isMobileExperienceEnabled} from '@app/features/ui/utils/MobileExperience';
 import {getReducedMotionProps} from '@app/features/ui/utils/ReducedMotionAnimation';
@@ -61,10 +62,6 @@ interface DragListeners {
 
 const DRAG_START_THRESHOLD = 6;
 const DRAG_START_THRESHOLD_SQ = DRAG_START_THRESHOLD ** 2;
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.min(Math.max(value, min), max);
-}
 
 function clampPosition(x: number, y: number, maxX: number, maxY: number, minY: number): Position {
 	return {

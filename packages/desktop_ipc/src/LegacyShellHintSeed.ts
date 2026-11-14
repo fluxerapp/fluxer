@@ -1,12 +1,14 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const LEGACY_SKELETON_LAYOUT_MEMORY_KEY = 'SkeletonLayoutMemory';
 const LEGACY_SIDEBAR_WIDTH_KEY = 'fluxer:ui:sidebar-width';
 const DM_ROOT_PATHNAME = '/channels/@me';
 
-export const LEGACY_SHELL_HINT_SEED_VERSION = 4;
+const LEGACY_SHELL_HINT_SEED_VERSION = 4;
 
-export const LEGACY_SHELL_HINT_NAGBAR_TONE_ORDER: ReadonlyArray<string> = Object.freeze([
+const LEGACY_SHELL_HINT_NAGBAR_TONE_ORDER: ReadonlyArray<string> = Object.freeze([
 	'neutral',
 	'maintenance',
 	'maintenance_scheduled',
@@ -58,10 +60,6 @@ const MIN_SIDEBAR_WIDTH_PX = 200;
 const MAX_SIDEBAR_WIDTH_PX = 480;
 const MAX_ACCOUNT_KEY_LENGTH = 256;
 const NO_SELECTED_ROW_INDEX = -1;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
 
 function parseRecord(value: unknown): Record<string, unknown> | null {
 	if (typeof value !== 'string') return null;

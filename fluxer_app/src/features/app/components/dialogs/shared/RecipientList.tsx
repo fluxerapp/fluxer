@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import styles from '@app/features/app/components/dialogs/shared/RecipientList.module.css';
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
+import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {
@@ -10,6 +12,8 @@ import {
 	SEARCH_FRIENDS_DESCRIPTOR,
 	SENT_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
@@ -17,14 +21,16 @@ import {Scroller} from '@app/features/ui/components/Scroller';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
+import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useMemo, useRef, useState} from 'react';
+import {useCallback, useId, useMemo, useRef, useState} from 'react';
 
 export interface RecipientItem {
 	id: string;
@@ -113,17 +119,17 @@ interface RecipientListProps {
 	defaultButtonLabel: React.ReactNode;
 	sentButtonLabel?: React.ReactNode;
 	buttonClassName?: string;
-	buttonDisabled?: (item: RecipientItem, isSent: boolean) => boolean;
 	searchPlaceholder?: string;
-	noResultsMessage?: React.ReactNode;
 	scrollerKey?: string;
 	searchQuery?: string;
 	onSearchQueryChange?: (value: string) => void;
 	showSearchInput?: boolean;
+	emptyText?: React.ReactNode;
 }
 
 export const RecipientList = observer((props: RecipientListProps) => {
 	const {i18n} = useLingui();
+	const listId = useId();
 	const [internalSearchQuery, setInternalSearchQuery] = useState('');
 	const searchQuery = props.searchQuery ?? internalSearchQuery;
 	const filteredRecipients = useMemo(() => {
@@ -138,6 +144,11 @@ export const RecipientList = observer((props: RecipientListProps) => {
 			return username.includes(query) || displayName.includes(query) || channelName.includes(query);
 		});
 	}, [searchQuery, props.recipients]);
+	const emptyText = props.emptyText ?? (
+		<Trans comment="Shown in a list of people to choose from when the account has no friends and no direct messages yet.">
+			No friends or direct messages yet.
+		</Trans>
+	);
 	const handleSearchChange = (value: string) => {
 		if (props.onSearchQueryChange) {
 			props.onSearchQueryChange(value);
@@ -173,7 +184,7 @@ export const RecipientList = observer((props: RecipientListProps) => {
 				>
 					{filteredRecipients.length === 0 ? (
 						<div className={styles.noResults} data-flx="app.recipient-list.no-results">
-							{props.noResultsMessage ?? <Trans>No friends match that.</Trans>}
+							{searchQuery.trim() ? <Trans>No friends match that.</Trans> : emptyText}
 						</div>
 					) : (
 						<div className={styles.friendList} data-flx="app.recipient-list.friend-list">
@@ -186,10 +197,11 @@ export const RecipientList = observer((props: RecipientListProps) => {
 								const secondaryText = (() => {
 									if (item.type === 'dm') return i18n._(DIRECT_MESSAGE_DESCRIPTOR);
 									if (item.type === 'group_dm') return i18n._(GROUP_DM_DESCRIPTOR);
-									return item.user.username;
+									return NicknameUtils.formatNameForStreamerMode(item.user.username);
 								})();
 								const groupChannel =
 									item.type === 'group_dm' && item.channelId ? Channels.getChannel(item.channelId) : null;
+								const itemId = `${listId}-${userId}`;
 								return (
 									<div key={userId} className={styles.friendItem} data-flx="app.recipient-list.friend-item">
 										<div className={styles.friendItemLeft} data-flx="app.recipient-list.friend-item-left">
@@ -203,19 +215,30 @@ export const RecipientList = observer((props: RecipientListProps) => {
 												/>
 											)}
 											<div className={styles.friendInfo} data-flx="app.recipient-list.friend-info">
-												<span className={styles.friendName} data-flx="app.recipient-list.friend-name">
+												<span
+													id={`${itemId}-name`}
+													className={styles.friendName}
+													data-flx="app.recipient-list.friend-name"
+												>
 													{displayName}
 												</span>
-												<span className={styles.friendSecondary} data-flx="app.recipient-list.friend-secondary">
+												<span
+													id={`${itemId}-secondary`}
+													className={styles.friendSecondary}
+													data-flx="app.recipient-list.friend-secondary"
+												>
 													{secondaryText}
 												</span>
 											</div>
 										</div>
 										<Button
+											id={`${itemId}-action`}
+											aria-labelledby={`${itemId}-action ${itemId}-name`}
+											aria-describedby={`${itemId}-secondary`}
 											small
 											variant="secondary"
 											onClick={() => props.onSend(item)}
-											disabled={props.buttonDisabled ? props.buttonDisabled(item, isSent) : isSent}
+											disabled={isSent}
 											submitting={isSending}
 											className={props.buttonClassName ?? styles.actionButton}
 											data-flx="app.recipient-list.action-button.send"
@@ -232,3 +255,37 @@ export const RecipientList = observer((props: RecipientListProps) => {
 		</div>
 	);
 });
+
+const recipientSendLogger = new Logger('RecipientList');
+export function useSendLinkToRecipients(getContent: () => string | null, onError?: (error: unknown) => void) {
+	const [sendingTo, setSendingTo] = useState(new Set<string>());
+	const [sentTo, setSentTo] = useState(new Map<string, boolean>());
+	const send = useCallback(
+		async (item: RecipientItem) => {
+			const content = getContent();
+			if (content === null) return;
+			if (blockIfAccountLimited()) return;
+			const userId = item.type === 'group_dm' ? item.id : item.user.id;
+			setSendingTo((previous) => new Set(previous).add(userId));
+			try {
+				const targetChannelId = item.channelId ?? (await PrivateChannelCommands.ensureDMChannel(item.user.id));
+				const result = await MessageCommands.send(targetChannelId, {
+					content,
+					nonce: SnowflakeUtils.fromTimestamp(Date.now()),
+				});
+				if (result) setSentTo((previous) => new Map(previous).set(userId, true));
+			} catch (error) {
+				recipientSendLogger.error('Failed to send shared link:', error);
+				(onError ?? showDmActionErrorModal)(error);
+			} finally {
+				setSendingTo((previous) => {
+					const next = new Set(previous);
+					next.delete(userId);
+					return next;
+				});
+			}
+		},
+		[getContent, onError],
+	);
+	return {sendingTo, sentTo, send};
+}

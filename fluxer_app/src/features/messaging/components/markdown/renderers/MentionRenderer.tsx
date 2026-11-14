@@ -16,7 +16,7 @@ import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import mentionRendererStyles from '@app/features/theme/styles/MentionRenderer.module.css';
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
-import {openThread} from '@app/features/threads/commands/ThreadNavigation';
+import {openThreadFromEvent, type ThreadOpenEvent} from '@app/features/threads/commands/ThreadNavigation';
 import {ThreadContextMenu} from '@app/features/threads/components/ThreadContextMenu';
 import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
@@ -59,7 +59,7 @@ interface InteractiveChannelMentionProps {
 
 function InteractiveChannelMention({channel, roleDescription}: InteractiveChannelMentionProps): React.ReactElement {
 	const {isOpen, withTracking} = useContextMenuTrigger();
-	const activate = () => {
+	const activate = (event: ThreadOpenEvent) => {
 		if (LinkChannelCommands.openLinkChannel(channel)) {
 			return;
 		}
@@ -68,7 +68,7 @@ function InteractiveChannelMention({channel, roleDescription}: InteractiveChanne
 			throw new Error('Interactive channel mentions must belong to a guild');
 		}
 		if (channel.isThread()) {
-			openThread(channel);
+			openThreadFromEvent(channel, event);
 			return;
 		}
 		NavigationCommands.selectChannel(guildId, channel.id);
@@ -84,13 +84,13 @@ function InteractiveChannelMention({channel, roleDescription}: InteractiveChanne
 				aria-roledescription={roleDescription}
 				onClick={(event) => {
 					event.stopPropagation();
-					activate();
+					activate(event);
 				}}
 				onKeyDown={(event) => {
 					if (!isKeyboardActivationKey(event.key)) return;
 					event.preventDefault();
 					event.stopPropagation();
-					activate();
+					activate(event);
 				}}
 				onContextMenu={(event) => {
 					event.preventDefault();

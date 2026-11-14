@@ -7,14 +7,11 @@
 
 -export([
     do_start_transferred/3,
-    do_stop_guild/2,
-    do_stop_guild/3,
+    do_stop_guild/2, do_stop_guild/3,
     do_shutdown_guild/2,
     start_guild/3,
-    start_new_guild/4,
     start_transferred_guild/3,
-    start_new_guild_from_state/4,
-    normalize_transferred_guild_state/2
+    start_new_guild_from_state/4
 ]).
 
 -type guild_id() :: integer().

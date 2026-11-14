@@ -53,14 +53,13 @@ export const MessageUsername = observer(
 		const keyboardModeEnabled = KeyboardMode.keyboardModeEnabled;
 		const usernameNode = (
 			<FocusRing data-flx="channel.message-username.focus-ring">
-				{/* biome-ignore lint/a11y/noStaticElementInteractions: the username span is only keyboard-interactive in keyboard mode (role="button"/tabIndex set conditionally); pointer/popout/context-menu interactions are handled by the wrapping PreloadableUserPopout. */}
 				<span
 					className={clsx(className, contextMenuOpen && styles.contextMenuUnderline)}
 					style={{color}}
 					data-user-id={user.id}
 					data-guild-id={guild?.id}
 					tabIndex={keyboardModeEnabled ? 0 : undefined}
-					role={keyboardModeEnabled ? 'button' : undefined}
+					role="button"
 					ref={usernameRef}
 					onKeyDown={handleKeyDown}
 					data-flx="channel.message-username.context-menu-underline.key-down"

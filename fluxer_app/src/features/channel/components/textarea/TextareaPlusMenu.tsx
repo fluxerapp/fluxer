@@ -7,11 +7,11 @@ import Keybind from '@app/features/input/state/InputKeybind';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {useCanSendGift} from '@app/features/premium/hooks/useCanSendGift';
 import {CREATE_THREAD_DESCRIPTOR} from '@app/features/threads/utils/ThreadMessageDescriptors';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {CreateThreadIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -72,11 +72,10 @@ const SHOW_SEND_BUTTON_DESCRIPTOR = msg({
 });
 
 interface TextareaPlusMenuProps {
+	giftChannelId?: string;
 	onUploadFile: () => void;
-	onSendPoll: () => void;
-	onSchedule?: () => void;
+	onSendPoll?: () => void;
 	canSendPolls?: boolean;
-	canSchedule?: boolean;
 	canAttachFiles: boolean;
 	canSendMessages: boolean;
 	textareaValue?: string;
@@ -87,6 +86,7 @@ interface TextareaPlusMenuProps {
 
 export const TextareaPlusMenu = observer(
 	({
+		giftChannelId,
 		onUploadFile,
 		onSendPoll,
 		canSendPolls,
@@ -114,13 +114,13 @@ export const TextareaPlusMenu = observer(
 		} else if (!canAttachFiles) {
 			uploadActionHint = cannotUploadFilesHint;
 		}
-		const createPollHint = !canSendMessages ? cannotSendMessagesHint : !canSendPolls ? cannotCreatePollHint : undefined;
+		let createPollHint: string | undefined;
+		if (!canSendMessages) {
+			createPollHint = cannotSendMessagesHint;
+		} else if (!canSendPolls) {
+			createPollHint = cannotCreatePollHint;
+		}
 		const sendGiftHint = !canSendMessages ? cannotSendMessagesHint : undefined;
-		const sendVoiceMessageDisabledHint = !canSendMessages
-			? cannotSendMessagesHint
-			: !canAttachFiles
-				? cannotUploadFilesHint
-				: undefined;
 		const sendVoiceMessageKeybind = Keybind.getByAction('chat_send_voice_message').combo;
 		const sendVoiceMessageKeybindHint =
 			sendVoiceMessageKeybind.key || sendVoiceMessageKeybind.code ? (
@@ -160,19 +160,21 @@ export const TextareaPlusMenu = observer(
 						{i18n._(CREATE_THREAD_DESCRIPTOR)}
 					</MenuItem>
 				)}
-				<MenuItem
-					icon={<TableIcon weight="bold" data-flx="channel.textarea.textarea-plus-menu.table-icon" />}
-					onClick={onSendPoll}
-					disabled={createPollHint != null}
-					hint={createPollHint}
-					data-flx="channel.textarea.textarea-plus-menu.menu-item.create-poll"
-				>
-					{i18n._(CREATE_POLL_DESCRIPTOR)}
-				</MenuItem>
+				{onSendPoll && (
+					<MenuItem
+						icon={<TableIcon weight="bold" data-flx="channel.textarea.textarea-plus-menu.table-icon" />}
+						onClick={onSendPoll}
+						disabled={createPollHint != null}
+						hint={createPollHint}
+						data-flx="channel.textarea.textarea-plus-menu.menu-item.create-poll"
+					>
+						{i18n._(CREATE_POLL_DESCRIPTOR)}
+					</MenuItem>
+				)}
 				{canSendGift && (
 					<MenuItem
 						icon={<GiftIcon data-flx="channel.textarea.textarea-plus-menu.gift-icon" />}
-						onClick={() => PremiumModalCommands.open(true)}
+						onClick={() => PremiumModalCommands.open({defaultGiftMode: true, giftChannelId})}
 						disabled={sendGiftHint != null}
 						hint={sendGiftHint}
 						data-flx="channel.textarea.textarea-plus-menu.menu-item.open"
@@ -185,7 +187,7 @@ export const TextareaPlusMenu = observer(
 						icon={<MicrophoneIcon weight="bold" data-flx="channel.textarea.textarea-plus-menu.microphone-icon" />}
 						onClick={onSendVoiceMessage}
 						disabled={!canSendMessages || !canAttachFiles}
-						hint={sendVoiceMessageDisabledHint ?? sendVoiceMessageKeybindHint}
+						hint={uploadActionHint ?? sendVoiceMessageKeybindHint}
 						data-flx="channel.textarea.textarea-plus-menu.menu-item.send-voice-message"
 					>
 						{i18n._(SEND_VOICE_MESSAGE_DESCRIPTOR)}

@@ -9,10 +9,11 @@ fn is_distribution_lib_dir(path: &Path) -> bool {
     path.starts_with("/usr/lib") || path.starts_with("/lib")
 }
 
-const NATIVE_SHIM_SOURCES: [&str; 17] = [
+const NATIVE_SHIM_SOURCES: [&str; 18] = [
     "src/webp_animation.c",
     "src/native_shim/hdr_color.c",
     "src/native_shim/av_input.c",
+    "src/native_shim/av_strip.c",
     "src/native_shim/av_frame_rgba.c",
     "src/native_shim/vips_image.c",
     "src/native_shim/gif_validation.c",

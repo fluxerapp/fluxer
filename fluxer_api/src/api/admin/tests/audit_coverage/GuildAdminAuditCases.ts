@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestCustomBadge} from '@app/api/admin/tests/AdminTestUtils';
 import type {AdminAuditCoverageCase} from '@app/api/admin/tests/audit_coverage/AdminAuditCoverage';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createGuild} from '@app/api/message/tests/MessageTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {expect} from 'vitest';
 
 const MISSING_GUILD_ID = '900000000000000001';
 
@@ -114,17 +117,72 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
+		method: 'PATCH',
+		route: '/admin/guilds/:guild_id',
+		name: 'badge_ids',
+		async prepare({harness, admin}) {
+			const badge = await createTestCustomBadge(harness, admin.token, 'guild');
+			const guild = await createGuild(harness, admin.token, 'Audit Badge Guild');
+			return {
+				request: {path: `/admin/guilds/${guild.id}`, body: {badge_ids: [badge.id]}},
+				expected: {
+					action: 'update_guild_badges',
+					targetType: 'guild',
+					targetId: guild.id,
+					metadata: {badge_ids: badge.id},
+				},
+			};
+		},
+	},
+	{
 		method: 'DELETE',
 		route: '/admin/guilds/:guild_id',
 		async prepare({harness, admin}) {
 			const guild = await createGuild(harness, admin.token, 'Audit Deleted Guild');
 			return {
-				request: {path: `/admin/guilds/${guild.id}`},
+				request: {path: `/admin/guilds/${guild.id}`, body: {basis: {type: 'holder_request'}}},
 				expected: {
 					action: 'delete_guild',
 					targetType: 'guild',
 					targetId: guild.id,
-					metadata: {guild_id: guild.id},
+					metadata: {guild_id: guild.id, basis: 'holder_request'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/guilds/:guild_id',
+		name: 'enforcement',
+		async prepare({harness, admin}) {
+			const guild = await createGuild(harness, admin.token, 'Audit Removed Guild');
+			return {
+				request: {
+					path: `/admin/guilds/${guild.id}`,
+					body: {
+						basis: {
+							type: 'enforcement',
+							decision: {
+								reason_code: DeletionReasons.SPAM,
+								source: 'own_review',
+								automation: 'none',
+								statement: 'Coverage decision',
+							},
+						},
+					},
+				},
+				expected: {
+					action: 'delete_guild',
+					targetType: 'guild',
+					targetId: guild.id,
+					metadata: {
+						guild_id: guild.id,
+						basis: 'enforcement',
+						decision_id: expect.any(String),
+						reason_code: DeletionReasons.SPAM.toString(),
+						kind: 'community_removal',
+						notice_status: 'sent',
+					},
 				},
 			};
 		},
@@ -166,7 +224,8 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		method: 'DELETE',
 		route: '/admin/guilds/:guild_id/members/:user_id',
 		async prepare({harness, admin}) {
-			const guild = await createGuild(harness, admin.token, 'Audit Kick Guild');
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Audit Kick Guild');
 			const target = await createTestAccount(harness);
 			await addMember(harness, admin, guild.id, target);
 			return {
@@ -175,7 +234,7 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'kick_member',
 					targetType: 'guild_member',
 					targetId: target.userId,
-					metadata: {guild_id: guild.id, user_id: target.userId},
+					metadata: {guild_id: guild.id, user_id: target.userId, acl: 'guild:kick_member'},
 				},
 			};
 		},
@@ -183,8 +242,9 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 	{
 		method: 'PUT',
 		route: '/admin/guilds/:guild_id/bans/:user_id',
-		async prepare({harness, admin}) {
-			const guild = await createGuild(harness, admin.token, 'Audit Ban Guild');
+		async prepare({harness}) {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Audit Ban Guild');
 			const target = await createTestAccount(harness);
 			return {
 				request: {path: `/admin/guilds/${guild.id}/bans/${target.userId}`, body: {}, expectStatus: 204},
@@ -192,7 +252,56 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'ban_member',
 					targetType: 'guild_member',
 					targetId: target.userId,
-					metadata: {guild_id: guild.id, user_id: target.userId, delete_message_days: '0'},
+					metadata: {
+						guild_id: guild.id,
+						user_id: target.userId,
+						delete_message_days: '0',
+						acl: 'guild:ban_member',
+					},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/guilds/:guild_id/bans/:user_id',
+		async prepare({harness, admin}) {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Audit Unban Guild');
+			const target = await createTestAccount(harness);
+			await createBuilder(harness, admin.token)
+				.put(`/admin/guilds/${guild.id}/bans/${target.userId}`)
+				.body({})
+				.expect(204)
+				.execute();
+			return {
+				request: {path: `/admin/guilds/${guild.id}/bans/${target.userId}`, expectStatus: 204},
+				expected: {
+					action: 'unban_member',
+					targetType: 'guild_member',
+					targetId: target.userId,
+					metadata: {guild_id: guild.id, user_id: target.userId, acl: 'guild:ban_member'},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/guilds/:guild_id/roles/:role_id/icon',
+		async prepare({harness, admin}) {
+			const guild = await createGuild(harness, admin.token, 'Audit Role Icon Guild');
+			const role = await createBuilder<{id: string}>(harness, admin.token)
+				.post(`/guilds/${guild.id}/roles`)
+				.body({name: 'Mods', unicode_emoji: '🛡️'})
+				.expect(200)
+				.execute();
+			return {
+				request: {path: `/admin/guilds/${guild.id}/roles/${role.id}/icon`, expectStatus: 204},
+				expected: {
+					action: 'clear_role_icon',
+					targetType: 'guild',
+					targetId: guild.id,
+					metadata: {role_id: role.id, unicode_emoji: '🛡️'},
 				},
 			};
 		},

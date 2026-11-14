@@ -3,7 +3,8 @@
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mirrorBestEffort} from '@app/api/stripe/StripeMirror';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
@@ -16,7 +17,7 @@ const CUSTOMER_LOCK_TTL_SECONDS = seconds('30 seconds');
 interface EnsureStripeCustomerParams {
 	stripe: Stripe;
 	user: User;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	cacheService: ICacheService;
 }
 
@@ -56,7 +57,7 @@ export async function ensureStripeCustomer({
 			return freshUser;
 		}
 		const customer = await stripe.customers.create({
-			email: user.email ?? undefined,
+			email: user.emailVerified ? (user.email ?? undefined) : undefined,
 			metadata: {
 				userId: user.id.toString(),
 			},
@@ -80,7 +81,7 @@ export async function ensureStripeCustomer({
 export async function syncStripeCustomerEmail(stripe: Stripe, user: User): Promise<void> {
 	const customerId = user.stripeCustomerId;
 	const email = user.email;
-	if (!customerId || !email) {
+	if (!customerId || !email || !user.emailVerified) {
 		return;
 	}
 	const mirrored = await getBillingRepository().customers.findById(customerId);
@@ -97,7 +98,10 @@ export async function enqueueStripeCustomerEmailSync(
 	oldUser: User,
 	newUser: User,
 ): Promise<void> {
-	if (!newUser.stripeCustomerId || !newUser.email || oldUser.email === newUser.email) {
+	if (!newUser.stripeCustomerId || !newUser.email || !newUser.emailVerified) {
+		return;
+	}
+	if (oldUser.email === newUser.email && oldUser.emailVerified) {
 		return;
 	}
 	try {
@@ -111,9 +115,9 @@ export async function enqueueStripeCustomerEmailSync(
 }
 
 async function mirrorStripeCustomer(customer: Stripe.Customer, user: User): Promise<void> {
-	try {
-		await getBillingRepository().customers.upsertFromStripe(customer, {knownUserId: user.id});
-	} catch (mirrorErr) {
-		Logger.error({mirrorErr, customerId: customer.id}, 'Mirror upsert failed after Stripe write; reconciler will heal');
-	}
+	await mirrorBestEffort(
+		() => getBillingRepository().customers.upsertFromStripe(customer, {knownUserId: user.id}),
+		{customerId: customer.id},
+		'Mirror upsert failed after Stripe write; reconciler will heal',
+	);
 }

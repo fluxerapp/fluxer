@@ -61,6 +61,11 @@ function getVoiceConnectionContext(): VoiceConnectionContextAccess {
 	}
 }
 
+export function isStreamAudioPlaybackEnabled(streamKey: string | null): boolean {
+	if (getEffectiveAudioState().serverDeaf) return false;
+	return streamKey ? !StreamAudioPrefs.isMuted(streamKey) : true;
+}
+
 class ParticipantVolume {
 	volumes: Record<string, number> = {};
 	localMutes: Record<string, boolean> = {};
@@ -187,16 +192,16 @@ class ParticipantVolume {
 		const outputVolume = VoiceSettings.getOutputVolume();
 		const locallyMuted = this.isLocalMuted(userId);
 		const {effectiveDeaf} = getEffectiveAudioState();
+		const streamAudioPlaybackEnabled = isStreamAudioPlaybackEnabled(streamKey);
 		participant.audioTrackPublications.forEach((pub) => {
 			const isScreenShareAudio = isScreenShareAudioPublicationLike(pub);
 			const streamVolume = streamKey ? StreamAudioPrefs.getVolume(streamKey) : 100;
-			const streamMuted = streamKey ? StreamAudioPrefs.isMuted(streamKey) : false;
 			const baseVolume = isScreenShareAudio
 				? composeVoiceVolumeGain(streamVolume, outputVolume)
 				: composeVoiceVolumeGain(userVolume, connectionVolume, outputVolume);
 			const playbackBoost = isScreenShareAudio ? 1 : getRemoteVoicePlaybackBoost(participant.identity);
 			const nextVolume = clampVoiceTrackTotalGain(baseVolume * playbackBoost);
-			const shouldDisable = isScreenShareAudio ? streamMuted || effectiveDeaf : locallyMuted || effectiveDeaf;
+			const shouldDisable = isScreenShareAudio ? !streamAudioPlaybackEnabled : locallyMuted || effectiveDeaf;
 			logger.debug('Applying remote audio publication prefs', {
 				participantIdentity: participant.identity,
 				source: pub.source,
@@ -205,7 +210,7 @@ class ParticipantVolume {
 				isScreenShareAudio,
 				streamKey,
 				streamVolume,
-				streamMuted,
+				streamAudioPlaybackEnabled,
 				userVolume,
 				connectionVolume,
 				outputVolume,

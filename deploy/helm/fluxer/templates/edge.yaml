@@ -1,0 +1,296 @@
+{{- include "fluxer.validate" . }}
+{{- $v := .Values }}
+{{- $e := $v.edge }}
+{{- $ctx := dict "root" . "name" "edge" "component" "edge" "w" $e }}
+{{- $lb := eq $e.expose "loadBalancer" }}
+{{- $caddyfile := .Files.Get "files/Caddyfile" | replace "\r" "" }}
+{{- $globalOptions := ternary (printf "email %s" $v.email) "" (and $lb (ne $v.email "")) }}
+{{- $siteAddress := ternary (printf "https://%s, :8080" $v.domain) ":8080" $lb }}
+{{- $trusted := ternary "127.0.0.1/32" "private_ranges" $lb }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edge-caddyfile
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+data:
+  Caddyfile: {{ $caddyfile | quote }}
+{{- if $lb }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: edge-data
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with $e.loadBalancer.persistence.storageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $e.loadBalancer.persistence.size }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  replicas: {{ ternary 1 ($e.replicas | int) $lb }}
+  revisionHistoryLimit: 3
+  {{- if $lb }}
+  strategy:
+    type: Recreate
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fluxer.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer.podLabels" $ctx | nindent 8 }}
+      annotations:
+        checksum/config: {{ printf "%s\n%s\n%s\n%s" $caddyfile $siteAddress $globalOptions (toJson (list $e.env $e.extraEnv)) | sha256sum }}
+        {{- with $e.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      {{- include "fluxer.pullSecrets" . | nindent 6 }}
+      securityContext:
+        {{- include "fluxer.podSecurityContext" (dict "uid" 65532) | nindent 8 }}
+        {{- if $lb }}
+        sysctls:
+          - name: net.ipv4.ip_unprivileged_port_start
+            value: "0"
+        {{- end }}
+      {{- include "fluxer.scheduling" $ctx | nindent 6 }}
+      containers:
+        - name: edge
+          image: {{ include "fluxer.thirdPartyImage" $e.image }}
+          imagePullPolicy: {{ $e.image.pullPolicy }}
+          {{- $edgeEnv := list (dict "name" "FLUXER_EDGE_SITE_ADDRESS" "value" $siteAddress) (dict "name" "FLUXER_EDGE_TRUSTED_PROXIES" "value" $trusted) (dict "name" "FLUXER_EDGE_GLOBAL_OPTIONS" "value" $globalOptions) (dict "name" "FLUXER_ADMIN_BASE_PATH" "value" $v.adminBasePath) }}
+          env:
+            {{- include "fluxer.envList" (dict "w" $e "env" $edgeEnv) | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            {{- if $lb }}
+            - name: public-http
+              containerPort: 80
+              protocol: TCP
+            - name: public-https
+              containerPort: 443
+              protocol: TCP
+            - name: public-quic
+              containerPort: 443
+              protocol: UDP
+            {{- end }}
+          startupProbe:
+            exec:
+              command: ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            exec:
+              command: ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command: ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+          {{- with $e.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+          volumeMounts:
+            - name: caddyfile
+              mountPath: /etc/caddy
+              readOnly: true
+            - name: config
+              mountPath: /config
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: caddyfile
+          configMap:
+            name: edge-caddyfile
+        - name: config
+          emptyDir: {}
+        - name: data
+          {{- if $lb }}
+          persistentVolumeClaim:
+            claimName: edge-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+{{- if $lb }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-public
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+  {{- with $e.loadBalancer.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  selector:
+    {{- include "fluxer.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: public-http
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: public-https
+      protocol: TCP
+    {{- if $e.loadBalancer.http3 }}
+    - name: quic
+      port: 443
+      targetPort: public-quic
+      protocol: UDP
+    {{- end }}
+{{- end }}
+{{- if eq $e.expose "ingress" }}
+{{- $tls := $e.ingress.tls }}
+{{- $annotations := dict
+  "nginx.ingress.kubernetes.io/proxy-body-size" "512m"
+  "nginx.ingress.kubernetes.io/proxy-read-timeout" "3600"
+  "nginx.ingress.kubernetes.io/proxy-send-timeout" "3600" }}
+{{- if eq $tls.mode "certManager" }}
+{{- $_ := set $annotations "cert-manager.io/issuer" "fluxer-acme" }}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: fluxer-acme
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  acme:
+    server: {{ $tls.acmeServer }}
+    {{- with $v.email }}
+    email: {{ . }}
+    {{- end }}
+    privateKeySecretRef:
+      name: fluxer-acme-account
+    solvers:
+      - http01:
+          {{- with $e.ingress.className }}
+          ingress:
+            ingressClassName: {{ . }}
+          {{- else }}
+          ingress: {}
+          {{- end }}
+{{- end }}
+{{- $annotations = merge (deepCopy ($e.ingress.annotations | default dict)) $annotations }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fluxer
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $e.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- if ne $tls.mode "none" }}
+  tls:
+    - hosts:
+        - {{ $v.domain }}
+      secretName: {{ $tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ $v.domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: edge
+                port:
+                  name: http
+{{- end }}
+{{- if eq $e.expose "gateway" }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: fluxer
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "fluxer.labels" $ctx | nindent 4 }}
+spec:
+  parentRefs:
+    {{- toYaml $e.gateway.parentRefs | nindent 4 }}
+  hostnames:
+    - {{ $v.domain }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: edge
+          port: 8080
+      {{- with $e.gateway.timeouts }}
+      timeouts:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

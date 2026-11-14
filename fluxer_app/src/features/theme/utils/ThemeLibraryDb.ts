@@ -8,6 +8,7 @@ import type {
 	ThemeLibraryLocalFileReference,
 	ThemeLibraryTheme,
 } from '@app/features/theme/state/ThemeLibrary';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const DB_NAME = 'fluxer-theme-library';
 const DB_VERSION = 1;
@@ -23,10 +24,6 @@ type ThemeLibraryTableName = typeof THEMES_STORE | typeof ASSETS_STORE | typeof 
 let openPromise: Promise<IDBDatabase> | null = null;
 
 const THEME_SOURCES = new Set<string>(['quick_css', 'css_file', 'desktop_directory', 'shared_theme', 'import']);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
-}
 
 function isStringArray(value: unknown): value is Array<string> {
 	return Array.isArray(value) && value.every((item) => typeof item === 'string');
@@ -46,6 +43,7 @@ function isThemeLibraryTheme(value: unknown): value is ThemeLibraryTheme {
 		typeof value.source === 'string' &&
 		THEME_SOURCES.has(value.source) &&
 		(value.linkedPath === undefined || typeof value.linkedPath === 'string') &&
+		(value.folderPath === undefined || typeof value.folderPath === 'string') &&
 		typeof value.createdAt === 'number' &&
 		typeof value.updatedAt === 'number'
 	);
@@ -236,25 +234,44 @@ export async function updateThemeLibraryThemes(
 	select: (theme: ThemeLibraryTheme) => boolean,
 	update: (theme: ThemeLibraryTheme) => ThemeLibraryTheme | null,
 ): Promise<{themes: Array<ThemeLibraryTheme>; written: boolean}> {
-	return await withReadwriteDb(THEMES_STORE, (store) => {
-		const result: {themes: Array<ThemeLibraryTheme>; written: boolean} = {themes: [], written: false};
-		const request = store.openCursor();
-		request.onsuccess = () => {
-			const cursor = request.result;
-			if (!cursor) return;
-			const stored: unknown = cursor.value;
-			if (isThemeLibraryTheme(stored) && select(stored)) {
-				const next = update(stored);
-				if (next) {
-					cursor.update(next);
-					result.written = true;
-				}
-				result.themes.push(next ?? stored);
-			}
-			cursor.continue();
-		};
-		return result;
+	await ensureThemeLibraryMigrated();
+	const result: {themes: Array<ThemeLibraryTheme>; written: boolean} = {themes: [], written: false};
+	const stored = readDurableList(DURABLE_THEMES_KEY, isThemeLibraryTheme);
+	const next = stored.map((theme) => {
+		if (!select(theme)) return theme;
+		const updated = update(theme);
+		if (updated) result.written = true;
+		result.themes.push(updated ?? theme);
+		return updated ?? theme;
 	});
+	if (result.written) writeDurableList(DURABLE_THEMES_KEY, next);
+	return result;
+}
+
+export async function applyThemeLibraryThemeChanges(
+	upserts: ReadonlyArray<ThemeLibraryTheme>,
+	removedIds: ReadonlySet<string>,
+): Promise<void> {
+	await ensureThemeLibraryMigrated();
+	const upsertIds = new Set(upserts.map((theme) => theme.id));
+	const themes = readDurableList(DURABLE_THEMES_KEY, isThemeLibraryTheme);
+	writeDurableList(DURABLE_THEMES_KEY, [
+		...themes.filter((existing) => !upsertIds.has(existing.id) && !removedIds.has(existing.id)),
+		...upserts,
+	]);
+}
+
+export function getThemeLibraryFolders(): Array<string> {
+	const raw = AppStorage.getItem(AppStorageKey.THEME_LIBRARY_FOLDERS);
+	return raw == null ? [] : readDurableStringArray(raw);
+}
+
+export function setThemeLibraryFolders(folders: ReadonlyArray<string>): void {
+	if (folders.length === 0) {
+		AppStorage.removeItem(AppStorageKey.THEME_LIBRARY_FOLDERS);
+		return;
+	}
+	AppStorage.setItem(AppStorageKey.THEME_LIBRARY_FOLDERS, JSON.stringify([...folders]));
 }
 
 export async function deleteThemeLibraryTheme(id: string): Promise<void> {
@@ -326,6 +343,15 @@ export async function getEnabledThemeIds(): Promise<Array<string>> {
 export async function setEnabledThemeIds(themeIds: ReadonlyArray<string>): Promise<void> {
 	await ensureThemeLibraryMigrated();
 	AppStorage.setItem(DURABLE_ENABLED_IDS_KEY, JSON.stringify([...themeIds]));
+}
+
+export function getAccountEnabledThemeIds(): Array<string> {
+	const raw = AppStorage.getItem(AppStorageKey.THEME_LIBRARY_ACCOUNT_ENABLED_IDS);
+	return raw == null ? [] : readDurableStringArray(raw);
+}
+
+export function setAccountEnabledThemeIds(themeIds: ReadonlyArray<string>): void {
+	AppStorage.setItem(AppStorageKey.THEME_LIBRARY_ACCOUNT_ENABLED_IDS, JSON.stringify([...themeIds]));
 }
 
 export async function clearThemeLibraryMeta(): Promise<void> {

@@ -3,11 +3,11 @@
 import {
 	canOwnerRunBots,
 	checkIsPremium,
+	getBadgePremiumType,
 	getEffectivePremiumUntil,
 	getPremiumPaymentRecoveryGraceMs,
 	isSignInRefused,
 	isTemporarilyBanned,
-	PREMIUM_GRACE_PERIOD_MS,
 } from '@app/api/user/UserHelpers';
 import {PremiumFlags, UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {describe, expect, it} from 'vitest';
@@ -61,10 +61,35 @@ describe('checkIsPremium', () => {
 	});
 });
 
+describe('getBadgePremiumType', () => {
+	it('shows a subscription badge for a backend premium override', () => {
+		expect(getBadgePremiumType({premiumType: null, premiumFlags: PremiumFlags.ENABLED_OVERRIDE})).toBe(
+			UserPremiumTypes.SUBSCRIPTION,
+		);
+		expect(getBadgePremiumType({premiumType: UserPremiumTypes.NONE, premiumFlags: PremiumFlags.ENABLED_OVERRIDE})).toBe(
+			UserPremiumTypes.SUBSCRIPTION,
+		);
+	});
+	it('keeps the stored premium type', () => {
+		expect(
+			getBadgePremiumType({premiumType: UserPremiumTypes.LIFETIME, premiumFlags: PremiumFlags.ENABLED_OVERRIDE}),
+		).toBe(UserPremiumTypes.LIFETIME);
+	});
+	it('shows no badge without premium or while perks are disabled', () => {
+		expect(getBadgePremiumType({premiumType: null, premiumFlags: 0})).toBeUndefined();
+		expect(
+			getBadgePremiumType({
+				premiumType: null,
+				premiumFlags: PremiumFlags.ENABLED_OVERRIDE | PremiumFlags.PERKS_DISABLED,
+			}),
+		).toBeUndefined();
+	});
+});
+
 describe('account standing', () => {
 	const hour = 3_600_000;
 	function standing(flags: bigint, tempBannedUntil: Date | null = null, deletionStartedAt: Date | null = null) {
-		return {flags, tempBannedUntil, deletionStartedAt};
+		return {isBot: false, isSystem: false, flags, tempBannedUntil, deletionStartedAt};
 	}
 	it('treats an active temporary ban as a refused sign-in', () => {
 		const banned = standing(UserFlags.DISABLED, new Date(Date.now() + hour));
@@ -92,6 +117,10 @@ describe('account standing', () => {
 		expect(isSignInRefused(standing(0n))).toBe(false);
 		expect(canOwnerRunBots(standing(0n))).toBe(true);
 	});
+	it('stops bots of a limited owner unless the owner is exempt', () => {
+		expect(canOwnerRunBots(standing(UserFlags.ACCOUNT_LIMITED))).toBe(false);
+		expect(canOwnerRunBots(standing(UserFlags.ACCOUNT_LIMITED | UserFlags.LIMIT_EXEMPT))).toBe(true);
+	});
 });
 
 describe('premium grace lengths', () => {
@@ -101,9 +130,5 @@ describe('premium grace lengths', () => {
 		expect(getPremiumPaymentRecoveryGraceMs('yearly')).toBe(14 * day);
 		expect(getPremiumPaymentRecoveryGraceMs(null)).toBe(7 * day);
 		expect(getPremiumPaymentRecoveryGraceMs(undefined)).toBe(7 * day);
-	});
-
-	it('keeps the fallback grace at 3 days', () => {
-		expect(PREMIUM_GRACE_PERIOD_MS).toBe(3 * 24 * 60 * 60 * 1000);
 	});
 });

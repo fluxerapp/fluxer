@@ -34,8 +34,8 @@ const NEVER_AUTOMATICALLY_DESCRIPTOR = msg({
 	message: 'Never automatically',
 	comment: 'Short label in the text to speech. Keep it concise.',
 });
-const REMAIN_SILENT_UNLESS_SOMEONE_RUNS_TTS_MANUALLY_DESCRIPTOR = msg({
-	message: 'Remain silent unless someone runs /tts manually.',
+const REMAIN_SILENT_UNLESS_SOMEONE_RUNS_TTS_IN_VIEWED_CHANNEL_DESCRIPTOR = msg({
+	message: "Remain silent unless someone runs /tts in the channel you're viewing.",
 	comment: 'Description text in the text to speech.',
 });
 const ENABLE_TTS_SPEECH_PLAYBACK_DESCRIPTOR = msg({
@@ -81,7 +81,7 @@ export const TextToSpeech = observer(() => {
 		{
 			value: TTSNotificationMode.NEVER,
 			name: i18n._(NEVER_AUTOMATICALLY_DESCRIPTOR),
-			desc: i18n._(REMAIN_SILENT_UNLESS_SOMEONE_RUNS_TTS_MANUALLY_DESCRIPTOR),
+			desc: i18n._(REMAIN_SILENT_UNLESS_SOMEONE_RUNS_TTS_IN_VIEWED_CHANNEL_DESCRIPTOR),
 		},
 	];
 	const handleTtsNotificationChange = useCallback((value: TTSNotificationMode) => {

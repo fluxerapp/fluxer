@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::{client::AdminApiClient, generated::types::GiftCodeDurationTypeSchema},
+    api::{client::AdminApiClient, codes::GIFT_DURATION_TYPES},
     middleware::{
         auth::AuthContext,
         csrf::CsrfToken,
@@ -33,7 +33,7 @@ struct GiftCodesForm {
     #[serde(default)]
     count: Option<u32>,
     #[serde(default)]
-    duration_type: Option<GiftCodeDurationTypeSchema>,
+    duration_type: Option<String>,
     #[serde(default)]
     duration_quantity: Option<u32>,
 }
@@ -81,20 +81,21 @@ async fn gift_codes_post(
         Ok(Form(f)) => f,
         Err(error) => {
             tracing::warn!(%error, "failed to parse gift codes form");
-            return flash::redirect_with_flash(
+            return flash::redirect_error(
+                config,
                 &format!("{base}/gift-codes"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
+                "Invalid form data",
             );
         }
     };
     let count = form.count.unwrap_or(1).clamp(1, MAX_GIFT_CODES);
     let duration_type = form
         .duration_type
-        .unwrap_or(GiftCodeDurationTypeSchema::Months);
-    let duration_quantity = form.duration_quantity.unwrap_or(1);
+        .as_deref()
+        .filter(|value| GIFT_DURATION_TYPES.contains(value))
+        .unwrap_or("months");
+    let duration_quantity = form.duration_quantity.unwrap_or(1).max(1);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let secure_cookies = config.secure_cookies();
     match client
         .generate_gift_codes(count, duration_type, duration_quantity)
         .await
@@ -104,15 +105,15 @@ async fn gift_codes_post(
             flash::redirect_with_flash(
                 &format!("{base}/gift-codes?codes={codes}"),
                 FlashData::success(format!("{} gift code(s) generated", result.codes.len())),
-                secure_cookies,
+                config.secure_cookies(),
             )
         }
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: generate gift codes");
-            flash::redirect_with_flash(
+            flash::redirect_error(
+                config,
                 &format!("{base}/gift-codes"),
-                FlashData::error("Failed to generate gift codes"),
-                secure_cookies,
+                "Failed to generate gift codes",
             )
         }
     }

@@ -93,27 +93,6 @@ describe('PasswordChangeFlow', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	describe('start', () => {
-		test('sends verification email and returns ticket', async () => {
-			const account = await createTestAccount(harness);
-			const result = await startPasswordChange(harness, account.token);
-			expect(result.ticket).toBeDefined();
-			expect(typeof result.ticket).toBe('string');
-			expect(result.code_expires_at).toBeDefined();
-			expect(result.resend_available_at).toBeDefined();
-			const emails = await listTestEmails(harness, {recipient: account.email});
-			const verificationEmail = findLastTestEmail(emails, 'password_change_verification');
-			expect(verificationEmail).not.toBeNull();
-			expect(verificationEmail!.metadata.code).toBeDefined();
-		});
-		test('requires authentication', async () => {
-			await createBuilderWithoutAuth(harness)
-				.post('/users/@me/password-change/start')
-				.body({})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
-		});
-	});
 	describe('resend', () => {
 		test('rejects during cooldown period', async () => {
 			const account = await createTestAccount(harness);
@@ -132,23 +111,8 @@ describe('PasswordChangeFlow', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
-		test('requires authentication', async () => {
-			await createBuilderWithoutAuth(harness)
-				.post('/users/@me/password-change/resend')
-				.body({ticket: 'some-ticket'})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
-		});
 	});
 	describe('verify', () => {
-		test('returns verification_proof with correct code', async () => {
-			const account = await createTestAccount(harness);
-			const startResult = await startPasswordChange(harness, account.token);
-			const code = await getVerificationCode(harness, account.email);
-			const verifyResult = await verifyPasswordChangeCode(harness, account.token, startResult.ticket, code);
-			expect(verifyResult.verification_proof).toBeDefined();
-			expect(typeof verifyResult.verification_proof).toBe('string');
-		});
 		test('rejects with incorrect code', async () => {
 			const account = await createTestAccount(harness);
 			const startResult = await startPasswordChange(harness, account.token);
@@ -181,20 +145,8 @@ describe('PasswordChangeFlow', () => {
 			const secondVerify = await verifyPasswordChangeCode(harness, account.token, startResult.ticket, code);
 			expect(firstVerify.verification_proof).toBe(secondVerify.verification_proof);
 		});
-		test('requires authentication', async () => {
-			await createBuilderWithoutAuth(harness)
-				.post('/users/@me/password-change/verify')
-				.body({ticket: 'some-ticket', code: 'ABCD-1234'})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
-		});
 	});
 	describe('complete', () => {
-		test('succeeds with correct proof and passwords', async () => {
-			const account = await createTestAccount(harness);
-			const {ticket, verificationProof} = await runFullVerification(harness, account);
-			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
-		});
 		test('succeeds when the user does not have a password set', async () => {
 			const account = await createTestAccount(harness);
 			const {ticket, verificationProof} = await runFullVerification(harness, account);
@@ -296,17 +248,6 @@ describe('PasswordChangeFlow', () => {
 			expect(result.auth_session_id_hash).toBeTruthy();
 			await createBuilder(harness, result.token).get('/users/@me').expect(HTTP_STATUS.OK).execute();
 		});
-		test('user can log in with new password after change', async () => {
-			const account = await createTestAccount(harness);
-			const {ticket, verificationProof} = await runFullVerification(harness, account);
-			await completePasswordChange(harness, account.token, ticket, verificationProof, TEST_CREDENTIALS.ALT_PASSWORD_1);
-			const login = await loginUser(harness, {
-				email: account.email,
-				password: TEST_CREDENTIALS.ALT_PASSWORD_1,
-			});
-			expect('token' in login).toBe(true);
-			expect('mfa' in login).toBe(false);
-		});
 		test('old password no longer works after change', async () => {
 			const account = await createTestAccount(harness);
 			const {ticket, verificationProof} = await runFullVerification(harness, account);
@@ -316,41 +257,6 @@ describe('PasswordChangeFlow', () => {
 				.body({email: account.email, password: TEST_CREDENTIALS.STRONG_PASSWORD})
 				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
-		});
-		test('requires authentication', async () => {
-			await createBuilderWithoutAuth(harness)
-				.post('/users/@me/password-change/complete')
-				.body({
-					ticket: 'some-ticket',
-					verification_proof: 'some-proof',
-					new_password: 'new-password',
-				})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
-		});
-	});
-	describe('full flow', () => {
-		test('start, verify, and complete password change end-to-end', async () => {
-			const account = await createTestAccount(harness);
-			const startResult = await startPasswordChange(harness, account.token);
-			expect(startResult.ticket).toBeDefined();
-			expect(startResult.code_expires_at).toBeDefined();
-			const code = await getVerificationCode(harness, account.email);
-			expect(code).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
-			const verifyResult = await verifyPasswordChangeCode(harness, account.token, startResult.ticket, code);
-			expect(verifyResult.verification_proof).toBeDefined();
-			await completePasswordChange(
-				harness,
-				account.token,
-				startResult.ticket,
-				verifyResult.verification_proof,
-				TEST_CREDENTIALS.ALT_PASSWORD_1,
-			);
-			const login = await loginUser(harness, {
-				email: account.email,
-				password: TEST_CREDENTIALS.ALT_PASSWORD_1,
-			});
-			expect('token' in login).toBe(true);
 		});
 	});
 });

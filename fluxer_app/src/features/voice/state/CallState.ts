@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallInitiator from '@app/features/voice/state/CallInitiator';
 import {
 	type Call,
@@ -58,7 +59,7 @@ class CallState {
 	}
 
 	getParticipants(channelId: string): Array<string> {
-		const voiceStates = MediaEngine.getAllVoiceStatesInChannel(ME, channelId);
+		const voiceStates = VoiceRuntime.getAllVoiceStatesInChannel(ME, channelId);
 		const participantIds: Array<string> = [];
 		const seenParticipantIds = new Set<string>();
 		for (const connectionId in voiceStates) {
@@ -120,6 +121,15 @@ class CallState {
 			}
 		}
 	}
+
+	reset(): void {
+		this.snapshot = createCallStateSnapshot();
+		this.calls.clear();
+	}
 }
 
-export default new CallState();
+const callState = new CallState();
+
+ResettableStates.register(callState, () => callState.reset());
+
+export default callState;

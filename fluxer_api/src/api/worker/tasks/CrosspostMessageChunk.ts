@@ -6,7 +6,8 @@ import {
 	CrosspostTaskNames,
 	crosspostChunkJobKey,
 } from '@app/api/channel/services/message/CrosspostPropagation';
-import {createCrosspostDeliveryService, mapWithConcurrency} from '@app/api/worker/tasks/utils/CrosspostWorker';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {createCrosspostDeliveryService} from '@app/api/worker/tasks/utils/CrosspostWorker';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {
 	CROSSPOST_CHUNK_RETRY_DELAYS_MS,

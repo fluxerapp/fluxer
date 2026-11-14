@@ -5,7 +5,7 @@ import styles from '@app/features/voice/components/modals/ScreenSharePickerModal
 import type {PickerCard} from '@app/features/voice/components/modals/screen_share_picker_modal/shared';
 import {getDeterministicPlaceholderGradient} from '@app/lib/placeholder-gradient';
 import {clsx} from 'clsx';
-import {type FC, type Ref, useEffect, useRef} from 'react';
+import {type FC, type ReactNode, type Ref, useEffect, useRef} from 'react';
 
 interface DevicePreviewVideoProps {
 	stream: MediaStream;
@@ -65,38 +65,46 @@ const PickerCardPreview: FC<PickerCardPreviewProps> = ({
 	onPreviewImageError,
 }) => {
 	const PlaceholderIcon = card.placeholderIcon;
+	let preview: ReactNode;
+	if (devicePreviewStream) {
+		preview = (
+			<DevicePreviewVideo
+				stream={devicePreviewStream}
+				data-flx="voice.screen-share-picker-modal.picker-card-button.picker-card-preview.device-preview-video"
+			/>
+		);
+	} else if (card.thumbnailSrc) {
+		preview = (
+			<img
+				src={card.thumbnailSrc}
+				alt=""
+				className={styles.previewImage}
+				draggable={false}
+				onError={onPreviewImageError}
+				data-flx="voice.screen-share-picker-modal.preview-image"
+			/>
+		);
+	} else {
+		preview = (
+			<div
+				className={clsx(styles.previewPlaceholder, isDeviceCard && styles.devicePreviewPlaceholder)}
+				style={isDeviceCard ? getDeterministicPlaceholderGradient(card.id) : undefined}
+				data-flx="voice.screen-share-picker-modal.preview-placeholder"
+			>
+				<PlaceholderIcon
+					className={styles.previewIcon}
+					weight="fill"
+					data-flx="voice.screen-share-picker-modal.preview-icon"
+				/>
+			</div>
+		);
+	}
 	return (
 		<div
 			className={clsx(styles.preview, isDeviceCard && styles.previewDevice)}
 			data-flx="voice.screen-share-picker-modal.preview"
 		>
-			{devicePreviewStream ? (
-				<DevicePreviewVideo
-					stream={devicePreviewStream}
-					data-flx="voice.screen-share-picker-modal.picker-card-button.picker-card-preview.device-preview-video"
-				/>
-			) : card.thumbnailSrc ? (
-				<img
-					src={card.thumbnailSrc}
-					alt=""
-					className={styles.previewImage}
-					draggable={false}
-					onError={onPreviewImageError}
-					data-flx="voice.screen-share-picker-modal.preview-image"
-				/>
-			) : (
-				<div
-					className={clsx(styles.previewPlaceholder, isDeviceCard && styles.devicePreviewPlaceholder)}
-					style={isDeviceCard ? getDeterministicPlaceholderGradient(card.id) : undefined}
-					data-flx="voice.screen-share-picker-modal.preview-placeholder"
-				>
-					<PlaceholderIcon
-						className={styles.previewIcon}
-						weight="fill"
-						data-flx="voice.screen-share-picker-modal.preview-icon"
-					/>
-				</div>
-			)}
+			{preview}
 			<span
 				className={styles.previewOverlay}
 				aria-hidden={true}

@@ -11,11 +11,13 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {Validator} from '@app/api/Validator';
 import {ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {TEXT_THREAD_PARENT_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ChannelTypeConversionNotSupportedError} from '@fluxer/errors/src/domains/channel/ChannelTypeConversionNotSupportedError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
 	ChannelUpdateGatedRequest,
@@ -37,10 +39,6 @@ import {
 import type {Context} from 'hono';
 
 const THREAD_PARENT_DEFAULT_KEYS = ['default_auto_archive_duration', 'default_thread_rate_limit_per_user'];
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 export function ChannelController(app: HonoApp) {
 	app.get(
@@ -140,7 +138,7 @@ export function ChannelController(app: HonoApp) {
 				if (channelType === undefined) {
 					throw new UnknownChannelError();
 				}
-				const body = isPlainObject(raw) ? raw : {};
+				const body = isRecord(raw) ? raw : {};
 				const requestedType = body.type;
 				if (
 					requestedType === undefined ||
@@ -161,7 +159,7 @@ export function ChannelController(app: HonoApp) {
 				if (THREAD_ONLY_CHANNEL_TYPES.has(channelType)) return true;
 				return (
 					TEXT_THREAD_PARENT_CHANNEL_TYPES.has(channelType) &&
-					isPlainObject(body) &&
+					isRecord(body) &&
 					THREAD_PARENT_DEFAULT_KEYS.some((key) => body[key] !== undefined)
 				);
 			},
@@ -192,6 +190,7 @@ export function ChannelController(app: HonoApp) {
 			const requestCache = ctx.get('requestCache');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const channelRequestService = ctx.get('channelRequestService');
+			const {countryCode} = await lookupGeoip(ctx.req.raw);
 			return ctx.json(
 				await channelRequestService.updateChannel({
 					viewer: viewerFromCtx(ctx),
@@ -202,6 +201,7 @@ export function ChannelController(app: HonoApp) {
 					requestCache,
 					auditLogReason,
 					typeConversion,
+					countryCode,
 				}),
 			);
 		},
@@ -237,7 +237,7 @@ export function ChannelController(app: HonoApp) {
 			const channelRequestService = ctx.get('channelRequestService');
 			await ctx
 				.get('channelService')
-				.channelData.operations.getChannel({viewer: viewerFromCtx(ctx), userId, channelId});
+				.channelData.operations.getChannel({viewer: viewerFromCtx(ctx), userId, channelId, skipNsfwValidation: true});
 			if (delete_messages) {
 				await requireSudoMode(ctx, user, body);
 				await ctx.get('channelService').userMessageDeletion.deleteUserMessagesInScope(userId, {

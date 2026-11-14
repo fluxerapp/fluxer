@@ -4,13 +4,15 @@ import i18n from '@app/app/I18n';
 import type {Channel} from '@app/features/channel/models/Channel';
 import ChannelDisplayName from '@app/features/channel/state/ChannelDisplayName';
 import {UNKNOWN_CHANNEL_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
-import {FORUM_DESCRIPTOR, MEDIA_DESCRIPTOR} from '@app/features/forum/utils/ForumMessageDescriptors';
-import {PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {FORUM_DESCRIPTOR} from '@app/features/forum/utils/ForumMessageDescriptors';
+import {MEDIA_DESCRIPTOR, PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {compareChannelPosition} from '@app/features/messaging/utils/ChannelShared';
 import {AnnouncementChannelIcon} from '@app/features/ui/components/icons/AnnouncementChannelIcon';
 import {EncryptedVoiceChannelIcon} from '@app/features/ui/components/icons/EncryptedVoiceChannelIcon';
+import {ForumChannelIcon} from '@app/features/ui/components/icons/ForumChannelIcon';
 import {LinkChannelIcon} from '@app/features/ui/components/icons/LinkChannelIcon';
 import {LockedAnnouncementChannelIcon} from '@app/features/ui/components/icons/LockedAnnouncementChannelIcon';
+import {LockedForumChannelIcon} from '@app/features/ui/components/icons/LockedForumChannelIcon';
 import {LockedLinkChannelIcon} from '@app/features/ui/components/icons/LockedLinkChannelIcon';
 import {LockedTextChannelIcon} from '@app/features/ui/components/icons/LockedTextChannelIcon';
 import {LockedVoiceChannelIcon} from '@app/features/ui/components/icons/LockedVoiceChannelIcon';
@@ -26,14 +28,7 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
-import {
-	CaretDownIcon,
-	ChatsIcon,
-	ChatsTeardropIcon,
-	type IconProps,
-	ImagesSquareIcon,
-	NotePencilIcon,
-} from '@phosphor-icons/react';
+import {CaretDownIcon, ChatsIcon, type IconProps, ImagesSquareIcon, NotePencilIcon} from '@phosphor-icons/react';
 
 const VOICE_MATURE_DESCRIPTOR = msg({
 	message: 'Voice (mature)',
@@ -103,6 +98,7 @@ function isChannelRoleRequired(channel: {
 			return (overwrite.deny & Permissions.CONNECT) === Permissions.CONNECT;
 		case ChannelTypes.GUILD_TEXT:
 		case ChannelTypes.GUILD_ANNOUNCEMENT:
+		case ChannelTypes.GUILD_FORUM:
 		case ChannelTypes.GUILD_LINK:
 			return (overwrite.deny & Permissions.VIEW_CHANNEL) === Permissions.VIEW_CHANNEL;
 		default:
@@ -182,7 +178,9 @@ export function getIcon(
 		case ChannelTypes.PRIVATE_THREAD:
 			return <ChatsIcon data-flx="channel.channel-utils.get-icon.thread-icon" {...props} />;
 		case ChannelTypes.GUILD_FORUM:
-			return <ChatsTeardropIcon data-flx="channel.channel-utils.get-icon.forum-icon" {...props} />;
+			if (roleRequired)
+				return <LockedForumChannelIcon data-flx="channel.channel-utils.get-icon.forum-icon" {...props} />;
+			return <ForumChannelIcon data-flx="channel.channel-utils.get-icon.forum-icon" {...props} />;
 		case ChannelTypes.GUILD_MEDIA:
 			return <ImagesSquareIcon data-flx="channel.channel-utils.get-icon.media-icon" {...props} />;
 		default:

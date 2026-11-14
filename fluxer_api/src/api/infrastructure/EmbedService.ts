@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isGuardedAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
 import type {RichEmbedMediaWithMetadata} from '@app/api/channel/EmbedTypes';
@@ -35,7 +36,6 @@ import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 interface ProcessedUrlEmbeds {
 	embeds: Array<Embed>;
-	cacheTtlSeconds: number | null;
 }
 
 interface InitialUrlEmbedResult {
@@ -54,7 +54,6 @@ function canonicalUrl(url: string | null | undefined): string | null {
 
 export class EmbedService {
 	private readonly MAX_EMBED_CHARACTERS = 6000;
-	private readonly MAX_EMBED_CHARACTERS_BUG_HUNTER = 12000;
 
 	constructor(
 		private unfurlerService: IUnfurlerService,
@@ -66,13 +65,12 @@ export class EmbedService {
 		content: string | null;
 		customEmbeds?: Array<RichEmbedRequest>;
 		nsfwMode: MediaProxyNsfwMode;
-		isBugHunterBot?: boolean;
 	}): Promise<{
 		embeds: Array<MessageEmbed> | null;
 		hasUncachedUrls: boolean;
 	}> {
 		if (params.customEmbeds?.length) {
-			this.validateEmbedSize(params.customEmbeds, params.isBugHunterBot ?? false);
+			this.validateEmbedSize(params.customEmbeds);
 			const embeds = await Promise.all(params.customEmbeds.map((embed) => this.createEmbed(embed, params.nsfwMode)));
 			return {embeds: embeds.map((embed) => embed.toMessageEmbed()), hasUncachedUrls: false};
 		}
@@ -104,11 +102,8 @@ export class EmbedService {
 		const result = await this.unfurlerService.unfurlWithCachePolicy(url, nsfwMode, options);
 		return {
 			embeds: result.embeds.map((embedData) => new Embed(this.mapResponseEmbed(embedData))),
-			cacheTtlSeconds: result.cacheTtlSeconds,
 		};
 	}
-
-	async cacheEmbeds(_url: string, _embeds: Array<Embed>, _cacheTtlSeconds?: number | null | undefined): Promise<void> {}
 
 	private async getInitialUrlEmbeds(
 		urls: Array<string>,
@@ -233,7 +228,7 @@ export class EmbedService {
 		};
 	}
 
-	private validateEmbedSize(embeds: Array<RichEmbedRequest>, isBugHunterBot: boolean = false): void {
+	private validateEmbedSize(embeds: Array<RichEmbedRequest>): void {
 		const totalChars = embeds.reduce<number>((sum, embed) => {
 			return (
 				sum +
@@ -244,10 +239,9 @@ export class EmbedService {
 				(embed.fields?.reduce((fieldSum, field) => fieldSum + field.name.length + field.value.length, 0) || 0)
 			);
 		}, 0);
-		const maxCharacters = isBugHunterBot ? this.MAX_EMBED_CHARACTERS_BUG_HUNTER : this.MAX_EMBED_CHARACTERS;
-		if (totalChars > maxCharacters) {
+		if (totalChars > this.MAX_EMBED_CHARACTERS) {
 			throw InputValidationError.fromCode('embeds', ValidationErrorCodes.EMBEDS_EXCEED_MAX_CHARACTERS, {
-				maxCharacters,
+				maxCharacters: this.MAX_EMBED_CHARACTERS,
 			});
 		}
 	}
@@ -266,7 +260,7 @@ export class EmbedService {
 			nsfw = true;
 		}
 		return new Embed({
-			type: embed.type ?? 'rich',
+			type: 'rich',
 			title: embed.title ?? null,
 			description: embed.description ?? null,
 			url: canonicalUrl(embed.url),
@@ -362,6 +356,7 @@ export class EmbedService {
 		metadata: MediaProxyMetadataResponse | null;
 	}> {
 		const stored = stripOwnAttachmentSignature(url);
+		if (isGuardedAttachmentUrl(url)) return {url: stored, metadata: null};
 		const directMetadata = await this.mediaService.getMetadata({
 			type: 'external',
 			url,
@@ -370,11 +365,14 @@ export class EmbedService {
 		if (this.isRenderableMediaType(directMetadata?.content_type)) {
 			return {url: stored, metadata: directMetadata};
 		}
-		const unfurled = await this.unfurlerService.unfurl(url, nsfwMode);
+		const unfurled = await this.unfurlerService.unfurl(url, nsfwMode).catch((error: unknown) => {
+			Logger.warn({error, url}, 'Failed to unfurl embed media URL, keeping it without metadata');
+			return [];
+		});
 		for (const embed of unfurled) {
 			const candidates = [embed.video?.url, embed.audio?.url, embed.image?.url, embed.thumbnail?.url];
 			for (const candidate of candidates) {
-				if (!candidate || candidate === url) continue;
+				if (!candidate || candidate === url || isGuardedAttachmentUrl(candidate)) continue;
 				const candidateMetadata = await this.mediaService.getMetadata({
 					type: 'external',
 					url: candidate,
@@ -399,7 +397,9 @@ export class EmbedService {
 	): Promise<EmbedAuthor | null> {
 		if (!author) return null;
 		let iconUrl: string | null = null;
-		if (author.icon_url) {
+		if (author.icon_url && isGuardedAttachmentUrl(author.icon_url)) {
+			iconUrl = stripOwnAttachmentSignature(author.icon_url);
+		} else if (author.icon_url) {
 			const metadata = await this.mediaService.getMetadata({
 				type: 'external',
 				url: author.icon_url,
@@ -420,7 +420,9 @@ export class EmbedService {
 	): Promise<EmbedFooter | null> {
 		if (!footer) return null;
 		let iconUrl: string | null = null;
-		if (footer.icon_url) {
+		if (footer.icon_url && isGuardedAttachmentUrl(footer.icon_url)) {
+			iconUrl = stripOwnAttachmentSignature(footer.icon_url);
+		} else if (footer.icon_url) {
 			const metadata = await this.mediaService.getMetadata({
 				type: 'external',
 				url: footer.icon_url,

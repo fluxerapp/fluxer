@@ -26,24 +26,41 @@ import {
 	usesUniqueUsernames,
 	usesUsernameSignIn,
 } from '@app/features/app/utils/AccountIdentityFeatures';
+import {discoveryEnabledOf, isDiscoveryAvailable} from '@app/features/app/utils/DiscoveryFeatures';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {
+	type EffectiveVerificationBasis,
+	type EmailCodeAvailability,
+	type EmailDeliveryState,
+	EmailDeliveryStates,
+	type GuildJoinGate,
+	GuildJoinGates,
+	type InteractionTierMode,
+	InteractionTierModes,
+	VerificationBases,
+} from '@fluxer/constants/src/AccountConfigConstants';
 import {
 	type AccountIdentityMode,
 	AccountIdentityModes,
 	type TagStyle,
 } from '@fluxer/constants/src/AccountIdentityConstants';
+import {resolveEffectiveVerificationBasis, resolveEmailCodeAvailability} from '@fluxer/constants/src/AccountTierRules';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
+import {NO_BUILT_IN_GUILD_BADGE_IMAGES} from '@fluxer/instance_bootstrap/src/ClientRuntimeDiscovery';
 import {InstanceDiscoveryUnreachableError} from '@fluxer/instance_bootstrap/src/Discovery';
 import {InstanceEndpointKind, normalizeInstanceEndpoint} from '@fluxer/instance_bootstrap/src/EndpointNormalization';
 import {isOfficialInstanceHost, OFFICIAL_INSTANCE_DISPLAY_HOST} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import type {
-	InstanceAgePolicy,
 	InstanceAppPublic,
+	InstanceBuiltInGuildBadgeImages,
 	InstanceCommunity,
+	InstanceConnectionProvider,
 	InstanceFeatures,
-	InstanceRegistration,
+	InstanceGuildBadge,
+	InstanceHiddenBuiltInGuildBadges,
+	InstanceNotice,
 	InstanceServices,
 	InstanceSso as InstanceSsoConfig,
 } from '@fluxer/instance_bootstrap/src/Types';
@@ -53,13 +70,39 @@ import {makeAutoObservable, observableRef} from 'mobx';
 
 const logger = new Logger('RuntimeConfig');
 
+function emailFeaturesForIdentity(
+	mode: AccountIdentityMode,
+	features: InstanceFeatures,
+): Pick<
+	InstanceFeatures,
+	'emails_enabled' | 'email_delivery_state' | 'verification_basis' | 'identifier_first' | 'email_codes'
+> {
+	if (mode !== AccountIdentityModes.USERNAME) {
+		const wasUsernameMode = features.email_delivery_state === EmailDeliveryStates.OFF_USERNAME_MODE;
+		return {
+			emails_enabled: features.emails_enabled,
+			email_delivery_state: wasUsernameMode ? undefined : features.email_delivery_state,
+			verification_basis: wasUsernameMode ? undefined : features.verification_basis,
+			...(features.identifier_first === undefined ? {} : {identifier_first: features.identifier_first}),
+			...(features.email_codes === undefined ? {} : {email_codes: features.email_codes}),
+		};
+	}
+	return {
+		identifier_first: false,
+		email_codes: false,
+		emails_enabled: false,
+		email_delivery_state: EmailDeliveryStates.OFF_USERNAME_MODE,
+		verification_basis: VerificationBases.LOCAL_CREDENTIAL,
+	};
+}
+
 export {
 	runtimeConfigSnapshotsAreSameInstance,
 	runtimeInstanceKey,
 } from '@app/features/app/state/InstanceSnapshotStore';
 export type {InstanceSsoConfig, RuntimeConfigSnapshot};
 
-export interface ApplyRuntimeConfigSnapshotRequest {
+interface ApplyRuntimeConfigSnapshotRequest {
 	snapshot: RuntimeConfigSnapshot;
 	signal: AbortSignal | null;
 }
@@ -96,8 +139,6 @@ type RuntimeConfigPublicationPhase = 'committed' | 'published' | 'renderer-rolle
 interface RuntimeConfigPublication {
 	phase: RuntimeConfigPublicationPhase;
 }
-
-const DEFAULT_PREMIUM_PRODUCT_NAME = 'Plutonium';
 
 class RuntimeActivationSupersededError extends Error {
 	constructor() {
@@ -270,14 +311,6 @@ class RuntimeConfig {
 		return this.readableSnapshot().features;
 	}
 
-	get sso(): InstanceSsoConfig | null {
-		return this.readableSnapshot().sso;
-	}
-
-	get registration(): InstanceRegistration {
-		return this.readableSnapshot().registration;
-	}
-
 	get community(): InstanceCommunity {
 		return this.readableSnapshot().community;
 	}
@@ -286,20 +319,12 @@ class RuntimeConfig {
 		return this.readableSnapshot().services;
 	}
 
-	get publicPushVapidKey(): string | null {
-		return this.readableSnapshot().publicPushVapidKey;
-	}
-
 	get limits(): LimitConfigSnapshot {
 		return this.readableSnapshot().limits;
 	}
 
 	get appPublic(): InstanceAppPublic {
 		return this.readableSnapshot().appPublic;
-	}
-
-	get agePolicy(): InstanceAgePolicy | null {
-		return this.readableSnapshot().agePolicy ?? null;
 	}
 
 	private requireActiveSnapshot(): RuntimeConfigSnapshot {
@@ -644,9 +669,9 @@ class RuntimeConfig {
 		const current = this.requireActiveSnapshot();
 		this.replaceActiveFeatures({
 			...current.features,
+			...emailFeaturesForIdentity(mode, current.features),
 			account_identity: mode,
 			tag_style: tagStyle,
-			emails_enabled: mode === AccountIdentityModes.USERNAME ? false : current.features.emails_enabled,
 		});
 	}
 
@@ -661,6 +686,13 @@ class RuntimeConfig {
 			...runtime.snapshot,
 			features: resolution.snapshot.features,
 			appPublic: resolution.snapshot.appPublic,
+			notice: resolution.snapshot.notice,
+			guildBadges: resolution.snapshot.guildBadges,
+			guildBadgesPartial: resolution.snapshot.guildBadgesPartial,
+			customBadgesVersion: resolution.snapshot.customBadgesVersion,
+			builtInGuildBadgeImages: resolution.snapshot.builtInGuildBadgeImages,
+			hiddenBuiltInGuildBadges: resolution.snapshot.hiddenBuiltInGuildBadges,
+			limits: resolution.snapshot.limits,
 		});
 		this.activeRuntime = {...runtime, snapshot: usable};
 		this.lifecycleGeneration = nextLifecycleGeneration(this.lifecycleGeneration);
@@ -685,7 +717,12 @@ class RuntimeConfig {
 	applyAdminInstanceConfig(config: InstanceConfigResponse): void {
 		const current = this.requireActiveSnapshot();
 		const appPublic: InstanceAppPublic = {
-			branding: config.app_public.branding,
+			branding: {
+				...config.app_public.branding,
+				status_page_instatus:
+					current.appPublic.branding.status_page_instatus &&
+					current.appPublic.branding.status_page_url === config.app_public.branding.status_page_url,
+			},
 			setup: {
 				configured: config.app_public.setup.configured,
 				admin_url: current.appPublic.setup.admin_url,
@@ -701,10 +738,9 @@ class RuntimeConfig {
 				premium_enabled: !config.self_hosted || config.policy.premium_mode === 'mirror',
 				stripe_enabled: config.billing.billing_active,
 				stripe_serviceable: config.billing.stripe_serviceable,
+				...emailFeaturesForIdentity(config.account_identity.mode, current.features),
 				account_identity: config.account_identity.mode,
 				tag_style: config.account_identity.tag_style,
-				emails_enabled:
-					config.account_identity.mode === AccountIdentityModes.USERNAME ? false : current.features.emails_enabled,
 			},
 			registration: {
 				mode: config.registration.mode,
@@ -716,14 +752,18 @@ class RuntimeConfig {
 					? config.policy.single_community_guild_id
 					: null,
 				direct_messages_disabled: config.policy.direct_messages_disabled,
+				friends_disabled: config.policy.friends_disabled,
+				personal_notes_enabled: config.policy.personal_notes_enabled,
 				guild_create_access: config.policy.guild_create_access,
 			},
 			services: {
 				gif_enabled: config.policy.services_resolved.gif_enabled,
 				youtube_enabled: config.policy.services_resolved.youtube_enabled,
 				bluesky_enabled: config.policy.services_resolved.bluesky_enabled,
+				connection_providers: current.services.connection_providers,
 			},
 			appPublic,
+			notice: config.notice,
 		};
 		const usable = this.requireUsableSnapshot(snapshot);
 		const runtime = this.requireActiveRuntime();
@@ -750,8 +790,8 @@ class RuntimeConfig {
 		return this.activeRuntime?.snapshot.appPublic.branding.status_page_url ?? '';
 	}
 
-	get statusPageIncidentHistoryUrl(): string {
-		return this.activeRuntime?.snapshot.appPublic.branding.status_page_incident_history_url ?? '';
+	get statusPageInstatus(): boolean {
+		return this.activeRuntime?.snapshot.appPublic.branding.status_page_instatus ?? false;
 	}
 
 	isSelfHosted(): boolean {
@@ -770,20 +810,54 @@ class RuntimeConfig {
 		return this.features.stripe_serviceable;
 	}
 
-	get premiumProductName(): string {
-		return this.appPublic.branding.premium_product_name?.trim() || DEFAULT_PREMIUM_PRODUCT_NAME;
-	}
-
-	get premiumInfoUrl(): string | null {
-		return this.appPublic.branding.premium_info_url ?? null;
-	}
-
 	get emailsEnabled(): boolean {
 		return this.features.emails_enabled;
 	}
 
+	get discoveryEnabled(): boolean {
+		return discoveryEnabledOf(this.features);
+	}
+
+	get discoveryAvailable(): boolean {
+		return isDiscoveryAvailable(this);
+	}
+
 	get accountIdentity(): AccountIdentityMode {
 		return accountIdentityOf(this.features);
+	}
+
+	get emailDeliveryState(): EmailDeliveryState {
+		if (this.features.email_delivery_state !== undefined) return this.features.email_delivery_state;
+		if (this.usesUsernameSignIn) return EmailDeliveryStates.OFF_USERNAME_MODE;
+		return this.emailsEnabled ? EmailDeliveryStates.ON : EmailDeliveryStates.OFF_DISABLED;
+	}
+
+	get verificationBasis(): EffectiveVerificationBasis {
+		return (
+			this.features.verification_basis ??
+			resolveEffectiveVerificationBasis({
+				identityMode: this.accountIdentity,
+				basis: VerificationBases.AUTO,
+				deliveryState: this.emailDeliveryState,
+			})
+		);
+	}
+
+	get interactionTier(): InteractionTierMode {
+		return this.features.interaction_tier ?? InteractionTierModes.LEGACY;
+	}
+
+	get guildJoinGate(): GuildJoinGate {
+		return this.features.guild_join_gate ?? GuildJoinGates.ALWAYS;
+	}
+
+	emailCodeAvailabilityFor(account: {hasEmail: boolean; emailVerified: boolean}): EmailCodeAvailability {
+		return resolveEmailCodeAvailability({
+			identityMode: this.accountIdentity,
+			deliveryState: this.emailDeliveryState,
+			hasEmail: account.hasEmail,
+			emailVerified: account.emailVerified,
+		});
 	}
 
 	get usesUsernameSignIn(): boolean {
@@ -802,34 +876,6 @@ class RuntimeConfig {
 		return this.appPublic.branding.product_name;
 	}
 
-	get premiumProductFullName(): string {
-		return `${this.productName} ${this.premiumProductName}`;
-	}
-
-	get iconUrl(): string | null {
-		return this.appPublic.branding.icon_url;
-	}
-
-	get symbolUrl(): string | null {
-		return this.appPublic.branding.symbol_url;
-	}
-
-	get logoUrl(): string | null {
-		return this.appPublic.branding.logo_url;
-	}
-
-	get wordmarkUrl(): string | null {
-		return this.appPublic.branding.wordmark_url;
-	}
-
-	get faviconUrl(): string | null {
-		return this.appPublic.branding.favicon_url;
-	}
-
-	get themeColor(): string | null {
-		return this.appPublic.branding.theme_color;
-	}
-
 	get termsUrl(): string | null {
 		return this.appPublic.legal.terms_url;
 	}
@@ -840,14 +886,6 @@ class RuntimeConfig {
 
 	get guidelinesUrl(): string | null {
 		return this.appPublic.legal.guidelines_url;
-	}
-
-	get collectDateOfBirthOnRegistration(): boolean {
-		return this.appPublic.registration.collect_date_of_birth;
-	}
-
-	get setupAdminUrl(): string | null {
-		return this.appPublic.setup.admin_url;
 	}
 
 	requiresSelfHostedSetup(): boolean {
@@ -872,6 +910,42 @@ class RuntimeConfig {
 		return this.community.direct_messages_disabled;
 	}
 
+	get friendsDisabled(): boolean {
+		return this.community.friends_disabled ?? this.community.direct_messages_disabled;
+	}
+
+	get personalNotesEnabled(): boolean {
+		return this.community.personal_notes_enabled ?? true;
+	}
+
+	get dmPickerAvailable(): boolean {
+		return !this.directMessagesDisabled && !this.friendsDisabled;
+	}
+
+	get instanceNotice(): InstanceNotice | null {
+		return this.activeRuntime?.snapshot.notice ?? null;
+	}
+
+	get guildBadges(): ReadonlyArray<InstanceGuildBadge> {
+		return this.activeRuntime?.snapshot.guildBadges ?? [];
+	}
+
+	get guildBadgesPartial(): boolean {
+		return this.activeRuntime?.snapshot.guildBadgesPartial ?? false;
+	}
+
+	get customBadgesVersion(): string | null {
+		return this.activeRuntime?.snapshot.customBadgesVersion ?? null;
+	}
+
+	get builtInGuildBadgeImages(): InstanceBuiltInGuildBadgeImages {
+		return this.activeRuntime?.snapshot.builtInGuildBadgeImages ?? NO_BUILT_IN_GUILD_BADGE_IMAGES;
+	}
+
+	get hiddenBuiltInGuildBadges(): InstanceHiddenBuiltInGuildBadges {
+		return this.activeRuntime?.snapshot.hiddenBuiltInGuildBadges ?? [];
+	}
+
 	get gifEnabled(): boolean {
 		return this.services.gif_enabled;
 	}
@@ -880,16 +954,12 @@ class RuntimeConfig {
 		return this.services.bluesky_enabled;
 	}
 
+	get connectionProviders(): ReadonlyArray<InstanceConnectionProvider> {
+		return this.services.connection_providers;
+	}
+
 	get marketingHost(): string {
 		return new URL(this.marketingEndpoint).host;
-	}
-
-	get inviteHost(): string {
-		return new URL(this.inviteEndpoint).host;
-	}
-
-	get giftHost(): string {
-		return new URL(this.giftEndpoint).host;
 	}
 
 	get inviteUrlBase(): string {

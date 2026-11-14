@@ -6,6 +6,7 @@ import {
 	getCachedDesktopTroubleshootingSettings,
 	getDesktopTroubleshootingSettings,
 	setDesktopDisableHardwareAcceleration,
+	setDesktopDisableModuleUpdates,
 } from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import SourceMaps from '@app/features/platform/state/SourceMaps';
@@ -20,16 +21,19 @@ import {
 	setDesktopWindowBehaviorSettings,
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {
+	DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR,
+	DOWNLOAD_SOURCE_MAPS_DESCRIPTOR,
+	LATER_DESCRIPTOR,
+	RESTART_NOW_DESCRIPTOR,
+	RESTART_DESCRIPTOR as RESTART_PRODUCT_DESCRIPTOR,
+	USE_NATIVE_TITLE_BAR_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@app/types/electron.d';
 import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useLayoutEffect, useState} from 'react';
-
-const DOWNLOAD_SOURCE_MAPS_DESCRIPTOR = msg({
-	message: 'Download source maps',
-	comment: 'Short label for a desktop setting that downloads debugging symbols.',
-});
 
 export const SourceMapsControl = observer(() => {
 	const {i18n} = useLingui();
@@ -47,10 +51,6 @@ export const SourceMapsControl = observer(() => {
 	);
 });
 
-const USE_NATIVE_TITLE_BAR_DESCRIPTOR = msg({
-	message: 'Use native title bar',
-	comment: 'Short label for an advanced desktop preference.',
-});
 const USE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Use hardware acceleration',
 	comment: 'Short label for an advanced desktop troubleshooting preference.',
@@ -63,20 +63,16 @@ const DISABLE_HARDWARE_ACCELERATION_DESCRIPTOR = msg({
 	message: 'Disable hardware acceleration?',
 	comment: 'Confirmation prompt in advanced settings.',
 });
-const RESTART_NOW_DESCRIPTOR = msg({
-	message: 'Restart now',
-	comment: 'Short confirmation button label in advanced settings.',
+const ENABLE_AUTOMATIC_UPDATES_PROMPT_DESCRIPTOR = msg({
+	message: 'Enable automatic updates?',
+	comment: 'Confirmation prompt in advanced settings.',
 });
-const RESTART_PRODUCT_DESCRIPTOR = msg({
-	message: 'Restart {productName}?',
-	comment: 'Confirmation prompt in advanced settings. Preserve {productName}; it is inserted by code.',
-});
-const LATER_DESCRIPTOR = msg({
-	message: 'Later',
-	comment: 'Short confirmation button label in advanced settings.',
+const DISABLE_AUTOMATIC_UPDATES_PROMPT_DESCRIPTOR = msg({
+	message: 'Disable automatic updates?',
+	comment: 'Confirmation prompt in advanced settings.',
 });
 
-function useDesktopWindowBehaviorSettings() {
+export function useDesktopWindowBehaviorSettings() {
 	const cachedDesktopWindowBehavior = getCachedDesktopWindowBehaviorSettings();
 	const [desktopWindowBehavior, setDesktopWindowBehavior] = useState<DesktopWindowBehaviorSettings | null>(
 		cachedDesktopWindowBehavior,
@@ -249,6 +245,63 @@ export const HardwareAccelerationControl = observer(() => {
 			onChange={handleChange}
 			compact
 			data-flx="user.advanced-settings-tab.switch.hardware-acceleration"
+		/>
+	);
+});
+
+export const AutomaticUpdatesControl = observer(() => {
+	const {i18n} = useLingui();
+	const {desktopTroubleshooting, desktopTroubleshootingBusy, setDesktopTroubleshooting, setDesktopTroubleshootingBusy} =
+		useDesktopTroubleshootingSettings();
+	const handleChange = useCallback(
+		(value: boolean) => {
+			ModalCommands.push(
+				modal(() => (
+					<ConfirmModal
+						title={
+							value
+								? i18n._(DISABLE_AUTOMATIC_UPDATES_PROMPT_DESCRIPTOR)
+								: i18n._(ENABLE_AUTOMATIC_UPDATES_PROMPT_DESCRIPTOR)
+						}
+						description={
+							value ? (
+								<Trans>
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart to stop updating while starting. When
+									an update is available, you can install it from the app whenever you like.
+								</Trans>
+							) : (
+								<Trans>
+									{ph({PRODUCT_NAME: RuntimeConfig.productName})} needs to restart to install updates automatically
+									again.
+								</Trans>
+							)
+						}
+						primaryText={i18n._(RESTART_NOW_DESCRIPTOR)}
+						primaryVariant="primary"
+						secondaryText={i18n._(CANCEL_DESCRIPTOR)}
+						onPrimary={async () => {
+							setDesktopTroubleshootingBusy(true);
+							const next = await setDesktopDisableModuleUpdates(value);
+							if (next) {
+								setDesktopTroubleshooting(next);
+							}
+							setDesktopTroubleshootingBusy(false);
+						}}
+						data-flx="user.advanced-settings-tab.automatic-updates.confirm-modal"
+					/>
+				)),
+			);
+		},
+		[i18n, setDesktopTroubleshooting, setDesktopTroubleshootingBusy],
+	);
+	return (
+		<Switch
+			ariaLabel={i18n._(DISABLE_AUTOMATIC_UPDATES_DESCRIPTOR)}
+			value={desktopTroubleshooting?.disableModuleUpdates ?? false}
+			disabled={desktopTroubleshootingBusy || desktopTroubleshooting === null}
+			onChange={handleChange}
+			compact
+			data-flx="user.advanced-settings-tab.switch.automatic-updates"
 		/>
 	);
 });

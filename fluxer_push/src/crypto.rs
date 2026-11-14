@@ -5,7 +5,7 @@ use hmac::{Hmac, KeyInit, Mac};
 use p256::PublicKey;
 use p256::ecdsa::signature::Signer as _;
 use p256::ecdsa::{Signature, SigningKey};
-use p256::elliptic_curve::sec1::ToEncodedPoint as _;
+use p256::elliptic_curve::sec1::ToSec1Point as _;
 use p256::pkcs8::DecodePrivateKey as _;
 use rand::Rng as _;
 use ring::aead::{AES_128_GCM, Aad, LessSafeKey, Nonce, UnboundKey};
@@ -131,7 +131,7 @@ fn seal(
     }
     let peer_public =
         PublicKey::from_sec1_bytes(p256dh).map_err(|_| CryptoError::InvalidPeerKey)?;
-    let local_point = local_secret.public_key().to_encoded_point(false);
+    let local_point = local_secret.public_key().to_sec1_point(false);
     let local_pub = local_point.as_bytes();
 
     let shared =

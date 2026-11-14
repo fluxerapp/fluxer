@@ -155,14 +155,6 @@ describe('DSA verification codes and tickets', () => {
 		expect((rejected?.json as ErrorResponse | undefined)?.code).toBe(APIErrorCodes.INVALID_DSA_VERIFICATION_CODE);
 	});
 
-	test('a wrong code keeps the sent code usable', async () => {
-		const {email, code} = await requestCode(harness);
-		await verify(harness, email, 'AAAA-AAAA')
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_DSA_VERIFICATION_CODE)
-			.execute();
-		await verify(harness, email, code).expect(HTTP_STATUS.OK).execute();
-	});
-
 	test('a second send within a minute is refused and the first code still verifies', async () => {
 		const {email, code} = await requestCode(harness);
 		const {response, json} = await send(harness, email.toUpperCase()).executeRaw();

@@ -2,41 +2,11 @@
 
 import {getKvMeta} from '@app/api/database/CassandraMetaRegistry';
 import type {CassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import type {
-	CassandraParams,
-	KvQueryCondition,
-	KvQueryMeta,
-	PreparedQuery,
-	WhereExpr,
-} from '@app/api/database/CassandraTypes';
+import type {CassandraParams, KvQueryCondition, KvQueryMeta, PreparedQuery} from '@app/api/database/CassandraTypes';
 import {isConditionalQuery} from '@app/api/database/CassandraTypes';
+import {matchesWhere, normalizeCql, rowComparator, valuesEqual} from '@app/api/database/PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
-
-function normalizeCql(cql: string): string {
-	return cql.replace(/\s+/g, ' ').trim();
-}
-
-function compareValues(a: unknown, b: unknown): number {
-	if (typeof a === 'bigint' || typeof b === 'bigint') {
-		const av = typeof a === 'bigint' ? a : BigInt(a as number | string);
-		const bv = typeof b === 'bigint' ? b : BigInt(b as number | string);
-		if (av === bv) return 0;
-		return av < bv ? -1 : 1;
-	}
-	const av = a instanceof Date ? a.getTime() : typeof a === 'bigint' ? Number(a) : a;
-	const bv = b instanceof Date ? b.getTime() : typeof b === 'bigint' ? Number(b) : b;
-	if (Buffer.isBuffer(av) && Buffer.isBuffer(bv)) return Buffer.compare(av, bv);
-	if (av === bv) return 0;
-	return (av as number | string) < (bv as number | string) ? -1 : 1;
-}
-
-function valuesEqual(a: unknown, b: unknown): boolean {
-	if (a == null && b == null) return true;
-	if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
-	if (Buffer.isBuffer(a) && Buffer.isBuffer(b)) return a.equals(b);
-	return a === b;
-}
 
 function matchesConditions(
 	row: Row | undefined,
@@ -81,77 +51,12 @@ function valueKey(value: unknown): string {
 	return `${typeof value}:${String(value)}`;
 }
 
-function getParam(params: CassandraParams, param: string): unknown {
-	return params[param];
-}
-
-function matchesWhere(row: Row, where: ReadonlyArray<WhereExpr<Row>> | undefined, params: CassandraParams): boolean {
-	for (const clause of where ?? []) {
-		switch (clause.kind) {
-			case 'eq':
-				if (!valuesEqual(row[clause.col], getParam(params, clause.param))) return false;
-				break;
-			case 'in': {
-				const values = getParam(params, clause.param) as ReadonlyArray<unknown> | Set<unknown> | undefined;
-				const haystack = values instanceof Set ? [...values] : (values ?? []);
-				if (!haystack.some((value) => valuesEqual(row[clause.col], value))) return false;
-				break;
-			}
-			case 'lt':
-				if (compareValues(row[clause.col], getParam(params, clause.param)) >= 0) return false;
-				break;
-			case 'lte':
-				if (compareValues(row[clause.col], getParam(params, clause.param)) > 0) return false;
-				break;
-			case 'gt':
-			case 'tokenGt':
-				if (compareValues(row[clause.col], getParam(params, clause.param)) <= 0) return false;
-				break;
-			case 'gte':
-				if (compareValues(row[clause.col], getParam(params, clause.param)) < 0) return false;
-				break;
-			case 'tupleGt': {
-				const left = clause.cols.map((column) => row[column]);
-				const right = clause.params.map((param) => getParam(params, param));
-				let greater = false;
-				for (let i = 0; i < left.length; i += 1) {
-					const cmp = compareValues(left[i], right[i]);
-					if (cmp > 0) {
-						greater = true;
-						break;
-					}
-					if (cmp < 0) break;
-				}
-				if (!greater) return false;
-				break;
-			}
-		}
-	}
-	return true;
-}
-
-function compareColumns(columns: ReadonlyArray<string>, left: Row, right: Row): number {
-	for (const column of columns) {
-		const cmp = compareValues(left[column], right[column]);
-		if (cmp !== 0) return cmp;
-	}
-	return 0;
-}
-
-function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
-	const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
-	if (!meta.orderBy) return (left, right) => compareColumns(primaryKey, left, right);
-	const column = meta.orderBy.col as string;
-	const columns = [column, ...primaryKey.slice(primaryKey.indexOf(column) + 1)];
-	const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
-	return (left, right) => compareColumns(columns, left, right) * direction;
-}
-
 function projectRow(row: Row, columns: ReadonlyArray<string> | undefined): Row {
 	if (!columns) return cloneRow(row);
 	const projected: Row = {};
 	for (const column of columns) {
-		projected[column] = cloneValue(row[column]);
+		// Cassandra returns null for selected columns that have never been written.
+		projected[column] = cloneValue(row[column] ?? null);
 	}
 	return projected;
 }
@@ -191,9 +96,14 @@ function parseRawMeta(cql: string): KvQueryMeta<Row> | null {
 
 export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorForTesting {
 	private readonly tables = new Map<string, Map<string, Row>>();
+	readonly executed: Array<KvQueryMeta> = [];
+	countStatements(statement: string): number {
+		return this.executed.filter((meta) => `${meta.action}:${meta.table.name}` === statement).length;
+	}
 
 	reset(): void {
 		this.tables.clear();
+		this.executed.length = 0;
 	}
 
 	private table(meta: KvQueryMeta): Map<string, Row> {
@@ -215,6 +125,8 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 
 	async executeQuery<T = Row>(query: PreparedQuery): Promise<Array<T>> {
 		const meta = this.meta(query);
+		const recordedMeta = query.kvMeta ?? getKvMeta(query.cql);
+		if (recordedMeta) this.executed.push(recordedMeta);
 		switch (meta.action) {
 			case 'select':
 				return this.select(meta, query.params) as Array<T>;
@@ -244,6 +156,17 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 				return [];
 		}
 		return [];
+	}
+
+	async executePagedQuery<T = Row>(
+		query: PreparedQuery,
+		options: {pageSize: number; pageState?: string | null},
+	): Promise<{rows: Array<T>; pageState: string | null}> {
+		const rows = await this.executeQuery<T>(query);
+		const offset = options.pageState ? Number.parseInt(options.pageState, 10) : 0;
+		const page = rows.slice(offset, offset + options.pageSize);
+		const nextOffset = offset + page.length;
+		return {rows: page, pageState: nextOffset < rows.length ? String(nextOffset) : null};
 	}
 
 	async executeBatch(

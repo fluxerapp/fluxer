@@ -4,9 +4,6 @@
 -typing([eqwalizer]).
 
 -export([
-    slice_items/3,
-    update_subscriptions/4,
-    remove_session_from_subscriptions/2,
     is_subset_of_ranges/2,
     compute_range_delta/2
 ]).
@@ -17,41 +14,6 @@
 -type list_item() :: map().
 
 -export_type([range/0, session_id/0, list_id/0, list_item/0]).
-
--spec slice_items([list_item()], non_neg_integer(), non_neg_integer()) -> [list_item()].
-slice_items(Items, Start, End) ->
-    SafeEnd = min(End, length(Items) - 1),
-    case Start > SafeEnd of
-        true -> [];
-        false -> lists:sublist(Items, Start + 1, SafeEnd - Start + 1)
-    end.
-
--spec update_subscriptions(session_id(), list_id(), [range()], map()) ->
-    {map(), [range()], boolean()}.
-update_subscriptions(SessionId, ListId, NormalizedRanges, Subscriptions) ->
-    case valid_list_id(ListId) of
-        true ->
-            ListSubs0 = maps:get(ListId, Subscriptions, #{}),
-            OldRanges = maps:get(SessionId, ListSubs0, []),
-            NewSubscriptions = apply_subscription_change(
-                SessionId, ListId, NormalizedRanges, ListSubs0, Subscriptions
-            ),
-            ShouldSync = NormalizedRanges =/= [] andalso NormalizedRanges =/= OldRanges,
-            {NewSubscriptions, OldRanges, ShouldSync};
-        false ->
-            {Subscriptions, [], false}
-    end.
-
--spec apply_subscription_change(session_id(), list_id(), [range()], map(), map()) -> map().
-apply_subscription_change(SessionId, ListId, [], ListSubs0, Subscriptions) ->
-    Trimmed = maps:remove(SessionId, ListSubs0),
-    case map_size(Trimmed) of
-        0 -> maps:remove(ListId, Subscriptions);
-        _ -> Subscriptions#{ListId => Trimmed}
-    end;
-apply_subscription_change(SessionId, ListId, NormalizedRanges, ListSubs0, Subscriptions) ->
-    Updated = ListSubs0#{SessionId => NormalizedRanges},
-    Subscriptions#{ListId => Updated}.
 
 -spec is_subset_of_ranges([range()], [range()]) -> boolean().
 is_subset_of_ranges([], _Outer) ->
@@ -112,32 +74,3 @@ subtract_one_range(RStart, REnd, SubStart, SubEnd) ->
             false -> []
         end,
     Left ++ Right.
-
--spec remove_session_from_subscriptions(session_id(), map()) -> map().
-remove_session_from_subscriptions(SessionId, Subscriptions) ->
-    maps:fold(
-        fun(ListId, ListSubs, Acc) ->
-            remove_session_from_list(SessionId, ListId, ListSubs, Acc)
-        end,
-        #{},
-        Subscriptions
-    ).
-
--spec remove_session_from_list(session_id(), list_id(), map(), map()) -> map().
-remove_session_from_list(SessionId, ListId, ListSubs, Acc) ->
-    Trimmed = maps:remove(SessionId, ListSubs),
-    case map_size(Trimmed) of
-        0 -> Acc;
-        _ -> Acc#{ListId => Trimmed}
-    end.
-
--spec valid_list_id(list_id()) -> boolean().
-valid_list_id(<<"0">>) ->
-    true;
-valid_list_id(ListId) when is_binary(ListId) ->
-    case snowflake_id:parse_maybe(ListId) of
-        Id when is_integer(Id), Id > 0 -> true;
-        _ -> false
-    end;
-valid_list_id(_) ->
-    false.

@@ -71,6 +71,8 @@ function renderSidebar(sidebar: SkeletonSidebarVariant, guildId: string | null) 
 			return (
 				<DiscoverySidebarSkeleton data-flx="app.skeleton.app-skeleton.render-sidebar.discovery-sidebar-skeleton" />
 			);
+		case SkeletonSidebarVariant.NONE:
+			return null;
 	}
 }
 
@@ -173,7 +175,8 @@ export const AppSkeleton = observer(({isExiting = false, onTransitionEnd, effect
 			</flx-app-skeleton>
 		);
 	}
-	const showMobileSidebarInline = isMobile && showsMobileSidebar(pathname);
+	const hasSidebar = shell.sidebar !== SkeletonSidebarVariant.NONE;
+	const showMobileSidebarInline = isMobile && hasSidebar && showsMobileSidebar(pathname);
 	const showRail = !isMobile || showsMobileGuildRail(pathname);
 	const reserveMobileBottomNav = isMobile && reservesMobileBottomNavSpace(pathname);
 	const showUserArea = !isMobile && !isVoiceCallFullscreenActive;
@@ -227,7 +230,7 @@ export const AppSkeleton = observer(({isExiting = false, onTransitionEnd, effect
 					data-flx="app.skeleton.app-skeleton.outline-frame"
 				>
 					<flx-app-skeleton-main
-						className={flxElementClassName(styles.main, isMobile && styles.mainSidebarless)}
+						className={flxElementClassName(styles.main, (isMobile || !hasSidebar) && styles.mainSidebarless)}
 						data-flx="app.skeleton.app-skeleton.main"
 					>
 						{!isMobile && renderSidebar(shell.sidebar, guildId)}

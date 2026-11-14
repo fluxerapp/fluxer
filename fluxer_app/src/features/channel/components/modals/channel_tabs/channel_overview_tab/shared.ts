@@ -20,6 +20,7 @@ export interface FormInputs {
 	rtc_region: string | null;
 	default_auto_archive_duration?: number;
 	default_thread_rate_limit_per_user?: number;
+	rtc_p2p: boolean;
 }
 
 export const CHANNEL_OVERVIEW_TAB_ID = 'overview';

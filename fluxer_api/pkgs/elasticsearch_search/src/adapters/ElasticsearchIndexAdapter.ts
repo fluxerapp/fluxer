@@ -54,9 +54,11 @@ interface ElasticsearchIndexAdapterOptions<TFilters> {
 	client: Client;
 	index: ElasticsearchIndexDefinition;
 	searchableFields: Array<string>;
+	buildSearchableFields?: (filters: TFilters) => Array<string>;
 	searchType?: 'best_fields' | 'bool_prefix';
 	fuzziness?: string;
 	minimumShouldMatch?: string;
+	operator?: 'and' | 'or';
 	buildFilters: (filters: TFilters) => Array<ElasticsearchFilter | undefined>;
 	buildSort?: (filters: TFilters) => Array<SortCombinations> | undefined;
 	lock?: ElasticsearchDistributedLock;
@@ -72,9 +74,11 @@ export class ElasticsearchIndexAdapter<
 	protected readonly client: Client;
 	protected readonly indexDefinition: ElasticsearchIndexDefinition;
 	protected readonly searchableFields: Array<string>;
+	protected readonly buildSearchableFields: ((filters: TFilters) => Array<string>) | undefined;
 	protected readonly searchType: 'best_fields' | 'bool_prefix';
 	protected readonly fuzziness: string | undefined;
 	protected readonly minimumShouldMatch: string | undefined;
+	protected readonly operator: 'and' | 'or';
 	protected readonly buildFilters: (filters: TFilters) => Array<ElasticsearchFilter | undefined>;
 	protected readonly buildSort: ((filters: TFilters) => Array<SortCombinations> | undefined) | undefined;
 	private readonly lock: ElasticsearchDistributedLock | undefined;
@@ -84,9 +88,11 @@ export class ElasticsearchIndexAdapter<
 		this.client = options.client;
 		this.indexDefinition = options.index;
 		this.searchableFields = options.searchableFields;
+		this.buildSearchableFields = options.buildSearchableFields;
 		this.searchType = options.searchType ?? 'best_fields';
 		this.fuzziness = options.fuzziness;
 		this.minimumShouldMatch = options.minimumShouldMatch;
+		this.operator = options.operator ?? 'or';
 		this.buildFilters = options.buildFilters;
 		this.buildSort = options.buildSort;
 		this.lock = options.lock;
@@ -237,6 +243,10 @@ export class ElasticsearchIndexAdapter<
 		this.assertBulkSucceeded(response, 'delete');
 	}
 
+	async deleteByTerm(field: string, value: string): Promise<void> {
+		await this.deleteByQuery({term: {[field]: value}});
+	}
+
 	async deleteByQuery(query: Record<string, unknown>): Promise<void> {
 		this.assertInitialised();
 		const response = await this.client.deleteByQuery({
@@ -265,20 +275,23 @@ export class ElasticsearchIndexAdapter<
 		const offset = options?.offset ?? (options?.page ? (options.page - 1) * (options.hitsPerPage ?? 25) : 0);
 		const filterClauses = compactFilters(this.buildFilters(filters));
 		const sort = this.buildSort?.(filters);
-		const must: Array<Record<string, unknown>> = query
-			? [
-					{
-						multi_match: {
-							query,
-							fields: this.searchableFields,
-							type: this.searchType,
-							operator: 'or',
-							...(this.fuzziness != null ? {fuzziness: this.fuzziness} : {}),
-							...(this.minimumShouldMatch != null ? {minimum_should_match: this.minimumShouldMatch} : {}),
-						},
+		let must: Array<Record<string, unknown>>;
+		if (query) {
+			must = [
+				{
+					multi_match: {
+						query,
+						fields: this.buildSearchableFields?.(filters) ?? this.searchableFields,
+						type: this.searchType,
+						operator: this.operator,
+						...(this.fuzziness != null ? {fuzziness: this.fuzziness} : {}),
+						...(this.minimumShouldMatch != null ? {minimum_should_match: this.minimumShouldMatch} : {}),
 					},
-				]
-			: [{match_all: {}}];
+				},
+			];
+		} else {
+			must = [{match_all: {}}];
+		}
 		const facets = options?.facets;
 		const searchParams: ElasticsearchBaseSearchRequest = {
 			index: this.indexDefinition.indexName,
@@ -348,9 +361,14 @@ export class ElasticsearchIndexAdapter<
 		let total: number | undefined;
 		let searchAfter: SortResults | undefined;
 		const hits: Array<TResult> = [];
+		const resultParams: ElasticsearchBaseSearchRequest = {...searchParams, aggs: undefined};
+		const skipParams: ElasticsearchBaseSearchRequest = {...resultParams, _source: false};
 		while (remainingOffset > 0 || remainingLimit > 0) {
-			const batchSize = Math.min(DEEP_PAGINATION_BATCH_SIZE, remainingOffset > 0 ? remainingOffset : remainingLimit);
-			const result = await this.executeSearchRequest(searchParams, {
+			const skipping = remainingOffset > 0;
+			const batchSize = skipping
+				? Math.min(ELASTICSEARCH_MAX_RESULT_WINDOW, remainingOffset)
+				: Math.min(DEEP_PAGINATION_BATCH_SIZE, remainingLimit);
+			const result = await this.executeSearchRequest(skipping ? skipParams : resultParams, {
 				size: batchSize,
 				searchAfter,
 				trackTotalHits: total == null,
@@ -366,7 +384,7 @@ export class ElasticsearchIndexAdapter<
 				break;
 			}
 			searchAfter = batchHits.at(-1)?.sort;
-			if (remainingOffset > 0) {
+			if (skipping) {
 				remainingOffset -= batchHits.length;
 				continue;
 			}

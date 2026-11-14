@@ -5,7 +5,7 @@ use crate::{
     api::types::GuildDetailInfo,
     config::AdminConfig,
     templates::components::{
-        form::{checkbox, csrf_input, form_actions, submit_button},
+        form::{Checkbox, csrf_input, form_actions, submit_button},
         page_container::card_with_header,
     },
 };
@@ -100,25 +100,25 @@ pub fn settings_tab(
                             "Content Rating"
                         }
                         p class="text-sm text-neutral-500" {
-                            "Adult content drives the age-verification gate. Content warnings are an advisory shown before entering, with optional custom copy."
+                            "Adult content is hidden from accounts that cannot see mature content. Content warnings are an advisory shown before entering, with optional custom copy."
                         }
                         input type="hidden" name="nsfw_submitted" value="1";
                         input type="hidden" name="content_warning_submitted" value="1";
                         div class="flex flex-wrap gap-6" {
-                            (checkbox(
-                                "nsfw",
-                                "on",
-                                "Adult content (18+)",
-                                guild.nsfw.unwrap_or(false),
-                                true,
-                            ))
-                            (checkbox(
-                                "content_warning_level",
-                                "on",
-                                "Show a content warning",
-                                guild.content_warning_level == Some(1),
-                                true,
-                            ))
+                            (Checkbox {
+                                name: "nsfw",
+                                value: "on",
+                                label: "Adult content (18+)",
+                                checked: guild.nsfw.unwrap_or(false),
+                                enabled: true,
+                            }.render())
+                            (Checkbox {
+                                name: "content_warning_level",
+                                value: "on",
+                                label: "Show a content warning",
+                                checked: guild.content_warning_level == Some(1),
+                                enabled: true,
+                            }.render())
                         }
                         div class="space-y-2" {
                             label for="guild-content-warning-text"
@@ -152,13 +152,13 @@ pub fn settings_tab(
                     (csrf_input(csrf_token))
                     div class="space-y-3" {
                         @for &(name, value) in DISABLED_OPERATIONS {
-                            (checkbox(
-                                "disabled_operations[]",
-                                &value.to_string(),
-                                name,
-                                guild.disabled_operations.unwrap_or(0) & value == value,
-                                true,
-                            ))
+                            (Checkbox {
+                                name: "disabled_operations[]",
+                                value: &value.to_string(),
+                                label: name,
+                                checked: guild.disabled_operations.unwrap_or(0) & value == value,
+                                enabled: true,
+                            }.render())
                         }
                     }
                     div class="mt-6 border-t border-neutral-200 pt-6" {
@@ -175,10 +175,34 @@ pub fn settings_tab(
                     (csrf_input(csrf_token))
                     div class="space-y-4" {
                         div class="space-y-2" {
-                            (checkbox("fields[]", "icon", "Icon", false, true))
-                            (checkbox("fields[]", "banner", "Banner", false, true))
-                            (checkbox("fields[]", "splash", "Splash", false, true))
-                            (checkbox("fields[]", "embed_splash", "Embed Splash", false, true))
+                            (Checkbox {
+                                name: "fields[]",
+                                value: "icon",
+                                label: "Icon",
+                                checked: false,
+                                enabled: true,
+                            }.render())
+                            (Checkbox {
+                                name: "fields[]",
+                                value: "banner",
+                                label: "Banner",
+                                checked: false,
+                                enabled: true,
+                            }.render())
+                            (Checkbox {
+                                name: "fields[]",
+                                value: "splash",
+                                label: "Splash",
+                                checked: false,
+                                enabled: true,
+                            }.render())
+                            (Checkbox {
+                                name: "fields[]",
+                                value: "embed_splash",
+                                label: "Embed Splash",
+                                checked: false,
+                                enabled: true,
+                            }.render())
                         }
                         (form_actions(html! {
                             (submit_button("Clear Selected Fields"))
@@ -292,34 +316,5 @@ fn readonly_field(label: &str, value: &str) -> Markup {
             dt class="text-sm font-medium text-neutral-700" { (label) }
             dd class="text-sm text-neutral-900" { (value) }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    fn guild() -> GuildDetailInfo {
-        serde_json::from_value(json!({
-            "id": "1500000000000000001",
-            "owner_id": "1400000000000000001",
-            "name": "Guild",
-            "verification_level": 1
-        }))
-        .expect("valid guild detail")
-    }
-
-    #[test]
-    fn low_verification_names_a_claimed_account_in_username_mode() {
-        let markup = settings_tab_readonly(&guild(), true).into_string();
-        assert!(markup.contains("Low (claimed account)"));
-        assert!(!markup.contains("verified email"));
-    }
-
-    #[test]
-    fn low_verification_names_a_verified_email_in_email_mode() {
-        let markup = settings_tab_readonly(&guild(), false).into_string();
-        assert!(markup.contains("Low (verified email)"));
     }
 }

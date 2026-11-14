@@ -11,15 +11,15 @@ import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import GuildCount from '@app/features/guild/state/GuildCount';
 import Guilds from '@app/features/guild/state/Guilds';
 import {JOIN_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {Button} from '@app/features/ui/button/Button';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useState} from 'react';
@@ -54,6 +54,7 @@ interface CommunityCardData {
 	banner: string | null;
 	description: string | null;
 	features: ReadonlySet<string> | ReadonlyArray<string>;
+	badgeIds: ReadonlyArray<string>;
 	onlineCount: number | null;
 	memberCount: number | null;
 	isMember: boolean;
@@ -90,6 +91,7 @@ function useCommunityCardView(message: Message, sourceGuildId: string | null): C
 				banner: localGuild.banner,
 				description: fetched?.description ?? null,
 				features: localGuild.features,
+				badgeIds: localGuild.badgeIds,
 				onlineCount: counts?.onlineCount ?? null,
 				memberCount: counts?.memberCount ?? null,
 				isMember: true,
@@ -116,10 +118,11 @@ function useCommunityCardView(message: Message, sourceGuildId: string | null): C
 			banner: card.banner ?? null,
 			description: card.description ?? null,
 			features: card.features,
+			badgeIds: card.badge_ids,
 			onlineCount: card.approximate_presence_count,
 			memberCount: card.approximate_member_count,
 			isMember: false,
-			canJoin: card.discoverable && !RuntimeConfig.singleCommunityEnabled,
+			canJoin: card.discoverable && RuntimeConfig.discoveryAvailable,
 		},
 	};
 }
@@ -155,7 +158,7 @@ export const CrosspostCommunityCard = observer(function CrosspostCommunityCard({
 		}
 	}, [guildId, onClose]);
 	const bannerUrl = data?.banner ? AvatarUtils.getGuildBannerURL({id: data.id, banner: data.banner}) : null;
-	const locale = getCurrentLocale();
+	const locale = getFormattingLocale();
 	const hasCounts = data != null && data.onlineCount != null && data.memberCount != null;
 	const renderedOnlineCount = hasCounts ? formatNumber(data.onlineCount ?? 0, locale) : '';
 	const renderedMemberCount = hasCounts ? formatNumber(data.memberCount ?? 0, locale) : '';
@@ -199,6 +202,7 @@ export const CrosspostCommunityCard = observer(function CrosspostCommunityCard({
 					{data != null && (
 						<GuildBadge
 							features={data.features}
+							badgeIds={data.badgeIds}
 							tooltipPosition="bottom"
 							data-flx="channel.crosspost-community-card.guild-badge"
 						/>

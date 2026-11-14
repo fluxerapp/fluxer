@@ -27,7 +27,7 @@ export interface NumericTierPerk extends BasePerk {
 	unit?: 'count' | 'bytes' | 'characters';
 }
 
-export interface TextTierPerk extends BasePerk {
+interface TextTierPerk extends BasePerk {
 	type: 'text';
 	restrictedValueI18nKey: string;
 	stockValueI18nKey: string;
@@ -42,10 +42,6 @@ export function isBooleanTierPerk(perk: LimitTierPerk): perk is BooleanTierPerk 
 
 export function isNumericTierPerk(perk: LimitTierPerk): perk is NumericTierPerk {
 	return perk.type === 'numeric';
-}
-
-export function isTextTierPerk(perk: LimitTierPerk): perk is TextTierPerk {
-	return perk.type === 'text';
 }
 
 export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [

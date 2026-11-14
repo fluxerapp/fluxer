@@ -42,6 +42,11 @@ export class PaymentRepository {
 		eu_withdrawal_waiver_accepted?: boolean;
 		eu_withdrawal_waiver_accepted_at?: Date | null;
 		eu_withdrawal_waiver_text_version?: string | null;
+		distribution?: string | null;
+		distribution_rate_bps?: number | null;
+		distribution_rule_version?: number | null;
+		distribution_base_amount_minor?: number | null;
+		distribution_purchase_ref?: string | null;
 	}): Promise<void> {
 		const batch = new BatchBuilder();
 		const paymentRow: PaymentRow = {
@@ -65,6 +70,11 @@ export class PaymentRepository {
 			eu_withdrawal_waiver_accepted: data.eu_withdrawal_waiver_accepted ?? false,
 			eu_withdrawal_waiver_accepted_at: data.eu_withdrawal_waiver_accepted_at ?? null,
 			eu_withdrawal_waiver_text_version: data.eu_withdrawal_waiver_text_version ?? null,
+			distribution: data.distribution ?? null,
+			distribution_rate_bps: data.distribution_rate_bps ?? null,
+			distribution_rule_version: data.distribution_rule_version ?? null,
+			distribution_base_amount_minor: data.distribution_base_amount_minor ?? null,
+			distribution_purchase_ref: data.distribution_purchase_ref ?? null,
 			completed_at: null,
 			version: 1,
 		};
@@ -118,6 +128,13 @@ export class PaymentRepository {
 				addField('eu_withdrawal_waiver_accepted');
 				addField('eu_withdrawal_waiver_accepted_at');
 				addField('eu_withdrawal_waiver_text_version');
+				addField('distribution');
+				addField('distribution_rate_bps');
+				addField('distribution_rule_version');
+				addField('distribution_base_amount_minor');
+				addField('distribution_purchase_ref');
+				addField('tax_amount_minor');
+				addField('tax_country');
 				addField('completed_at');
 				return {
 					pk: {checkout_session_id: checkoutSessionId},

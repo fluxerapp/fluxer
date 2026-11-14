@@ -23,7 +23,7 @@ type NumericAuditLogOptionKey =
 	| 'max_uses'
 	| 'uses';
 
-export const GUILD_AUDIT_INTERNAL_CHANGE_KEYS: ReadonlySet<string> = new Set([
+const GUILD_AUDIT_INTERNAL_CHANGE_KEYS: ReadonlySet<string> = new Set([
 	'guild_id',
 	'member_count',
 	'banner_width',

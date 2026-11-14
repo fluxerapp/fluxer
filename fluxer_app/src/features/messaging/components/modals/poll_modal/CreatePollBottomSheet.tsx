@@ -4,21 +4,10 @@ import selectorStyles from '@app/features/app/components/dialogs/shared/Selector
 import {Limits} from '@app/features/app/utils/UserLimits';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
-import styles from '@app/features/messaging/components/modals/poll_modal/CreatePollModal.module.css';
-import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
-import {Button} from '@app/features/ui/button/Button';
-import {Combobox} from '@app/features/ui/components/form/FormCombobox';
-import {FieldSet, Textarea} from '@app/features/ui/components/form/FormInput';
-import {Scroller} from '@app/features/ui/components/Scroller';
-import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGroup';
-import {useLingui} from '@lingui/react';
-import {PlusIcon} from '@phosphor-icons/react';
-import {observer} from 'mobx-react-lite';
-import {useCallback, useMemo, useState} from 'react';
-import {useTextareaSegments} from '../../../hooks/useTextareaSegments';
 import {
 	CREATE_A_POLL_DESCRIPTOR,
 	generateDurationOptions,
+	type IdlessPollAnswerItem,
 	POLL_ADD_ANSWER_DESCRIPTOR,
 	POLL_ALLOW_MULTIPLE_ANSWERS_DESCRIPTOR,
 	POLL_ANONYMOUS_VOTING_DESCRIPTOR,
@@ -29,10 +18,24 @@ import {
 	POLL_QUESTION_DESCRIPTOR,
 	POLL_QUESTION_PLACEHOLDER_DESCRIPTOR,
 	POLL_SUBMIT_DESCRIPTOR,
-	type IdlessPollAnswerItem,
 	type PollForm,
-} from './CreatePollModal';
-import {EmojiContextMenuBottomSheet, PollAnswerInput} from './PollAnswerInput';
+} from '@app/features/messaging/components/modals/poll_modal/CreatePollModal';
+import styles from '@app/features/messaging/components/modals/poll_modal/CreatePollModal.module.css';
+import {
+	EmojiContextMenuBottomSheet,
+	PollAnswerInput,
+} from '@app/features/messaging/components/modals/poll_modal/PollAnswerInput';
+import {useTextareaSegments} from '@app/features/messaging/hooks/useTextareaSegments';
+import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
+import {Button} from '@app/features/ui/button/Button';
+import {Combobox} from '@app/features/ui/components/form/FormCombobox';
+import {FieldSet, Textarea} from '@app/features/ui/components/form/FormInput';
+import {Scroller} from '@app/features/ui/components/Scroller';
+import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGroup';
+import {useLingui} from '@lingui/react';
+import {PlusIcon} from '@phosphor-icons/react';
+import {observer} from 'mobx-react-lite';
+import {useCallback, useMemo, useState} from 'react';
 
 interface CreatePollBottomSheetProps {
 	isOpen: boolean;
@@ -43,7 +46,7 @@ interface CreatePollBottomSheetProps {
 
 export const CreatePollBottomSheet = observer(({isOpen, onClose, onSubmit, channelId}: CreatePollBottomSheetProps) => {
 	const {i18n} = useLingui();
-	const {previousValueRef, displayToActual, handleTextChange} = useTextareaSegments();
+	const {displayToActual} = useTextareaSegments();
 	const [submitting, setSubmitting] = useState(false);
 	const [currentOpenedAnswer, setCurrentOpenedAnswer] = useState(-1);
 	const [expressionPickerOpen, setExpressionPickerOpen] = useState(false);
@@ -143,12 +146,8 @@ export const CreatePollBottomSheet = observer(({isOpen, onClose, onSubmit, chann
 							showCharacterCount={true}
 							error={forgotToEnterQuestion ? i18n._(POLL_ERROR_YOU_FORGOT_TO_ENTER_A_QUESTION) : undefined}
 							onChange={(e) => {
-								const nativeEvent = e.nativeEvent as InputEvent;
-								const newValue = e.target.value;
-								const inputType = typeof nativeEvent.inputType === 'string' ? nativeEvent.inputType : undefined;
 								setForgotToEnterQuestion(false);
-								handleTextChange(newValue, previousValueRef.current, inputType);
-								setQuestion(newValue);
+								setQuestion(e.target.value);
 							}}
 							data-flx="messaging.create-poll-bottom-sheet.textarea.question"
 						/>
@@ -198,10 +197,11 @@ export const CreatePollBottomSheet = observer(({isOpen, onClose, onSubmit, chann
 									}
 									showDelete={answers.length > 1}
 									channelId={channelId}
+									data-flx="messaging.poll-modal.create-poll-bottom-sheet.poll-answer-input"
 								/>
 							))}
 							<Button
-								leftIcon={<PlusIcon weight="bold" />}
+								leftIcon={<PlusIcon weight="bold" data-flx="messaging.poll-modal.create-poll-bottom-sheet.plus-icon" />}
 								variant="secondary"
 								hidden={answers.length >= maxAnswerCount}
 								onClick={() => {
@@ -216,6 +216,7 @@ export const CreatePollBottomSheet = observer(({isOpen, onClose, onSubmit, chann
 										];
 									});
 								}}
+								data-flx="messaging.poll-modal.create-poll-bottom-sheet.button.set-answers"
 							>
 								{i18n._(POLL_ADD_ANSWER_DESCRIPTOR)}
 							</Button>

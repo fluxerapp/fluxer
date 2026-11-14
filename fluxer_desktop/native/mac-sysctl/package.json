@@ -19,9 +19,5 @@
 		"loader-diagnostics.cjs",
 		"mac-sysctl.darwin-x64.node",
 		"mac-sysctl.darwin-arm64.node"
-	],
-	"scripts": {
-		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
-		"test": "cargo test --manifest-path Cargo.toml"
-	}
+	]
 }

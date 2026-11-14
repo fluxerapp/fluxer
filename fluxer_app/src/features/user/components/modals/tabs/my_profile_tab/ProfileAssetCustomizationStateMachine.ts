@@ -41,7 +41,7 @@ export type ProfileAssetCustomizationEvent =
 
 type ProfileAssetCustomizationStateValue = 'unhydrated' | 'clean' | 'dirty' | 'committed';
 
-export interface ProfileAssetCustomizationState extends ProfileAssetRemoteState {
+interface ProfileAssetCustomizationState extends ProfileAssetRemoteState {
 	readonly state: ProfileAssetCustomizationStateValue;
 	readonly initialMode: ProfileAssetMode;
 	readonly previewUrl: string | null;
@@ -109,7 +109,14 @@ export function createProfileAssetRemoteStateFromFlags(params: {
 	hasCustomAsset: boolean;
 	isUnset: boolean;
 }): ProfileAssetRemoteState {
-	const mode: ProfileAssetMode = params.isUnset ? 'unset' : params.hasCustomAsset ? 'custom' : 'inherit';
+	let mode: ProfileAssetMode;
+	if (params.isUnset) {
+		mode = 'unset';
+	} else if (params.hasCustomAsset) {
+		mode = 'custom';
+	} else {
+		mode = 'inherit';
+	}
 	return createProfileAssetRemoteState({
 		identityKey: params.identityKey,
 		mode,
@@ -189,28 +196,19 @@ const profileAssetCustomizationStateMachine = setup({
 	id: 'profileAssetCustomization',
 	context: () => createContext(),
 	initial: 'unhydrated',
+	on: {
+		'asset.remoteApplied': {target: '.clean', actions: 'applyRemote'},
+		'asset.committed': {target: '.committed', actions: 'commitRemote'},
+		'asset.modeSelected': {target: '.routing', actions: 'selectMode'},
+		'asset.uploaded': {target: '.routing', actions: 'applyUpload'},
+		'asset.cleared': {target: '.routing', actions: 'clearAsset'},
+	},
 	states: {
-		unhydrated: {
-			on: {
-				'asset.remoteApplied': {target: 'clean', actions: 'applyRemote'},
-				'asset.committed': {target: 'committed', actions: 'commitRemote'},
-				'asset.modeSelected': {target: 'routing', actions: 'selectMode'},
-				'asset.uploaded': {target: 'routing', actions: 'applyUpload'},
-				'asset.cleared': {target: 'routing', actions: 'clearAsset'},
-			},
-		},
+		unhydrated: {},
 		routing: {
 			always: [{guard: 'isDirty', target: 'dirty'}, {target: 'clean'}],
 		},
-		clean: {
-			on: {
-				'asset.remoteApplied': {target: 'clean', actions: 'applyRemote'},
-				'asset.committed': {target: 'committed', actions: 'commitRemote'},
-				'asset.modeSelected': {target: 'routing', actions: 'selectMode'},
-				'asset.uploaded': {target: 'routing', actions: 'applyUpload'},
-				'asset.cleared': {target: 'routing', actions: 'clearAsset'},
-			},
-		},
+		clean: {},
 		dirty: {
 			on: {
 				'asset.remoteApplied': [
@@ -218,10 +216,6 @@ const profileAssetCustomizationStateMachine = setup({
 					{guard: 'remoteIdentityChanged', target: 'clean', actions: 'applyRemote'},
 					{target: 'dirty'},
 				],
-				'asset.committed': {target: 'committed', actions: 'commitRemote'},
-				'asset.modeSelected': {target: 'routing', actions: 'selectMode'},
-				'asset.uploaded': {target: 'routing', actions: 'applyUpload'},
-				'asset.cleared': {target: 'routing', actions: 'clearAsset'},
 			},
 		},
 		committed: {
@@ -232,10 +226,6 @@ const profileAssetCustomizationStateMachine = setup({
 					{guard: 'remoteMatchesCurrent', target: 'clean', actions: 'applyRemote'},
 					{target: 'committed'},
 				],
-				'asset.committed': {target: 'committed', actions: 'commitRemote'},
-				'asset.modeSelected': {target: 'routing', actions: 'selectMode'},
-				'asset.uploaded': {target: 'routing', actions: 'applyUpload'},
-				'asset.cleared': {target: 'routing', actions: 'clearAsset'},
 			},
 		},
 	},

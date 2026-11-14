@@ -10,6 +10,7 @@ import {ChannelResponse, ThreadChannelResponse} from '@fluxer/schema/src/domains
 import {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {type MessageEmbed, MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
+import {type MessagePoll, MessagePollResponse} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {MessageReferenceTypeSchema, MessageTypeSchema} from '@fluxer/schema/src/primitives/MessageValidators';
 import {
@@ -19,7 +20,6 @@ import {
 	SnowflakeStringType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
-import {type MessagePoll, MessagePollResponse} from './PollSchemas';
 
 export const MessageAttachmentResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this attachment'),

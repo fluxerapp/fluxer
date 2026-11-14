@@ -10,7 +10,7 @@
 	border: none;
 	background-color: transparent;
 	padding: 0;
-	text-align: left;
+	text-align: start;
 	font-size: 0.6875rem;
 	line-height: 0.875rem;
 	color: var(--text-primary-muted);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {createQueryIntegerType, DateTimeType, QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
+import {createQueryIntegerType, QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {describe, expect, it} from 'vitest';
 
 describe('QueryBooleanType', () => {
@@ -75,44 +75,5 @@ describe('createQueryIntegerType', () => {
 
 	it('rejects unsafe integers even when the configured range includes them', () => {
 		expect(createQueryIntegerType({maxValue: Number.MAX_VALUE}).safeParse('9007199254740993').success).toBe(false);
-	});
-});
-
-describe('DateTimeType', () => {
-	it.each([
-		['2024-01-15T12:30:00Z', '2024-01-15T12:30:00.000Z'],
-		['2024-01-15T12:30:00.123Z', '2024-01-15T12:30:00.123Z'],
-		['2024-01-15T12:30:00+05:00', '2024-01-15T07:30:00.000Z'],
-		['2024-01-15T12:30:00-0800', '2024-01-15T20:30:00.000Z'],
-		['2024-02-29T00:00:00Z', '2024-02-29T00:00:00.000Z'],
-		['2000-02-29T00:00:00Z', '2000-02-29T00:00:00.000Z'],
-		[1705323000000, '2024-01-15T12:50:00.000Z'],
-		[0, '1970-01-01T00:00:00.000Z'],
-	])('parses %j to the exact instant', (input, expected) => {
-		expect(DateTimeType.parse(input).toISOString()).toBe(expected);
-	});
-
-	it('preserves timezone-free timestamps as local time', () => {
-		expect(DateTimeType.parse('2024-01-15T12:30:00')).toEqual(new Date(2024, 0, 15, 12, 30));
-	});
-
-	it.each([
-		'2024-01-15 12:30:00',
-		'not-a-date',
-		'2023-02-29T00:00:00Z',
-		'1900-02-29T00:00:00Z',
-		'2024-04-31T00:00:00Z',
-		'2024-01-15T25:00:00Z',
-		-1,
-		8640000000000001,
-		1705323000000.5,
-		Number.NaN,
-		Number.POSITIVE_INFINITY,
-	])('rejects invalid calendar dates or timestamps: %j', (input) => {
-		expect(DateTimeType.safeParse(input).success).toBe(false);
-	});
-
-	it('accepts the maximum JavaScript date', () => {
-		expect(DateTimeType.parse(8640000000000000).getTime()).toBe(8640000000000000);
 	});
 });

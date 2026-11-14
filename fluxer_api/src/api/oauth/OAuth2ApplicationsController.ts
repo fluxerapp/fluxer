@@ -3,6 +3,7 @@
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {CaptchaMiddleware} from '@app/api/middleware/CaptchaMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
@@ -175,6 +176,7 @@ export function OAuth2ApplicationsController(app: HonoApp) {
 	);
 	app.patch(
 		'/oauth2/applications/:id/bot',
+		RequestBodyLimit(jsonAssetBodyLimit({avatar: 1, banner: 1})),
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENT_UPDATE),
 		LoginRequired,
 		DefaultUserOnly,

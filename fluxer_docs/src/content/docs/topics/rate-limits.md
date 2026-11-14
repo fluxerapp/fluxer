@@ -1,71 +1,37 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Rate limits
-description: The route and global buckets, the denial body, and the rate limit headers.
+description: How the HTTP API limits requests, the 429 response and the rate limit headers.
 ---
 
-Fluxer bounds HTTP API traffic with a per-route bucket and one global bucket. A bucket is one allowance counted over one window. Fluxer denies an over-allowance request with 429, `code` set to `RATE_LIMITED`, a [rate limit response object](#rate-limit-response-object), and the [rate limit headers](#rate-limit-headers).
+When you send too many requests, the HTTP API returns 429 with `code` set to `RATE_LIMITED`. Wait `retry_after` seconds from the [response body](#rate-limit-response-object) and send the request again.
 
-## Buckets and scope
+## Buckets
 
-Nearly every route declares its own bucket. A bucket name can have a path parameter placeholder written as a colon followed by the parameter name, as in `guild:emojis:list::guild_id`. Fluxer substitutes the request value before keying the bucket, so one route holds a separate allowance for each path resource.
+Every HTTP API and Admin API operation declares a bucket, and its reference section says how many requests the bucket allows. A bucket name with a path parameter, such as `guild:emojis:list::guild_id`, has a separate allowance for each value of that parameter.
 
-Every bucket is also keyed by the caller's identity. An authenticated request is keyed by the account and its credential kind, and an OAuth2 bearer credential is keyed by the owning application as well. A session, a bot token, an Admin API key, and each bearer application therefore draw on separate allowances for the same account.
+Each caller has its own allowance, and a user session, a bot token, an Admin API key and an OAuth2 application count as separate callers even on the same account. A request with no token counts against the client IP address, or its `/64` for IPv6.
 
-A request that resolves no account is keyed by the client IP address, exactly for IPv4 and by the `/64` for IPv6, so clients in the same `/64` share an allowance. Where the deployment is configured to read the address from a header the request does not have, Fluxer refuses the request with 403 `FORBIDDEN` before evaluating any bucket.
+Each request also counts against a global bucket of 50 requests per second for each caller. An account with the [`HIGH_GLOBAL_RATE_LIMIT`](/admin-api/users/#account-flags) flag gets 1,200 requests per second, and an account with [`RATE_LIMIT_BYPASS`](/admin-api/users/#account-flags) skips the global bucket and every route bucket. Executing a webhook, and getting, editing or deleting its messages through the webhook's token URL, don't count against the global bucket.
 
-A request also counts against the global bucket, unless its route bucket is declared exempt. The global bucket is keyed by the same identity, so a request that resolves no account consumes the global allowance of its client IP address.
+Buckets refill continuously. A request still counts when the API rejects it with an error.
 
-These buckets are exempt, and each is the only bucket its route declares: `webhook:execute::webhook_id`, `webhook:message_get::webhook_id`, `webhook:message_edit::webhook_id`, `webhook:message_delete::webhook_id`, `webhook:github::webhook_id`, `webhook:instatus::webhook_id`, and `stripe:webhook`. Those routes draw on no global allowance. The `user:group_dm:create` and `user:group_dm:recipient:add` buckets are exempt as well. Each is a second bucket on a route whose first bucket is not exempt, so both routes still draw on the global allowance.
-
-Every HTTP API and Admin API operation declares a bucket. A caller that sends no credential on a [Bluesky client document](/http-api/connections/#get-bluesky-client-metadata) is keyed by the client IP address.
-
-The global window is one second. The default allowance is 50 requests per second, and an account holding the [`HIGH_GLOBAL_RATE_LIMIT`](/admin-api/users/#account-flags) flag receives 1,200 requests per second instead. The [`RATE_LIMIT_BYPASS`](/admin-api/users/#account-flags) flag exempts an account from the global bucket and from every route bucket. A successful response to that account has no rate limit header.
-
-Some operations enforce a further limit inside the handler. `RATE_LIMIT_BYPASS` exempts an account from none of them. [Limits enforced inside a handler](#limits-enforced-inside-a-handler) has the complete set.
-
-:::note[An allowance drains continuously]
-Every bucket is a leaky bucket. It admits at most the declared limit at once and refills continuously at that limit for each declared window, so a client that exhausts an allowance can send again as soon as enough of it has drained.
+:::caution[A global denial signs the user out]
+When the global bucket denies a request made with a user session token, the API revokes that token and the client has to log in again. Bot tokens, OAuth2 access tokens and Admin API keys are never revoked this way.
 :::
-
-:::note[The headers and the body report different instants]
-`X-RateLimit-Reset` and `X-RateLimit-Reset-After` report when the bucket has drained completely. `retry_after` in the response body reports the shorter delay after which one further request is admitted.
-:::
-
-:::note[A 429 can hide a 401 or 403]
-A rate-limited request can return 429 even if its credentials would otherwise be rejected with 401 or 403.
-:::
-
-Some routes declare a second route bucket, including group direct message creation, adding group recipients, and deleting guild emoji or stickers. Each operation lists its limits. Fluxer counts a request against its route buckets before the handler runs, so a request the handler rejects still uses up allowance.
-
-:::caution[A global denial revokes a user session]
-When the global bucket denies a request authenticated by a non-bot account's user session token, Fluxer revokes that token before writing the 429. The client must authenticate again. A bot token, an OAuth2 access token, and an Admin API key are never revoked this way, and a route bucket denial never revokes a credential.
-:::
-
-A deployment can disable both buckets through instance configuration. While they are disabled, no response has an `X-RateLimit-*` header and no request is refused with 429 `RATE_LIMITED`. That switch also turns off the login allowances. Every other [limit enforced inside a handler](#limits-enforced-inside-a-handler) stays in force.
 
 ## Rate limit response object
 
-The denial body has the members of the ordinary [error response](/http-api/#error-response) and two further members.
+A 429 body has the fields of the [error response](/http-api/#error-response) and two more.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| code<sup>1</sup> | string | `RATE_LIMITED` on a bucket denial |
-| message<sup>2</sup> | string | The localised rate limit message |
-| global | boolean | Whether the global bucket produced the denial, present and false on a route denial |
-| retry_after<sup>3</sup> | number | The delay in fractional seconds before another request is admitted |
-
-<sup>1</sup> A limit enforced outside the route bucket middleware can reuse this body with its own code. [Allowances answering 429](#allowances-answering-429) and [Announcement channel allowances](#announcement-channel-allowances) list every live one
-
-<sup>2</sup> The locale [resolved](/topics/locales/#negotiation) for the request, which the account setting selects ahead of [Accept-Language](/http-api/#standard-request-headers)
-
-<sup>3</sup> Never below 0.001, falling back to the whole-second `Retry-After` value when no fractional delay was computed
-
-The [Resend IP authorisation](/http-api/authentication/#resend-ip-authorisation) cooldown answers 429 with its own code and a different body. [Allowances answering 429](#allowances-answering-429) states what that body has.
-
-A [slowmode](#slowmode) denial answers 400 `SLOWMODE_RATE_LIMITED`.
+| code | string | `RATE_LIMITED`, or a more specific code from one of the [operation limits](#limits-enforced-inside-a-handler) |
+| message | string | The rate limit message in the request's [locale](/topics/locales/#negotiation) |
+| global | boolean | Whether the global bucket denied the request |
+| retry_after | number | The seconds to wait, as a decimal (at least 0.001) for a bucket denial and in whole seconds for most operation limits |
 
 ### Example
 
@@ -78,140 +44,93 @@ A [slowmode](#slowmode) denial answers 400 `SLOWMODE_RATE_LIMITED`.
 }
 ```
 
-## Rate limit scopes
-
-The `X-RateLimit-Scope` header is the scope that produced a denial.
-
-| Value | Description |
-| --- | --- |
-| user | The denial came from an allowance keyed by the caller alone |
-| global | The denial came from the global bucket |
-| shared<sup>1</sup> | The denial came from an allowance that several accounts can exhaust for each other |
-
-<sup>1</sup> No route bucket declares a scope of its own, so every route bucket denial reports `user`. The announcement channel allowances are the live sources of `shared`
-
-[Crosspost message](/http-api/messages/#crosspost-message) reports `shared` for its channel publish allowance, and an edit of a published message reports it for the per-message edit allowance. Every member who publishes or edits draws on the same allowance.
-
 ## Rate limit headers
 
-These headers describe a rate limit decision. An operation that answers 429 returns this set.
+Every 429 has `Retry-After`. A 429 with the [rate limit response object](#rate-limit-response-object) also has `X-RateLimit-Scope`, and a route bucket denial has the other `X-RateLimit-*` headers too. Successful responses have the route headers only for a bot token or a webhook token.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| Retry-After?<sup>1</sup> | string | The delay in whole seconds before another request is admitted, rounded up and never below 1 |
-| X-RateLimit-Scope?<sup>1</sup> | string | The [rate limit scope](#rate-limit-scopes) that produced the denial |
-| X-RateLimit-Global?<sup>2</sup> | string | The literal value `true` on a global HTTP 429 |
-| X-RateLimit-Limit?<sup>3</sup> | string | The maximum requests the route allowance admits at once |
-| X-RateLimit-Remaining?<sup>3</sup> | string | The whole requests the route allowance still admits, always 0 on a denial |
-| X-RateLimit-Reset?<sup>3</sup> <sup>4</sup> | string | The Unix timestamp in seconds at which the whole route allowance is available again |
-| X-RateLimit-Reset-After?<sup>3</sup> <sup>5</sup> | string | The seconds until the whole route allowance is available again |
-| X-RateLimit-Bucket?<sup>3</sup> <sup>6</sup> | string | The stable 16-character hexadecimal identifier of the route bucket |
+| Retry-After? | string | The seconds to wait, rounded up to a whole number (at least 1) |
+| X-RateLimit-Scope? | string | The [scope](#scopes) that denied the request |
+| X-RateLimit-Global? | string | `true` when the global bucket denied the request, sent with no route headers |
+| X-RateLimit-Limit? | string | The most requests the route bucket allows at once |
+| X-RateLimit-Remaining? | string | The requests the route bucket allows right now, 0 on a denial |
+| X-RateLimit-Reset? | string | The Unix time in seconds when the route bucket is full again |
+| X-RateLimit-Reset-After? | string | The seconds until the route bucket is full again |
+| X-RateLimit-Bucket? | string | A 16-character hex ID for the route bucket, left out on an operation limit |
 
-<sup>1</sup> Sent on every rate limit denial and on no successful response
+The reset headers say when the bucket is full again, and `retry_after` says when you can send one more request. Browser clients can't read these headers across origins and should use `retry_after` from the body.
 
-<sup>2</sup> Sent only when the global bucket produced the denial, in which case none of the route bucket headers is sent
+### Scopes
 
-<sup>3</sup> Sent on a route HTTP 429, subject to footnote 6 for `X-RateLimit-Bucket`. On a successful response they are sent only when the credential resolves to a bot account, or when the request resolves no account at all on a route with both a `webhook_id` and a `token` path parameter
+| Value | Description |
+| --- | --- |
+| user | A route bucket, counted for you alone |
+| global | The global bucket |
+| shared | An allowance shared with other members, such as the announcement channel limits |
 
-<sup>4</sup> A value at or before the current second is replaced with the next second
+## Handling a 429
 
-<sup>5</sup> Rounded to millisecond precision with trailing zeros removed on a successful response, and emitted as the exact computed decimal on a denial
-
-<sup>6</sup> An opaque identifier for the route's bucket, not the caller
-
-A 429 from a limit enforced inside a handler has the other route headers and no `X-RateLimit-Bucket`.
-
-:::note[Cross-origin clients cannot read rate-limit headers]
-The [cross-origin policy](/http-api/#cross-origin-requests) does not expose these headers. Use the response body's `retry_after` value.
-:::
+- Use `retry_after` from the body over the `Retry-After` header, which is rounded up to whole seconds.
+- When `global` is true, pause every request with that token.
+- For a bot, read `X-RateLimit-Remaining` on successful responses and slow down before it gets to 0.
 
 ## Limits enforced inside a handler
 
-An allowance enforced inside a handler is keyed independently of the route bucket and of the global bucket, so exhausting it denies the request while both buckets still have room. The set below is complete.
+Some operations have extra limits apart from the route and global buckets, and `RATE_LIMIT_BYPASS` doesn't skip them.
 
-The `disable_rate_limits` deployment switch turns off the login allowances along with both buckets. `relax_registration_rate_limits` turns off the registration allowances. Every other allowance below is enforced on every deployment.
+### Limits that return 429
 
-A denial takes one of the shapes below. An allowance in [Allowances answering 429](#allowances-answering-429) or [Announcement channel allowances](#announcement-channel-allowances) answers 429 with the [rate limit response object](#rate-limit-response-object) and the [rate limit headers](#rate-limit-headers) minus `X-RateLimit-Bucket`. An allowance in [Allowances answering 400](#allowances-answering-400) answers 400 `INVALID_FORM_BODY` with one [validation error](/http-api/#validation-error-object) entry whose `code` names the exhausted allowance.
+These return 429 with the [rate limit response object](#rate-limit-response-object) and [headers](#rate-limit-headers).
 
-The 400 shape has no `retry_after` member, no `X-RateLimit-*` header, and no `Retry-After` header. The remaining delay appears only in the entry's localised `message`.
-
-### Allowances answering 429
-
-| Operation | Allowance | Code |
-| --- | --- | --- |
-| [Log in with a password](/http-api/authentication/#log-in-with-a-password) | 5 per 15 minutes, keyed by the submitted email address | `RATE_LIMITED` |
-| [Log in with a password](/http-api/authentication/#log-in-with-a-password) | 10 per 30 minutes, keyed by the client IP address, exactly for IPv4 and by the `/64` for IPv6 | `RATE_LIMITED` |
-| [Register an account](/http-api/authentication/#register-an-account) | 3 per 15 minutes, keyed by the submitted email address | `RATE_LIMITED` |
-| [Register an account](/http-api/authentication/#register-an-account) | 3 per hour, keyed by the client IP address | `RATE_LIMITED` |
-| [Register an account](/http-api/authentication/#register-an-account) | 15 per hour, keyed by the client subnet, the IPv4 `/24` or the IPv6 `/48` | `RATE_LIMITED` |
-| [Resend email verification](/http-api/authentication/#resend-email-verification) | 3 per 15 minutes, keyed by the account's stored email address | `RATE_LIMITED` |
-| [Request password recovery](/http-api/authentication/#request-password-recovery) | 20 per 30 minutes, keyed by the client IP address | `RATE_LIMITED` |
-| [Request password recovery](/http-api/authentication/#request-password-recovery) | 5 per 30 minutes, keyed by the submitted email address | `RATE_LIMITED` |
-| [Start email change](/http-api/users/email-and-password/#start-email-change) and [Resend original email code](/http-api/users/email-and-password/#resend-original-email-code) | 3 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
-| [Request new email](/http-api/users/email-and-password/#request-new-email), [Resend new email code](/http-api/users/email-and-password/#resend-new-email-code), and both [bounced email recovery](/http-api/users/email-and-password/#bounced-email-recovery) sends | 5 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
-| [Start password change](/http-api/users/email-and-password/#start-password-change) | 3 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
-| [Resend password change code](/http-api/users/email-and-password/#resend-password-change-code) | 3 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
-| Every code resend and every new-address request on an email or password change ticket | 1 send per 30 seconds, keyed by the ticket and counted from its previous send | `RATE_LIMITED` |
-| [Submit message report flow](/http-api/reports/#submit-message-report-flow), [Submit user report flow](/http-api/reports/#submit-user-report-flow), and [Create DSA report](/http-api/reports/#create-dsa-report) | 5 per hour, keyed by the reporter, an account or a verified email address | `RATE_LIMITED` |
-| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 3 per hour, keyed by the reporter and the channel together | `RATE_LIMITED` |
-| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 20 per hour, keyed by the reported message, across all reporters | `RATE_LIMITED` |
-| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 4 per hour, keyed by the reporter and the guild together, for a guild message | `RATE_LIMITED` |
-| [Resend IP authorisation](/http-api/authentication/#resend-ip-authorisation) | Nothing in the first 30 seconds after the ticket was issued, keyed by the authorisation ticket | `IP_AUTHORIZATION_RESEND_COOLDOWN` |
-
-The Resend IP authorisation cooldown has no `X-RateLimit-*` header. It has a `Retry-After` header in whole seconds, and the body reports that delay again as a top-level `resend_available_in` and `retry_after`. A second resend on one ticket returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED`. The allowance never refills, and the ticket expires 15 minutes after it was issued.
-
-### Announcement channel allowances
-
-These allowances answer 429 the same way as the ones above, with `X-RateLimit-Scope` set to `shared`.
-
-| Allowance | Code |
+| Operation | Limit |
 | --- | --- |
-| Publishes from one announcement channel through [Crosspost message](/http-api/messages/#crosspost-message), 10 in a row, then one every 6 minutes | `MESSAGE_CROSSPOST_RATE_LIMITED` |
-| Edits of one published message through [Modify message](/http-api/messages/#modify-message) and the other edit routes, 3 in a row, then one every 20 minutes | `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` |
+| [Log in with a password](/http-api/authentication/#log-in-with-a-password) | 5 per 15 minutes for one email address, and 10 failed logins per 30 minutes from one IP address |
+| [Register an account](/http-api/authentication/#register-an-account) | 3 per 15 minutes for one email address, 3 per hour for one IP address and 15 per hour for one subnet |
+| [Resend email verification](/http-api/authentication/#resend-email-verification) | 3 per 15 minutes for one account |
+| [Request password recovery](/http-api/authentication/#request-password-recovery) | 5 per 30 minutes for one email address and 20 per 30 minutes for one IP address |
+| [Start email change](/http-api/users/email-and-password/#start-email-change) | 3 code sends to the current address and 5 to the new one per 15 minutes, and one every 30 seconds per ticket |
+| [Start password change](/http-api/users/email-and-password/#start-password-change) | 3 code sends per 15 minutes, and one every 30 seconds per ticket |
+| [Submit message report flow](/http-api/reports/#submit-message-report-flow) | 5 reports per hour for one reporter, 3 in one channel, 4 in one community and 20 for one message from all reporters. A report with a highest-priority reason only counts toward the limit for one message |
+| [Create DSA report](/http-api/reports/#create-dsa-report) | 5 reports per hour for one reporter, shared with the other report routes |
 
-Each is a leaky bucket like the route buckets. It admits a burst of its full size and then refills one slot at the stated interval, so a caller that waits one interval can act once more. A moderator edit of another member's published message draws on no allowance. [Announcement channels](/topics/announcement-channels/#limits) lists them with the other announcement channel limits.
+On an instance where people sign in with a username, a password login allows 5 attempts per 15 minutes for one username from one IP address and 100 failed logins per hour for one username, and the IP address limit still applies.
 
-### Allowances answering 400
+Registering an [instant account](/admin-api/instance/#auth-configuration-object) allows 5 per hour and 20 per day from one IP address and 40 per hour from one subnet instead.
 
-| Operation | Allowance | Validation code |
+[Resend IP authorization](/http-api/authentication/#resend-ip-authorization) allows one resend per ticket, 30 seconds or more after the ticket was issued. An earlier resend returns 429 `IP_AUTHORIZATION_RESEND_COOLDOWN` with `retry_after` and `resend_available_in` in the body, a `Retry-After` header and no `X-RateLimit-*` headers. A second resend returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED`.
+
+### Announcement channel limits
+
+These return `X-RateLimit-Scope` set to `shared`, because every member who publishes or edits uses the same allowance. [Announcement channels](/topics/announcement-channels/#limits) has the other limits.
+
+| Limit | Code |
+| --- | --- |
+| 10 [crossposts](/http-api/messages/#crosspost-message) from one channel, then one every 6 minutes | `MESSAGE_CROSSPOST_RATE_LIMITED` |
+| 3 edits of one published message, then one every 20 minutes | `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` |
+
+### Limits that return 400
+
+These return 400 `INVALID_FORM_BODY` with a [validation error](/http-api/#validation-error-object) whose `code` says which limit you hit, and no `retry_after` or rate limit headers. The username limit applies to [Modify current user](/http-api/users/current-user/#modify-current-user) and [Update bot profile](/http-api/applications/#update-bot-profile). The other profile limits apply to [Modify current user](/http-api/users/current-user/#modify-current-user) and to [Modify current guild member](/http-api/guild-members/#modify-current-guild-member), which counts them separately in each guild.
+
+| Change | Limit | Validation code |
 | --- | --- | --- |
-| [Modify current user](/http-api/users/current-user/#modify-current-user) | 5 per 3 hours on the resulting username or discriminator | `USERNAME_CHANGED_TOO_MANY_TIMES` |
-| [Modify current user](/http-api/users/current-user/#modify-current-user) | 25 per 30 minutes on the biography, when the submitted value differs | `BIO_CHANGED_TOO_MANY_TIMES` |
-| [Modify current user](/http-api/users/current-user/#modify-current-user) | 25 per 30 minutes on the pronouns, when the submitted value differs | `PRONOUNS_CHANGED_TOO_MANY_TIMES` |
-| [Modify current user](/http-api/users/current-user/#modify-current-user) | 25 per 30 minutes on the accent colour, when the submitted value differs | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
-| [Modify current user](/http-api/users/current-user/#modify-current-user) | 25 per 30 minutes on any non-null avatar | `AVATAR_CHANGED_TOO_MANY_TIMES` |
-| [Modify current user](/http-api/users/current-user/#modify-current-user) | 25 per 30 minutes on any banner value past the entitlement check | `BANNER_CHANGED_TOO_MANY_TIMES` |
-| [Update bot profile](/http-api/applications/#update-bot-profile) | 5 per 3 hours on the bot's resulting username or discriminator | `USERNAME_CHANGED_TOO_MANY_TIMES` |
-| [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) | 25 per 30 minutes on the guild avatar, whenever supplied | `AVATAR_CHANGED_TOO_MANY_TIMES` |
-| [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) | 25 per 30 minutes on the guild banner, whenever supplied | `BANNER_CHANGED_TOO_MANY_TIMES` |
-| [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) | 25 per 30 minutes on the guild biography, when the submitted value differs | `BIO_CHANGED_TOO_MANY_TIMES` |
-| [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) | 25 per 30 minutes on the guild pronouns, when the submitted value differs | `PRONOUNS_CHANGED_TOO_MANY_TIMES` |
-| [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) | 25 per 30 minutes on the guild accent colour, when the submitted value differs | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
-| [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing) | 1 per 24 hours on the sharing default | `VOICE_ACTIVITY_SHARING_ON_COOLDOWN` |
-| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp), [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa), and [Complete passkey bridge](/http-api/authentication/#complete-passkey-bridge) for `login_mfa` | 10 multi-factor attempts per 15 minutes | `INVALID_CODE` |
-| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp), [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa), and [Complete passkey bridge](/http-api/authentication/#complete-passkey-bridge) for `login_mfa` | 5 multi-factor attempts per 5 minutes on one MFA ticket | `INVALID_CODE` |
-| [Sudo mode](/http-api/users/mfa/#sudo-mode) with the `totp` method, and [Complete passkey bridge](/http-api/authentication/#complete-passkey-bridge) for `sudo` | 10 multi-factor attempts per 15 minutes | `INVALID_MFA_CODE` |
+| Username | 5 username or discriminator changes per 3 hours | `USERNAME_CHANGED_TOO_MANY_TIMES` |
+| Biography | 25 changes per 30 minutes | `BIO_CHANGED_TOO_MANY_TIMES` |
+| Pronouns | 25 changes per 30 minutes | `PRONOUNS_CHANGED_TOO_MANY_TIMES` |
+| Accent color | 25 changes per 30 minutes | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
+| Avatar | 25 changes per 30 minutes | `AVATAR_CHANGED_TOO_MANY_TIMES` |
+| Banner | 25 changes per 30 minutes | `BANNER_CHANGED_TOO_MANY_TIMES` |
+| [Voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing) | 1 change per 24 hours | `VOICE_ACTIVITY_SHARING_ON_COOLDOWN` |
+| [TOTP login](/http-api/authentication/#complete-login-with-totp) | 10 attempts per 15 minutes, and 5 per 5 minutes on one MFA ticket | `INVALID_CODE` |
+| [Sudo mode](/http-api/users/mfa/#sudo-mode) with TOTP | 10 attempts per 15 minutes | `INVALID_MFA_CODE` |
 
-Every Modify current user allowance is keyed by the authenticated account, and the bot tag allowance by the bot account, so an owner changing a bot's tag draws on the bot's allowance. The guild member allowances are keyed by the guild and the member together, and one account holds a separate allowance in each guild. The login allowances are keyed by the account and by the MFA ticket respectively, and the sudo allowance by the account.
-
-Fluxer consumes every multi-factor allowance before it checks the code, so a correct code drawn against an exhausted allowance is reported exactly like a wrong one. A correct code clears the counter. A completed passkey bridge ceremony clears nothing, and redeeming a `login_mfa` ceremony clears the login counters. The ticket allowance also destroys the MFA ticket as it denies, and the client restarts from [Log in with a password](/http-api/authentication/#log-in-with-a-password).
-
-### Allowances answering neither shape
-
-[Get desktop handoff information](/http-api/authentication/#get-desktop-handoff-information) and [Complete desktop handoff](/http-api/authentication/#complete-desktop-handoff) share one failed-attempt counter keyed by the client IP address. Five failures block both operations for 15 minutes from the most recent failure, and a blocked request returns 400 `INVALID_HANDOFF_CODE` as a top-level code with no validation entry. Get desktop handoff information separately permits three successful lookups for each handoff code and reports a fourth with the same top-level code.
-
-[Refund latest purchase](/http-api/billing/#refund-latest-purchase) permits one self-serve refund every 30 days for each account and reports a request inside that window as 403 `STRIPE_REFUND_COOLDOWN_ACTIVE`.
-
-[Slowmode](#slowmode) is enforced inside the handler as well.
+The TOTP login limits also apply to [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa), and when you hit the MFA ticket limit, the ticket is deleted and you have to log in again.
 
 ## Slowmode
 
-Slowmode limits how often one account sends a message in one channel. Fluxer reports a denial as an ordinary request failure. A denied send returns 400 `SLOWMODE_RATE_LIMITED` with a top-level `retry_after` in fractional seconds and a `Retry-After` header in whole seconds. The response has no `X-RateLimit-*` header, so a client tells it apart from a bucket denial by the status and the code.
+When a channel's `rate_limit_per_user` is N, each member can send one message every N seconds. A send that comes too early returns 400 `SLOWMODE_RATE_LIMITED` with `retry_after` in the body and a `Retry-After` header. Bots and members with [BYPASS_SLOWMODE](/http-api/permissions/) aren't limited. [Get channel slowmode state](/http-api/channels/#get-channel-slowmode-state) returns how long you have to wait.
 
-The allowance is one message for each interval the channel configures in `rate_limit_per_user`, counted separately for each account and channel pair. Fluxer counts it for a non-bot account in a guild channel whose configured interval is above zero. A caller holding [BYPASS_SLOWMODE](/http-api/permissions/) is exempt. [Get channel slowmode state](/http-api/channels/#get-channel-slowmode-state) reports the caller's remaining delay before a send is attempted.
+## Gateway and media
 
-Starting a thread uses the parent slowmode on its own counter, as [Start thread from message](/http-api/threads/#start-thread-from-message) states. The same applies to a post in a forum or media channel, as [Forum channel fields](/http-api/forums/#forum-channel-fields) states. For a guild text or announcement channel, [Get channel slowmode state](/http-api/channels/#get-channel-slowmode-state) reports the message counter alone. [Indicate typing](/http-api/messages/#indicate-typing) returns the remaining delay of both counters to a user session that declares the [`channel_threads` client capability](/http-api/threads/#client-capability).
-
-## Other surfaces
-
-Each protocol surface documents its own rate limit contract. The [main Gateway](/gateway/overview/) states its session, command, replay, backpressure, and admission limits in [Gateway limits and rate limits](/gateway/limits-and-rate-limits/). The [Media Proxy API](/media-proxy/overview/) has no request-count rate limit and bounds work through concurrency, payload, and deadline limits. The [upload relay](/media-proxy/upload-relay/) authorises each transfer with an upload URL that expires and limits the body size.
+The Gateway has its own limits in [Gateway limits and rate limits](/gateway/limits-and-rate-limits/). The [Media Proxy API](/media-proxy/overview/) doesn't count requests.

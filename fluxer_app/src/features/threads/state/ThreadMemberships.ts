@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ThreadMemberResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
+import isEqual from 'lodash/isEqual';
 import {makeAutoObservable, observable} from 'mobx';
 
-export interface ThreadMembership {
+interface ThreadMembership {
 	readonly threadId: string;
 	readonly joinTimestamp: string;
 	readonly flags: number;
@@ -42,22 +43,13 @@ class ThreadMemberships {
 		return membership.muteEndTime == null || Date.parse(membership.muteEndTime) > Date.now();
 	}
 
-	get joinedThreadIds(): ReadonlyArray<string> {
-		return Array.from(this.memberships.keys());
-	}
-
 	set(threadId: string, member: ThreadMemberResponse): void {
-		this.memberships.set(threadId, toMembership(threadId, member));
+		const next = toMembership(threadId, member);
+		if (!isEqual(this.memberships.get(threadId), next)) this.memberships.set(threadId, next);
 	}
 
 	remove(threadId: string): void {
 		this.memberships.delete(threadId);
-	}
-
-	removeMany(threadIds: Iterable<string>): void {
-		for (const threadId of threadIds) {
-			this.memberships.delete(threadId);
-		}
 	}
 
 	clear(): void {

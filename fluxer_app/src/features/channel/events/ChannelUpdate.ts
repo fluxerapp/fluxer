@@ -5,7 +5,7 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import GuildReadState from '@app/features/guild/state/GuildReadState';
 import Permission from '@app/features/permissions/state/Permission';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 
 export type ChannelUpdatePayload = Partial<Channel> & {
@@ -21,6 +21,6 @@ export function handleChannelUpdate(data: ChannelUpdatePayload, _context: Gatewa
 	GuildReadState.handleGenericUpdate(data.id);
 	QuickSwitcher.recomputeIfOpen();
 	if (data.bitrate !== undefined) {
-		void MediaEngine.refreshMicrophonePublishSettingsForChannel(data.id);
+		void VoiceRuntime.engine?.refreshMicrophonePublishSettingsForChannel(data.id);
 	}
 }

@@ -6,14 +6,13 @@ import Channels from '@app/features/channel/state/Channels';
 import {UNKNOWN_CHANNEL_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import Guilds from '@app/features/guild/state/Guilds';
-import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {AnnouncementChannelIcon} from '@app/features/ui/components/icons/AnnouncementChannelIcon';
+import {ArrowRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import foodPatternUrl from '@app/media/images/i-like-food.svg';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowRightIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 
 const FOLLOW_SUCCESS_TITLE_DESCRIPTOR = msg({
@@ -45,6 +44,7 @@ const ChannelFollowSuccessModal = observer(({sourceChannelId, targetChannelId}: 
 	return (
 		<Modal.Root size="small" centered data-flx="channel.channel-follow-success-modal.modal-root">
 			<Modal.ScreenReaderLabel text={title} data-flx="channel.channel-follow-success-modal.modal-screen-reader-label" />
+			<Modal.InsetCloseButton onClick={ModalCommands.pop} data-flx="channel.channel-follow-success-modal.close" />
 			<div className={styles.hero} aria-hidden data-flx="channel.channel-follow-success-modal.hero">
 				<div
 					className={styles.patternImage}
@@ -102,10 +102,11 @@ const ChannelFollowSuccessModal = observer(({sourceChannelId, targetChannelId}: 
 						targetName: target?.name ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR),
 					})}
 				</p>
-				<Button onClick={ModalCommands.pop} data-flx="channel.channel-follow-success-modal.button.got-it">
-					{i18n._(GOT_IT_DESCRIPTOR)}
-				</Button>
 			</div>
+			<Modal.DismissFooter
+				label={i18n._(GOT_IT_DESCRIPTOR)}
+				data-flx="channel.channel-follow-success-modal.dismiss-footer"
+			/>
 		</Modal.Root>
 	);
 });

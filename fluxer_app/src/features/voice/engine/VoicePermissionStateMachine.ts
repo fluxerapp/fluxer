@@ -284,38 +284,24 @@ const voicePermissionStateMachine = setup({
 	id: 'voicePermission',
 	context: () => initialContext(),
 	initial: 'routing',
+	on: {
+		'permission.watch.start': {target: '.routing', actions: 'startWatch'},
+		'permission.watch.stop': {target: '.routing', actions: 'stopWatch'},
+		'permission.room.set': {target: '.routing', actions: 'setRoomPresence'},
+		'permission.update': {target: '.routing', actions: 'updatePermissions'},
+		'permission.change': {target: '.routing', actions: 'changePermission'},
+		'permission.set': {target: '.routing', actions: 'setPermissions'},
+		'subscription.initialize': {target: '.routing', actions: 'initializeSubscriptions'},
+		'deafen.apply': {target: '.routing', actions: 'applyDeafen'},
+		'permission.reset': {target: '.routing', actions: 'reset'},
+		'permission.clearCommands': {actions: 'clearCommands'},
+	},
 	states: {
 		routing: {
 			always: [{guard: 'watcherActive', target: 'watching'}, {target: 'inactive'}],
 		},
-		inactive: {
-			on: {
-				'permission.watch.start': {target: 'routing', actions: 'startWatch'},
-				'permission.watch.stop': {target: 'routing', actions: 'stopWatch'},
-				'permission.room.set': {target: 'routing', actions: 'setRoomPresence'},
-				'permission.update': {target: 'routing', actions: 'updatePermissions'},
-				'permission.change': {target: 'routing', actions: 'changePermission'},
-				'permission.set': {target: 'routing', actions: 'setPermissions'},
-				'subscription.initialize': {target: 'routing', actions: 'initializeSubscriptions'},
-				'deafen.apply': {target: 'routing', actions: 'applyDeafen'},
-				'permission.reset': {target: 'routing', actions: 'reset'},
-				'permission.clearCommands': {actions: 'clearCommands'},
-			},
-		},
-		watching: {
-			on: {
-				'permission.watch.start': {target: 'routing', actions: 'startWatch'},
-				'permission.watch.stop': {target: 'routing', actions: 'stopWatch'},
-				'permission.room.set': {target: 'routing', actions: 'setRoomPresence'},
-				'permission.update': {target: 'routing', actions: 'updatePermissions'},
-				'permission.change': {target: 'routing', actions: 'changePermission'},
-				'permission.set': {target: 'routing', actions: 'setPermissions'},
-				'subscription.initialize': {target: 'routing', actions: 'initializeSubscriptions'},
-				'deafen.apply': {target: 'routing', actions: 'applyDeafen'},
-				'permission.reset': {target: 'routing', actions: 'reset'},
-				'permission.clearCommands': {actions: 'clearCommands'},
-			},
-		},
+		inactive: {},
+		watching: {},
 	},
 });
 

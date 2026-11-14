@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ElectronAPI} from '@app/features/platform/types/Electron';
+import type {ElectronAPI} from '@app/types/electron.d';
 
 export interface DesktopStoreAccessOptions {
 	readonly allowUnavailable?: boolean;

@@ -29,7 +29,7 @@
 }
 
 .searchInput {
-	margin-left: 0.5rem;
+	margin-inline-start: 0.5rem;
 	height: 100%;
 	flex: 1;
 	border: none;
@@ -44,7 +44,7 @@
 }
 
 .clearButton {
-	margin-left: 0.5rem;
+	margin-inline-start: 0.5rem;
 	display: flex;
 	height: 2rem;
 	width: 2rem;

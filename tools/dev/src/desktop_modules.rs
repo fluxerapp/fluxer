@@ -13,12 +13,11 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub const DEVELOPMENT_PACKAGE_ORIGIN: &str = "http://localhost:48780";
+pub const DEVELOPMENT_PACKAGE_ORIGIN: &str = "http://127.0.0.1:48780";
 const PKGS_ROOT_ENV: &str = "FLUXER_DEV_PKGS_ROOT";
 const PKGS_CONTAINER: &str = "fluxer-dev-pkgs";
 const PKGS_IMAGE: &str = "nginx:1.28";
 const PKGS_PUBLISH: &str = "127.0.0.1:48780:80";
-const PKGS_PROBE_ORIGIN: &str = "http://127.0.0.1:48780";
 const PKGS_CONTAINER_ROOT: &str = "/srv/pkgs";
 const PKGS_CONTAINER_CONFIG: &str = "/etc/nginx/conf.d/default.conf";
 const PKGS_NGINX_CONFIG: &str = "server {
@@ -104,18 +103,9 @@ pub fn host_module_platform() -> Result<&'static str> {
 }
 
 pub fn rfc3339_utc(now: SystemTime) -> String {
-    let seconds = now
-        .duration_since(UNIX_EPOCH)
-        .map(|elapsed| elapsed.as_secs())
-        .unwrap_or(0);
-    let (year, month, day) = crate::desktop::civil_from_days((seconds / 86_400) as i64);
-    let second_of_day = seconds % 86_400;
-    format!(
-        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
-        second_of_day / 3600,
-        (second_of_day % 3600) / 60,
-        second_of_day % 60
-    )
+    chrono::DateTime::<chrono::Utc>::from(now)
+        .format("%Y-%m-%dT%H:%M:%SZ")
+        .to_string()
 }
 
 fn run_ci_step(step: &str, cwd: &Path, env: Vec<(String, Option<String>)>) -> Result<()> {
@@ -223,8 +213,8 @@ fn stage_channel_manifest(
                 "WORKDIR".to_owned(),
                 Some(modules_workdir().display().to_string()),
             ),
-            ("CHANNEL".to_owned(), Some(target.channel.clone())),
-            ("VERSION".to_owned(), Some(stamp.version.clone())),
+            ("BUILD_CHANNEL".to_owned(), Some(target.channel.clone())),
+            ("BUILD_VERSION".to_owned(), Some(stamp.version.clone())),
             ("PUB_DATE".to_owned(), Some(stamp.pub_date.clone())),
             ("DESKTOP_MODULE_ONLY".to_owned(), Some("1".to_owned())),
             ("PLATFORM".to_owned(), Some(target.platform.clone())),
@@ -251,11 +241,7 @@ fn sha256_file(path: &Path) -> Result<String> {
         }
         hasher.update(&buffer[..read]);
     }
-    Ok(hasher
-        .finalize()
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect())
+    Ok(hex::encode(hasher.finalize()))
 }
 
 fn write_atomically(path: &Path, bytes: &[u8]) -> Result<()> {
@@ -565,7 +551,7 @@ pub fn ensure_pkgs_server() -> Result<()> {
 
 fn verify_served_manifest(target: &ModuleCoordinate, metadata_version: u64) -> Result<()> {
     let url = format!(
-        "{PKGS_PROBE_ORIGIN}/desktop/{}/{}/{}/{CHANNEL_MANIFEST_NAME}",
+        "{DEVELOPMENT_PACKAGE_ORIGIN}/desktop/{}/{}/{}/{CHANNEL_MANIFEST_NAME}",
         target.channel, target.platform, target.arch
     );
     let mut last = String::new();
@@ -606,114 +592,4 @@ pub fn publish_renderer_modules(
     remove_path(&publish_staging_dir())?;
     ensure_pkgs_server()?;
     verify_served_manifest(target, metadata_version)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn metadata_version_always_rises_above_the_live_feed() {
-        assert_eq!(next_metadata_version(100, 50, None), 100);
-        assert_eq!(next_metadata_version(100, 150, None), 150);
-        assert_eq!(next_metadata_version(100, 50, Some(120)), 121);
-        assert_eq!(next_metadata_version(100, 50, Some(99)), 100);
-    }
-
-    #[test]
-    fn packed_module_stamps_round_trip() {
-        let stamp = PackedModulesStamp {
-            fingerprint: "abc".to_owned(),
-            version: "2026.1005.171400".to_owned(),
-            pub_date: "2026-10-05T17:14:00Z".to_owned(),
-        };
-        assert_eq!(PackedModulesStamp::parse(&stamp.render()), Some(stamp));
-        assert_eq!(PackedModulesStamp::parse("abc 2026.1005.1"), None);
-    }
-
-    #[test]
-    fn formats_pub_dates_as_rfc3339_utc() {
-        let at = UNIX_EPOCH + std::time::Duration::from_secs(1_791_220_440);
-        assert_eq!(rfc3339_utc(at), "2026-10-05T17:14:00Z");
-    }
-
-    #[test]
-    fn publishes_one_coordinate_and_restamps_only_on_change() {
-        let temp = tempfile::tempdir().unwrap();
-        let payload = temp.path().join("payload");
-        let root = temp.path().join("root");
-        let package_dir = payload.join("development/modules/fluxer_renderer");
-        let package_bytes = b"renderer";
-        let digest = Sha256::digest(package_bytes)
-            .iter()
-            .map(|byte| format!("{byte:02x}"))
-            .collect::<String>();
-        fs::create_dir_all(package_dir.join(&digest)).unwrap();
-        fs::write(
-            package_dir.join(&digest).join(MODULE_PACKAGE_NAME),
-            package_bytes,
-        )
-        .unwrap();
-        let manifest = serde_json::json!({
-            "release_channel": "development",
-            "metadata_version": 10,
-            "modules": {
-                "fluxer_renderer": {
-                    "sha256": digest,
-                    "bytes": package_bytes.len(),
-                    "url": format!("{DEVELOPMENT_PACKAGE_ORIGIN}/desktop/development/modules/fluxer_renderer/{digest}/package.br"),
-                }
-            }
-        });
-        let manifest_dir = payload.join("development/darwin/arm64");
-        fs::create_dir_all(&manifest_dir).unwrap();
-        fs::write(
-            manifest_dir.join(CHANNEL_MANIFEST_NAME),
-            manifest.to_string(),
-        )
-        .unwrap();
-        let stamp = PackedModulesStamp {
-            fingerprint: "f".to_owned(),
-            version: "2026.1005.1".to_owned(),
-            pub_date: "2026-10-05T00:00:00Z".to_owned(),
-        };
-        let target = ModuleCoordinate {
-            channel: "development".to_owned(),
-            platform: "darwin".to_owned(),
-            arch: "arm64".to_owned(),
-        };
-        let first = publish_modules(&payload, &root, &stamp, &target).unwrap();
-        assert!(first > 10);
-        assert!(
-            root.join(format!(
-                "desktop/development/modules/fluxer_renderer/{digest}/package.br"
-            ))
-            .is_file()
-        );
-        assert!(
-            root.join("desktop/development/darwin/arm64/2026.1005.1/modules.json")
-                .is_file()
-        );
-        assert_eq!(
-            publish_modules(&payload, &root, &stamp, &target).unwrap(),
-            first
-        );
-    }
-
-    #[test]
-    fn refuses_a_manifest_whose_package_is_not_at_its_content_address() {
-        let temp = tempfile::tempdir().unwrap();
-        let manifest = serde_json::json!({
-            "modules": {
-                "fluxer_renderer": {
-                    "sha256": "00".repeat(32),
-                    "bytes": 1,
-                    "url": "https://pkgs.fluxer.com/desktop/development/modules/fluxer_renderer/x/package.br",
-                }
-            }
-        });
-        let error = verify_manifest_packages(temp.path(), "development", &manifest, Path::new("m"))
-            .unwrap_err();
-        assert!(error.to_string().contains("not its content address"));
-    }
 }

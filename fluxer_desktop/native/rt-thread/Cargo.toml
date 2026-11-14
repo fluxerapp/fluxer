@@ -5,9 +5,6 @@ edition = "2024"
 license = "AGPL-3.0-or-later"
 publish = false
 
-[workspace]
-resolver = "2"
-
 [lib]
 crate-type = ["rlib"]
 
@@ -23,10 +20,3 @@ windows = {version = "0.62.2", features = [
 	"Win32_Media",
 	"Win32_Media_Multimedia",
 ]}
-
-[dev-dependencies]
-criterion = "0.8"
-
-[[bench]]
-name = "tick"
-harness = false

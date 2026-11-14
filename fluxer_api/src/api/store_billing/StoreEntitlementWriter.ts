@@ -11,16 +11,16 @@ import type {User} from '@app/api/models/User';
 import {selectActiveStoreSubscription} from '@app/api/store_billing/StoreBillingMappers';
 import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
 import {shiftGiftExtensionEnd} from '@app/api/user/GiftExtensionShift';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {clearPerksSanitizedFlag} from '@app/api/user/UserHelpers';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 
 const USER_WRITE_ATTEMPTS = 3;
 
 interface StoreEntitlementWriterDeps {
 	repository: StoreBillingRepository;
-	userRepository: IUserRepository;
+	userRepository: UserRepository;
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 }
@@ -157,11 +157,7 @@ export class StoreEntitlementWriter {
 	async patchUserAndDispatch(user: User, patch: Partial<UserRow>): Promise<User> {
 		const updatedUser = await this.deps.userRepository.patchUpsert(user.id, patch, user.toRow());
 		this.deps.userCacheService.setUserPartialResponseFromUserInBackground(updatedUser);
-		await this.deps.gatewayService.dispatchPresence({
-			userId: updatedUser.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(updatedUser),
-		});
+		await dispatchUserUpdate(this.deps.gatewayService, updatedUser);
 		return updatedUser;
 	}
 

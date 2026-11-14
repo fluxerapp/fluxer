@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
+
 export interface EncodeWavOptions {
 	startSeconds: number;
 	endSeconds: number;
@@ -7,10 +9,6 @@ export interface EncodeWavOptions {
 }
 
 const RIFF_HEADER_BYTES = 44;
-
-function clamp(value: number, min: number, max: number): number {
-	return value < min ? min : value > max ? max : value;
-}
 
 export function encodeAudioBufferSliceToWav(buffer: AudioBuffer, options: EncodeWavOptions): Blob {
 	const sampleRate = buffer.sampleRate;

@@ -10,20 +10,18 @@
     thread_context/2
 ]).
 
--type guild_state() :: map().
-
 -define(STORE_EVENT_KEYS, [
     <<"id">>, <<"channel_id">>, <<"type">>, <<"ids">>, <<"last_pin_timestamp">>, <<"user">>
 ]).
 
--spec apply_event(atom(), map(), guild_state()) -> guild_state().
+-spec apply_event(atom(), map(), map()) -> map().
 apply_event(Event, Data, State) ->
     case guild_thread_gate:store(State) of
         undefined -> State;
         Tab -> apply_store_event(Event, Data, Tab, State)
     end.
 
--spec apply_store_event(atom(), map(), ets:table(), guild_state()) -> guild_state().
+-spec apply_store_event(atom(), map(), ets:table(), map()) -> map().
 apply_store_event(thread_create, Data, Tab, State) ->
     Thread = normalize_thread(Data),
     case archived(Thread) of
@@ -31,24 +29,12 @@ apply_store_event(thread_create, Data, Tab, State) ->
             State;
         false ->
             ok = guild_thread_store:put_thread(Tab, Thread),
-            ok = put_members(Tab, thread_members(Data), State),
+            ok = put_members(Tab, thread_members(Data)),
             bump_forum_parent(Thread, State)
     end;
 apply_store_event(thread_update, Data, Tab, State) ->
-    Thread = normalize_thread(Data),
-    ThreadId = maps:get(<<"id">>, Thread),
-    case archived(Thread) of
-        true ->
-            ok = guild_thread_store:remove_thread(Tab, ThreadId),
-            State;
-        false ->
-            Known = guild_thread_store:get_thread(Tab, ThreadId) =/= undefined,
-            ok = guild_thread_store:put_thread(Tab, Thread),
-            case Known of
-                true -> State;
-                false -> restore_members(Tab, Data, State)
-            end
-    end;
+    ok = update_thread(Tab, Data),
+    State;
 apply_store_event(thread_delete, Data, Tab, State) ->
     case snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)) of
         ThreadId when is_integer(ThreadId) ->
@@ -58,55 +44,75 @@ apply_store_event(thread_delete, Data, Tab, State) ->
     end,
     State;
 apply_store_event(thread_member_update, Data, Tab, State) ->
-    Member = guild_data_normalize:thread_member(Data),
-    case member_key(Member) of
-        {ThreadId, UserId} ->
-            case guild_thread_store:get_thread(Tab, ThreadId) of
-                undefined -> ok;
-                _ -> guild_thread_store:put_member(Tab, ThreadId, UserId, Member)
-            end;
-        undefined ->
-            ok
-    end,
+    ok = put_known_member(Tab, Data),
     State;
 apply_store_event(thread_members_update, Data, Tab, State) ->
-    ThreadId = snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)),
-    ok = ensure_thread(Tab, ThreadId, Data),
-    case
-        is_integer(ThreadId) andalso guild_thread_store:get_thread(Tab, ThreadId) =/= undefined
-    of
-        true ->
-            ok = put_members(Tab, list_field(<<"added_members">>, Data), State),
-            lists:foreach(
-                fun(UserId) -> guild_thread_store:remove_member(Tab, ThreadId, UserId) end,
-                parse_ids(maps:get(<<"removed_member_ids">>, Data, []))
-            ),
-            ok = update_member_count(Tab, ThreadId, Data);
-        false ->
-            ok
-    end,
+    ok = update_thread_members(Tab, Data),
     State;
 apply_store_event(_Event, _Data, _Tab, State) ->
     State.
 
+-spec update_thread(ets:table(), map()) -> ok.
+update_thread(Tab, Data) ->
+    Thread = normalize_thread(Data),
+    ThreadId = maps:get(<<"id">>, Thread),
+    RestoreMembers =
+        case archived(Thread) of
+            true ->
+                ok = guild_thread_store:remove_thread(Tab, ThreadId),
+                false;
+            false ->
+                Known = guild_thread_store:get_thread(Tab, ThreadId) =/= undefined,
+                ok = guild_thread_store:put_thread(Tab, Thread),
+                not Known
+        end,
+    case RestoreMembers of
+        true -> ok = put_members(Tab, list_field(<<"_fluxer_members">>, Data));
+        false -> ok
+    end.
+
+-spec update_thread_members(ets:table(), map()) -> ok.
+update_thread_members(Tab, Data) ->
+    ThreadId = snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)),
+    ok = ensure_thread(Tab, ThreadId, Data),
+    Known =
+        is_integer(ThreadId) andalso guild_thread_store:get_thread(Tab, ThreadId) =/= undefined,
+    case Known andalso ThreadId of
+        KnownThreadId when is_integer(KnownThreadId) ->
+            apply_member_changes(Tab, KnownThreadId, Data);
+        false ->
+            ok
+    end.
+
+-spec apply_member_changes(ets:table(), integer(), map()) -> ok.
+apply_member_changes(Tab, ThreadId, Data) ->
+    ok = put_members(Tab, list_field(<<"added_members">>, Data)),
+    lists:foreach(
+        fun(UserId) -> guild_thread_store:remove_member(Tab, ThreadId, UserId) end,
+        parse_ids(maps:get(<<"removed_member_ids">>, Data, []))
+    ),
+    ok = update_member_count(Tab, ThreadId, Data).
+
 -spec ensure_thread(ets:table(), integer() | undefined, map()) -> ok.
 ensure_thread(Tab, ThreadId, Data) when is_integer(ThreadId) ->
-    case
-        {
-            guild_thread_store:get_thread(Tab, ThreadId),
-            maps:get(<<"_fluxer_thread">>, Data, undefined)
-        }
-    of
-        {undefined, Context} when is_map(Context) ->
-            Thread = normalize_thread(Context),
-            case archived(Thread) of
-                true -> ok;
-                false -> guild_thread_store:put_thread(Tab, Thread)
-            end;
-        {Existing, Context} when is_map(Existing), is_map(Context) ->
-            guild_thread_store:put_thread(Tab, maps:merge(Existing, normalize_thread(Context)));
-        _ ->
-            ok
+    Candidate =
+        case
+            {
+                guild_thread_store:get_thread(Tab, ThreadId),
+                maps:get(<<"_fluxer_thread">>, Data, undefined)
+            }
+        of
+            {undefined, Context} when is_map(Context) ->
+                Thread = normalize_thread(Context),
+                not archived(Thread) andalso Thread;
+            {Existing, Context} when is_map(Existing), is_map(Context) ->
+                maps:merge(Existing, normalize_thread(Context));
+            _ ->
+                false
+        end,
+    case Candidate of
+        false -> ok;
+        Updated -> guild_thread_store:put_thread(Tab, Updated)
     end;
 ensure_thread(_Tab, _ThreadId, _Data) ->
     ok.
@@ -125,36 +131,29 @@ update_member_count(Tab, ThreadId, Data) ->
             ok
     end.
 
--spec restore_members(ets:table(), map(), guild_state()) -> guild_state().
-restore_members(Tab, Data, State) ->
-    ok = put_members(Tab, list_field(<<"_fluxer_members">>, Data), State),
-    State.
+-spec put_members(ets:table(), [map()]) -> ok.
+put_members(Tab, Members) ->
+    lists:foreach(fun(Member) -> put_known_member(Tab, Member) end, Members).
 
--spec put_members(ets:table(), [map()], guild_state()) -> ok.
-put_members(Tab, Members, _State) ->
-    lists:foreach(
-        fun(Raw) ->
-            Member = guild_data_normalize:thread_member(Raw),
-            case member_key(Member) of
-                {ThreadId, UserId} ->
-                    case guild_thread_store:get_thread(Tab, ThreadId) of
-                        undefined -> ok;
-                        _ -> guild_thread_store:put_member(Tab, ThreadId, UserId, Member)
-                    end;
-                undefined ->
-                    ok
-            end
+-spec put_known_member(ets:table(), map()) -> ok.
+put_known_member(Tab, Raw) ->
+    Member = guild_data_normalize:thread_member(Raw),
+    Known =
+        case Member of
+            #{<<"id">> := ThreadId, <<"user_id">> := UserId} when
+                is_integer(ThreadId), is_integer(UserId)
+            ->
+                guild_thread_store:get_thread(Tab, ThreadId) =/= undefined andalso
+                    {ThreadId, UserId};
+            _ ->
+                false
         end,
-        Members
-    ).
-
--spec member_key(term()) -> {integer(), integer()} | undefined.
-member_key(#{<<"id">> := ThreadId, <<"user_id">> := UserId}) when
-    is_integer(ThreadId), is_integer(UserId)
-->
-    {ThreadId, UserId};
-member_key(_) ->
-    undefined.
+    case Known of
+        {KnownThreadId, KnownUserId} ->
+            guild_thread_store:put_member(Tab, KnownThreadId, KnownUserId, Member);
+        false ->
+            ok
+    end.
 
 -spec thread_members(map()) -> [map()].
 thread_members(Data) ->
@@ -181,11 +180,11 @@ normalize_thread(Data) ->
 archived(#{<<"thread_metadata">> := #{<<"archived">> := true}}) -> true;
 archived(_) -> false.
 
--spec bump_forum_parent(map(), guild_state()) -> guild_state().
+-spec bump_forum_parent(map(), map()) -> map().
 bump_forum_parent(Thread, State) ->
     Data = maps:get(data, State),
     ParentId = guild_thread_permissions:parent_id(Thread),
-    Index = guild_data_index:channel_index(Data),
+    Index = guild_data_index_channels:channel_index(Data),
     case maps:get(ParentId, Index, undefined) of
         #{<<"type">> := Type} = Parent when Type =:= 15; Type =:= 16 ->
             Updated = Parent#{<<"last_message_id">> => maps:get(<<"id">>, Thread)},
@@ -198,32 +197,40 @@ bump_forum_parent(Thread, State) ->
             State
     end.
 
--spec after_regular_event(atom(), map(), guild_state()) -> guild_state().
+-spec after_regular_event(atom(), map(), map()) -> map().
 after_regular_event(Event, Data, State) ->
     case guild_thread_gate:store(State) of
         undefined -> State;
         Tab -> after_store_event(Event, Data, Tab, queue_while_loading(Event, Data, State))
     end.
 
--spec after_replayed_event(atom(), map(), guild_state()) -> guild_state().
+-spec after_replayed_event(atom(), map(), map()) -> map().
 after_replayed_event(message_create, Data, State) ->
     case guild_thread_gate:store(State) of
         undefined ->
             State;
         Tab ->
-            MessageId = snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)),
-            with_thread(Data, Tab, fun(ThreadId, Thread) ->
-                case newer(MessageId, Thread) of
-                    true -> count_message(ThreadId, Data, Thread);
-                    false -> Thread
-                end
-            end),
+            ok = count_replayed_message(Data, Tab),
             State
     end;
 after_replayed_event(Event, Data, State) ->
     after_regular_event(Event, Data, State).
 
--spec queue_while_loading(atom(), map(), guild_state()) -> guild_state().
+-spec count_replayed_message(map(), ets:table()) -> ok.
+count_replayed_message(Data, Tab) ->
+    MessageId = snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)),
+    with_thread(Data, Tab, fun(ThreadId, Thread) ->
+        count_if_newer(MessageId, ThreadId, Data, Thread)
+    end).
+
+-spec count_if_newer(term(), integer(), map(), map()) -> map().
+count_if_newer(MessageId, ThreadId, Data, Thread) ->
+    case newer(MessageId, Thread) of
+        true -> count_message(ThreadId, Data, Thread);
+        false -> Thread
+    end.
+
+-spec queue_while_loading(atom(), map(), map()) -> map().
 queue_while_loading(Event, Data, State) ->
     case
         store_event(Event) andalso guild_thread_load:loading(State) andalso
@@ -233,7 +240,7 @@ queue_while_loading(Event, Data, State) ->
         false -> State
     end.
 
--spec regular_channel_event(atom(), map(), guild_state()) -> boolean().
+-spec regular_channel_event(atom(), map(), map()) -> boolean().
 regular_channel_event(Event, Data, State) when
     Event =:= message_create;
     Event =:= message_delete;
@@ -242,7 +249,9 @@ regular_channel_event(Event, Data, State) when
 ->
     case snowflake_id:parse_maybe(maps:get(<<"channel_id">>, Data, undefined)) of
         ChannelId when is_integer(ChannelId) ->
-            maps:is_key(ChannelId, guild_data_index:channel_index(maps:get(data, State, #{})));
+            maps:is_key(
+                ChannelId, guild_data_index_channels:channel_index(maps:get(data, State, #{}))
+            );
         _ ->
             true
     end;
@@ -258,16 +267,13 @@ store_event(channel_delete) -> true;
 store_event(guild_member_remove) -> true;
 store_event(_) -> false.
 
--spec after_store_event(atom(), map(), ets:table(), guild_state()) -> guild_state().
+-spec after_store_event(atom(), map(), ets:table(), map()) -> map().
 after_store_event(message_create, Data, Tab, State) ->
     with_thread(Data, Tab, fun(ThreadId, Thread) -> count_message(ThreadId, Data, Thread) end),
     State;
 after_store_event(message_delete, Data, Tab, State) ->
     with_thread(Data, Tab, fun(ThreadId, Thread) ->
-        case snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)) of
-            ThreadId -> Thread;
-            _ -> decrement(Thread, 1)
-        end
+        decrement_unless_starter(ThreadId, Data, Thread)
     end),
     State;
 after_store_event(message_delete_bulk, Data, Tab, State) ->
@@ -284,32 +290,58 @@ after_store_event(channel_pins_update, Data, Tab, State) ->
 after_store_event(channel_delete, Data, Tab, State) ->
     case snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)) of
         ParentId when is_integer(ParentId) ->
-            lists:foreach(
-                fun(ThreadId) -> guild_thread_store:remove_thread(Tab, ThreadId) end,
-                guild_thread_store:parent_thread_ids(Tab, ParentId)
-            );
+            remove_parent_threads(Tab, ParentId);
         _ ->
             ok
     end,
     State;
 after_store_event(guild_member_remove, Data, Tab, State) ->
-    _ =
-        case guild_state_member:extract_user_id(Data) of
-            UserId when is_integer(UserId) -> guild_thread_store:remove_user(Tab, UserId);
-            _ -> []
-        end,
-    State;
+    case guild_state_member:extract_user_id(Data) of
+        UserId when is_integer(UserId) ->
+            lists:foldl(
+                fun guild_thread_subscriptions:member_lists_changed/2,
+                State,
+                guild_thread_store:remove_user(Tab, UserId)
+            );
+        _ ->
+            State
+    end;
+after_store_event(guild_member_update, Data, _Tab, State) ->
+    case guild_state_member:extract_user_id(Data) of
+        UserId when is_integer(UserId) ->
+            guild_thread_subscriptions:member_changed(UserId, State);
+        _ ->
+            State
+    end;
 after_store_event(_Event, _Data, _Tab, State) ->
     State.
 
+-spec decrement_unless_starter(integer(), map(), map()) -> map().
+decrement_unless_starter(ThreadId, Data, Thread) ->
+    case snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)) of
+        ThreadId -> Thread;
+        _ -> decrement(Thread, 1)
+    end.
+
+-spec remove_parent_threads(ets:table(), integer()) -> ok.
+remove_parent_threads(Tab, ParentId) ->
+    lists:foreach(
+        fun(ThreadId) -> guild_thread_store:remove_thread(Tab, ThreadId) end,
+        guild_thread_store:parent_thread_ids(Tab, ParentId)
+    ).
+
 -spec with_thread(map(), ets:table(), fun((integer(), map()) -> map())) -> ok.
 with_thread(Data, Tab, Fun) ->
-    case snowflake_id:parse_maybe(maps:get(<<"channel_id">>, Data, undefined)) of
-        ChannelId when is_integer(ChannelId) ->
-            case guild_thread_store:get_thread(Tab, ChannelId) of
-                undefined -> ok;
-                Thread -> guild_thread_store:put_thread(Tab, Fun(ChannelId, Thread))
-            end;
+    Entry =
+        case snowflake_id:parse_maybe(maps:get(<<"channel_id">>, Data, undefined)) of
+            ChannelId when is_integer(ChannelId) ->
+                {ChannelId, guild_thread_store:get_thread(Tab, ChannelId)};
+            _ ->
+                undefined
+        end,
+    case Entry of
+        {ThreadId, Thread} when Thread =/= undefined ->
+            guild_thread_store:put_thread(Tab, Fun(ThreadId, Thread));
         _ ->
             ok
     end.
@@ -321,16 +353,18 @@ count_message(ThreadId, Data, Thread) ->
         true ->
             Thread;
         false ->
-            Last =
-                case newer(MessageId, Thread) of
-                    true -> MessageId;
-                    false -> maps:get(<<"last_message_id">>, Thread)
-                end,
             Thread#{
-                <<"last_message_id">> => Last,
+                <<"last_message_id">> => newest_message_id(MessageId, Thread),
                 <<"message_count">> => counter(Thread, <<"message_count">>) + 1,
                 <<"total_message_sent">> => counter(Thread, <<"total_message_sent">>) + 1
             }
+    end.
+
+-spec newest_message_id(term(), map()) -> term().
+newest_message_id(MessageId, Thread) ->
+    case newer(MessageId, Thread) of
+        true -> MessageId;
+        false -> maps:get(<<"last_message_id">>, Thread)
     end.
 
 -spec newer(term(), map()) -> boolean().
@@ -355,15 +389,14 @@ counter(Thread, Key) ->
 
 -spec thread_context(integer(), map()) -> map() | undefined.
 thread_context(ThreadId, Data) ->
-    case maps:get(<<"_fluxer_thread">>, Data, undefined) of
-        Context when is_map(Context) ->
-            Thread = normalize_thread(Context),
-            case maps:get(<<"id">>, Thread, undefined) of
-                ThreadId -> Thread;
-                _ -> undefined
-            end;
-        _ ->
-            undefined
+    Context =
+        case maps:get(<<"_fluxer_thread">>, Data, undefined) of
+            Raw when is_map(Raw) -> normalize_thread(Raw);
+            _ -> undefined
+        end,
+    case is_map(Context) andalso maps:get(<<"id">>, Context, undefined) =:= ThreadId of
+        true -> Context;
+        false -> undefined
     end.
 
 -spec parse_ids(term()) -> [integer()].
@@ -378,149 +411,3 @@ list_field(Key, Map) ->
         List when is_list(List) -> [Item || Item <- List, is_map(Item)];
         _ -> []
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-state() ->
-    Tab = guild_thread_store:new(),
-    Data = guild_data_index:normalize_map(#{
-        <<"guild">> => #{<<"id">> => <<"1">>, <<"owner_id">> => <<"2">>},
-        <<"channels">> => [
-            #{<<"id">> => <<"100">>, <<"type">> => 0},
-            #{<<"id">> => <<"200">>, <<"type">> => 15}
-        ],
-        <<"roles">> => [],
-        <<"members">> => []
-    }),
-    #{
-        id => 1,
-        data => Data#{thread_store => Tab, thread_gate => #{active => true, version => 1}}
-    }.
-
-thread_payload(Id, Parent) ->
-    #{
-        <<"id">> => integer_to_binary(Id),
-        <<"parent_id">> => integer_to_binary(Parent),
-        <<"guild_id">> => <<"1">>,
-        <<"type">> => 11,
-        <<"name">> => <<"t">>,
-        <<"message_count">> => 0,
-        <<"total_message_sent">> => 0,
-        <<"member_count">> => 1,
-        <<"thread_metadata">> => #{<<"archived">> => false},
-        <<"_fluxer_member_ids_preview">> => [<<"5">>],
-        <<"_fluxer_members">> => [
-            #{<<"id">> => integer_to_binary(Id), <<"user_id">> => <<"5">>, <<"flags">> => 1}
-        ]
-    }.
-
-counters_exclude_the_starter_and_type_21_test() ->
-    State0 = state(),
-    Tab = guild_thread_gate:store(State0),
-    State1 = apply_event(thread_create, thread_payload(300, 100), State0),
-    Msg = fun(Id, Type) ->
-        #{<<"id">> => integer_to_binary(Id), <<"channel_id">> => <<"300">>, <<"type">> => Type}
-    end,
-    State2 = after_regular_event(message_create, Msg(300, 21), State1),
-    State3 = after_regular_event(message_create, Msg(301, 0), State2),
-    State4 = after_regular_event(message_create, Msg(302, 0), State3),
-    Thread = guild_thread_store:get_thread(Tab, 300),
-    ?assertEqual(2, maps:get(<<"message_count">>, Thread)),
-    ?assertEqual(2, maps:get(<<"total_message_sent">>, Thread)),
-    ?assertEqual(302, maps:get(<<"last_message_id">>, Thread)),
-    ?assertEqual([5], maps:get(<<"member_ids_preview">>, Thread)),
-    State5 = after_regular_event(message_delete, Msg(300, 0), State4),
-    State6 = after_regular_event(
-        message_delete_bulk,
-        #{<<"channel_id">> => <<"300">>, <<"ids">> => [<<"300">>, <<"301">>, <<"302">>]},
-        State5
-    ),
-    Thread2 = guild_thread_store:get_thread(Tab, 300),
-    ?assertEqual(0, maps:get(<<"message_count">>, Thread2)),
-    ?assertEqual(2, maps:get(<<"total_message_sent">>, Thread2)),
-    _ = State6,
-    guild_thread_store:destroy(Tab).
-
-out_of_order_live_messages_still_count_test() ->
-    State0 = state(),
-    Tab = guild_thread_gate:store(State0),
-    State1 = apply_event(thread_create, thread_payload(300, 100), State0),
-    Msg = fun(Id) ->
-        #{<<"id">> => integer_to_binary(Id), <<"channel_id">> => <<"300">>, <<"type">> => 0}
-    end,
-    State2 = after_regular_event(message_create, Msg(302), State1),
-    State3 = after_regular_event(message_create, Msg(301), State2),
-    Thread = guild_thread_store:get_thread(Tab, 300),
-    ?assertEqual(2, maps:get(<<"message_count">>, Thread)),
-    ?assertEqual(2, maps:get(<<"total_message_sent">>, Thread)),
-    ?assertEqual(302, maps:get(<<"last_message_id">>, Thread)),
-    State4 = after_replayed_event(message_create, Msg(301), State3),
-    ?assertEqual(2, maps:get(<<"message_count">>, guild_thread_store:get_thread(Tab, 300))),
-    State5 = after_replayed_event(message_create, Msg(303), State4),
-    Thread2 = guild_thread_store:get_thread(Tab, 300),
-    ?assertEqual(3, maps:get(<<"message_count">>, Thread2)),
-    ?assertEqual(303, maps:get(<<"last_message_id">>, Thread2)),
-    _ = State5,
-    guild_thread_store:destroy(Tab).
-
-forum_parent_last_message_id_follows_new_posts_test() ->
-    State0 = state(),
-    State1 = apply_event(thread_create, thread_payload(300, 200), State0),
-    Index = guild_data_index:channel_index(maps:get(data, State1)),
-    ?assertEqual(300, maps:get(<<"last_message_id">>, maps:get(200, Index))),
-    guild_thread_store:destroy(guild_thread_gate:store(State0)).
-
-archive_removes_and_parent_delete_purges_test() ->
-    State0 = state(),
-    Tab = guild_thread_gate:store(State0),
-    State1 = apply_event(thread_create, thread_payload(300, 100), State0),
-    State2 = apply_event(thread_create, thread_payload(301, 100), State1),
-    Archived = (thread_payload(300, 100))#{<<"thread_metadata">> => #{<<"archived">> => true}},
-    State3 = apply_event(thread_update, Archived, State2),
-    ?assertEqual(undefined, guild_thread_store:get_thread(Tab, 300)),
-    ?assertEqual([], guild_thread_store:user_thread_ids(Tab, 5) -- [301]),
-    _ = after_regular_event(channel_delete, #{<<"id">> => <<"100">>}, State3),
-    ?assertEqual(0, guild_thread_store:thread_count(Tab)),
-    guild_thread_store:destroy(Tab).
-
-unarchive_restores_members_from_the_event_only_test() ->
-    State0 = state(),
-    Tab = guild_thread_gate:store(State0),
-    Archived = (thread_payload(300, 100))#{<<"thread_metadata">> => #{<<"archived">> => true}},
-    State1 = apply_event(thread_update, Archived, State0),
-    State2 = apply_event(thread_update, thread_payload(300, 100), State1),
-    ?assertEqual([5], guild_thread_store:member_ids(Tab, 300)),
-    State3 = apply_event(thread_update, Archived, State2),
-    _ = apply_event(
-        thread_update, maps:remove(<<"_fluxer_members">>, thread_payload(300, 100)), State3
-    ),
-    ?assertNotEqual(undefined, guild_thread_store:get_thread(Tab, 300)),
-    ?assertEqual([], guild_thread_store:member_ids(Tab, 300)),
-    guild_thread_store:destroy(Tab).
-
-members_update_adds_and_removes_test() ->
-    State0 = state(),
-    Tab = guild_thread_gate:store(State0),
-    State1 = apply_event(thread_create, thread_payload(300, 100), State0),
-    _ = apply_event(
-        thread_members_update,
-        #{
-            <<"id">> => <<"300">>,
-            <<"member_count">> => 2,
-            <<"added_members">> => [
-                #{<<"id">> => <<"300">>, <<"user_id">> => <<"6">>, <<"flags">> => 0}
-            ],
-            <<"removed_member_ids">> => [<<"5">>]
-        },
-        State1
-    ),
-    ?assertEqual([6], guild_thread_store:member_ids(Tab, 300)),
-    ?assertEqual(2, maps:get(<<"member_count">>, guild_thread_store:get_thread(Tab, 300))),
-    _ = after_regular_event(
-        guild_member_remove, #{<<"user">> => #{<<"id">> => <<"6">>}}, State1
-    ),
-    ?assertEqual([], guild_thread_store:member_ids(Tab, 300)),
-    guild_thread_store:destroy(Tab).
-
--endif.

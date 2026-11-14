@@ -4,6 +4,7 @@ import ChannelPins from '@app/features/channel/state/ChannelPins';
 import Channels from '@app/features/channel/state/Channels';
 import ForumPosts from '@app/features/forum/state/ForumPosts';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
+import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import MessageReferences from '@app/features/messaging/state/MessageReferences';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
@@ -25,6 +26,7 @@ export function handleMessageDelete(data: MessageDeletePayload, _context: Gatewa
 	Channels.handleThreadMessageDelete(data.channel_id, data.id);
 	ForumPosts.handleMessageDelete(data.channel_id, data.id);
 	MessageReferences.handleMessageDelete(data.channel_id, data.id);
+	MessageReactions.handleMessageDelete(data.id);
 	MessageReply.handleMessageDelete(data.channel_id, data.id);
 	ReadStates.handleMessageDelete({channelId: data.channel_id});
 	MentionFeed.handleMessageDelete(data.id);

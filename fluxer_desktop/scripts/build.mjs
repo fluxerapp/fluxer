@@ -12,7 +12,6 @@ const DIST_DIR = path.join(ROOT_DIR, 'dist');
 const BUILD_INFO_FILE_NAME = 'build-info.json';
 const BUILD_IN_PROGRESS_FILE_NAME = '.build-in-progress';
 const BUILD_IN_PROGRESS_FILE = path.join(DIST_DIR, BUILD_IN_PROGRESS_FILE_NAME);
-let compiledBuildChannel = '';
 const NATIVE_DIR = path.join(ROOT_DIR, 'native');
 const MONOREPO_ROOT = path.join(ROOT_DIR, '..');
 const APP_DIST_DIR = path.join(MONOREPO_ROOT, 'fluxer_app', 'dist');
@@ -26,31 +25,62 @@ const BUNDLED_RENDERER_ENTRIES = Object.freeze([...REQUIRED_RENDERER_ENTRIES, 'v
 const BUNDLED_RENDERER_VERSION_PATTERN = /^\d+\.\d+\.\d+$/u;
 const FORBIDDEN_RENDERER_ENTRIES = Object.freeze(['sw.js', 'sw.js.map']);
 const SUPPORTED_BUILD_ARGUMENTS = Object.freeze(['--shared-assets', '--use-shared-renderer']);
-const MAIN_BOOTSTRAP_ENTRY_NAME = 'index';
+const MAIN_LAUNCH_ENTRY_NAME = 'index';
+const MAIN_BOOTSTRAP_ENTRY_NAME = 'Bootstrap';
+const MAIN_BOOTSTRAP_OUTPUT_FILE_NAME = `${MAIN_BOOTSTRAP_ENTRY_NAME}.js`;
+const MAIN_BOOTSTRAP_OUTPUT_FILE_DEFINE = '__FLUXER_MAIN_BOOTSTRAP_OUTPUT_FILE__';
 const MAIN_APP_ENTRY_NAME = 'MainApp';
 const MAIN_APP_OUTPUT_FILE_NAME = `${MAIN_APP_ENTRY_NAME}.js`;
 const MAIN_APP_OUTPUT_FILE_DEFINE = '__FLUXER_MAIN_APP_OUTPUT_FILE__';
+const MAIN_LAUNCH_SOURCE = path.join(SRC_DIR, 'main', 'LaunchEntry.ts');
 const MAIN_BOOTSTRAP_SOURCE = path.join(SRC_DIR, 'main', 'Bootstrap.ts');
 const MAIN_APP_SOURCE = path.join(SRC_DIR, 'main', 'index.ts');
+const CERTIFICATE_WORKER_SOURCE = path.join(SRC_DIR, 'main', 'DesktopTrustedCertificatesWorker.ts');
+const SPLASH_WINDOW_SOURCE = path.join(SRC_DIR, 'main', 'SplashWindow.ts');
 const DESKTOP_TSCONFIG = path.join(ROOT_DIR, 'tsconfig.json');
+const APP_SRC_DIR = path.join(MONOREPO_ROOT, 'fluxer_app', 'src');
+const ACCOUNT_ENGINE_SOURCE = path.join(SRC_DIR, 'engine', 'AccountEngineMain.ts');
+const ACCOUNT_ENGINE_CORE_SOURCE = path.join(APP_SRC_DIR, 'features', 'account_engine', 'core', 'index.ts');
+const ACCOUNT_ENGINE_OUTPUT_FILE_NAME = 'AccountEngine.cjs';
 const requireModule = createRequire(import.meta.url);
 const isProduction =
 	process.env.NODE_ENV === 'production' ||
 	process.env.FLUXER_DESKTOP_PRODUCTION === 'true' ||
 	process.env.GITHUB_ACTIONS === 'true';
 const skipNative = process.env.FLUXER_SKIP_NATIVE === 'true';
-const embeddedBuildVersion = process.env.PUBLIC_BUILD_VERSION || process.env.BUILD_VERSION || '';
-const embeddedReleaseChannel = process.env.PUBLIC_RELEASE_CHANNEL || process.env.RELEASE_CHANNEL || '';
+const RENAMED_BUILD_ENV = {
+	PUBLIC_BUILD_VERSION: 'BUILD_VERSION',
+	PUBLIC_RELEASE_CHANNEL: 'BUILD_CHANNEL',
+	RELEASE_CHANNEL: 'BUILD_CHANNEL',
+};
+for (const [oldName, newName] of Object.entries(RENAMED_BUILD_ENV)) {
+	if (process.env[oldName] && !process.env[newName]) {
+		throw new Error(`The desktop build no longer reads ${oldName}. Set ${newName} instead.`);
+	}
+}
+const BUILD_CHANNELS = Object.freeze(['stable', 'canary', 'development']);
+const BUILD_CHANNEL_DEFINE = '__FLUXER_BUILD_CHANNEL__';
+function resolveBuildChannel() {
+	const channel = process.env.BUILD_CHANNEL || 'stable';
+	if (!BUILD_CHANNELS.includes(channel)) {
+		throw new Error(`BUILD_CHANNEL must be one of ${BUILD_CHANNELS.join(', ')}, got ${JSON.stringify(channel)}.`);
+	}
+	return channel;
+}
+const buildChannel = resolveBuildChannel();
+let embeddedBuildVersion = process.env.BUILD_VERSION || '';
 const modulesEnabled = process.env.FLUXER_MODULES === '1' || process.env.FLUXER_MODULES === 'true';
 const offlineBuild = process.env.FLUXER_OFFLINE === '1' || process.env.FLUXER_OFFLINE === 'true';
-const publicBuildDefines = {
-	'process.env.PUBLIC_BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
-	'process.env.BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
-	'process.env.PUBLIC_RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
-	'process.env.RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
-	'process.env.FLUXER_MODULES': JSON.stringify(modulesEnabled ? '1' : ''),
-	'process.env.FLUXER_OFFLINE': JSON.stringify(offlineBuild ? '1' : ''),
-};
+const packageLaunchCommand = process.env.FLUXER_LAUNCH_COMMAND || '';
+function buildInfoDefines() {
+	return {
+		[BUILD_CHANNEL_DEFINE]: JSON.stringify(buildChannel),
+		'process.env.BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
+		'process.env.FLUXER_MODULES': JSON.stringify(modulesEnabled ? '1' : ''),
+		'process.env.FLUXER_OFFLINE': JSON.stringify(offlineBuild ? '1' : ''),
+		'process.env.FLUXER_LAUNCH_COMMAND': JSON.stringify(packageLaunchCommand),
+	};
+}
 const electronExternals = [
 	'electron',
 	'electron-log',
@@ -113,6 +143,16 @@ function readBundledRendererVersion() {
 		return typeof parsed?.version === 'string' ? parsed.version : '';
 	} catch {
 		return '';
+	}
+}
+
+function fallBackToBundledRendererVersion() {
+	if (embeddedBuildVersion !== '') {
+		return;
+	}
+	const bundledVersion = readBundledRendererVersion();
+	if (BUNDLED_RENDERER_VERSION_PATTERN.test(bundledVersion)) {
+		embeddedBuildVersion = bundledVersion;
 	}
 }
 
@@ -322,12 +362,12 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 	artifacts.push({
 		label: '@fluxer/app-store',
 		relativePath: `app-store.${tag}.node`,
-		runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+		runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 	});
 	artifacts.push({
 		label: '@fluxer/gateway-socket',
 		relativePath: `gateway-socket.${tag}.node`,
-		runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+		runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 	});
 	if (platform === 'darwin') {
 		artifacts.push({
@@ -357,7 +397,7 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
-			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 		});
 	} else if (platform === 'win32') {
 		artifacts.push({
@@ -380,16 +420,12 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
-			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 		});
 	} else if (platform === 'linux') {
 		artifacts.push({
 			label: '@fluxer/linux-audio-capture',
 			relativePath: `linux-audio-capture.${tag}.node`,
-		});
-		artifacts.push({
-			label: '@fluxer/linux-screen-capture',
-			relativePath: `linux-screen-capture.${tag}.node`,
 		});
 		artifacts.push({
 			label: '@fluxer/linux-portals',
@@ -414,7 +450,7 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
-			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs'],
 		});
 	}
 	return artifacts;
@@ -447,9 +483,43 @@ function verifyInstalledNativeArtifacts() {
 	}
 }
 
-function runNativeCommand(packageDir, command) {
-	const [bin, ...args] = command;
-	console.log(`  $ ${command.join(' ')}`);
+let fluxerCiBin = process.env.FLUXER_CI_BIN || '';
+
+function compiledFluxerCiBin() {
+	if (fluxerCiBin !== '') {
+		return fluxerCiBin;
+	}
+	console.log('Building fluxer-ci without its S3 and HTTP features...');
+	const output = execFileSync(
+		'cargo',
+		['build', '--locked', '--no-default-features', '-p', 'fluxer-ci', '--message-format=json-render-diagnostics'],
+		{cwd: MONOREPO_ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, stdio: ['ignore', 'pipe', 'inherit']},
+	);
+	for (const line of output.split('\n')) {
+		if (!line.startsWith('{')) continue;
+		const message = JSON.parse(line);
+		if (message.reason === 'compiler-artifact' && message.target?.name === 'fluxer-ci' && message.executable) {
+			fluxerCiBin = message.executable;
+		}
+	}
+	if (fluxerCiBin === '') {
+		throw new Error('cargo build -p fluxer-ci did not report an executable');
+	}
+	return fluxerCiBin;
+}
+
+function runFluxerCi(args, {cwd = MONOREPO_ROOT, env = process.env} = {}) {
+	console.log(`  $ fluxer-ci ${args.join(' ')}`);
+	execFileSync(compiledFluxerCiBin(), args, {cwd, stdio: 'inherit', env});
+}
+
+function buildNativeAddon({label, dirName}) {
+	const packageDir = path.join(NATIVE_DIR, dirName);
+	if (!fs.existsSync(packageDir)) {
+		throw new Error(`Native addon directory missing: ${packageDir}`);
+	}
+	const startedAt = Date.now();
+	console.log(`Building native addon ${label}...`);
 	const env = {
 		...process.env,
 		PATH: `${ROOT_BIN_DIR}${path.delimiter}${process.env.PATH || ''}`,
@@ -458,25 +528,8 @@ function runNativeCommand(packageDir, command) {
 		env.NODE_ENV = 'production';
 		env.FLUXER_DESKTOP_PRODUCTION = 'true';
 	}
-	execFileSync(bin, args, {
-		cwd: packageDir,
-		stdio: 'inherit',
-		env,
-		shell: process.platform === 'win32',
-	});
-}
-
-function buildNativeAddon({label, dirName, commands, jsEntry = 'lib/index.js'}) {
-	const packageDir = path.join(NATIVE_DIR, dirName);
-	if (!fs.existsSync(packageDir)) {
-		throw new Error(`Native addon directory missing: ${packageDir}`);
-	}
-	const startedAt = Date.now();
-	console.log(`Building native addon ${label}...`);
-	for (const command of commands) {
-		runNativeCommand(packageDir, command);
-	}
-	const jsEntryPath = path.join(packageDir, jsEntry);
+	runFluxerCi(['build-desktop-native-addon'], {cwd: packageDir, env});
+	const jsEntryPath = path.join(packageDir, 'index.js');
 	if (!fs.existsSync(jsEntryPath)) {
 		throw new Error(`${label}: JS entry missing at ${jsEntryPath} after build`);
 	}
@@ -498,69 +551,47 @@ function buildNativeAddons() {
 	buildNativeAddon({
 		label: '@fluxer/webauthn',
 		dirName: 'webauthn',
-		commands: [['pnpm', 'build']],
-		jsEntry: 'index.js',
 	});
 	buildNativeAddon({
 		label: '@fluxer/hardware-encoder',
 		dirName: 'hardware-encoder',
-		commands: [['pnpm', 'build']],
-		jsEntry: 'index.js',
 	});
 	buildNativeAddon({
 		label: '@fluxer/app-store',
 		dirName: 'app-store',
-		commands: [['pnpm', 'build']],
-		jsEntry: 'index.js',
 	});
 	buildNativeAddon({
 		label: '@fluxer/gateway-socket',
 		dirName: 'gateway-socket',
-		commands: [['pnpm', 'build']],
-		jsEntry: 'index.js',
 	});
 	if (process.platform === 'darwin') {
 		buildNativeAddon({
 			label: '@fluxer/mac-app-audio',
 			dirName: 'mac-app-audio',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/mac-screen-capture',
 			dirName: 'mac-screen-capture',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/mac-clipboard',
 			dirName: 'mac-clipboard',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/mac-sysctl',
 			dirName: 'mac-sysctl',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/mac-tcc',
 			dirName: 'mac-tcc',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/macos-input-hook',
 			dirName: 'macos-input-hook',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/platform-info',
 			dirName: 'platform-info',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		verifyInstalledNativeArtifacts();
 		return;
@@ -569,38 +600,26 @@ function buildNativeAddons() {
 		buildNativeAddon({
 			label: '@fluxer/win-process-loopback',
 			dirName: 'win-process-loopback',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/win-clipboard',
 			dirName: 'win-clipboard',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/win-shell',
 			dirName: 'win-shell',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/windows-input-hook',
 			dirName: 'windows-input-hook',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/win-game-capture',
 			dirName: 'win-game-capture',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/platform-info',
 			dirName: 'platform-info',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		verifyInstalledNativeArtifacts();
 		return;
@@ -609,50 +628,30 @@ function buildNativeAddons() {
 		buildNativeAddon({
 			label: '@fluxer/linux-audio-capture',
 			dirName: 'linux-audio-capture',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
-		});
-		buildNativeAddon({
-			label: '@fluxer/linux-screen-capture',
-			dirName: 'linux-screen-capture',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/linux-portals',
 			dirName: 'linux-portals',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/linux-notifications',
 			dirName: 'linux-notifications',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/linux-evdev',
 			dirName: 'linux-evdev',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/system-hunspell',
 			dirName: 'system-hunspell',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/linux-input-hook',
 			dirName: 'linux-input-hook',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		buildNativeAddon({
 			label: '@fluxer/platform-info',
 			dirName: 'platform-info',
-			commands: [['pnpm', 'build']],
-			jsEntry: 'index.js',
 		});
 		verifyInstalledNativeArtifacts();
 		return;
@@ -662,8 +661,19 @@ function buildNativeAddons() {
 
 async function buildMain() {
 	console.log('Building main process...');
+	const certificateWorker = await esbuild.build({
+		entryPoints: [CERTIFICATE_WORKER_SOURCE],
+		bundle: true,
+		write: false,
+		platform: 'node',
+		target: 'node22',
+		format: 'cjs',
+		minify: isProduction,
+		tsconfig: DESKTOP_TSCONFIG,
+	});
 	const result = await esbuild.build({
 		entryPoints: {
+			[MAIN_LAUNCH_ENTRY_NAME]: MAIN_LAUNCH_SOURCE,
 			[MAIN_BOOTSTRAP_ENTRY_NAME]: MAIN_BOOTSTRAP_SOURCE,
 			[MAIN_APP_ENTRY_NAME]: MAIN_APP_SOURCE,
 		},
@@ -684,7 +694,9 @@ async function buildMain() {
 		define: {
 			'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
 			[MAIN_APP_OUTPUT_FILE_DEFINE]: JSON.stringify(MAIN_APP_OUTPUT_FILE_NAME),
-			...publicBuildDefines,
+			__FLUXER_CERTIFICATE_WORKER_SOURCE__: JSON.stringify(certificateWorker.outputFiles[0].text),
+			[MAIN_BOOTSTRAP_OUTPUT_FILE_DEFINE]: JSON.stringify(MAIN_BOOTSTRAP_OUTPUT_FILE_NAME),
+			...buildInfoDefines(),
 		},
 		banner: {
 			js: `import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);`,
@@ -692,14 +704,20 @@ async function buildMain() {
 	});
 	assertMainProcessEntryOutput(
 		result.metafile,
+		MAIN_LAUNCH_SOURCE,
+		path.join(DIST_DIR, 'main', `${MAIN_LAUNCH_ENTRY_NAME}.js`),
+	);
+	assertMainProcessEntryOutput(
+		result.metafile,
 		MAIN_BOOTSTRAP_SOURCE,
-		path.join(DIST_DIR, 'main', `${MAIN_BOOTSTRAP_ENTRY_NAME}.js`),
+		path.join(DIST_DIR, 'main', MAIN_BOOTSTRAP_OUTPUT_FILE_NAME),
 	);
 	assertMainProcessEntryOutput(
 		result.metafile,
 		MAIN_APP_SOURCE,
 		path.join(DIST_DIR, 'main', MAIN_APP_OUTPUT_FILE_NAME),
 	);
+	assertSplashBundleOwnership(result.metafile);
 	console.log('Main process build complete.');
 }
 
@@ -718,6 +736,42 @@ function assertMainProcessEntryOutput(metafile, entryPoint, expectedOutput) {
 		.map(([outputPath]) => path.resolve(ROOT_DIR, outputPath));
 	if (actualOutputs.length !== 1 || actualOutputs[0] !== expectedOutput) {
 		throw new MainProcessBuildOutputError(entryPoint, expectedOutput, actualOutputs);
+	}
+}
+
+function entryOutputInputs(metafile, entryPoint) {
+	const outputs = Object.entries(metafile.outputs);
+	const start = outputs.find(
+		([, output]) => output.entryPoint != null && path.resolve(ROOT_DIR, output.entryPoint) === entryPoint,
+	);
+	const inputs = new Set();
+	const seen = new Set();
+	const queue = start == null ? [] : [start[0]];
+	while (queue.length > 0) {
+		const outputPath = queue.shift();
+		if (seen.has(outputPath) || metafile.outputs[outputPath] == null) {
+			continue;
+		}
+		seen.add(outputPath);
+		const output = metafile.outputs[outputPath];
+		for (const input of Object.keys(output.inputs)) {
+			inputs.add(path.resolve(ROOT_DIR, input));
+		}
+		for (const imported of output.imports) {
+			queue.push(imported.path);
+		}
+	}
+	return inputs;
+}
+
+function assertSplashBundleOwnership(metafile) {
+	if (!entryOutputInputs(metafile, MAIN_BOOTSTRAP_SOURCE).has(SPLASH_WINDOW_SOURCE)) {
+		throw new Error(`${MAIN_BOOTSTRAP_ENTRY_NAME}.js no longer bundles ${SPLASH_WINDOW_SOURCE}`);
+	}
+	if (entryOutputInputs(metafile, MAIN_APP_SOURCE).has(SPLASH_WINDOW_SOURCE)) {
+		throw new Error(
+			`${MAIN_APP_OUTPUT_FILE_NAME} reaches ${SPLASH_WINDOW_SOURCE}, so the splash would load twice with two copies of its state. Talk to the splash through ModuleBootHandoff instead.`,
+		);
 	}
 }
 
@@ -780,7 +834,7 @@ function buildRendererBundle() {
 	execFileSync('pnpm', ['--filter', 'fluxer_app', 'build:desktop'], {
 		cwd: MONOREPO_ROOT,
 		stdio: 'inherit',
-		env: {...process.env, NODE_ENV: 'production'},
+		env: {...process.env, NODE_ENV: 'production', BUILD_CHANNEL: buildChannel, FLUXER_CI_BIN: compiledFluxerCiBin()},
 		shell: process.platform === 'win32',
 	});
 }
@@ -816,9 +870,45 @@ function preloadBuildOptions(entryFileName, outputFileName) {
 		tsconfig: DESKTOP_TSCONFIG,
 		define: {
 			'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
-			...publicBuildDefines,
+			...buildInfoDefines(),
 		},
 	};
+}
+
+export function accountEngineBuildOptions({outfile, minify = isProduction, sourcemap = true} = {}) {
+	return {
+		entryPoints: [ACCOUNT_ENGINE_SOURCE],
+		bundle: true,
+		platform: 'node',
+		target: 'node22',
+		format: 'cjs',
+		outfile: outfile ?? path.join(DIST_DIR, 'engine', ACCOUNT_ENGINE_OUTPUT_FILE_NAME),
+		minify,
+		sourcemap,
+		external: ['@fluxer/gateway-socket'],
+		tsconfig: DESKTOP_TSCONFIG,
+		alias: {'@fluxer/account-engine-core': ACCOUNT_ENGINE_CORE_SOURCE},
+		plugins: [
+			{
+				name: 'fluxer-app-source',
+				setup(build) {
+					build.onResolve({filter: /^@app\//}, (args) => ({
+						path: path.join(APP_SRC_DIR, `${args.path.slice('@app/'.length)}.ts`),
+					}));
+				},
+			},
+		],
+		define: {
+			'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+			[BUILD_CHANNEL_DEFINE]: JSON.stringify(buildChannel),
+		},
+	};
+}
+
+async function buildAccountEngine() {
+	console.log('Building account engine...');
+	await esbuild.build(accountEngineBuildOptions());
+	console.log('Account engine build complete.');
 }
 
 async function buildPreload() {
@@ -830,38 +920,14 @@ async function buildPreload() {
 	console.log('Preload script build complete.');
 }
 
-function runDesktopBuildStep(step) {
+function prunePackedRendererModules() {
+	console.log('Pruning on-demand module assets from the bundled renderer...');
+	const startedAt = Date.now();
 	const env = {...process.env};
 	if (!env.WORKDIR && !env.GITHUB_WORKSPACE) {
 		env.WORKDIR = MONOREPO_ROOT;
 	}
-	execFileSync(
-		'cargo',
-		[
-			'run',
-			'--manifest-path',
-			path.join(MONOREPO_ROOT, 'tools', 'ci', 'Cargo.toml'),
-			'--',
-			'build-desktop',
-			'--step',
-			step,
-		],
-		{
-			stdio: 'inherit',
-			env,
-		},
-	);
-}
-
-function ensureBuildChannelFile() {
-	runDesktopBuildStep('set_build_channel');
-	compiledBuildChannel = readGeneratedBuildChannel();
-}
-
-function prunePackedRendererModules() {
-	console.log('Pruning on-demand module assets from the bundled renderer...');
-	const startedAt = Date.now();
-	runDesktopBuildStep('prune_shell_renderer');
+	runFluxerCi(['build-desktop', '--step', 'prune_shell_renderer'], {cwd: ROOT_DIR, env});
 	const missing = findMissingEntries(BUNDLED_RENDERER_ENTRIES, RENDERER_DIST_DIR);
 	if (missing.length > 0) {
 		throw new BundledRendererMissingError(RENDERER_DIST_DIR, missing);
@@ -875,7 +941,7 @@ function prunePackedRendererModules() {
 
 async function build() {
 	const options = parseBuildArguments(process.argv.slice(2));
-	ensureBuildChannelFile();
+	console.log(`Desktop build channel: ${buildChannel}`);
 	if (options.sharedAssetsOnly) {
 		console.log('Building shared renderer assets...');
 		buildRendererBundle();
@@ -894,46 +960,42 @@ async function build() {
 	cleanDistDirectory(options);
 	fs.mkdirSync(path.join(DIST_DIR, 'main'), {recursive: true});
 	fs.mkdirSync(path.join(DIST_DIR, 'preload'), {recursive: true});
+	fs.mkdirSync(path.join(DIST_DIR, 'engine'), {recursive: true});
 	if (!options.useSharedRenderer) {
 		copyRendererIntoDist();
 	}
+	fallBackToBundledRendererVersion();
 	if (modulesEnabled) {
 		prunePackedRendererModules();
 	}
-	await Promise.all([buildMain(), buildPreload()]);
+	await Promise.all([buildMain(), buildPreload(), buildAccountEngine()]);
+	assertBuildChannelDefined();
 	copySplashAssets();
 	writeBuildInfo();
 	fs.rmSync(BUILD_IN_PROGRESS_FILE, {force: true});
 	console.log('Build complete!');
 }
 
-function readGeneratedBuildChannel() {
-	const source = fs.readFileSync(path.join(ROOT_DIR, 'src/common/BuildChannel.ts'), 'utf8');
-	const match = /BUILD_CHANNEL = '([^']+)'/.exec(source);
-	return match ? match[1] : '';
-}
-
-class BuildChannelDriftError extends Error {
-	constructor(compiled, current) {
-		super(
-			`src/common/BuildChannel.ts changed from ${compiled} to ${current} while this build was running. It is gitignored and generated, so a concurrent build in the same worktree rewrote it. This build compiled ${compiled} and must not be recorded as ${current}.`,
-		);
-		this.name = 'BuildChannelDriftError';
+function assertBuildChannelDefined() {
+	for (const bundleDir of ['main', 'preload', 'engine']) {
+		for (const entry of fs.readdirSync(path.join(DIST_DIR, bundleDir), {recursive: true})) {
+			if (!/\.c?js$/u.test(entry)) continue;
+			if (fs.readFileSync(path.join(DIST_DIR, bundleDir, entry), 'utf8').includes(BUILD_CHANNEL_DEFINE)) {
+				throw new Error(
+					`dist/${bundleDir}/${entry} still references ${BUILD_CHANNEL_DEFINE}, so its esbuild options miss the channel define.`,
+				);
+			}
+		}
 	}
 }
 
 function writeBuildInfo() {
-	const currentChannel = readGeneratedBuildChannel();
-	if (currentChannel !== compiledBuildChannel) {
-		throw new BuildChannelDriftError(compiledBuildChannel, currentChannel);
-	}
 	fs.writeFileSync(
 		path.join(DIST_DIR, BUILD_INFO_FILE_NAME),
 		`${JSON.stringify(
 			{
 				buildVersion: embeddedBuildVersion,
-				releaseChannel: embeddedReleaseChannel,
-				buildChannel: compiledBuildChannel,
+				buildChannel,
 				offlineBuild,
 				modulesEnabled,
 			},
@@ -943,7 +1005,9 @@ function writeBuildInfo() {
 	);
 }
 
-build().catch((error) => {
-	console.error('Build failed:', error);
-	process.exit(1);
-});
+if (process.argv[1] != null && path.resolve(process.argv[1]) === path.resolve(import.meta.filename)) {
+	build().catch((error) => {
+		console.error('Build failed:', error);
+		process.exit(1);
+	});
+}

@@ -140,9 +140,6 @@ export interface MembersTableBodyProps {
 	onRowClick: (data: MemberDisplayData) => void;
 }
 
-export type PaginationItem = number | 'ellipsis-left' | 'ellipsis-right';
-export type PaginationEllipsisSide = 'left' | 'right';
-
 function hasSelectedValues<T>(values?: ReadonlyArray<T>): boolean {
 	return values != null && values.length > 0;
 }

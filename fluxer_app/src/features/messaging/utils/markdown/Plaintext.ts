@@ -50,6 +50,7 @@ export interface PlaintextRenderOptions {
 	includeEmojiNames?: boolean;
 	includeLinkUrls?: boolean;
 	mentionChannels?: ReadonlyArray<ChannelMention>;
+	resolveFromStores?: boolean;
 	i18n: I18n;
 }
 
@@ -287,7 +288,7 @@ function renderTableCellToPlaintext(cell: TableCellNode, options: PlaintextRende
 		.trim();
 }
 
-function normaliseUrlForComparison(value?: string | null): string | null {
+export function normaliseUrlForComparison(value?: string | null): string | null {
 	if (!value) {
 		return null;
 	}
@@ -366,6 +367,9 @@ function renderMentionToPlaintext(node: MentionNode, options: PlaintextRenderOpt
 	const {kind} = node;
 	switch (kind.kind) {
 		case MentionKind.User: {
+			if (options.resolveFromStores === false) {
+				return `@${options.i18n._(UNKNOWN_MENTION_LABEL)}`;
+			}
 			const user = Users.getUser(kind.id);
 			if (!user) {
 				return `@${kind.id}`;
@@ -374,6 +378,9 @@ function renderMentionToPlaintext(node: MentionNode, options: PlaintextRenderOpt
 			return `@${NicknameUtils.getNickname(user, channel?.guildId ?? null, options.channelId)}`;
 		}
 		case MentionKind.Role: {
+			if (options.resolveFromStores === false) {
+				return `@${options.i18n._(UNKNOWN_ROLE_MENTION_LABEL)}`;
+			}
 			const channel = options.channelId ? Channels.getChannel(options.channelId) : null;
 			const guild = Guilds.getGuild(channel?.guildId ?? '');
 			const role = guild ? guild.roles[kind.id] : null;
@@ -383,7 +390,7 @@ function renderMentionToPlaintext(node: MentionNode, options: PlaintextRenderOpt
 			return `@${role.name}`;
 		}
 		case MentionKind.Channel: {
-			const channel = Channels.getChannel(kind.id);
+			const channel = options.resolveFromStores === false ? undefined : Channels.getChannel(kind.id);
 			if (channel && COPYABLE_CHANNEL_MENTION_TYPES.has(channel.type)) {
 				return `#${channel.name}`;
 			}
@@ -491,15 +498,11 @@ function trimTrailingWhitespaceBeforeLineBreaks(value: string, preserveMarkdown:
 	return lines.join('\n');
 }
 
-function renderToPlaintext(nodes: Array<Node>, options: PlaintextRenderOptions): string {
+export function renderAstToPlaintext(nodes: Array<Node>, options: PlaintextRenderOptions): string {
 	const result = renderNodesToPlaintext(nodes, options);
 	return trimTrailingWhitespaceBeforeLineBreaks(result, options.preserveMarkdown)
 		.replace(/\n{3,}/g, '\n\n')
 		.replace(/^\n+|\n+$/gu, '');
-}
-
-export function renderAstToPlaintext(nodes: Array<Node>, options: PlaintextRenderOptions): string {
-	return renderToPlaintext(nodes, options);
 }
 
 export function parseAndRenderToPlaintext(
@@ -510,7 +513,7 @@ export function parseAndRenderToPlaintext(
 	try {
 		const parser = new WasmParser(content, parserFlags);
 		const {nodes} = parser.parse();
-		return renderToPlaintext(nodes, options);
+		return renderAstToPlaintext(nodes, options);
 	} catch (error) {
 		logger.error('Error parsing content for plaintext rendering:', error);
 		return content;

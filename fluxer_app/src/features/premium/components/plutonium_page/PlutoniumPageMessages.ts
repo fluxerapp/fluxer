@@ -4,15 +4,18 @@ import {msg} from '@lingui/core/macro';
 
 export const MONTHLY_PRICE_DESCRIPTOR = msg({
 	message: '{monthlyPrice}/mo',
-	comment: 'Compact monthly price on the Plutonium page hero. Preserve the monthlyPrice placeholder exactly.',
+	comment:
+		'Compact monthly price on the Plutonium page hero. Preserve the monthlyPrice placeholder exactly. The price is shown bold and any text around it in a lighter style, so keep the period words outside the placeholder.',
 });
 export const YEARLY_PRICE_DESCRIPTOR = msg({
 	message: '{yearlyPrice}/yr',
-	comment: 'Compact yearly price on the Plutonium page hero. Preserve the yearlyPrice placeholder exactly.',
+	comment:
+		'Compact yearly price on the Plutonium page hero. Preserve the yearlyPrice placeholder exactly. The price is shown bold and any text around it in a lighter style, so keep the period words outside the placeholder.',
 });
 export const PRICE_OR_DESCRIPTOR = msg({
 	message: 'or',
-	comment: 'Compact conjunction between the monthly and yearly price on the Plutonium page hero.',
+	comment:
+		'Compact conjunction between the monthly and yearly price on the Plutonium page hero. On narrow screens it starts the second line, right before the yearly price.',
 });
 export const DONATION_HINT_DESCRIPTOR = msg({
 	message: "Just want to support {productName}'s open source development? {donateLink}.",
@@ -23,6 +26,11 @@ export const DONATE_INSTEAD_DESCRIPTOR = msg({
 	message: 'Donate instead',
 	comment: 'Link text in the Plutonium page donation hint. Opens the donation page on the website.',
 });
+export const PREMIUM_INFO_LINK_DESCRIPTOR = msg({
+	message: 'Learn more about {premiumProductName}',
+	comment:
+		'Link under the Plutonium page hero buttons on self-hosted instances. premiumProductName is the paid tier name set by the instance. Opens a page about the tier that the instance admin chose.',
+});
 export const SUBSCRIBE_YEARLY_DESCRIPTOR = msg({
 	message: 'Get yearly',
 	comment: 'Primary Plutonium page button that starts a yearly subscription checkout.',
@@ -31,10 +39,6 @@ export const SUBSCRIBE_MONTHLY_DESCRIPTOR = msg({
 	message: 'Get monthly',
 	comment: 'Secondary Plutonium page button that starts a monthly subscription checkout.',
 });
-export const SAVE_PERCENT_DESCRIPTOR = msg({
-	message: 'Save {percent}%',
-	comment: 'Badge on the yearly Plutonium button. percent is a whole number such as 17.',
-});
 export const GIFT_PLUTONIUM_DESCRIPTOR = msg({
 	message: 'Gift {premiumProductName}',
 	comment: 'Plutonium page button that opens the gift purchase dialog. premiumProductName is the paid tier name.',
@@ -42,10 +46,6 @@ export const GIFT_PLUTONIUM_DESCRIPTOR = msg({
 export const REDEEM_GIFT_CODE_DESCRIPTOR = msg({
 	message: 'Redeem a gift code',
 	comment: 'Plutonium page link that opens the gift code redemption settings.',
-});
-export const MANAGE_SUBSCRIPTION_DESCRIPTOR = msg({
-	message: 'Manage subscription',
-	comment: 'Plutonium page hero button that scrolls to the subscription management panel.',
 });
 export const MEMBER_THANKS_DESCRIPTOR = msg({
 	message: "You're a {premiumProductName} member. Thanks for supporting an independent communication platform.",
@@ -76,10 +76,6 @@ export const REDEEM_ONLY_DESCRIPTOR = msg({
 	message: 'Have a gift code? Redeem it to unlock {premiumProductName}.',
 	comment:
 		'Plutonium page hero text on an instance where the paid tier cannot be bought, only redeemed. premiumProductName is the paid tier name.',
-});
-export const MANAGE_HEADING_DESCRIPTOR = msg({
-	message: 'Your subscription',
-	comment: 'Heading of the subscription management panel on the Plutonium page.',
 });
 export const SHOWCASE_EXPRESSIONS_TITLE_DESCRIPTOR = msg({
 	message: 'Your emojis, everywhere',
@@ -132,10 +128,6 @@ export const FEATURE_COLUMN_DESCRIPTOR = msg({
 export const FREE_COLUMN_DESCRIPTOR = msg({
 	message: 'Free',
 	comment: 'Column header for the free tier in the Plutonium page comparison table.',
-});
-export const AVAILABLE_DESCRIPTOR = msg({
-	message: 'Available',
-	comment: 'Screen reader text for a check mark in the Plutonium page comparison table.',
 });
 export const NOT_AVAILABLE_DESCRIPTOR = msg({
 	message: 'Not available',
@@ -254,15 +246,11 @@ export const PURCHASE_BLOCKED_CLAIM_DESCRIPTOR = msg({
 		'Plutonium page note under disabled buttons for unclaimed accounts. premiumProductName is the paid tier name.',
 });
 export const PURCHASE_BLOCKED_VERIFY_DESCRIPTOR = msg({
-	message: 'Verify your email to buy {premiumProductName}.',
+	message: 'Confirm your email to buy {premiumProductName}.',
 	comment:
 		'Plutonium page note under disabled buttons for unverified accounts. premiumProductName is the paid tier name.',
 });
 export const PAGE_LABEL_DESCRIPTOR = msg({
 	message: '{premiumProductName} page',
 	comment: 'Accessible label of the Plutonium page region. premiumProductName is the paid tier name.',
-});
-export const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'Accessible label of the back button on the Plutonium page in the mobile layout.',
 });

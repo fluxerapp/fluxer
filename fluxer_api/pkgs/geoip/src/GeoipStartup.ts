@@ -52,6 +52,7 @@ interface GeoipStartupResult {
 interface EnsureGeoipStartupOptions {
 	geoip: GeoipSourceConfig;
 	s3Config?: GeoipS3ConnectionConfig;
+	resolveStoredObjectPath?: (bucket: string, key: string) => string | null;
 }
 
 interface GeoipRuntimePathOptions {
@@ -91,7 +92,38 @@ export async function ensureGeoipDatabaseOnStartup(options: EnsureGeoipStartupOp
 			maxmindDbPath: geoip.maxmindDbPath,
 		};
 	}
+	if (options.resolveStoredObjectPath) {
+		return copyStoredObject(geoip, options.resolveStoredObjectPath);
+	}
 	return ensureS3Startup(geoip, options.s3Config);
+}
+
+async function copyStoredObject(
+	geoip: GeoipS3SourceConfig,
+	resolveStoredObjectPath: (bucket: string, key: string) => string | null,
+): Promise<GeoipStartupResult> {
+	const source = resolveStoredObjectPath(geoip.s3Bucket, geoip.s3Key);
+	if (!source) {
+		throw new Error(`GeoIP object s3://${geoip.s3Bucket}/${geoip.s3Key} is not a storable key`);
+	}
+	await fs.mkdir(path.dirname(geoip.maxmindDbPath), {recursive: true});
+	const tempPath = `${geoip.maxmindDbPath}.tmp-${process.pid}-${Date.now()}`;
+	try {
+		await fs.copyFile(source, tempPath);
+		await fs.rename(tempPath, geoip.maxmindDbPath);
+	} catch (error) {
+		await fs.rm(tempPath, {force: true}).catch(() => undefined);
+		throw new Error(`Failed to copy GeoIP database from ${source}`, {cause: error});
+	}
+	const stat = await fs.stat(geoip.maxmindDbPath);
+	return {
+		mode: 's3',
+		downloaded: false,
+		city: {path: geoip.maxmindDbPath, sizeBytes: stat.size, upstream: source},
+		maxmindDbPath: geoip.maxmindDbPath,
+		bucket: geoip.s3Bucket,
+		key: geoip.s3Key,
+	};
 }
 
 async function ensureS3Startup(

@@ -89,6 +89,7 @@ interface AccountAccessRequest {
 export interface AccountAccessCheckOptions {
 	readonly force?: boolean;
 	readonly resetFailures?: boolean;
+	readonly maxAgeMs?: number;
 }
 
 function userRequiresAction(user: UserPrivate): boolean {
@@ -150,15 +151,17 @@ function unavailablePollDelay(consecutiveFailures: number): number {
 export class AccountAccess {
 	private readonly records = observable.map<string, AccountAccessRecord>();
 	private readonly checkedTokens = new Map<string, string>();
+	private readonly checkedAt = new Map<string, number>();
 	private readonly requests = new Map<string, AccountAccessRequest>();
 	revision = 0;
 
 	constructor() {
-		makeAutoObservable<AccountAccess, 'records' | 'checkedTokens' | 'requests' | 'setRecord'>(
+		makeAutoObservable<AccountAccess, 'records' | 'checkedTokens' | 'checkedAt' | 'requests' | 'setRecord'>(
 			this,
 			{
 				records: false,
 				checkedTokens: false,
+				checkedAt: false,
 				requests: false,
 				currentPhase: computed,
 				setRecord: false,
@@ -201,11 +204,6 @@ export class AccountAccess {
 		return record.user;
 	}
 
-	getRetryEligibleAt(accountKey: string): number {
-		const record = this.recordFor(accountKey);
-		return record === null ? 0 : record.nextPollAt;
-	}
-
 	async ensureAccountChecked(
 		accountKey: string,
 		options: AccountAccessCheckOptions = {},
@@ -228,7 +226,9 @@ export class AccountAccess {
 			this.requests.delete(accountKey);
 		}
 		const existing = this.recordFor(accountKey);
-		if (options.force !== true && existingToken === account.token && existing !== null) {
+		const refreshesCheckedResult =
+			options.force !== true && existing !== null && this.checkedResultIsStale(accountKey, existing, options);
+		if (options.force !== true && existingToken === account.token && existing !== null && !refreshesCheckedResult) {
 			switch (existing.phase) {
 				case AccountAccessPhase.ALLOWED:
 				case AccountAccessPhase.GATEWAY_STARTING:
@@ -246,8 +246,10 @@ export class AccountAccess {
 			}
 		}
 		if (
-			existing === null ||
-			(existing.phase !== AccountAccessPhase.ACTION_REQUIRED && existing.phase !== AccountAccessPhase.GATEWAY_STARTING)
+			!refreshesCheckedResult &&
+			(existing === null ||
+				(existing.phase !== AccountAccessPhase.ACTION_REQUIRED &&
+					existing.phase !== AccountAccessPhase.GATEWAY_STARTING))
 		) {
 			this.setRecord(accountKey, {
 				consecutiveFailures: recheckConsecutiveFailures(options, existing),
@@ -317,6 +319,7 @@ export class AccountAccess {
 	private clearRecord(accountKey: string): void {
 		this.records.delete(accountKey);
 		this.checkedTokens.delete(accountKey);
+		this.checkedAt.delete(accountKey);
 		this.revision += 1;
 	}
 
@@ -373,6 +376,7 @@ export class AccountAccess {
 			const wasActionRequired = actionRequired || (existing?.wasActionRequired ?? false);
 			runInAction(() => {
 				this.checkedTokens.set(accountKey, token);
+				this.checkedAt.set(accountKey, Date.now());
 				this.setRecord(accountKey, {
 					consecutiveFailures: 0,
 					nextPollAt: actionRequiredNextPollAt(actionRequired),
@@ -409,6 +413,24 @@ export class AccountAccess {
 			}
 			this.forgetAccount(accountKey);
 		});
+	}
+
+	private checkedResultIsStale(
+		accountKey: string,
+		record: AccountAccessRecord,
+		options: AccountAccessCheckOptions,
+	): boolean {
+		if (options.maxAgeMs === undefined) {
+			return false;
+		}
+		if (
+			record.phase !== AccountAccessPhase.ALLOWED &&
+			record.phase !== AccountAccessPhase.GATEWAY_STARTING &&
+			record.phase !== AccountAccessPhase.ACTION_REQUIRED
+		) {
+			return false;
+		}
+		return Date.now() - (this.checkedAt.get(accountKey) ?? 0) >= options.maxAgeMs;
 	}
 
 	private recordFor(accountKey: string): AccountAccessRecord | null {

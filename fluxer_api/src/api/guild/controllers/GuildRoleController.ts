@@ -5,6 +5,7 @@ import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
@@ -43,6 +44,7 @@ export function GuildRoleController(app: HonoApp) {
 	);
 	app.post(
 		'/guilds/:guild_id/roles',
+		RequestBodyLimit(jsonAssetBodyLimit({role_icon: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_ROLE_CREATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),
@@ -55,7 +57,7 @@ export function GuildRoleController(app: HonoApp) {
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],
 			description:
-				'Create guild role. Requires manage_roles permission. Creates a new role with specified name, permissions, and color.',
+				'Create guild role. Requires manage_roles permission. Creates a new role with specified name, permissions, colour and an optional icon image or Unicode emoji.',
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
@@ -127,6 +129,7 @@ export function GuildRoleController(app: HonoApp) {
 	);
 	app.patch(
 		'/guilds/:guild_id/roles/:role_id',
+		RequestBodyLimit(jsonAssetBodyLimit({role_icon: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_ROLE_UPDATE),
 		LoginRequired,
 		Validator('param', GuildIdRoleIdParam),
@@ -139,7 +142,7 @@ export function GuildRoleController(app: HonoApp) {
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],
 			description:
-				'Update guild role. Requires manage_roles permission. Modifies role name, permissions, color, and other settings.',
+				'Update guild role. Requires manage_roles permission. Modifies role name, permissions, colour, icon and other settings.',
 		}),
 		async (ctx) => {
 			const {guild_id, role_id} = ctx.req.valid('param');

@@ -19,6 +19,8 @@ export interface VoiceState {
 	suppress?: boolean;
 	member?: GuildMemberData;
 	e2ee_capable?: boolean;
+	p2p?: boolean;
+	version?: number;
 }
 
 export interface CallVoiceState {

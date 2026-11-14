@@ -16,7 +16,7 @@
 	white-space: break-spaces;
 	user-select: text;
 	-webkit-user-select: text;
-	text-align: left;
+	text-align: start;
 }
 
 .bio {
@@ -133,6 +133,14 @@
 	text-decoration: underline;
 }
 
+@media (hover: none) {
+	.markup .link,
+	.markup .link:hover,
+	.markup .link:active {
+		text-decoration: var(--link-decoration, none) !important;
+	}
+}
+
 .markup ul,
 .markup ol {
 	margin-block: 0.25rem 0;
@@ -183,6 +191,8 @@
 .markup code.inline,
 .inlineFormat code.inline {
 	display: inline;
+	direction: ltr;
+	unicode-bidi: isolate;
 	box-sizing: border-box;
 	max-width: 100%;
 	font-family: var(--font-mono);
@@ -256,6 +266,8 @@
 }
 
 .markup pre {
+	direction: ltr;
+	text-align: start;
 	font-family: var(--font-mono);
 	font-size: 0.75em;
 	line-height: 1.333333;
@@ -281,7 +293,7 @@
 .markup .codeActions {
 	position: absolute;
 	top: 0.25rem;
-	right: 0.25rem;
+	inset-inline-end: 0.25rem;
 	display: flex;
 	gap: 0.125rem;
 	opacity: 0;
@@ -335,7 +347,7 @@
 	border-radius: 0.25rem;
 	background-color: var(--interactive-muted);
 	flex-shrink: 0;
-	margin-right: 0.75rem;
+	margin-inline-end: 0.75rem;
 }
 
 .markup .blockquoteContent {
@@ -410,13 +422,13 @@
 	word-wrap: break-word;
 	overflow-wrap: break-word;
 	min-inline-size: var(--message-compact-table-min-cell-width, 5rem);
-	text-align: left;
+	text-align: start;
 }
 
 .markup .tableCell {
 	border-bottom: 0.0625rem solid var(--border-color);
 	padding: 0.5rem 0.75rem;
-	text-align: left;
+	text-align: start;
 	background: var(--bg-table-row-odd);
 	vertical-align: middle;
 	line-height: 1.4;
@@ -440,7 +452,7 @@
 }
 
 .markup .alignLeft {
-	text-align: left;
+	text-align: start;
 }
 
 .markup .alignCenter {
@@ -448,12 +460,13 @@
 }
 
 .markup .alignRight {
-	text-align: right;
+	text-align: end;
 }
 
 .markup .alert {
 	position: relative;
-	padding: 0.375rem 0.75rem 0.375rem 1rem;
+	padding-block: 0.375rem;
+	padding-inline: 1rem 0.75rem;
 	margin-top: 0.25rem;
 	border-radius: var(--radius-md);
 	background: transparent;
@@ -462,7 +475,7 @@
 .markup .alert::before {
 	content: '';
 	position: absolute;
-	left: 0;
+	inset-inline-start: 0;
 	top: 0;
 	bottom: 0;
 	width: 0.25rem;
@@ -474,7 +487,7 @@
 	display: inline-block;
 	width: 1em;
 	height: 1em;
-	margin-right: 0.25rem;
+	margin-inline-end: 0.25rem;
 	vertical-align: text-bottom;
 }
 
@@ -842,7 +855,7 @@
 	font-weight: 600;
 	font-size: inherit;
 	white-space: normal;
-	padding-right: 0.75rem;
+	padding-inline-end: 0.75rem;
 	line-height: 1.25em;
 	color: inherit;
 	border: none;
@@ -860,20 +873,21 @@
 .markup .inlineFormat ol {
 	display: inline;
 	margin: 0;
-	padding: 0 0.5rem 0 0;
+	padding-block: 0;
+	padding-inline: 0 0.5rem;
 }
 
 .markup.inlineFormat li,
 .markup .inlineFormat li {
 	display: inline;
 	margin: 0;
-	padding-right: 0.5rem;
+	padding-inline-end: 0.5rem;
 }
 
 .markup.inlineFormat li:before,
 .markup .inlineFormat li:before {
 	content: '•';
-	padding-right: 0.25rem;
+	padding-inline-end: 0.25rem;
 }
 
 .markup.inlineFormat li li:before,
@@ -1105,7 +1119,7 @@
 	background-color: hsla(358, calc(85% * var(--saturation-factor)), 60%, 0.1);
 	border-radius: var(--radius-md);
 	margin: 0.25rem 0;
-	border-left: 0.1875rem solid var(--accent-danger);
+	border-inline-start: 0.1875rem solid var(--accent-danger);
 	font-family: var(--font-mono);
 	font-size: 0.9em;
 }
@@ -1139,7 +1153,8 @@
 	}
 
 	.markup .alert {
-		padding: 0.375rem 0.5rem 0.375rem calc(0.5rem + 0.1875rem);
+		padding-block: 0.375rem;
+		padding-inline: calc(0.5rem + 0.1875rem) 0.5rem;
 	}
 
 	.markup .codeContainer {

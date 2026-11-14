@@ -1,0 +1,333 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.root {
+	--switcher-stage: color-mix(in srgb, var(--background-primary) 30%, rgb(0 0 0) 70%);
+	--switcher-scrim: rgb(0 0 0 / 0.66);
+	--switcher-text: var(--text-on-dark, #fff);
+	--switcher-text-muted: color-mix(in srgb, var(--switcher-text) 62%, transparent);
+	--switcher-dashed: color-mix(in srgb, var(--switcher-text) 36%, transparent);
+	--switcher-hover-scale: 1.04;
+	--switcher-motion-ms: 140ms;
+	--switcher-busy-duration: 1s;
+	--switcher-column-gap: clamp(1rem, 2vw, 2rem);
+	--switcher-row-gap: clamp(1.25rem, 3vh, 2.25rem);
+	--tile: clamp(6.5rem, 4.75rem + 5vw, 9.75rem);
+
+	position: fixed;
+	inset: 0;
+	isolation: isolate;
+	color: var(--switcher-text);
+}
+
+.root[data-reduced-motion='true'] {
+	--switcher-hover-scale: 1;
+	--switcher-motion-ms: 0ms;
+	--switcher-busy-duration: 2.4s;
+}
+
+.backdrop {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background: var(--switcher-stage);
+}
+
+.dialog {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	padding: calc(clamp(1.5rem, 5vh, 4rem) + env(safe-area-inset-top, 0px))
+		calc(clamp(1rem, 4vw, 3rem) + env(safe-area-inset-right, 0px))
+		calc(clamp(1.5rem, 5vh, 4rem) + env(safe-area-inset-bottom, 0px))
+		calc(clamp(1rem, 4vw, 3rem) + env(safe-area-inset-left, 0px));
+	outline: none;
+}
+
+.view {
+	display: flex;
+	width: 100%;
+	max-width: 76rem;
+	max-height: 100%;
+	min-height: 0;
+	flex-direction: column;
+	align-items: center;
+}
+
+.stage {
+	display: flex;
+	width: 100%;
+	min-height: 0;
+	flex: 0 1 auto;
+	flex-direction: column;
+	align-items: center;
+	gap: clamp(1rem, 2.5vh, 2rem);
+}
+
+.header {
+	display: flex;
+	flex: 0 0 auto;
+	max-width: 40rem;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	text-align: center;
+}
+
+.heading {
+	margin: 0;
+	color: var(--switcher-text);
+	font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+}
+
+.subline {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem 0.3em;
+	margin: 0;
+	color: var(--switcher-text-muted);
+	font-size: 0.9375rem;
+	line-height: 1.375rem;
+}
+
+.sublineShortcut {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+}
+
+.search {
+	display: flex;
+	flex: 0 0 auto;
+	width: min(100%, 22rem);
+	height: 2.75rem;
+	box-sizing: border-box;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0 1rem 0 0.875rem;
+	border: 0.0625rem solid color-mix(in srgb, var(--switcher-text) 18%, transparent);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--switcher-text) 8%, transparent);
+	transition:
+		border-color 100ms ease,
+		background-color 100ms ease;
+}
+
+.search:focus-within {
+	border-color: color-mix(in srgb, var(--switcher-text) 48%, transparent);
+	background: color-mix(in srgb, var(--switcher-text) 12%, transparent);
+}
+
+.searchIcon {
+	flex: 0 0 auto;
+	color: var(--switcher-text-muted);
+	transition: color 100ms ease;
+}
+
+.search:focus-within .searchIcon {
+	color: var(--switcher-text);
+}
+
+.searchInput {
+	width: 100%;
+	min-width: 0;
+	height: 100%;
+	flex: 1 1 auto;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--switcher-text);
+	font: inherit;
+	font-size: 0.9375rem;
+	outline: none;
+}
+
+.searchInput::placeholder {
+	color: var(--switcher-text-muted);
+}
+
+@property --switcher-fade-top {
+	syntax: '<length>';
+	inherits: false;
+	initial-value: 0px;
+}
+
+@property --switcher-fade-bottom {
+	syntax: '<length>';
+	inherits: false;
+	initial-value: 0px;
+}
+
+.stage .scroller {
+	width: 100%;
+	height: auto;
+	min-height: 0;
+	align-self: stretch;
+	mask-image: linear-gradient(
+		to bottom,
+		transparent 0,
+		#000 var(--switcher-fade-top),
+		#000 calc(100% - var(--switcher-fade-bottom)),
+		transparent 100%
+	);
+	animation:
+		switcher-fade-top linear both,
+		switcher-fade-bottom linear both;
+	animation-timeline: scroll(self), scroll(self);
+	animation-range:
+		0 3rem,
+		calc(100% - 3rem) 100%;
+}
+
+@keyframes switcher-fade-top {
+	from {
+		--switcher-fade-top: 0px;
+	}
+
+	to {
+		--switcher-fade-top: 3rem;
+	}
+}
+
+@keyframes switcher-fade-bottom {
+	from {
+		--switcher-fade-bottom: 3rem;
+	}
+
+	to {
+		--switcher-fade-bottom: 0px;
+	}
+}
+
+.scrollerContent {
+	flex: 0 0 auto;
+	padding: 1rem 0.75rem 1.25rem;
+}
+
+.empty {
+	margin: 0;
+	padding: 2rem 1rem;
+	color: var(--switcher-text-muted);
+	font-size: 0.9375rem;
+	text-align: center;
+}
+
+.srOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.actions {
+	display: flex;
+	flex: 0 0 auto;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+}
+
+.card {
+	display: flex;
+	width: min(100%, 30rem);
+	max-height: min(100%, 52rem);
+	min-height: 0;
+	box-sizing: border-box;
+	flex-direction: column;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 1rem;
+	background: var(--background-primary);
+	box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.45);
+	color: var(--text-primary);
+	overflow: hidden;
+}
+
+.cardHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 1rem 1.25rem 0.25rem 0.75rem;
+}
+
+.cardTitle {
+	min-width: 0;
+	margin: 0;
+	overflow: hidden;
+	color: var(--text-primary);
+	font-size: 1.25rem;
+	font-weight: 700;
+	line-height: 1.75rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.backButton {
+	display: inline-flex;
+	width: 2.25rem;
+	height: 2.25rem;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--text-secondary);
+	cursor: pointer;
+}
+
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.backButton:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.cardBody {
+	min-height: 0;
+	flex: 1 1 auto;
+}
+
+.cardBodyContent {
+	padding: 0.5rem 1.25rem 1.5rem;
+}
+
+@media (hover: none) and (pointer: coarse) {
+	.sublineKeys {
+		display: none;
+	}
+}
+
+@media (max-width: 42rem) {
+	.root {
+		--tile: clamp(5.75rem, 26vw, 7.5rem);
+		--switcher-column-gap: 1rem;
+	}
+
+	.heading {
+		font-size: 1.5rem;
+	}
+
+	.dialog {
+		align-items: stretch;
+	}
+
+	.view {
+		justify-content: center;
+	}
+
+	.card {
+		width: 100%;
+	}
+}

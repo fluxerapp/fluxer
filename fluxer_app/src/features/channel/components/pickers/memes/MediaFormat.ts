@@ -12,3 +12,25 @@ export const getFileExtension = (filename: string, contentType: string): string 
 	const typeMatch = contentType.match(/\/([^;]+)/);
 	return typeMatch?.[1]?.toUpperCase() || 'FILE';
 };
+
+export function filterMemesByContentType<T extends {contentType: string; isGifv: boolean}>(
+	memes: ReadonlyArray<T>,
+	filter: 'all' | 'image' | 'video' | 'audio' | 'gif',
+): Array<T> {
+	if (filter === 'all') return [...memes];
+	return memes.filter((meme) => {
+		const contentType = meme.contentType.toLowerCase();
+		switch (filter) {
+			case 'image':
+				return contentType.startsWith('image/') && !contentType.includes('gif') && !meme.isGifv;
+			case 'video':
+				return contentType.startsWith('video/') && !meme.isGifv;
+			case 'audio':
+				return contentType.startsWith('audio/');
+			case 'gif':
+				return contentType.includes('gif') || meme.isGifv;
+			default:
+				return true;
+		}
+	});
+}

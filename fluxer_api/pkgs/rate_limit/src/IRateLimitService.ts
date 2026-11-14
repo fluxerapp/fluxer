@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export type RateLimitScope = 'global' | 'shared' | 'user';
-type RateLimitAlgorithm = 'leaky_bucket';
-
 export interface RateLimitResult {
 	allowed: boolean;
 	limit: number;
@@ -18,14 +16,12 @@ export interface RateLimitConfig {
 	maxAttempts: number;
 	windowMs: number;
 	identifier: string;
-	algorithm?: RateLimitAlgorithm;
 }
 
 export interface BucketConfig {
 	limit: number;
 	windowMs: number;
 	exemptFromGlobal?: boolean;
-	algorithm?: RateLimitAlgorithm;
 }
 
 export interface IRateLimitService {

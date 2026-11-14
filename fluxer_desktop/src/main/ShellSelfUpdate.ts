@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createRequire} from 'node:module';
+import {errorMessage as errorDetail} from '@electron/common/ErrorMessage';
 import {createChildLogger} from '@electron/common/Logger';
 import {
 	type AppImageTarget,
@@ -10,7 +11,7 @@ import {
 } from '@electron/main/AppImageUpdate';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {moduleNetworkFetch} from '@electron/main/ModuleNetworkFetch';
-import {compareModuleVersions, parseModuleVersion} from '@electron/main/ModuleVersion';
+import {compareShellVersions} from '@electron/main/ModuleVersion';
 import {getUpdateBaseUrl} from '@electron/main/ShellDownloadFormats';
 import type {ShellUpdateCapability, ShellUpdatePlan} from '@electron/main/ShellUpdateCapability';
 import {
@@ -24,10 +25,10 @@ import type {UpdateInfo, VelopackAsset} from 'velopack';
 const requireModule = createRequire(import.meta.url);
 const logger = createChildLogger('ShellSelfUpdate');
 
-export const SHELL_SELF_UPDATE_CHECK_TIMEOUT_MS = 30_000;
-export const SHELL_SELF_UPDATE_TOTAL_TIMEOUT_MS = 600_000;
+const SHELL_SELF_UPDATE_CHECK_TIMEOUT_MS = 30_000;
+const SHELL_SELF_UPDATE_TOTAL_TIMEOUT_MS = 600_000;
 
-export function getElectronUpdateFeedUrl(): string {
+function getElectronUpdateFeedUrl(): string {
 	return `${getUpdateBaseUrl()}/RELEASES.json`;
 }
 
@@ -43,26 +44,35 @@ interface ShellSelfUpdateHooks {
 	readonly onRestarting: () => void;
 }
 
-interface SelfUpdateControl {
+type ShellStageResult =
+	| {readonly status: 'staged'}
+	| {readonly status: 'failed'; readonly failure: ShellSelfUpdateFailure};
+
+interface StageControl {
+	readonly succeed: () => void;
 	readonly settle: (failure: ShellSelfUpdateFailure) => void;
 	readonly isSettled: () => boolean;
 	readonly clearCheckDeadline: () => void;
 	readonly addCleanup: (cleanup: () => void) => void;
 }
 
-function errorDetail(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
-}
+type VelopackUpdateManager = InstanceType<typeof import('velopack').UpdateManager>;
 
-function compareShellVersions(left: string, right: string): number {
-	return compareModuleVersions(parseModuleVersion(left, 'shell version'), parseModuleVersion(right, 'shell version'));
-}
+type StagedShellUpdate =
+	| {
+			readonly updater: 'velopack';
+			readonly manager: VelopackUpdateManager;
+			readonly update: UpdateInfo | VelopackAsset;
+	  }
+	| {readonly updater: 'appimage'; readonly target: AppImageTarget; readonly update: StagedAppImageUpdate}
+	| {readonly updater: 'electron'};
+
+let stagedShell: StagedShellUpdate | null = null;
+let applyingShell = false;
 
 function feedUserAgent(): string {
 	return `Fluxer/${app.getVersion()} (${process.platform}: ${process.arch})`;
 }
-
-type VelopackUpdateManager = InstanceType<typeof import('velopack').UpdateManager>;
 
 function readInstalledVelopackVersion(manager: VelopackUpdateManager): string {
 	try {
@@ -128,7 +138,36 @@ function downloadVelopackUpdateOnce(
 	return settled;
 }
 
-async function runVelopackSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdateHooks): Promise<void> {
+function launchVelopackApply(
+	manager: VelopackUpdateManager,
+	update: UpdateInfo | VelopackAsset,
+	restart: boolean,
+): void {
+	const version = getStagedVelopackVersion(update);
+	if (version != null) {
+		recordVelopackApplyAttempt(version);
+	}
+	manager.waitExitThenApplyUpdate(update, true, restart);
+}
+
+function armVelopackApplyOnQuit(): void {
+	app.once('will-quit', () => {
+		const staged = stagedShell;
+		if (applyingShell || staged?.updater !== 'velopack') return;
+		applyingShell = true;
+		try {
+			launchVelopackApply(staged.manager, staged.update, false);
+			logger.info('Applying the staged shell update while the app quits');
+		} catch (error) {
+			logger.warn('Failed to apply the staged shell update on quit', error);
+		}
+	});
+}
+
+async function stageVelopackUpdate(
+	control: StageControl,
+	onDownloading: (progress: number | null) => void,
+): Promise<void> {
 	const {UpdateManager} = requireModule('velopack') as typeof import('velopack');
 	const manager = new UpdateManager(getUpdateBaseUrl());
 	const unlanded = classifyUnlandedVelopackApply(manager);
@@ -160,11 +199,11 @@ async function runVelopackSelfUpdate(control: SelfUpdateControl, hooks: ShellSel
 			return;
 		}
 		control.clearCheckDeadline();
-		hooks.onDownloading(0);
+		onDownloading(0);
 		try {
 			await downloadVelopackUpdateOnce(manager, available, (percent) => {
 				if (control.isSettled()) return;
-				hooks.onDownloading(percent);
+				onDownloading(percent);
 			});
 		} catch (error) {
 			control.settle({reason: 'download-failed', detail: errorDetail(error)});
@@ -173,19 +212,11 @@ async function runVelopackSelfUpdate(control: SelfUpdateControl, hooks: ShellSel
 		if (control.isSettled()) return;
 		staged = available;
 	}
-	control.clearCheckDeadline();
-	hooks.onRestarting();
-	const stagedVersion = getStagedVelopackVersion(staged);
-	if (stagedVersion != null) {
-		recordVelopackApplyAttempt(stagedVersion);
+	if (stagedShell == null) {
+		armVelopackApplyOnQuit();
 	}
-	try {
-		manager.waitExitThenApplyUpdate(staged, true, true);
-	} catch (error) {
-		control.settle({reason: 'install-failed', detail: errorDetail(error)});
-		return;
-	}
-	app.quit();
+	stagedShell = {updater: 'velopack', manager, update: staged};
+	control.succeed();
 }
 
 async function fetchPublishedAppImage(): Promise<{version: string; sha256: string | null}> {
@@ -244,9 +275,9 @@ async function stageAppImageUpdateOnce(
 	}
 }
 
-async function runAppImageSelfUpdate(
-	control: SelfUpdateControl,
-	hooks: ShellSelfUpdateHooks,
+async function stageAppImageShellUpdate(
+	control: StageControl,
+	onDownloading: (progress: number | null) => void,
 	target: AppImageTarget,
 ): Promise<void> {
 	let published: {version: string; sha256: string | null};
@@ -273,30 +304,20 @@ async function runAppImageSelfUpdate(
 		return;
 	}
 	control.clearCheckDeadline();
-	hooks.onDownloading(0);
+	onDownloading(0);
 	let staged: StagedAppImageUpdate;
 	try {
 		staged = await stageAppImageUpdateOnce(target, published.version, published.sha256, (percent) => {
 			if (control.isSettled()) return;
-			hooks.onDownloading(percent);
+			onDownloading(percent);
 		});
 	} catch (error) {
 		control.settle({reason: 'download-failed', detail: errorDetail(error)});
 		return;
 	}
-	if (control.isSettled()) {
-		return;
-	}
-	hooks.onRestarting();
-	appImageStaging = null;
-	try {
-		applyStagedAppImageUpdate(target, staged);
-	} catch (error) {
-		control.settle({reason: 'install-failed', detail: errorDetail(error)});
-		return;
-	}
-	relaunchStableLaunchPath();
-	app.quit();
+	if (control.isSettled()) return;
+	stagedShell = {updater: 'appimage', target, update: staged};
+	control.succeed();
 }
 
 const ElectronUpdatePhase = Object.freeze({
@@ -347,7 +368,8 @@ function armElectronUpdateSession(): void {
 	});
 	autoUpdater.on('update-downloaded', () => {
 		electronUpdateSession.phase = ElectronUpdatePhase.DOWNLOADED;
-		logger.info('The shell update finished downloading');
+		stagedShell = {updater: 'electron'};
+		logger.info('The shell update finished downloading and installs when the app quits');
 		publishElectronUpdateEvent({type: 'downloaded'});
 	});
 	autoUpdater.on('error', (error: Error) => {
@@ -359,34 +381,19 @@ function armElectronUpdateSession(): void {
 	});
 }
 
-export function resetElectronUpdateSessionForTests(): void {
-	electronUpdateSession.phase = ElectronUpdatePhase.IDLE;
-	electronUpdateSession.armed = false;
-	electronUpdateSession.observers.clear();
-}
-
-function runElectronSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdateHooks): void {
+function stageElectronUpdate(control: StageControl, onDownloading: (progress: number | null) => void): void {
 	armElectronUpdateSession();
-	const install = (): void => {
-		control.clearCheckDeadline();
-		hooks.onRestarting();
-		try {
-			autoUpdater.quitAndInstall();
-		} catch (error) {
-			control.settle({reason: 'install-failed', detail: errorDetail(error)});
-		}
-	};
 	const observer = (event: ElectronUpdateEvent): void => {
 		switch (event.type) {
 			case 'available':
 				control.clearCheckDeadline();
-				hooks.onDownloading(null);
+				onDownloading(null);
 				return;
 			case 'not-available':
 				control.settle({reason: 'no-update', detail: null});
 				return;
 			case 'downloaded':
-				install();
+				control.succeed();
 				return;
 			case 'error':
 				control.settle({
@@ -402,16 +409,13 @@ function runElectronSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdat
 	});
 	switch (electronUpdateSession.phase) {
 		case ElectronUpdatePhase.DOWNLOADED:
-			logger.info('The shell update was already downloaded this session, installing it');
-			install();
+			control.succeed();
 			return;
 		case ElectronUpdatePhase.DOWNLOADING:
-			logger.info('The shell update is already downloading this session, waiting for it');
 			control.clearCheckDeadline();
-			hooks.onDownloading(null);
+			onDownloading(null);
 			return;
 		case ElectronUpdatePhase.CHECKING:
-			logger.info('The shell update check is already running this session, waiting for it');
 			return;
 		case ElectronUpdatePhase.IDLE:
 			break;
@@ -432,11 +436,14 @@ function runElectronSelfUpdate(control: SelfUpdateControl, hooks: ShellSelfUpdat
 
 type ShellSelfUpdatePlan = Extract<ShellUpdatePlan, {capability: typeof ShellUpdateCapability.SELF_UPDATE}>;
 
-export function runShellSelfUpdate(
+export function stageShellUpdate(
 	plan: ShellSelfUpdatePlan,
-	hooks: ShellSelfUpdateHooks,
-): Promise<ShellSelfUpdateFailure> {
-	return new Promise<ShellSelfUpdateFailure>((resolve) => {
+	onDownloading: (progress: number | null) => void = () => {},
+): Promise<ShellStageResult> {
+	if (stagedShell != null) {
+		return Promise.resolve({status: 'staged'});
+	}
+	return new Promise<ShellStageResult>((resolve) => {
 		const cleanups: Array<() => void> = [];
 		let settled = false;
 		let checkTimer: NodeJS.Timeout | null = null;
@@ -448,7 +455,7 @@ export function runShellSelfUpdate(
 			checkTimer = null;
 		};
 
-		const settle = (failure: ShellSelfUpdateFailure): void => {
+		const finish = (result: ShellStageResult): void => {
 			if (settled) return;
 			settled = true;
 			clearCheckDeadline();
@@ -460,15 +467,20 @@ export function runShellSelfUpdate(
 				try {
 					cleanup();
 				} catch (error) {
-					logger.error('A shell self update cleanup threw', error);
+					logger.error('A shell update staging cleanup threw', error);
 				}
 			}
-			logger.warn('The shell self update did not complete', {updater: plan.updater, ...failure});
-			resolve(failure);
+			if (result.status === 'failed') {
+				logger.warn('The shell update was not staged', {updater: plan.updater, ...result.failure});
+			} else {
+				logger.info('The shell update is staged', {updater: plan.updater});
+			}
+			resolve(result);
 		};
 
-		const control: SelfUpdateControl = {
-			settle,
+		const control: StageControl = {
+			succeed: () => finish({status: 'staged'}),
+			settle: (failure) => finish({status: 'failed', failure}),
 			isSettled: () => settled,
 			clearCheckDeadline,
 			addCleanup: (cleanup) => {
@@ -478,31 +490,79 @@ export function runShellSelfUpdate(
 
 		checkTimer = setTimeout(() => {
 			checkTimer = null;
-			settle({reason: 'timed-out', detail: 'the update check produced no answer'});
+			control.settle({reason: 'timed-out', detail: 'the update check produced no answer'});
 		}, SHELL_SELF_UPDATE_CHECK_TIMEOUT_MS);
 		checkTimer.unref();
 		totalTimer = setTimeout(() => {
 			totalTimer = null;
-			settle({reason: 'timed-out', detail: 'the update did not finish'});
+			control.settle({reason: 'timed-out', detail: 'the update did not finish downloading'});
 		}, SHELL_SELF_UPDATE_TOTAL_TIMEOUT_MS);
 		totalTimer.unref();
 
-		if (plan.updater === 'appimage') {
-			runAppImageSelfUpdate(control, hooks, plan.target).catch((error: unknown) => {
-				settle({reason: 'install-failed', detail: errorDetail(error)});
-			});
-			return;
-		}
-		if (plan.updater === 'velopack') {
-			runVelopackSelfUpdate(control, hooks).catch((error: unknown) => {
-				settle({reason: 'install-failed', detail: errorDetail(error)});
-			});
-			return;
-		}
-		try {
-			runElectronSelfUpdate(control, hooks);
-		} catch (error) {
-			settle({reason: 'check-failed', detail: errorDetail(error)});
+		const fail = (error: unknown): void => {
+			control.settle({reason: 'check-failed', detail: errorDetail(error)});
+		};
+		switch (plan.updater) {
+			case 'appimage':
+				stageAppImageShellUpdate(control, onDownloading, plan.target).catch(fail);
+				return;
+			case 'velopack':
+				stageVelopackUpdate(control, onDownloading).catch(fail);
+				return;
+			case 'electron':
+				try {
+					stageElectronUpdate(control, onDownloading);
+				} catch (error) {
+					fail(error);
+				}
+				return;
 		}
 	});
+}
+
+export function applyStagedShellUpdate(): ShellSelfUpdateFailure | null {
+	const staged = stagedShell;
+	if (staged == null) {
+		return {reason: 'no-update', detail: 'no shell update is staged'};
+	}
+	applyingShell = true;
+	try {
+		switch (staged.updater) {
+			case 'velopack':
+				launchVelopackApply(staged.manager, staged.update, true);
+				app.quit();
+				break;
+			case 'appimage':
+				appImageStaging = null;
+				applyStagedAppImageUpdate(staged.target, staged.update);
+				stagedShell = null;
+				relaunchStableLaunchPath();
+				app.quit();
+				break;
+			case 'electron':
+				autoUpdater.quitAndInstall();
+				break;
+		}
+	} catch (error) {
+		applyingShell = false;
+		return {reason: 'install-failed', detail: errorDetail(error)};
+	}
+	return null;
+}
+
+export async function runShellSelfUpdate(
+	plan: ShellSelfUpdatePlan,
+	hooks: ShellSelfUpdateHooks,
+): Promise<ShellSelfUpdateFailure> {
+	const staged = await stageShellUpdate(plan, hooks.onDownloading);
+	if (staged.status === 'failed') {
+		return staged.failure;
+	}
+	hooks.onRestarting();
+	const failure = applyStagedShellUpdate();
+	if (failure == null) {
+		return await new Promise<never>(() => {});
+	}
+	logger.warn('The shell self update did not complete', {updater: plan.updater, ...failure});
+	return failure;
 }

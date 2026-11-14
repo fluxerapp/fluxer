@@ -29,9 +29,6 @@ export declare class InputHook {
 	start(): void;
 
 	stop(): void;
-
-	readonly droppedEvents: number;
-	readonly reinstallCount: number;
 }
 
 export declare function isAvailable(): boolean;

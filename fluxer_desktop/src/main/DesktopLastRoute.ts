@@ -12,7 +12,7 @@ const LEGACY_SESSION_TOKEN_KEY = 'token';
 const LEGACY_SESSION_USER_ID_KEY = 'userId';
 const LEGACY_LOCATION_STORE_KEY = 'Location';
 
-export function desktopLastRouteFilePath(userDataPath: string): string {
+function desktopLastRouteFilePath(userDataPath: string): string {
 	return path.join(userDataPath, LAST_ROUTE_FILE_NAME);
 }
 

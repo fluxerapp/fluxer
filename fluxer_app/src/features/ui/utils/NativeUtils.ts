@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
+import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopLocalResourceTarget';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {hasUnavailableElectronNativeContext, isElectron} from '@app/features/ui/utils/ElectronRuntime';
@@ -145,7 +147,7 @@ export function isFirefoxBrowser(): boolean {
 export function supportsDesktopScreenShareAudioCapture(): boolean {
 	const electronApi = getElectronAPI();
 	if (!electronApi) {
-		return !isFirefoxBrowser();
+		return isChromiumBrowser();
 	}
 	return electronApi.platform === 'win32' || electronApi.platform === 'linux' || electronApi.platform === 'darwin';
 }
@@ -193,15 +195,30 @@ export async function navigateToExternalURL(url: string): Promise<void> {
 }
 
 async function refreshAttachmentUrl(url: string): Promise<string> {
-	const {default: AttachmentUrlRefresher} = await import('@app/features/messaging/state/AttachmentUrlRefresher');
-	return AttachmentUrlRefresher.refresh(url);
+	const [{default: AttachmentUrlRefresher}, {default: apiAttachmentFileTokens}] = await Promise.all([
+		import('@app/features/messaging/state/AttachmentUrlRefresher'),
+		import('@app/features/messaging/state/ApiAttachmentFileTokens'),
+	]);
+	return apiAttachmentFileTokens.linkUrl(await AttachmentUrlRefresher.refresh(url));
 }
 
 export async function openExternalUrl(url: string, target: string = '_blank') {
 	const safeUrl = getSafeExternalUrl(url);
 	if (!safeUrl) return;
-	const refreshedUrl = await refreshAttachmentUrl(safeUrl);
 	const electronApi = getElectronAPI();
+	if (!electronApi && isApiAttachmentUrl(safeUrl)) {
+		const opened = window.open('about:blank', target);
+		if (opened) opened.opener = null;
+		const scopedUrl = await refreshAttachmentUrl(safeUrl);
+		if (opened) opened.location.replace(scopedUrl);
+		else window.open(scopedUrl, target, 'noopener,noreferrer');
+		return;
+	}
+	if (!electronApi && !attachmentUrlMayNeedRefresh(safeUrl, Date.now())) {
+		window.open(safeUrl, target, 'noopener,noreferrer');
+		return;
+	}
+	const refreshedUrl = await refreshAttachmentUrl(safeUrl);
 	if (electronApi) {
 		try {
 			await electronApi.openExternal(refreshedUrl);
@@ -212,27 +229,6 @@ export async function openExternalUrl(url: string, target: string = '_blank') {
 		}
 	}
 	window.open(refreshedUrl, target, 'noopener,noreferrer');
-}
-
-interface ExternalLinkClickEvent {
-	preventDefault(): void;
-	stopPropagation(): void;
-}
-
-interface ExternalLinkClickOptions {
-	stopPropagation?: boolean;
-}
-
-export function handleExternalLinkClick(
-	event: ExternalLinkClickEvent,
-	url: string,
-	options?: ExternalLinkClickOptions,
-): void {
-	event.preventDefault();
-	if (options?.stopPropagation) {
-		event.stopPropagation();
-	}
-	void openExternalUrl(url);
 }
 
 export type NativeDownloadOutcome = 'success' | 'canceled' | 'checksum-mismatch' | 'failed' | 'unavailable';

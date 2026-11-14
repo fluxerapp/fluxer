@@ -2,7 +2,11 @@
 
 import i18n from '@app/app/I18n';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureContext, failureMessage} from '@app/features/platform/utils/ResponseInspection';
+import {
+	PAYMENT_DISPUTE_OPEN_DESCRIPTOR,
+	PURCHASES_PAUSED_TITLE_DESCRIPTOR,
+} from '@app/features/premium/utils/PremiumMessageDescriptors';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -48,9 +52,16 @@ interface PremiumActionErrorCopy {
 }
 
 function resolvePremiumActionErrorContent(
-	code: string | undefined,
+	error: unknown,
 	copy: PremiumActionErrorCopy,
 ): {title: string; message: string} {
+	const code = failureCode(error);
+	if (code === APIErrorCodes.PREMIUM_PURCHASE_BLOCKED && failureContext(error)?.reason === 'payment_dispute_open') {
+		return {
+			title: i18n._(PURCHASES_PAUSED_TITLE_DESCRIPTOR),
+			message: i18n._(PAYMENT_DISPUTE_OPEN_DESCRIPTOR),
+		};
+	}
 	switch (code) {
 		case APIErrorCodes.STRIPE_PAYMENT_NOT_AVAILABLE:
 			return {
@@ -73,6 +84,11 @@ function resolvePremiumActionErrorContent(
 				title: i18n._(NOT_CANCELING_TITLE_DESCRIPTOR),
 				message: i18n._(NOT_CANCELING_MESSAGE_DESCRIPTOR),
 			};
+		case APIErrorCodes.STRIPE_BILLING_CYCLE_CHANGE_NEEDS_RESUBSCRIBE:
+			return {
+				title: i18n._(copy.fallbackTitle),
+				message: failureMessage(error) ?? i18n._(copy.fallbackMessage),
+			};
 		default:
 			return {
 				title: i18n._(copy.fallbackTitle),
@@ -82,10 +98,9 @@ function resolvePremiumActionErrorContent(
 }
 
 export function showPremiumActionErrorModal(error: unknown, copy: PremiumActionErrorCopy, flxKey: string): void {
-	const code = failureCode(error);
 	ModalCommands.push(
 		modal(() => {
-			const {title, message} = resolvePremiumActionErrorContent(code, copy);
+			const {title, message} = resolvePremiumActionErrorContent(error, copy);
 			return <GenericErrorModal title={title} message={message} data-flx={flxKey} />;
 		}),
 	);

@@ -50,18 +50,6 @@ export class VoiceMediaGraphTimerScheduler {
 		this.sync();
 	}
 
-	stop(): void {
-		this.unsubscribe?.();
-		this.unsubscribe = null;
-		let visited = 0;
-		for (const timer of this.timers.values()) {
-			visited += 1;
-			assert.ok(visited <= VOICE_MEDIA_GRAPH_ENTRY_LIMIT, 'timer cancellation exceeded graph limit');
-			this.platform.clearTimeout(timer.handle);
-		}
-		this.timers.clear();
-	}
-
 	private sync(): void {
 		const deadlines = this.store.getGraphSnapshot().deadlinesByKey;
 		assert.ok(deadlines.size <= VOICE_MEDIA_GRAPH_ENTRY_LIMIT, 'deadline map exceeded graph limit');

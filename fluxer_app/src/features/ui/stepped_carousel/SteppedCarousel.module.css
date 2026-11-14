@@ -3,9 +3,11 @@
 .container {
 	position: relative;
 	display: flex;
+	flex: 0 0 auto;
 	flex-direction: column;
 	gap: inherit;
-	overflow: hidden;
+	margin: -0.5rem;
+	overflow: clip;
 }
 
 .pane {
@@ -13,7 +15,9 @@
 	flex-direction: column;
 	gap: inherit;
 	flex: 0 0 auto;
+	box-sizing: border-box;
 	width: 100%;
+	padding: 0.5rem;
 }
 
 .actions {

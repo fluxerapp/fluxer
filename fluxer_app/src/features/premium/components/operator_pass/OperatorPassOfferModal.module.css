@@ -1,0 +1,47 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.loading {
+	display: flex;
+	justify-content: center;
+	padding: 2rem 0;
+}
+
+.note {
+	margin: 0;
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.consentBox {
+	padding: 0.75rem;
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-accent);
+}
+
+.consentBoxError {
+	border-color: var(--status-danger);
+}
+
+.consentError {
+	margin: 0.5rem 0 0;
+	color: var(--status-danger);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.consentCheckbox {
+	height: auto !important;
+	align-items: flex-start;
+}
+
+.consentCheckbox > :first-child {
+	flex-shrink: 0;
+}
+
+.consentLabel {
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}

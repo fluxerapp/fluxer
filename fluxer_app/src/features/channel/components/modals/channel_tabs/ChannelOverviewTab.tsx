@@ -44,6 +44,11 @@ import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChange
 import {Form} from '@app/features/ui/components/form/Form';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import VoiceP2pRollout from '@app/features/voice/state/VoiceP2pRollout';
+import {
+	CHANNEL_RTC_P2P_SETTING_DESCRIPTION_DESCRIPTOR,
+	CHANNEL_RTC_P2P_SETTING_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {
@@ -154,6 +159,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 			user_limit: 0,
 			voice_connection_limit: VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
 			rtc_region: null,
+			rtc_p2p: false,
 		},
 	});
 	const threadDefaultsActive =
@@ -181,6 +187,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 				user_limit: channel.userLimit ?? 0,
 				voice_connection_limit: channel.voiceConnectionLimit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
 				rtc_region: channel.rtcRegion ?? null,
+				rtc_p2p: channel.rtcP2p,
 			}
 		: null;
 	useEffect(() => {
@@ -257,6 +264,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 					updateData.bitrate = Math.min(data.bitrate ?? BITRATE_KBPS_DEFAULT, maxBitrateKbps) * 1000;
 					updateData.user_limit = data.user_limit;
 					updateData.voice_connection_limit = data.voice_connection_limit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT;
+					if (dirty.rtc_p2p) updateData.rtc_p2p = data.rtc_p2p;
 				} else if (channel.type === ChannelTypes.GUILD_LINK) {
 					updateData.url = data.url;
 				}
@@ -325,6 +333,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 								default_thread_rate_limit_per_user: data.default_thread_rate_limit_per_user,
 							}
 						: {}),
+					rtc_p2p: data.rtc_p2p,
 				});
 				ToastCommands.createToast({type: 'success', children: <Trans>Channel updated</Trans>});
 			};
@@ -491,6 +500,24 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 								form={form}
 								maxBitrateKbps={maxBitrateKbps}
 								data-flx="channel.channel-tabs.channel-overview-tab.voice-settings"
+							/>
+						)}
+						{canManageChannel && VoiceP2pRollout.enabled && (
+							<Controller
+								name="rtc_p2p"
+								control={form.control}
+								render={({field}) => (
+									<Switch
+										label={i18n._(CHANNEL_RTC_P2P_SETTING_DESCRIPTOR)}
+										description={i18n._(CHANNEL_RTC_P2P_SETTING_DESCRIPTION_DESCRIPTOR, {
+											maxParticipants: VoiceP2pRollout.maxParticipants,
+										})}
+										value={field.value}
+										onChange={field.onChange}
+										data-flx="channel.channel-tabs.channel-overview-tab.rtc-p2p-switch.change"
+									/>
+								)}
+								data-flx="channel.channel-tabs.channel-overview-tab.rtc-p2p-controller"
 							/>
 						)}
 						{canUpdateRtcRegion && (

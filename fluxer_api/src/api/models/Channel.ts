@@ -32,6 +32,7 @@ export class Channel {
 	readonly userLimit: number | null;
 	readonly voiceConnectionLimit: number | null;
 	readonly rtcRegion: string | null;
+	readonly rtcP2p: boolean;
 	readonly lastMessageId: MessageID | null;
 	readonly lastPinTimestamp: Date | null;
 	readonly permissionOverwrites: Map<RoleID | UserID, ChannelPermissionOverwrite>;
@@ -63,6 +64,7 @@ export class Channel {
 			row.voice_connection_limit ??
 			(this.type === ChannelTypes.GUILD_VOICE ? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT : null);
 		this.rtcRegion = row.rtc_region ?? null;
+		this.rtcP2p = row.rtc_p2p ?? false;
 		this.lastMessageId = row.last_message_id ?? null;
 		this.lastPinTimestamp = row.last_pin_timestamp ?? null;
 		this.permissionOverwrites = new Map();
@@ -79,10 +81,6 @@ export class Channel {
 
 	isThread(): boolean {
 		return THREAD_CHANNEL_TYPES.has(this.type);
-	}
-
-	isPrivateThread(): boolean {
-		return this.type === ChannelTypes.PRIVATE_THREAD;
 	}
 
 	isThreadOnly(): boolean {
@@ -123,6 +121,7 @@ export class Channel {
 			user_limit: this.userLimit,
 			voice_connection_limit: this.voiceConnectionLimit,
 			rtc_region: this.rtcRegion,
+			rtc_p2p: this.rtcP2p,
 			last_message_id: this.lastMessageId,
 			last_pin_timestamp: this.lastPinTimestamp,
 			permission_overwrites: permOverwritesMap,

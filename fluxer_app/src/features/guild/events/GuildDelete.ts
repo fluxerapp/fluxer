@@ -4,6 +4,7 @@ import Channels from '@app/features/channel/state/Channels';
 import Emoji from '@app/features/emoji/state/Emoji';
 import Sticker from '@app/features/emoji/state/EmojiSticker';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
+import {showVisitEndedToast} from '@app/features/guild/commands/GuildVisitCommands';
 import ChannelMemberCount from '@app/features/guild/state/ChannelMemberCount';
 import GuildAvailability from '@app/features/guild/state/GuildAvailability';
 import GuildCount from '@app/features/guild/state/GuildCount';
@@ -11,6 +12,7 @@ import GuildList from '@app/features/guild/state/GuildList';
 import GuildReadState from '@app/features/guild/state/GuildReadState';
 import Guilds from '@app/features/guild/state/Guilds';
 import GuildVerification from '@app/features/guild/state/GuildVerification';
+import GuildVisits from '@app/features/guild/state/GuildVisits';
 import Invites from '@app/features/invite/state/Invites';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSearch from '@app/features/member/state/MemberSearch';
@@ -23,7 +25,7 @@ import Presence from '@app/features/presence/state/Presence';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import UserProfile from '@app/features/user/state/UserProfile';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import Webhooks from '@app/features/webhook/state/Webhooks';
 import type {Guild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 
@@ -34,6 +36,7 @@ export interface GuildDeletePayload {
 }
 
 export function handleGuildDelete(data: GuildDeletePayload, _context: GatewayHandlerContext): void {
+	const endedVisit = data.unavailable ? undefined : Guilds.getGuild(data.id);
 	GuildAvailability.setGuildDegraded(data.id, false);
 	GuildAvailability.handleGuildAvailability(data.id, data.unavailable, data.unavailable_hidden);
 	Guilds.handleGuildDelete({guildId: data.id, unavailable: data.unavailable});
@@ -52,11 +55,14 @@ export function handleGuildDelete(data: GuildDeletePayload, _context: GatewayHan
 	Invites.handleGuildDelete(data.id, currentInstanceTarget());
 	Presence.handleGuildDelete(data.id);
 	Webhooks.handleGuildDelete(data.id);
-	MediaEngine.handleGuildDelete(data.id);
+	VoiceRuntime.handleGuildDelete(data.id);
 	MemberSidebar.handleGuildDelete(data.id);
 	Messages.handleGuildUnavailable(data.id, data.unavailable ?? false);
 	Messages.handleCleanup();
 	MentionFeed.handleGuildDelete(data.id);
 	UserProfile.handleGuildDelete(data.unavailable);
 	QuickSwitcher.recomputeIfOpen();
+	if (endedVisit?.visiting === true && !GuildVisits.consumeEndedByUser(data.id)) {
+		showVisitEndedToast(endedVisit.name);
+	}
 }

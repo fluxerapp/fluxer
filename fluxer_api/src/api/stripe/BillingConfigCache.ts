@@ -21,6 +21,7 @@ export interface EffectiveBillingConfig {
 	automaticTax: boolean;
 	taxIdCollection: boolean;
 	termsConsentRequired: boolean;
+	billingEmails: boolean;
 	catalogMode: BillingCatalogMode;
 	defaultCurrency: string | null;
 	prices: Record<string, BillingPriceSet>;
@@ -128,10 +129,6 @@ export function getStoredBillingConfig(): StoredBillingConfig | null {
 	return storedBillingConfig;
 }
 
-export function getActiveStoredBillingConfig(): StoredBillingConfig | null {
-	return Config.instance.selfHosted ? storedBillingConfig : null;
-}
-
 function trackWebhookSecret(): void {
 	if (!Config.instance.selfHosted) {
 		previousWebhookSecrets = [];
@@ -220,6 +217,7 @@ function computeEffectiveBillingConfig(): Omit<EffectiveBillingConfig, 'version'
 		automaticTax: selfHosted ? (stored?.automatic_tax ?? false) : true,
 		taxIdCollection: selfHosted ? (stored?.tax_id_collection ?? false) : true,
 		termsConsentRequired: selfHosted ? (stored?.terms_consent_required ?? false) : true,
+		billingEmails: selfHosted ? (stored?.billing_emails ?? false) : true,
 		catalogMode,
 		defaultCurrency: catalogMode === 'operator' ? (stored?.default_currency ?? null) : null,
 		prices: operatorPrices === null ? buildEnvPrices() : buildOperatorPrices(operatorPrices),

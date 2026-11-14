@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const CHROMIUM_SPKI_BLOCKLIST_SOURCE = 'chromium 152.0.7977.78 net/cert/cert_verify_proc_blocklist.inc';
+export const CHROMIUM_SPKI_BLOCKLIST_SOURCE =
+	'chromium 152.0.7977.78 net/cert/cert_verify_proc_blocklist.inc and electron 44.9.1 add_entries_to_the_spki_blocklist.patch';
 
 export const CHROMIUM_SPKI_BLOCKLIST: ReadonlySet<string> = new Set([
 	'04dde9aa9a79f61498682325fa0870276707fb9ca95384120b46893268494fc9',
@@ -106,4 +107,12 @@ export const CHROMIUM_SPKI_BLOCKLIST: ReadonlySet<string> = new Set([
 	'36ce75edea806f0985145683294e54dbdff02fc821870cf5067a308d1504be3a',
 	'a4e9af01416e3a029b5d35e5b119de00cfe156c5cf95fc823cf6d05e3c1a8237',
 	'3472e4f16c570e0dd388aaaa4a64a34a4b939f1ca770996b5be0037c1aded9c1',
+	'ebed6475c2c2d80fcb199f3fe8dd6e6b3ce60b77eb15d4e42c3dec0c6f5b5105',
+	'43bffa19d6ef651451f6841e019931e96f6f2eaeff28ab4b6f1ce4576de2717b',
+	'e0254c7fcdc265e2f0f8a428dabb75ab4ae039b4872d62f5ee57f0877d5a8a41',
+	'49dd353dc2b919a3770645117d0e60c16115e7d1bc259eefe734b00ea434fe5f',
+	'63ecefee431d49523bc1136c4e72d0206a477086caf606cd5cf025686c109cf8',
+	'5c0660a2b164910d8ff589c18e14552e9e0ec237dcefe2cb736d41a4811f81a0',
+	'ec4ffa1ad0ac88081314b7aaffef6a91f97cd57291bb5ba686c5415f5eb4f6b6',
+	'92c063d67e8f14db71d288e11266ffdaf69cbf115f7bab14f3bc2f68d25e0e30',
 ]);

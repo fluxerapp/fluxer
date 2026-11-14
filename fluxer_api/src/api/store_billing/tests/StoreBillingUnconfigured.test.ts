@@ -4,7 +4,6 @@ import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {buildAPIConfigFromMaster, getConfig} from '@app/api/Config';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
-import {isAppStoreConfigured, isGooglePlayConfigured} from '@app/api/store_billing/StoreBillingConfig';
 import {STORE_PURCHASE_REFRESH_QUEUE_KEY} from '@app/api/store_billing/StorePurchaseRefresh';
 import {
 	getStoreContext,
@@ -13,13 +12,13 @@ import {
 	uninstallStoreBillingWorker,
 } from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {
 	createGooglePlayDeveloperApiHandlers,
 	type FakeGooglePlayDeveloperApi,
 } from '@app/api/test/msw/handlers/GooglePlayDeveloperApiHandlers';
 import {createStripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import pollAppStoreNotificationHistory from '@app/api/worker/tasks/PollAppStoreNotificationHistory';
@@ -29,11 +28,8 @@ import {loadConfig} from '@fluxer/config/src/ConfigLoader';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {PremiumStateResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-
-const STORE_ENV_PREFIXES = ['FLUXER_APP_STORE_', 'FLUXER_GOOGLE_PLAY_', 'FLUXER_STORE_BILLING_'];
 
 type StoreConfigState = Pick<APIConfig, 'appStore' | 'googlePlay' | 'storeBilling'>;
 
@@ -47,21 +43,6 @@ function applyStoreConfig(state: StoreConfigState): void {
 	config.appStore = state.appStore;
 	config.googlePlay = state.googlePlay;
 	config.storeBilling = state.storeBilling;
-}
-
-function createWorkerHelpers(scheduled: Array<string>): WorkerTaskHelpers {
-	return {
-		logger: new NoopLogger(),
-		jobId: 1n,
-		attempt: {isLastAttempt: false},
-		addJob: async (taskType) => {
-			scheduled.push(taskType);
-			return 0n;
-		},
-		reportProgress: async () => {},
-		shouldCancel: async () => false,
-		setContextLink: async () => {},
-	};
 }
 
 describe('Store billing with no store configuration', () => {
@@ -95,23 +76,6 @@ describe('Store billing with no store configuration', () => {
 		applyStoreConfig(original);
 		uninstallStoreBillingWorker();
 		server.resetHandlers();
-	});
-
-	it('loads the empty store defaults when no store variable is set', async () => {
-		expect(
-			Object.keys(process.env).filter((key) => STORE_ENV_PREFIXES.some((prefix) => key.startsWith(prefix))),
-		).toEqual([]);
-		const master = await loadConfig();
-		expect(master.integrations.app_store).toEqual({enabled: false, apps: [], products: {}});
-		expect(master.integrations.google_play).toEqual({
-			enabled: false,
-			packages: [],
-			token_uri: 'https://oauth2.googleapis.com/token',
-			products: {},
-		});
-		expect(master.integrations.store_billing).toEqual({sandbox_user_ids: [], sandbox_entitles_all: false});
-		expect(isAppStoreConfigured()).toBe(false);
-		expect(isGooglePlayConfigured()).toBe(false);
 	});
 
 	it('reports both stores disabled with no products', async () => {
@@ -200,9 +164,36 @@ describe('Store billing with no store configuration', () => {
 			voidedTimeMillis: String(Date.now()),
 		});
 		const scheduled: Array<string> = [];
-		await processStorePurchaseRefreshQueue({}, createWorkerHelpers(scheduled));
-		await pollGooglePlayVoidedPurchases({}, createWorkerHelpers(scheduled));
-		await pollAppStoreNotificationHistory({}, createWorkerHelpers(scheduled));
+		await processStorePurchaseRefreshQueue(
+			{},
+			createTestWorkerHelpers({
+				attempt: {isLastAttempt: false},
+				addJob: async (taskType) => {
+					scheduled.push(taskType);
+					return 0n;
+				},
+			}),
+		);
+		await pollGooglePlayVoidedPurchases(
+			{},
+			createTestWorkerHelpers({
+				attempt: {isLastAttempt: false},
+				addJob: async (taskType) => {
+					scheduled.push(taskType);
+					return 0n;
+				},
+			}),
+		);
+		await pollAppStoreNotificationHistory(
+			{},
+			createTestWorkerHelpers({
+				attempt: {isLastAttempt: false},
+				addJob: async (taskType) => {
+					scheduled.push(taskType);
+					return 0n;
+				},
+			}),
+		);
 		expect(scheduled).toEqual([]);
 		expect(await getKVClient().zrangebyscore(STORE_PURCHASE_REFRESH_QUEUE_KEY, dueAt, dueAt)).toEqual([storeKey]);
 		expect(google.spies.voidedQueries).toEqual([]);

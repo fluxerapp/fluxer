@@ -121,7 +121,7 @@
 	padding: 0;
 	margin: 0;
 	width: 100%;
-	text-align: left;
+	text-align: start;
 	font: inherit;
 	color: inherit;
 	cursor: pointer;
@@ -237,7 +237,7 @@
 }
 
 .skeletonDot {
-	margin-right: 0.3125rem;
+	margin-inline-end: 0.3125rem;
 	height: 0.55rem;
 	width: 0.55rem;
 	border-radius: 624.9375rem;

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type ChannelID, createChannelID, type GuildID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ThreadView} from '@app/api/channel/services/thread/ThreadMappers';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
-import {guildActive} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
 import {getThreadSearchService} from '@app/api/SearchFactory';
 import type {IThreadSearchService} from '@app/api/search/IThreadSearchService';
@@ -26,7 +25,7 @@ export function threadSearchCursor(id: bigint): ThreadSearchCursor {
 	return {createdAt: snowflakeToDate(id).getTime(), idSequence: Number(id & ((1n << TIMESTAMP_SHIFT) - 1n))};
 }
 
-export function toSearchableThread(view: ThreadView): SearchableThread {
+function toSearchableThread(view: ThreadView): SearchableThread {
 	const {channel, state} = view;
 	return {
 		id: channel.id.toString(),
@@ -51,14 +50,10 @@ async function readyService(): Promise<IThreadSearchService | null> {
 	return service;
 }
 
-export async function syncThreadSearchDocument(
-	repository: IChannelRepositoryAggregate,
-	threadId: ChannelID,
-): Promise<void> {
+export async function syncThreadSearchDocument(repository: ChannelRepository, threadId: ChannelID): Promise<void> {
 	const service = await readyService();
 	if (!service) return;
 	const state = await repository.threads.getState(threadId);
-	if (state && !guildActive(state.guildId)) return;
 	const [view] = state ? await loadThreadViews(repository, [state]) : [];
 	if (!view) {
 		await service.deleteDocument(threadId.toString());
@@ -78,9 +73,9 @@ export async function deleteThreadSearchDocuments(threadIds: ReadonlyArray<Chann
 	}
 }
 
-export async function backfillThreadSearch(repository: IChannelRepositoryAggregate, guildId: GuildID): Promise<number> {
+export async function backfillThreadSearch(repository: ChannelRepository, guildId: GuildID): Promise<number> {
 	const service = await readyService();
-	if (!service || !guildActive(guildId)) return 0;
+	if (!service) return 0;
 	const threadIds = await repository.threads.listGuildThreadIds(guildId);
 	let indexed = 0;
 	for (let offset = 0; offset < threadIds.length; offset += BACKFILL_BATCH_SIZE) {

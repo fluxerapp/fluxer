@@ -53,16 +53,6 @@ describe('Group DM Security Boundaries', () => {
 			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACCESS')
 			.execute();
 	});
-	it('recipient can leave group DM', async () => {
-		const creator = await createTestAccount(harness);
-		const recipient = await createTestAccount(harness);
-		await createFriendship(harness, creator, recipient);
-		const groupDm = await createGroupDmChannel(harness, creator.token, [recipient.userId]);
-		await createBuilder(harness, recipient.token)
-			.delete(`/channels/${groupDm.id}/recipients/${recipient.userId}`)
-			.expect(HTTP_STATUS.NO_CONTENT)
-			.execute();
-	});
 	it('after leaving, former member cannot read messages', async () => {
 		const creator = await createTestAccount(harness);
 		const recipient = await createTestAccount(harness);

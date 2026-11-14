@@ -5,10 +5,9 @@ import {
 	DomainMigrationAssignmentResponse,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
-import {
-	INERT_PLUTONIUM_PAGE_ASSIGNMENT,
-	PlutoniumPageAssignmentResponse,
-} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
+import {GuildVisitsAssignmentResponse} from '@fluxer/schema/src/domains/admin/GuildVisitsSchemas';
+import {PlutoniumPageAssignmentResponse} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
+import {INERT_VOICE_P2P_ASSIGNMENT, VoiceP2pAssignmentResponse} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {z} from 'zod';
 
 export const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS = 60;
@@ -35,8 +34,6 @@ export const ExperimentDeliveryConfigSchema = z.object({
 
 export type ExperimentDeliveryConfig = z.infer<typeof ExperimentDeliveryConfigSchema>;
 
-export const DEFAULT_EXPERIMENT_DELIVERY_CONFIG: ExperimentDeliveryConfig = ExperimentDeliveryConfigSchema.parse({});
-
 export const ExperimentDeliveryConfigUpdateRequest = z.object(experimentDeliveryFields).partial();
 
 export type ExperimentDeliveryConfigUpdateRequest = z.infer<typeof ExperimentDeliveryConfigUpdateRequest>;
@@ -49,6 +46,8 @@ const ExperimentAssignmentsSchema = z.object({
 	domain_migration: DomainMigrationAssignmentResponse.optional(),
 	channel_threads: ChannelThreadsAssignmentResponse.optional(),
 	plutonium_page: PlutoniumPageAssignmentResponse.optional(),
+	voice_p2p: VoiceP2pAssignmentResponse.optional(),
+	guild_visits: GuildVisitsAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -71,12 +70,6 @@ export function readDomainMigrationAssignment(
 	return response.assignments.domain_migration ?? INERT_DOMAIN_MIGRATION_ASSIGNMENT;
 }
 
-export function readChannelThreadsAssignment(
-	response: ExperimentAssignmentsResponse,
-): ChannelThreadsAssignmentResponse | null {
-	return response.assignments.channel_threads ?? null;
-}
-
-export function readPlutoniumPageAssignment(response: ExperimentAssignmentsResponse): PlutoniumPageAssignmentResponse {
-	return response.assignments.plutonium_page ?? INERT_PLUTONIUM_PAGE_ASSIGNMENT;
+export function readVoiceP2pAssignment(response: ExperimentAssignmentsResponse): VoiceP2pAssignmentResponse {
+	return response.assignments.voice_p2p ?? INERT_VOICE_P2P_ASSIGNMENT;
 }

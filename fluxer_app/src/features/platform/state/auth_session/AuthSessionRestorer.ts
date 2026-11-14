@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import {
 	AccountInstanceMismatchError,
@@ -21,7 +21,7 @@ import type {
 	StoredSessionMirror,
 } from '@app/features/platform/state/auth_session/SessionCredentialMirror';
 
-export type AuthSessionSignedOutReason = 'no-session-pointer' | ActiveStoredAccountUnresolvedReason;
+type AuthSessionSignedOutReason = 'no-session-pointer' | ActiveStoredAccountUnresolvedReason;
 
 export type AuthSessionInitialization =
 	| {

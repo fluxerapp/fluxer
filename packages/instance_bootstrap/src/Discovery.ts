@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
+import {
+	EmailDeliveryStates,
+	GuildJoinGates,
+	InstantAccountAvailability,
+	InteractionTierModes,
+	VerificationBases,
+} from '@fluxer/constants/src/AccountConfigConstants';
+import {
+	AccountIdentityLockReasons,
+	AccountIdentityModes,
+	TagStyles,
+} from '@fluxer/constants/src/AccountIdentityConstants';
+import {BUILT_IN_GUILD_BADGE_KINDS} from '@fluxer/constants/src/BadgeConstants';
 import {Headers as HttpHeader} from '@fluxer/constants/src/Headers';
 import {HttpStatus, MimeType} from '@fluxer/constants/src/HttpConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -13,11 +25,16 @@ import {
 	type InstanceAgePolicyGeo,
 	type InstanceAppRegistration,
 	type InstanceBranding,
+	type InstanceBuiltInGuildBadgeImages,
 	type InstanceCommunity,
+	type InstanceConnectionProvider,
 	type InstanceDomainMigration,
 	type InstanceFeatures,
 	type InstanceGif,
+	type InstanceGuildBadge,
+	type InstanceHiddenBuiltInGuildBadges,
 	type InstanceLegal,
+	type InstanceNotice,
 	type InstancePush,
 	type InstanceRegistration,
 	type InstanceServices,
@@ -37,8 +54,6 @@ export const INSTANCE_DISCOVERY_TIMEOUT_MS = 15_000;
 
 export const ACCOUNT_DELETION_GRACE_PERIOD_HOURS_MIN = 1;
 export const ACCOUNT_DELETION_GRACE_PERIOD_HOURS_MAX = 8760;
-export const MAX_BACKGROUND_GATEWAY_CONNECTIONS_MIN = 0;
-export const MAX_BACKGROUND_GATEWAY_CONNECTIONS_MAX = 64;
 export const LIMIT_RULES_MAX = 100;
 export const AGE_POLICY_GEOS_MAX = 512;
 export const DOMAIN_MIGRATION_ROLLOUT_BASIS_POINTS_MAX = EXPERIMENT_BUCKET_RESOLUTION;
@@ -61,7 +76,13 @@ const FEATURE_FLAG_KEYS = Object.freeze([
 	'premium_enabled',
 	'stripe_serviceable',
 	'phone_verification_enabled',
+	'discovery_enabled',
 	'desktop_modules_enabled',
+	'identifier_first',
+	'instant_accounts',
+	'email_codes',
+	'date_of_birth_step',
+	'proxy_attachments_through_api',
 ] as const) satisfies ReadonlyArray<keyof InstanceFeatures>;
 
 const BRANDING_URL_KEYS = Object.freeze([
@@ -70,16 +91,35 @@ const BRANDING_URL_KEYS = Object.freeze([
 	'logo_url',
 	'wordmark_url',
 	'favicon_url',
+	'favicon_dark_url',
 	'status_page_url',
 	'status_page_incident_history_url',
 	'premium_info_url',
+	'sign_in_backdrop_url',
+	'premium_showcase_expressions_url',
+	'premium_showcase_profile_url',
+	'premium_showcase_stream_url',
+	'premium_showcase_upload_url',
 ] as const) satisfies ReadonlyArray<keyof InstanceBranding>;
+
+const SETUP_FLAG_KEYS = Object.freeze([
+	'configured',
+	'account_identity_locked',
+	'setup_token_required',
+] as const) satisfies ReadonlyArray<keyof InstanceSetup>;
+
+const ACCOUNT_IDENTITY_LOCK_REASONS = Object.freeze(Object.values(AccountIdentityLockReasons));
+
+const LEGAL_URL_KEYS = Object.freeze(['terms_url', 'privacy_url', 'guidelines_url'] as const) satisfies ReadonlyArray<
+	keyof InstanceLegal
+>;
 
 interface InstanceDiscoveryEndpoints {
 	readonly api: string;
 	readonly gateway: string;
 	readonly api_client: string | null;
 	readonly api_public: string | null;
+	readonly api_transport: string | null;
 	readonly media: string | null;
 	readonly upload_relay: string | null;
 	readonly static_cdn: string | null;
@@ -113,6 +153,12 @@ export interface InstanceDiscoveryDocument {
 	readonly appPublic: InstanceDiscoveryAppPublic | null;
 	readonly agePolicy: InstanceAgePolicy | null;
 	readonly domainMigration: InstanceDomainMigration | null;
+	readonly notice?: InstanceNotice | null;
+	readonly guildBadges?: ReadonlyArray<InstanceGuildBadge>;
+	readonly guildBadgesPartial?: boolean;
+	readonly customBadgesVersion?: string | null;
+	readonly builtInGuildBadgeImages?: InstanceBuiltInGuildBadgeImages;
+	readonly hiddenBuiltInGuildBadges?: InstanceHiddenBuiltInGuildBadges;
 }
 
 interface InstanceDiscoveryAttempt {
@@ -199,7 +245,7 @@ interface FetchInstanceDiscoveryRequest extends InstanceDiscoveryCandidateReques
 	readonly fetch?: InstanceDiscoveryFetch;
 	readonly signal?: AbortSignal;
 	readonly conditionalHeaders?: Readonly<Record<string, string>>;
-	readonly adoptServingOrigin?: boolean;
+	readonly adoptServingOrigin?: boolean | 'when-api-routed';
 }
 
 type InstanceDiscoveryResult =
@@ -274,6 +320,12 @@ export function parseInstanceDiscoveryDocument(payload: unknown): InstanceDiscov
 		appPublic: parseAppPublic(source.app_public),
 		agePolicy: parseAgePolicy(source.age_policy),
 		domainMigration: parseInstanceDomainMigration(source.domain_migration),
+		notice: parseNotice(source.notice),
+		guildBadges: parseGuildBadges(source.guild_badges),
+		guildBadgesPartial: source.guild_badges_partial === true,
+		customBadgesVersion: readNonEmptyString(source, 'custom_badges_version'),
+		builtInGuildBadgeImages: parseBuiltInGuildBadgeImages(source.built_in_guild_badge_images),
+		hiddenBuiltInGuildBadges: parseHiddenBuiltInGuildBadges(source.hidden_built_in_guild_badges),
 	};
 }
 
@@ -302,7 +354,9 @@ async function requestInstanceDiscovery(
 		throw new Error('responded without a JSON content type');
 	}
 	const parsed = parseInstanceDiscoveryDocument(JSON.parse(await readBoundedBody(response)));
-	const document = request.adoptServingOrigin === true ? withEndpointsOnServingOrigin(url, parsed) : parsed;
+	const document = adoptsServingOrigin(url, request.adoptServingOrigin)
+		? withEndpointsOnServingOrigin(url, parsed)
+		: parsed;
 	requireDiscoveryDeclaresItsOwnOrigin(url, document);
 	return {
 		kind: 'ok',
@@ -313,21 +367,67 @@ async function requestInstanceDiscovery(
 	};
 }
 
+function adoptsServingOrigin(url: string, adopt: FetchInstanceDiscoveryRequest['adoptServingOrigin']): boolean {
+	if (adopt === 'when-api-routed') {
+		return new URL(url).pathname.startsWith(`${INSTANCE_DISCOVERY_CONVENTIONAL_ENDPOINT_PATH}/`);
+	}
+	return adopt === true;
+}
+
 function withEndpointsOnServingOrigin(url: string, document: InstanceDiscoveryDocument): InstanceDiscoveryDocument {
 	const servedBy = originOfEndpoint(url);
 	if (servedBy == null) {
 		return document;
 	}
 	const api = `${servedBy}${INSTANCE_DISCOVERY_CONVENTIONAL_ENDPOINT_PATH}`;
+	const declaredApiHost = hostOfEndpoint(document.endpoints.api);
+	const moveToServingOrigin = <T extends string | null>(endpoint: T): T =>
+		(endpoint == null ? endpoint : (onServingOrigin(endpoint, declaredApiHost, servedBy) ?? endpoint)) as T;
 	return {
 		...document,
 		endpoints: {
 			...document.endpoints,
 			api,
 			api_client: document.endpoints.api_client == null ? null : api,
+			gateway: moveToServingOrigin(document.endpoints.gateway),
+			media: moveToServingOrigin(document.endpoints.media),
+			upload_relay: moveToServingOrigin(document.endpoints.upload_relay),
+			static_cdn: moveToServingOrigin(document.endpoints.static_cdn),
 			webapp: document.endpoints.webapp == null ? null : servedBy,
 		},
 	};
+}
+
+function hostOfEndpoint(value: string): string | null {
+	try {
+		return new URL(value).host;
+	} catch {
+		return null;
+	}
+}
+
+function onServingOrigin(endpoint: string, declaredApiHost: string | null, servedBy: string): string | null {
+	if (declaredApiHost == null) {
+		return null;
+	}
+	let url: URL;
+	let serving: URL;
+	try {
+		url = new URL(endpoint);
+		serving = new URL(servedBy);
+	} catch {
+		return null;
+	}
+	if (url.host !== declaredApiHost) {
+		return null;
+	}
+	const socket = url.protocol === 'ws:' || url.protocol === 'wss:';
+	let protocol = serving.protocol;
+	if (socket) {
+		protocol = serving.protocol === 'https:' ? 'wss:' : 'ws:';
+	}
+	const path = url.pathname === '/' && !endpoint.endsWith('/') ? '' : url.pathname;
+	return `${protocol}//${serving.host}${path}${url.search}`;
 }
 
 export function requireDiscoveryDeclaresItsOwnOrigin(url: string, document: InstanceDiscoveryDocument): void {
@@ -450,6 +550,7 @@ function parseEndpoints(value: unknown): InstanceDiscoveryEndpoints {
 		gateway,
 		api_client: normalizeInstanceEndpoint(source.api_client, InstanceEndpointKind.SERVICE),
 		api_public: normalizeInstanceEndpoint(source.api_public, InstanceEndpointKind.SERVICE),
+		api_transport: normalizeInstanceEndpoint(source.api_transport, InstanceEndpointKind.SERVICE),
 		media: normalizeInstanceEndpoint(source.media, InstanceEndpointKind.SERVICE),
 		upload_relay: normalizeInstanceEndpoint(source.upload_relay, InstanceEndpointKind.SERVICE),
 		static_cdn: normalizeInstanceEndpoint(source.static_cdn, InstanceEndpointKind.SERVICE),
@@ -482,6 +583,30 @@ function parseFeatures(value: unknown): Readonly<Partial<InstanceFeatures>> {
 	if (tagStyle !== undefined) {
 		features.tag_style = tagStyle;
 	}
+	const instantAccountAvailability = Object.values(InstantAccountAvailability).find(
+		(value) => value === source.instant_account_availability,
+	);
+	if (instantAccountAvailability !== undefined) {
+		features.instant_account_availability = instantAccountAvailability;
+	}
+	const interactionTier = Object.values(InteractionTierModes).find((value) => value === source.interaction_tier);
+	if (interactionTier !== undefined) {
+		features.interaction_tier = interactionTier;
+	}
+	const guildJoinGate = Object.values(GuildJoinGates).find((value) => value === source.guild_join_gate);
+	if (guildJoinGate !== undefined) {
+		features.guild_join_gate = guildJoinGate;
+	}
+	const emailDeliveryState = Object.values(EmailDeliveryStates).find((value) => value === source.email_delivery_state);
+	if (emailDeliveryState !== undefined) {
+		features.email_delivery_state = emailDeliveryState;
+	}
+	const verificationBasis = [VerificationBases.CONFIRMED_EMAIL, VerificationBases.LOCAL_CREDENTIAL].find(
+		(value) => value === source.verification_basis,
+	);
+	if (verificationBasis !== undefined) {
+		features.verification_basis = verificationBasis;
+	}
 	const gracePeriodHours = readInteger(
 		source,
 		'account_deletion_grace_period_hours',
@@ -490,15 +615,6 @@ function parseFeatures(value: unknown): Readonly<Partial<InstanceFeatures>> {
 	);
 	if (gracePeriodHours != null) {
 		features.account_deletion_grace_period_hours = gracePeriodHours;
-	}
-	const maxBackgroundGatewayConnections = readInteger(
-		source,
-		'max_background_gateway_connections',
-		MAX_BACKGROUND_GATEWAY_CONNECTIONS_MIN,
-		MAX_BACKGROUND_GATEWAY_CONNECTIONS_MAX,
-	);
-	if (maxBackgroundGatewayConnections != null) {
-		features.max_background_gateway_connections = maxBackgroundGatewayConnections;
 	}
 	return features;
 }
@@ -531,12 +647,18 @@ function parseSso(value: unknown): InstanceSso | null {
 	const sso: InstanceSso = {
 		enabled,
 		enforced,
+		username_from_provider: readBoolean(source, 'username_from_provider') ?? false,
 		display_name: readNonEmptyString(source, 'display_name'),
+		button_label: readNonEmptyString(source, 'button_label'),
 		redirect_uri: redirectUri,
 	};
 	const available = readBoolean(source, 'available');
 	if (available != null) {
 		sso.available = available;
+	}
+	const providerTrait = readNonEmptyString(source, 'provider_trait');
+	if (providerTrait != null) {
+		sso.provider_trait = providerTrait;
 	}
 	return sso;
 }
@@ -568,8 +690,79 @@ function parseCommunity(value: unknown): InstanceCommunity | null {
 		single_community: singleCommunity,
 		single_community_guild_id: readNonEmptyString(source, 'single_community_guild_id'),
 		direct_messages_disabled: directMessagesDisabled,
+		friends_disabled: readBoolean(source, 'friends_disabled') ?? directMessagesDisabled,
+		personal_notes_enabled: readBoolean(source, 'personal_notes_enabled') ?? true,
 		guild_create_access: readBoolean(source, 'guild_create_access') ?? true,
 	};
+}
+
+function readDateString(source: Record<string, unknown>, key: string): string | null {
+	const value = readNonEmptyString(source, key);
+	return value !== null && Number.isFinite(Date.parse(value)) ? value : null;
+}
+
+function parseNotice(value: unknown): InstanceNotice | null {
+	const source = asRecord(value);
+	if (source == null) {
+		return null;
+	}
+	const id = readNonEmptyString(source, 'id');
+	const message = readNonEmptyString(source, 'message');
+	if (id == null || message == null) {
+		return null;
+	}
+	return {
+		id,
+		message,
+		url: readNonEmptyString(source, 'url'),
+		starts_at: readDateString(source, 'starts_at'),
+		ends_at: readDateString(source, 'ends_at'),
+	};
+}
+
+function parseBuiltInGuildBadgeImages(value: unknown): InstanceBuiltInGuildBadgeImages {
+	const source = asRecord(value) ?? {};
+	return {
+		verified: readNonEmptyString(source, 'verified'),
+		partnered: readNonEmptyString(source, 'partnered'),
+		discoverable: readNonEmptyString(source, 'discoverable'),
+	};
+}
+
+function parseHiddenBuiltInGuildBadges(value: unknown): InstanceHiddenBuiltInGuildBadges {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+	return BUILT_IN_GUILD_BADGE_KINDS.filter((kind) => value.includes(kind));
+}
+
+function parseGuildBadges(value: unknown): Array<InstanceGuildBadge> {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+	return value.flatMap((entry) => {
+		const source = asRecord(entry);
+		if (source == null) {
+			return [];
+		}
+		const id = readNonEmptyString(source, 'id');
+		const name = readNonEmptyString(source, 'name');
+		const assetUrl = readNonEmptyString(source, 'asset_url');
+		if (id == null || !/^\d{1,20}$/.test(id) || name == null || assetUrl == null) {
+			return [];
+		}
+		const position = readNonEmptyString(source, 'position');
+		return [
+			{
+				id,
+				name,
+				description: readNonEmptyString(source, 'description'),
+				asset_url: assetUrl,
+				href: readAbsoluteHTTPURL(source, 'href'),
+				...(position != null && /^-?[0-9]{1,19}$/.test(position) ? {position} : {}),
+			},
+		];
+	});
 }
 
 function parseServices(value: unknown): InstanceServices | null {
@@ -583,7 +776,27 @@ function parseServices(value: unknown): InstanceServices | null {
 	if (gifEnabled == null || youtubeEnabled == null || blueskyEnabled == null) {
 		return null;
 	}
-	return {gif_enabled: gifEnabled, youtube_enabled: youtubeEnabled, bluesky_enabled: blueskyEnabled};
+	return {
+		gif_enabled: gifEnabled,
+		youtube_enabled: youtubeEnabled,
+		bluesky_enabled: blueskyEnabled,
+		connection_providers: parseConnectionProviders(source['connection_providers']),
+	};
+}
+
+function parseConnectionProviders(value: unknown): Array<InstanceConnectionProvider> {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+	return value.flatMap((entry): Array<InstanceConnectionProvider> => {
+		const source = asRecord(entry);
+		const id = source == null ? null : readNonEmptyString(source, 'id');
+		const name = source == null ? null : readNonEmptyString(source, 'name');
+		if (source == null || id == null || name == null) {
+			return [];
+		}
+		return [{id, name, icon_url: readAbsoluteHTTPURL(source, 'icon_url')}];
+	});
 }
 
 function parseLimits(value: unknown): LimitConfigSnapshot | LimitConfigWireFormat | null {
@@ -732,8 +945,25 @@ function parseBranding(value: unknown): Readonly<Partial<InstanceBranding>> {
 			branding[key] = readAbsoluteHTTPURL(source, key);
 		}
 	}
+	const statusPageInstatus = readBoolean(source, 'status_page_instatus');
+	if (statusPageInstatus != null) {
+		branding.status_page_instatus = statusPageInstatus;
+	}
 	if (Object.hasOwn(source, 'theme_color')) {
 		branding.theme_color = readNonEmptyString(source, 'theme_color');
+	}
+	if (Object.hasOwn(source, 'premium_page_color')) {
+		branding.premium_page_color = readNonEmptyString(source, 'premium_page_color');
+	}
+	if (Object.hasOwn(source, 'custom_css')) {
+		branding.custom_css = readNonEmptyString(source, 'custom_css');
+	}
+	if (Object.hasOwn(source, 'upload_limit_message')) {
+		branding.upload_limit_message = readNonEmptyString(source, 'upload_limit_message');
+	}
+	const trustedDomains = readStringArray(source, 'trusted_domains');
+	if (trustedDomains != null) {
+		branding.trusted_domains = trustedDomains;
 	}
 	return branding;
 }
@@ -744,12 +974,21 @@ function parseSetup(value: unknown): Readonly<Partial<InstanceSetup>> {
 		return {};
 	}
 	const setup: Partial<InstanceSetup> = {};
-	const configured = readBoolean(source, 'configured');
-	if (configured != null) {
-		setup.configured = configured;
+	for (const key of SETUP_FLAG_KEYS) {
+		const flag = readBoolean(source, key);
+		if (flag != null) {
+			setup[key] = flag;
+		}
 	}
 	if (Object.hasOwn(source, 'admin_url')) {
 		setup.admin_url = readAbsoluteHTTPURL(source, 'admin_url');
+	}
+	if (Object.hasOwn(source, 'account_identity_lock_reason')) {
+		setup.account_identity_lock_reason = readLiteral(
+			source,
+			'account_identity_lock_reason',
+			ACCOUNT_IDENTITY_LOCK_REASONS,
+		);
 	}
 	return setup;
 }
@@ -760,11 +999,10 @@ function parseLegal(value: unknown): Readonly<Partial<InstanceLegal>> {
 		return {};
 	}
 	const legal: Partial<InstanceLegal> = {};
-	if (Object.hasOwn(source, 'terms_url')) {
-		legal.terms_url = readAbsoluteHTTPURL(source, 'terms_url');
-	}
-	if (Object.hasOwn(source, 'privacy_url')) {
-		legal.privacy_url = readAbsoluteHTTPURL(source, 'privacy_url');
+	for (const key of LEGAL_URL_KEYS) {
+		if (Object.hasOwn(source, key)) {
+			legal[key] = readAbsoluteHTTPURL(source, key);
+		}
 	}
 	return legal;
 }
@@ -795,15 +1033,13 @@ function parseAgePolicy(value: unknown): InstanceAgePolicy | null {
 			return null;
 		}
 		const action = readLiteral(geo, 'action', AGE_POLICY_ACTIONS);
-		const cardVerificationAvailable = readBoolean(geo, 'card_verification_available');
-		if (action == null || cardVerificationAvailable == null) {
+		if (action == null) {
 			return null;
 		}
 		geos.push({
 			country_code: countryCode,
 			region_code: readNonEmptyString(geo, 'region_code'),
 			action,
-			card_verification_available: cardVerificationAvailable,
 		});
 	}
 	return {geos};

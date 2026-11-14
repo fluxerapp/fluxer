@@ -13,6 +13,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import styles from '@app/features/channel/components/ChannelMembers.module.css';
 import {hasVisibleCompactMemberCustomStatus} from '@app/features/channel/components/CompactMemberCustomStatus';
 import {MemberListContainer} from '@app/features/channel/components/MemberListContainer';
+import {MemberListGroupHeader} from '@app/features/channel/components/MemberListGroupHeader';
 import {MemberListItem} from '@app/features/channel/components/MemberListItem';
 import {
 	MEMBER_LIST_GROUP_HEADER_HEIGHT_PX,
@@ -30,8 +31,12 @@ import {MemberListUnavailableFallback} from '@app/features/channel/components/sh
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {OFFLINE_DESCRIPTOR, ONLINE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {useMemberListSubscription} from '@app/features/member/hooks/useMemberListSubscription';
+import {
+	forgetMemberListScroll,
+	recallMemberListScroll,
+	rememberMemberListScroll,
+} from '@app/features/member/state/MemberListScrollMemory';
 import {resolveMemberListViewportModel} from '@app/features/member/state/MemberListViewportStateMachine';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import {
@@ -43,6 +48,7 @@ import {
 } from '@app/features/member/utils/MemberListLayout';
 import {
 	areNormalizedMemberListRangesEqual,
+	buildInitialMemberListRenderWindow,
 	buildMemberListRangeWindow,
 	buildMemberListRenderWindow,
 	type NormalizedMemberListRanges,
@@ -53,7 +59,6 @@ import * as MemberListUtils from '@app/features/member/utils/MemberListUtils';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import Presence from '@app/features/presence/state/Presence';
 import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
-import {openRoleContextMenu, openRoleContextMenuForElement} from '@app/features/ui/action_menu/RoleContextMenu';
 import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type {User} from '@app/features/user/models/User';
@@ -62,18 +67,21 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MEMBER_LIST_RANGE_MAX_SPAN} from '@fluxer/constants/src/GatewayConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import {MEDIA_PROXY_AVATAR_SIZE_DEFAULT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {useLingui as useLinguiRuntime} from '@lingui/react';
 import {useLingui} from '@lingui/react/macro';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type {ReactNode, UIEvent} from 'react';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 const INITIAL_SUBSCRIPTION_RANGE: [number, number] = [0, MEMBER_LIST_RANGE_MAX_SPAN];
-const INITIAL_RENDER_RANGE: [number, number] = [0, 64];
 const INITIAL_SUBSCRIPTION_RANGES = normalizeMemberListRanges([INITIAL_SUBSCRIPTION_RANGE]);
-const INITIAL_RENDER_RANGES = normalizeMemberListRanges([INITIAL_RENDER_RANGE]);
+function initialMemberListRenderRanges(): NormalizedMemberListRanges {
+	return buildInitialMemberListRenderWindow(
+		window.innerHeight,
+		Math.min(MEMBER_LIST_ITEM_HEIGHT_PX, MEMBER_LIST_GROUP_HEADER_HEIGHT_PX) * getAppRemScale(),
+	);
+}
 const EMPTY_MEMBER_LIST_RANGES = normalizeMemberListRanges([]);
 const SUBSCRIPTION_OVERSCAN_PAGES = 0;
 const MIN_SUBSCRIPTION_BUFFER_ROWS = 1;
@@ -137,37 +145,6 @@ function useGroupHeadingWidthTracking(): GroupHeadingWidthTracking {
 	return trackingRef.current;
 }
 
-interface MemberListGroupHeaderContentProps {
-	name: string;
-	count: number;
-}
-
-function MemberListGroupHeaderContent({name, count}: MemberListGroupHeaderContentProps) {
-	const {i18n} = useLingui();
-	return (
-		<>
-			<span
-				className={styles.groupHeaderLabel}
-				data-flx="channel.channel-members.member-list-group-header-content.group-header-label"
-			>
-				{name}
-			</span>
-			<span
-				className={styles.groupHeaderSeparator}
-				data-flx="channel.channel-members.member-list-group-header-content.group-header-separator"
-			>
-				{'—'}
-			</span>
-			<span
-				className={styles.groupHeaderCount}
-				data-flx="channel.channel-members.member-list-group-header-content.group-header-count"
-			>
-				{getCachedNumberFormat(i18n.locale).format(count)}
-			</span>
-		</>
-	);
-}
-
 interface GroupDMMemberListGroupProps {
 	group: GroupDMMemberGroup;
 	channelId: string;
@@ -177,18 +154,15 @@ interface GroupDMMemberListGroupProps {
 
 const GroupDMMemberListGroup = observer(({group, channelId, ownerId, onHeadingRef}: GroupDMMemberListGroupProps) => (
 	<div className={styles.groupContainer} data-flx="channel.channel-members.group-dm-member-list-group.group-container">
-		<div
+		<MemberListGroupHeader
 			ref={onHeadingRef}
-			data-member-group-id={group.id}
+			groupId={group.id}
+			guildRole={null}
+			name={group.displayName}
+			count={group.count}
 			className={styles.groupHeader}
 			data-flx="channel.channel-members.group-dm-member-list-group.group-header"
-		>
-			<MemberListGroupHeaderContent
-				name={group.displayName}
-				count={group.count}
-				data-flx="channel.channel-members.group-dm-member-list-group.member-list-group-header-content"
-			/>
-		</div>
+		/>
 		<div className={styles.membersList} data-flx="channel.channel-members.group-dm-member-list-group.members-list">
 			{group.users.map((user) => {
 				const status = Presence.getStatus(user.id);
@@ -216,13 +190,15 @@ interface LazyMemberListProps {
 
 const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMemberListProps) {
 	const {i18n} = useLingui();
+	const [renderWindowRanges, setRenderWindowRanges] =
+		useState<NormalizedMemberListRanges>(initialMemberListRenderRanges);
 	const subscriptionRangesRef = useRef<NormalizedMemberListRanges>(INITIAL_SUBSCRIPTION_RANGES);
-	const renderRangesRef = useRef<NormalizedMemberListRanges>(INITIAL_RENDER_RANGES);
+	const renderRangesRef = useRef<NormalizedMemberListRanges>(renderWindowRanges);
 	const scrollFrameRef = useRef<number | null>(null);
 	const pendingScrollMetricsRef = useRef<{scrollTop: number; clientHeight: number} | null>(null);
 	const scrollerRef = useRef<ScrollerHandle | null>(null);
+	const restoredScrollKeyRef = useRef<string | null>(null);
 	const viewportHeightRef = useRef<number | null>(null);
-	const [renderWindowRanges, setRenderWindowRanges] = useState<NormalizedMemberListRanges>(INITIAL_RENDER_RANGES);
 	const memberListIdentityKey = MemberSidebar.getListIdentityKey(guild.id, channel.id);
 	const memberListUpdatesDisabled = (guild.disabledOperations & GuildOperations.MEMBER_LIST_UPDATES) !== 0;
 	const currentUserId = Authentication.currentUserId;
@@ -384,20 +360,36 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 				viewportHeightRef.current = viewportHeight;
 			}
 			scheduleRangeUpdate(target.scrollTop, viewportHeight);
+			if (restoredScrollKeyRef.current === memberListIdentityKey) {
+				rememberMemberListScroll(memberListIdentityKey, target.scrollTop);
+			}
 		},
-		[scheduleRangeUpdate],
+		[scheduleRangeUpdate, memberListIdentityKey],
 	);
+	useLayoutEffect(() => {
+		if (restoredScrollKeyRef.current === memberListIdentityKey || isInitialLoading || totalRows <= 0) return;
+		const viewport = scrollerRef.current?.getViewportElement();
+		if (!viewport) return;
+		restoredScrollKeyRef.current = memberListIdentityKey;
+		const saved = recallMemberListScroll(memberListIdentityKey);
+		if (saved <= 0) return;
+		viewport.scrollTop = saved;
+		scheduleRangeUpdate(viewport.scrollTop, viewport.clientHeight);
+	}, [memberListIdentityKey, isInitialLoading, totalRows, scheduleRangeUpdate]);
+	useEffect(() => () => forgetMemberListScroll(memberListIdentityKey), [memberListIdentityKey]);
 	const handleResize = useCallback(() => {
 		viewportHeightRef.current = null;
 		scheduleRangeUpdateFromScroller();
 	}, [scheduleRangeUpdateFromScroller]);
 	useEffect(() => {
 		const initialSubscriptionRanges = INITIAL_SUBSCRIPTION_RANGES;
-		const initialRenderRanges = INITIAL_RENDER_RANGES;
+		const initialRenderRanges = initialMemberListRenderRanges();
 		subscriptionRangesRef.current = initialSubscriptionRanges;
 		renderRangesRef.current = initialRenderRanges;
 		viewportHeightRef.current = null;
-		setRenderWindowRanges(initialRenderRanges);
+		setRenderWindowRanges((ranges) =>
+			areNormalizedMemberListRangesEqual(ranges, initialRenderRanges) ? ranges : initialRenderRanges,
+		);
 	}, [memberListIdentityKey, guild.id]);
 	useEffect(() => {
 		scheduleRangeUpdateFromScroller();
@@ -459,114 +451,31 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 		for (let rowIndex = firstRow; rowIndex <= lastRow; rowIndex += 1) {
 			const rowTop = rowOffsets != null ? rowOffsets[rowIndex]! : rowIndex * scaledMemberItemHeight;
 			const rowStyle = {transform: `translateY(${rowTop}px)`};
-			if (layouts.length === 0) {
-				const item = memberListState.items.get(rowIndex);
-				if (!item) {
+
+			if (layouts.length > 0) {
+				const layout = getGroupLayoutForRow(layouts, rowIndex);
+				if (!layout) {
+					continue;
+				}
+				if (rowIndex === layout.headerRowIndex) {
+					const group = groupById.get(layout.id) ?? {id: layout.id, count: layout.count};
+					const role = group.id === 'online' || group.id === 'offline' ? null : (guild.getRole(group.id) ?? null);
 					virtualRows.push(
-						<div
-							key={`member-skeleton-${rowIndex}`}
-							className={clsx(styles.virtualRow, styles.virtualMemberRow)}
-							style={rowStyle}
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.skeleton"
-						>
-							<MemberListSkeletonRow
-								index={rowIndex}
-								variant={MemberListSkeletonVariant.GUILD}
-								data-flx="channel.channel-members.lazy-member-list.member-list-skeleton-row"
-							/>
-						</div>,
-					);
-					continue;
-				}
-				const member = MemberSidebar.materializeItemMember(guild.id, item);
-				if (!member) {
-					continue;
-				}
-				const user = member.user;
-				if (renderedMemberIds.has(user.id)) {
-					continue;
-				}
-				renderedMemberIds.add(user.id);
-				const displayName = member.nick
-					? NicknameUtils.formatNicknameForStreamerMode(member.nick)
-					: NicknameUtils.getNickname(user, guild.id);
-				const roleColor = member.getColorString?.() ?? undefined;
-				virtualRows.push(
-					<div
-						key={`member-${user.id}`}
-						className={clsx(styles.virtualRow, styles.virtualMemberRow)}
-						style={rowStyle}
-						data-flx="channel.channel-members.lazy-member-list.virtual-row.member"
-					>
-						<MemberListItem
-							user={user}
-							channelId={channel.id}
-							guildId={guild.id}
-							guildMember={member}
-							isOwner={guild.isOwner(user.id)}
-							roleColor={roleColor}
-							displayName={displayName}
-							disableBackdrop={true}
-							avatarMediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.member-list-item"
-						/>
-					</div>,
-				);
-				continue;
-			}
-			const layout = getGroupLayoutForRow(layouts, rowIndex);
-			if (!layout) {
-				continue;
-			}
-			if (rowIndex === layout.headerRowIndex) {
-				const group = groupById.get(layout.id) ?? {id: layout.id, count: layout.count};
-				const role = group.id === 'online' || group.id === 'offline' ? null : (guild.getRole(group.id) ?? null);
-				const groupName = getGroupName(group.id);
-				const groupRowContent = (
-					<MemberListGroupHeaderContent
-						name={groupName}
-						count={group.count}
-						data-flx="channel.channel-members.lazy-member-list.member-list-group-header-content"
-					/>
-				);
-				if (role) {
-					virtualRows.push(
-						<div
+						<MemberListGroupHeader
 							key={`group-${group.id}`}
 							ref={registerGroupHeading}
-							data-member-group-id={group.id}
+							groupId={group.id}
+							guildRole={role}
+							name={getGroupName(group.id)}
+							count={group.count}
 							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
 							style={rowStyle}
-							role="button"
-							tabIndex={0}
-							onContextMenu={(event) => openRoleContextMenu(event, role.id)}
-							onKeyDown={(event) => {
-								if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
-								event.preventDefault();
-								event.stopPropagation();
-								openRoleContextMenuForElement(event.currentTarget, role.id);
-							}}
-							data-member-list-focus-item="true"
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.group"
-						>
-							{groupRowContent}
-						</div>,
+							data-flx="channel.channel-members.lazy-member-list.virtual-row"
+						/>,
 					);
-				} else {
-					virtualRows.push(
-						<div
-							key={`group-${group.id}`}
-							ref={registerGroupHeading}
-							data-member-group-id={group.id}
-							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
-							style={rowStyle}
-							data-flx="channel.channel-members.lazy-member-list.virtual-row.group"
-						>
-							{groupRowContent}
-						</div>,
-					);
+
+					continue;
 				}
-				continue;
 			}
 			const item = memberListState.items.get(rowIndex);
 			if (!item) {
@@ -615,7 +524,6 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 						roleColor={roleColor}
 						displayName={displayName}
 						disableBackdrop={true}
-						avatarMediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}
 						data-flx="channel.channel-members.lazy-member-list.virtual-row.member-list-item--2"
 					/>
 				</div>,
@@ -698,7 +606,11 @@ export const ChannelMembers = observer(function ChannelMembers({guild = null, ch
 	const frameSides = guild ? {left: false} : undefined;
 	return (
 		<OutlineFrame hideTopBorder sides={frameSides} data-flx="channel.channel-members.outline-frame--2">
-			<LazyMemberList guild={guild} channel={channel} data-flx="channel.channel-members.lazy-member-list" />
+			{guild.visiting ? (
+				<MemberListUnavailableFallback variant="visiting" data-flx="channel.channel-members.visiting-fallback" />
+			) : (
+				<LazyMemberList guild={guild} channel={channel} data-flx="channel.channel-members.lazy-member-list" />
+			)}
 		</OutlineFrame>
 	);
 });

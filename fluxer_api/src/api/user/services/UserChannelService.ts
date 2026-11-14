@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
-import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {
 	createMessageResponseDataService,
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
+import {personalNotesEnabled} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -26,12 +26,12 @@ import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
+import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
-import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
-import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
-import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_GROUP_DM_RECIPIENTS, MAX_GROUP_DMS_PER_USER} from '@fluxer/constants/src/LimitConstants';
@@ -41,21 +41,16 @@ import type {GroupDmUnaddableRecipient} from '@fluxer/errors/src/domains/channel
 import {GroupDmRecipientsNotAddableError} from '@fluxer/errors/src/domains/channel/GroupDmRecipientsNotAddableError';
 import {MaxGroupDmRecipientsError} from '@fluxer/errors/src/domains/channel/MaxGroupDmRecipientsError';
 import {MaxGroupDmsError} from '@fluxer/errors/src/domains/channel/MaxGroupDmsError';
-import {UnclaimedAccountCannotJoinGroupDmsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotJoinGroupDmsError';
-import {UnclaimedAccountCannotSendDirectMessagesError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotSendDirectMessagesError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 
-interface UserChannelRepository extends IUserAccountRepository, IUserChannelRepository, IUserRelationshipRepository {}
-
 export class UserChannelService {
-	private readonly userRepository: UserChannelRepository;
+	private readonly userRepository: UserRepository;
 	private readonly channelService: ChannelService;
-	private readonly channelRepository: IChannelRepository;
+	private readonly channelRepository: ChannelRepository;
 	private readonly gatewayService: IGatewayService;
 	private readonly snowflakeService: ISnowflakeService;
 	private readonly userPermissionUtils: UserPermissionUtils;
@@ -64,15 +59,15 @@ export class UserChannelService {
 	constructor(
 		apiContext: ApiContext,
 		channelService: ChannelService,
-		channelRepository: IChannelRepository,
+		channelRepository: ChannelRepository,
 		userPermissionUtils: UserPermissionUtils,
 		limitConfigService: LimitConfigService,
 	);
 
 	constructor(
-		userRepository: UserChannelRepository,
+		userRepository: UserRepository,
 		channelService: ChannelService,
-		channelRepository: IChannelRepository,
+		channelRepository: ChannelRepository,
 		gatewayService: IGatewayService,
 		snowflakeService: ISnowflakeService,
 		userPermissionUtils: UserPermissionUtils,
@@ -84,14 +79,14 @@ export class UserChannelService {
 			| [
 					apiContext: ApiContext,
 					channelService: ChannelService,
-					channelRepository: IChannelRepository,
+					channelRepository: ChannelRepository,
 					userPermissionUtils: UserPermissionUtils,
 					limitConfigService: LimitConfigService,
 			  ]
 			| [
-					userRepository: UserChannelRepository,
+					userRepository: UserRepository,
 					channelService: ChannelService,
-					channelRepository: IChannelRepository,
+					channelRepository: ChannelRepository,
 					gatewayService: IGatewayService,
 					snowflakeService: ISnowflakeService,
 					userPermissionUtils: UserPermissionUtils,
@@ -129,7 +124,9 @@ export class UserChannelService {
 	}
 
 	async getPrivateChannels(userId: UserID): Promise<Array<Channel>> {
-		return await this.userRepository.listPrivateChannels(userId);
+		const channels = await this.userRepository.listPrivateChannels(userId);
+		if (await personalNotesEnabled()) return channels;
+		return channels.filter((channel) => channel.type !== ChannelTypes.DM_PERSONAL_NOTES);
 	}
 
 	async createOrOpenDMChannel({
@@ -143,15 +140,13 @@ export class UserChannelService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<Channel> {
-		const callingUser = await this.userRepository.findUnique(userId);
-		if (!callingUser) throw new UnknownUserError();
-		if (callingUser.isUnclaimedAccount()) {
-			if (data.recipients !== undefined) {
-				throw new UnclaimedAccountCannotJoinGroupDmsError();
-			}
-			throw new UnclaimedAccountCannotSendDirectMessagesError();
-		}
-		requireEmailVerified(callingUser, 'direct_message');
+		const callingUser = await this.userRepository.findUniqueAssert(userId);
+		assertTierAllows(
+			callingUser,
+			data.recipients !== undefined ? TierGatedActions.GROUP_DM : TierGatedActions.DIRECT_MESSAGE,
+			NO_TIER_CONTEXT,
+		);
+		assertTierAllows(callingUser, TierGatedActions.DIRECT_MESSAGE_OPEN, NO_TIER_CONTEXT);
 		if (data.recipients !== undefined) {
 			assertAccountNotLimited(callingUser);
 			return await this.createGroupDMChannel({
@@ -172,7 +167,7 @@ export class UserChannelService {
 			user: callingUser,
 			targetId: recipientId,
 			users: this.userRepository,
-			messages: this.channelRepository,
+			messages: this.channelRepository.messages,
 		});
 		const suppressed = isDirectDeliverySuppressed(callingUser);
 		const channel = await this.openOneToOneDMChannel({userId, recipientId, suppressed, userCacheService, requestCache});
@@ -196,16 +191,14 @@ export class UserChannelService {
 		requestCache: RequestCache;
 	}): Promise<Channel> {
 		if (suppressed) {
-			const targetUser = await this.userRepository.findUnique(recipientId);
-			if (!targetUser) throw new UnknownUserError();
+			await this.userRepository.findUniqueAssert(recipientId);
 			return await this.createOrOpenLocalOnlyDMChannel({userId, recipientId, userCacheService, requestCache});
 		}
 		const existingChannel = await this.userRepository.findExistingDmState(userId, recipientId);
 		if (existingChannel) {
 			return await this.reopenExistingDMChannel({userId, existingChannel, userCacheService, requestCache});
 		}
-		const targetUser = await this.userRepository.findUnique(recipientId);
-		if (!targetUser) throw new UnknownUserError();
+		await this.userRepository.findUniqueAssert(recipientId);
 		return await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
 	}
 
@@ -233,14 +226,16 @@ export class UserChannelService {
 		}
 	}
 
-	async pinDmChannel({
+	async setDmChannelPinned({
 		userId,
 		channelId,
 		viewer,
+		pinned,
 	}: {
 		userId: UserID;
 		viewer: ThreadViewer;
 		channelId: ChannelID;
+		pinned: boolean;
 	}): Promise<void> {
 		const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
 		if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
@@ -249,31 +244,9 @@ export class UserChannelService {
 		if (!channel.recipientIds.has(userId)) {
 			throw new MissingAccessError();
 		}
-		const newPinnedDMs = await this.userRepository.addPinnedDm(userId, channelId);
-		await this.gatewayService.dispatchPresence({
-			userId: userId,
-			event: 'USER_PINNED_DMS_UPDATE',
-			data: newPinnedDMs.map(String),
-		});
-	}
-
-	async unpinDmChannel({
-		userId,
-		channelId,
-		viewer,
-	}: {
-		userId: UserID;
-		viewer: ThreadViewer;
-		channelId: ChannelID;
-	}): Promise<void> {
-		const channel = await this.channelService.channelData.operations.getChannel({userId, viewer, channelId});
-		if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
-			throw InputValidationError.fromCode('channel_id', ValidationErrorCodes.CHANNEL_MUST_BE_DM_OR_GROUP_DM);
-		}
-		if (!channel.recipientIds.has(userId)) {
-			throw new MissingAccessError();
-		}
-		const newPinnedDMs = await this.userRepository.removePinnedDm(userId, channelId);
+		const newPinnedDMs = pinned
+			? await this.userRepository.addPinnedDm(userId, channelId)
+			: await this.userRepository.removePinnedDm(userId, channelId);
 		await this.gatewayService.dispatchPresence({
 			userId: userId,
 			event: 'USER_PINNED_DMS_UPDATE',
@@ -351,7 +324,7 @@ export class UserChannelService {
 		return await this.createNewDmForBothUsers({userId, recipientId, userCacheService, requestCache});
 	}
 
-	async createNewDmForBothUsers({
+	private async createNewDmForBothUsers({
 		userId,
 		recipientId,
 		userCacheService,
@@ -522,6 +495,7 @@ export class UserChannelService {
 			user_limit: null,
 			voice_connection_limit: null,
 			rtc_region: null,
+			rtc_p2p: null,
 			last_message_id: null,
 			last_pin_timestamp: null,
 			permission_overwrites: null,
@@ -530,14 +504,14 @@ export class UserChannelService {
 			indexed_at: null,
 			version: 1,
 		};
-		const newChannel = await this.channelRepository.upsert(channelData);
+		const newChannel = await this.channelRepository.channelData.create(channelData);
 		for (const recipientId of allRecipients) {
 			await this.userRepository.openPrivateChannelForUser(recipientId, newChannel);
 		}
 		const systemMessages: Array<Message> = [];
 		for (const recipientId of recipientIds) {
 			const messageId = createMessageID(await this.snowflakeService.generateForChannel(channelId));
-			const message = await this.channelRepository.upsertMessage({
+			const message = await this.channelRepository.messages.upsertMessage({
 				channel_id: channelId,
 				bucket: BucketUtils.makeBucket(messageId),
 				message_id: messageId,

@@ -1,5 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub const THEME_INIT_SCRIPT: &str = r#"
+(function () {
+	var root = document.documentElement;
+	var media = window.matchMedia('(prefers-color-scheme: dark)');
+	function stored() {
+		try {
+			var value = localStorage.getItem('fluxer-admin-theme');
+			return value === 'light' || value === 'dark' ? value : null;
+		} catch (e) {
+			return null;
+		}
+	}
+	function apply() { root.dataset.theme = stored() || (media.matches ? 'dark' : 'light'); }
+	apply();
+	media.addEventListener('change', apply);
+})();
+"#;
+
+pub const HISTORY_CACHE_CLEAR_SCRIPT: &str =
+    "try { localStorage.removeItem('htmx-history-cache'); } catch (e) {}";
+
+pub const THEME_TOGGLE_SCRIPT: &str = r#"
+(function () {
+	if (window.__fluxerAdminThemeToggle) return;
+	window.__fluxerAdminThemeToggle = true;
+	document.addEventListener('click', function (event) {
+		var button = event.target.closest && event.target.closest('[data-theme-toggle]');
+		if (!button) return;
+		var root = document.documentElement;
+		var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+		root.dataset.theme = next;
+		try { localStorage.setItem('fluxer-admin-theme', next); } catch (e) {}
+	});
+})();
+"#;
+
 pub const SIDEBAR_ACTIVE_SCROLL_SCRIPT: &str = r#"
 (function () {
 	var sidebar = document.querySelector('[data-sidebar]');
@@ -389,6 +425,15 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 		}
 	}
 
+	function hideToast() {
+		if (hideTimer) {
+			window.clearTimeout(hideTimer);
+			hideTimer = 0;
+		}
+		if (activeToast) activeToast.remove();
+		activeToast = null;
+	}
+
 	function requestVerb(detail) {
 		var cfg = detail && detail.requestConfig;
 		return String((cfg && cfg.verb) || '').toLowerCase();
@@ -508,7 +553,9 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 			var parsed = JSON.parse(raw);
 			return {
 				level: parsed && parsed.level ? String(parsed.level) : 'info',
-				message: parsed && parsed.message ? String(parsed.message) : ''
+				message: parsed && parsed.message ? String(parsed.message) : '',
+				field: parsed && parsed.field ? String(parsed.field) : '',
+				fieldMessage: parsed && parsed.field_message ? String(parsed.field_message) : ''
 			};
 		} catch (error) {
 			return null;
@@ -529,13 +576,57 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 		});
 	}
 
+	function fieldErrorSlots(root) {
+		return root && root.querySelectorAll ? root.querySelectorAll('[data-field-error]') : [];
+	}
+
+	function clearFieldErrors(detail) {
+		var elt = mutationElement(detail);
+		var form = elt && elt.closest ? elt.closest('form') : null;
+		Array.prototype.forEach.call(fieldErrorSlots(form), function (slot) {
+			slot.textContent = '';
+			slot.hidden = true;
+			var field = document.getElementById(slot.getAttribute('data-field-error'));
+			if (field) field.removeAttribute('aria-invalid');
+		});
+	}
+
+	function showFieldError(toast) {
+		if (!toast || !toast.field || !toast.fieldMessage) return false;
+		var field = document.getElementById(toast.field);
+		var slot = Array.prototype.find.call(fieldErrorSlots(document), function (candidate) {
+			return candidate.getAttribute('data-field-error') === toast.field;
+		});
+		if (!field || !slot) return false;
+		slot.textContent = toast.fieldMessage;
+		slot.hidden = false;
+		field.setAttribute('aria-invalid', 'true');
+		window.setTimeout(function () { field.focus(); }, 0);
+		return true;
+	}
+
+	function showResult(toast) {
+		if (showFieldError(toast) && !toast.message) {
+			hideToast();
+			return;
+		}
+		showToast(toast.level, toast.message || toast.fieldMessage);
+	}
+
 	document.body.addEventListener('showFlash', function (evt) {
 		var d = evt.detail || {};
 		showToast(d.level || 'info', d.message || '');
 	});
 
+	function clearFlashBanner() {
+		var container = document.getElementById('flash-container');
+		if (container) container.innerHTML = '';
+	}
+
 	document.addEventListener('htmx:beforeRequest', function (event) {
 		if (!isMutation(event.detail)) return;
+		clearFlashBanner();
+		clearFieldErrors(event.detail);
 		showToast('info', 'Working...', {persist: true});
 	}, true);
 
@@ -552,7 +643,7 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 		event.detail.shouldSwap = false;
 		event.detail.isError = false;
 		markToastHandled(event.detail);
-		showToast(parsed.level, parsed.message);
+		showResult(parsed);
 		refreshAfterSuccess(event.detail, parsed.level);
 	}, true);
 
@@ -562,7 +653,7 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 		var xhr = event.detail.xhr;
 		var serverToast = parseAdminToastHeader(xhr);
 		if (serverToast) {
-			showToast(serverToast.level, serverToast.message);
+			showResult(serverToast);
 			markToastHandled(event.detail);
 			refreshAfterSuccess(event.detail, serverToast.level);
 			return;
@@ -570,6 +661,12 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 		var failed = !event.detail.successful || (xhr && xhr.status >= 400) || isLoginResponse(xhr);
 		showToast(failed ? 'error' : 'success', isLoginResponse(xhr) ? 'Session expired. Sign in again.' : failed ? 'Action failed.' : 'Done.');
 		markToastHandled(event.detail);
+	}, true);
+
+	document.addEventListener('htmx:sendError', function (event) {
+		if (requestVerb(event.detail) !== 'get') return;
+		var path = event.detail.pathInfo && event.detail.pathInfo.finalRequestPath;
+		if (path) window.location.assign(path);
 	}, true);
 })();
 "#;
@@ -621,4 +718,45 @@ pub const SH_LINK_REWRITE_SCRIPT: &str = r#"
 	}, true);
 })();
 
+"#;
+
+pub const ENFORCEMENT_FIELDS_SCRIPT: &str = r#"
+(function () {
+	if (window.__fluxerEnforcementFields) return;
+	window.__fluxerEnforcementFields = true;
+	function codes(section, name) {
+		var value = section.getAttribute(name);
+		return value === null ? null : value.split(' ');
+	}
+	function syncReason(form, code) {
+		form.querySelectorAll('[data-show-for-codes], [data-hide-for-codes]').forEach(function (section) {
+			var showFor = codes(section, 'data-show-for-codes');
+			var hideFor = codes(section, 'data-hide-for-codes');
+			var shown = showFor ? showFor.indexOf(code) >= 0 : hideFor.indexOf(code) < 0;
+			section.hidden = !shown;
+			section.querySelectorAll('input, textarea, select').forEach(function (control) {
+				control.disabled = !shown;
+			});
+		});
+	}
+	function syncChoice(form, name, value) {
+		form.querySelectorAll('[data-show-for-' + name + ']').forEach(function (section) {
+			var shown = codes(section, 'data-show-for-' + name).indexOf(value) >= 0;
+			section.hidden = !shown;
+			section.disabled = !shown;
+		});
+	}
+	document.addEventListener('change', function (event) {
+		var control = event.target;
+		var form = control instanceof Element ? control.closest('form') : null;
+		if (!form) return;
+		if (control instanceof HTMLSelectElement && control.name === 'reason_code') {
+			syncReason(form, control.value);
+		} else if (control instanceof HTMLSelectElement && (control.name === 'resolution' || control.name === 'duration_hours')) {
+			syncChoice(form, control.name, control.value);
+		} else if (control instanceof HTMLInputElement && control.type === 'radio' && (control.name === 'basis' || control.name === 'limit' || control.name === 'source')) {
+			syncChoice(form, control.name, control.value);
+		}
+	});
+})();
 "#;

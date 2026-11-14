@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {MORE_OPTIONS_DESCRIPTOR, WATCH_STREAM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	ChangeStreamIcon,
 	LocalMuteIcon,
@@ -22,7 +23,6 @@ import {
 } from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import type {
 	MenuCheckboxType,
 	MenuGroupType,
@@ -31,12 +31,13 @@ import type {
 	MenuSubmenuItemType,
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {copyVoiceDiagnostics} from '@app/features/voice/commands/VoiceDiagnosticsCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {changeActiveScreenShare, stopActiveScreenShare} from '@app/features/voice/components/ActiveScreenShareMenu';
-import {openScreenSharePreviewPrivacyModal} from '@app/features/voice/components/modals/ScreenSharePickerModal';
+import {openScreenSharePreviewPrivacyModal} from '@app/features/voice/components/LazyVoiceComponents';
 import {COPY_STATS_JSON_DESCRIPTOR} from '@app/features/voice/components/StatsForNerdsCopyDescriptors';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import PopoutWindowManager, {isVoicePopoutSupported} from '@app/features/voice/state/PopoutWindowManager';
 import StreamAudioPrefs from '@app/features/voice/state/StreamAudioPrefs';
@@ -155,7 +156,7 @@ function buildStreamAudioActions(
 			checked: isStreamMuted,
 			onChange: (checked: boolean) => {
 				StreamAudioPrefs.setMuted(source.streamKey, checked);
-				MediaEngine.applyLocalAudioPreferencesForUser(userId);
+				VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(userId);
 			},
 		},
 		{
@@ -165,9 +166,9 @@ function buildStreamAudioActions(
 			maxValue: 200,
 			onChange: (value: number) => {
 				StreamAudioPrefs.setVolume(source.streamKey, value);
-				MediaEngine.applyLocalAudioPreferencesForUser(userId);
+				VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(userId);
 			},
-			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
+			onFormat: (value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 			factoryDefaultValue: 100,
 		},
 	];
@@ -223,7 +224,7 @@ function buildStreamMoreOptions(options: VoiceParticipantStreamMenuBuilderOption
 				onChange: (checked: boolean) => VoiceSettingsCommands.update({showMyOwnScreenShare: checked}),
 			},
 			{
-				label: i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR),
+				label: i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR, {productName: RuntimeConfig.productName}),
 				checked: pauseOwnScreenSharePreviewOnUnfocus,
 				onChange: (checked: boolean) => VoiceSettingsCommands.update({pauseOwnScreenSharePreviewOnUnfocus: checked}),
 			},
@@ -233,7 +234,7 @@ function buildStreamMoreOptions(options: VoiceParticipantStreamMenuBuilderOption
 				label: i18n._(SCREEN_SHARE_PRIVACY_DESCRIPTOR),
 				onClick: () => {
 					onClose();
-					openScreenSharePreviewPrivacyModal();
+					void openScreenSharePreviewPrivacyModal();
 				},
 			});
 		}
@@ -281,11 +282,11 @@ interface VoiceParticipantOwnStreamMenuTailProps {
 export const VoiceParticipantOwnStreamMenuTail: React.FC<VoiceParticipantOwnStreamMenuTailProps> = observer(
 	({userId, guildId, connectionId, displayName, onClose}) => {
 		const {i18n} = useLingui();
-		const connectionVoiceState = connectionId ? MediaEngine.getVoiceStateByConnectionId(connectionId) : null;
+		const connectionVoiceState = connectionId ? VoiceRuntime.getVoiceStateByConnectionId(connectionId) : null;
 		const channelId = connectionVoiceState?.channel_id ?? null;
 		const participantIdentity = connectionId ? buildVoiceParticipantIdentity(userId, connectionId) : '';
 		const canPopOut = Boolean(
-			connectionId && channelId && participantIdentity && MediaEngine.connectionId && isVoicePopoutSupported(),
+			connectionId && channelId && participantIdentity && VoiceRuntime.connectionId && isVoicePopoutSupported(),
 		);
 		return (
 			<>
@@ -335,13 +336,13 @@ export const VoiceParticipantOwnStreamMenuTail: React.FC<VoiceParticipantOwnStre
 									}
 									data-flx="ui.action-menu.items.voice-participant-stream-menu-builder.voice-participant-own-stream-menu-tail.checkbox-item--2"
 								>
-									{i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR)}
+									{i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 								</CheckboxItem>
 								{guildId === undefined && (
 									<MenuItem
 										onClick={() => {
 											onClose();
-											openScreenSharePreviewPrivacyModal();
+											void openScreenSharePreviewPrivacyModal();
 										}}
 										data-flx="ui.action-menu.items.voice-participant-stream-menu-builder.voice-participant-own-stream-menu-tail.menu-item.close"
 									>

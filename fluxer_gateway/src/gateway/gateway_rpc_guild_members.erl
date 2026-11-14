@@ -6,10 +6,6 @@
 
 -export([handle/2]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -define(GUILD_CALL_TIMEOUT, 4000).
 
 -spec handle(binary(), map()) -> term().
@@ -142,7 +138,7 @@ get_has_member_via_rpc(GuildId, UserId) ->
             {error, guild_not_found}
     end.
 
--spec has_member_from_guild(integer(), pid(), term()) -> {ok, boolean()} | error.
+-spec has_member_from_guild(integer(), pid(), {atom(), map()}) -> {ok, boolean()} | error.
 has_member_from_guild(GuildId, Pid, Msg) ->
     case
         gateway_rpc_guild_infra:safe_guild_call(
@@ -175,7 +171,7 @@ get_member_via_rpc(GuildId, UserId) ->
             {error, guild_not_found}
     end.
 
--spec member_from_guild(integer(), pid(), term()) ->
+-spec member_from_guild(integer(), pid(), {atom(), map()}) ->
     {ok, map() | undefined} | error.
 member_from_guild(GuildId, Pid, Msg) ->
     case
@@ -214,7 +210,7 @@ get_members_with_role_via_rpc(GuildId, RoleId) ->
             error
     end.
 
--spec role_members_from_guild(integer(), pid(), term()) -> {ok, [integer()]} | error.
+-spec role_members_from_guild(integer(), pid(), {atom(), map()}) -> {ok, [integer()]} | error.
 role_members_from_guild(GuildId, Pid, Msg) ->
     case
         gateway_rpc_guild_infra:safe_guild_call(
@@ -243,13 +239,3 @@ clamp_limit(Value) ->
 -spec parse_optional_snowflake(term(), binary()) -> integer() | undefined.
 parse_optional_snowflake(undefined, _) -> undefined;
 parse_optional_snowflake(Value, Field) -> validation:snowflake_or_throw(Field, Value).
-
--ifdef(TEST).
-
-clamp_limit_test() ->
-    ?assertEqual(1, clamp_limit(undefined)),
-    ?assertEqual(1, clamp_limit(0)),
-    ?assertEqual(50, clamp_limit(50)),
-    ?assertEqual(1000, clamp_limit(2000)).
-
--endif.

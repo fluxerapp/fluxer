@@ -37,15 +37,17 @@ import type {
 	AuditLogDomainResult,
 	AuditLogPlaceholder,
 	AuditLogPresentationContext,
-	AuditLogSentence,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
 import {
 	actorPlaceholder,
+	namePlaceholder,
 	readChange,
 	readNumber,
 	readOption,
 	readSnowflake,
 	readString,
+	summaryOnly,
+	textPlaceholder,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import type {GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import type {MessageDescriptor} from '@lingui/core';
@@ -53,18 +55,6 @@ import type {MessageDescriptor} from '@lingui/core';
 interface NameChange {
 	oldName: string;
 	newName: string;
-}
-
-function summaryOnly(summary: AuditLogSentence): AuditLogDomainResult {
-	return {summary, rows: [], blocks: []};
-}
-
-function namePlaceholder(value: string): AuditLogPlaceholder {
-	return {kind: 'name', value};
-}
-
-function textPlaceholder(value: string): AuditLogPlaceholder {
-	return {kind: 'text', value};
 }
 
 function readOldString(entry: GuildAuditLogEntryResponse, key: string): string | null {

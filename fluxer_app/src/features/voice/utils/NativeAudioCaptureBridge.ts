@@ -22,19 +22,29 @@ import {
 	nativeAudioRoutingRulesEqual,
 	patchTrackStopForCleanup,
 	replaceStreamAudioTrack,
+	selectWindowsDesktopAudioStart,
 	shouldMixSelfWindowAudioIntoSystemCapture,
 	unsupportedPlatformAvailability,
+	type WindowsDesktopAudioSelection,
+	windowsEndpointsEqual,
 } from '@app/features/voice/utils/native_audio_capture_bridge/shared';
-import type {ScreenShareAudioCaptureDebugInfo} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
 import {
-	acquireSelfWindowScreenShareAudioTrack,
-	releaseSelfWindowScreenShareAudioTrack,
-} from '@app/features/voice/utils/SelfWindowScreenShareAudio';
+	type ScreenShareAudioCaptureDebugInfo,
+	ScreenShareAudioCaptureError,
+} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
+import {releaseSelfWindowScreenShareAudioTrack} from '@app/features/voice/utils/SelfWindowScreenShareAudio';
 import {
 	type MixedSelfWindowAudioTrack,
 	mixTrackWithSelfWindowScreenShareAudio,
 } from '@app/features/voice/utils/SelfWindowScreenShareAudioMix';
-import type {NativeAudioAvailability, NativeAudioStartOptions, NativeAudioStartResult} from '@app/types/electron.d';
+import type {
+	ElectronAPI,
+	NativeAudioApi,
+	NativeAudioAvailability,
+	NativeAudioPlaybackDevice,
+	NativeAudioStartOptions,
+	NativeAudioStartResult,
+} from '@app/types/electron.d';
 
 const logger = new Logger('NativeAudioCaptureBridge');
 
@@ -54,9 +64,9 @@ interface NativeAudioStartedCaptureDiagnostic {
 	sourceMode?: 'system' | 'specific';
 	targetPid?: number;
 	linuxRule?: NativeAudioStartOptions['linuxRule'];
-	macBackend?: NativeAudioStartOptions['macBackend'];
 	macCaptureScope?: NativeAudioStartOptions['macCaptureScope'];
 	winCaptureScope?: NativeAudioStartOptions['winCaptureScope'];
+	winEndpoints?: Array<string>;
 	includeSelfWindowAudio?: boolean;
 }
 
@@ -70,6 +80,7 @@ interface NativeAudioLifecycleFaultDiagnostic {
 const MAX_RETAINED_LIFECYCLE_FAULTS = 8;
 
 let lastStartedCapture: NativeAudioStartedCaptureDiagnostic | null = null;
+let lastPlaybackDeviceListing: {atMs: number; devices: Array<NativeAudioPlaybackDevice>} | null = null;
 let sourceLifecycleBridge: VoiceEngineV2AppSourceLifecycleBridge | null = null;
 let lifecycleFaults: Array<NativeAudioLifecycleFaultDiagnostic> = [];
 const lifecycleBoundCaptureIds = new Set<string>();
@@ -118,6 +129,19 @@ function unbindNativeAudioCaptureLifecycle(captureId: string, fault: string | nu
 	lifecycleBoundCaptureIds.delete(captureId);
 }
 
+function nativeAudioUnavailableReason(
+	electronApi: ElectronAPI | null,
+	nativeAudioApi: NativeAudioApi | undefined,
+): string {
+	if (!electronApi) {
+		return 'electron-api-unavailable';
+	}
+	if (!nativeAudioApi) {
+		return 'native-audio-api-unavailable';
+	}
+	return 'unsupported-platform';
+}
+
 function setLastArmFailure(debugInfo: ScreenShareAudioCaptureDebugInfo): void {
 	lastArmFailure = debugInfo;
 }
@@ -149,21 +173,35 @@ function summarizeArmedCapture(capture: ArmedNativeAudioCapture | null): Record<
 			includeSelfWindowAudio: capture.includeSelfWindowAudio,
 		};
 	}
-	if (capture.kind === 'capture') {
-		return {
-			kind: capture.kind,
-			captureId: capture.captureId,
-			includeSelfWindowAudio: capture.includeSelfWindowAudio,
-		};
-	}
-	return {kind: capture.kind};
+	return {
+		kind: capture.kind,
+		captureId: capture.captureId,
+		includeSelfWindowAudio: capture.includeSelfWindowAudio,
+		winEndpoints: capture.winEndpoints ? [...capture.winEndpoints] : undefined,
+	};
 }
 
 function rememberStartedCapture(capture: NativeAudioStartedCaptureDiagnostic): void {
 	lastStartedCapture = {
 		...capture,
 		linuxRule: cloneLinuxRule(capture.linuxRule),
+		winEndpoints: capture.winEndpoints ? [...capture.winEndpoints] : undefined,
 	};
+}
+
+export async function refreshWindowsPlaybackDeviceListing(): Promise<Array<NativeAudioPlaybackDevice>> {
+	const nativeAudioApi = getNativeAudioApi();
+	if (getElectronAPI()?.platform !== 'win32' || typeof nativeAudioApi?.listPlaybackDevices !== 'function') {
+		return [];
+	}
+	try {
+		const devices = await nativeAudioApi.listPlaybackDevices();
+		lastPlaybackDeviceListing = {atMs: Date.now(), devices};
+		return devices;
+	} catch (error) {
+		logger.warn('Failed to list Windows playback devices', {error});
+		return [];
+	}
 }
 
 type CapturedDisplayAudioDiagnostic = {
@@ -198,7 +236,12 @@ export function getNativeAudioCaptureDiagnosticState(): Record<string, unknown> 
 		: null;
 	return {
 		armedCapture: summarizeArmedCapture(armedCapture),
-		activeBridge: activeBridge ? {captureId: activeBridge.captureId} : null,
+		activeBridge: activeBridge
+			? {
+					captureId: activeBridge.captureId,
+					winEndpoints: activeBridge.winEndpoints ? [...activeBridge.winEndpoints] : undefined,
+				}
+			: null,
 		supersededBridge: supersededBridge ? {captureId: supersededBridge.captureId} : null,
 		lastStartedCapture: started,
 		lastArmFailure: getLastNativeAudioArmFailure(),
@@ -206,6 +249,15 @@ export function getNativeAudioCaptureDiagnosticState(): Record<string, unknown> 
 		endedBridgeCaptures: getEndedBridgeCaptures(),
 		lifecycleFaults: lifecycleFaults.map((fault) => ({...fault})),
 		capturedDisplayAudio: lastCapturedDisplayAudio ? {...lastCapturedDisplayAudio} : null,
+		lastPlaybackDeviceListing: lastPlaybackDeviceListing
+			? {
+					atMs: lastPlaybackDeviceListing.atMs,
+					devices: lastPlaybackDeviceListing.devices.map((device) => ({
+						...device,
+						sessions: device.sessions.map((session) => ({...session})),
+					})),
+				}
+			: null,
 	};
 }
 
@@ -246,10 +298,6 @@ function cleanupManagedBridgeById(
 }
 
 async function stopArmedCapture(capture: ArmedNativeAudioCapture, logContext: string): Promise<void> {
-	if (capture.kind === 'self-window-web-audio') {
-		releaseSelfWindowScreenShareAudioTrack();
-		return;
-	}
 	if (capture.kind !== 'capture') return;
 	await getNativeAudioApi()
 		?.stop(capture.captureId)
@@ -308,7 +356,7 @@ async function createNativeAudioBridge(captureId: string): Promise<NativeAudioBr
 	if (getGeneratorCtor() && getAudioDataCtor()) {
 		return createGeneratorBridge(captureId, (id) => cleanupManagedBridgeById(id, false, 'remote end'));
 	}
-	logger.info('Falling back to ScriptProcessor native-audio bridge');
+	logger.debug('Falling back to ScriptProcessor native-audio bridge');
 	return createScriptProcessorBridge(captureId, (id) => cleanupManagedBridgeById(id, false, 'remote end'));
 }
 
@@ -350,11 +398,7 @@ async function startLinuxNativeAudioCapture(
 	if (electronApi?.platform !== 'linux' || !nativeAudioApi) {
 		setLastArmFailure({
 			platform: electronApi?.platform,
-			reason: !electronApi
-				? 'electron-api-unavailable'
-				: !nativeAudioApi
-					? 'native-audio-api-unavailable'
-					: 'unsupported-platform',
+			reason: nativeAudioUnavailableReason(electronApi, nativeAudioApi),
 		});
 		logger.warn('Cannot start Linux native audio capture: native audio API unavailable', {
 			hasElectronApi: Boolean(electronApi),
@@ -420,40 +464,6 @@ function installPatchIfNeeded(): void {
 		}
 		if (pendingCapture && armedCapture === pendingCapture) {
 			armedCapture = null;
-			if (pendingCapture.kind === 'self-window-web-audio') {
-				const track = acquireSelfWindowScreenShareAudioTrack();
-				if (track) {
-					const cleanupListeners: Array<() => void> = [];
-					const restoreStops: Array<() => void> = [];
-					let cleanedUpSelf = false;
-					const cleanupSelf = (): void => {
-						if (cleanedUpSelf) return;
-						cleanedUpSelf = true;
-						for (const removeListener of cleanupListeners.splice(0)) {
-							removeListener();
-						}
-						for (const restoreStop of restoreStops.splice(0)) {
-							restoreStop();
-						}
-						releaseSelfWindowScreenShareAudioTrack(track);
-					};
-					try {
-						await replaceStreamAudioTrack(stream, track);
-						for (const otherTrack of [...stream.getVideoTracks(), track]) {
-							const onEnded = (): void => cleanupSelf();
-							otherTrack.addEventListener('ended', onEnded);
-							cleanupListeners.push(() => otherTrack.removeEventListener('ended', onEnded));
-							restoreStops.push(patchTrackStopForCleanup(otherTrack, cleanupSelf));
-						}
-					} catch (error) {
-						logger.warn('Failed to attach self-window screen-share audio tap; degrading to video-only', {error});
-						cleanupSelf();
-					}
-				} else {
-					logger.warn('Self-window screen-share audio tap unavailable; degrading to video-only');
-				}
-				return stream;
-			}
 			let handle: NativeAudioBridgeHandle | null = null;
 			let captureId = getArmedCaptureId(pendingCapture);
 			try {
@@ -468,19 +478,20 @@ function installPatchIfNeeded(): void {
 					return stream;
 				}
 				const previousBridge = activeBridge;
-				handle =
-					(pendingCapture.kind === 'capture' || pendingCapture.kind === 'linux-routing') &&
-					pendingCapture.includeSelfWindowAudio
-						? await createNativeAudioBridgeWithSelfWindowAudio(captureId)
-						: await createNativeAudioBridge(captureId);
+				handle = pendingCapture.includeSelfWindowAudio
+					? await createNativeAudioBridgeWithSelfWindowAudio(captureId)
+					: await createNativeAudioBridge(captureId);
 				await replaceStreamAudioTrack(stream, handle.track);
 				const cleanup = attachNativeAudioCleanup(stream, captureId, handle);
-				activeBridge = {captureId, cleanup};
+				activeBridge =
+					pendingCapture.kind === 'capture' && pendingCapture.winEndpoints
+						? {captureId, cleanup, winEndpoints: [...pendingCapture.winEndpoints]}
+						: {captureId, cleanup};
 				if (previousBridge && previousBridge.captureId !== captureId) {
 					supersededBridge = previousBridge;
 				}
 			} catch (error) {
-				logger.warn('Failed to substitute native audio capture into display stream; degrading to video-only', {
+				logger.warn('Failed to substitute native audio capture into display stream; stopping the capture', {
 					captureId,
 					error,
 				});
@@ -501,6 +512,15 @@ function installPatchIfNeeded(): void {
 							});
 						});
 				}
+				for (const track of stream.getTracks()) {
+					track.stop();
+				}
+				throw new ScreenShareAudioCaptureError({
+					captureId,
+					platform: getElectronAPI()?.platform ?? null,
+					reason: 'native-audio-substitution-failed',
+					detail: getNativeAudioErrorDetail(error),
+				});
 			}
 		}
 		return stream;
@@ -559,7 +579,7 @@ function rejectUnverifiedSystemSelfExclusion(
 	logger.warn(`${context}: self-audio exclusion is not verified`, {availability});
 }
 
-export async function isNativeAudioAvailable(): Promise<boolean> {
+async function isNativeAudioAvailable(): Promise<boolean> {
 	const availability = await getNativeAudioAvailabilityCached();
 	return availability.available;
 }
@@ -571,11 +591,7 @@ export async function armNativeAudioForNextCapture(sourceId: string): Promise<bo
 		setLastArmFailure({
 			platform: electronApi?.platform,
 			sourceId,
-			reason: !electronApi
-				? 'electron-api-unavailable'
-				: !nativeAudioApi
-					? 'native-audio-api-unavailable'
-					: 'unsupported-platform',
+			reason: nativeAudioUnavailableReason(electronApi, nativeAudioApi),
 		});
 		logger.warn('Cannot arm per-window audio capture: not a supported desktop platform', {
 			hasElectronApi: Boolean(electronApi),
@@ -661,7 +677,9 @@ export async function armNativeAudioForNextCapture(sourceId: string): Promise<bo
 	return true;
 }
 
-export async function armNativeSystemAudioForNextCapture(): Promise<boolean> {
+export async function armNativeSystemAudioForNextCapture(
+	windowsAudio: WindowsDesktopAudioSelection = {all: true, devices: []},
+): Promise<boolean> {
 	const electronApi = getElectronAPI();
 	const nativeAudioApi = electronApi?.nativeAudio;
 	const supported = electronApi?.platform === 'darwin' || electronApi?.platform === 'win32';
@@ -669,11 +687,7 @@ export async function armNativeSystemAudioForNextCapture(): Promise<boolean> {
 		setLastArmFailure({
 			platform: electronApi?.platform,
 			sourceMode: 'system',
-			reason: !electronApi
-				? 'electron-api-unavailable'
-				: !nativeAudioApi
-					? 'native-audio-api-unavailable'
-					: 'unsupported-platform',
+			reason: nativeAudioUnavailableReason(electronApi, nativeAudioApi),
 		});
 		logger.warn('Cannot arm native system audio capture: native audio API unavailable', {
 			hasElectronApi: Boolean(electronApi),
@@ -699,12 +713,7 @@ export async function armNativeSystemAudioForNextCapture(): Promise<boolean> {
 		return false;
 	}
 	const includeSelfWindowAudio = shouldMixSelfWindowAudioIntoSystemCapture(availability);
-	const winCaptureScope =
-		electronApi.platform === 'win32' &&
-		availability.capabilities?.processExclude === false &&
-		availability.capabilities?.sessionMixer === true
-			? 'session-mixer'
-			: 'system';
+	const windowsStart = selectWindowsDesktopAudioStart(windowsAudio, availability);
 	if (armedCapture) {
 		await stopArmedCapture(armedCapture, 'new system capture arm');
 		armedCapture = null;
@@ -725,12 +734,9 @@ export async function armNativeSystemAudioForNextCapture(): Promise<boolean> {
 			includeProcessTree: electronApi.platform !== 'win32',
 			...(electronApi.platform === 'darwin'
 				? {
-						macBackend: 'sck' as const,
 						macCaptureScope: 'system' as const,
 					}
-				: {
-						winCaptureScope,
-					}),
+				: windowsStart),
 		});
 		rememberStartedCapture({
 			captureId: result.captureId,
@@ -739,12 +745,9 @@ export async function armNativeSystemAudioForNextCapture(): Promise<boolean> {
 			sourceMode: 'system',
 			...(electronApi.platform === 'darwin'
 				? {
-						macBackend: 'sck' as const,
 						macCaptureScope: 'system' as const,
 					}
-				: {
-						winCaptureScope,
-					}),
+				: windowsStart),
 			includeSelfWindowAudio,
 		});
 	} catch (error) {
@@ -763,7 +766,11 @@ export async function armNativeSystemAudioForNextCapture(): Promise<boolean> {
 		kind: 'capture',
 		captureId: result.captureId,
 		includeSelfWindowAudio,
+		...(windowsStart.winEndpoints ? {winEndpoints: windowsStart.winEndpoints} : {}),
 	};
+	if (windowsStart.winEndpoints) {
+		void refreshWindowsPlaybackDeviceListing();
+	}
 	return true;
 }
 
@@ -776,11 +783,7 @@ export async function armNativeAudioForLinuxRouting(
 	if (electronApi?.platform !== 'linux' || !nativeAudioApi) {
 		setLastArmFailure({
 			platform: electronApi?.platform,
-			reason: !electronApi
-				? 'electron-api-unavailable'
-				: !nativeAudioApi
-					? 'native-audio-api-unavailable'
-					: 'unsupported-platform',
+			reason: nativeAudioUnavailableReason(electronApi, nativeAudioApi),
 		});
 		logger.warn('Cannot arm Linux native audio capture: native audio API unavailable', {
 			hasElectronApi: Boolean(electronApi),
@@ -831,11 +834,7 @@ export async function captureNativeAudioTrackForWindowPid(targetPid: number): Pr
 		setLastArmFailure({
 			platform: electronApi?.platform,
 			sourceMode: 'specific',
-			reason: !electronApi
-				? 'electron-api-unavailable'
-				: !nativeAudioApi
-					? 'native-audio-api-unavailable'
-					: 'unsupported-platform',
+			reason: nativeAudioUnavailableReason(electronApi, nativeAudioApi),
 		});
 		logger.warn('Cannot capture native window audio track: native audio API unavailable', {
 			hasElectronApi: Boolean(electronApi),
@@ -892,7 +891,7 @@ export async function captureNativeAudioTrackForWindowPid(targetPid: number): Pr
 			detail,
 		});
 		if (refusedSelf) {
-			logger.info('Native window audio capture refused for Fluxer-owned process', {targetPid, detail});
+			logger.debug('Native window audio capture refused for Fluxer-owned process', {targetPid, detail});
 		} else {
 			logger.warn('Cannot capture native window audio track: native audio start failed', {error, targetPid});
 		}
@@ -940,12 +939,12 @@ export async function captureNativeAudioTrackForWindowPid(targetPid: number): Pr
 	}
 }
 
-export type LinuxNativeAudioReconfigureResult = 'unchanged' | 'updated' | 'unsupported';
+export type NativeAudioReconfigureResult = 'unchanged' | 'updated' | 'unsupported';
 
 export async function reconfigureLinuxNativeAudioRouting(
 	linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>,
 	options: {includeSelfWindowAudio?: boolean} = {},
-): Promise<LinuxNativeAudioReconfigureResult> {
+): Promise<NativeAudioReconfigureResult> {
 	const bridge = activeBridge;
 	if (!bridge) return 'unsupported';
 	if (bridge.linuxRule === undefined) return 'unsupported';
@@ -967,6 +966,34 @@ export async function reconfigureLinuxNativeAudioRouting(
 	if (activeBridge !== bridge) return 'unsupported';
 	activeBridge = {...bridge, linuxRule};
 	return 'updated';
+}
+
+export async function reconfigureWindowsDesktopAudioEndpoints(
+	endpoints: Array<string>,
+): Promise<NativeAudioReconfigureResult> {
+	const bridge = activeBridge;
+	if (!bridge?.winEndpoints) return 'unsupported';
+	if (windowsEndpointsEqual(bridge.winEndpoints, endpoints)) return 'unchanged';
+	const nativeAudioApi = getNativeAudioApi();
+	if (typeof nativeAudioApi?.setWinEndpoints !== 'function') return 'unsupported';
+	let applied = false;
+	try {
+		applied = await nativeAudioApi.setWinEndpoints(bridge.captureId, endpoints);
+	} catch (error) {
+		logger.warn('Failed to change Windows desktop audio devices in place', {
+			captureId: bridge.captureId,
+			error,
+		});
+		return 'unsupported';
+	}
+	if (!applied) return 'unsupported';
+	if (activeBridge !== bridge) return 'unsupported';
+	activeBridge = {...bridge, winEndpoints: [...endpoints]};
+	return 'updated';
+}
+
+export function getActiveWindowsDesktopAudioEndpoints(): Array<string> | null {
+	return activeBridge?.winEndpoints ? [...activeBridge.winEndpoints] : null;
 }
 
 export async function captureNativeAudioTrackForLinuxRouting(

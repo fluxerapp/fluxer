@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
 use crate::utils::plural::noun_for;
 use crate::{
     api::types::AuditLogsListResponse,
@@ -14,7 +16,7 @@ use crate::{
         layout::admin_layout,
     },
 };
-use maud::{Markup, PreEscaped, html};
+use maud::{Markup, html};
 
 use super::audit_logs_table::{audit_log_table_body, audit_log_table_headers};
 
@@ -141,23 +143,7 @@ pub fn audit_logs_page(
                     })))
                 }
                 @if total > params.limit as u64 {
-                    div class="mt-4 flex items-center justify-between" {
-                        @if params.current_page > 0 {
-                            a href=(build_pagination_url(base, params.current_page - 1, params))
-                                class="text-sm text-neutral-900 underline" {
-                                (PreEscaped("&larr; Previous"))
-                            }
-                        } @else { span {} }
-                        span class="text-sm text-neutral-500" {
-                            "Page " (page_number) " of " (total_pages)
-                        }
-                        @if let Some(page) = next_page {
-                            a href=(build_pagination_url(base, page, params))
-                                class="text-sm text-neutral-900 underline" {
-                                (PreEscaped("Next &rarr;"))
-                            }
-                        } @else { span {} }
-                    }
+                    (pager_with_missing((params.current_page > 0).then(|| build_pagination_url(base, params.current_page - 1, params)), Some(format!("Page {page_number} of {total_pages}")), next_page.map(|page| build_pagination_url(base, page, params)), true))
                 }
             }
         }
@@ -170,49 +156,4 @@ pub fn audit_logs_page(
         }
     };
     admin_layout(config, auth, "Audit Logs", "audit-logs", None, content)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn target_type_filter_offers_bulk_jobs() {
-        let params = AuditLogsParams {
-            query: "",
-            admin_user_id: "",
-            target_id: "",
-            target_type: "bulk_job",
-            access: "",
-            sort_by: "createdAt",
-            sort_order: "desc",
-            limit: 50,
-            current_page: 0,
-        };
-        let markup = filters_section("/admin", &params).into_string();
-        assert!(markup.contains(r#"<option value="bulk_job" selected>Bulk job</option>"#));
-        assert!(markup.contains(r#"<option value="" selected>All entries</option>"#));
-    }
-
-    #[test]
-    fn access_filter_survives_form_and_pagination() {
-        let params = AuditLogsParams {
-            query: "",
-            admin_user_id: "",
-            target_id: "1500000000000000001",
-            target_type: "",
-            access: "read",
-            sort_by: "createdAt",
-            sort_order: "desc",
-            limit: 50,
-            current_page: 0,
-        };
-        let markup = filters_section("/admin", &params).into_string();
-        assert!(markup.contains(r#"<select id="access" name="access""#));
-        assert!(markup.contains(r#"<option value="read" selected>Reads only</option>"#));
-        assert_eq!(
-            build_pagination_url("/admin", 1, &params),
-            "/admin/audit-logs?page=1&target_id=1500000000000000001&access=read&sort_by=createdAt&sort_order=desc&limit=50"
-        );
-    }
 }

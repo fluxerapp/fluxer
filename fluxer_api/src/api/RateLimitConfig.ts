@@ -6,10 +6,12 @@ import {ChannelRateLimitConfigs} from '@app/api/rate_limit_configs/ChannelRateLi
 import {DiscoveryRateLimitConfigs} from '@app/api/rate_limit_configs/DiscoveryRateLimitConfig';
 import {DonationRateLimitConfigs} from '@app/api/rate_limit_configs/DonationRateLimitConfig';
 import {GuildRateLimitConfigs} from '@app/api/rate_limit_configs/GuildRateLimitConfig';
+import {GuildVisitRateLimitConfigs} from '@app/api/rate_limit_configs/GuildVisitRateLimitConfig';
 import {IntegrationRateLimitConfigs} from '@app/api/rate_limit_configs/IntegrationRateLimitConfig';
 import {InviteRateLimitConfigs} from '@app/api/rate_limit_configs/InviteRateLimitConfig';
 import {MiscRateLimitConfigs} from '@app/api/rate_limit_configs/MiscRateLimitConfig';
 import {OAuthRateLimitConfigs} from '@app/api/rate_limit_configs/OAuthRateLimitConfig';
+import {OperatorPassRateLimitConfigs} from '@app/api/rate_limit_configs/OperatorPassRateLimitConfig';
 import type {RateLimitSection} from '@app/api/rate_limit_configs/RateLimitHelpers';
 import {mergeRateLimitSections} from '@app/api/rate_limit_configs/RateLimitHelpers';
 import {StoreBillingRateLimitConfigs} from '@app/api/rate_limit_configs/StoreBillingRateLimitConfig';
@@ -23,7 +25,9 @@ const rateLimitSections = [
 	ChannelRateLimitConfigs,
 	DiscoveryRateLimitConfigs,
 	DonationRateLimitConfigs,
+	OperatorPassRateLimitConfigs,
 	GuildRateLimitConfigs,
+	GuildVisitRateLimitConfigs,
 	InviteRateLimitConfigs,
 	WebhookRateLimitConfigs,
 	IntegrationRateLimitConfigs,

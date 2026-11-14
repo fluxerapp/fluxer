@@ -21,7 +21,7 @@ export type AccountSwitcherAuthPurposeType =
 	(typeof AccountSwitcherAuthPurposeType)[keyof typeof AccountSwitcherAuthPurposeType];
 
 export type AccountSwitcherAuthPurpose =
-	| {readonly type: typeof AccountSwitcherAuthPurposeType.ADD}
+	| {readonly type: typeof AccountSwitcherAuthPurposeType.ADD; readonly instance: RuntimeConfigSnapshot | null}
 	| {readonly type: typeof AccountSwitcherAuthPurposeType.RELOGIN; readonly account: Account};
 
 export const AccountSwitcherAuthStep = Object.freeze({
@@ -54,14 +54,10 @@ export function getAccountSwitcherAuthStepLabel(step: AccountSwitcherAuthStep): 
 }
 
 export function getInitialRuntimeSnapshot(purpose: AccountSwitcherAuthPurpose): RuntimeConfigSnapshot | null {
-	if (purpose.type !== AccountSwitcherAuthPurposeType.RELOGIN) {
-		return null;
+	if (purpose.type === AccountSwitcherAuthPurposeType.ADD) {
+		return purpose.instance;
 	}
-	const instance = purpose.account.instance;
-	if (instance == null) {
-		return null;
-	}
-	return instance;
+	return purpose.account.instance ?? null;
 }
 
 export function getReloginIdentifier(purpose: AccountSwitcherAuthPurpose): string | null {

@@ -13,12 +13,13 @@ export type VoiceControlBarDeafenLabel = 'moderatorDeafened' | 'undeafen' | 'dea
 export type VoiceControlBarCameraLabel = 'noPermission' | 'limitReached' | 'userCapReached' | 'turnOff' | 'turnOn';
 export type VoiceControlBarScreenShareLabel = 'noPermission' | 'end' | 'start';
 
-export interface VoiceControlBarSignals {
+interface VoiceControlBarSignals {
 	isDeafened: boolean;
 	isGuildMuted: boolean;
 	isGuildDeafened: boolean;
 	isPermissionMuted: boolean;
 	isPushToTalkEffective: boolean;
+	isSelfMuted: boolean;
 	effectiveMuted: boolean;
 	canStream: boolean;
 	isCameraEnabled: boolean;
@@ -54,6 +55,7 @@ const DEFAULT_SIGNALS: VoiceControlBarSignals = {
 	isGuildDeafened: false,
 	isPermissionMuted: false,
 	isPushToTalkEffective: false,
+	isSelfMuted: false,
 	effectiveMuted: false,
 	canStream: true,
 	isCameraEnabled: false,
@@ -74,7 +76,7 @@ function selectMuteLabel(signals: VoiceControlBarSignals): VoiceControlBarMuteLa
 	if (signals.isGuildDeafened) return 'moderatorDeafened';
 	if (signals.isGuildMuted) return 'moderatorMuted';
 	if (signals.isPermissionMuted) return 'permissionMuted';
-	if (signals.isPushToTalkEffective) return 'pushToTalkHoldHint';
+	if (signals.isPushToTalkEffective && !signals.isSelfMuted) return 'pushToTalkHoldHint';
 	return signals.effectiveMuted ? 'unmute' : 'mute';
 }
 
@@ -97,11 +99,10 @@ function selectScreenShareLabel(signals: VoiceControlBarSignals): VoiceControlBa
 
 function selectVoiceControlBarState(signals: VoiceControlBarSignals): VoiceControlBarState {
 	const isMicLocked = signals.isGuildMuted || signals.isGuildDeafened || signals.isPermissionMuted;
-	const isMuteToggleLocked = isMicLocked || signals.isPushToTalkEffective;
 	return {
 		mute: {
-			disabled: isMuteToggleLocked,
-			pressed: signals.effectiveMuted,
+			disabled: isMicLocked,
+			pressed: signals.isPushToTalkEffective ? isMicLocked || signals.isSelfMuted : signals.effectiveMuted,
 			label: selectMuteLabel(signals),
 		},
 		deafen: {

@@ -147,14 +147,6 @@ export function createSnowflakeGenerator(options: SnowflakeGeneratorOptions = {}
 	return new SnowflakeGenerator(options);
 }
 
-export function setDefaultSnowflakeGenerator(options: SnowflakeGeneratorOptions = {}): void {
-	defaultGenerator = createSnowflakeGenerator(options);
-}
-
-export function resetDefaultSnowflakeGenerator(): void {
-	defaultGenerator = null;
-}
-
 export function generateSnowflake(workerIdOrOptions?: number | SnowflakeGeneratorOptions): bigint {
 	if (workerIdOrOptions !== undefined) {
 		return new SnowflakeGenerator(workerIdOrOptions).generate();
@@ -170,10 +162,6 @@ export function createSnowflake(options: CreateSnowflakeOptions): bigint {
 	const sequence = assertValidSequence(options.sequence ?? 0);
 	const relativeTimestamp = toRelativeTimestamp(options.timestamp);
 	return createSnowflakeBigInt(relativeTimestamp, workerId, sequence);
-}
-
-export function createSnowflakeFromTimestamp(timestamp: number | bigint, workerId = 0): bigint {
-	return createSnowflake({timestamp, workerId});
 }
 
 export function snowflakeToDate(snowflake: bigint): Date {
@@ -201,4 +189,8 @@ export function isValidSnowflake(value: unknown): value is bigint {
 		return false;
 	}
 	return true;
+}
+
+export function createSnowflakeFromTimestamp(timestamp: number | bigint, workerId = 0): bigint {
+	return createSnowflake({timestamp, workerId});
 }

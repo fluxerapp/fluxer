@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isOperatorPath, isOperatorRequest} from '@app/api/admin/operator/OperatorRequests';
+import {openAttachmentMediaToken} from '@app/api/attachment/AttachmentMediaToken';
+import {isAttachmentMediaRequest} from '@app/api/attachment/AttachmentPublicUrl';
 import * as AuthSession from '@app/api/auth/AuthSession';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {Logger} from '@app/api/Logger';
 import {hashRequestToken, recordAuthFailure} from '@app/api/middleware/RequestErrorTelemetry';
+import {getApplicationRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {isSignInRefused} from '@app/api/user/UserHelpers';
@@ -20,7 +25,11 @@ interface ParsedAuthHeader {
 
 const SKIP_PATHS = new Set([
 	'/_health',
+	'/admin/sso/sign-in',
 	'/webhooks/livekit',
+	'/voice/join/preview',
+	'/voice/join',
+	'/voice/node',
 	'/webhooks/sweego',
 	'/webhooks/app-store',
 	'/webhooks/google-play',
@@ -77,6 +86,23 @@ function setUserInContext(ctx: Context<HonoEnv>, user: User, trackActivity: bool
 	}
 }
 
+async function authenticateAttachmentMediaToken(ctx: Context<HonoEnv>): Promise<void> {
+	const token = ctx.req.query('mt');
+	if (!token) return;
+	const payload = openAttachmentMediaToken(token);
+	if (!payload) return;
+	const apiContext = ctx.get('apiContext');
+	const authSession = await apiContext.services.users.getAuthSessionByToken(Buffer.from(payload.s, 'base64url'));
+	if (!authSession || authSession.isExpiredSsoSession() || authSession.userId.toString() !== payload.u) return;
+	const user = await apiContext.services.users.findUnique(authSession.userId);
+	if (!user || isSignInRefused(user)) return;
+	ctx.set('authSession', authSession);
+	ctx.set('authTokenType', 'attachment_media');
+	ctx.set('attachmentMediaToken', payload);
+	ctx.set('clientFeatures', new Set(payload.f));
+	setUserInContext(ctx, user, false);
+}
+
 export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	const path = stripApiPrefix(ctx.req.path);
 	if (SKIP_PATHS.has(path)) {
@@ -85,15 +111,27 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	const rawAuthHeader = ctx.req.header('Authorization');
 	const parsed = parseAuthHeader(rawAuthHeader);
 	const resolvedClientIp = getRequestClientIp(ctx);
-	ctx.set('oauthBearerToken', undefined);
 	ctx.set('oauthBearerApplicationId', undefined);
 	ctx.set('oauthBearerAllowed', false);
 	ctx.set('oauthBearerScopes', undefined);
-	ctx.set('oauthBearerUserId', undefined);
 	ctx.set('authToken', undefined);
+	ctx.set('adminApiKeyId', null);
+	if (isOperatorRequest(ctx.req.raw)) {
+		if (isOperatorPath(path)) {
+			const operator = await ctx.get('apiContext').services.users.findUnique(SYSTEM_USER_ID);
+			if (operator) {
+				ctx.set('authTokenType', 'operator');
+				setUserInContext(ctx, operator, false);
+			}
+		}
+		await next();
+		return;
+	}
 	if (!parsed) {
 		if (rawAuthHeader) {
 			recordAuthFailure(resolvedClientIp, hashRequestToken(rawAuthHeader));
+		} else if (isAttachmentMediaRequest(ctx.req.method, ctx.req.path)) {
+			await authenticateAttachmentMediaToken(ctx);
 		}
 		return next();
 	}
@@ -106,7 +144,7 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 		if (authSession) {
 			const user = await apiContext.services.users.findUnique(authSession.userId);
 			if (user && !isSignInRefused(user)) {
-				void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash);
+				void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash, ctx.req.raw);
 				ctx.set('authSession', authSession);
 				ctx.set('authTokenType', 'session');
 				setUserInContext(ctx, user, true);
@@ -127,14 +165,15 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	if (type === 'bearer') {
 		const oauth2TokenRepository = ctx.get('oauth2TokenRepository');
 		const accessToken = await oauth2TokenRepository.getAccessToken(token);
-		const tokenUser = accessToken?.userId
-			? await ctx.get('apiContext').services.users.findUnique(accessToken.userId)
-			: null;
-		if (accessToken && !(tokenUser && isSignInRefused(tokenUser))) {
-			ctx.set('oauthBearerToken', token);
+		const [tokenUser, application] = accessToken
+			? await Promise.all([
+					ctx.get('apiContext').services.users.findUnique(accessToken.userId),
+					getApplicationRepository().getApplication(accessToken.applicationId),
+				])
+			: [null, null];
+		if (accessToken && application && !(tokenUser && isSignInRefused(tokenUser))) {
 			ctx.set('oauthBearerApplicationId', accessToken.applicationId);
 			ctx.set('oauthBearerScopes', accessToken.scope);
-			ctx.set('oauthBearerUserId', accessToken.userId ?? undefined);
 			ctx.set('authTokenType', 'bearer');
 			if (tokenUser) {
 				setUserInContext(ctx, tokenUser, false);
@@ -153,7 +192,7 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 			const botUser = await ctx.get('apiContext').services.users.findUnique(botUserId);
 			if (botUser) {
 				ctx.set('authTokenType', 'bot');
-				setUserInContext(ctx, botUser, false);
+				setUserInContext(ctx, botUser, true);
 			}
 		} else {
 			recordAuthFailure(resolvedClientIp, tokenHash);
@@ -171,11 +210,13 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 		const apiKey = await adminApiKeyService.validateApiKey(token);
 		if (apiKey) {
 			const user = await ctx.get('apiContext').services.users.findUnique(apiKey.createdById);
-			if (user) {
+			if (user && !isSignInRefused(user)) {
 				ctx.set('authTokenType', 'admin_api_key');
-				ctx.set('adminApiKey', apiKey);
 				ctx.set('adminApiKeyAcls', apiKey.acls);
+				ctx.set('adminApiKeyId', apiKey.keyId);
 				setUserInContext(ctx, user, false);
+			} else if (user) {
+				recordAuthFailure(resolvedClientIp, tokenHash);
 			}
 		} else {
 			recordAuthFailure(resolvedClientIp, tokenHash);

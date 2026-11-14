@@ -11,43 +11,31 @@
     hide_for_non_viewer/4
 ]).
 
--type guild_state() :: map().
-
--spec guild_threads(integer(), map(), map() | undefined, guild_state()) -> [map()].
+-spec guild_threads(integer(), map(), map() | undefined, map()) -> [map()].
 guild_threads(UserId, Opts, Member, State) ->
-    case guild_thread_gate:store(State) of
-        undefined ->
-            [];
-        Tab ->
-            case maps:get(bot, Opts, false) of
-                true -> bot_threads(UserId, Member, Tab, State);
-                false -> joined_threads(UserId, Member, Tab, State)
-            end
+    case {guild_thread_gate:store(State), maps:get(bot, Opts, false)} of
+        {undefined, _Bot} -> [];
+        {Tab, true} -> bot_threads(UserId, Member, Tab, State);
+        {Tab, false} -> joined_threads(UserId, Member, Tab, State);
+        {_Tab, Bot} -> error({case_clause, Bot})
     end.
 
--spec bot_threads(integer(), map() | undefined, ets:table(), guild_state()) -> [map()].
+-spec bot_threads(integer(), map() | undefined, ets:table(), map()) -> [map()].
 bot_threads(UserId, Member, Tab, State) ->
     [
         with_own_member(UserId, Thread, Tab)
      || Thread <- guild_thread_store:threads(Tab), can_view(UserId, Thread, Member, State)
     ].
 
--spec joined_threads(integer(), map() | undefined, ets:table(), guild_state()) -> [map()].
+-spec joined_threads(integer(), map() | undefined, ets:table(), map()) -> [map()].
 joined_threads(UserId, Member, Tab, State) ->
-    lists:filtermap(
-        fun(ThreadId) ->
-            case guild_thread_store:get_thread(Tab, ThreadId) of
-                undefined ->
-                    false;
-                Thread ->
-                    case can_view(UserId, Thread, Member, State) of
-                        true -> {true, with_own_member(UserId, Thread, Tab)};
-                        false -> false
-                    end
-            end
-        end,
-        guild_thread_store:user_thread_ids(Tab, UserId)
-    ).
+    [
+        with_own_member(UserId, Thread, Tab)
+     || ThreadId <- guild_thread_store:user_thread_ids(Tab, UserId),
+        Thread <- [guild_thread_store:get_thread(Tab, ThreadId)],
+        Thread =/= undefined,
+        can_view(UserId, Thread, Member, State)
+    ].
 
 -spec with_own_member(integer(), map(), ets:table()) -> map().
 with_own_member(UserId, Thread, Tab) ->
@@ -69,13 +57,13 @@ thread_payload(Thread) ->
 thread_id(Thread) ->
     snowflake_id:parse(maps:get(<<"id">>, Thread)).
 
--spec can_view(integer(), map(), map() | undefined, guild_state()) -> boolean().
+-spec can_view(integer(), map(), map() | undefined, map()) -> boolean().
 can_view(UserId, Thread, Member, State) ->
     Perms = guild_thread_permissions:resolve(UserId, Thread, Member, State),
-    permission_bits:has(Perms, constants:view_channel_permission()).
+    bitset:has(Perms, constants:view_channel_permission()).
 
 -spec viewable_thread_ids(
-    integer(), [integer()] | all | joined, map() | undefined, guild_state()
+    integer(), [integer()] | all | joined, map() | undefined, map()
 ) ->
     [{integer(), map()}].
 viewable_thread_ids(UserId, Parents, Member, State) ->
@@ -102,34 +90,27 @@ candidate_threads(Parents, _UserId, Tab) ->
 
 -spec stored_threads([integer()], ets:table()) -> [map()].
 stored_threads(ThreadIds, Tab) ->
-    lists:filtermap(
-        fun(ThreadId) ->
-            case guild_thread_store:get_thread(Tab, ThreadId) of
-                undefined -> false;
-                Thread -> {true, Thread}
-            end
-        end,
-        ThreadIds
-    ).
+    [
+        Thread
+     || ThreadId <- ThreadIds,
+        Thread <- [guild_thread_store:get_thread(Tab, ThreadId)],
+        Thread =/= undefined
+    ].
 
 -spec list_sync(
-    integer(), integer(), [integer()] | all | joined, map() | undefined, guild_state()
+    integer(), integer(), [integer()] | all | joined, map() | undefined, map()
 ) ->
     map().
 list_sync(GuildId, UserId, Parents, Member, State) ->
     Viewable = viewable_thread_ids(UserId, Parents, Member, State),
-    Members =
-        case guild_thread_gate:store(State) of
-            undefined ->
-                [];
-            Tab ->
-                [
-                    M
-                 || {ThreadId, _Thread} <- Viewable,
-                    M <- [guild_thread_store:get_member(Tab, ThreadId, UserId)],
-                    M =/= undefined
-                ]
-        end,
+    Tab = guild_thread_gate:store(State),
+    Members = [
+        M
+     || {ThreadId, _Thread} <- Viewable,
+        Tab =/= undefined,
+        M <- [guild_thread_store:get_member(Tab, ThreadId, UserId)],
+        M =/= undefined
+    ],
     Base = #{
         <<"guild_id">> => integer_to_binary(GuildId),
         <<"threads">> => [thread_payload(Thread) || {_Id, Thread} <- Viewable],
@@ -141,43 +122,39 @@ list_sync(GuildId, UserId, Parents, Member, State) ->
         _ -> Base#{<<"channel_ids">> => [integer_to_binary(P) || P <- Parents]}
     end.
 
--spec hide_for_non_viewer(integer(), map() | undefined, guild_state(), [map()]) -> [map()].
+-spec hide_for_non_viewer(integer(), map() | undefined, map(), [map()]) -> [map()].
 hide_for_non_viewer(UserId, Member, State, Channels) ->
-    Kept = [C || C <- Channels, not guild_thread_gate:is_thread_only_type(channel_type(C))],
+    Kept = [C || C <- Channels, not channel_types:is_thread_only(channel_type(C))],
     Visible =
         case length(Kept) =:= length(Channels) of
             true -> Kept;
             false -> drop_forum_only_categories(UserId, Member, State, Kept)
         end,
     [
-        guild_thread_gate:mask_overwrites(guild_thread_gate:strip_channel_surface(C))
+        guild_thread_payload:mask_overwrites(guild_thread_payload:strip_channel_surface(C))
      || C <- Visible
     ].
 
--spec drop_forum_only_categories(integer(), map() | undefined, guild_state(), [map()]) ->
+-spec drop_forum_only_categories(integer(), map() | undefined, map(), [map()]) ->
     [map()].
 drop_forum_only_categories(UserId, Member, State, Channels) ->
     Parents = sets:from_list([
         P
      || C <- Channels,
-        channel_type(C) =/= 4,
+        not channel_types:is_category(channel_type(C)),
         P <- [snowflake_id:parse_maybe(maps:get(<<"parent_id">>, C, undefined))],
         is_integer(P)
     ]),
     lists:filter(
         fun(C) ->
-            case
-                {channel_type(C), snowflake_id:parse_maybe(maps:get(<<"id">>, C, undefined))}
-            of
-                {4, Id} when is_integer(Id) ->
-                    sets:is_element(Id, Parents) orelse
-                        guild_permissions:can_view_channel_by_permissions(
-                            UserId, Id, Member, State
-                        ) orelse
-                        guild_virtual_channel_access:has_virtual_access(UserId, Id, State);
-                _ ->
-                    true
-            end
+            Type = channel_type(C),
+            Id = snowflake_id:parse_maybe(maps:get(<<"id">>, C, undefined)),
+            not channel_types:is_category(Type) orelse not is_integer(Id) orelse
+                sets:is_element(Id, Parents) orelse
+                guild_permissions_check:can_view_channel_by_permissions(
+                    UserId, Id, Member, State
+                ) orelse
+                guild_virtual_channel_access:has_virtual_access(UserId, Id, State)
         end,
         Channels
     ).

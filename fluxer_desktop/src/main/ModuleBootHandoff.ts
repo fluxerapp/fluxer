@@ -30,7 +30,6 @@ interface ModuleBootHandoffState {
 	mainWindowSignalled: boolean;
 	mainWindowReadySignalled: boolean;
 	mainWindow: BrowserWindow | null;
-	liveMainWindow: BrowserWindow | null;
 	onDemandModuleInstaller: OnDemandModuleInstaller | null;
 	mainWindowFactory: MainWindowFactory | null;
 	secondInstanceForwarding: boolean;
@@ -39,9 +38,12 @@ interface ModuleBootHandoffState {
 	openUrlForwarding: boolean;
 	openUrlSink: OpenUrlSink | null;
 	readonly bufferedOpenUrls: Array<string>;
+	quitGateArmed: boolean;
+	quitStarted: boolean;
+	moduleLaunchGranted: boolean;
+	startupWindowSettled: boolean;
 	readonly committedModuleFilesListeners: Set<CommittedModuleFilesListener>;
 	readonly mainWindowListeners: Set<MainWindowListener>;
-	readonly mainWindowObservers: Set<MainWindowListener>;
 	readonly mainWindowReadyListeners: Set<MainWindowReadyListener>;
 }
 
@@ -50,7 +52,6 @@ const handoffState: ModuleBootHandoffState = {
 	mainWindowSignalled: false,
 	mainWindowReadySignalled: false,
 	mainWindow: null,
-	liveMainWindow: null,
 	onDemandModuleInstaller: null,
 	mainWindowFactory: null,
 	secondInstanceForwarding: false,
@@ -59,9 +60,12 @@ const handoffState: ModuleBootHandoffState = {
 	openUrlForwarding: false,
 	openUrlSink: null,
 	bufferedOpenUrls: [],
+	quitGateArmed: false,
+	quitStarted: false,
+	moduleLaunchGranted: false,
+	startupWindowSettled: false,
 	committedModuleFilesListeners: new Set(),
 	mainWindowListeners: new Set(),
-	mainWindowObservers: new Set(),
 	mainWindowReadyListeners: new Set(),
 };
 
@@ -73,10 +77,45 @@ function deliverSecondInstance(sink: SecondInstanceSink, argv: Array<string>): v
 	}
 }
 
+function armQuitGate(): void {
+	if (handoffState.quitGateArmed) return;
+	handoffState.quitGateArmed = true;
+	app.once('before-quit', () => {
+		handoffState.quitStarted = true;
+		handoffState.bufferedSecondInstances.splice(0);
+		handoffState.bufferedOpenUrls.splice(0);
+	});
+}
+
+export function hasQuitStarted(): boolean {
+	return handoffState.quitStarted;
+}
+
+export function markModuleLaunchGranted(): void {
+	handoffState.moduleLaunchGranted = true;
+}
+
+export function isModuleLaunchGranted(): boolean {
+	return handoffState.moduleLaunchGranted;
+}
+
+export function isStartupWindowPending(): boolean {
+	return !handoffState.startupWindowSettled;
+}
+
+export function settleStartupWindow(): void {
+	handoffState.startupWindowSettled = true;
+}
+
 export function armSecondInstanceForwarding(): void {
 	if (handoffState.secondInstanceForwarding) return;
 	handoffState.secondInstanceForwarding = true;
+	armQuitGate();
 	app.on('second-instance', (_event, argv) => {
+		if (handoffState.quitStarted) {
+			logger.info('Ignoring a second instance launch because the app is quitting');
+			return;
+		}
 		const sink = handoffState.secondInstanceSink;
 		if (sink == null) {
 			handoffState.bufferedSecondInstances.push(argv);
@@ -103,6 +142,10 @@ function deliverOpenUrl(sink: OpenUrlSink, url: string): void {
 }
 
 function forwardOpenUrl(url: string): void {
+	if (handoffState.quitStarted) {
+		logger.info('Ignoring an opened link because the app is quitting');
+		return;
+	}
 	const sink = handoffState.openUrlSink;
 	if (sink == null) {
 		handoffState.bufferedOpenUrls.push(url);
@@ -114,6 +157,7 @@ function forwardOpenUrl(url: string): void {
 export function armOpenUrlForwarding(): void {
 	if (handoffState.openUrlForwarding) return;
 	handoffState.openUrlForwarding = true;
+	armQuitGate();
 	app.on('open-url', (event, url) => {
 		event.preventDefault();
 		forwardOpenUrl(url);
@@ -157,10 +201,6 @@ export function observeCommittedModuleFiles(listener: CommittedModuleFilesListen
 	};
 }
 
-export function getCommittedModuleFiles(): ReadonlyMap<string, string> {
-	return handoffState.committedModuleFileIndex.files;
-}
-
 export function setOnDemandModuleInstaller(installer: OnDemandModuleInstaller | null): void {
 	handoffState.onDemandModuleInstaller = installer;
 }
@@ -178,10 +218,12 @@ export function getMainWindowFactory(): MainWindowFactory | null {
 }
 
 export function signalMainWindowCreated(window: BrowserWindow | null): void {
-	handoffState.liveMainWindow = window;
+	handoffState.mainWindow = window;
+	window?.once('closed', () => {
+		if (handoffState.mainWindow === window) handoffState.mainWindow = null;
+	});
 	if (!handoffState.mainWindowSignalled) {
 		handoffState.mainWindowSignalled = true;
-		handoffState.mainWindow = window;
 		const listeners = Array.from(handoffState.mainWindowListeners);
 		handoffState.mainWindowListeners.clear();
 		for (const listener of listeners) {
@@ -192,13 +234,6 @@ export function signalMainWindowCreated(window: BrowserWindow | null): void {
 			}
 		}
 	}
-	for (const observer of Array.from(handoffState.mainWindowObservers)) {
-		try {
-			observer(window);
-		} catch (error) {
-			logger.error('A main window observer threw', error);
-		}
-	}
 }
 
 export function onMainWindowCreated(listener: MainWindowListener): void {
@@ -207,14 +242,6 @@ export function onMainWindowCreated(listener: MainWindowListener): void {
 		return;
 	}
 	handoffState.mainWindowListeners.add(listener);
-}
-
-export function observeMainWindow(observer: MainWindowListener): () => void {
-	handoffState.mainWindowObservers.add(observer);
-	observer(handoffState.liveMainWindow);
-	return () => {
-		handoffState.mainWindowObservers.delete(observer);
-	};
 }
 
 export function signalMainWindowReady(): void {

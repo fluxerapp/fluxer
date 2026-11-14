@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {validateResetPasswordToken} from '@app/features/auth/commands/AuthenticationCommands';
-import type {AuthRequestTarget} from '@app/features/auth/state/AuthRequestTarget';
+import type {InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 
 export type ResetPasswordTokenStatus = 'valid' | 'invalid';
 
@@ -15,7 +15,7 @@ let settled: SettledResetPasswordTokenCheck | null = null;
 
 export async function checkResetPasswordToken(
 	token: string,
-	target: AuthRequestTarget,
+	target: InstanceHTTPTarget,
 ): Promise<ResetPasswordTokenStatus> {
 	try {
 		return (await validateResetPasswordToken(token, target)) ? 'valid' : 'invalid';
@@ -24,16 +24,16 @@ export async function checkResetPasswordToken(
 	}
 }
 
-export async function warmResetPasswordTokenCheck(token: string, target: AuthRequestTarget): Promise<void> {
+export async function warmResetPasswordTokenCheck(token: string, target: InstanceHTTPTarget): Promise<void> {
 	const status = await checkResetPasswordToken(token, target);
-	settled = {token, instanceKey: target.http.instanceKey, status};
+	settled = {token, instanceKey: target.instanceKey, status};
 }
 
 export function peekSettledResetPasswordTokenCheck(
 	token: string,
-	target: AuthRequestTarget,
+	target: InstanceHTTPTarget,
 ): ResetPasswordTokenStatus | null {
-	if (settled === null || settled.token !== token || settled.instanceKey !== target.http.instanceKey) {
+	if (settled === null || settled.token !== token || settled.instanceKey !== target.instanceKey) {
 		return null;
 	}
 	return settled.status;
@@ -41,7 +41,7 @@ export function peekSettledResetPasswordTokenCheck(
 
 export function takeSettledResetPasswordTokenCheck(
 	token: string,
-	target: AuthRequestTarget,
+	target: InstanceHTTPTarget,
 ): ResetPasswordTokenStatus | null {
 	const status = peekSettledResetPasswordTokenCheck(token, target);
 	settled = null;

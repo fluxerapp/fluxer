@@ -3,9 +3,10 @@
 import Channels from '@app/features/channel/state/Channels';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
+import Messages from '@app/features/messaging/state/MessagingMessages';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 
 export interface PassiveUpdatesPayload {
 	guild_id: string;
@@ -20,10 +21,11 @@ export function handlePassiveUpdates(data: PassiveUpdatesPayload, _context: Gate
 		channels,
 	});
 	ReadStates.handlePassiveLastMessageUpdates(channels, data.guild_id);
+	Messages.handlePassiveLastMessageUpdates(channels);
 	if (changedChannels) {
 		QuickSwitcher.recomputeIfOpen();
 	}
 	if (voiceStates?.length) {
-		MediaEngine.handlePassiveVoiceStates(data.guild_id, voiceStates);
+		VoiceRuntime.handlePassiveVoiceStates(data.guild_id, voiceStates);
 	}
 }

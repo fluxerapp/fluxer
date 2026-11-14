@@ -86,6 +86,8 @@ type LabelSource = 'header' | 'screen-reader';
 
 export type ModalTransitionPreset = 'default' | 'instant' | 'quick' | 'profile-slide';
 
+export type ModalBackdropTone = 'default' | 'strong';
+
 export interface ModalProps {
 	children: ReactNode;
 	className?: string;
@@ -95,6 +97,7 @@ export interface ModalProps {
 	onClose?: () => void;
 	onAnimationComplete?: () => void;
 	backdropSlot?: ReactNode;
+	backdropTone?: ModalBackdropTone;
 	transitionPreset?: ModalTransitionPreset;
 	disableHistoryManagement?: boolean;
 }
@@ -119,6 +122,22 @@ export interface ModalLogicState {
 	handleClose: (onClose?: () => void) => void;
 	registerLabel: (source: LabelSource, id: string) => () => void;
 	getDefaultLabelId: (source: LabelSource) => string;
+}
+
+export function getModalFocusInsideElements(ownerDocument: Document): Array<Element> {
+	const inside: Array<Element> = [];
+	const popoutsRoot = ownerDocument.querySelector('[data-popouts-root]');
+	if (popoutsRoot) inside.push(popoutsRoot);
+	const mediaViewerPortalRoot = ownerDocument.querySelector('[data-media-viewer-portal-root]');
+	if (mediaViewerPortalRoot) inside.push(mediaViewerPortalRoot);
+	ownerDocument.querySelectorAll('[data-floating-ui-portal]').forEach((el) => inside.push(el));
+	ownerDocument
+		.querySelectorAll('[data-rsbs-root], [data-rsbs-backdrop], [data-rsbs-overlay]')
+		.forEach((el) => inside.push(el));
+	ownerDocument.querySelectorAll('[data-quick-css-panel]').forEach((el) => inside.push(el));
+	const nativeTitlebar = ownerDocument.querySelector('[data-native-titlebar]');
+	if (nativeTitlebar) inside.push(nativeTitlebar);
+	return inside;
 }
 
 export function usePopOwningModal(): () => void {
@@ -215,11 +234,11 @@ export function useModalLogic({
 		[onClose, popOwningModal],
 	);
 	useEffect(() => {
-		LayerManager.addLayer('modal', modalKey, handleClose);
+		LayerManager.addLayer('modal', modalKey, handleClose, ownerDocument);
 		return () => {
 			LayerManager.removeLayer('modal', modalKey);
 		};
-	}, [handleClose, modalKey]);
+	}, [handleClose, modalKey, ownerDocument]);
 	const handleBackdropClick = useCallback(
 		(customOnClose?: () => void) => {
 			if (isBackdropActivationLeftOver(ownerDocument)) {

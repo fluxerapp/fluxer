@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {LookupAddress, LookupAllOptions} from 'node:dns';
 import http from 'node:http';
 import https from 'node:https';
 import net, {type LookupFunction} from 'node:net';
@@ -14,25 +15,26 @@ interface ConnectAddress {
 }
 
 type ConnectCallback = (error: Error | null, socket: net.Socket | null) => void;
-type Dial = (options: net.TcpNetConnectOpts) => net.Socket;
 
 interface RaceOptions {
-	readonly attemptDelayMs?: number;
-	readonly dial?: Dial;
+	readonly connectionSignal?: AbortSignal;
 	readonly keepAlive?: boolean;
 	readonly keepAliveInitialDelay?: number;
 	readonly noDelay?: boolean;
 }
 
 type CreatedConnectionCallback = (error: Error | null, stream: Duplex) => void;
+type ConnectionCompletion = (...args: [error: Error, stream: undefined] | [error: null, stream: Duplex]) => void;
+type LookupAll = (
+	hostname: string,
+	options: LookupAllOptions,
+	callback: (error: NodeJS.ErrnoException | null, addresses: Array<LookupAddress>) => void,
+) => void;
 
-interface HappyEyeballsConnectOptions {
+interface HappyEyeballsConnectOptions extends RaceOptions {
 	readonly host?: string | null;
 	readonly hostname?: string | null;
-	readonly keepAlive?: boolean;
-	readonly keepAliveInitialDelay?: number;
 	readonly lookup?: LookupFunction;
-	readonly noDelay?: boolean;
 	readonly port?: number | string | null;
 }
 
@@ -73,14 +75,12 @@ function interleaveFamilies(addresses: ReadonlyArray<ConnectAddress>): ReadonlyA
 	return ordered;
 }
 
-export function connectToFirstAnsweringAddress(
+function connectToFirstAnsweringAddress(
 	addresses: ReadonlyArray<ConnectAddress>,
 	port: number,
 	options: RaceOptions,
 	callback: ConnectCallback,
 ): void {
-	const attemptDelayMs = options.attemptDelayMs ?? HAPPY_EYEBALLS_ATTEMPT_DELAY_MS;
-	const dial = options.dial ?? net.connect;
 	const ordered = interleaveFamilies(addresses);
 	const pending = new Set<net.Socket>();
 	const errors: Array<Error> = [];
@@ -92,6 +92,7 @@ export function connectToFirstAnsweringAddress(
 			return;
 		}
 		settled = true;
+		options.connectionSignal?.removeEventListener('abort', onAbort);
 		clearTimeout(attemptTimer);
 		clearTimeout(deadline);
 		for (const socket of pending) {
@@ -102,6 +103,11 @@ export function connectToFirstAnsweringAddress(
 		pending.clear();
 		callback(error, winner);
 	};
+	const onAbort = (): void => {
+		const reason: unknown = options.connectionSignal?.reason;
+		const error = reason instanceof Error ? reason : new DOMException('The operation was aborted', 'AbortError');
+		finish(error, null);
+	};
 	const startNext = (): void => {
 		clearTimeout(attemptTimer);
 		if (settled || next >= ordered.length) {
@@ -109,7 +115,7 @@ export function connectToFirstAnsweringAddress(
 		}
 		const {address, family} = ordered[next];
 		next += 1;
-		const socket = dial({
+		const socket = net.connect({
 			family,
 			host: address,
 			keepAlive: options.keepAlive,
@@ -136,7 +142,7 @@ export function connectToFirstAnsweringAddress(
 			finish(null, socket);
 		});
 		if (next < ordered.length) {
-			attemptTimer = setTimeout(startNext, attemptDelayMs);
+			attemptTimer = setTimeout(startNext, HAPPY_EYEBALLS_ATTEMPT_DELAY_MS);
 		}
 	};
 	const deadline = setTimeout(() => {
@@ -144,6 +150,11 @@ export function connectToFirstAnsweringAddress(
 		finish(connectFailure(errors), null);
 	}, HAPPY_EYEBALLS_CONNECT_TIMEOUT_MS);
 	deadline.unref();
+	options.connectionSignal?.addEventListener('abort', onAbort, {once: true});
+	if (options.connectionSignal?.aborted === true) {
+		onAbort();
+		return;
+	}
 	if (ordered.length === 0) {
 		finish(connectTimeoutError(), null);
 		return;
@@ -151,21 +162,26 @@ export function connectToFirstAnsweringAddress(
 	startNext();
 }
 
-function connectThroughLookup(options: HappyEyeballsConnectOptions, callback: ConnectCallback): void {
-	const lookup = options.lookup as LookupFunction;
+function connectThroughLookup(
+	options: HappyEyeballsConnectOptions,
+	lookup: LookupFunction,
+	callback: ConnectCallback,
+): void {
+	const lookupAll = lookup as LookupAll;
 	const hostname = options.host ?? options.hostname ?? '';
-	lookup(hostname, {all: true}, (error, resolved) => {
+	lookupAll(hostname, {all: true}, (error, resolved) => {
 		if (error != null) {
 			callback(error, null);
 			return;
 		}
-		const addresses = (resolved as unknown as ReadonlyArray<{address: string; family: number}>).map(
+		const addresses = resolved.map(
 			(entry): ConnectAddress => ({address: entry.address, family: entry.family === 6 ? 6 : 4}),
 		);
 		connectToFirstAnsweringAddress(
 			addresses,
 			Number(options.port),
 			{
+				connectionSignal: options.connectionSignal,
 				keepAlive: options.keepAlive,
 				keepAliveInitialDelay: options.keepAliveInitialDelay,
 				noDelay: options.noDelay,
@@ -183,12 +199,13 @@ export class HappyEyeballsHttpAgent extends http.Agent {
 		if (options.lookup == null || callback == null) {
 			return super.createConnection(options as http.ClientRequestArgs, callback);
 		}
-		connectThroughLookup(options, (error, socket) => {
+		const complete = callback as ConnectionCompletion;
+		connectThroughLookup(options, options.lookup, (error, socket) => {
 			if (error != null || socket == null) {
-				callback(error ?? connectTimeoutError(), undefined as unknown as Duplex);
+				complete(error ?? connectTimeoutError(), undefined);
 				return;
 			}
-			callback(null, socket);
+			complete(null, socket);
 		});
 		return undefined;
 	}
@@ -202,12 +219,13 @@ export class HappyEyeballsHttpsAgent extends https.Agent {
 		if (options.lookup == null || callback == null) {
 			return super.createConnection(options as http.ClientRequestArgs, callback);
 		}
-		connectThroughLookup(options, (error, socket) => {
+		const complete = callback as ConnectionCompletion;
+		connectThroughLookup(options, options.lookup, (error, socket) => {
 			if (error != null || socket == null) {
-				callback(error ?? connectTimeoutError(), undefined as unknown as Duplex);
+				complete(error ?? connectTimeoutError(), undefined);
 				return;
 			}
-			callback(null, super.createConnection({...options, socket} as http.ClientRequestArgs) as Duplex);
+			complete(null, super.createConnection({...options, socket} as http.ClientRequestArgs) as Duplex);
 		});
 		return undefined;
 	}

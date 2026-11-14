@@ -13,18 +13,6 @@ fn main() {
     let has_windows_nvenc = target_os == "windows" && supports_nvenc_arch();
     let has_windows_nvenc_encoder = has_windows_nvenc;
 
-    println!(
-        "cargo:rustc-env=FLUXER_LINUX_NVENC_COMPILED={}",
-        if has_linux_nvenc { "1" } else { "0" }
-    );
-    println!(
-        "cargo:rustc-env=FLUXER_WINDOWS_NVENC_COMPILED={}",
-        if has_windows_nvenc { "1" } else { "0" }
-    );
-    println!(
-        "cargo:rustc-env=FLUXER_WINDOWS_NVENC_ENCODER_COMPILED={}",
-        if has_windows_nvenc_encoder { "1" } else { "0" }
-    );
     if has_linux_nvenc {
         println!("cargo:rustc-cfg=fluxer_linux_nvenc");
     }
@@ -34,10 +22,6 @@ fn main() {
     if has_windows_nvenc_encoder {
         println!("cargo:rustc-cfg=fluxer_windows_nvenc_encoder");
     }
-    println!(
-        "cargo:rustc-env=FLUXER_MACOS_VIDEOTOOLBOX_COMPILED={}",
-        if is_macos { "1" } else { "0" }
-    );
     if is_macos {
         println!("cargo:rustc-cfg=fluxer_macos_videotoolbox");
         println!("cargo:rustc-link-lib=framework=CoreFoundation");

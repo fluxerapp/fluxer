@@ -25,7 +25,7 @@ import SessionManager from '@app/features/platform/state/AuthSession';
 import {getProtectedLocalStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {
 	ExperimentAssignmentsResponse,
 	readDomainMigrationAssignment,
@@ -48,7 +48,7 @@ interface SourceGateState {
 }
 
 function isVoiceActive(): boolean {
-	return MediaEngine.connected || MediaEngine.connecting;
+	return VoiceRuntime.connected || VoiceRuntime.connecting;
 }
 
 function isSessionSettled(): boolean {

@@ -5,6 +5,7 @@ import {resolveModalBackdropMotionSpec, resolveModalMotionSpec} from '@app/featu
 import {useModalResizePin, useWindowLiveResize} from '@app/features/app/components/dialogs/useModalResizePin';
 import {useModalBackHandler} from '@app/features/app/hooks/useModalBackHandler';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {Button} from '@app/features/ui/button/Button';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -12,9 +13,11 @@ import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
+import MobileLayout from '@app/features/ui/state/MobileLayout';
 import OverlayStack from '@app/features/ui/state/OverlayStack';
 import {ModalStackContext} from '@app/features/ui/utils/ModalStackContext';
 import {
+	getModalFocusInsideElements,
 	type HeaderProps,
 	type ModalContextValue,
 	type ModalProps,
@@ -24,6 +27,7 @@ import {
 	useScreenReaderLabelLogic,
 } from '@app/features/ui/utils/ModalUtils';
 import {wasPointerDownInside} from '@app/lib/overlay/DismissGuard';
+import {useDirection} from '@base-ui/react/direction-provider';
 import {FloatingFocusManager, FloatingOverlay, FloatingPortal, useFloating} from '@floating-ui/react';
 import {useLingui} from '@lingui/react/macro';
 import {XIcon} from '@phosphor-icons/react';
@@ -51,6 +55,7 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 			onClose,
 			onAnimationComplete,
 			backdropSlot,
+			backdropTone = 'default',
 			transitionPreset = 'default',
 			disableHistoryManagement = false,
 			...props
@@ -98,6 +103,7 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 			}
 			PopoutCommands.closeAllForDocument(modalDocument);
 		}, [isFirstModal, modalDocument]);
+		const direction = useDirection();
 		const isInstantTransition = transitionPreset === 'instant';
 		const shouldAnimateRoot = !prefersReducedMotion && !isInstantTransition;
 		const [isRootAnimating, setIsRootAnimating] = useState(shouldAnimateRoot);
@@ -118,11 +124,13 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 			transitionPreset,
 			prefersReducedMotion,
 			isFullscreenOnMobile,
+			isRtl: direction === 'rtl',
 		});
 		const backdropMotionSpec = resolveModalBackdropMotionSpec({
 			transitionPreset,
 			prefersReducedMotion,
 			isMobile,
+			backdropTone,
 		});
 		const handleBackdropClickEvent = useCallback(
 			(event: React.MouseEvent) => {
@@ -255,23 +263,7 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 							outsideElementsInert={isInteractive}
 							returnFocus={restoreFocusOnClose}
 							visuallyHiddenDismiss={isInteractive}
-							getInsideElements={() => {
-								if (!isInteractive) {
-									return [];
-								}
-								const inside: Array<Element> = [];
-								const popoutsRoot = modalDocument.querySelector('[data-popouts-root]');
-								if (popoutsRoot) inside.push(popoutsRoot);
-								const mediaViewerPortalRoot = modalDocument.querySelector('[data-media-viewer-portal-root]');
-								if (mediaViewerPortalRoot) inside.push(mediaViewerPortalRoot);
-								modalDocument.querySelectorAll('[data-floating-ui-portal]').forEach((el) => inside.push(el));
-								modalDocument
-									.querySelectorAll('[data-rsbs-root], [data-rsbs-backdrop], [data-rsbs-overlay]')
-									.forEach((el) => inside.push(el));
-								const nativeTitlebar = modalDocument.querySelector('[data-native-titlebar]');
-								if (nativeTitlebar) inside.push(nativeTitlebar);
-								return inside;
-							}}
+							getInsideElements={() => (isInteractive ? getModalFocusInsideElements(modalDocument) : [])}
 							data-flx="app.modal.floating-focus-manager"
 						>
 							<div
@@ -406,6 +398,26 @@ export const Footer = React.forwardRef<HTMLDivElement, FooterProps>(
 );
 
 Footer.displayName = 'ModalFooter';
+
+interface DismissFooterProps {
+	label?: React.ReactNode;
+	onDismiss?: () => void;
+}
+
+export const DismissFooter = observer(({label, onDismiss, ...props}: DismissFooterProps) => {
+	const {i18n} = useLingui();
+	const {popOwningModal} = useModalContext();
+	if (!MobileLayout.enabled) {
+		return null;
+	}
+	return (
+		<Footer data-flx="app.modal.dismiss-footer" {...props}>
+			<Button variant="secondary" onClick={onDismiss ?? popOwningModal} data-flx="app.modal.dismiss-footer.button">
+				{label ?? i18n._(CLOSE_DESCRIPTOR)}
+			</Button>
+		</Footer>
+	);
+});
 
 export const ScreenReaderLabel: React.FC<ScreenReaderLabelProps> = ({text, id}) => {
 	const modalContextValue = useModalContext();

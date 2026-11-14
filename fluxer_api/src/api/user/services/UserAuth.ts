@@ -3,17 +3,16 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
-import {deriveSudoMethods, userHasMfa, userHasSudoCapability} from '@app/api/auth/services/SudoMethods';
+import {createSudoModeRequiredError, userHasMfa} from '@app/api/auth/services/SudoMethods';
 import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
 import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {User} from '@app/api/models/User';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {TotpGenerator} from '@app/api/utils/TotpGenerator';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {MfaNotDisabledError} from '@fluxer/errors/src/domains/auth/MfaNotDisabledError';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
-import {SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 
 const RETIRED_AUTHENTICATOR_TYPE = 1;
@@ -42,18 +41,13 @@ async function assertSudoVerifiedForMfa(
 	user: User,
 	sudoContext: SudoVerificationResult,
 ): Promise<void> {
-	const identityVerifiedViaSudo = sudoContext.method === 'mfa' || sudoContext.method === 'sudo_token';
+	const identityVerifiedViaSudo =
+		sudoContext.method === 'mfa' || sudoContext.method === 'sudo_token' || sudoContext.method === 'email_code';
 	const identityVerifiedViaPassword = sudoContext.method === 'password';
 	if (identityVerifiedViaSudo || identityVerifiedViaPassword) {
 		return;
 	}
-	const credentials = await ctx.services.users.listWebAuthnCredentials(user.id);
-	const hasPasskeyCredentials = credentials.length > 0;
-	const hasBackupCodes = await AuthMfa.hasUnconsumedBackupCodes(ctx, user.id);
-	throw new SudoModeRequiredError(
-		userHasSudoCapability(user, hasPasskeyCredentials),
-		deriveSudoMethods(user, hasPasskeyCredentials, hasBackupCodes),
-	);
+	throw await createSudoModeRequiredError(ctx, user);
 }
 
 async function isValidTotpSetupCode(secret: string, code: string): Promise<boolean> {
@@ -91,9 +85,9 @@ export async function enableMfaTotp(
 		},
 		user.toRow(),
 	);
-	const newBackupCodes = AuthUtility.generateBackupCodes(ctx);
+	const newBackupCodes = AuthUtility.generateBackupCodes();
 	const mfaBackupCodes = await users.createMfaBackupCodes(userId, newBackupCodes);
-	await dispatchUserUpdate(ctx, updatedUser);
+	await dispatchUserUpdate(ctx.services.gateway, updatedUser);
 	await botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 	return mfaBackupCodes;
 }
@@ -128,7 +122,7 @@ export async function disableMfaTotp(ctx: ApiContext, {user, code, sudoContext}:
 	if (!userHasMfa(updatedUser)) {
 		await users.clearMfaBackupCodes(userId);
 	}
-	await dispatchUserUpdate(ctx, updatedUser);
+	await dispatchUserUpdate(ctx.services.gateway, updatedUser);
 	await botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 }
 
@@ -147,16 +141,7 @@ export async function getMfaBackupCodes(
 export async function regenerateMfaBackupCodes(ctx: ApiContext, user: User): Promise<Array<MfaBackupCode>> {
 	const {users} = ctx.services;
 	const userId = user.id;
-	const newBackupCodes = AuthUtility.generateBackupCodes(ctx);
+	const newBackupCodes = AuthUtility.generateBackupCodes();
 	await users.clearMfaBackupCodes(userId);
 	return await users.createMfaBackupCodes(userId, newBackupCodes);
-}
-
-async function dispatchUserUpdate(ctx: ApiContext, user: User): Promise<void> {
-	const {gateway} = ctx.services;
-	await gateway.dispatchPresence({
-		userId: user.id,
-		event: 'USER_UPDATE',
-		data: mapUserToPrivateResponse(user),
-	});
 }

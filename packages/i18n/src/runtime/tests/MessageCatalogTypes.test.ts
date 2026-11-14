@@ -2,7 +2,6 @@
 
 import type {MessageArgsForTemplate, MessageVariablesForTemplate} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
 import {
-	defineStaticLocaleMessages,
 	extractMessageTemplatePlaceholders,
 	extractMessageTemplateVariables,
 	validateMessageTemplateVariables,
@@ -44,15 +43,13 @@ describe('message catalog type helpers', () => {
 		expectTypeOf<Args>().toEqualTypeOf<[variables: {userName: string | number | boolean | Date}]>();
 		expectTypeOf<NoArgs>().toEqualTypeOf<[variables?: undefined]>();
 	});
-	it('defines locale messages with source placeholders preserved', () => {
-		const defineMessages = defineStaticLocaleMessages<{
-			greeting: 'Hello {userName}.';
-			count: '{count, plural, one {# item} other {# items}}';
+	it('types placeholders nested inside select and plural cases', () => {
+		type Variables =
+			MessageVariablesForTemplate<'{all, select, yes {All gone.} other {{count, plural, =1 {# item} other {# items}} until {ends_at}.}}'>;
+		expectTypeOf<Variables>().toEqualTypeOf<{
+			all: string | number | boolean | Date;
+			count: number;
+			ends_at: string | number | boolean | Date;
 		}>();
-		const messages = defineMessages({
-			greeting: 'Salut {userName}.',
-			count: '{count, plural, one {# element} other {# elements}}',
-		});
-		expect(messages.greeting).toBe('Salut {userName}.');
 	});
 });

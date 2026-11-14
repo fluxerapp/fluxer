@@ -23,13 +23,11 @@ interface RecordAttachmentUploadRequestInput {
 	contentType: string;
 	uploadMode: AttachmentUploadMode;
 	requestIp: string;
-	requestedAt?: Date;
 }
 
 interface MarkAttachmentUploadCompletedInput {
 	uploadKey: string;
 	completionIp: string;
-	completedAt?: Date;
 }
 
 interface GetPendingAttachmentUploadInput {
@@ -59,7 +57,7 @@ export class AttachmentUploadTraceRepository {
 	}
 
 	async recordRequestedUpload(input: RecordAttachmentUploadRequestInput): Promise<AttachmentUploadTraceByKeyRow> {
-		const now = input.requestedAt ?? new Date();
+		const now = new Date();
 		const row: AttachmentUploadTraceByKeyRow = {
 			upload_key: input.uploadKey,
 			attachment_id: null,
@@ -84,7 +82,7 @@ export class AttachmentUploadTraceRepository {
 		if (!existing) {
 			return null;
 		}
-		const completedAt = input.completedAt ?? new Date();
+		const completedAt = new Date();
 		const updated: AttachmentUploadTraceByKeyRow = {
 			...existing,
 			completion_ip: input.completionIp,

@@ -15,9 +15,24 @@ pub(crate) fn probe_animated(
     media_limits: &MediaLimits,
     input: &[u8],
 ) -> Result<Option<AnimatedProbe>, MediaError> {
+    Ok(
+        probe_header(media_limits, input)?.map(|dims| AnimatedProbe {
+            width: dims.width as c_int,
+            height: dims.height as c_int,
+            pages: dims.pages as c_int,
+        }),
+    )
+}
+
+fn probe_header(
+    media_limits: &MediaLimits,
+    input: &[u8],
+) -> Result<Option<ImageDimensions>, MediaError> {
     let mut width = 0;
     let mut height = 0;
     let mut pages = 0;
+    let mut bands = 0;
+    let mut format = 0;
     let rc = unsafe {
         native::fluxer_vips_probe_animated(
             input.as_ptr().cast(),
@@ -25,6 +40,8 @@ pub(crate) fn probe_animated(
             &mut width,
             &mut height,
             &mut pages,
+            &mut bands,
+            &mut format,
         )
     };
     match native::NativeStatus::from_code(rc) {
@@ -39,14 +56,16 @@ pub(crate) fn probe_animated(
                 .expect("non-success native status must map to an error"));
         }
     }
-    if pages <= 0 || width <= 0 || height <= 0 {
+    if pages <= 0 || width <= 0 || height <= 0 || bands <= 0 {
         return Err(MediaError::InvalidImageDimensions);
     }
     validate_animation_geometry(media_limits, width as u32, height as u32, pages as u32)?;
-    Ok(Some(AnimatedProbe {
-        width,
-        height,
-        pages,
+    Ok(Some(ImageDimensions {
+        width: width as u32,
+        height: height as u32,
+        pages: pages as u32,
+        bands: bands as u32,
+        eight_bit: format == unsafe { native::fluxer_vips_format_uchar },
     }))
 }
 
@@ -55,12 +74,8 @@ pub(crate) fn probe_image_dims(
     input: &[u8],
 ) -> Result<ImageDimensions, MediaError> {
     ensure_vips_init()?;
-    if let Some(probe) = probe_animated(media_limits, input)? {
-        return Ok(ImageDimensions {
-            width: probe.width as u32,
-            height: probe.height as u32,
-            pages: probe.pages as u32,
-        });
+    if let Some(dims) = probe_header(media_limits, input)? {
+        return Ok(dims);
     }
     if mime::sniff(input).mime == "image/bmp"
         && let Some(image) = try_decode_bmp(input, media_limits)?
@@ -89,6 +104,10 @@ fn probe_loaded_image_dims(
         width,
         height,
         pages,
+        bands: unsafe { native::fluxer_vips_image_get_bands(image.as_ptr()) } as u32,
+        eight_bit: unsafe {
+            native::fluxer_vips_image_get_format(image.as_ptr()) == native::fluxer_vips_format_uchar
+        },
     })
 }
 

@@ -5,7 +5,7 @@ import type {Guild} from '@app/api/models/Guild';
 import type {User} from '@app/api/models/User';
 import type {GuildAdminResponse, ListUserGuildsResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 
-function formatOwnerFields(ownerUser: User | null): {
+export function formatOwnerFields(ownerUser: User | null): {
 	owner_username: string | null;
 	owner_global_name: string | null;
 	owner_discriminator: string | null;
@@ -39,22 +39,6 @@ export function mapGuildToAdminResponse(guild: Guild, ownerUser?: User | null): 
 
 export function mapGuildsToAdminResponse(guilds: Array<Guild>, ownerMap?: Map<string, User>): ListUserGuildsResponse {
 	return {
-		guilds: guilds.map((guild) => {
-			const ownerUser = ownerMap?.get(guild.ownerId.toString()) ?? null;
-			return {
-				id: guild.id.toString(),
-				name: guild.name,
-				features: mapGuildFeatures(guild.features),
-				owner_id: guild.ownerId.toString(),
-				...formatOwnerFields(ownerUser),
-				icon: guild.iconHash,
-				banner: guild.bannerHash,
-				member_count: guild.memberCount,
-				nsfw_level: guild.nsfwLevel,
-				nsfw: guild.nsfw,
-				content_warning_level: guild.contentWarningLevel as 0 | 1,
-				content_warning_text: guild.contentWarningText,
-			};
-		}),
+		guilds: guilds.map((guild) => mapGuildToAdminResponse(guild, ownerMap?.get(guild.ownerId.toString()) ?? null)),
 	};
 }

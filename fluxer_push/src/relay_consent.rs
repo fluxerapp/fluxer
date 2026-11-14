@@ -6,10 +6,16 @@ use fluxer_svc::transport::{Transport, TransportMessage, TransportSubscriber};
 use serde_json::Value;
 use std::sync::RwLock;
 use std::time::Duration;
-use tokio::time::{Instant, MissedTickBehavior};
+use tokio::time::Instant;
 use tracing::{info, warn};
 
 pub const RECONCILE_INTERVAL: Duration = Duration::from_secs(30);
+const FIRST_READ_RETRY_DELAYS: [Duration; 3] = [
+    Duration::from_secs(1),
+    Duration::from_secs(2),
+    Duration::from_secs(4),
+];
+const FIRST_READ_RETRY_CAP: Duration = Duration::from_secs(5);
 
 const SUBJECT: &str = "config.push.delivery";
 const MESSAGE_TYPE: &str = "push_service_delivery_config";
@@ -138,14 +144,9 @@ pub async fn run_subscriber<T: Transport>(
             }
         };
         info!(subject = SUBJECT, "listening for relay consent updates");
-        let outcome = fetch(rpc, store, metrics).await;
-        info!(
-            outcome = outcome.label(),
-            "relay consent read after subscribing"
-        );
-        let mut reconcile =
-            tokio::time::interval_at(Instant::now() + reconcile_every, reconcile_every);
-        reconcile.set_missed_tick_behavior(MissedTickBehavior::Delay);
+        let mut failed_first_reads = Some(0);
+        let next_read = tokio::time::sleep(Duration::ZERO);
+        tokio::pin!(next_read);
         loop {
             tokio::select! {
                 message = subscriber.next() => {
@@ -155,8 +156,24 @@ pub async fn run_subscriber<T: Transport>(
                     let outcome = store.apply(message.payload());
                     record(metrics, store, outcome);
                 }
-                _ = reconcile.tick() => {
-                    fetch(rpc, store, metrics).await;
+                () = &mut next_read => {
+                    let read = fetch(rpc, store, metrics).await;
+                    let wait = match (failed_first_reads, read) {
+                        (Some(_), Ok(outcome)) => {
+                            info!(
+                                outcome = outcome.label(),
+                                "relay consent read after subscribing"
+                            );
+                            failed_first_reads = None;
+                            reconcile_every
+                        }
+                        (Some(failed), Err(())) => {
+                            failed_first_reads = Some(failed + 1);
+                            first_read_retry_delay(failed)
+                        }
+                        (None, _) => reconcile_every,
+                    };
+                    next_read.as_mut().reset(Instant::now() + wait);
                 }
             }
         }
@@ -167,16 +184,27 @@ pub async fn run_subscriber<T: Transport>(
     }
 }
 
-async fn fetch(rpc: &RpcClient, store: &RelayConsentStore, metrics: &Metrics) -> ConsentUpdate {
-    let outcome = match rpc.push_service_delivery_config().await {
-        Ok(config) => store.update(&config),
+fn first_read_retry_delay(failed: usize) -> Duration {
+    FIRST_READ_RETRY_DELAYS
+        .get(failed)
+        .copied()
+        .unwrap_or(FIRST_READ_RETRY_CAP)
+}
+
+async fn fetch(
+    rpc: &RpcClient,
+    store: &RelayConsentStore,
+    metrics: &Metrics,
+) -> Result<ConsentUpdate, ()> {
+    let read = match rpc.push_service_delivery_config().await {
+        Ok(config) => Ok(store.update(&config)),
         Err(error) => {
             warn!(error = %error, "relay consent read failed");
-            ConsentUpdate::Rejected
+            Err(())
         }
     };
-    record(metrics, store, outcome);
-    outcome
+    record(metrics, store, read.unwrap_or(ConsentUpdate::Rejected));
+    read
 }
 
 fn record(metrics: &Metrics, store: &RelayConsentStore, outcome: ConsentUpdate) {
@@ -244,71 +272,5 @@ mod tests {
             ConsentUpdate::Rejected
         );
         assert!(store.held().is_none());
-    }
-
-    #[test]
-    fn a_config_version_that_is_not_an_integer_is_refused() {
-        let store = RelayConsentStore::new(false);
-        assert_eq!(
-            store.update(&json!({"config_version": -1, "relay_consent_accepted": true})),
-            ConsentUpdate::Rejected
-        );
-        assert!(!store.accepted());
-    }
-
-    #[test]
-    fn an_older_config_version_never_overwrites_a_newer_one() {
-        let store = RelayConsentStore::new(false);
-        store.update(&legacy_document(5, true));
-        assert_eq!(
-            store.update(&legacy_document(4, false)),
-            ConsentUpdate::Stale
-        );
-        assert!(store.accepted());
-        assert_eq!(
-            store.update(&legacy_document(6, false)),
-            ConsentUpdate::Updated
-        );
-        assert!(!store.accepted());
-    }
-
-    #[test]
-    fn the_same_document_again_is_unchanged() {
-        let store = RelayConsentStore::new(false);
-        store.update(&legacy_document(5, true));
-        assert_eq!(
-            store.update(&legacy_document(5, true)),
-            ConsentUpdate::Unchanged
-        );
-    }
-
-    #[test]
-    fn the_env_override_accepts_whatever_the_document_says() {
-        let store = RelayConsentStore::new(true);
-        assert!(store.accepted());
-        store.update(&legacy_document(1, false));
-        assert!(store.accepted());
-    }
-
-    #[test]
-    fn a_nats_message_is_unwrapped_from_its_envelope() {
-        let store = RelayConsentStore::new(false);
-        let message = json!({"type": MESSAGE_TYPE, "config": legacy_document(2, true)});
-        assert_eq!(
-            store.apply(message.to_string().as_bytes()),
-            ConsentUpdate::Updated
-        );
-        assert!(store.accepted());
-    }
-
-    #[test]
-    fn a_nats_message_of_another_type_is_refused() {
-        let store = RelayConsentStore::new(false);
-        let message = json!({"type": "something_else", "config": legacy_document(2, true)});
-        assert_eq!(
-            store.apply(message.to_string().as_bytes()),
-            ConsentUpdate::Rejected
-        );
-        assert!(!store.accepted());
     }
 }

@@ -50,4 +50,26 @@ describe('MFA requires verified email', () => {
 			.executeWithResponse();
 		expect(json.code).toBe(APIErrorCodes.MFA_EMAIL_VERIFICATION_REQUIRED);
 	});
+	it('rejects new backup codes for unverified accounts and keeps the two-factor they already have', async () => {
+		const account = await createTestAccount(harness);
+		const secret = createTotpSecret();
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mfa/totp/enable')
+			.body({secret, code: totpCodeNow(secret), password: account.password})
+			.execute();
+		await createBuilder(harness, '')
+			.post(`/test/users/${account.userId}/security-flags`)
+			.body({email_verified: false})
+			.expect(200)
+			.execute();
+		const {json} = await createBuilder<ErrorResponse>(harness, account.token)
+			.post('/users/@me/mfa/backup-codes')
+			.body({regenerate: true, mfa_method: 'totp', mfa_code: totpCodeNow(secret)})
+			.expect(403)
+			.executeWithResponse();
+		expect(json.code).toBe(APIErrorCodes.MFA_EMAIL_VERIFICATION_REQUIRED);
+		expect(json.message).toBe('Confirm your email address to use two-factor authentication or passkeys.');
+		const me = await createBuilder<{mfa_enabled: boolean}>(harness, account.token).get('/users/@me').execute();
+		expect(me.mfa_enabled).toBe(true);
+	});
 });

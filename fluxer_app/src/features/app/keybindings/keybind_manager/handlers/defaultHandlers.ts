@@ -3,7 +3,7 @@
 import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
+import {registerAccountKeybindHandlers} from '@app/features/app/keybindings/keybind_manager/handlers/accountHandlers';
 import type {HandlerHost} from '@app/features/app/keybindings/keybind_manager/handlers/types';
 import {
 	PUSH_TO_TALK_WHILE_DEAFENED_DESCRIPTION_DESCRIPTOR,
@@ -12,22 +12,20 @@ import {
 	YOU_CAN_T_UNMUTE_YOURSELF_BECAUSE_A_MODERATOR_DESCRIPTOR,
 } from '@app/features/app/keybindings/keybind_manager/shared';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {openAccountSwitcherModal} from '@app/features/auth/commands/AccountSwitcherModalCommands';
-import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
-import {switcherAccounts} from '@app/features/auth/state/AccountSwitcherAccounts';
-import Accounts from '@app/features/auth/state/Accounts';
-import {switchStoredAccountFromSwitcher} from '@app/features/auth/utils/AccountSwitcherModalUtils';
 import {requestChannelComposerAffordanceDismissal} from '@app/features/channel/components/ChannelComposerDismissal';
+import {
+	CallButtonBlocks,
+	resolveCallButtonBlock,
+} from '@app/features/channel/components/channel_header_components/CallButtonBlock';
 import {CreateDMModal} from '@app/features/channel/components/modals/CreateDMModal';
 import Channels from '@app/features/channel/state/Channels';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {AddGuildModal} from '@app/features/guild/components/modals/AddGuildModal';
-import {CANCEL_DESCRIPTOR, OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InboxCommands from '@app/features/inbox/commands/InboxCommands';
 import Inbox from '@app/features/inbox/state/Inbox';
 import {KeyboardShortcutsCheatsheetModal} from '@app/features/input/components/modals/KeyboardShortcutsCheatsheetModal';
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
-import {ACCOUNT_SWITCHER_SLOT_ACTIONS} from '@app/features/input/state/input_keybind/KeybindCommands';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {focusChannelTextareaFromKeybind} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
@@ -39,18 +37,20 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
-import type {Account} from '@app/features/platform/state/AuthSession';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
-import * as ThemeStudioCommands from '@app/features/theme_studio/commands/ThemeStudioCommands';
+import * as ThemeSettingsCommands from '@app/features/theme_settings/commands/ThemeSettingsCommands';
 import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
+import {openUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
+import Users from '@app/features/user/state/Users';
+import {openAccountGateFlow} from '@app/features/user/utils/AccountGatePresentation';
 import {openVoiceMessageComposerModal} from '@app/features/voice/components/VoiceMessageComposerModal';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import * as CallUtils from '@app/features/voice/utils/CallUtils';
 import {
@@ -71,46 +71,10 @@ function canOpenVoiceMessageComposerForChannel(channelId: string): boolean {
 }
 
 const KEYBOARD_SHORTCUTS_CHEATSHEET_MODAL_KEY = 'keyboard-shortcuts-cheatsheet';
-const ACCOUNT_SWITCHER_MODAL_KEY = 'account-switcher';
 const PUSH_TO_TALK_DEAFENED_MODAL_KEY = 'push-to-talk-deafened';
 
-function openKeybindAccountSwitcher(initialReloginAccount: Account | null): void {
-	openAccountSwitcherModal(
-		{
-			closeCurrentAccountOnSelect: true,
-			initialReloginAccount,
-			redirectAfterLogin: null,
-			redirectAfterSwitch: Routes.ME,
-			switchAccount: null,
-		},
-		ACCOUNT_SWITCHER_MODAL_KEY,
-	);
-}
-
-function switchToAccountSwitcherSlot(slotIndex: number): void {
-	const account = switcherAccounts()[slotIndex];
-	if (account == null) {
-		return;
-	}
-	if (account.isValid === false) {
-		openKeybindAccountSwitcher(account);
-		return;
-	}
-	const accountKey = getAccountKey(account);
-	if (accountKey === Accounts.currentAccountKey) {
-		return;
-	}
-	void switchStoredAccountFromSwitcher({
-		accountKey,
-		onSessionExpired: (expiredAccount) => openKeybindAccountSwitcher(expiredAccount),
-		onSuccess: null,
-		redirectAfterSwitch: Routes.ME,
-		switchAccount: null,
-	});
-}
-
 function showPushToTalkDeafenedModalIfNeeded(host: HandlerHost, i18n: I18n): void {
-	const voiceState = MediaEngine.getVoiceState(MediaEngine.guildId);
+	const voiceState = VoiceRuntime.getVoiceState(VoiceRuntime.guildId);
 	const isGuildDeafened = voiceState?.deaf ?? false;
 	if (!isGuildDeafened && !LocalVoiceState.getSelfDeaf()) return;
 	if (isGuildDeafened) {
@@ -119,11 +83,6 @@ function showPushToTalkDeafenedModalIfNeeded(host: HandlerHost, i18n: I18n): voi
 				React.createElement(ConfirmModal, {
 					title: i18n._(VOICE_DEAFENED_BY_MODERATORS_DESCRIPTOR),
 					description: i18n._(YOU_CAN_T_UNDEAFEN_YOURSELF_BECAUSE_A_MODERATOR_DEAFENED_DESCRIPTOR),
-					primaryText: i18n._(OKAY_DESCRIPTOR),
-					primaryVariant: 'primary',
-					secondaryText: false,
-					onPrimary: () => {},
-					hideCloseButton: true,
 				}),
 			),
 			PUSH_TO_TALK_DEAFENED_MODAL_KEY,
@@ -167,20 +126,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 			KEYBOARD_SHORTCUTS_CHEATSHEET_MODAL_KEY,
 		);
 	});
-	host.register('system_open_account_switcher', ({type}) => {
-		if (type !== 'press') return;
-		if (ModalCommands.getTopModalKey() === ACCOUNT_SWITCHER_MODAL_KEY) {
-			ModalCommands.popWithKey(ACCOUNT_SWITCHER_MODAL_KEY);
-			return;
-		}
-		openKeybindAccountSwitcher(null);
-	});
-	for (const [slotIndex, action] of ACCOUNT_SWITCHER_SLOT_ACTIONS.entries()) {
-		host.register(action, ({type}) => {
-			if (type !== 'press') return;
-			switchToAccountSwitcherSlot(slotIndex);
-		});
-	}
+	registerAccountKeybindHandlers(host, i18n);
 	host.register('misc_help', ({type}) => {
 		if (type !== 'press') return;
 		const helpUrl = Routes.help();
@@ -193,8 +139,8 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('voice_toggle_mute', ({type}) => {
 		if (type !== 'press') return;
-		const connectedGuildId = MediaEngine.guildId;
-		const voiceState = MediaEngine.getVoiceState(connectedGuildId);
+		const connectedGuildId = VoiceRuntime.guildId;
+		const voiceState = VoiceRuntime.getVoiceState(connectedGuildId);
 		const isGuildMuted = voiceState?.mute ?? false;
 		if (isGuildMuted) {
 			ModalCommands.push(
@@ -202,11 +148,6 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 					React.createElement(ConfirmModal, {
 						title: i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR),
 						description: i18n._(YOU_CAN_T_UNMUTE_YOURSELF_BECAUSE_A_MODERATOR_DESCRIPTOR),
-						primaryText: i18n._(OKAY_DESCRIPTOR),
-						primaryVariant: 'primary',
-						secondaryText: false,
-						onPrimary: () => {},
-						hideCloseButton: true,
 					}),
 				),
 			);
@@ -218,8 +159,8 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('voice_toggle_deafen', ({type}) => {
 		if (type !== 'press') return;
-		const connectedGuildId = MediaEngine.guildId;
-		const voiceState = MediaEngine.getVoiceState(connectedGuildId);
+		const connectedGuildId = VoiceRuntime.guildId;
+		const voiceState = VoiceRuntime.getVoiceState(connectedGuildId);
 		const isGuildDeafened = voiceState?.deaf ?? false;
 		if (isGuildDeafened) {
 			ModalCommands.push(
@@ -227,11 +168,6 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 					React.createElement(ConfirmModal, {
 						title: i18n._(VOICE_DEAFENED_BY_MODERATORS_DESCRIPTOR),
 						description: i18n._(YOU_CAN_T_UNDEAFEN_YOURSELF_BECAUSE_A_MODERATOR_DEAFENED_DESCRIPTOR),
-						primaryText: i18n._(OKAY_DESCRIPTOR),
-						primaryVariant: 'primary',
-						secondaryText: false,
-						onPrimary: () => {},
-						hideCloseButton: true,
 					}),
 				),
 			);
@@ -255,42 +191,48 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('system_toggle_settings', ({type}) => {
 		if (type !== 'press') return;
-		ModalCommands.push(modal(() => React.createElement(UserSettingsModal), 'user-settings'));
+		openUserSettingsModal();
 	});
 	host.register('system_open_theme_studio_popout', ({type}) => {
 		if (type !== 'press') return;
-		ThemeStudioCommands.openThemeStudioPopout();
+		ThemeSettingsCommands.toggleQuickCssEditorFocus();
+	});
+	host.register('system_toggle_custom_css', ({type}) => {
+		if (type !== 'press') return;
+		ThemeSettingsCommands.toggleCustomCss();
 	});
 	host.register('voice_push_to_talk', ({type, sourceId}) => {
 		if (type === 'release') {
-			Keybind.releaseHoldSource('voice_push_to_talk', sourceId, () => MediaEngine.applyPushToTalkHold(false));
+			Keybind.releaseHoldSource('voice_push_to_talk', sourceId, () => VoiceRuntime.engine?.applyPushToTalkHold(false));
 			return;
 		}
 		if (!Keybind.isPushToTalkEffective()) return;
 		showPushToTalkDeafenedModalIfNeeded(host, i18n);
 		if (Keybind.pressHoldSource('voice_push_to_talk', sourceId)) {
-			MediaEngine.applyPushToTalkHold(true);
+			VoiceRuntime.engine?.applyPushToTalkHold(true);
 		}
 	});
 	host.register('voice_push_to_mute', ({type, sourceId}) => {
 		if (type === 'release') {
-			Keybind.releaseHoldSource('voice_push_to_mute', sourceId, () => MediaEngine.applyPushToMuteHold(false));
+			Keybind.releaseHoldSource('voice_push_to_mute', sourceId, () => VoiceRuntime.engine?.applyPushToMuteHold(false));
 			return;
 		}
 		if (Keybind.isPushToTalkEffective()) return;
 		if (Keybind.pressHoldSource('voice_push_to_mute', sourceId)) {
-			MediaEngine.applyPushToMuteHold(true);
+			VoiceRuntime.engine?.applyPushToMuteHold(true);
 		}
 	});
 	host.register('voice_push_to_talk_priority', ({type, sourceId}) => {
 		if (type === 'release') {
-			Keybind.releaseHoldSource('voice_push_to_talk_priority', sourceId, () => MediaEngine.applyPushToTalkHold(false));
+			Keybind.releaseHoldSource('voice_push_to_talk_priority', sourceId, () =>
+				VoiceRuntime.engine?.applyPushToTalkHold(false),
+			);
 			return;
 		}
 		if (!Keybind.isPushToTalkEffective()) return;
 		showPushToTalkDeafenedModalIfNeeded(host, i18n);
 		if (Keybind.pressHoldSource('voice_push_to_talk_priority', sourceId)) {
-			MediaEngine.applyPushToTalkHold(true);
+			VoiceRuntime.engine?.applyPushToTalkHold(true);
 		}
 	});
 	host.register('voice_priority_vad', ({type, sourceId}) => {
@@ -307,9 +249,9 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('voice_toggle_camera', ({type}) => {
 		if (type !== 'press') return;
-		void MediaEngine.toggleCameraFromKeybind().catch((error) =>
-			host.logger.error('voice_toggle_camera keybind failed', error),
-		);
+		void VoiceRuntime.engine
+			?.toggleCameraFromKeybind()
+			.catch((error) => host.logger.error('voice_toggle_camera keybind failed', error));
 	});
 	host.register('voice_switch_channel', ({type}) => {
 		if (type !== 'press') return;
@@ -320,15 +262,15 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (channel.type !== ChannelTypes.GUILD_VOICE) {
 			return;
 		}
-		void MediaEngine.connectToVoiceChannel(channel.guildId ?? null, channel.id).catch((error) =>
-			host.logger.error('voice_switch_channel keybind failed', error),
-		);
+		void VoiceRuntime.withEngine('join', (engine) =>
+			engine.connectToVoiceChannel(channel.guildId ?? null, channel.id),
+		).catch((error) => host.logger.error('voice_switch_channel keybind failed', error));
 	});
 	host.register('voice_disconnect', ({type}) => {
 		if (type !== 'press') return;
-		void MediaEngine.disconnectFromVoiceChannel('user').catch((error) =>
-			host.logger.error('voice_disconnect keybind failed', error),
-		);
+		void VoiceRuntime.engine
+			?.disconnectFromVoiceChannel('user')
+			.catch((error) => host.logger.error('voice_disconnect keybind failed', error));
 	});
 	host.register('voice_toggle_soundboard', ({type}) => {
 		if (type !== 'press') return;
@@ -367,7 +309,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		const targetId = ReadStates.getOldestUnreadMessageId(channelId);
+		const targetId = ReadStates.getOldestUnreadJumpTargetId(channelId);
 		if (!targetId) return;
 		goToMessage(channelId, targetId, {jumpType: JumpTypes.ANIMATED});
 	});
@@ -425,18 +367,18 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		if (SelectedChannel.navigateViewedChannelHistory(-1)) return;
 		const history = RouterUtils.getHistory();
-		if (history?.go) history.go(-1);
+		if (history?.canGo(-1)) history.go(-1);
 	});
 	host.register('nav_history_forward', ({type}) => {
 		if (type !== 'press') return;
 		if (SelectedChannel.navigateViewedChannelHistory(1)) return;
 		const history = RouterUtils.getHistory();
-		if (history?.go) history.go(1);
+		if (history?.canGo(1)) history.go(1);
 	});
 	host.register('nav_current_call', ({type}) => {
 		if (type !== 'press') return;
-		const channelId = MediaEngine.channelId;
-		const guildId = MediaEngine.guildId;
+		const channelId = VoiceRuntime.channelId;
+		const guildId = VoiceRuntime.guildId;
 		if (!channelId) return;
 		host.navigateToChannel(guildId, channelId);
 	});
@@ -511,6 +453,12 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (!channelId) return;
 		const channel = Channels.getChannel(channelId);
 		if (!channel || channel.guildId) return;
+		const callBlock = resolveCallButtonBlock(channel, Users.getCurrentUser());
+		if (callBlock.block === CallButtonBlocks.SYSTEM_DM) return;
+		if (callBlock.block === CallButtonBlocks.ACCOUNT) {
+			openAccountGateFlow(i18n, callBlock.gate);
+			return;
+		}
 		void CallUtils.requestStartCall(i18n, channelId, CallUtils.getCallStartRequestOptions({shiftKey}, {kind: 'voice'}));
 	});
 	host.register('chat_toggle_pins', ({type}) => {
@@ -580,7 +528,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 	});
 	host.register('chat_new_dm', ({type}) => {
 		if (type !== 'press') return;
-		if (RuntimeConfig.directMessagesDisabled) return;
+		if (!RuntimeConfig.dmPickerAvailable) return;
 		ModalCommands.push(modal(() => React.createElement(CreateDMModal)));
 	});
 	host.register('chat_focus_textarea', ({type}) => {

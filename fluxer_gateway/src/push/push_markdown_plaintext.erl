@@ -3,23 +3,11 @@
 -module(push_markdown_plaintext).
 -typing([eqwalizer]).
 
--export([
-    available/0,
-    render_push_preview/2
-]).
+-export([render_push_preview/2]).
 
 -define(MAX_CONTENT_BYTES, 16 * 1024).
 -define(MAX_CONTEXT_JSON_BYTES, 64 * 1024).
 -define(MAX_CONTEXT_NAME_ENTRIES, 512).
-
--spec available() -> boolean().
-available() ->
-    try push_markdown_plaintext_nif:available() of
-        true -> true;
-        _ -> false
-    catch
-        _:_ -> false
-    end.
 
 -spec render_push_preview(binary(), map()) -> binary().
 render_push_preview(Content, Context) when

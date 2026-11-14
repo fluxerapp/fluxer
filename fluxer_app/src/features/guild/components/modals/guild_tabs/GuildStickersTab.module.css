@@ -39,7 +39,7 @@
 }
 
 .viewToggleButton:not(:last-child) {
-	border-right: 0.0625rem solid var(--background-header-secondary);
+	border-inline-end: 0.0625rem solid var(--background-header-secondary);
 }
 
 .viewToggleButtonActive {

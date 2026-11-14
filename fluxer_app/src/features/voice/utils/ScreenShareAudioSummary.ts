@@ -13,6 +13,7 @@ import {
 	supportsWindowShareAudioScope,
 	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {MICROPHONE_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import type {VirtmicNode} from '@app/types/electron.d';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -38,26 +39,23 @@ const SHARED_WINDOW_DESCRIPTOR = msg({
 	message: 'Shared window',
 	comment: 'Screen-share audio summary shown when a window share captures only the audio of the window it shares.',
 });
-export const MICROPHONE_DESCRIPTOR = msg({
-	message: 'Microphone',
-	comment: 'Screen-share audio summary on a video device share whose audio comes from an unnamed microphone.',
-});
+
 export const MICROPHONE_WITH_DEVICE_DESCRIPTOR = msg({
 	message: 'Microphone ({deviceLabel})',
 	comment:
 		'Screen-share audio summary on a video device share. {deviceLabel} is the name of the selected audio input device.',
 });
-export const DEVICE_AUDIO_ONLY_DESCRIPTOR = msg({
+const DEVICE_AUDIO_ONLY_DESCRIPTOR = msg({
 	message: 'Device audio only',
 	comment:
 		'Screen-share audio summary on a video device share that publishes only the audio of the capture device itself.',
 });
-export const DEVICE_AUDIO_WITH_DEVICE_DESCRIPTOR = msg({
+const DEVICE_AUDIO_WITH_DEVICE_DESCRIPTOR = msg({
 	message: 'Device audio ({deviceLabel})',
 	comment:
 		'Screen-share audio summary on a video device share. {deviceLabel} is the name of the audio input paired with the capture device.',
 });
-export const NO_DEVICE_AUDIO_DESCRIPTOR = msg({
+const NO_DEVICE_AUDIO_DESCRIPTOR = msg({
 	message: 'No audio from this device',
 	comment: 'Screen-share audio summary on a video device share whose capture device has no audio input of its own.',
 });
@@ -105,7 +103,7 @@ export interface ScreenShareAudioSummaryInput {
 	usesDeviceMicrophone?: boolean;
 }
 
-export type ScreenShareAudioSummary =
+type ScreenShareAudioSummary =
 	| {readonly kind: 'sourceName'; readonly name: string}
 	| {
 			readonly kind: 'message';
@@ -144,7 +142,7 @@ function summariseDeviceShareAudio(input: ScreenShareAudioSummaryInput): ScreenS
 	return {kind: 'message', descriptor: DEVICE_AUDIO_ONLY_DESCRIPTOR};
 }
 
-export function resolveScreenShareAudioSummary(input: ScreenShareAudioSummaryInput): ScreenShareAudioSummary {
+function resolveScreenShareAudioSummary(input: ScreenShareAudioSummaryInput): ScreenShareAudioSummary {
 	const selected = filterRoutableLinuxAudioSources(input.includeSources);
 	const routesSelectedSources = input.sourceMode === 'specific' && selected.length > 0;
 	if (input.shareContext === 'device') {

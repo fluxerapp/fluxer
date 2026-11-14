@@ -7,21 +7,13 @@ import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 
 const FALLBACKS = {
-	max_guilds: DEFAULT_STOCK_LIMITS.max_guilds,
 	max_message_length: DEFAULT_STOCK_LIMITS.max_message_length,
 	max_poll_question_length: DEFAULT_STOCK_LIMITS.max_poll_question_length,
 	max_poll_answers: DEFAULT_STOCK_LIMITS.max_poll_answers,
 	max_poll_answer_length: DEFAULT_STOCK_LIMITS.max_poll_answer_length,
 	max_poll_duration_hours: DEFAULT_STOCK_LIMITS.max_poll_duration_hours,
 	max_attachments_per_message: DEFAULT_STOCK_LIMITS.max_attachments_per_message,
-	max_bio_length: DEFAULT_STOCK_LIMITS.max_bio_length,
-	max_bookmarks: DEFAULT_STOCK_LIMITS.max_bookmarks,
-	max_favorite_memes: DEFAULT_STOCK_LIMITS.max_favorite_memes,
-	max_favorite_meme_tags: DEFAULT_STOCK_LIMITS.max_favorite_meme_tags,
-	max_relationships: DEFAULT_STOCK_LIMITS.max_relationships,
 	max_group_dm_recipients: DEFAULT_STOCK_LIMITS.max_group_dm_recipients,
-	max_private_channels_per_user: DEFAULT_STOCK_LIMITS.max_private_channels_per_user,
-	max_attachment_file_size: DEFAULT_STOCK_LIMITS.max_attachment_file_size,
 } as const;
 
 class LimitsClass {
@@ -72,11 +64,11 @@ class LimitsClass {
 	}
 
 	getStockValue(key: LimitKey, fallback: number): number {
-		return LimitResolver.resolvePremium(key, fallback);
+		return LimitResolver.resolveStock(key, fallback);
 	}
 
 	getRestrictedValue(key: LimitKey, fallback: number): number {
-		return LimitResolver.resolveFree(key, fallback);
+		return LimitResolver.resolveRestricted(key, fallback);
 	}
 
 	hasStockFeature(key: LimitKey, fallback: boolean): boolean {
@@ -85,10 +77,6 @@ class LimitsClass {
 
 	hasRestrictedFeature(key: LimitKey, fallback: boolean): boolean {
 		return this.getRestrictedValue(key, fallback ? 1 : 0) > 0;
-	}
-
-	getPremiumValue(key: LimitKey, fallback: number): number {
-		return this.getStockValue(key, fallback);
 	}
 }
 

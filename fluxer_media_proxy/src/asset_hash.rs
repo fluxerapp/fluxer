@@ -30,33 +30,3 @@ pub fn strip_animation_prefix(hash: &str) -> &str {
 pub fn has_animation_prefix(hash: &str) -> bool {
     hash.starts_with("a_")
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn strip_animation_prefix_removes_only_virtual_animated_prefix() {
-        assert_eq!("abc123", strip_animation_prefix("a_abc123"));
-        assert_eq!("abc123", strip_animation_prefix("abc123"));
-    }
-
-    #[test]
-    fn parsed_hashes_split_the_animation_prefix_from_the_digest() {
-        let plain = AssetHash::parse("abc123");
-        assert_eq!("abc123", plain.digest());
-        assert!(!plain.is_animated());
-
-        let animated = AssetHash::parse("a_abc123");
-        assert_eq!("abc123", animated.digest());
-        assert!(animated.is_animated());
-
-        let empty = AssetHash::parse("");
-        assert_eq!("", empty.digest());
-        assert!(!empty.is_animated());
-
-        let doubled = AssetHash::parse("a_a_abc123");
-        assert_eq!("a_abc123", doubled.digest());
-        assert!(doubled.is_animated());
-    }
-}

@@ -1,0 +1,36 @@
+package: adminapi
+output: internal/adminapi/gen.go
+generate:
+  models: true
+output-options:
+  include-operation-ids:
+    - list_admin_users
+    - get_admin_user
+    - create_admin_user
+    - set_admin_user_acls
+    - create_admin_user_password_reset_link
+    - create_admin_user_sign_in_link
+    - list_admin_user_sessions
+    - terminate_admin_user_sessions
+    - disable_admin_user_mfa
+    - ban_admin_user
+    - unban_admin_user
+    - schedule_admin_user_deletion
+    - delete_admin_user_messages
+    - create_admin_registration_url
+    - revoke_admin_registration_url
+    - list_admin_pending_registrations
+    - update_admin_pending_registration
+    - get_admin_instance_config
+    - update_admin_instance_config
+    - create_admin_instance_branding_asset
+    - create_admin_instance_smtp_test
+    - list_admin_voice_regions
+    - create_admin_voice_region
+    - create_admin_voice_server
+    - update_admin_voice_server
+    - delete_admin_voice_server
+    - create_admin_voice_server_test_token
+    - create_admin_voice_join_token
+    - list_admin_voice_join_tokens
+    - revoke_admin_voice_join_token

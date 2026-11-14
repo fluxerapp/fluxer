@@ -2,13 +2,13 @@
 
 import Channels from '@app/features/channel/state/Channels';
 import * as PollCommands from '@app/features/messaging/commands/PollCommands';
+import {usePollVotes, usePollVoteUsers} from '@app/features/messaging/hooks/useMessagePollAnswerVoterStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import {getPollVoteKey} from '@app/features/messaging/state/PollVotes';
 import type {User} from '@app/features/user/models/User';
 import type {MessagePoll, MessagePollAnswerCount} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {getPollVoteKey} from '../state/PollVotes';
-import {usePollVotes, usePollVoteUsers} from './useMessagePollAnswerVoterStore';
 
 interface UseMessagePollAnswerVotersStateOptions {
 	channelId: string;
@@ -85,7 +85,7 @@ export function useMessagePollAnswerVotersState({
 			return;
 		}
 		const voteOnMessage = votes.find((vote) => vote.id === selectedAnswerId);
-		if (!voteOnMessage || !voteOnMessage.count || voteOnMessage.count === 0) {
+		if (!voteOnMessage?.count || voteOnMessage.count === 0) {
 			return;
 		}
 		const desiredInitialLimit = Math.min(100, voteOnMessage.count);

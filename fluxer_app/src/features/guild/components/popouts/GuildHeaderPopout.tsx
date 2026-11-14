@@ -2,13 +2,19 @@
 
 import {GuildSettingsModal, UserSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {CategoryCreateModal} from '@app/features/channel/components/modals/CategoryCreateModal';
 import {ChannelCreateModal} from '@app/features/channel/components/modals/ChannelCreateModal';
 import {DELETE_MY_MESSAGES_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
+import {joinVisitedGuild, leaveVisit} from '@app/features/guild/commands/GuildVisitCommands';
 import {GuildNotificationSettingsModal} from '@app/features/guild/components/modals/GuildNotificationSettingsModal';
 import {GuildPrivacySettingsModal} from '@app/features/guild/components/modals/GuildPrivacySettingsModal';
 import styles from '@app/features/guild/components/popouts/GuildHeaderPopout.module.css';
+import {
+	JOIN_COMMUNITY_DESCRIPTOR,
+	STOP_PREVIEWING_DESCRIPTOR,
+} from '@app/features/guild/components/visits/GuildPreviewNagbar';
 import {useDeleteMyMessagesInGuild} from '@app/features/guild/hooks/useDeleteMyMessagesInGuild';
 import {useLeaveGuild} from '@app/features/guild/hooks/useLeaveGuild';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -34,11 +40,13 @@ import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuil
 import {GUILD_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/GuildSettingsConstants';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
+import {canOpenProfileEditor} from '@app/features/user/utils/ProfileEditAccess';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {
 	BellIcon,
+	DoorOpenIcon,
 	FolderPlusIcon,
 	GearIcon,
 	type Icon,
@@ -176,7 +184,7 @@ export const GuildHeaderPopout = observer(({guild}: {guild: Guild}) => {
 		canManageEmojis ||
 		canCreateExpressions ||
 		canBanMembers;
-	const canEditCommunityProfile = Users.getCurrentUser()?.isClaimed() ?? true;
+	const canEditCommunityProfile = canOpenProfileEditor(Users.getCurrentUser());
 	const settings = UserGuildSettings.getSettingsForScope(guild.id);
 	const hideMutedChannels = settings?.hide_muted_channels ?? false;
 	const handleToggleHideMutedChannels = useCallback(
@@ -190,10 +198,36 @@ export const GuildHeaderPopout = observer(({guild}: {guild: Guild}) => {
 	);
 	const listRef = useRovingFocusList<HTMLDivElement>({
 		focusableSelector: '[data-roving-focus="true"]',
-		manageTabIndex: true,
 	});
 	const leaveGuild = useLeaveGuild();
 	const deleteMyMessagesInGuild = useDeleteMyMessagesInGuild();
+	if (guild.visiting) {
+		return (
+			<div
+				className={styles.container}
+				ref={listRef}
+				role="menu"
+				aria-orientation="vertical"
+				tabIndex={-1}
+				data-autofocus
+				data-flx="guild.guild-header-popout.visiting-container"
+			>
+				<GuildHeaderPopoutItem
+					icon={DoorOpenIcon}
+					title={i18n._(JOIN_COMMUNITY_DESCRIPTOR)}
+					onClick={() => void joinVisitedGuild(guild.id)}
+					data-flx="guild.guild-header-popout.guild-header-popout-item.join-visit"
+				/>
+				<GuildHeaderPopoutItem
+					danger={true}
+					icon={SignOutIcon}
+					onClick={() => void leaveVisit(guild.id)}
+					title={i18n._(STOP_PREVIEWING_DESCRIPTOR)}
+					data-flx="guild.guild-header-popout.guild-header-popout-item.leave-visit"
+				/>
+			</div>
+		);
+	}
 	return (
 		<div
 			className={styles.container}
@@ -278,21 +312,23 @@ export const GuildHeaderPopout = observer(({guild}: {guild: Guild}) => {
 				}
 				data-flx="guild.guild-header-popout.guild-header-popout-item.push--5"
 			/>
-			<GuildHeaderPopoutItem
-				icon={ShieldIcon}
-				title={i18n._(PRIVACY_SETTINGS_DESCRIPTOR)}
-				onClick={() =>
-					ModalCommands.push(
-						modal(() => (
-							<GuildPrivacySettingsModal
-								guildId={guild.id}
-								data-flx="guild.guild-header-popout.guild-privacy-settings-modal"
-							/>
-						)),
-					)
-				}
-				data-flx="guild.guild-header-popout.guild-header-popout-item.push--6"
-			/>
+			{!RuntimeConfig.directMessagesDisabled && (
+				<GuildHeaderPopoutItem
+					icon={ShieldIcon}
+					title={i18n._(PRIVACY_SETTINGS_DESCRIPTOR)}
+					onClick={() =>
+						ModalCommands.push(
+							modal(() => (
+								<GuildPrivacySettingsModal
+									guildId={guild.id}
+									data-flx="guild.guild-header-popout.guild-privacy-settings-modal"
+								/>
+							)),
+						)
+					}
+					data-flx="guild.guild-header-popout.guild-header-popout-item.push--6"
+				/>
+			)}
 			{canEditCommunityProfile && (
 				<GuildHeaderPopoutItem
 					icon={UserCircleIcon}

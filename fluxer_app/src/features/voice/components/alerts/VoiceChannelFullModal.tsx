@@ -10,7 +10,7 @@ const VOICE_CHANNEL_FULL_DESCRIPTOR = msg({
 	comment: 'Title of the modal shown when a voice channel has reached its participant cap.',
 });
 const THIS_VOICE_CHANNEL_HAS_REACHED_ITS_USER_LIMIT_DESCRIPTOR = msg({
-	message: 'This voice channel has reached its user limit. Try again later or join a different channel.',
+	message: 'This voice channel is at its user limit. Try again later or join a different channel.',
 	comment: 'Body of the voice-channel-full modal.',
 });
 export const VoiceChannelFullModal = observer(() => {

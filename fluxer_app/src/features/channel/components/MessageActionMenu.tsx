@@ -30,6 +30,7 @@ import {
 	TRY_AGAIN_DESCRIPTOR,
 	UNPIN_MESSAGE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import * as SavedMessageCommands from '@app/features/messaging/commands/SavedMessageCommands';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
@@ -126,6 +127,7 @@ interface MessageActionMenuOptions {
 	sourceChannel?: MessagePermissions['channel'] | null;
 	quickReactionCount?: number;
 	submenuReactionCount?: number;
+	hideReply?: boolean;
 }
 
 export const messageActionMenuItemIds = {
@@ -175,13 +177,17 @@ export const useMessageActionMenuData = (
 		sourceChannel,
 		quickReactionCount = 5,
 		submenuReactionCount = 16,
+		hideReply = false,
 	} = options;
 	const permissions = useMessagePermissions(message, sourceChannel);
 	const handlers = useMemo(
 		() => createMessageActionHandlers(message, {i18n, onClose, channel: permissions?.channel ?? sourceChannel}),
 		[message, permissions?.channel, sourceChannel, onClose, i18n.locale],
 	);
-	const isSaved = useMemo(() => SavedMessages.isSaved(message.id), [message.id]);
+	const isSaved = SavedMessages.isSaved(message.id);
+	useEffect(() => {
+		void SavedMessageCommands.ensureAllLoaded();
+	}, []);
 	const channel = permissions?.channel ?? sourceChannel ?? null;
 	const shouldBuildQuickReactions = permissions?.canAddReactions === true && message.state === MessageStates.SENT;
 	const reactionEmojiLimit = Math.max(quickReactionCount, submenuReactionCount);
@@ -259,7 +265,7 @@ export const useMessageActionMenuData = (
 					shortcut: <KeybindHint action="message_react" data-flx="channel.message-action-menu.groups.keybind-hint" />,
 				});
 			}
-			if (reactions.length > 0 && onOpenReactionsSheet) {
+			if (reactions.length > 0 && onOpenReactionsSheet && !permissions?.isPreviewing) {
 				reactionActions.push({
 					id: messageActionMenuItemIds.viewReactions,
 					icon: <ViewReactionsIcon size={20} data-flx="channel.message-action-menu.groups.view-reactions-icon" />,
@@ -278,16 +284,18 @@ export const useMessageActionMenuData = (
 					danger: true,
 				});
 			}
-			interactionActions.push({
-				id: messageActionMenuItemIds.markUnread,
-				icon: <MarkAsUnreadIcon size={20} data-flx="channel.message-action-menu.groups.mark-as-unread-icon" />,
-				label: i18n._(MARK_AS_UNREAD_DESCRIPTOR),
-				onClick: handlers.handleMarkAsUnread,
-				shortcut: (
-					<KeybindHint action="message_mark_unread" data-flx="channel.message-action-menu.groups.keybind-hint--2" />
-				),
-			});
-			if (message.isUserMessage() && supportsInteractiveActions && permissions?.canSendMessages) {
+			if (!permissions?.isPreviewing) {
+				interactionActions.push({
+					id: messageActionMenuItemIds.markUnread,
+					icon: <MarkAsUnreadIcon size={20} data-flx="channel.message-action-menu.groups.mark-as-unread-icon" />,
+					label: i18n._(MARK_AS_UNREAD_DESCRIPTOR),
+					onClick: handlers.handleMarkAsUnread,
+					shortcut: (
+						<KeybindHint action="message_mark_unread" data-flx="channel.message-action-menu.groups.keybind-hint--2" />
+					),
+				});
+			}
+			if (message.isUserMessage() && supportsInteractiveActions && permissions?.canSendMessages && !hideReply) {
 				interactionActions.push({
 					id: messageActionMenuItemIds.reply,
 					icon: <ReplyIcon size={20} data-flx="channel.message-action-menu.groups.reply-icon" />,
@@ -408,10 +416,16 @@ export const useMessageActionMenuData = (
 					),
 				});
 			}
-			if (message.isCurrentUserAuthor() && message.isUserMessage() && !message.messageSnapshots && message.poll && !message.poll.results?.is_finalized) {
+			if (
+				message.isCurrentUserAuthor() &&
+				message.isUserMessage() &&
+				!message.messageSnapshots &&
+				message.poll &&
+				!message.poll.results?.is_finalized
+			) {
 				utilityActions.push({
 					id: messageActionMenuItemIds.endPollNow,
-					icon: <EndPollNowIcon size={20}  data-flx="channel.message-action-menu.groups.end-poll-now-icon" />,
+					icon: <EndPollNowIcon size={20} data-flx="channel.message-action-menu.groups.end-poll-now-icon" />,
 					label: i18n._(END_POLL_NOW_DESCRIPTOR),
 					onClick: handlers.handleEndPollNow,
 				});
@@ -502,6 +516,7 @@ export const useMessageActionMenuData = (
 		handleSpeakMessage,
 		handleReportMessage,
 		handleDebugMessage,
+		hideReply,
 		i18n.locale,
 	]);
 	const quickReactionRowVisible =

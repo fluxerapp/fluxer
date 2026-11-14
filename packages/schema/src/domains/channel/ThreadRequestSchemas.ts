@@ -22,7 +22,6 @@ import {
 import {z} from 'zod';
 
 const THREAD_MEMBERS_LIST_MAX_LIMIT = 100;
-const LOCATION_MAX_LENGTH = 100;
 
 export const ThreadAutoArchiveDurationSchema = createInt32EnumType(
 	[
@@ -43,13 +42,10 @@ const ThreadRateLimitPerUserType = Int32Type.max(THREAD_RATE_LIMIT_PER_USER_MAX)
 	'Seconds a user has to wait before sending another message (0-21600)',
 );
 
-const LocationType = z.string().max(LOCATION_MAX_LENGTH).optional().describe('Accepted and ignored');
-
 export const StartThreadFromMessageRequest = z.object({
 	name: ThreadNameType,
 	auto_archive_duration: ThreadAutoArchiveDurationSchema.optional(),
 	rate_limit_per_user: ThreadRateLimitPerUserType.optional(),
-	location: LocationType,
 });
 
 export type StartThreadFromMessageRequest = z.infer<typeof StartThreadFromMessageRequest>;
@@ -68,14 +64,9 @@ export const StartThreadRequest = z.object({
 	auto_archive_duration: ThreadAutoArchiveDurationSchema.optional(),
 	rate_limit_per_user: ThreadRateLimitPerUserType.optional(),
 	invitable: z.boolean().optional().describe('Whether non-moderators can add other non-moderators (private threads)'),
-	location: LocationType,
 });
 
 export type StartThreadRequest = z.infer<typeof StartThreadRequest>;
-
-export const ThreadLocationQuery = z.object({
-	location: LocationType,
-});
 
 export const ThreadMembersListQuery = z.object({
 	with_member: QueryBooleanType.describe('Whether to include a guild member object for each thread member'),

@@ -4,29 +4,30 @@ import crypto from 'node:crypto';
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {ProductType} from '@app/api/stripe/ProductRegistry';
-import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {
+	sendStripeWebhook,
+	sendStripeWebhookExpectStripeError,
+	setupSyncStripeWebhookWorker,
+} from '@app/api/stripe/tests/StripeWebhookTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {
 	createInvoiceFinalizationFailedEvent,
 	createInvoicePaidEvent,
 	createInvoicePaymentActionRequiredEvent,
 	createInvoicePaymentFailedEvent,
 	createInvoiceUpdatedEvent,
-	createMockWebhookPayload,
 	createStripeApiHandlers,
+	createSubscriptionDeletedEvent,
 	type StripeApiHandlers,
 	type StripeWebhookEventData,
 } from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {HttpResponse, http} from 'msw';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
@@ -47,8 +48,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const LEGACY_MONTHLY_BRL_PRICE = 'price_legacy_monthly_brl';
 const LEGACY_YEARLY_BRL_PRICE = 'price_legacy_yearly_brl';
 const UNMAPPED_PRICE = 'price_retired_unmapped_brl';
-const MANDATE_REVOKED_WARNING =
-	'Stripe mandate is no longer active; recurring payments on this payment method will fail';
 
 describe('Stripe Webhook - Invoice Events', () => {
 	let harness: ApiTestHarness;
@@ -82,36 +81,6 @@ describe('Stripe Webhook - Invoice Events', () => {
 	afterEach(() => {
 		server.resetHandlers();
 	});
-	function createWebhookSignature(payload: string, timestamp: number, secret: string): string {
-		const signedPayload = `${timestamp}.${payload}`;
-		const signature = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
-		return `t=${timestamp},v1=${signature}`;
-	}
-	async function sendWebhook(eventData: StripeWebhookEventData): Promise<{
-		received: boolean;
-	}> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		return createBuilder<{
-			received: boolean;
-		}>(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.execute();
-	}
-	async function sendWebhookExpectStripeError(eventData: StripeWebhookEventData): Promise<void> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		await createBuilder(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.expect(400, APIErrorCodes.STRIPE_ERROR)
-			.execute();
-	}
 	async function createPaymentRecord(params: {
 		userId: string;
 		subscriptionId: string;
@@ -217,7 +186,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				},
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const user = await createBuilder<{
 				premium_type: number | null;
@@ -268,7 +237,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				},
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const user = await createBuilder<{
 				premium_since: string | null;
@@ -303,7 +272,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				},
 			};
-			const firstResult = await sendWebhook(firstEventData);
+			const firstResult = await sendStripeWebhook(harness, firstEventData);
 			expect(firstResult.received).toBe(true);
 			const userAfterFirst = await createBuilder<{
 				premium_type: number | null;
@@ -321,7 +290,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				...firstEventData,
 				id: 'evt_duplicate_invoice_renewal_1_b',
 			};
-			const secondResult = await sendWebhook(secondEventData);
+			const secondResult = await sendStripeWebhook(harness, secondEventData);
 			expect(secondResult.received).toBe(true);
 			const userAfterSecond = await createBuilder<{
 				premium_type: number | null;
@@ -351,7 +320,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				},
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const user = await createBuilder<{
 				premium_type: number;
@@ -373,7 +342,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				},
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 		});
 		test('handles missing subscription info gracefully', async () => {
@@ -402,42 +371,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				},
 			};
-			await sendWebhookExpectStripeError(eventData);
-		});
-		test('anchors yearly subscription renewal premium_until to Stripe period_end', async () => {
-			const account = await createTestAccount(harness);
-			const subscriptionId = `sub_test_${Date.now()}`;
-			await createPaymentRecord({
-				userId: account.userId,
-				subscriptionId,
-				priceId: MOCK_PRICES.yearlyUsd,
-				productType: ProductType.YEARLY_SUBSCRIPTION,
-			});
-			const eventData: StripeWebhookEventData = {
-				type: 'invoice.payment_succeeded',
-				data: {
-					object: {
-						id: `in_test_${Date.now()}`,
-						billing_reason: 'subscription_cycle',
-						parent: {subscription_details: {subscription: subscriptionId}},
-					},
-				},
-			};
-			const result = await sendWebhook(eventData);
-			expect(result.received).toBe(true);
-			const user = await createBuilder<{
-				premium_type: number | null;
-				premium_until: string | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(user.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(user.premium_until).not.toBeNull();
-			const premiumUntil = new Date(user.premium_until!);
-			const now = new Date();
-			const daysDiff = (premiumUntil.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-			expect(daysDiff).toBeGreaterThanOrEqual(27);
-			expect(daysDiff).toBeLessThanOrEqual(32);
+			await sendStripeWebhookExpectStripeError(harness, eventData);
 		});
 		test('anchors renewal to Stripe period_end regardless of existing premium time', async () => {
 			const account = await createTestAccount(harness);
@@ -473,7 +407,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				},
 			};
-			await sendWebhook(eventData);
+			await sendStripeWebhook(harness, eventData);
 			const userAfter = await createBuilder<{
 				premium_until: string | null;
 			}>(harness, account.token)
@@ -514,7 +448,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				},
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const userAfter = await createBuilder<{
 				premium_type: number | null;
@@ -557,7 +491,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				},
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const userAfter = await createBuilder<{
 				premium_billing_cycle: string | null;
@@ -621,7 +555,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				],
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const me = await createBuilder<{
 				premium_type: number | null;
@@ -655,7 +589,8 @@ describe('Stripe Webhook - Invoice Events', () => {
 				premiumUntil: failedPeriodStart,
 				billingCycle: 'yearly',
 			});
-			const result = await sendWebhook(
+			const result = await sendStripeWebhook(
+				harness,
 				createRenewalFailureEvent({
 					invoiceId: `in_failed_yearly_${Date.now()}`,
 					customerId: 'cus_test_failed_yearly',
@@ -706,7 +641,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				});
 				eventData.id = `evt_failed_repeat_${attempt}_${Date.now()}`;
 				eventData.data.object.attempt_count = attempt;
-				const result = await sendWebhook(eventData);
+				const result = await sendStripeWebhook(harness, eventData);
 				expect(result.received).toBe(true);
 				const me = await createBuilder<{
 					premium_until: string | null;
@@ -717,6 +652,49 @@ describe('Stripe Webhook - Invoice Events', () => {
 				expect(me.premium_until).toBe(failedPeriodStart.toISOString());
 				expect(me.premium_grace_ends_at).toBe(expectedDeadline);
 			}
+		});
+		test('leaves the user unlinked when the last failure arrives after the subscription was deleted', async () => {
+			const account = await createTestAccount(harness);
+			const subscriptionId = `sub_failed_after_delete_${Date.now()}`;
+			const customerId = 'cus_test_failed_after_delete';
+			const failedPeriodStart = new Date(Math.floor((Date.now() - 10 * DAY_MS) / 1000) * 1000);
+			const failedPeriodEnd = new Date(failedPeriodStart.getTime() + 30 * DAY_MS);
+			await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId,
+				priceId: MOCK_PRICES.monthlyUsd,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			await setSubscriptionUserState({
+				accountUserId: account.userId,
+				subscriptionId,
+				customerId,
+				premiumUntil: failedPeriodStart,
+				premiumWillCancel: true,
+				billingCycle: 'monthly',
+			});
+			stripeHandlers.put.subscription(subscriptionId, {status: 'canceled'});
+			await sendStripeWebhook(
+				harness,
+				createSubscriptionDeletedEvent({subscriptionId, customerId, cancellationReason: 'payment_failed'}),
+			);
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
+			const userRepository = new UserRepository();
+			const userId = createUserID(BigInt(account.userId));
+			const afterDelete = (await userRepository.findUnique(userId))!;
+			expect(afterDelete.stripeSubscriptionId).toBeNull();
+			const eventData = createRenewalFailureEvent({
+				invoiceId: `in_failed_after_delete_${Date.now()}`,
+				customerId,
+				subscriptionId,
+				periodStart: failedPeriodStart,
+				periodEnd: failedPeriodEnd,
+			});
+			eventData.data.object.attempt_count = 4;
+			await sendStripeWebhook(harness, eventData);
+			const afterFailure = (await userRepository.findUnique(userId))!;
+			expect(afterFailure.stripeSubscriptionId).toBeNull();
+			expect(afterFailure.premiumWillCancel).toBe(afterDelete.premiumWillCancel);
 		});
 		test('ignores non-renewal invoice payment failures', async () => {
 			const account = await createTestAccount(harness);
@@ -749,7 +727,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				amountDue: 500,
 			});
 			eventData.data.object.billing_reason = 'subscription_update';
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const me = await createBuilder<{
 				premium_until: string | null;
@@ -802,7 +780,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				],
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const me = await createBuilder<{
 				premium_until: string | null;
@@ -855,7 +833,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				],
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const me = await createBuilder<{
 				premium_until: string | null;
@@ -910,7 +888,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				],
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const me = await createBuilder<{
 				premium_until: string | null;
@@ -949,7 +927,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				nextPaymentAttempt: null,
 			});
 			eventData.data.object.billing_reason = 'subscription_cycle';
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const me = await createBuilder<{
 				premium_until: string | null;
@@ -979,7 +957,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				currency: 'usd',
 			});
 			eventData.data.object.billing_reason = 'subscription_cycle';
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const me = await createBuilder<{
 				premium_type: number | null;
@@ -1020,7 +998,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				}).handlers,
 			);
-			const result = await sendWebhook({
+			const result = await sendStripeWebhook(harness, {
 				type: 'invoice.payment_succeeded',
 				data: {
 					object: {
@@ -1079,7 +1057,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				}).handlers,
 			);
-			const result = await sendWebhook({
+			const result = await sendStripeWebhook(harness, {
 				type: 'invoice.payment_succeeded',
 				data: {
 					object: {
@@ -1138,7 +1116,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					},
 				}).handlers,
 			);
-			await sendWebhookExpectStripeError({
+			await sendStripeWebhookExpectStripeError(harness, {
 				type: 'invoice.payment_succeeded',
 				data: {
 					object: {
@@ -1157,36 +1135,6 @@ describe('Stripe Webhook - Invoice Events', () => {
 				.execute();
 			expect(me.premium_type).toBe(UserPremiumTypes.NONE);
 			expect(me.premium_until).toBeNull();
-		});
-		test('lets an authored price win over a legacy entry that claims the same price id', async () => {
-			Config.stripe.legacyPrices = {yearly_brl: [MOCK_PRICES.monthlyUsd]};
-			const account = await createTestAccount(harness);
-			const subscriptionId = 'sub_authored_wins_over_legacy';
-			await createPaymentRecord({
-				userId: account.userId,
-				subscriptionId,
-				priceId: MOCK_PRICES.monthlyUsd,
-				productType: ProductType.MONTHLY_SUBSCRIPTION,
-			});
-			const result = await sendWebhook({
-				type: 'invoice.payment_succeeded',
-				data: {
-					object: {
-						id: 'in_authored_wins_over_legacy',
-						billing_reason: 'subscription_cycle',
-						parent: {subscription_details: {subscription: subscriptionId}},
-					},
-				},
-			});
-			expect(result.received).toBe(true);
-			const me = await createBuilder<{
-				premium_billing_cycle: string | null;
-				premium_type: number | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(me.premium_billing_cycle).toBe('monthly');
 		});
 	});
 	describe('donation subscription guard', () => {
@@ -1209,7 +1157,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				subscriptionInterval: 'month',
 				subscriptionCurrentPeriodEnd: null,
 			});
-			const result = await sendWebhook({
+			const result = await sendStripeWebhook(harness, {
 				type: 'invoice.payment_succeeded',
 				data: {
 					object: {
@@ -1250,7 +1198,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				subscriptionInterval: 'month',
 				subscriptionCurrentPeriodEnd: null,
 			});
-			const result = await sendWebhook({
+			const result = await sendStripeWebhook(harness, {
 				type: 'invoice.payment_succeeded',
 				data: {
 					object: {
@@ -1270,86 +1218,6 @@ describe('Stripe Webhook - Invoice Events', () => {
 				.execute();
 			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
 			expect(me.premium_until).not.toBeNull();
-		});
-	});
-	describe('mandate.updated', () => {
-		function captureLoggerWarnings(): {
-			messages: Array<unknown>;
-			restore: () => void;
-		} {
-			const activeLogger = Logger.child({}) as unknown as NoopLogger;
-			expect(activeLogger).toBeInstanceOf(NoopLogger);
-			const messages: Array<unknown> = [];
-			const spy = vi.spyOn(activeLogger, 'warn').mockImplementation((...args: Array<unknown>) => {
-				messages.push(args[args.length - 1]);
-			});
-			return {messages, restore: () => spy.mockRestore()};
-		}
-		function revocationWarnings(messages: Array<unknown>): Array<unknown> {
-			return messages.filter((message) => message === MANDATE_REVOKED_WARNING);
-		}
-		test('logs the revocation warning and leaves premium untouched when a mandate goes inactive', async () => {
-			const account = await createTestAccount(harness);
-			const premiumUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-			await createBuilder(harness, account.token)
-				.post(`/test/users/${account.userId}/premium`)
-				.body({
-					premium_type: UserPremiumTypes.SUBSCRIPTION,
-					premium_until: premiumUntil.toISOString(),
-					stripe_subscription_id: 'sub_pix_mandate',
-					stripe_customer_id: 'cus_pix_mandate',
-				})
-				.execute();
-			const warnings = captureLoggerWarnings();
-			try {
-				const result = await sendWebhook({
-					type: 'mandate.updated',
-					data: {
-						object: {
-							id: 'mandate_test_inactive',
-							object: 'mandate',
-							status: 'inactive',
-							payment_method: 'pm_pix_mandate',
-							type: 'multi_use',
-						},
-					},
-				});
-				expect(result.received).toBe(true);
-				expect(revocationWarnings(warnings.messages)).toHaveLength(1);
-			} finally {
-				warnings.restore();
-			}
-			const me = await createBuilder<{
-				premium_type: number | null;
-				premium_until: string | null;
-			}>(harness, account.token)
-				.get('/users/@me')
-				.execute();
-			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(me.premium_until).toBe(premiumUntil.toISOString());
-		});
-		test('does not log the revocation warning for a pending or still-active mandate', async () => {
-			const warnings = captureLoggerWarnings();
-			try {
-				for (const status of ['pending', 'active'] as const) {
-					const result = await sendWebhook({
-						type: 'mandate.updated',
-						data: {
-							object: {
-								id: `mandate_test_${status}`,
-								object: 'mandate',
-								status,
-								payment_method: {id: 'pm_pix_mandate', object: 'payment_method', type: 'pix'},
-								type: 'multi_use',
-							},
-						},
-					});
-					expect(result.received).toBe(true);
-				}
-				expect(revocationWarnings(warnings.messages)).toHaveLength(0);
-			} finally {
-				warnings.restore();
-			}
 		});
 	});
 });

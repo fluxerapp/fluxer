@@ -72,10 +72,6 @@ export class UnsubscribeGraceGate {
 
 	constructor(private readonly graceMs: number) {}
 
-	get isPending(): boolean {
-		return this.timeoutId !== null;
-	}
-
 	scheduleDisable(onDisable: () => void): void {
 		if (this.timeoutId !== null) return;
 		this.timeoutId = setTimeout(() => {

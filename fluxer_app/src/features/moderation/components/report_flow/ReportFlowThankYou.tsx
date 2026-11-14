@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	BLOCK_DESCRIPTION_DESCRIPTOR,
 	BLOCK_NAME_DESCRIPTOR,
 	BLOCKED_BUTTON_DESCRIPTOR,
 	MORE_YOU_CAN_DO_DESCRIPTOR,
 	THANK_YOU_BODY_DESCRIPTOR,
+	THANK_YOU_BODY_SELF_HOSTED_DESCRIPTOR,
 	THANK_YOU_NO_REPORT_BODY_DESCRIPTOR,
 	THANK_YOU_NO_REPORT_SHORT_BODY_DESCRIPTOR,
 } from '@app/features/moderation/components/report_flow/ReportFlowCopy';
@@ -34,14 +36,20 @@ export const ReportFlowThankYou: React.FC<ReportFlowThankYouProps> = observer(
 		const {i18n} = useLingui();
 		const isBlocked = blockTarget !== null && Relationships.isBlocked(blockTarget.id);
 		const blockTargetName = blockTarget !== null ? NicknameUtils.getNickname(blockTarget, guildId, channelId) : '';
+		let body: string;
+		if (reportSent && RuntimeConfig.isSelfHosted()) {
+			body = i18n._(THANK_YOU_BODY_SELF_HOSTED_DESCRIPTOR);
+		} else if (reportSent) {
+			body = i18n._(THANK_YOU_BODY_DESCRIPTOR, {productName});
+		} else if (endedOnStart) {
+			body = i18n._(THANK_YOU_NO_REPORT_BODY_DESCRIPTOR);
+		} else {
+			body = i18n._(THANK_YOU_NO_REPORT_SHORT_BODY_DESCRIPTOR);
+		}
 		return (
 			<div className={styles.container} data-flx="moderation.report-flow.report-flow-thank-you.container">
 				<p className={styles.body} data-flx="moderation.report-flow.report-flow-thank-you.body">
-					{reportSent
-						? i18n._(THANK_YOU_BODY_DESCRIPTOR, {productName})
-						: endedOnStart
-							? i18n._(THANK_YOU_NO_REPORT_BODY_DESCRIPTOR)
-							: i18n._(THANK_YOU_NO_REPORT_SHORT_BODY_DESCRIPTOR)}
+					{body}
 				</p>
 				{blockTarget !== null && (
 					<section className={styles.section} data-flx="moderation.report-flow.report-flow-thank-you.section">

@@ -2,13 +2,14 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
-import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
 import type {User} from '@app/api/models/User';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {assertCanRegisterPasskey, assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import * as UserAuth from '@app/api/user/services/UserAuth';
 import {mapUserToPrivateResponse, mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import type {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
@@ -53,7 +54,7 @@ interface UserAuthWebAuthnDeleteRequest {
 export class UserAuthRequestService {
 	constructor(
 		private apiContext: ApiContext,
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 	) {}
 
 	async enableTotp({
@@ -61,7 +62,7 @@ export class UserAuthRequestService {
 		data,
 		sudoContext,
 	}: UserAuthWithSudoRequest<EnableMfaTotpRequest>): Promise<MfaBackupCodesResponse> {
-		requireEmailVerified(user, 'mfa');
+		assertTierAllows(user, TierGatedActions.MFA, NO_TIER_CONTEXT);
 		const backupCodes = await UserAuth.enableMfaTotp(this.apiContext, {
 			user,
 			secret: data.secret,
@@ -84,6 +85,7 @@ export class UserAuthRequestService {
 		data,
 		sudoContext,
 	}: UserAuthWithSudoRequest<MfaBackupCodesRequest>): Promise<MfaBackupCodesResponse> {
+		if (data.regenerate) assertTierAllows(user, TierGatedActions.MFA, NO_TIER_CONTEXT);
 		const backupCodes = await UserAuth.getMfaBackupCodes(this.apiContext, {
 			user,
 			regenerate: data.regenerate,
@@ -105,14 +107,15 @@ export class UserAuthRequestService {
 	async generateWebAuthnRegistrationOptions(
 		user: User,
 		origin: string | undefined,
+		requestedRpId?: string | null,
 	): Promise<WebAuthnChallengeResponse> {
-		requireEmailVerified(user, 'mfa');
-		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id, origin);
-		return this.toWebAuthnChallengeResponse(options);
+		assertCanRegisterPasskey(user);
+		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id, origin, requestedRpId);
+		return {...options};
 	}
 
 	async registerWebAuthnCredential({user, data}: UserAuthWebAuthnRegisterRequest): Promise<void> {
-		requireEmailVerified(user, 'mfa');
+		assertCanRegisterPasskey(user);
 		await AuthMfa.verifyWebAuthnRegistration(this.apiContext, user.id, data.response, data.challenge, data.name);
 	}
 
@@ -128,9 +131,7 @@ export class UserAuthRequestService {
 		user,
 		data,
 	}: UserAuthRequest<WebAuthnTwoFactorRequest>): Promise<WebAuthnTwoFactorResponse> {
-		if (data.enabled) {
-			requireEmailVerified(user, 'mfa');
-		}
+		if (data.enabled) assertTierAllows(user, TierGatedActions.MFA, NO_TIER_CONTEXT);
 		const result = await AuthMfa.setWebAuthnTwoFactor(this.apiContext, user.id, data.enabled);
 		return {
 			user: mapUserToPrivateResponse(result.user),
@@ -144,19 +145,13 @@ export class UserAuthRequestService {
 		return AuthMfa.getAvailableMfaMethods(this.apiContext, user.id);
 	}
 
-	async getSudoWebAuthnOptions(user: User, origin: string | undefined): Promise<WebAuthnChallengeResponse> {
-		const options = await AuthMfa.generateWebAuthnOptionsForSudo(this.apiContext, user.id, origin);
-		return this.toWebAuthnChallengeResponse(options);
-	}
-
-	private toWebAuthnChallengeResponse(options: {challenge: string}): WebAuthnChallengeResponse {
-		const response: Record<string, unknown> & {
-			challenge: string;
-		} = {
-			...options,
-			challenge: options.challenge,
-		};
-		return response;
+	async getSudoWebAuthnOptions(
+		user: User,
+		origin: string | undefined,
+		requestedRpId?: string | null,
+	): Promise<WebAuthnChallengeResponse> {
+		const options = await AuthMfa.generateWebAuthnOptionsForSudo(this.apiContext, user.id, origin, requestedRpId);
+		return {...options};
 	}
 
 	private toBackupCodesResponse(

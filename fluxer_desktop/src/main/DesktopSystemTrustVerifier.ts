@@ -4,7 +4,7 @@ import {createHash, X509Certificate} from 'node:crypto';
 import net from 'node:net';
 import {createChildLogger} from '@electron/common/Logger';
 import {CHROMIUM_SPKI_BLOCKLIST, CHROMIUM_SPKI_BLOCKLIST_SOURCE} from '@electron/main/DesktopChromiumSPKIBlocklist';
-import {resolveDesktopLocallyAddedCertificates} from '@electron/main/DesktopTrustedCertificates';
+import {resolveDesktopPlatformTrustAnchors} from '@electron/main/DesktopTrustedCertificates';
 import type {Certificate, Session} from 'electron';
 
 const logger = createChildLogger('DesktopSystemTrustVerifier');
@@ -99,7 +99,7 @@ interface DesktopSystemTrustRequest {
 	readonly errorCode: number;
 }
 
-export type DesktopTrustAnchors = ReadonlyMap<string, ReadonlyArray<ParsedCertificate>>;
+type DesktopTrustAnchors = ReadonlyMap<string, ReadonlyArray<ParsedCertificate>>;
 
 function readNodes(buffer: Buffer): Array<DerNode> {
 	const nodes: Array<DerNode> = [];
@@ -397,15 +397,15 @@ function chainsToDesktopTrustAnchor(
 	return buildsPath({intermediates, anchors, now, signatures: new Map(), signatureChecks: 0}, leaf, [leaf]);
 }
 
-export function buildDesktopTrustAnchors(
-	certificates: ReadonlyArray<string>,
+function buildDesktopTrustAnchors(
+	certificates: ReadonlyArray<string | Buffer>,
 	now: number = Date.now(),
 ): DesktopTrustAnchors {
 	const anchors = new Map<string, Array<ParsedCertificate>>();
-	for (const pem of certificates) {
+	for (const certificate of certificates) {
 		let anchor: ParsedCertificate;
 		try {
-			anchor = parseCertificate(new X509Certificate(pem));
+			anchor = parseCertificate(new X509Certificate(certificate));
 		} catch {
 			continue;
 		}
@@ -417,7 +417,7 @@ export function buildDesktopTrustAnchors(
 	return anchors;
 }
 
-export function verifyAgainstDesktopSystemTrust(
+function verifyAgainstDesktopSystemTrust(
 	request: DesktopSystemTrustRequest,
 	loadAnchors: () => DesktopTrustAnchors,
 ): number {
@@ -434,12 +434,13 @@ export function verifyAgainstDesktopSystemTrust(
 	return CHROMIUM_DEFAULT_RESULT;
 }
 
-export function installDesktopSystemTrustVerifier(target: Session): void {
-	if (process.platform !== 'linux') return;
-	const anchors = buildDesktopTrustAnchors(resolveDesktopLocallyAddedCertificates());
+export async function installDesktopSystemTrustVerifier(target: Session): Promise<void> {
+	if (process.platform !== 'linux' && process.platform !== 'win32') return;
+	const anchors = buildDesktopTrustAnchors(await resolveDesktopPlatformTrustAnchors());
 	if (anchors.size === 0) return;
 	logger.info('Trusting locally added CAs for Chromium requests', {
 		count: anchors.size,
+		platform: process.platform,
 		blocklist: CHROMIUM_SPKI_BLOCKLIST_SOURCE,
 	});
 	target.setCertificateVerifyProc((request, callback) => {

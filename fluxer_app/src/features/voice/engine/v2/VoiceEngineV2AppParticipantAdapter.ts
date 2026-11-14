@@ -4,13 +4,13 @@ import assert from 'node:assert/strict';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
 import {asVoiceConnectionQuality, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {assertNonNullObject, assertString} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
-	VoiceEngineV2Controller,
-	VoiceEngineV2Event,
 	VoiceEngineV2Model,
 	VoiceEngineV2Participant,
 	VoiceEngineV2Track,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 import type {Participant, Room, TrackPublication} from 'livekit-client';
 import {Track} from 'livekit-client';
 

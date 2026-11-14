@@ -12,7 +12,7 @@
 
 -spec strip_role_from_members(term(), guild_data()) -> guild_data().
 strip_role_from_members(RoleId, Data) when is_integer(RoleId) ->
-    MemberRoleIndex = guild_data_index:member_role_index(Data),
+    MemberRoleIndex = guild_data_index_members:member_role_index(Data),
     AffectedUsers = maps:keys(maps:get(RoleId, MemberRoleIndex, #{})),
     lists:foldl(
         fun(UserId, AccData) ->
@@ -26,7 +26,7 @@ strip_role_from_members(_RoleId, Data) ->
 
 -spec strip_role_from_single_member(user_id(), integer(), guild_data()) -> guild_data().
 strip_role_from_single_member(UserId, RoleIdInt, AccData) ->
-    case guild_data_index:get_member(UserId, AccData) of
+    case guild_data_index_members:get_member(UserId, AccData) of
         undefined ->
             AccData;
         Member ->
@@ -42,11 +42,11 @@ remove_role_from_member(Member, RoleIdInt, AccData) ->
         end,
         MemberRoles
     ),
-    guild_data_index:put_member(Member#{<<"roles">> => FilteredRoles}, AccData).
+    guild_data_index_members:put_member(Member#{<<"roles">> => FilteredRoles}, AccData).
 
 -spec strip_role_from_channel_overwrites(term(), guild_data()) -> guild_data().
 strip_role_from_channel_overwrites(RoleId, Data) when is_integer(RoleId) ->
-    Channels = guild_data_index:channel_list(Data),
+    Channels = guild_data_index_channels:channel_list(Data),
     UpdatedChannels = lists:map(
         fun(Channel) -> strip_role_overwrite_from_channel(Channel, RoleId) end,
         Channels

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import {
 	type ChannelID,
 	channelIdToMessageId,
@@ -11,10 +12,12 @@ import {
 } from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {MessageRequest} from '@app/api/channel/MessageTypes';
+import type {CreateThreadParams} from '@app/api/channel/repositories/ThreadRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {withChannelFollowLock} from '@app/api/channel/services/ChannelFollowers';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {messageResponseAccessForGuild} from '@app/api/channel/services/message/MessageResponseDataService';
 import {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
 import {resolveAppliedTags} from '@app/api/channel/services/thread/ForumTagRules';
 import {assertThreadAllowed} from '@app/api/channel/services/thread/ThreadDenials';
@@ -119,11 +122,15 @@ export class ThreadCreationService {
 	}): Promise<ThreadChannelResponse> {
 		const parentAuth = await this.authorizeParent(params.viewer, params.user, params.channelId, 'from_message');
 		const source = await this.ctx.channelRepository.messages.getMessage(parentAuth.channel.id, params.messageId);
-		if (!source) throw new UnknownMessageError();
+		if (!source) {
+			throw new UnknownMessageError();
+		}
 		if (source.type !== MessageTypes.DEFAULT && source.type !== MessageTypes.REPLY) {
 			throw new CannotEditSystemMessageError();
 		}
-		if ((source.flags & ServerMessageFlags.HAS_THREAD) !== 0) throw new ThreadAlreadyCreatedForMessageError();
+		if ((source.flags & ServerMessageFlags.HAS_THREAD) !== 0) {
+			throw new ThreadAlreadyCreatedForMessageError();
+		}
 		const {view, members} = await this.create({
 			parent: parentAuth.channel,
 			creator: {kind: 'user', user: params.user, parentAuth},
@@ -157,7 +164,9 @@ export class ThreadCreationService {
 			});
 		}
 		const starter = await this.buildStarterEvent(params.viewer, params.user.id, view, params.requestCache);
-		if (starter) events.push(starter);
+		if (starter) {
+			events.push(starter);
+		}
 		if (!(await this.isAmongRecentMessages(parentAuth.channel.id, source.id))) {
 			events.push(await this.createThreadCreatedMessage(parentAuth.channel, view, params.user.id));
 		}
@@ -187,7 +196,9 @@ export class ThreadCreationService {
 		auditLogReason: string | null;
 	}): Promise<ThreadChannelResponse> {
 		const type = resolveTextThreadType(params.parentAuth.channel.type, params.type);
-		if (type === null) throw new InvalidChannelTypeError();
+		if (type === null) {
+			throw new InvalidChannelTypeError();
+		}
 		const isPrivate = type === ChannelTypes.PRIVATE_THREAD;
 		const parentAuth = await this.authorizeAuthenticatedParent(
 			params.parentAuth,
@@ -206,7 +217,9 @@ export class ThreadCreationService {
 		});
 		await this.recordCreateAudit(view, params.user.id, params.auditLogReason);
 		const events: Array<ThreadDispatchEvent> = [threadCreateEvent(view, {members, newlyCreated: true})];
-		if (!isPrivate) events.push(await this.createThreadCreatedMessage(parentAuth.channel, view, params.user.id));
+		if (!isPrivate) {
+			events.push(await this.createThreadCreatedMessage(parentAuth.channel, view, params.user.id));
+		}
 		await dispatchThreadEvents(this.ctx.gatewayService, view.state.guildId, events);
 		return mapThreadToResponse(view);
 	}
@@ -222,11 +235,17 @@ export class ThreadCreationService {
 		const {parentAuth, user, body} = params;
 		assertAccountNotLimited(user);
 		const {channel: parent, guild} = parentAuth;
-		if (!guild || !parent.isThreadOnly()) throw new InvalidChannelTypeError();
-		if (body.type !== undefined && body.type !== ChannelTypes.PUBLIC_THREAD) throw new InvalidChannelTypeError();
+		if (!guild || !parent.isThreadOnly()) {
+			throw new InvalidChannelTypeError();
+		}
+		if (body.type !== undefined && body.type !== ChannelTypes.PUBLIC_THREAD) {
+			throw new InvalidChannelTypeError();
+		}
 		const actor = await this.ctx.parentActor(parentAuth, user.id);
 		assertThreadAllowed(canCreateThread(actor, 'forum_post'));
-		const config = await this.ctx.channelRepository.threads.getParentConfig(parent.guildId!, parent.id);
+		const guildId = parent.guildId;
+		assert(guildId !== null);
+		const config = await this.ctx.channelRepository.threads.getParentConfig(guildId, parent.id);
 		const appliedTags = resolveAppliedTags({
 			config,
 			requested: (body.applied_tags ?? []).map((id) => BigInt(id)),
@@ -281,7 +300,9 @@ export class ThreadCreationService {
 		sendStarter: (thread: Channel) => Promise<Message>;
 	}): Promise<Message> {
 		const {parent} = params;
-		if (!parent.isThreadOnly() || parent.guildId === null) throw new InvalidChannelTypeError();
+		if (!parent.isThreadOnly() || parent.guildId === null) {
+			throw new InvalidChannelTypeError();
+		}
 		const config = await this.ctx.channelRepository.threads.getParentConfig(parent.guildId, parent.id);
 		const appliedTags = resolveAppliedTags({config, requested: params.appliedTags, previous: [], moderator: false});
 		const threadId = createChannelID(await this.ctx.snowflakeService.generate());
@@ -298,12 +319,15 @@ export class ThreadCreationService {
 		await dispatchThreadEvents(this.ctx.gatewayService, view.state.guildId, [
 			threadCreateEvent(view, {members, newlyCreated: true}),
 		]);
+		let starter: Message;
 		try {
-			return await params.sendStarter(view.channel);
+			starter = await params.sendStarter(view.channel);
 		} catch (error) {
 			await this.discardThread(view, members, parent);
 			throw error;
 		}
+		if (starter.channelId !== view.channel.id) await this.discardThread(view, members, parent);
+		return starter;
 	}
 
 	private async discardThread(view: ThreadView, members: Array<ThreadMember>, parent: Channel): Promise<void> {
@@ -342,7 +366,9 @@ export class ThreadCreationService {
 	}
 
 	private async ackForumPost(viewer: ThreadViewer, user: User, parent: Channel, threadId: ChannelID): Promise<void> {
-		if (user.isBot || viewer.kind !== 'user') return;
+		if (user.isBot || viewer.kind !== 'user') {
+			return;
+		}
 		try {
 			await this.ctx.readStateService.ackMessage({
 				userId: user.id,
@@ -374,20 +400,25 @@ export class ThreadCreationService {
 	): Promise<AuthenticatedChannel> {
 		assertAccountNotLimited(user);
 		const {channel, guild} = parentAuth;
-		if (!guild || !TEXT_THREAD_PARENT_CHANNEL_TYPES.has(channel.type)) throw new InvalidChannelTypeError();
+		if (!guild || !TEXT_THREAD_PARENT_CHANNEL_TYPES.has(channel.type)) {
+			throw new InvalidChannelTypeError();
+		}
 		assertThreadAllowed(canCreateThread(await this.ctx.parentActor(parentAuth, user.id), kind));
 		return parentAuth;
 	}
 
 	private async enforceCreateSlowmode(parentAuth: AuthenticatedChannel, user: User): Promise<void> {
 		const rateLimitPerUser = parentAuth.channel.rateLimitPerUser ?? 0;
-		if (rateLimitPerUser <= 0 || user.isBot) return;
-		if (await parentAuth.hasPermission(Permissions.BYPASS_SLOWMODE)) return;
+		if (rateLimitPerUser <= 0 || user.isBot) {
+			return;
+		}
+		if (await parentAuth.hasPermission(Permissions.BYPASS_SLOWMODE)) {
+			return;
+		}
 		const result = await this.ctx.rateLimitService.checkLimit({
 			identifier: slowmodeThreadKey(parentAuth.channel.id, user.id),
 			maxAttempts: 1,
 			windowMs: rateLimitPerUser * 1000,
-			algorithm: 'leaky_bucket',
 		});
 		if (!result.allowed) {
 			throw new SlowmodeRateLimitError({retryAfter: result.retryAfter, retryAfterDecimal: result.retryAfterDecimal});
@@ -396,13 +427,16 @@ export class ThreadCreationService {
 
 	private async create(params: NewThread): Promise<{view: ThreadView; members: Array<ThreadMember>}> {
 		const {parent, creator} = params;
-		const guildId = parent.guildId!;
+		const guildId = parent.guildId;
+		assert(guildId !== null);
 		const ownerId = creator.kind === 'user' ? creator.user.id : creator.ownerId;
 		const {threads} = this.ctx.channelRepository;
 		if ((await threads.countActiveThreads(guildId)) >= MAX_ACTIVE_THREADS_PER_GUILD) {
 			throw new MaxActiveThreadsError(MAX_ACTIVE_THREADS_PER_GUILD);
 		}
-		if (creator.kind === 'user') await this.enforceCreateSlowmode(creator.parentAuth, creator.user);
+		if (creator.kind === 'user') {
+			await this.enforceCreateSlowmode(creator.parentAuth, creator.user);
+		}
 		const state = await this.storeThread(params).catch(async (error: unknown) => {
 			if (creator.kind === 'user') {
 				await this.ctx.rateLimitService.resetLimit(slowmodeThreadKey(parent.id, creator.user.id));
@@ -410,10 +444,17 @@ export class ThreadCreationService {
 			throw error;
 		});
 		const channel = await this.ctx.channelRepository.channelData.findUnique(params.threadId);
-		if (!channel) throw new InvalidChannelTypeError();
+		if (!channel) {
+			throw new InvalidChannelTypeError();
+		}
 		const view = await loadThreadView(this.ctx.channelRepository, channel, state, parent);
 		const members = creator.kind === 'user' ? await threads.getMembers(params.threadId, [ownerId]) : [];
-		const kind = parent.isThreadOnly() ? 'forum_post' : params.hasStarter ? 'from_message' : 'standalone';
+		let kind = 'standalone';
+		if (parent.isThreadOnly()) {
+			kind = 'forum_post';
+		} else if (params.hasStarter) {
+			kind = 'from_message';
+		}
 		threadsCreatedTotal.inc(`kind="${kind}",type="${params.type}"`);
 		await this.ctx.archiveQueue.schedule(state, null);
 		enqueueThreadSearchSync(params.threadId);
@@ -422,7 +463,8 @@ export class ThreadCreationService {
 
 	private async storeThread(params: NewThread): Promise<ThreadState> {
 		const {parent, creator} = params;
-		const guildId = parent.guildId!;
+		const guildId = parent.guildId;
+		assert(guildId !== null);
 		const ownerId = creator.kind === 'user' ? creator.user.id : creator.ownerId;
 		const {threads} = this.ctx.channelRepository;
 		contentModerationService.scanText(params.input.name, {
@@ -453,6 +495,7 @@ export class ThreadCreationService {
 			user_limit: null,
 			voice_connection_limit: null,
 			rtc_region: null,
+			rtc_p2p: null,
 			last_message_id: null,
 			last_pin_timestamp: null,
 			permission_overwrites: null,
@@ -461,8 +504,8 @@ export class ThreadCreationService {
 			indexed_at: now,
 			version: 1,
 		};
-		const write = () =>
-			threads.create({
+		const write = () => {
+			const options: CreateThreadParams = {
 				channel: row,
 				parentType: parent.type,
 				autoArchiveDuration: params.input.autoArchiveDuration ?? DEFAULT_THREAD_AUTO_ARCHIVE_DURATION,
@@ -471,21 +514,29 @@ export class ThreadCreationService {
 				appliedTags: params.appliedTags ?? [],
 				hasStarter: params.hasStarter,
 				createdAt: now,
-				members:
-					creator.kind === 'user'
-						? [{userId: creator.user.id, flags: creator.user.isBot ? 0 : ThreadMemberFlags.HAS_INTERACTED}]
-						: [],
-			});
-		if (!TEXT_THREAD_PARENT_CHANNEL_TYPES.has(parent.type)) return write();
+				members: [],
+			};
+			if (creator.kind === 'user') {
+				const userId = creator.user.id;
+				const flags = creator.user.isBot ? 0 : ThreadMemberFlags.HAS_INTERACTED;
+				options.members.push({userId, flags});
+			}
+			return threads.create(options);
+		};
+		if (!TEXT_THREAD_PARENT_CHANNEL_TYPES.has(parent.type)) {
+			return write();
+		}
 		return withChannelFollowLock(this.ctx.cacheService, parent.id, async () => {
 			const current = await this.ctx.channelRepository.channelData.findUnique(parent.id);
-			if (current?.type !== parent.type) throw new InvalidChannelTypeError();
+			if (current?.type !== parent.type) {
+				throw new InvalidChannelTypeError();
+			}
 			return write();
 		});
 	}
 
 	private async recordCreateAudit(view: ThreadView, userId: UserID, auditLogReason: string | null): Promise<void> {
-		await this.ctx.recordAudit({
+		await this.ctx.guildAuditLogService.record({
 			guildId: view.state.guildId,
 			userId,
 			action: AuditLogActionType.THREAD_CREATE,
@@ -511,10 +562,13 @@ export class ThreadCreationService {
 			viewer,
 			userId,
 			authChannel: threadAuth,
+			access: messageResponseAccessForGuild(view.channel.guildId),
 			messageId: createMessageID(BigInt(view.channel.id)),
 			requestCache,
 		});
-		if (!starter) return null;
+		if (!starter) {
+			return null;
+		}
 		const referenced = starter.referenced_message;
 		if (referenced?.thread) {
 			const {member: _member, ...thread} = referenced.thread;
@@ -548,10 +602,11 @@ export class ThreadCreationService {
 			mention_channels: null,
 			attachments: null,
 			embeds: null,
+			poll: null,
 			sticker_items: null,
 			message_reference: {
 				channel_id: view.channel.id,
-				message_id: null as unknown as MessageID,
+				message_id: null,
 				guild_id: createGuildID(BigInt(view.state.guildId)),
 				type: MessageReferenceTypes.DEFAULT,
 			},

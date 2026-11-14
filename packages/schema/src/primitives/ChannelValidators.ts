@@ -61,7 +61,7 @@ function sanitizeChannelName(value: string): string {
 		throw new Error(ValidationErrorCodes.STRING_LENGTH_INVALID);
 	}
 	let s = normalizeString(value);
-	s = stripInvisibles(s);
+	s = stripInvisibles(s, {keepInnerJoinControls: true});
 	s = normalizeWhitespace(s);
 	return s;
 }

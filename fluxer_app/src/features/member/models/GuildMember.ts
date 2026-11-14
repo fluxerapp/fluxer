@@ -61,6 +61,26 @@ export class GuildMember {
 		this.mentionFlags = (guildMember.mention_flags ?? 0) as MentionReplyPreference;
 	}
 
+	matches(guildMember: GuildMemberData): boolean {
+		const until = guildMember.communication_disabled_until
+			? new Date(guildMember.communication_disabled_until).getTime()
+			: null;
+		return (
+			this.joinedAt.getTime() === new Date(guildMember.joined_at).getTime() &&
+			this.nick === (guildMember.nick ?? null) &&
+			this.avatar === (guildMember.avatar ?? null) &&
+			this.banner === (guildMember.banner ?? null) &&
+			this.accentColor === (guildMember.accent_color ?? null) &&
+			this.mute === (guildMember.mute ?? false) &&
+			this.deaf === (guildMember.deaf ?? false) &&
+			this.profileFlags === (guildMember.profile_flags ?? 0) &&
+			this.mentionFlags === (guildMember.mention_flags ?? 0) &&
+			(this.communicationDisabledUntil?.getTime() ?? null) === until &&
+			this.roles.size === guildMember.roles.length &&
+			guildMember.roles.every((roleId) => this.roles.has(roleId))
+		);
+	}
+
 	isAvatarUnset(): boolean {
 		return (this.profileFlags & GuildMemberProfileFlags.AVATAR_UNSET) !== 0;
 	}
@@ -69,7 +89,7 @@ export class GuildMember {
 		return (this.profileFlags & GuildMemberProfileFlags.BANNER_UNSET) !== 0;
 	}
 
-	getSortedRoles(): ReadonlyArray<GuildRole> {
+	getDisplayRoles(): ReadonlyArray<GuildRole> {
 		const guild = Guilds.getGuild(this.guildId);
 		if (!guild) {
 			return [];
@@ -85,8 +105,12 @@ export class GuildMember {
 			});
 	}
 
+	getIconRole(): GuildRole | undefined {
+		return this.getDisplayRoles().find((role) => role.icon !== null || role.unicodeEmoji !== null);
+	}
+
 	getColorString(): string | undefined {
-		const sortedRoles = this.getSortedRoles();
+		const sortedRoles = this.getDisplayRoles();
 		for (const role of sortedRoles) {
 			if (role.color) {
 				return ColorUtils.int2rgb(role.color);

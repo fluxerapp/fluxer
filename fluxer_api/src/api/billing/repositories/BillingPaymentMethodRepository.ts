@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {mapStripePaymentMethodToRow} from '@app/api/billing/mappers/StripeToBillingMapper';
-import {
-	buildPatchFromRow,
-	executeBillingVersionedUpdate,
-	isExistingNewer,
-	rowsEquivalent,
-} from '@app/api/billing/repositories/BillingRepoHelpers';
-import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {hydrateByRefs, upsertVersionedMirrorRow} from '@app/api/billing/repositories/BillingRepoHelpers';
+import {fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
+import {executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {BillingPaymentMethodRow} from '@app/api/database/types/BillingTypes';
 import {BILLING_PAYMENT_METHOD_COLUMNS} from '@app/api/database/types/BillingTypes';
 import {BillingPaymentMethods, BillingPaymentMethodsByCustomer} from '@app/api/Tables';
@@ -31,12 +27,11 @@ export class BillingPaymentMethodRepository {
 	}
 
 	async listByCustomer(customerId: string): Promise<Array<BillingPaymentMethodRow>> {
-		const refs = await fetchMany<{
-			provider_id: string;
-		}>(FETCH_BY_CUSTOMER, {customer_id: customerId});
-		if (refs.length === 0) return [];
-		const ids = refs.map((r) => r.provider_id);
-		const rows = await fetchMany<BillingPaymentMethodRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
+		const rows = await hydrateByRefs<BillingPaymentMethodRow>(
+			FETCH_BY_CUSTOMER,
+			{customer_id: customerId},
+			FETCH_BY_PROVIDER_IDS,
+		);
 		return rows.filter((row) => row.customer_id === customerId);
 	}
 
@@ -51,29 +46,20 @@ export class BillingPaymentMethodRepository {
 	}> {
 		const mapped = mapStripePaymentMethodToRow(pm, hints);
 		const existing = await this.findById(mapped.primary.provider_id);
-		if (isExistingNewer(existing, mapped.primary)) {
-			return {changed: false, row: existing!};
-		}
-		if (existing && rowsEquivalent(existing, mapped.primary, ['mirrored_at', 'version'])) {
-			return {changed: false, row: existing};
-		}
-		const result = await executeBillingVersionedUpdate<BillingPaymentMethodRow, 'provider_id'>(
-			async () => existing,
-			(current) => ({
-				pk: {provider_id: mapped.primary.provider_id},
-				patch: buildPatchFromRow(mapped.primary, current, BILLING_PAYMENT_METHOD_COLUMNS, ['provider_id']),
-			}),
+		const result = await upsertVersionedMirrorRow(
 			BillingPaymentMethods,
-			{initialData: existing},
+			BILLING_PAYMENT_METHOD_COLUMNS,
+			existing,
+			mapped.primary,
 		);
-		if (mapped.byCustomer) {
-			await upsertOne(BillingPaymentMethodsByCustomer.upsertAll(mapped.byCustomer));
+		if (result.changed) {
+			if (mapped.byCustomer) await upsertOne(BillingPaymentMethodsByCustomer.upsertAll(mapped.byCustomer));
 		}
-		return {changed: true, row: {...mapped.primary, version: result.finalVersion}};
+		return result;
 	}
 
 	async markDetached(providerId: string, detachedAt: Date): Promise<void> {
-		await executeBillingVersionedUpdate<BillingPaymentMethodRow, 'provider_id'>(
+		await executeVersionedUpdate<BillingPaymentMethodRow, 'provider_id'>(
 			async () => this.findById(providerId),
 			() => ({
 				pk: {provider_id: providerId},
@@ -84,6 +70,7 @@ export class BillingPaymentMethodRepository {
 				},
 			}),
 			BillingPaymentMethods,
+			{bumpVersion: (current) => (current ?? 0n) + 1n},
 		);
 	}
 }

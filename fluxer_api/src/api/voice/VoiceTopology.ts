@@ -2,9 +2,9 @@
 
 import {Logger} from '@app/api/Logger';
 import {RefreshSubscription, RefreshSubscriptionUnavailableError} from '@app/api/utils/RefreshSubscription';
-import type {IVoiceRepository} from '@app/api/voice/IVoiceRepository';
 import {VOICE_CONFIGURATION_CHANNEL} from '@app/api/voice/VoiceConstants';
 import type {VoiceRegionMetadata, VoiceRegionRecord, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 type Subscriber = () => void;
@@ -26,7 +26,7 @@ export class VoiceTopology {
 	});
 
 	constructor(
-		private voiceRepository: IVoiceRepository,
+		private voiceRepository: VoiceRepository,
 		private kvClient: IKVProvider | null,
 	) {}
 
@@ -44,10 +44,6 @@ export class VoiceTopology {
 		return this.defaultRegionId;
 	}
 
-	getRegion(regionId: string): VoiceRegionRecord | null {
-		return this.regions.get(regionId) ?? null;
-	}
-
 	getAllRegions(): Array<VoiceRegionRecord> {
 		return Array.from(this.regions.values());
 	}
@@ -60,6 +56,7 @@ export class VoiceTopology {
 			latitude: region.latitude,
 			longitude: region.longitude,
 			isDefault: region.isDefault,
+			hidden: region.hidden,
 			vipOnly: region.restrictions.vipOnly,
 			requiredGuildFeatures: Array.from(region.restrictions.requiredGuildFeatures),
 		}));
@@ -95,6 +92,7 @@ export class VoiceTopology {
 				latitude: region.latitude,
 				longitude: region.longitude,
 				isDefault: region.isDefault,
+				hidden: region.hidden,
 				restrictions: {
 					vipOnly: region.restrictions.vipOnly,
 					requiredGuildFeatures: new Set(region.restrictions.requiredGuildFeatures),

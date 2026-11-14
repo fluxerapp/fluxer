@@ -1,7 +1,7 @@
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {Locales} from '@fluxer/constants/src/Locales';
 import {OAuth2Error} from '@fluxer/errors/src/domains/auth/OAuth2Error';
 import {
 	getApiErrorCodeForStatus,
@@ -20,22 +20,34 @@ import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {ErrorCodeToI18nKey} from '@fluxer/errors/src/i18n/ErrorCodeMappings';
 import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
 import type {ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
-import type {BaseHonoEnv, ErrorI18nService} from '@fluxer/hono_types/src/HonoTypes';
+import {parseAcceptLanguage} from '@fluxer/i18n/src/locale/resolution/AcceptLanguageNegotiation';
 import {createLogger} from '@fluxer/logger/src/Logger';
 import type {Context} from 'hono';
 import {HTTPException} from 'hono/http-exception';
 
+interface ErrorI18nService {
+	getMessage(
+		key: string,
+		locale: string | null | undefined,
+		variables?: Record<string, unknown>,
+		fallbackMessage?: string,
+	): string;
+}
+
+export interface BaseHonoEnv {
+	Variables: {
+		errorI18nService?: ErrorI18nService;
+		requestLocale?: string;
+		requestId?: string;
+	};
+}
+
 const logger = createLogger('errors');
-const LOCALE_LOOKUP = new Map<string, string>(Object.values(Locales).map((locale) => [locale.toLowerCase(), locale]));
 
 interface LocalizedValidationErrorEntry {
 	path: string;
 	code: string;
 	variables?: Record<string, unknown>;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object';
 }
 
 function isLocalizedValidationErrorEntry(value: unknown): value is LocalizedValidationErrorEntry {
@@ -66,34 +78,6 @@ function isExpectedError(err: Error): boolean {
 	return 'isExpected' in err && Boolean(err.isExpected);
 }
 
-function resolveLocaleFromAcceptLanguage(acceptLanguageHeader: string | undefined): string | undefined {
-	if (!acceptLanguageHeader) {
-		return undefined;
-	}
-	for (const entry of acceptLanguageHeader.split(',')) {
-		const localeToken = entry.split(';')[0]?.trim().toLowerCase();
-		if (!localeToken) {
-			continue;
-		}
-		const exactMatch = LOCALE_LOOKUP.get(localeToken);
-		if (exactMatch) {
-			return exactMatch;
-		}
-		const baseToken = localeToken.split('-')[0];
-		if (!baseToken) {
-			continue;
-		}
-		if (baseToken === 'en') {
-			return Locales.EN_US;
-		}
-		const baseMatch = LOCALE_LOOKUP.get(baseToken);
-		if (baseMatch) {
-			return baseMatch;
-		}
-	}
-	return undefined;
-}
-
 function getI18nContext<E extends BaseHonoEnv>(
 	ctx: Context<E>,
 ): {
@@ -101,7 +85,7 @@ function getI18nContext<E extends BaseHonoEnv>(
 	locale: string;
 } {
 	const requestLocale = ctx.get('requestLocale');
-	const locale = requestLocale ?? resolveLocaleFromAcceptLanguage(ctx.req.header('accept-language')) ?? Locales.EN_US;
+	const locale = requestLocale ?? parseAcceptLanguage(ctx.req.header('accept-language'));
 	return {
 		errorI18nService: ctx.get('errorI18nService'),
 		locale,

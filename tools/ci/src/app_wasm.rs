@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::common::{CommandSpec, command_succeeds, env_bool, output_text, run_command};
+use crate::common::{CommandSpec, command_succeeds, output_text, run_command};
 use anyhow::{Context, Result, anyhow, ensure};
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD as BASE64;
 use clap::Args;
 use std::env;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
-const LIBFLUXCORE_WASM_BINDGEN_VERSION: &str = "0.2.128";
+const WORKSPACE_LOCKFILE: &str = "../Cargo.lock";
+const WASM_PROFILE: &str = "wasm-release";
 const LIBFLUXCORE_WASM_SIZE_BUDGET_BYTES: u64 = 300 * 1024;
-const LIBFLUXCORE_WRAPPER_JS: &str = include_str!("../templates/libfluxcore_wrapper.js");
-const LIBFLUXCORE_WRAPPER_DTS: &str = include_str!("../templates/libfluxcore_wrapper.d.ts");
+const LIBFLUXCORE_INDEX: &str = "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
+export * from './libfluxcore_bindgen.js';\n\
+export {default} from './libfluxcore_bindgen.js';\n";
 const LIBFLUXWEBP_SIMD_WASM_SIZE_BUDGET_BYTES: u64 = 672 * 1024;
 const LIBFLUXWEBP_SCALAR_WASM_SIZE_BUDGET_BYTES: u64 = 288 * 1024;
 const LIBFLUXWEBP_WASM_IMPORT_MODULE: &str = "./libfluxwebp_bg.js";
@@ -27,22 +27,12 @@ pub struct BuildAppWasmArgs {
     app_dir: Option<PathBuf>,
 }
 
-#[derive(Debug, Args, Clone)]
-pub struct BuildMarkdownParserWasmArgs {
-    #[arg(long)]
-    app_dir: Option<PathBuf>,
-}
-
 pub fn run_build_app_wasm(args: BuildAppWasmArgs) -> Result<()> {
     let app_dir = resolve_app_dir(args.app_dir)?;
+    let wasm_bindgen = ensure_wasm_bindgen_cli(&locked_wasm_bindgen_version(&app_dir)?)?;
     build_markdown_parser_wasm(&app_dir)?;
-    build_libfluxcore_wasm(&app_dir)?;
-    build_libfluxwebp_wasm(&app_dir)
-}
-
-pub fn run_build_markdown_parser_wasm(args: BuildMarkdownParserWasmArgs) -> Result<()> {
-    let app_dir = resolve_app_dir(args.app_dir)?;
-    build_markdown_parser_wasm(&app_dir)
+    build_libfluxcore_wasm(&app_dir, &wasm_bindgen)?;
+    build_libfluxwebp_wasm(&app_dir, &wasm_bindgen)
 }
 
 const WASM_CC_ENV: &str = "CC_wasm32_unknown_unknown";
@@ -153,34 +143,44 @@ fn clang_targets_wasm32(clang: &Path) -> bool {
 
 fn build_markdown_parser_wasm(app_dir: &Path) -> Result<()> {
     let rust_source_dir = app_dir.join("../packages/markdown_parser/rust");
-    let bytes_path =
-        app_dir.join("src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts");
+    let out_path = app_dir.join("pkgs/markdown_parser/markdown_parser.wasm");
     let target_dir = rust_source_dir.join("target");
 
     run_command(apply_wasm_c_toolchain(
         CommandSpec::new("cargo")
-            .args(["build", "--release", "--target", "wasm32-unknown-unknown"])
+            .args([
+                "build",
+                "--release",
+                "--locked",
+                "--target",
+                "wasm32-unknown-unknown",
+            ])
             .env("CARGO_TARGET_DIR", target_dir.to_string_lossy().as_ref())
             .current_dir(&rust_source_dir),
     )?)?;
 
     let wasm_path = target_dir.join("wasm32-unknown-unknown/release/fluxer_markdown_parser.wasm");
-    let wasm =
-        fs::read(&wasm_path).with_context(|| format!("Failed to read {}", wasm_path.display()))?;
-    let content = markdown_wasm_bytes_content(&wasm);
-    if let Some(parent) = bytes_path.parent() {
+    if let Some(parent) = out_path.parent() {
         fs::create_dir_all(parent)
             .with_context(|| format!("Failed to create {}", parent.display()))?;
     }
-    fs::write(&bytes_path, content)
-        .with_context(|| format!("Failed to write {}", bytes_path.display()))
+    fs::copy(&wasm_path, &out_path).with_context(|| {
+        format!(
+            "Failed to copy {} to {}",
+            wasm_path.display(),
+            out_path.display()
+        )
+    })?;
+    Ok(())
 }
 
 fn libfluxcore_build_command(rust_package_dir: &Path, target_dir: &Path) -> CommandSpec {
     CommandSpec::new("cargo")
         .args([
             "build",
-            "--release",
+            "--profile",
+            WASM_PROFILE,
+            "--locked",
             "--target",
             "wasm32-unknown-unknown",
             "--manifest-path",
@@ -191,10 +191,10 @@ fn libfluxcore_build_command(rust_package_dir: &Path, target_dir: &Path) -> Comm
 }
 
 fn libfluxcore_wasm_path(target_dir: &Path) -> PathBuf {
-    target_dir.join("wasm32-unknown-unknown/release/libfluxcore.wasm")
+    target_dir.join("wasm32-unknown-unknown/wasm-release/libfluxcore.wasm")
 }
 
-fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
+fn build_libfluxcore_wasm(app_dir: &Path, wasm_bindgen: &OsStr) -> Result<()> {
     let rust_package_dir = app_dir.join("rust/libfluxcore");
     let out_dir = app_dir.join("pkgs/libfluxcore");
     let wasm_path = out_dir.join("libfluxcore_bg.wasm");
@@ -204,20 +204,13 @@ fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
         .with_context(|| format!("Failed to create {}", out_dir.display()))?;
 
     let target_dir = rust_package_dir.join("target");
-    let mut build = libfluxcore_build_command(&rust_package_dir, &target_dir);
-
-    if env_bool("FLUXCORE_WASM_SIMD") {
-        let rustflags = match env::var("RUSTFLAGS") {
-            Ok(value) if !value.trim().is_empty() => format!("{value} -C target-feature=+simd128"),
-            _ => "-C target-feature=+simd128".to_string(),
-        };
-        build = build.env("RUSTFLAGS", rustflags);
-    }
+    let build = libfluxcore_build_command(&rust_package_dir, &target_dir);
 
     run_command(apply_wasm_c_toolchain(build)?)?;
     let temp = TempDir::new().context("Failed to create libfluxcore wasm-bindgen temp dir")?;
     let bindgen_dir = temp.path().join("bindgen");
     run_wasm_bindgen(
+        wasm_bindgen,
         &libfluxcore_wasm_path(&target_dir),
         &bindgen_dir,
         "libfluxcore",
@@ -255,21 +248,13 @@ fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
     )
     .with_context(|| format!("Failed to copy {}", bindgen_wasm_dts_path.display()))?;
 
-    fs::write(
-        out_dir.join("libfluxcore.js"),
-        libfluxcore_index_js_content(),
-    )
-    .with_context(|| {
+    fs::write(out_dir.join("libfluxcore.js"), LIBFLUXCORE_INDEX).with_context(|| {
         format!(
             "Failed to write {}",
             out_dir.join("libfluxcore.js").display()
         )
     })?;
-    fs::write(
-        out_dir.join("libfluxcore.d.ts"),
-        libfluxcore_index_dts_content(),
-    )
-    .with_context(|| {
+    fs::write(out_dir.join("libfluxcore.d.ts"), LIBFLUXCORE_INDEX).with_context(|| {
         format!(
             "Failed to write {}",
             out_dir.join("libfluxcore.d.ts").display()
@@ -297,8 +282,12 @@ fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn run_wasm_bindgen(wasm: &Path, out_dir: &Path, out_name: &str) -> Result<()> {
-    let wasm_bindgen = ensure_wasm_bindgen_cli()?;
+fn run_wasm_bindgen(
+    wasm_bindgen: &OsStr,
+    wasm: &Path,
+    out_dir: &Path,
+    out_name: &str,
+) -> Result<()> {
     fs::create_dir_all(out_dir)
         .with_context(|| format!("Failed to create {}", out_dir.display()))?;
     run_command(
@@ -313,8 +302,10 @@ fn run_wasm_bindgen(wasm: &Path, out_dir: &Path, out_name: &str) -> Result<()> {
 fn check_wasm_size_budget(path: &Path, budget: u64) -> Result<u64> {
     let size =
         file_size(path)?.ok_or_else(|| anyhow!("wasm build did not emit {}", path.display()))?;
-    ensure!(
-        size <= budget,
+    if size <= budget {
+        return Ok(size);
+    }
+    let message = format!(
         "{} is {}, over the {} budget",
         path.file_name()
             .map(|name| name.to_string_lossy().into_owned())
@@ -322,7 +313,15 @@ fn check_wasm_size_budget(path: &Path, budget: u64) -> Result<u64> {
         format_bytes(size),
         format_bytes(budget)
     );
-    Ok(size)
+    if is_offline_build() {
+        eprintln!("warning: {message}. Offline builds only warn about wasm size budgets.");
+        return Ok(size);
+    }
+    Err(anyhow!(message))
+}
+
+fn is_offline_build() -> bool {
+    matches!(env::var("FLUXER_OFFLINE").as_deref(), Ok("1" | "true"))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -367,7 +366,7 @@ impl LibfluxwebpVariant {
     }
 }
 
-fn build_libfluxwebp_wasm(app_dir: &Path) -> Result<()> {
+fn build_libfluxwebp_wasm(app_dir: &Path, wasm_bindgen: &OsStr) -> Result<()> {
     let crate_dir = app_dir.join("rust/libfluxwebp");
     let crate_dir = fs::canonicalize(&crate_dir)
         .with_context(|| format!("Failed to resolve {}", crate_dir.display()))?;
@@ -380,7 +379,8 @@ fn build_libfluxwebp_wasm(app_dir: &Path) -> Result<()> {
         let mut build = CommandSpec::new("cargo")
             .args([
                 "build",
-                "--release",
+                "--profile",
+                WASM_PROFILE,
                 "--locked",
                 "--target",
                 "wasm32-unknown-unknown",
@@ -398,7 +398,8 @@ fn build_libfluxwebp_wasm(app_dir: &Path) -> Result<()> {
 
         let bindgen_dir = temp.path().join(variant.name());
         run_wasm_bindgen(
-            &target_dir.join("wasm32-unknown-unknown/release/libfluxwebp.wasm"),
+            wasm_bindgen,
+            &target_dir.join("wasm32-unknown-unknown/wasm-release/libfluxwebp.wasm"),
             &bindgen_dir,
             "libfluxwebp",
         )?;
@@ -640,11 +641,39 @@ pub(crate) fn resolve_app_dir(explicit: Option<PathBuf>) -> Result<PathBuf> {
     ))
 }
 
-fn ensure_wasm_bindgen_cli() -> Result<OsString> {
-    let expected = format!("wasm-bindgen {LIBFLUXCORE_WASM_BINDGEN_VERSION}");
+fn locked_wasm_bindgen_version(app_dir: &Path) -> Result<String> {
+    let path = app_dir.join(WORKSPACE_LOCKFILE);
+    let content =
+        fs::read_to_string(&path).with_context(|| format!("Failed to read {}", path.display()))?;
+    locked_package_version(&content, "wasm-bindgen")
+        .with_context(|| format!("{} must lock exactly one wasm-bindgen", path.display()))
+}
+
+fn locked_package_version(lockfile: &str, package: &str) -> Result<String> {
+    let name_line = format!("name = \"{package}\"");
+    let versions = lockfile
+        .split("[[package]]")
+        .filter(|entry| entry.lines().any(|line| line.trim() == name_line))
+        .map(|entry| {
+            entry
+                .lines()
+                .find_map(|line| line.trim().strip_prefix("version = \""))
+                .and_then(|rest| rest.strip_suffix('"'))
+                .map(str::to_string)
+                .ok_or_else(|| anyhow!("{package} has no version in the lockfile"))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    match versions.as_slice() {
+        [version] => Ok(version.clone()),
+        _ => Err(anyhow!("found {} {package} entries", versions.len())),
+    }
+}
+
+fn ensure_wasm_bindgen_cli(version: &str) -> Result<OsString> {
+    let expected = format!("wasm-bindgen {version}");
     if command_succeeds(CommandSpec::new("wasm-bindgen").arg("--version")) {
-        let version = output_text(CommandSpec::new("wasm-bindgen").arg("--version"))?;
-        if version.trim() == expected {
+        let installed = output_text(CommandSpec::new("wasm-bindgen").arg("--version"))?;
+        if installed.trim() == expected {
             return Ok("wasm-bindgen".into());
         }
     }
@@ -653,10 +682,15 @@ fn ensure_wasm_bindgen_cli() -> Result<OsString> {
         "install",
         "wasm-bindgen-cli",
         "--version",
-        LIBFLUXCORE_WASM_BINDGEN_VERSION,
+        version,
         "--locked",
         "--force",
-    ]))?;
+    ]))
+    .with_context(|| {
+        format!(
+            "{expected} is not on PATH and installing it failed. Offline builds must put wasm-bindgen-cli {version} on PATH first. The version is the wasm-bindgen entry in the root Cargo.lock."
+        )
+    })?;
     Ok("wasm-bindgen".into())
 }
 
@@ -678,25 +712,6 @@ fn write_with_spdx(path: &Path, content: &str) -> Result<()> {
         format!("// SPDX-License-Identifier: AGPL-3.0-or-later\n{content}"),
     )
     .with_context(|| format!("Failed to write {}", path.display()))
-}
-
-fn libfluxcore_index_js_content() -> String {
-    format!(
-        "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-import {{crop_rotate_rgba_raw}} from './libfluxcore_bindgen.js';\n\
-{LIBFLUXCORE_WRAPPER_JS}\n\
-export * from './libfluxcore_bindgen.js';\n\
-export {{default}} from './libfluxcore_bindgen.js';\n"
-    )
-}
-
-fn libfluxcore_index_dts_content() -> String {
-    format!(
-        "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-export * from './libfluxcore_bindgen.js';\n\
-export {{default}} from './libfluxcore_bindgen.js';\n\n\
-{LIBFLUXCORE_WRAPPER_DTS}"
-    )
 }
 
 fn libfluxcore_package_json_content() -> String {
@@ -733,16 +748,7 @@ fn libfluxcore_package_json_content() -> String {
 fn libfluxcore_readme_content() -> &'static str {
     "<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->\n\
 # libfluxcore\n\n\
-Rust WebAssembly helpers and JavaScript codec wrappers for Fluxer media processing.\n"
-}
-
-fn markdown_wasm_bytes_content(wasm: &[u8]) -> String {
-    format!(
-        "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-export const MARKDOWN_PARSER_WASM_BASE64 =\n\
-\t'{}';\n",
-        BASE64.encode(wasm)
-    )
+Rust WebAssembly helpers for Fluxer media processing.\n"
 }
 
 #[cfg(test)]
@@ -780,16 +786,6 @@ mod tests {
     }
 
     #[test]
-    fn markdown_wasm_bytes_content_matches_legacy_node_output() {
-        assert_eq!(
-            markdown_wasm_bytes_content(b"hello"),
-            "// SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
-export const MARKDOWN_PARSER_WASM_BASE64 =\n\
-\t'aGVsbG8=';\n"
-        );
-    }
-
-    #[test]
     fn libfluxcore_build_keeps_its_output_in_the_crate_target_dir() {
         let package_dir = Path::new("/repo/fluxer_app/rust/libfluxcore");
         let target_dir = package_dir.join("target");
@@ -812,17 +808,9 @@ export const MARKDOWN_PARSER_WASM_BASE64 =\n\
         assert_eq!(
             libfluxcore_wasm_path(&target_dir),
             Path::new(
-                "/repo/fluxer_app/rust/libfluxcore/target/wasm32-unknown-unknown/release/libfluxcore.wasm"
+                "/repo/fluxer_app/rust/libfluxcore/target/wasm32-unknown-unknown/wasm-release/libfluxcore.wasm"
             )
         );
-    }
-
-    #[test]
-    fn libfluxcore_index_reexports_bindgen_module() {
-        let content = libfluxcore_index_js_content();
-        assert!(content.contains("import {crop_rotate_rgba_raw} from './libfluxcore_bindgen.js';"));
-        assert!(content.contains("export * from './libfluxcore_bindgen.js';"));
-        assert!(content.contains("export function crop_rotate_rgba("));
     }
 
     #[test]

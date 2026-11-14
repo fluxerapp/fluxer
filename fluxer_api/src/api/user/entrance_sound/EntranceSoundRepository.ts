@@ -16,10 +16,6 @@ const FETCH_SOUND_CQL = UserEntranceSounds.select({
 const LIST_SELECTIONS_CQL = UserEntranceSoundSelections.select({
 	where: UserEntranceSoundSelections.where.eq('user_id'),
 });
-const FETCH_SELECTION_CQL = UserEntranceSoundSelections.select({
-	where: [UserEntranceSoundSelections.where.eq('user_id'), UserEntranceSoundSelections.where.eq('scope_id')],
-	limit: 1,
-});
 
 export class EntranceSoundRepository {
 	async listSounds(userId: UserID): Promise<Array<EntranceSound>> {
@@ -46,13 +42,6 @@ export class EntranceSoundRepository {
 		return rows.map((row) => new EntranceSoundSelection(row));
 	}
 
-	async getSelection(userId: UserID, scopeId: string): Promise<EntranceSoundSelection | null> {
-		const row = await fetchOne<UserEntranceSoundSelectionRow>(
-			FETCH_SELECTION_CQL.bind({user_id: userId, scope_id: scopeId}),
-		);
-		return row ? new EntranceSoundSelection(row) : null;
-	}
-
 	async upsertSelection(selection: EntranceSoundSelection): Promise<EntranceSoundSelection> {
 		await upsertOne(UserEntranceSoundSelections.upsertAll(selection.toRow()));
 		return selection;
@@ -60,6 +49,16 @@ export class EntranceSoundRepository {
 
 	async deleteSelection(userId: UserID, scopeId: string): Promise<void> {
 		await deleteOneOrMany(UserEntranceSoundSelections.deleteByPk({user_id: userId, scope_id: scopeId}));
+	}
+
+	async deleteAllForUser(userId: UserID): Promise<void> {
+		await deleteOneOrMany(
+			UserEntranceSoundSelections.deleteCql({where: UserEntranceSoundSelections.where.eq('user_id')}),
+			{user_id: userId},
+		);
+		await deleteOneOrMany(UserEntranceSounds.deleteCql({where: UserEntranceSounds.where.eq('user_id')}), {
+			user_id: userId,
+		});
 	}
 
 	async deleteSelectionsForSound(userId: UserID, soundId: EntranceSoundID): Promise<void> {

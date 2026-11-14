@@ -49,6 +49,10 @@ export function findInvite(content: string | null): string | null {
 	return CodeLinkUtils.findCode(content, INVITE_CONFIG);
 }
 
+export function findInviteUrl(url: string | null): string | null {
+	return CodeLinkUtils.findCodeAtUrlStart(url, INVITE_CONFIG);
+}
+
 export function findSpoileredInvites(content: string | null): Array<CodeLinkUtils.CodeLinkMatch> {
 	return CodeLinkUtils.findSpoileredCodeMatches(content, INVITE_CONFIG);
 }
@@ -123,11 +127,9 @@ function isChannelVisibleToEveryone(channel: Channel, guild: Guild): boolean {
 	return (everyoneOverwrite.deny & Permissions.VIEW_CHANNEL) === 0n;
 }
 
-export interface InviteCapability {
-	canInvite: boolean;
-	useVanityUrl: boolean;
-	vanityUrlCode: string | null;
-}
+export type InviteCapability =
+	| {canInvite: boolean; useVanityUrl: false; vanityUrlCode: null}
+	| {canInvite: true; useVanityUrl: true; vanityUrlCode: string};
 
 export function getInviteCapability(channelId: string | undefined, guildId: string | undefined): InviteCapability {
 	if (!channelId || !guildId || isSyncExcludedChannelId(channelId)) {

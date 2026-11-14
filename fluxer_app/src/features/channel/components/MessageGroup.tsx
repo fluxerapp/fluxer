@@ -76,6 +76,7 @@ const MessageGroupBase: React.FC<MessageGroupProps> = observer((props) => {
 				? {
 						...providedBehaviorOverrides,
 						disableContextMenu: true,
+						disableDoubleClick: true,
 					}
 				: providedBehaviorOverrides,
 		[suppressMessageActions, providedBehaviorOverrides],

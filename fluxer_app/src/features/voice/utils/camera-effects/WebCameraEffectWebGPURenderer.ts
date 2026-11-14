@@ -33,6 +33,7 @@ import {
 	type WebCameraEffectWebGPUPipelines,
 } from '@app/features/voice/utils/camera-effects/WebCameraEffectWebGPUPipelines';
 import {
+	collectInferenceOutputDisposalFailures,
 	loadWebSelfieRuntime,
 	MissingSegmentationAlphasOutputError,
 	SEG_INPUT_EDGE,
@@ -174,20 +175,6 @@ function destroyCustomTexture(customTexture: CustomTexture | null): void {
 		return;
 	}
 	customTexture.texture.destroy();
-}
-
-function collectInferenceOutputDisposalFailures(
-	outputs: Readonly<Record<string, OrtNamespace.Tensor>>,
-): ReadonlyArray<unknown> {
-	const failures: Array<unknown> = [];
-	for (const output of Object.values(outputs)) {
-		try {
-			output.dispose();
-		} catch (error) {
-			failures.push(error);
-		}
-	}
-	return failures;
 }
 
 async function collectWebGPUInitializationCleanupFailures(

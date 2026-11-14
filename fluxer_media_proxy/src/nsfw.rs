@@ -265,7 +265,7 @@ impl NSFWClient {
         Self {
             transport: None,
             policy: NSFWPolicy::Disabled,
-            metrics: Arc::new(NSFWMetrics::new()),
+            metrics: Arc::new(NSFWMetrics::default()),
         }
     }
 
@@ -274,7 +274,7 @@ impl NSFWClient {
     }
 
     pub fn record_declined_scan(&self) {
-        self.metrics.record_disabled();
+        self.metrics.nsfw_calls_disabled.inc();
     }
 
     pub async fn check_buffers(
@@ -283,9 +283,9 @@ impl NSFWClient {
     ) -> Result<NSFWClassification, NSFWError> {
         let outcome = timed_stage(Stage::Nsfw, self.classify(request)).await;
         match outcome {
-            Ok(_) => self.metrics.record_success(),
-            Err(NSFWError::Disabled) => self.metrics.record_disabled(),
-            Err(_) => self.metrics.record_failure(),
+            Ok(_) => self.metrics.nsfw_calls_ok.inc(),
+            Err(NSFWError::Disabled) => self.metrics.nsfw_calls_disabled.inc(),
+            Err(_) => self.metrics.nsfw_calls_failed.inc(),
         }
         outcome
     }
@@ -367,183 +367,4 @@ pub fn verdict_from_frame_probabilities(
 
 fn number_as_f32(value: &Value) -> Option<f32> {
     value.as_f64().map(|v| v as f32)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::metrics::Metrics;
-
-    fn threshold() -> NSFWThreshold {
-        NSFWThreshold::new(0.85).expect("0.85 is a valid threshold")
-    }
-
-    #[test]
-    fn parse_batch_probabilities_reads_every_frame() {
-        let parsed = parse_batch_probabilities(
-            br#"{"predictions":[{"nsfw_probability":0.1},{"nsfw_probability":0.7},{"nsfw_probability":0.3}]}"#,
-        )
-        .unwrap();
-        assert_eq!(3, parsed.len());
-        assert!((parsed[1] - 0.7).abs() < 0.001);
-        assert!(
-            parse_batch_probabilities(br#"{"predictions":[]}"#)
-                .unwrap()
-                .is_empty()
-        );
-        assert_eq!(
-            Err(NSFWError::InvalidResponse),
-            parse_batch_probabilities(br#"{}"#)
-        );
-        assert_eq!(
-            Err(NSFWError::InvalidResponse),
-            parse_batch_probabilities(b"not-json")
-        );
-    }
-
-    #[test]
-    fn single_high_frame_does_not_flag_a_multi_frame_scan() {
-        let verdict = verdict_from_frame_probabilities(
-            &[0.02, 0.99, 0.03],
-            NSFWThreshold::new(0.95).unwrap(),
-        );
-        assert!(!verdict.is_nsfw);
-        assert!((verdict.probability - 0.99).abs() < 0.001);
-    }
-
-    #[test]
-    fn two_high_frames_flag_a_multi_frame_scan() {
-        assert!(
-            verdict_from_frame_probabilities(
-                &[0.02, 0.99, 0.97],
-                NSFWThreshold::new(0.95).unwrap()
-            )
-            .is_nsfw
-        );
-    }
-
-    #[test]
-    fn a_lone_frame_still_flags_on_its_own() {
-        assert!(
-            verdict_from_frame_probabilities(&[0.99], NSFWThreshold::new(0.95).unwrap()).is_nsfw
-        );
-        assert!(
-            !verdict_from_frame_probabilities(&[0.94], NSFWThreshold::new(0.95).unwrap()).is_nsfw
-        );
-    }
-
-    #[test]
-    fn an_empty_scan_never_flags() {
-        let verdict = verdict_from_frame_probabilities(&[], NSFWThreshold::new(0.95).unwrap());
-        assert!(!verdict.is_nsfw);
-        assert!((verdict.probability - 0.0).abs() < 0.001);
-    }
-
-    #[test]
-    fn frames_at_the_threshold_count_as_over() {
-        assert!(
-            verdict_from_frame_probabilities(&[0.95, 0.95], NSFWThreshold::new(0.95).unwrap())
-                .is_nsfw
-        );
-    }
-
-    #[test]
-    fn disabled_when_endpoint_empty() {
-        let client = NSFWClient::new("", 0.85, Arc::new(NSFWMetrics::new())).unwrap();
-        assert_eq!(NSFWPolicy::Disabled, client.policy());
-        assert_eq!(None, client.policy().scan_threshold(true));
-    }
-
-    #[test]
-    fn trim_trailing_slash_matches_service_urls() {
-        assert_eq!("http://x", trim_trailing_slash("http://x"));
-        assert_eq!("http://x", trim_trailing_slash("http://x/"));
-        assert_eq!("http://x", trim_trailing_slash("http://x///"));
-        assert_eq!("", trim_trailing_slash("/"));
-    }
-
-    #[test]
-    fn parse_probability_accepts_known_shapes() {
-        assert!((parse_probability(br#"{"nsfw_probability":0.42}"#).unwrap() - 0.42).abs() < 0.001);
-        assert!((parse_probability(br#"{"score":0.99}"#).unwrap() - 0.99).abs() < 0.001);
-        assert!((parse_probability(br#"{"probability":1}"#).unwrap() - 1.0).abs() < 0.001);
-        assert!((parse_probability(br#"{"nsfw":0}"#).unwrap() - 0.0).abs() < 0.001);
-        assert_eq!(Err(NSFWError::InvalidResponse), parse_probability(br#"{}"#));
-        assert_eq!(
-            Err(NSFWError::InvalidResponse),
-            parse_probability(b"not-json")
-        );
-    }
-
-    #[test]
-    fn probability_clamped_to_unit_interval() {
-        assert!((parse_probability(br#"{"score":2.5}"#).unwrap() - 1.0).abs() < 0.001);
-        assert!((parse_probability(br#"{"score":-0.3}"#).unwrap() - 0.0).abs() < 0.001);
-    }
-
-    #[test]
-    fn a_threshold_outside_the_unit_interval_is_rejected() {
-        assert_eq!(Err(InvalidNSFWThreshold), NSFWThreshold::new(1.5));
-        assert_eq!(Err(InvalidNSFWThreshold), NSFWThreshold::new(-0.1));
-        assert_eq!(Err(InvalidNSFWThreshold), NSFWThreshold::new(f32::NAN));
-        assert!(threshold().classifies_as_nsfw(0.85));
-        assert!(!threshold().classifies_as_nsfw(0.849));
-    }
-
-    #[test]
-    fn a_scan_request_bounds_its_frames() {
-        assert_eq!(
-            InvalidNSFWScanRequest::Empty,
-            NSFWScanRequest::new(threshold(), Vec::new()).unwrap_err()
-        );
-        assert_eq!(
-            InvalidNSFWScanRequest::EmptyFrame { index: 1 },
-            NSFWScanRequest::new(threshold(), vec![vec![1], Vec::new()]).unwrap_err()
-        );
-        assert_eq!(
-            InvalidNSFWScanRequest::FrameTooLarge {
-                index: 0,
-                bytes: NSFW_MAX_FRAME_BYTES + 1,
-            },
-            NSFWScanRequest::new(threshold(), vec![vec![1; NSFW_MAX_FRAME_BYTES + 1]]).unwrap_err()
-        );
-        assert!(NSFWScanRequest::new(threshold(), vec![vec![1]; NSFW_MAX_FRAMES]).is_ok());
-    }
-
-    #[tokio::test]
-    async fn a_four_frame_request_is_rejected_before_any_http_call() {
-        let metrics = Metrics::new();
-        let client = NSFWClient::new("http://127.0.0.1:9/", 0.85, metrics.nsfw()).unwrap();
-        assert_eq!(
-            InvalidNSFWScanRequest::TooManyFrames { count: 4 },
-            NSFWScanRequest::new(threshold(), vec![vec![1]; 4]).unwrap_err()
-        );
-        let rendered = metrics.render();
-        assert!(rendered.contains("fluxer_media_proxy_nsfw_calls_failed_total 0"));
-
-        let reachable = NSFWScanRequest::new(threshold(), vec![vec![1]]).unwrap();
-        assert_eq!(
-            Err(NSFWError::Unavailable),
-            client.check_buffers(reachable).await
-        );
-        let rendered = metrics.render();
-        assert!(rendered.contains("fluxer_media_proxy_nsfw_calls_failed_total 1"));
-        assert!(rendered.contains("fluxer_media_proxy_nsfw_calls_ok_total 0"));
-    }
-
-    #[tokio::test]
-    async fn a_disabled_client_records_a_disabled_call() {
-        let metrics = Metrics::new();
-        let client = NSFWClient::new("", 0.85, metrics.nsfw()).unwrap();
-        let request = NSFWScanRequest::new(threshold(), vec![vec![1]]).unwrap();
-        assert_eq!(
-            Err(NSFWError::Disabled),
-            client.check_buffers(request).await
-        );
-        assert!(
-            metrics
-                .render()
-                .contains("fluxer_media_proxy_nsfw_calls_disabled_total 1")
-        );
-    }
 }

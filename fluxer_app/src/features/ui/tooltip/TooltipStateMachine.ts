@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface TooltipEnvironment {
@@ -242,8 +243,35 @@ const tooltipStateMachine = setup({
 
 export type TooltipSnapshot = SnapshotFrom<typeof tooltipStateMachine>;
 
-export function createTooltipSnapshot(input: TooltipMachineInput = {}): TooltipSnapshot {
+function createTooltipSnapshot(input: TooltipMachineInput = {}): TooltipSnapshot {
 	return initialTransition(tooltipStateMachine, input)[0];
+}
+
+const initialSnapshotsByEnvironment = new Map<number, TooltipSnapshot>();
+
+function environmentKey(environment: TooltipEnvironment): number {
+	return (
+		(environment.disabled ? 1 : 0) |
+		(environment.mobileEnabled ? 2 : 0) |
+		(environment.contextMenuOpen ? 4 : 0) |
+		(environment.keyboardModeEnabled ? 8 : 0) |
+		(environment.hoverControlsEnabled ? 16 : 0) |
+		(environment.hasRenderableContent ? 32 : 0)
+	);
+}
+
+export function initialTooltipSnapshot(environment: TooltipEnvironment): TooltipSnapshot {
+	if (!isDesktopLocalAppDocument()) {
+		return createTooltipSnapshot(environment);
+	}
+	const key = environmentKey(environment);
+	const known = initialSnapshotsByEnvironment.get(key);
+	if (known !== undefined) {
+		return known;
+	}
+	const snapshot = createTooltipSnapshot(environment);
+	initialSnapshotsByEnvironment.set(key, snapshot);
+	return snapshot;
 }
 
 export function transitionTooltipSnapshot(snapshot: TooltipSnapshot, event: TooltipMachineEvent): TooltipSnapshot {

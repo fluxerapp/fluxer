@@ -61,8 +61,6 @@ jobs:
           --step install_dependencies
 
       - name: Refresh source catalogs
-        env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: pnpm i18n:source-sync
 
       - name: Format generated catalogs

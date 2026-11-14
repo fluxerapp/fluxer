@@ -22,7 +22,7 @@
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 0.25rem;
-	text-align: left;
+	text-align: start;
 }
 
 .label {
@@ -46,7 +46,7 @@
 }
 
 .description {
-	padding-right: 1rem;
+	padding-inline-end: 1rem;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
 	color: var(--text-primary-muted);
@@ -54,8 +54,6 @@
 
 .switchRoot {
 	--switch-highlight: rgba(255, 255, 255, 0.1);
-	--switch-edge: rgba(0, 0, 0, 0.25);
-	--switch-shadow: rgba(0, 0, 0, 0.2);
 	display: inline-flex;
 	align-items: center;
 	position: relative;
@@ -104,8 +102,7 @@
 	transition-property: transform, box-shadow;
 	transition-duration: 150ms;
 	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-	will-change: transform;
-	transform: translateX(0.125rem);
+	transform: translateX(calc(0.125rem * var(--switch-travel-sign, 1)));
 }
 
 .switchRoot:active .switchThumb {
@@ -116,7 +113,12 @@
 }
 
 .switchThumb[data-state='checked'] {
-	transform: translateX(1.375rem);
+	background-color: var(--brand-primary-fill);
+	transform: translateX(calc(1.375rem * var(--switch-travel-sign, 1)));
+}
+
+:global(html[dir='rtl']) .switchRoot {
+	--switch-travel-sign: -1;
 }
 
 .iconChecked {

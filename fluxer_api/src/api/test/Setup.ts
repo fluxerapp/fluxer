@@ -11,15 +11,19 @@ import {
 	setCassandraQueryExecutorForTesting,
 	shutdownCassandraQueryExecutorForTesting,
 } from '@app/api/database/CassandraQueryExecution';
-import {pinChannelThreadsConfigForTesting} from '@app/api/experiment/ChannelThreadsGate';
-import type {IUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import type {
+	AppAttestAgeAccepted,
+	AppAttestChallengeIssued,
+	AppAttestOutcome,
+	IUsersServiceClient,
+	PlayIntegrityOutcome,
+} from '@app/api/infrastructure/UsersServiceClient';
 import {setInjectedUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import {initializeLogger} from '@app/api/Logger';
 import {setInjectedKVProvider, setInjectedSnowflakeService} from '@app/api/middleware/ServiceRegistry';
 import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import {drainSearchTasks, enableSearchTaskTracking} from '@app/api/search/SearchTaskTracker';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {MockSnowflakeService} from '@app/api/test/mocks/MockSnowflakeService';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {RepositoryBackedMessageResponseDataService} from '@app/api/test/mocks/RepositoryBackedMessageResponseDataService';
@@ -27,6 +31,7 @@ import {server} from '@app/api/test/msw/server';
 import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {loadConfig} from '@fluxer/config/src/ConfigLoader';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {afterAll, afterEach, beforeAll} from 'vitest';
 
 function defaultNatsUrl(): string {
@@ -65,6 +70,8 @@ function setDefaultTestEnv(): void {
 		FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
 		FLUXER_ADMIN_SECRET_KEY_BASE: 'test-admin-secret',
 		FLUXER_ADMIN_OAUTH_CLIENT_SECRET: 'test-admin-oauth-secret',
+		FLUXER_ADMIN_SSO_ISSUER: 'https://1.1.1.1/admin-sso',
+		FLUXER_ADMIN_SSO_CLIENT_ID: 'admin-sso-test-client',
 		FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'test-gateway-rpc-token',
 		FLUXER_SUDO_MODE_SECRET: 'test-sudo-secret',
 		FLUXER_CONNECTION_INITIATION_SECRET: 'test-connection-secret',
@@ -81,7 +88,7 @@ function setDefaultTestEnv(): void {
 		FLUXER_EMAIL_SMTP_PORT: '1025',
 		FLUXER_EMAIL_SMTP_USERNAME: 'test',
 		FLUXER_EMAIL_SMTP_PASSWORD: 'test',
-		FLUXER_EMAIL_SMTP_SECURE: 'false',
+		FLUXER_EMAIL_SMTP_TLS_MODE: 'none',
 		FLUXER_LIVEKIT_ENABLED: 'false',
 		FLUXER_STRIPE_ENABLED: 'true',
 		FLUXER_SEARCH_ENGINE: 'elasticsearch',
@@ -111,6 +118,26 @@ class RepositoryBackedUsersServiceClient implements IUsersServiceClient {
 	}
 
 	async invalidateUserCache(_userId: UserID): Promise<void> {}
+
+	async appAttestCreateChallenge(): Promise<AppAttestOutcome<AppAttestChallengeIssued>> {
+		return {ok: false, code: 'not_configured'};
+	}
+
+	async appAttestRegisterKey(): Promise<AppAttestOutcome<true>> {
+		return {ok: false, code: 'not_configured'};
+	}
+
+	async appAttestSubmitAge(): Promise<AppAttestOutcome<AppAttestAgeAccepted>> {
+		return {ok: false, code: 'not_configured'};
+	}
+
+	async playIntegrityCreateChallenge(): Promise<PlayIntegrityOutcome<AppAttestChallengeIssued>> {
+		return {ok: false, code: 'not_configured'};
+	}
+
+	async playIntegritySubmitAge(): Promise<PlayIntegrityOutcome<AppAttestAgeAccepted>> {
+		return {ok: false, code: 'not_configured'};
+	}
 }
 
 setDefaultTestEnv();
@@ -182,6 +209,7 @@ const testApiConfig: APIConfig = {
 	storeBilling: {
 		sandboxUserIds: [],
 		sandboxEntitlesAll: false,
+		sandboxSubscriptions: false,
 	},
 };
 testApiConfig.dev.relaxRegistrationRateLimits = true;
@@ -217,7 +245,6 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
-	pinChannelThreadsConfigForTesting(null);
 	server.close();
 	await shutdownCassandraQueryExecutorForTesting();
 });

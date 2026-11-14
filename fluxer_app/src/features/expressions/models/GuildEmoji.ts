@@ -25,16 +25,6 @@ export class GuildEmoji {
 		this.user = data.user;
 	}
 
-	equals(other: GuildEmoji): boolean {
-		return (
-			this.id === other.id &&
-			this.guildId === other.guildId &&
-			this.name === other.name &&
-			this.animated === other.animated &&
-			this.user?.id === other.user?.id
-		);
-	}
-
 	toJSON(): WireGuildEmoji {
 		return {
 			id: this.id,
@@ -42,9 +32,5 @@ export class GuildEmoji {
 			animated: this.animated,
 			user: this.user,
 		};
-	}
-
-	static create(guildId: string, data: WireGuildEmoji): GuildEmoji {
-		return new GuildEmoji(guildId, data);
 	}
 }

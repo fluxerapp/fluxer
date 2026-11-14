@@ -7,11 +7,17 @@ import type {default as MessageFormat, MessageFormatOptions} from '@messageforma
 
 type StaticLocaleMessages<TKey extends string, TValue> = Partial<Record<TKey, TValue>>;
 
+function isTranslated(value: unknown): boolean {
+	if (typeof value === 'string') {
+		return value !== '';
+	}
+	return value != null && typeof value === 'object' && Object.values(value).every((field) => field !== '');
+}
+
 export interface StaticI18nConfig<TKey extends string, TValue, TVariables> {
 	defaultLocale: string;
 	defaultMessages: Record<TKey, TValue>;
 	localeMessages: Record<string, StaticLocaleMessages<TKey, TValue>>;
-	normalizeLocale?: (locale: string) => string;
 	onWarning?: (message: string) => void;
 	validateVariables?: (key: TKey, template: TValue, variables: TVariables) => string | null;
 	messageFormatOptions?: MessageFormatOptions<'string'>;
@@ -46,7 +52,8 @@ export function createStaticI18n<TKey extends string, TValue, TVariables>(
 				: undefined;
 			const translatedTemplate =
 				localeMessages != null && Object.hasOwn(localeMessages, key) ? localeMessages[key] : undefined;
-			const template = translatedTemplate ?? sourceTemplate;
+			const template =
+				translatedTemplate !== undefined && isTranslated(translatedTemplate) ? translatedTemplate : sourceTemplate;
 			const validationError = config.validateVariables?.(key, template, variables);
 			if (validationError) {
 				return {

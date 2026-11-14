@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createAuthHarness, createUniqueEmail, createUniqueUsername} from '@app/api/auth/tests/AuthTestUtils';
+import {getConfig} from '@app/api/Config';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface PendingRegistrationResponse {
 	registration_pending_approval: true;
@@ -30,6 +33,7 @@ function registrationBody(prefix: string): Record<string, unknown> {
 
 describe('Auth registration policy', () => {
 	let harness: ApiTestHarness;
+	let originalSelfHosted: boolean;
 
 	beforeAll(async () => {
 		harness = await createAuthHarness();
@@ -37,6 +41,11 @@ describe('Auth registration policy', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
+		originalSelfHosted = getConfig().instance.selfHosted;
+	});
+
+	afterEach(() => {
+		getConfig().instance.selfHosted = originalSelfHosted;
 	});
 
 	afterAll(async () => {
@@ -90,5 +99,157 @@ describe('Auth registration policy', () => {
 			.body({email: body.email, password: body.password})
 			.expect(403, APIErrorCodes.REGISTRATION_PENDING_APPROVAL)
 			.execute();
+	});
+
+	it('refuses an approval registration without sign-in credentials', async () => {
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/register')
+			.body({global_name: 'Nobody Signs In', date_of_birth: '2000-01-01', consent: true})
+			.expect(400, APIErrorCodes.REGISTRATION_CREDENTIALS_REQUIRED)
+			.execute();
+		expect(await getInstanceConfigRepository().getPendingRegistrations()).toEqual([]);
+	});
+
+	it('refuses an approval registration with an email but no password', async () => {
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+		const {password: _password, ...body} = registrationBody('nopassword');
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/register')
+			.body(body)
+			.expect(400, APIErrorCodes.REGISTRATION_CREDENTIALS_REQUIRED)
+			.execute();
+		expect(await getInstanceConfigRepository().getPendingRegistrations()).toEqual([]);
+	});
+
+	it('refuses an approval registration with a password but no email', async () => {
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
+		const {email: _email, ...body} = registrationBody('noemail');
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/register')
+			.body(body)
+			.expect(400, APIErrorCodes.REGISTRATION_CREDENTIALS_REQUIRED)
+			.execute();
+		expect(await getInstanceConfigRepository().getPendingRegistrations()).toEqual([]);
+	});
+
+	it('keeps the registration URL seat when an approval registration is refused', async () => {
+		const repository = getInstanceConfigRepository();
+		await repository.setRegistrationConfig({mode: 'open', admin_registration_urls_enabled: true});
+		const {code} = await repository.createRegistrationUrl({
+			label: 'Reviewed link',
+			createdByUserId: '1',
+			expiresAt: null,
+			maxUses: 1,
+			approvalRequired: true,
+		});
+		await createBuilderWithoutAuth(harness)
+			.post('/auth/register')
+			.body({global_name: 'Seat Keeper', date_of_birth: '2000-01-01', consent: true, registration_url_code: code})
+			.expect(400, APIErrorCodes.REGISTRATION_CREDENTIALS_REQUIRED)
+			.execute();
+		const registration = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
+			.post('/auth/register')
+			.body({...registrationBody('seatkeeper'), registration_url_code: code})
+			.execute();
+		expect(registration.registration_pending_approval).toBe(true);
+	});
+
+	it('still accepts an unclaimed registration in open mode', async () => {
+		await getInstanceConfigRepository().setRegistrationConfig({mode: 'open'});
+		const registration = await createBuilderWithoutAuth<RegistrationTokenResponse>(harness)
+			.post('/auth/register')
+			.body({global_name: 'Open Unclaimed', date_of_birth: '2000-01-01', consent: true})
+			.execute();
+		expect(registration.token.length).toBeGreaterThan(0);
+	});
+
+	it('limits public sign-ups to the allowed email domains', async () => {
+		const repository = getInstanceConfigRepository();
+		const saved = await repository.setRegistrationConfig({allowed_email_domains: [' Example.COM ', 'corp.example']});
+		expect(saved.allowed_email_domains).toEqual(['example.com', 'corp.example']);
+		expect(await repository.getRegistrationPublicConfig()).not.toHaveProperty('allowed_email_domains');
+		const {json} = await createBuilderWithoutAuth<{errors: Array<{path: string; code: string}>}>(harness)
+			.post('/auth/register')
+			.body({...registrationBody('outsider'), email: `outsider-${Date.now()}@elsewhere.test`})
+			.expect(400, APIErrorCodes.INVALID_FORM_BODY)
+			.executeWithResponse();
+		expect(json.errors).toEqual([
+			expect.objectContaining({path: 'email', code: ValidationErrorCodes.EMAIL_DOMAIN_NOT_ALLOWED}),
+		]);
+		const allowed = await createBuilderWithoutAuth<RegistrationTokenResponse>(harness)
+			.post('/auth/register')
+			.body({...registrationBody('insider'), email: `insider-${Date.now()}@EXAMPLE.com`})
+			.execute();
+		expect(allowed.token.length).toBeGreaterThan(0);
+	});
+
+	it('lets an admin-issued registration URL sign up outside the allowed email domains', async () => {
+		const repository = getInstanceConfigRepository();
+		await repository.setRegistrationConfig({allowed_email_domains: ['corp.example']});
+		const {code} = await repository.createRegistrationUrl({
+			label: 'Guest',
+			createdByUserId: '1',
+			expiresAt: null,
+			maxUses: 1,
+			approvalRequired: false,
+		});
+		const registration = await createBuilderWithoutAuth<RegistrationTokenResponse>(harness)
+			.post('/auth/register')
+			.body({...registrationBody('guest'), registration_url_code: code})
+			.execute();
+		expect(registration.token.length).toBeGreaterThan(0);
+	});
+
+	it('refuses a public sign-up without an email while allowed email domains are set', async () => {
+		const repository = getInstanceConfigRepository();
+		await repository.setRegistrationConfig({mode: 'open', allowed_email_domains: ['corp.example']});
+		expect(await repository.getInstantAccountAvailability()).toBe('email_domains_restricted');
+		const {json} = await createBuilderWithoutAuth<{errors: Array<{path: string; code: string}>}>(harness)
+			.post('/auth/register')
+			.body({global_name: 'Domain Guest', date_of_birth: '2000-01-01', consent: true})
+			.expect(400, APIErrorCodes.INVALID_FORM_BODY)
+			.executeWithResponse();
+		expect(json.errors).toEqual([
+			expect.objectContaining({path: 'email', code: ValidationErrorCodes.EMAIL_DOMAIN_NOT_ALLOWED}),
+		]);
+	});
+
+	it('lets a registration URL start an account without an email while allowed email domains are set', async () => {
+		const repository = getInstanceConfigRepository();
+		await repository.setRegistrationConfig({mode: 'open', allowed_email_domains: ['corp.example']});
+		const {code} = await repository.createRegistrationUrl({
+			label: 'Guest link',
+			createdByUserId: '1',
+			expiresAt: null,
+			maxUses: 1,
+			approvalRequired: false,
+		});
+		const registration = await createBuilderWithoutAuth<RegistrationTokenResponse>(harness)
+			.post('/auth/register')
+			.body({global_name: 'Linked Guest', date_of_birth: '2000-01-01', consent: true, registration_url_code: code})
+			.execute();
+		expect(registration.token.length).toBeGreaterThan(0);
+	});
+
+	it('keeps accounts without an email on username instances with allowed email domains set', async () => {
+		getConfig().instance.selfHosted = true;
+		const repository = getInstanceConfigRepository();
+		await repository.setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
+		await repository.setAppPublicConfig({setup: {configured: true}});
+		await repository.updateAuthConfig({instant_accounts: {enabled: true}});
+		await repository.setRegistrationConfig({mode: 'open', allowed_email_domains: ['corp.example']});
+		expect(await repository.getInstantAccountAvailability()).toBe('available');
+		const registration = await createBuilderWithoutAuth<RegistrationTokenResponse>(harness)
+			.post('/auth/register')
+			.body({global_name: 'Username Guest', date_of_birth: '2000-01-01', consent: true})
+			.execute();
+		expect(registration.token.length).toBeGreaterThan(0);
+	});
+
+	it('refuses an allowed email domain list with an invalid entry', async () => {
+		await expect(
+			getInstanceConfigRepository().setRegistrationConfig({allowed_email_domains: ['user@example.com']}),
+		).rejects.toMatchObject({code: APIErrorCodes.INVALID_FORM_BODY});
 	});
 });

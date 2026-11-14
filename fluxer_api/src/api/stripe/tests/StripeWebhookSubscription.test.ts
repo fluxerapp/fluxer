@@ -1,26 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import crypto from 'node:crypto';
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {createTestStoreEntitlementService} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {ProductType} from '@app/api/stripe/ProductRegistry';
-import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {
+	sendStripeWebhook,
+	sendStripeWebhookExpectStripeError,
+	setupSyncStripeWebhookWorker,
+} from '@app/api/stripe/tests/StripeWebhookTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
-	createMockWebhookPayload,
+	createPaymentIntentInvoicePayments,
 	createStripeApiHandlers,
 	createSubscriptionDeletedEvent,
 	createSubscriptionUpdatedEvent,
 	type StripeApiHandlers,
-	type StripeWebhookEventData,
 } from '@app/api/test/msw/handlers/StripeApiHandlers';
 import {server} from '@app/api/test/msw/server';
+import {createTestWorkerHelpers} from '@app/api/test/SyncTaskWorkerService';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {getPremiumPaymentRecoveryGraceMs, PREMIUM_GRACE_PERIOD_MS} from '@app/api/user/UserHelpers';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import processPremiumStateReconciliationQueue from '@app/api/worker/tasks/ProcessPremiumStateReconciliationQueue';
+import {getWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {HttpResponse, http} from 'msw';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
@@ -63,36 +68,6 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 		server.resetHandlers();
 		server.use(...stripeHandlers.handlers);
 	});
-	function createWebhookSignature(payload: string, timestamp: number, secret: string): string {
-		const signedPayload = `${timestamp}.${payload}`;
-		const signature = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
-		return `t=${timestamp},v1=${signature}`;
-	}
-	async function sendWebhook(eventData: StripeWebhookEventData): Promise<{
-		received: boolean;
-	}> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		return createBuilder<{
-			received: boolean;
-		}>(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.execute();
-	}
-	async function sendWebhookExpectStripeError(eventData: StripeWebhookEventData): Promise<void> {
-		const {payload, timestamp} = createMockWebhookPayload(eventData);
-		const signature = createWebhookSignature(payload, timestamp, Config.stripe.webhookSecret!);
-		await createBuilder(harness, '')
-			.post('/stripe/webhook')
-			.header('stripe-signature', signature)
-			.header('content-type', 'application/json')
-			.body(payload)
-			.expect(400, APIErrorCodes.STRIPE_ERROR)
-			.execute();
-	}
 	describe('customer.subscription.updated', () => {
 		test('updates subscription cancellation status when cancel_at_period_end is true', async () => {
 			const account = await createTestAccount(harness);
@@ -133,7 +108,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			eventData.data.object.items = {
 				data: [{current_period_end: cancelAt}],
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const response = await harness.requestJson({
 				path: '/users/@me',
@@ -190,7 +165,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			eventData.data.object.items = {
 				data: [{current_period_end: currentPeriodEnd}],
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const response = await harness.requestJson({
 				path: '/users/@me',
@@ -255,7 +230,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			eventData.data.object.items = {
 				data: [{current_period_end: unpaidFuturePeriodEnd}],
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const updatedUser = await userRepository.findUnique(userId);
 			expect(updatedUser?.premiumWillCancel).toBe(true);
@@ -315,7 +290,8 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			const renewalSeconds = Math.floor(Date.now() / 1000) - 60 * 60;
 			const renewalAt = new Date(renewalSeconds * 1000);
 			const userId = await seedPastDueUser(subscriptionId, renewalAt);
-			const result = await sendWebhook(
+			const result = await sendStripeWebhook(
+				harness,
 				pastDueEvent(subscriptionId, renewalSeconds, renewalSeconds + 30 * 24 * 60 * 60),
 			);
 			expect(result.received).toBe(true);
@@ -331,7 +307,10 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			const periodEndSeconds = periodStartSeconds + 30 * 24 * 60 * 60;
 			const paidThrough = new Date(periodEndSeconds * 1000);
 			const userId = await seedPastDueUser(subscriptionId, paidThrough);
-			const result = await sendWebhook(pastDueEvent(subscriptionId, periodStartSeconds, periodEndSeconds));
+			const result = await sendStripeWebhook(
+				harness,
+				pastDueEvent(subscriptionId, periodStartSeconds, periodEndSeconds),
+			);
 			expect(result.received).toBe(true);
 			const updatedUser = await userRepository.findUnique(userId);
 			expect(updatedUser?.premiumUntil?.getTime()).toBe(paidThrough.getTime());
@@ -406,7 +385,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 					}),
 				),
 			);
-			await sendWebhookExpectStripeError(eventData);
+			await sendStripeWebhookExpectStripeError(harness, eventData);
 			const response = await harness.requestJson({
 				path: '/users/@me',
 				method: 'GET',
@@ -460,7 +439,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			eventData.data.object.items = {
 				data: [{current_period_end: currentPeriodEnd}],
 			};
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const me = await createBuilder<{
 				premium_until: string | null;
@@ -505,7 +484,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(beforeUser?.premiumType).toBe(UserPremiumTypes.SUBSCRIPTION);
 			expect(beforeUser?.stripeSubscriptionId).toBe(subscriptionId);
 			const eventData = createSubscriptionDeletedEvent({subscriptionId});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const afterUser = await userRepository.findUnique(userId);
 			expect(afterUser?.premiumType).toBe(UserPremiumTypes.SUBSCRIPTION);
@@ -546,7 +525,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			const beforeUser = await userRepository.findUnique(userId);
 			expect(beforeUser?.premiumType).toBe(UserPremiumTypes.LIFETIME);
 			const eventData = createSubscriptionDeletedEvent({subscriptionId});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const afterUser = await userRepository.findUnique(userId);
 			expect(afterUser?.premiumType).toBe(UserPremiumTypes.LIFETIME);
@@ -570,7 +549,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			);
 			const endedAt = Math.floor(Date.now() / 1000) - 60;
 			const eventData = createSubscriptionDeletedEvent({subscriptionId, endedAt});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const afterUser = await userRepository.findUnique(userId);
 			expect(afterUser?.premiumUntil?.getTime()).toBe(endedAt * 1000);
@@ -578,6 +557,60 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(afterUser?.stripeSubscriptionId).toBeNull();
 			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
 			expect(checkHasActivePaidPremium(afterUser!)).toBe(false);
+		});
+		test('keeps premium cut off after reconciliation when the cancelled subscription was refunded and disputed', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const subscriptionId = 'sub_test_refunded_yearly';
+			const invoiceId = 'in_test_refunded_yearly';
+			const day = 24 * 60 * 60;
+			const endedAt = Math.floor(Date.now() / 1000) - 60;
+			const paidPeriodEnd = endedAt + 222 * day;
+			const paymentIntentId = `pi_${invoiceId}`;
+			const stripeApi = createStripeApiHandlers({
+				subscriptions: {
+					[subscriptionId]: {
+						status: 'canceled',
+						interval: 'year',
+						ended_at: endedAt,
+						current_period_start: paidPeriodEnd - 365 * day,
+						current_period_end: paidPeriodEnd,
+					},
+				},
+				invoices: {
+					[invoiceId]: {
+						subscriptionId,
+						lines: {data: [{period: {start: paidPeriodEnd - 365 * day, end: paidPeriodEnd}}]},
+						payments: createPaymentIntentInvoicePayments(invoiceId, paymentIntentId, endedAt),
+					},
+				},
+				charges: {
+					[`ch_${paymentIntentId}`]: {refunded: true, amount_refunded: 2500, disputed: true},
+				},
+			});
+			server.use(...stripeApi.handlers);
+			await userRepository.patchUpsert(
+				userId,
+				{
+					premium_type: UserPremiumTypes.SUBSCRIPTION,
+					stripe_subscription_id: subscriptionId,
+					stripe_customer_id: 'cus_test_1',
+					premium_since: new Date(),
+					premium_until: new Date(paidPeriodEnd * 1000),
+				},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+			const result = await sendStripeWebhook(harness, createSubscriptionDeletedEvent({subscriptionId, endedAt}));
+			expect(result.received).toBe(true);
+			setWorkerDependenciesForTest({
+				...getWorkerDependencies(),
+				storeEntitlementService: createTestStoreEntitlementService(),
+			});
+			await processPremiumStateReconciliationQueue({}, createTestWorkerHelpers());
+			const afterUser = await userRepository.findUnique(userId);
+			expect(afterUser?.premiumType).toBeNull();
+			expect(afterUser?.premiumUntil).toBeNull();
+			expect(stripeApi.spies.retrievedPaymentIntents).toContain(paymentIntentId);
 		});
 		test('ends premium without grace when the subscription is cancelled at the end of its paid period', async () => {
 			const account = await createTestAccount(harness);
@@ -597,7 +630,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			);
 			const endedAt = Math.floor(Date.now() / 1000);
 			const eventData = createSubscriptionDeletedEvent({subscriptionId, endedAt});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const afterUser = await userRepository.findUnique(userId);
 			expect(afterUser?.premiumUntil?.getTime()).toBe(premiumUntil.getTime());
@@ -648,7 +681,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 				cancellationReason: 'payment_failed',
 				interval: 'month',
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const afterUser = await userRepository.findUnique(userId);
 			expect(afterUser?.premiumType).toBe(UserPremiumTypes.SUBSCRIPTION);
@@ -700,7 +733,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 				cancellationReason: 'payment_failed',
 				interval: 'year',
 			});
-			const result = await sendWebhook(eventData);
+			const result = await sendStripeWebhook(harness, eventData);
 			expect(result.received).toBe(true);
 			const afterUser = await userRepository.findUnique(userId);
 			expect(afterUser?.premiumUntil?.getTime()).toBe(lapseStart.getTime());
@@ -732,7 +765,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(donorBefore).not.toBeNull();
 			expect(donorBefore?.stripeSubscriptionId).toBe(subscriptionId);
 			const deleteEvent = createSubscriptionDeletedEvent({subscriptionId});
-			const deleteResult = await sendWebhook(deleteEvent);
+			const deleteResult = await sendStripeWebhook(harness, deleteEvent);
 			expect(deleteResult.received).toBe(true);
 			const donorAfter = await donationRepository.findDonorByEmail(donorEmail);
 			expect(donorAfter?.stripeSubscriptionId).toBeNull();

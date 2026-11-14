@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {mapThreadMemberToRpcResponse, mapThreadToRpcResponse} from '@app/api/channel/services/thread/ThreadMappers';
 import {mapThreadParentFields} from '@app/api/channel/services/thread/ThreadParentSettings';
 import {loadThreadViews} from '@app/api/channel/services/thread/ThreadViews';
-import {getCompiledChannelThreadsConfig, guildActive, isTainted} from '@app/api/experiment/ChannelThreadsGate';
+import {getChannelThreadsConfig, isTainted} from '@app/api/experiment/ChannelThreadsGate';
 import type {Channel} from '@app/api/models/Channel';
 import type {ThreadMember} from '@app/api/models/ThreadMember';
 import type {ThreadParentConfig} from '@app/api/models/ThreadParentConfig';
@@ -23,9 +23,7 @@ import type {
 const MEMBER_PAGE_SIZE = 1000;
 const MEMBER_LOAD_CONCURRENCY = 16;
 
-export type ThreadGateRpcData =
-	| {thread_gate: {active: boolean; config_version: number}; thread_tainted: boolean}
-	| {thread_tainted: true};
+export type ThreadGateRpcData = {thread_gate: {active: boolean; config_version: number}; thread_tainted: boolean};
 
 export interface ThreadCollectionRpcData {
 	threads: Array<ReturnType<typeof mapThreadToRpcResponse>>;
@@ -34,9 +32,8 @@ export interface ThreadCollectionRpcData {
 }
 
 export async function resolveThreadGateRpcData(guildId: GuildID): Promise<ThreadGateRpcData | null> {
-	if (!guildActive(guildId)) return (await isTainted(guildId)) ? {thread_tainted: true} : null;
 	return {
-		thread_gate: {active: true, config_version: getCompiledChannelThreadsConfig().config.config_version},
+		thread_gate: {active: true, config_version: getChannelThreadsConfig().config_version},
 		thread_tainted: await isTainted(guildId),
 	};
 }
@@ -49,10 +46,7 @@ function mapParentSettingsToRpc(
 	return {channel_id: parent.id.toString(), ...mapThreadParentFields(parent.type, config)};
 }
 
-async function listAllMembers(
-	repository: IChannelRepositoryAggregate,
-	threadId: ChannelID,
-): Promise<Array<ThreadMember>> {
+async function listAllMembers(repository: ChannelRepository, threadId: ChannelID): Promise<Array<ThreadMember>> {
 	const members: Array<ThreadMember> = [];
 	let after: UserID | undefined;
 	while (members.length < MAX_THREAD_MEMBERS * 2) {
@@ -65,7 +59,7 @@ async function listAllMembers(
 }
 
 export async function loadThreadCollectionRpcData(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	guildId: GuildID,
 	parents: ReadonlyArray<Channel>,
 	{members: includeMembers}: {members: boolean},
@@ -91,21 +85,8 @@ export async function loadThreadCollectionRpcData(
 	};
 }
 
-export async function loadActiveThreadMemberships(
-	repository: IChannelRepositoryAggregate,
-	guildId: GuildID,
-	userId: UserID,
-): Promise<Array<ThreadMemberRpcResponse>> {
-	const joined = await repository.threads.listJoinedThreadIds(userId, guildId);
-	if (joined.length === 0) return [];
-	const states = await repository.threads.getStates(joined);
-	const active = states.filter((state) => !state.archived && state.guildId === guildId);
-	const members = await Promise.all(active.map((state) => repository.threads.getMember(state.threadId, userId)));
-	return members.flatMap((member) => (member ? [mapThreadMemberToRpcResponse(member)] : []));
-}
-
 export async function listThreadMembersPage(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	params: {guildId: GuildID; threadIds: Array<ChannelID>; limit: number; after?: UserID},
 ): Promise<{
 	members: Array<ThreadMemberRpcResponse>;
@@ -149,14 +130,13 @@ export interface ForumUnreadRpcEntry {
 }
 
 export async function loadForumUnreads(
-	repository: IChannelRepositoryAggregate,
+	repository: ChannelRepository,
 	params: {
 		guildId: GuildID;
 		channelId: ChannelID;
 		threads: Array<{threadId: ChannelID; ackMessageId?: MessageID}>;
 	},
 ): Promise<Array<ForumUnreadRpcEntry>> {
-	if (!guildActive(params.guildId)) return [];
 	const states = await repository.threads.getStates(params.threads.map((thread) => thread.threadId));
 	const inForum = new Set(
 		states

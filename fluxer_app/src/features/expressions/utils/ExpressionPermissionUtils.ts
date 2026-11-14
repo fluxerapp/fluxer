@@ -57,6 +57,14 @@ export function checkEmojiAvailability(i18n: I18n, emoji: FlatEmoji, channel: Ch
 	return checkEmojiAvailabilityWithGuildFallback(i18n, emoji, channel, null);
 }
 
+export function checkRoleIconEmojiAvailability(emoji: FlatEmoji, guildId: string): AvailabilityCheck {
+	return {
+		canUse: !emoji.guildId || emoji.guildId === guildId,
+		isLockedByPremium: false,
+		isLockedByPermission: false,
+	};
+}
+
 export function checkEmojiAvailabilityWithGuildFallback(
 	i18n: I18n,
 	emoji: FlatEmoji,

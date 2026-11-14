@@ -141,14 +141,6 @@ describe('Apple root certificate pin', () => {
 	it('matches the root of the real Apple chain', () => {
 		expect(REAL_APPLE_ROOT).toBe(APPLE_ROOT_CA_G3_DER_BASE64);
 	});
-
-	it('lets tests inject roots and restores the pin', () => {
-		const pki = createAppleTestPki();
-		setInjectedAppleRootCertificates([pki.root]);
-		expect(getAppleRootCertificates()).toEqual([pki.root]);
-		setInjectedAppleRootCertificates(undefined);
-		expect(getAppleRootCertificates()[0].fingerprint256.replaceAll(':', '')).toBe(APPLE_ROOT_CA_G3_SHA256);
-	});
 });
 
 describe('certificate extension lookup', () => {

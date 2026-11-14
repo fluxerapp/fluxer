@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod keys;
-mod local;
-mod relay;
-mod response_body;
-mod s3;
-mod s3_read_endpoint;
+mod slow_stream;
 
 use crate::{
     config::{
@@ -13,24 +9,12 @@ use crate::{
         MediaServingConfig, PolicyMode, StorageBackend, StorageConfig, UploadRelayConfig,
     },
     constants,
-    metrics::{Metrics, http_client::HTTPClientMetrics, storage::StorageMetrics},
-    secret::{SecretBytes, SecretString},
-    storage::Store,
 };
 use axum::response::Response;
 use bytes::Bytes;
 use http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header};
 use parking_lot::Mutex;
-use std::{
-    collections::HashMap,
-    path::Path,
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    },
-    time::Duration,
-};
-use tokio::io::AsyncReadExt as _;
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 pub(crate) type CapturedRequest = (Method, http::Uri, HeaderMap, Bytes);
 
@@ -94,22 +78,6 @@ fn test_config(root: &Path) -> Config {
     }
 }
 
-fn store(cfg: Config) -> Store {
-    store_with_storage_metrics(cfg, Arc::new(StorageMetrics::new()))
-}
-
-fn store_with_storage_metrics(cfg: Config, metrics: Arc<StorageMetrics>) -> Store {
-    Store::new(cfg, metrics, Arc::new(HTTPClientMetrics::new()))
-}
-
-fn rendered_counter(metrics: &Metrics, name: &str) -> u64 {
-    let rendered = metrics.render();
-    rendered
-        .lines()
-        .find_map(|line| line.strip_prefix(name)?.trim().parse().ok())
-        .expect("counter is rendered")
-}
-
 #[derive(Clone, Default)]
 pub(crate) struct FakeObject {
     pub(crate) body: Vec<u8>,
@@ -119,7 +87,6 @@ pub(crate) struct FakeObject {
     pub(crate) last_modified: Option<String>,
     pub(crate) status: Option<u16>,
     pub(crate) read_status: Option<u16>,
-    pub(crate) delay: Option<Duration>,
 }
 
 #[derive(Clone)]
@@ -133,18 +100,6 @@ pub(crate) struct FakeS3 {
 impl FakeS3 {
     pub(crate) fn put_object(&self, path: &str, object: FakeObject) {
         self.objects.lock().insert(path.to_owned(), object);
-    }
-
-    pub(crate) fn set_put_etag(&self, etag: &str) {
-        *self.put_etag.lock() = Some(etag.to_owned());
-    }
-
-    pub(crate) fn endpoint(&self) -> &str {
-        &self.endpoint
-    }
-
-    pub(crate) fn requests(&self) -> Vec<CapturedRequest> {
-        self.requests.lock().clone()
     }
 
     pub(crate) fn last_request(&self) -> CapturedRequest {
@@ -216,9 +171,6 @@ async fn serve_fake_s3(state: FakeS3, request: axum::extract::Request) -> Respon
             b"<Error>NoSuchKey</Error>",
         );
     };
-    if let Some(delay) = object.delay {
-        tokio::time::sleep(delay).await;
-    }
     if let Some(status) = object.status {
         return fake_s3_response(
             StatusCode::from_u16(status).expect("fake status is valid"),
@@ -248,15 +200,6 @@ async fn serve_fake_s3(state: FakeS3, request: axum::extract::Request) -> Respon
     }
     if let Some(last_modified) = object.last_modified.clone() {
         headers.push((header::LAST_MODIFIED, last_modified));
-    }
-    if let Some(requested) = parts.headers.get(header::IF_MATCH)
-        && object.etag.as_deref() != requested.to_str().ok()
-    {
-        return fake_s3_response(
-            StatusCode::PRECONDITION_FAILED,
-            Vec::new(),
-            b"<Error>PreconditionFailed</Error>",
-        );
     }
     if parts.method == Method::HEAD {
         let advertised = vec![0u8; usize::try_from(total_length).expect("fake length fits usize")];
@@ -304,29 +247,4 @@ fn fake_s3_response(
     response
 }
 
-pub(crate) async fn connection_dropping_front(
-    origin: &str,
-    dropped: usize,
-) -> (String, Arc<AtomicUsize>) {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let endpoint = format!("http://{}", listener.local_addr().unwrap());
-    let origin = origin.trim_start_matches("http://").to_owned();
-    let accepted = Arc::new(AtomicUsize::new(0));
-    let counter = Arc::clone(&accepted);
-    tokio::spawn(async move {
-        while let Ok((mut client, _)) = listener.accept().await {
-            let index = counter.fetch_add(1, Ordering::SeqCst);
-            let origin = origin.clone();
-            tokio::spawn(async move {
-                if index < dropped {
-                    let mut request = [0u8; 4096];
-                    let _ = client.read(&mut request).await;
-                    return;
-                }
-                let mut upstream = tokio::net::TcpStream::connect(origin).await.unwrap();
-                let _ = tokio::io::copy_bidirectional(&mut client, &mut upstream).await;
-            });
-        }
-    });
-    (endpoint, accepted)
-}
+use fluxer_common::secret::{SecretBytes, SecretString};

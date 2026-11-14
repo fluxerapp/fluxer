@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {ENABLE_NOTIFICATIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	ENABLE_NOTIFICATIONS_DESCRIPTOR,
+	FEATURE_NEEDS_HTTPS_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {usePushSubscriptions} from '@app/features/notification/hooks/usePushSubscriptions';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
 import * as PushSubscriptionService from '@app/features/platform/push/PushSubscriptionService';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import * as NotificationCommands from '@app/features/ui/commands/NotificationCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
@@ -13,6 +17,10 @@ import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsC
 import styles from '@app/features/user/components/modals/tabs/notifications_tab/Notifications.module.css';
 import {PushSettings} from '@app/features/user/components/modals/tabs/notifications_tab/PushSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {
+	ENABLE_UNREAD_MESSAGE_BADGE_DESCRIPTOR,
+	UNKNOWN_DEVICE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -50,17 +58,14 @@ const GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_2_DESCRIPTOR = msg({
 		'Get notified when you receive messages. You may need to allow notifications in your browser settings. For per-channel/per-community controls, right-click a community icon and open notification settings.',
 	comment: 'Label in the notifications.',
 });
-const ENABLE_UNREAD_MESSAGE_BADGE_DESCRIPTOR = msg({
-	message: 'Enable unread message badge',
-	comment: 'Button or menu action label in the notifications. Keep it concise.',
-});
+
 const PUSH_SUBSCRIPTIONS_FOR_THIS_DEVICE_DESCRIPTOR = msg({
 	message: 'Push subscriptions for this device',
 	comment: 'Label in the notifications.',
 });
 const USES_PUSH_NOTIFICATIONS_WHEN_INSTALLED_AS_A_MOBILE_DESCRIPTOR = msg({
 	message:
-		'{productName} uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the app is backgrounded.',
+		'{productName} uses push notifications when installed as a mobile PWA. Registering lets the gateway send notifications to your device even when the app is in the background.',
 	comment: 'Label in the notifications.',
 });
 const REFRESH_PUSH_SUBSCRIPTION_DESCRIPTOR = msg({
@@ -73,10 +78,6 @@ const ENABLE_PUSH_FOR_THIS_DEVICE_DESCRIPTOR = msg({
 });
 const FORGET_SUBSCRIPTIONS_DESCRIPTOR = msg({
 	message: 'Forget subscriptions',
-	comment: 'Short label in the notifications. Keep it concise.',
-});
-const UNKNOWN_DEVICE_DESCRIPTOR = msg({
-	message: 'Unknown device',
 	comment: 'Short label in the notifications. Keep it concise.',
 });
 
@@ -135,39 +136,47 @@ export const Notifications: FC<NotificationsProps> = observer(
 			await PushSubscriptionService.unregisterAllPushSubscriptions();
 			await refresh();
 		};
-		const pushStatusMessage = loading
-			? i18n._(LOADING_PUSH_SUBSCRIPTIONS_DESCRIPTOR)
-			: subscriptions.length > 0
-				? plural(
-						{count: subscriptions.length},
-						{
-							one: '# active subscription',
-							other: '# active subscriptions',
-						},
-					)
-				: i18n._(NO_PUSH_SUBSCRIPTIONS_REGISTERED_YET_DESCRIPTOR);
+		let pushStatusMessage: string;
+		if (loading) {
+			pushStatusMessage = i18n._(LOADING_PUSH_SUBSCRIPTIONS_DESCRIPTOR);
+		} else if (subscriptions.length > 0) {
+			pushStatusMessage = plural(
+				{count: subscriptions.length},
+				{
+					one: '# active subscription',
+					other: '# active subscriptions',
+				},
+			);
+		} else {
+			pushStatusMessage = i18n._(NO_PUSH_SUBSCRIPTIONS_REGISTERED_YET_DESCRIPTOR);
+		}
+		let notificationsLabel: string;
+		let notificationsDescription: string;
+		if (isDesktop()) {
+			notificationsLabel = i18n._(ENABLE_DESKTOP_NOTIFICATIONS_DESCRIPTOR);
+			notificationsDescription = i18n._(USES_THE_OS_NOTIFICATION_CENTER_FOR_PER_CHANNEL_DESCRIPTOR);
+		} else if (isPwa) {
+			notificationsLabel = i18n._(ENABLE_NOTIFICATIONS_DESCRIPTOR);
+			notificationsDescription = i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_DESCRIPTOR, {
+				productName: RuntimeConfig.productName,
+			});
+		} else {
+			notificationsLabel = i18n._(ENABLE_BROWSER_NOTIFICATIONS_DESCRIPTOR);
+			notificationsDescription = i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_2_DESCRIPTOR);
+		}
+		const notificationsBlocked = isInsecureBrowserContext();
+		if (notificationsBlocked) {
+			notificationsDescription = i18n._(FEATURE_NEEDS_HTTPS_DESCRIPTOR);
+		}
 		return (
 			<div className={styles.container} data-flx="user.notifications-tab.notifications.container">
 				<div className={styles.switchesContainer} data-flx="user.notifications-tab.notifications.switches-container">
 					<Switch
-						label={
-							isDesktop()
-								? i18n._(ENABLE_DESKTOP_NOTIFICATIONS_DESCRIPTOR)
-								: isPwa
-									? i18n._(ENABLE_NOTIFICATIONS_DESCRIPTOR)
-									: i18n._(ENABLE_BROWSER_NOTIFICATIONS_DESCRIPTOR)
-						}
-						description={
-							isDesktop()
-								? i18n._(USES_THE_OS_NOTIFICATION_CENTER_FOR_PER_CHANNEL_DESCRIPTOR)
-								: isPwa
-									? i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_DESCRIPTOR, {
-											productName: RuntimeConfig.productName,
-										})
-									: i18n._(GET_NOTIFIED_WHEN_YOU_RECEIVE_MESSAGES_YOU_MAY_2_DESCRIPTOR)
-						}
-						value={browserNotificationsEnabled}
+						label={notificationsLabel}
+						description={notificationsDescription}
+						value={browserNotificationsEnabled && !notificationsBlocked}
 						onChange={handleToggleNotifications}
+						disabled={notificationsBlocked}
 						data-flx="user.notifications-tab.notifications.switch.toggle-notifications"
 					/>
 					<Switch

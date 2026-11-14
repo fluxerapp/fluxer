@@ -9,13 +9,14 @@ import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import ContextMenu from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Modal from '@app/features/ui/state/Modal';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowLeftIcon, MagnifyingGlassIcon, XIcon} from '@phosphor-icons/react';
+import {MagnifyingGlassIcon, XIcon} from '@phosphor-icons/react';
 import React, {useCallback, useEffect, useRef} from 'react';
 
 const SEARCH_DESCRIPTOR = msg({
@@ -50,7 +51,6 @@ interface PickerSearchInputProps {
 	maxLength?: number;
 	showBackButton?: boolean;
 	onBackButtonClick?: () => void;
-	rightCustomElement?: React.ReactNode;
 }
 
 const assignRef = <T,>(ref: React.Ref<T> | null | undefined, value: T | null) => {
@@ -63,17 +63,7 @@ const assignRef = <T,>(ref: React.Ref<T> | null | undefined, value: T | null) =>
 };
 export const PickerSearchInput = React.forwardRef<HTMLInputElement, PickerSearchInputProps>(
 	(
-		{
-			value,
-			onChange,
-			placeholder,
-			inputRef,
-			onKeyDown,
-			maxLength = 100,
-			showBackButton = false,
-			onBackButtonClick,
-			rightCustomElement,
-		},
+		{value, onChange, placeholder, inputRef, onKeyDown, maxLength = 100, showBackButton = false, onBackButtonClick},
 		forwardedRef,
 	) => {
 		const {i18n} = useLingui();
@@ -197,7 +187,6 @@ export const PickerSearchInput = React.forwardRef<HTMLInputElement, PickerSearch
 							className={styles.rightElementContainer}
 							data-flx="channel.picker-search-input.right-element-container"
 						>
-							{rightCustomElement}
 							{value ? (
 								<button
 									type="button"

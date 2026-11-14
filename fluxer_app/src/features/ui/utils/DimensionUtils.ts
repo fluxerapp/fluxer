@@ -130,16 +130,6 @@ export class MediaDimensionCalculator {
 		}
 		return value;
 	}
-
-	public static scale(
-		width: number,
-		height: number,
-		maxWidth = DEFAULT_OPTIONS.maxWidth,
-		maxHeight = DEFAULT_OPTIONS.maxHeight,
-	): [number, number] {
-		const fitted = fitMediaWithinBounds({width, height, maxWidth, maxHeight});
-		return [fitted.width, fitted.height];
-	}
 }
 
 export function createCalculator(options?: DimensionOptions): MediaDimensionCalculator {

@@ -3,63 +3,13 @@
 -module(guild_member_list_store).
 -typing([eqwalizer]).
 
--export([
-    new/1,
-    bulk_load/3,
-    update_member/5,
-    remove_member/2,
-    set_online/3,
-    set_hoisted_roles/2,
-    get_counts/1,
-    get_groups/1,
-    get_items/3,
-    prepare_member_tuples/2,
-    prepare_hoisted_role_ids/2,
-    extract_role_ids/1
-]).
+-export([prepare_member_tuples/2, prepare_hoisted_role_ids/2, extract_role_ids/1]).
 
 -type store_ref() :: ets:table().
 -type member_tuple() :: {integer(), binary(), [integer()], boolean()}.
 -type guild_state() :: #{member_presence := ets:tid() | map(), term() => term()}.
 
 -export_type([store_ref/0, member_tuple/0, guild_state/0]).
-
--spec new(integer()) -> store_ref().
-new(_GuildId) ->
-    guild_member_list_engine:new().
-
--spec bulk_load(store_ref(), [member_tuple()], [integer()]) -> ok.
-bulk_load(Ref, Members, HoistedRoleIds) ->
-    guild_member_list_engine:bulk_load(Ref, Members, HoistedRoleIds).
-
--spec update_member(store_ref(), integer(), binary(), [integer()], boolean()) -> ok.
-update_member(Ref, UserId, SortKey, RoleIds, IsOnline) ->
-    guild_member_list_engine:update_member(Ref, UserId, SortKey, RoleIds, IsOnline).
-
--spec remove_member(store_ref(), integer()) -> ok.
-remove_member(Ref, UserId) ->
-    guild_member_list_engine:remove_member(Ref, UserId).
-
--spec set_online(store_ref(), integer(), boolean()) -> ok.
-set_online(Ref, UserId, IsOnline) ->
-    guild_member_list_engine:set_online(Ref, UserId, IsOnline).
-
--spec set_hoisted_roles(store_ref(), [integer()]) -> changed | unchanged.
-set_hoisted_roles(Ref, HoistedRoleIds) ->
-    guild_member_list_engine:set_hoisted_roles(Ref, HoistedRoleIds).
-
--spec get_counts(store_ref()) -> {non_neg_integer(), non_neg_integer()}.
-get_counts(Ref) ->
-    guild_member_list_engine:get_counts(Ref).
-
--spec get_groups(store_ref()) -> [{binary(), non_neg_integer()}].
-get_groups(Ref) ->
-    guild_member_list_engine:get_groups(Ref).
-
--spec get_items(store_ref(), non_neg_integer(), non_neg_integer()) ->
-    [{group, binary(), non_neg_integer()} | {member, integer()}].
-get_items(Ref, Start, End) ->
-    guild_member_list_engine:get_items(Ref, Start, End).
 
 -spec prepare_member_tuples(map(), guild_state()) -> [member_tuple()].
 prepare_member_tuples(MemberMap, State) ->
@@ -110,12 +60,3 @@ filtermap_snowflake(RoleId) ->
         Id when is_integer(Id), Id > 0 -> {true, Id};
         _ -> false
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-new_returns_nif_ref_test() ->
-    Ref = new(123),
-    ?assert(is_reference(Ref)).
-
--endif.

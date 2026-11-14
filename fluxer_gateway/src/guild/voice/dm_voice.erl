@@ -6,7 +6,6 @@
 -export([voice_state_update/2]).
 -export([get_voice_token/6]).
 -export([disconnect_voice_user/2]).
--export([]).
 
 -export_type([
     dm_state/0,

@@ -3,6 +3,7 @@
 import Channels from '@app/features/channel/state/Channels';
 import ForumPosts from '@app/features/forum/state/ForumPosts';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
+import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import MessageReferences from '@app/features/messaging/state/MessageReferences';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
@@ -19,6 +20,9 @@ export function handleMessageDeleteBulk(data: MessageDeleteBulkPayload, _context
 	Channels.handleThreadMessageDeleteBulk(data.channel_id, data.ids);
 	for (const id of data.ids) ForumPosts.handleMessageDelete(data.channel_id, id);
 	MessageReferences.handleMessageDeleteBulk(data.channel_id, data.ids);
+	MessageReactions.batch(() => {
+		for (const id of data.ids) MessageReactions.handleMessageDelete(id);
+	});
 	MessageReply.handleMessageDeleteBulk(data.channel_id, data.ids);
 	ReadStates.handleMessageDelete({channelId: data.channel_id});
 	Notification.handleMessageDelete({channelId: data.channel_id});

@@ -194,13 +194,6 @@ class ScreenShareVideoSubscriptionRecoveryCoordinator {
 		};
 	}
 
-	dispose(): void {
-		for (const session of this.sessions.values()) {
-			this.clearTimer(session);
-		}
-		this.sessions.clear();
-	}
-
 	getFirstFrameRecoveryCount(streamKey: string | null | undefined, generation: number): number {
 		if (!streamKey) return 0;
 		return this.firstFrameRecoveriesByWatch.get(firstFrameRecoveryKey(streamKey, generation)) ?? 0;

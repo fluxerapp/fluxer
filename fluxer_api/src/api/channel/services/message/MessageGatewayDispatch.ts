@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {getUserRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {isContentHidden} from '@app/api/user/UserHelpers';
+import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 
 interface BuildBroadcastMessageDataParams {
@@ -26,6 +28,7 @@ type MessageCreateBroadcastData = MessageResponse & {
 	channel_type: Channel['type'];
 	nicks?: Record<string, string>;
 	mention_here?: true;
+	channel_nsfw?: true;
 };
 
 export async function buildBroadcastMessageData({
@@ -50,12 +53,16 @@ async function buildBroadcastMessageCreateData(
 	params: BuildBroadcastMessageCreateDataParams,
 ): Promise<MessageCreateBroadcastData> {
 	const messageResponse = await buildBroadcastMessageData(params);
+	if (params.message.type === MessageTypes.CHANNEL_PINNED_MESSAGE) {
+		delete messageResponse.referenced_message;
+	}
 	const groupDmNicks = serializeGroupDmNicks(params.channel);
 	return {
 		...messageResponse,
 		channel_type: params.channel.type,
 		...(groupDmNicks ? {nicks: groupDmNicks} : {}),
 		...(params.mentionHere ? {mention_here: true} : {}),
+		...(params.channel.type === ChannelTypes.GROUP_DM && params.channel.isNsfw ? {channel_nsfw: true} : {}),
 	};
 }
 
@@ -99,16 +106,72 @@ export async function dispatchMessageCreateToUser({
 	});
 }
 
+export async function findContentHiddenAuthorId(message: Message): Promise<UserID | null> {
+	if (!message.authorId) return null;
+	const author = await getUserRepository().findUnique(message.authorId);
+	return author && isContentHidden(author, message.id) ? author.id : null;
+}
+
 export async function dispatchMessageUpdateBroadcast({
 	gatewayService,
 	...params
 }: BuildBroadcastMessageDataParams & {
 	gatewayService: IGatewayService;
 }): Promise<void> {
+	const data = await buildBroadcastMessageData(params);
+	const hiddenAuthorId = await findContentHiddenAuthorId(params.message);
+	if (hiddenAuthorId) {
+		await gatewayService.dispatchPresence({userId: hiddenAuthorId, event: 'MESSAGE_UPDATE', data});
+		return;
+	}
 	await dispatchChannelEvent({
 		gatewayService,
 		channel: params.channel,
 		event: 'MESSAGE_UPDATE',
-		data: await buildBroadcastMessageData(params),
+		data,
+	});
+}
+
+export async function dispatchMessageDelete({
+	gatewayService,
+	channel,
+	messageId,
+	message,
+}: {
+	gatewayService: IGatewayService;
+	channel: Channel;
+	messageId: MessageID;
+	message: Message;
+}): Promise<void> {
+	await dispatchChannelEvent({
+		gatewayService,
+		channel,
+		event: 'MESSAGE_DELETE',
+		data: {
+			channel_id: channel.id.toString(),
+			id: messageId.toString(),
+			content: message.content,
+			author_id: message.authorId?.toString(),
+		},
+	});
+}
+
+export async function dispatchMessageDeleteBulk({
+	gatewayService,
+	channel,
+	messageIds,
+}: {
+	gatewayService: IGatewayService;
+	channel: Channel;
+	messageIds: Array<MessageID>;
+}): Promise<void> {
+	await dispatchChannelEvent({
+		gatewayService,
+		channel,
+		event: 'MESSAGE_DELETE_BULK',
+		data: {
+			channel_id: channel.id.toString(),
+			ids: messageIds.map((id) => id.toString()),
+		},
 	});
 }

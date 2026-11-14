@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import AccountEngine from '@app/features/account_engine/state/AccountEngine';
+import {computeAppBadge, UNREAD_INDICATOR} from '@app/features/app/components/AppBadgeCount';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {getDocumentFaviconUrl} from '@app/features/app/state/RuntimeDocumentBranding';
-import DesktopBackgroundGateway from '@app/features/gateway/transport/DesktopBackgroundGateway';
+import {findActiveIconLink, getDocumentFavicons} from '@app/features/app/state/RuntimeDocumentBranding';
 import GuildReadState from '@app/features/guild/state/GuildReadState';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
+import Theme from '@app/features/theme/state/Theme';
 import Notification from '@app/features/ui/state/Notification';
-import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {updateDocumentTitleBadge} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import Favico from 'favico.js';
@@ -16,22 +18,11 @@ import type React from 'react';
 import {useEffect} from 'react';
 
 const logger = new Logger('AppBadge');
-const UNREAD_INDICATOR = -1;
 
 let favico: Favico | null = null;
 let favicoLink: HTMLLinkElement | null = null;
 let favicoLinkHref: string | null = null;
 let favicoSource: string | null = null;
-
-const findIconLink = (): HTMLLinkElement | null => {
-	const links = document.head.querySelectorAll<HTMLLinkElement>('link');
-	for (let index = links.length - 1; index >= 0; index--) {
-		if (/(^|\s)icon(\s|$)/i.test(links[index].getAttribute('rel') ?? '')) {
-			return links[index];
-		}
-	}
-	return null;
-};
 
 const releaseFavico = (): void => {
 	if (favicoLink !== null && favicoLinkHref !== null && favicoLink.getAttribute('href')?.startsWith('data:')) {
@@ -45,7 +36,7 @@ const releaseFavico = (): void => {
 const initFavico = (): Favico | null => {
 	if (favico) return favico;
 	try {
-		const link = findIconLink();
+		const link = findActiveIconLink();
 		favicoLink = link;
 		favicoLinkHref = link?.getAttribute('href') ?? null;
 		favico = new Favico(link === null ? {animation: 'none'} : {animation: 'none', element: link});
@@ -58,15 +49,20 @@ const initFavico = (): Favico | null => {
 };
 const setElectronBadge = (badge: number): void => {
 	const electronApi = getElectronAPI();
-	if (!electronApi?.setBadgeCount) return;
-	const electronBadge = badge > 0 ? badge : 0;
 	try {
-		electronApi.setBadgeCount(electronBadge);
+		if (electronApi?.setUnreadBadge) {
+			electronApi.setUnreadBadge(badge);
+		} else {
+			electronApi?.setBadgeCount?.(Math.max(badge, 0));
+		}
 	} catch (e) {
 		logger.warn('Failed to set Electron badge', e);
 	}
 };
 const setFaviconBadge = (badge: number, source: string | null): void => {
+	if (isDesktop()) {
+		return;
+	}
 	if (source !== favicoSource) {
 		releaseFavico();
 		favicoSource = source;
@@ -85,7 +81,7 @@ const setFaviconBadge = (badge: number, source: string | null): void => {
 	}
 };
 const setPwaBadge = (badge: number): void => {
-	if (!navigator.setAppBadge || !navigator.clearAppBadge) {
+	if (isDesktop() || !navigator.setAppBadge || !navigator.clearAppBadge) {
 		return;
 	}
 	try {
@@ -105,28 +101,30 @@ const setBadge = (badge: number, faviconSource: string | null): void => {
 	setFaviconBadge(badge, faviconSource);
 	setPwaBadge(badge);
 };
+function appBadgeMentionCount(): number {
+	return GuildReadState.mentionCountAcrossGuilds(RuntimeConfig.directMessagesDisabled);
+}
+
 export const AppBadge: React.FC = observer(() => {
 	const relationships = Relationships.getRelationships();
-	const unreadMessageBadgeEnabled = Notification.unreadMessageBadgeEnabled;
-	const mentionCount = GuildReadState.mentionCountAcrossGuilds() + DesktopBackgroundGateway.totalMentionCount;
-	const hasUnread = GuildReadState.anyGuildUnread;
-	const pendingCount = RuntimeConfig.directMessagesDisabled
-		? 0
-		: relationships.filter((relationship) => relationship.type === RelationshipTypes.INCOMING_REQUEST).length;
-	const totalCount = mentionCount + pendingCount;
-	let badge: number = 0;
-	if (totalCount > 0) {
-		badge = totalCount;
-	} else if (hasUnread && unreadMessageBadgeEnabled) {
-		badge = UNREAD_INDICATOR;
-	}
-	const faviconSource = getDocumentFaviconUrl(RuntimeConfig.getSnapshotOrNull()?.appPublic ?? null);
+	const {badge, totalCount, showUnread} = computeAppBadge({
+		foregroundMentionCount: appBadgeMentionCount(),
+		otherAccountsMentionCount: AccountEngine.otherAccountsMentionCount,
+		pendingFriendRequestCount: RuntimeConfig.friendsDisabled
+			? 0
+			: relationships.filter((relationship) => relationship.type === RelationshipTypes.INCOMING_REQUEST).length,
+		foregroundHasUnread: GuildReadState.anyGuildUnread,
+		otherAccountsHaveUnread: AccountEngine.otherAccountsHaveUnread,
+		unreadMessageBadgeEnabled: Notification.unreadMessageBadgeEnabled,
+	});
+	const favicons = getDocumentFavicons(RuntimeConfig.getSnapshotOrNull()?.appPublic ?? null);
+	const faviconSource = favicons.dark !== null && Theme.systemPrefersDark ? favicons.dark : favicons.light;
 	useEffect(() => {
 		setBadge(badge, faviconSource);
 	}, [badge, faviconSource]);
 	useEffect(() => {
-		updateDocumentTitleBadge(totalCount, hasUnread && unreadMessageBadgeEnabled);
-	}, [totalCount, hasUnread, unreadMessageBadgeEnabled]);
+		updateDocumentTitleBadge(totalCount, showUnread);
+	}, [totalCount, showUnread]);
 	useEffect(() => {
 		return () => {
 			setBadge(0, favicoSource);

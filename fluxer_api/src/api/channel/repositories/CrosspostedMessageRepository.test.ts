@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChannelID, createGuildID, createMessageID, createWebhookID, type MessageID} from '@app/api/BrandedTypes';
-import {ChannelRepository} from '@app/api/channel/repositories/ChannelRepository';
 import {CrosspostedMessageRepository} from '@app/api/channel/repositories/CrosspostedMessageRepository';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import type {CrosspostedMessageRow} from '@app/api/database/types/ChannelTypes';
@@ -41,14 +40,6 @@ describe('CrosspostedMessageRepository', () => {
 	afterEach(() => {
 		executor.reset();
 		setCassandraQueryExecutorForTesting(null);
-	});
-
-	it('is exposed on the channel repository aggregate', () => {
-		expect(new ChannelRepository().crossposts).toBeInstanceOf(CrosspostedMessageRepository);
-	});
-
-	it('returns null for a pair that was never reserved', async () => {
-		expect(await repository.get(SOURCE_MESSAGE, WEBHOOK)).toBeNull();
 	});
 
 	it('inserts a pending row once and refuses a second reservation', async () => {

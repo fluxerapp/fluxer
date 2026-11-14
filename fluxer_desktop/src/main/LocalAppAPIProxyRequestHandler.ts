@@ -76,7 +76,7 @@ export class DesktopLocalAppAPIProxyRequestHandler {
 	private async forward({request, plan, localPathPrefix, signal}: ForwardAPIProxyRequest): Promise<Response> {
 		const uploadId = readLocalAppUploadId(request.headers);
 		const targetURL = buildAPITargetURL({
-			apiEndpoint: plan.endpoints.apiEndpoint,
+			apiEndpoint: plan.endpoints.apiTransportEndpoint ?? plan.endpoints.apiEndpoint,
 			requestURL: request.url,
 			localPathPrefix,
 		});

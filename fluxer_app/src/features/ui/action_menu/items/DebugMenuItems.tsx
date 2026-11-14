@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Channel} from '@app/features/channel/models/Channel';
-import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
-import {GuildMemberDebugModal} from '@app/features/devtools/components/debug/GuildMemberDebugModal';
-import {UserDebugModal} from '@app/features/devtools/components/debug/UserDebugModal';
+import {
+	CHANNEL_RECORD_DESCRIPTOR,
+	COMMUNITY_MEMBER_RECORD_DESCRIPTOR,
+	RecordDebugModal,
+	USER_RECORD_DESCRIPTOR,
+} from '@app/features/devtools/components/debug/RecordDebugModal';
+
 import {
 	CHANNEL_DEBUG_DESCRIPTOR,
 	DEBUG_CHANNEL_DESCRIPTOR,
@@ -44,9 +48,10 @@ export const DebugUserMenuItem: React.FC<DebugUserMenuItemProps> = observer(({us
 	const handleDebug = useCallback(() => {
 		ModalCommands.push(
 			modal(() => (
-				<UserDebugModal
+				<RecordDebugModal
+					label={i18n._(USER_RECORD_DESCRIPTOR)}
 					title={i18n._(USER_DEBUG_DESCRIPTOR)}
-					user={user}
+					record={user}
 					data-flx="ui.action-menu.items.debug-menu-items.handle-debug.user-debug-modal"
 				/>
 			)),
@@ -73,9 +78,10 @@ export const DebugChannelMenuItem: React.FC<DebugChannelMenuItemProps> = observe
 	const handleDebug = useCallback(() => {
 		ModalCommands.push(
 			modal(() => (
-				<ChannelDebugModal
+				<RecordDebugModal
+					label={i18n._(CHANNEL_RECORD_DESCRIPTOR)}
 					title={i18n._(CHANNEL_DEBUG_DESCRIPTOR)}
-					channel={channel}
+					record={channel}
 					data-flx="ui.action-menu.items.debug-menu-items.handle-debug.channel-debug-modal"
 				/>
 			)),
@@ -101,9 +107,10 @@ export const DebugGuildMemberMenuItem: React.FC<DebugGuildMemberMenuItemProps> =
 	const handleDebug = useCallback(() => {
 		ModalCommands.push(
 			modal(() => (
-				<GuildMemberDebugModal
+				<RecordDebugModal
+					label={i18n._(COMMUNITY_MEMBER_RECORD_DESCRIPTOR)}
 					title={i18n._(COMMUNITY_MEMBER_DEBUG_DESCRIPTOR)}
-					member={member}
+					record={member}
 					data-flx="ui.action-menu.items.debug-menu-items.handle-debug.guild-member-debug-modal"
 				/>
 			)),

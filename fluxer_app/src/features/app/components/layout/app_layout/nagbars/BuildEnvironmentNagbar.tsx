@@ -30,7 +30,7 @@ export function BuildEnvironmentNagbar({isMobile}: {isMobile: boolean}) {
 				isMobile={isMobile}
 				onDismiss={NagbarController.dismissBuildEnvironmentNagbar}
 				message={i18n._(BUILD_ENVIRONMENT_MESSAGE_DESCRIPTOR, {
-					releaseChannel: Config.PUBLIC_RELEASE_CHANNEL,
+					releaseChannel: Config.RELEASE_CHANNEL,
 					productName: RuntimeConfig.productName,
 				})}
 				data-flx="app.app-layout.nagbars.build-environment-nagbar.nagbar-content"

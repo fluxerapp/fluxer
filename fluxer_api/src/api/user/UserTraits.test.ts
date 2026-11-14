@@ -1,10 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getConfig} from '@app/api/Config';
 import {isDerivedTrait, isServerManagedTrait, resolveAssignedTraits} from '@app/api/user/UserTraits';
-import {describe, expect, it} from 'vitest';
+import {afterEach, describe, expect, it} from 'vitest';
 
 describe('UserTraits', () => {
+	const selfHosted = getConfig().instance.selfHosted;
+
+	afterEach(() => {
+		getConfig().instance.selfHosted = selfHosted;
+	});
+
+	it('lets a self-hosted admin assign premium', () => {
+		getConfig().instance.selfHosted = true;
+		expect(isDerivedTrait('premium')).toBe(false);
+		expect([...resolveAssignedTraits([], ['beta-tester', 'premium'])]).toEqual(['beta-tester', 'premium']);
+	});
+
 	it('treats premium as derived rather than assignable', () => {
+		getConfig().instance.selfHosted = false;
 		expect(isDerivedTrait('premium')).toBe(true);
 		expect(isDerivedTrait('beta-tester')).toBe(false);
 	});
@@ -23,7 +37,8 @@ describe('UserTraits', () => {
 		expect([...resolveAssignedTraits([], ['beta-tester', 'experimental'])]).toEqual(['beta-tester', 'experimental']);
 	});
 
-	it('drops premium because nothing reads the stored value', () => {
+	it('drops premium on the hosted instance because nothing reads the stored value', () => {
+		getConfig().instance.selfHosted = false;
 		expect([...resolveAssignedTraits([], ['premium'])]).toEqual([]);
 		expect([...resolveAssignedTraits([], ['beta-tester', 'premium'])]).toEqual(['beta-tester']);
 	});

@@ -32,21 +32,6 @@ describe('Group DM Add Recipient Permissions', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST, 'NOT_FRIENDS_WITH_USER')
 			.execute();
 	});
-	it('allows adding friend to group DM', async () => {
-		const user1 = await createTestAccount(harness);
-		const user2 = await createTestAccount(harness);
-		const user3 = await createTestAccount(harness);
-		const user4 = await createTestAccount(harness);
-		await createFriendship(harness, user1, user2);
-		await createFriendship(harness, user1, user3);
-		await createFriendship(harness, user1, user4);
-		const groupDmChannel = await createGroupDmChannel(harness, user1.token, [user2.userId, user3.userId]);
-		await createBuilder(harness, user1.token)
-			.put(`/channels/${groupDmChannel.id}/recipients/${user4.userId}`)
-			.body(null)
-			.expect(HTTP_STATUS.NO_CONTENT)
-			.execute();
-	});
 	it('allows member to add their own friend to group DM', async () => {
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);

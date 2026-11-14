@@ -4,6 +4,7 @@ import {Button} from '@app/features/ui/button/Button';
 import styles from '@app/features/voice/components/popout/PoppedOutOverlay.module.css';
 import type {PoppedOutOverlayTransition} from '@app/features/voice/components/popout/PoppedOutSurfaceStateMachine';
 import PopoutWindowManager from '@app/features/voice/state/PopoutWindowManager';
+import {POP_BACK_IN_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowSquareOutIcon} from '@phosphor-icons/react';
@@ -14,16 +15,13 @@ import {useCallback} from 'react';
 
 const CALL_POPPED_OUT_DESCRIPTOR = msg({
 	message: 'Call is popped out',
-	comment: 'Overlay text shown in the in-app call area while the call view lives in a separate popped-out window.',
+	comment: 'Overlay text shown in the in-app call area while the call view is in a separate popped-out window.',
 });
 const TILE_POPPED_OUT_DESCRIPTOR = msg({
 	message: 'Popped out',
-	comment: 'Overlay text shown on a voice participant tile while it lives in a separate popped-out window.',
+	comment: 'Overlay text shown on a voice participant tile while it is in a separate popped-out window.',
 });
-const POP_BACK_IN_DESCRIPTOR = msg({
-	message: 'Pop back in',
-	comment: 'Button label on the popped-out overlay that closes the popout window and restores the view in the app.',
-});
+
 const FOCUS_WINDOW_DESCRIPTOR = msg({
 	message: 'Focus window',
 	comment: 'Button label on the popped-out overlay that brings the popped-out window to the foreground.',

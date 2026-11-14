@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Channel} from '@app/features/channel/models/Channel';
+import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
 import React, {useContext} from 'react';
@@ -8,20 +9,7 @@ import React, {useContext} from 'react';
 interface MessagePreviewOverrides {
 	usernameColor?: string;
 	displayName?: string;
-}
-
-interface MessagePreviewPermissions {
-	isDM: boolean;
-	canSendMessages: boolean;
-	canAddReactions: boolean;
-	canEditMessage: boolean;
-	canDeleteMessage: boolean;
-	canDeleteAttachment: boolean;
-	canPinMessage: boolean;
-	canForwardMessage: boolean;
-	canCrosspostMessage: boolean;
-	canSuppressEmbeds: boolean;
-	shouldRenderSuppressEmbeds: boolean;
+	iconRole?: GuildRole | null;
 }
 
 export interface MessageViewContextValue {
@@ -32,7 +20,6 @@ export interface MessageViewContextValue {
 	messageDisplayCompact: boolean;
 	previewContext?: keyof typeof MessagePreviewContext;
 	previewOverrides?: MessagePreviewOverrides;
-	previewPermissions?: MessagePreviewPermissions;
 	handleDelete: (bypassConfirm?: boolean) => void;
 	onPopoutToggle?: (isOpen: boolean) => void;
 	suppressMessageActions?: boolean;

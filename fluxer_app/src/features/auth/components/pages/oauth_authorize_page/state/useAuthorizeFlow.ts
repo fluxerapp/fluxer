@@ -95,6 +95,7 @@ const CHOOSE_EITHER_A_COMMUNITY_OR_GROUP_DM_DESCRIPTOR = msg({
 
 export interface AuthorizeFlow {
 	phase: AuthorizePhase;
+	includesAccountStep: boolean;
 	sessionExpiredMessage: string;
 	authParams: AuthorizeParams | null;
 	publicApp: PublicAppData | null;
@@ -132,9 +133,10 @@ export interface AuthorizeFlow {
 	goBack: () => void;
 }
 
-export interface UseAuthorizeFlowOptions {
+interface UseAuthorizeFlowOptions {
 	search?: string;
 	includeAccountStep?: boolean;
+	startAtConsent?: boolean;
 	onCancel?: () => void;
 }
 
@@ -148,7 +150,7 @@ function getCurrentInviteDestinationKey(): string | null {
 	if (guildId === '@me') {
 		return channelId ? createBotInviteDestinationKey('group_dm', channelId) : null;
 	}
-	if (guildId !== '@favorites' && guildId !== '@discover' && guildId !== '@premium') {
+	if (!guildId.startsWith('@')) {
 		return createBotInviteDestinationKey('guild', guildId);
 	}
 	return null;
@@ -169,7 +171,7 @@ function getLoginRedirectPath(): string {
 }
 
 export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): AuthorizeFlow {
-	const {search, includeAccountStep = true, onCancel: onCancelOverride} = options;
+	const {search, includeAccountStep = true, startAtConsent = false, onCancel: onCancelOverride} = options;
 	const {i18n} = useLingui();
 	const paramsState = useAuthorizeParams(search);
 	const {params, scopes, hasBotScope, isBotOnly, redirectHostname, botInviteWithoutRedirect} = paramsState;
@@ -185,7 +187,11 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 	const initialMissingClientId = !params;
 	const publicAppState = useOAuthPublicApp(params?.clientId ?? null);
 	const scopeSelection = useScopeSelection(scopes);
-	const destinations = useBotInviteDestinations(hasBotScope, params?.permissions ?? null);
+	const destinations = useBotInviteDestinations(
+		hasBotScope,
+		params?.permissions ?? null,
+		phase.kind === 'review' && phase.step === 'community',
+	);
 	const selectedDestinationTarget = parseBotInviteDestinationKey(selectedDestinationKey);
 	const selectedGuildId = selectedDestinationTarget?.kind === 'guild' ? selectedDestinationTarget.id : null;
 	const permissionSelection = usePermissionSelection(
@@ -194,7 +200,7 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 			(ThreadGuilds.isActive(selectedGuildId) ||
 				destinations.guilds.some((guild) => guild.id === selectedGuildId && guild.threadsActive)),
 	);
-	const initialReviewStep: ReviewStep = includeAccountStep ? 'account' : 'scopes';
+	const initialReviewStep: ReviewStep = includeAccountStep && !startAtConsent ? 'account' : 'scopes';
 	const preFetchValidationError = useMemo(() => {
 		if (!params) return i18n._(MISSING_CLIENT_ID_DESCRIPTOR);
 		if (params.guildId && params.channelId) {
@@ -268,9 +274,12 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 	]);
 	useEffect(() => {
 		if (phase.kind !== 'session_expired') return;
+		const expiredAccount = Accounts.currentAccount;
+		if (expiredAccount != null) {
+			Accounts.markAccountInvalid(expiredAccount.storageKey, expiredAccount.token);
+		}
+		if (includeAccountStep) return;
 		void import('@app/features/platform/state/AuthSession').then(async ({default: SessionManager}) => {
-			const expiredUserId = SessionManager.userId;
-			if (expiredUserId) SessionManager.markAccountInvalid(expiredUserId);
 			try {
 				await SessionManager.handleConnectionClosed(4004);
 				window.location.replace(getLoginRedirectPath());
@@ -278,25 +287,23 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 				logger.error('Failed to complete the expired session transition', error);
 			}
 		});
-	}, [phase.kind]);
+	}, [includeAccountStep, phase.kind]);
 	const currentAccountKey = Accounts.currentAccountKey;
-	const destinationInitRef = useRef(false);
 	useEffect(() => {
-		destinationInitRef.current = false;
 		setSelectedDestinationKey(null);
 	}, [currentAccountKey]);
 	useEffect(() => {
 		if (!hasBotScope) {
-			destinationInitRef.current = false;
 			setSelectedDestinationKey(null);
 			return;
 		}
-		if (destinationInitRef.current) return;
-		const requestedDestinationKey = params?.channelId
-			? createBotInviteDestinationKey('group_dm', params.channelId)
-			: params?.guildId
-				? createBotInviteDestinationKey('guild', params.guildId)
-				: null;
+		if (destinations.options.some((option) => option.value === selectedDestinationKey)) return;
+		let requestedDestinationKey: string | null = null;
+		if (params?.channelId) {
+			requestedDestinationKey = createBotInviteDestinationKey('group_dm', params.channelId);
+		} else if (params?.guildId) {
+			requestedDestinationKey = createBotInviteDestinationKey('guild', params.guildId);
+		}
 		if (requestedDestinationKey) {
 			if (destinations.status !== 'ready' && destinations.status !== 'error') return;
 			setSelectedDestinationKey(
@@ -304,23 +311,23 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 					? requestedDestinationKey
 					: null,
 			);
-			destinationInitRef.current = true;
 			return;
 		}
 		if (destinations.status !== 'ready') return;
 		const preferredDestinationKey = preferredDestinationKeyRef.current;
 		if (preferredDestinationKey && destinations.options.some((option) => option.value === preferredDestinationKey)) {
 			setSelectedDestinationKey(preferredDestinationKey);
-			destinationInitRef.current = true;
 			return;
 		}
-		if (destinations.options.length > 0) {
-			setSelectedDestinationKey(destinations.options[0].value);
-			destinationInitRef.current = true;
-			return;
-		}
-		destinationInitRef.current = true;
-	}, [hasBotScope, params?.guildId, params?.channelId, destinations.options, destinations.status]);
+		setSelectedDestinationKey(destinations.options[0]?.value ?? null);
+	}, [
+		hasBotScope,
+		params?.guildId,
+		params?.channelId,
+		destinations.options,
+		destinations.status,
+		selectedDestinationKey,
+	]);
 	const selectedDestination = useMemo(
 		() => destinations.options.find((option) => option.value === selectedDestinationKey) ?? null,
 		[destinations.options, selectedDestinationKey],
@@ -434,13 +441,13 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 			return;
 		}
 		try {
-			if (params.redirectUri) {
+			if (params.redirectUri && publicAppState.data) {
 				if (!isSafeRedirectUri(params.redirectUri)) {
 					setSubmitting(null);
 					setSubmitError(i18n._(INVALID_REDIRECT_URI_DESCRIPTOR));
 					return;
 				}
-				if (publicAppState.data && !publicAppState.data.redirect_uris?.includes(params.redirectUri)) {
+				if (!publicAppState.data.redirect_uris?.includes(params.redirectUri)) {
 					setSubmitting(null);
 					setSubmitError(i18n._(THE_PROVIDED_REDIRECT_URI_NOT_REGISTERED_DESCRIPTOR));
 					return;
@@ -465,6 +472,7 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 	);
 	return {
 		phase,
+		includesAccountStep: includeAccountStep,
 		sessionExpiredMessage,
 		authParams: params,
 		publicApp: publicAppState.data,

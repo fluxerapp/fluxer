@@ -5,13 +5,23 @@ import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {getPremiumGraceEndDate} from '@app/features/premium/utils/PremiumGrace';
 import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
+import {
+	type AccountTier,
+	AccountTiers,
+	type AccountVerificationNeed,
+	type LocalCredentialKind,
+	localCredentialKindOf,
+} from '@fluxer/constants/src/AccountTierConstants';
+import {resolveAccountTier, resolveVerificationNeed} from '@fluxer/constants/src/AccountTierRules';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {
 	type MentionReplyPreference,
 	ProfileFieldPrivacyFlags,
 	PublicUserFlags,
+	UserAuthenticatorTypes,
 	UserPremiumTypes,
 } from '@fluxer/constants/src/UserConstants';
+import {UserTraits} from '@fluxer/constants/src/UserTraitConstants';
 import {DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import type {UserPartial, UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
@@ -157,10 +167,12 @@ export class User {
 	private readonly _premiumLifetimeSequence: number | null | undefined;
 	private readonly _premiumGraceEndsAt: Date | null | undefined;
 	private readonly _premiumDiscriminator: boolean | undefined;
-	readonly premiumBadgeHidden: boolean | undefined;
+	readonly hiddenProfileBadges: ReadonlyArray<string> | undefined;
 	readonly premiumBadgeMasked: boolean | undefined;
 	readonly premiumBadgeTimestampHidden: boolean | undefined;
-	readonly premiumBadgeSequenceHidden: boolean | undefined;
+	readonly operatorPassBadgeTimestampHidden: boolean | undefined;
+	readonly operatorPassBadgeCountHidden: boolean | undefined;
+	readonly operatorPassSince: Date | null | undefined;
 	readonly premiumEnabledOverride: boolean | undefined;
 	readonly premiumPerksDisabled: boolean | undefined;
 	readonly passwordLastChangedAt: Date | null | undefined;
@@ -170,10 +182,16 @@ export class User {
 	private readonly _hasEverPurchased: boolean | undefined;
 	private readonly _hasUnreadGiftInventory: boolean | undefined;
 	private readonly _unreadGiftInventoryCount: number | undefined;
-	private readonly _ageVerifiedAdult: boolean | undefined;
+	private readonly _matureContentUnlocked: boolean | undefined;
 	private readonly _termsAgreedAt: Date | null | undefined;
 	private readonly _privacyAgreedAt: Date | null | undefined;
 	private readonly _traits: ReadonlyArray<string>;
+	private readonly _claimed: boolean | undefined;
+	private readonly _accountTier: AccountTier | undefined;
+	private readonly _verificationNeed: AccountVerificationNeed | null | undefined;
+	private readonly _hasPassword: boolean | undefined;
+	private readonly _dateOfBirthRequired: boolean | undefined;
+	private readonly _hasAgeRange: boolean | undefined;
 
 	constructor(user: WireUser, options?: UserRecordOptions) {
 		this.instanceId = options?.instanceId ?? RuntimeConfig.localInstanceDomain;
@@ -219,13 +237,21 @@ export class User {
 			? (user.premium_lifetime_sequence ?? null)
 			: undefined;
 		this._premiumDiscriminator = hasKey(user, 'premium_discriminator') ? user.premium_discriminator : undefined;
-		this.premiumBadgeHidden = hasKey(user, 'premium_badge_hidden') ? user.premium_badge_hidden : undefined;
+		this.hiddenProfileBadges = hasKey(user, 'hidden_profile_badges')
+			? Object.freeze([...(user.hidden_profile_badges ?? [])])
+			: undefined;
 		this.premiumBadgeMasked = hasKey(user, 'premium_badge_masked') ? user.premium_badge_masked : undefined;
 		this.premiumBadgeTimestampHidden = hasKey(user, 'premium_badge_timestamp_hidden')
 			? user.premium_badge_timestamp_hidden
 			: undefined;
-		this.premiumBadgeSequenceHidden = hasKey(user, 'premium_badge_sequence_hidden')
-			? user.premium_badge_sequence_hidden
+		this.operatorPassBadgeTimestampHidden = hasKey(user, 'operator_pass_badge_timestamp_hidden')
+			? user.operator_pass_badge_timestamp_hidden
+			: undefined;
+		this.operatorPassBadgeCountHidden = hasKey(user, 'operator_pass_badge_count_hidden')
+			? user.operator_pass_badge_count_hidden
+			: undefined;
+		this.operatorPassSince = hasKey(user, 'operator_pass_since')
+			? parseDateOrNull(user.operator_pass_since)
 			: undefined;
 		this.premiumEnabledOverride = hasKey(user, 'premium_enabled_override') ? user.premium_enabled_override : undefined;
 		this.premiumPerksDisabled = hasKey(user, 'premium_perks_disabled') ? user.premium_perks_disabled : undefined;
@@ -246,10 +272,16 @@ export class User {
 		this._unreadGiftInventoryCount = hasKey(user, 'unread_gift_inventory_count')
 			? user.unread_gift_inventory_count
 			: undefined;
-		this._ageVerifiedAdult = hasKey(user, 'age_verified_adult') ? user.age_verified_adult : undefined;
+		this._matureContentUnlocked = hasKey(user, 'mature_content_unlocked') ? user.mature_content_unlocked : undefined;
 		this._termsAgreedAt = hasKey(user, 'terms_agreed_at') ? parseDateOrNull(user.terms_agreed_at) : undefined;
 		this._privacyAgreedAt = hasKey(user, 'privacy_agreed_at') ? parseDateOrNull(user.privacy_agreed_at) : undefined;
 		this._traits = mergeTraitsArray(EMPTY_STRING_ARRAY, user, {clearMissing: true});
+		this._claimed = hasKey(user, 'claimed') ? user.claimed : undefined;
+		this._accountTier = hasKey(user, 'account_tier') ? user.account_tier : undefined;
+		this._verificationNeed = hasKey(user, 'verification_need') ? user.verification_need : undefined;
+		this._hasPassword = hasKey(user, 'has_password') ? user.has_password : undefined;
+		this._dateOfBirthRequired = hasKey(user, 'date_of_birth_required') ? user.date_of_birth_required : undefined;
+		this._hasAgeRange = hasKey(user, 'has_age_range') ? user.has_age_range : undefined;
 	}
 
 	get email(): string | null | undefined {
@@ -336,8 +368,8 @@ export class User {
 		return this._nsfwAllowed;
 	}
 
-	get matureContentCheckComplete(): boolean | undefined {
-		return this._ageVerifiedAdult;
+	get matureContentUnlocked(): boolean | undefined {
+		return this._matureContentUnlocked;
 	}
 
 	get termsAgreedAt(): Date | null | undefined {
@@ -432,8 +464,8 @@ export class User {
 		if (premiumGraceEndsAt !== undefined) result.premium_grace_ends_at = dateToIsoOrNull(premiumGraceEndsAt);
 		const premiumDiscriminator = pickField(this._premiumDiscriminator, u, 'premium_discriminator', opts);
 		if (premiumDiscriminator !== undefined) result.premium_discriminator = premiumDiscriminator;
-		const premiumBadgeHidden = pickField(this.premiumBadgeHidden, u, 'premium_badge_hidden', opts);
-		if (premiumBadgeHidden !== undefined) result.premium_badge_hidden = premiumBadgeHidden;
+		const hiddenProfileBadges = pickField(this.hiddenProfileBadges, u, 'hidden_profile_badges', opts);
+		if (hiddenProfileBadges !== undefined) result.hidden_profile_badges = hiddenProfileBadges;
 		const premiumBadgeMasked = pickField(this.premiumBadgeMasked, u, 'premium_badge_masked', opts);
 		if (premiumBadgeMasked !== undefined) result.premium_badge_masked = premiumBadgeMasked;
 		const premiumBadgeTimestampHidden = pickField(
@@ -443,13 +475,26 @@ export class User {
 			opts,
 		);
 		if (premiumBadgeTimestampHidden !== undefined) result.premium_badge_timestamp_hidden = premiumBadgeTimestampHidden;
-		const premiumBadgeSequenceHidden = pickField(
-			this.premiumBadgeSequenceHidden,
+		const operatorPassBadgeTimestampHidden = pickField(
+			this.operatorPassBadgeTimestampHidden,
 			u,
-			'premium_badge_sequence_hidden',
+			'operator_pass_badge_timestamp_hidden',
 			opts,
 		);
-		if (premiumBadgeSequenceHidden !== undefined) result.premium_badge_sequence_hidden = premiumBadgeSequenceHidden;
+		if (operatorPassBadgeTimestampHidden !== undefined) {
+			result.operator_pass_badge_timestamp_hidden = operatorPassBadgeTimestampHidden;
+		}
+		const operatorPassBadgeCountHidden = pickField(
+			this.operatorPassBadgeCountHidden,
+			u,
+			'operator_pass_badge_count_hidden',
+			opts,
+		);
+		if (operatorPassBadgeCountHidden !== undefined) {
+			result.operator_pass_badge_count_hidden = operatorPassBadgeCountHidden;
+		}
+		const operatorPassSince = pickDateField(this.operatorPassSince, u, 'operator_pass_since', opts);
+		if (operatorPassSince !== undefined) result.operator_pass_since = dateToIsoOrNull(operatorPassSince);
 		const premiumEnabledOverride = pickField(this.premiumEnabledOverride, u, 'premium_enabled_override', opts);
 		if (premiumEnabledOverride !== undefined) result.premium_enabled_override = premiumEnabledOverride;
 		const premiumPerksDisabled = pickField(this.premiumPerksDisabled, u, 'premium_perks_disabled', opts);
@@ -481,13 +526,25 @@ export class User {
 		if (hasUnreadGiftInventory !== undefined) result.has_unread_gift_inventory = hasUnreadGiftInventory;
 		const unreadGiftInventoryCount = pickField(this._unreadGiftInventoryCount, u, 'unread_gift_inventory_count', opts);
 		if (unreadGiftInventoryCount !== undefined) result.unread_gift_inventory_count = unreadGiftInventoryCount;
-		const ageVerifiedAdult = pickField(this._ageVerifiedAdult, u, 'age_verified_adult', opts);
-		if (ageVerifiedAdult !== undefined) result.age_verified_adult = ageVerifiedAdult;
+		const matureContentUnlocked = pickField(this._matureContentUnlocked, u, 'mature_content_unlocked', opts);
+		if (matureContentUnlocked !== undefined) result.mature_content_unlocked = matureContentUnlocked;
 		const termsAgreedAt = pickDateField(this._termsAgreedAt, u, 'terms_agreed_at', opts);
 		if (termsAgreedAt !== undefined) result.terms_agreed_at = dateToIsoOrNull(termsAgreedAt);
 		const privacyAgreedAt = pickDateField(this._privacyAgreedAt, u, 'privacy_agreed_at', opts);
 		if (privacyAgreedAt !== undefined) result.privacy_agreed_at = dateToIsoOrNull(privacyAgreedAt);
 		result.traits = mergeTraitsArray(this._traits, u, opts);
+		const claimed = pickField(this._claimed, u, 'claimed', opts);
+		if (claimed !== undefined) result.claimed = claimed;
+		const accountTier = pickField(this._accountTier, u, 'account_tier', opts);
+		if (accountTier !== undefined) result.account_tier = accountTier;
+		const verificationNeed = pickField(this._verificationNeed, u, 'verification_need', opts);
+		if (verificationNeed !== undefined) result.verification_need = verificationNeed;
+		const hasPassword = pickField(this._hasPassword, u, 'has_password', opts);
+		if (hasPassword !== undefined) result.has_password = hasPassword;
+		const dateOfBirthRequired = pickField(this._dateOfBirthRequired, u, 'date_of_birth_required', opts);
+		if (dateOfBirthRequired !== undefined) result.date_of_birth_required = dateOfBirthRequired;
+		const hasAgeRange = pickField(this._hasAgeRange, u, 'has_age_range', opts);
+		if (hasAgeRange !== undefined) result.has_age_range = hasAgeRange;
 		return result;
 	}
 
@@ -563,6 +620,13 @@ export class User {
 		return this.resolveRuntimeLimit('max_favorite_meme_tags', DEFAULT_STOCK_LIMITS.max_favorite_meme_tags);
 	}
 
+	get guildVisitHistoryDays(): number {
+		return this.resolveRuntimeLimit(
+			'guild_visit_history_days_unverified',
+			DEFAULT_STOCK_LIMITS.guild_visit_history_days_unverified,
+		);
+	}
+
 	get maxGroupDmRecipients(): number {
 		return this.resolveRuntimeLimit('max_group_dm_recipients', DEFAULT_STOCK_LIMITS.max_group_dm_recipients);
 	}
@@ -580,8 +644,64 @@ export class User {
 	}
 
 	isClaimed(): boolean {
-		if (!RuntimeConfig.usesUsernameSignIn) return !!this.email;
-		return this.passwordLastChangedAt != null || this._traits.includes('sso');
+		return this.accountTier !== AccountTiers.UNCLAIMED;
+	}
+
+	get reportsAccountTier(): boolean {
+		return this._accountTier !== undefined || this._claimed !== undefined;
+	}
+
+	get localCredential(): LocalCredentialKind {
+		return localCredentialKindOf({
+			hasPassword: this.hasPassword,
+			hasPasskey:
+				this._traits.includes(UserTraits.PASSKEY) ||
+				(this.authenticatorTypes?.includes(UserAuthenticatorTypes.WEBAUTHN) ?? false),
+		});
+	}
+
+	get accountTier(): AccountTier {
+		if (DeveloperOptions.unclaimedAccountOverride === true) return AccountTiers.UNCLAIMED;
+		const usesServerTier = DeveloperOptions.emailVerifiedOverride == null;
+		if (usesServerTier && this._accountTier !== undefined) return this._accountTier;
+		const derived = resolveAccountTier({
+			isBot: this.bot,
+			isSystem: this.system,
+			traits: this._traits,
+			identityMode: RuntimeConfig.accountIdentity,
+			effectiveBasis: RuntimeConfig.verificationBasis,
+			hasEmail: this.email != null,
+			emailVerified: this.verified === true,
+			localCredential: this.localCredential,
+		});
+		if (this._claimed === undefined) return derived;
+		if (!this._claimed) return AccountTiers.UNCLAIMED;
+		return derived === AccountTiers.UNCLAIMED ? AccountTiers.VERIFIED : derived;
+	}
+
+	get verificationNeed(): AccountVerificationNeed | null {
+		const tier = this.accountTier;
+		if (
+			this._verificationNeed !== undefined &&
+			this._accountTier === tier &&
+			DeveloperOptions.unclaimedAccountOverride !== true &&
+			DeveloperOptions.emailVerifiedOverride == null
+		) {
+			return this._verificationNeed;
+		}
+		return resolveVerificationNeed({tier, identityMode: RuntimeConfig.accountIdentity, hasEmail: this.email != null});
+	}
+
+	get hasPassword(): boolean {
+		return this._hasPassword ?? this.passwordLastChangedAt != null;
+	}
+
+	get dateOfBirthRequired(): boolean {
+		return this._dateOfBirthRequired === true;
+	}
+
+	get hasAgeRange(): boolean {
+		return this._hasAgeRange === true;
 	}
 
 	equals(other: User): boolean {
@@ -620,10 +740,12 @@ export class User {
 			this._premiumBillingCycle === other._premiumBillingCycle &&
 			this._premiumLifetimeSequence === other._premiumLifetimeSequence &&
 			this._premiumDiscriminator === other._premiumDiscriminator &&
-			this.premiumBadgeHidden === other.premiumBadgeHidden &&
+			arraysShallowEqual(this.hiddenProfileBadges, other.hiddenProfileBadges) &&
 			this.premiumBadgeMasked === other.premiumBadgeMasked &&
 			this.premiumBadgeTimestampHidden === other.premiumBadgeTimestampHidden &&
-			this.premiumBadgeSequenceHidden === other.premiumBadgeSequenceHidden &&
+			this.operatorPassBadgeTimestampHidden === other.operatorPassBadgeTimestampHidden &&
+			this.operatorPassBadgeCountHidden === other.operatorPassBadgeCountHidden &&
+			datesEqual(this.operatorPassSince, other.operatorPassSince) &&
 			this.premiumEnabledOverride === other.premiumEnabledOverride &&
 			this.premiumPerksDisabled === other.premiumPerksDisabled &&
 			datesEqual(this.passwordLastChangedAt, other.passwordLastChangedAt) &&
@@ -633,10 +755,16 @@ export class User {
 			this._hasEverPurchased === other._hasEverPurchased &&
 			this._hasUnreadGiftInventory === other._hasUnreadGiftInventory &&
 			this._unreadGiftInventoryCount === other._unreadGiftInventoryCount &&
-			this._ageVerifiedAdult === other._ageVerifiedAdult &&
+			this._matureContentUnlocked === other._matureContentUnlocked &&
 			datesEqual(this._termsAgreedAt, other._termsAgreedAt) &&
 			datesEqual(this._privacyAgreedAt, other._privacyAgreedAt) &&
-			arraysShallowEqual(this._traits, other._traits)
+			arraysShallowEqual(this._traits, other._traits) &&
+			this._claimed === other._claimed &&
+			this._accountTier === other._accountTier &&
+			this._verificationNeed === other._verificationNeed &&
+			this._hasPassword === other._hasPassword &&
+			this._dateOfBirthRequired === other._dateOfBirthRequired &&
+			this._hasAgeRange === other._hasAgeRange
 		);
 	}
 
@@ -684,10 +812,15 @@ export class User {
 			this._premiumGraceEndsAt === undefined ? undefined : dateToIsoOrNull(this._premiumGraceEndsAt),
 		);
 		setOptional('premium_discriminator', this._premiumDiscriminator);
-		setOptional('premium_badge_hidden', this.premiumBadgeHidden);
+		setOptional('hidden_profile_badges', this.hiddenProfileBadges);
 		setOptional('premium_badge_masked', this.premiumBadgeMasked);
 		setOptional('premium_badge_timestamp_hidden', this.premiumBadgeTimestampHidden);
-		setOptional('premium_badge_sequence_hidden', this.premiumBadgeSequenceHidden);
+		setOptional('operator_pass_badge_timestamp_hidden', this.operatorPassBadgeTimestampHidden);
+		setOptional('operator_pass_badge_count_hidden', this.operatorPassBadgeCountHidden);
+		setOptional(
+			'operator_pass_since',
+			this.operatorPassSince === undefined ? undefined : dateToIsoOrNull(this.operatorPassSince),
+		);
 		setOptional('premium_enabled_override', this.premiumEnabledOverride);
 		setOptional('premium_perks_disabled', this.premiumPerksDisabled);
 		setOptional(
@@ -705,7 +838,7 @@ export class User {
 		setOptional('has_ever_purchased', this._hasEverPurchased);
 		setOptional('has_unread_gift_inventory', this._hasUnreadGiftInventory);
 		setOptional('unread_gift_inventory_count', this._unreadGiftInventoryCount);
-		setOptional('age_verified_adult', this._ageVerifiedAdult);
+		setOptional('mature_content_unlocked', this._matureContentUnlocked);
 		setOptional(
 			'terms_agreed_at',
 			this._termsAgreedAt === undefined ? undefined : dateToIsoOrNull(this._termsAgreedAt),
@@ -715,6 +848,12 @@ export class User {
 			this._privacyAgreedAt === undefined ? undefined : dateToIsoOrNull(this._privacyAgreedAt),
 		);
 		privateFields.traits = [...this._traits];
+		setOptional('claimed', this._claimed);
+		setOptional('account_tier', this._accountTier);
+		setOptional('verification_need', this._verificationNeed);
+		setOptional('has_password', this._hasPassword);
+		setOptional('date_of_birth_required', this._dateOfBirthRequired);
+		setOptional('has_age_range', this._hasAgeRange);
 		return {
 			...baseFields,
 			...(privateFields as Partial<UserPrivate>),

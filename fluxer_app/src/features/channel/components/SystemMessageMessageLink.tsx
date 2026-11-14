@@ -17,8 +17,7 @@ export const SystemMessageMessageLink = React.forwardRef<
 	}
 >(({linkText, guildId, linkedMessage}, ref) => {
 	const activate = () => {
-		if (linkedMessage)
-			NavigationCommands.navigateToMessage(guildId, linkedMessage.channelId, linkedMessage.id, 'push');
+		if (linkedMessage) NavigationCommands.navigateToMessage(guildId, linkedMessage.channelId, linkedMessage.id, 'push');
 	};
 
 	return (

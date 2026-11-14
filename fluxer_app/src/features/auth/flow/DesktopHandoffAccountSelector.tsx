@@ -77,8 +77,6 @@ const DesktopHandoffAccountSelector = observer(function DesktopHandoffAccountSel
 			error={error}
 			onSelectAccount={handleSelectAccount}
 			onAddAccount={onSelectNewAccount}
-			addButtonLabel={<Trans>Add a different account</Trans>}
-			scrollerKey="desktop-handoff-scroller"
 			data-flx="auth.flow.desktop-handoff-account-selector.account-selector"
 		/>
 	);

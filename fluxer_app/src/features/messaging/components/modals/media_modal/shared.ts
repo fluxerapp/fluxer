@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
+
 import {msg} from '@lingui/core/macro';
 import type {MouseEventHandler, ReactNode} from 'react';
 
@@ -26,8 +28,7 @@ export interface MediaModalProps {
 	onDeleteAttachment?: MouseEventHandler<HTMLButtonElement>;
 	onReply?: () => void;
 	onForward?: () => void;
-	onInfo?: () => void;
-	additionalActions?: ReactNode;
+	onViewPost?: () => void;
 	children: ReactNode;
 	enablePanZoom?: boolean;
 	currentIndex?: number;
@@ -43,16 +44,9 @@ export interface MediaModalProps {
 	onMenuOpen?: () => void;
 }
 
-export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 export const getViewportPadding = () => {
 	const minSide = Math.min(window.innerWidth, window.innerHeight);
 	return Math.round(clamp(minSide * 0.05, 16, 64));
-};
-export const getNativeTitlebarHeight = () => {
-	if (typeof document === 'undefined') return 0;
-	const raw = getComputedStyle(document.documentElement).getPropertyValue('--native-titlebar-height').trim();
-	const parsed = Number.parseFloat(raw);
-	return Number.isFinite(parsed) ? parsed : 0;
 };
 export const MEDIA_CONTROLS_DESCRIPTOR = msg({
 	message: 'Media controls',
@@ -89,6 +83,11 @@ export const FORWARD_MEDIA_DESCRIPTOR = msg({
 export const REPLY_TO_MEDIA_MESSAGE_DESCRIPTOR = msg({
 	message: 'Reply to message',
 	comment: 'Tooltip on the media viewer button that closes the viewer and replies to the message containing the media.',
+});
+export const OPEN_POST_DESCRIPTOR = msg({
+	message: 'Open post',
+	comment:
+		'Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.',
 });
 export const CLOSE_MODAL_DESCRIPTOR = msg({
 	message: 'Close modal',

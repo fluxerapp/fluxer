@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	APP_STORAGE_INDEXED_DB_NAME,
+	APP_STORAGE_INDEXED_DB_VERSION,
+	APP_STORAGE_OBJECT_STORE,
+	APP_STORAGE_SCOPE_INDEX,
+} from '@app/features/platform/state/AppStorageDatabase';
 import {getProtectedIndexedDB} from '@app/features/platform/state/ProtectedWebStorage';
 
 export const PersistentStorageBackendKind = Object.freeze({
@@ -38,11 +44,6 @@ export interface PersistentStorageBackend {
 	clearAllExcept(keysToKeep: ReadonlySet<string>): Promise<void>;
 	setMany(writes: ReadonlyArray<AppStorageWrite>): Promise<void>;
 }
-
-export const APP_STORAGE_INDEXED_DB_NAME = 'fluxer-app-storage';
-export const APP_STORAGE_INDEXED_DB_VERSION = 1;
-export const APP_STORAGE_OBJECT_STORE = 'entries';
-export const APP_STORAGE_SCOPE_INDEX = 'scope';
 
 const APP_STORAGE_OPERATION_TIMEOUT_MS = 5_000;
 const APP_STORAGE_OPEN_BLOCKED_WAIT_MS = 500;
@@ -105,19 +106,9 @@ let stampSequence = 0;
 
 function nextStamp(): AppStorageStamp {
 	const now = Date.now();
-	stampWall = now > stampWall ? now : stampWall;
+	stampWall = Math.max(now, stampWall);
 	stampSequence += 1;
 	return {wall: stampWall, seq: stampSequence};
-}
-
-export function compareAppStorageStamps(left: AppStorageStamp, right: AppStorageStamp): number {
-	if (left.wall !== right.wall) {
-		return left.wall < right.wall ? -1 : 1;
-	}
-	if (left.seq !== right.seq) {
-		return left.seq < right.seq ? -1 : 1;
-	}
-	return 0;
 }
 
 interface AppStorageRecord {
@@ -618,4 +609,14 @@ export function getPersistentStorageBackend(): PersistentStorageBackend {
 
 export function installPersistentStorageBackend(backend: PersistentStorageBackend): void {
 	sharedBackend = backend;
+}
+
+export function switchToMemoryPersistentStorageBackend(): PersistentStorageBackend {
+	const current = getPersistentStorageBackend();
+	if (current.kind === PersistentStorageBackendKind.MEMORY) {
+		return current;
+	}
+	const memory = createMemoryBackend();
+	sharedBackend = memory;
+	return memory;
 }

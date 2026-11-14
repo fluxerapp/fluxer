@@ -1,8 +1,43 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {HdrDisplayMode} from '@app/features/accessibility/state/Accessibility';
+import {readRawStorageItem, writeRawStorageItem} from '@app/features/platform/state/PrebootMirror';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {useLayoutEffect} from 'react';
+import {getInstanceBrandVariables, INSTANCE_BRAND_VARIABLES} from '@app/features/theme/utils/InstanceBrandColors';
+import {useInsertionEffect, useLayoutEffect} from 'react';
+
+const SERVED_THEME_COLOR_STYLE_ID = 'fluxer-instance-theme-color';
+const INSTANCE_BRAND_PREBOOT_STORAGE_KEY = 'fluxer:instance-brand:preboot';
+const SATURATION_PREBOOT_STORAGE_KEY = 'fluxer:accessibility:saturation-preboot';
+
+interface SavedInstanceBrandColors {
+	c: string;
+	s: number;
+	v: Record<string, Record<string, string>>;
+}
+
+function readSavedInstanceBrandColors(): SavedInstanceBrandColors | null {
+	try {
+		const saved = JSON.parse(readRawStorageItem(INSTANCE_BRAND_PREBOOT_STORAGE_KEY) ?? 'null');
+		return saved !== null && typeof saved === 'object' && typeof saved.v === 'object' && saved.v !== null
+			? saved
+			: null;
+	} catch {
+		return null;
+	}
+}
+
+function saveInstanceBrandColors(
+	themeColor: string,
+	saturationFactor: number,
+	theme: string,
+	variables: Record<string, string>,
+): void {
+	const saved = readSavedInstanceBrandColors();
+	const themes = saved?.c === themeColor && saved.s === saturationFactor ? saved.v : {};
+	const next: SavedInstanceBrandColors = {c: themeColor, s: saturationFactor, v: {...themes, [theme]: variables}};
+	writeRawStorageItem(INSTANCE_BRAND_PREBOOT_STORAGE_KEY, JSON.stringify(next));
+}
 
 interface ThemeCssVariablesOptions {
 	effectiveTheme: string;
@@ -14,6 +49,7 @@ interface ThemeCssVariablesOptions {
 	messageGutter: number;
 	messageGroupSpacing: number;
 	hdrDisplayMode: HdrDisplayMode;
+	instanceThemeColor: string | null;
 }
 
 export function useThemeCssVariables({
@@ -26,8 +62,9 @@ export function useThemeCssVariables({
 	messageGutter,
 	messageGroupSpacing,
 	hdrDisplayMode,
+	instanceThemeColor,
 }: ThemeCssVariablesOptions): void {
-	useLayoutEffect(() => {
+	useInsertionEffect(() => {
 		const htmlNode = document.documentElement;
 		const themeClass = `theme-${effectiveTheme}`;
 		for (const existingClass of Array.from(htmlNode.classList)) {
@@ -37,6 +74,7 @@ export function useThemeCssVariables({
 		}
 		htmlNode.classList.add(themeClass);
 		htmlNode.style.setProperty('--saturation-factor', saturationFactor.toString());
+		writeRawStorageItem(SATURATION_PREBOOT_STORAGE_KEY, saturationFactor === 1 ? null : saturationFactor.toString());
 		htmlNode.style.setProperty('--user-select', enableTextSelection ? 'auto' : 'none');
 		htmlNode.style.setProperty('--font-size', remFromPx(fontSize));
 		htmlNode.style.setProperty('--chat-horizontal-padding', remFromPx(messageGutter));
@@ -63,6 +101,29 @@ export function useThemeCssVariables({
 		messageGroupSpacing,
 		hdrDisplayMode,
 	]);
+	useInsertionEffect(() => {
+		document.getElementById(SERVED_THEME_COLOR_STYLE_ID)?.remove();
+		const variables =
+			instanceThemeColor === null
+				? null
+				: getInstanceBrandVariables(instanceThemeColor, effectiveTheme, saturationFactor);
+		if (instanceThemeColor === null || variables === null) {
+			if (readRawStorageItem(INSTANCE_BRAND_PREBOOT_STORAGE_KEY) !== null) {
+				writeRawStorageItem(INSTANCE_BRAND_PREBOOT_STORAGE_KEY, null);
+			}
+			return;
+		}
+		saveInstanceBrandColors(instanceThemeColor, saturationFactor, effectiveTheme, variables);
+		const htmlNode = document.documentElement;
+		for (const name of INSTANCE_BRAND_VARIABLES) {
+			htmlNode.style.setProperty(name, variables[name]);
+		}
+		return () => {
+			for (const name of INSTANCE_BRAND_VARIABLES) {
+				htmlNode.style.removeProperty(name);
+			}
+		};
+	}, [instanceThemeColor, effectiveTheme, saturationFactor]);
 	useLayoutEffect(() => {
 		const htmlNode = document.documentElement;
 		return () => {

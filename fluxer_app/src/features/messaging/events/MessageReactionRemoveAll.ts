@@ -17,10 +17,10 @@ export function handleMessageReactionRemoveAll(
 	data: MessageReactionRemoveAllPayload,
 	_context: GatewayHandlerContext,
 ): void {
-	SavedMessages.handleMessageReactionRemoveAll(data.message_id);
+	SavedMessages.handleMessageReactionChange(data.message_id);
 	MessageReactions.handleReactionRemoveAll(data.message_id);
 	ChannelPins.handleMessageReactionRemoveAll(data.channel_id, data.message_id);
 	ForumPosts.handleReactionClear(data.channel_id, data.message_id);
-	MentionFeed.handleMessageReactionRemoveAll(data.message_id);
+	MentionFeed.handleMessageReactionChange(data.message_id);
 	Messages.handleRemoveAllReactions({channelId: data.channel_id, messageId: data.message_id});
 }

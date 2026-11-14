@@ -4,11 +4,15 @@ import {randomInt} from 'node:crypto';
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {createMessageID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
-import {dispatchChannelDelete} from '@app/api/channel/services/group_dm/GroupDmHelpers';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {
+	dispatchChannelDelete,
+	dispatchDmChannelDelete,
+	requireGroupDmMember,
+} from '@app/api/channel/services/group_dm/GroupDmHelpers';
 import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
@@ -23,7 +27,7 @@ import type {Channel} from '@app/api/models/Channel';
 import type {User} from '@app/api/models/User';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -37,16 +41,16 @@ import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownCha
 import {CannotRemoveOtherRecipientsError} from '@fluxer/errors/src/domains/core/CannotRemoveOtherRecipientsError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
-import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
+import {NsfwContentAgeRestrictedError} from '@fluxer/errors/src/domains/moderation/NsfwContentAgeRestrictedError';
 import {NotFriendsWithUserError} from '@fluxer/errors/src/domains/user/NotFriendsWithUserError';
 
 export class GroupDmOperationsService {
 	private readonly userPermissionUtils: UserPermissionUtils;
 
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
-		guildRepository: IGuildRepositoryAggregate,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
+		guildRepository: GuildRepository,
 		private userCacheService: UserCacheService,
 		private gatewayService: IGatewayService,
 		private snowflakeService: ISnowflakeService,
@@ -69,14 +73,7 @@ export class GroupDmOperationsService {
 		recipientId: UserID;
 		requestCache: RequestCache;
 	}): Promise<Channel> {
-		const channel = await this.channelRepository.channelData.findUnique(channelId);
-		if (!channel) throw new UnknownChannelError();
-		if (channel.type !== ChannelTypes.GROUP_DM) {
-			throw new InvalidChannelTypeError();
-		}
-		if (!channel.recipientIds.has(userId)) {
-			throw new MissingAccessError();
-		}
+		const channel = await requireGroupDmMember(this.channelRepository, channelId, userId);
 		await this.assertInviterNotLimited(userId);
 		const friendship = await this.userRepository.getRelationship(userId, recipientId, RelationshipTypes.FRIEND);
 		if (!friendship) {
@@ -109,14 +106,7 @@ export class GroupDmOperationsService {
 		botUserId: UserID;
 		requestCache: RequestCache;
 	}): Promise<Channel> {
-		const channel = await this.channelRepository.channelData.findUnique(channelId);
-		if (!channel) throw new UnknownChannelError();
-		if (channel.type !== ChannelTypes.GROUP_DM) {
-			throw new InvalidChannelTypeError();
-		}
-		if (!channel.recipientIds.has(userId)) {
-			throw new MissingAccessError();
-		}
+		await requireGroupDmMember(this.channelRepository, channelId, userId);
 		await this.assertInviterNotLimited(userId);
 		const {channel: updatedChannel} = await this.addRecipientViaInviteWithResult({
 			channelId,
@@ -180,7 +170,7 @@ export class GroupDmOperationsService {
 			return {channel, recipientAdded: false};
 		}
 		if (channel.isNsfw && !(await this.canJoinMatureGroup(recipientId))) {
-			throw new NsfwContentRequiresAgeVerificationError();
+			throw new NsfwContentAgeRestrictedError();
 		}
 		const inviterUser = inviterId ? await this.userRepository.findUnique(inviterId) : null;
 		const fallbackLimit = MAX_GROUP_DM_RECIPIENTS;
@@ -189,10 +179,13 @@ export class GroupDmOperationsService {
 			throw new MaxGroupDmRecipientsError(recipientLimit);
 		}
 		const updatedRecipientIds = new Set([...channel.recipientIds, recipientId]);
-		const updatedChannel = await this.channelRepository.channelData.upsert({
-			...channel.toRow(),
-			recipient_ids: updatedRecipientIds,
-		});
+		const updatedChannel = await this.channelRepository.channelData.upsert(
+			{
+				...channel.toRow(),
+				recipient_ids: updatedRecipientIds,
+			},
+			channel.toRow(),
+		);
 		await this.userRepository.openPrivateChannelForUser(recipientId, updatedChannel);
 		const recipientUserResponse = await this.userCacheService.getUserPartialResponse(recipientId, requestCache);
 		const messageId = createMessageID(await this.snowflakeService.generateForChannel(channelId));
@@ -287,12 +280,15 @@ export class GroupDmOperationsService {
 		}
 		const updatedNicknames = new Map(channel.nicknames);
 		updatedNicknames.delete(recipientId.toString());
-		const updatedChannel = await this.channelRepository.channelData.upsert({
-			...channel.toRow(),
-			owner_id: newOwnerId,
-			recipient_ids: updatedRecipientIds,
-			nicks: updatedNicknames.size > 0 ? updatedNicknames : null,
-		});
+		const updatedChannel = await this.channelRepository.channelData.upsert(
+			{
+				...channel.toRow(),
+				owner_id: newOwnerId,
+				recipient_ids: updatedRecipientIds,
+				nicks: updatedNicknames.size > 0 ? updatedNicknames : null,
+			},
+			channel.toRow(),
+		);
 		await this.userRepository.closeDmForUser(recipientId, channelId);
 		await this.disconnectRemovedRecipientFromCall(channelId, recipientId);
 		const recipientUserResponse = await this.userCacheService.getUserPartialResponse(recipientId, requestCache);
@@ -321,16 +317,12 @@ export class GroupDmOperationsService {
 				message: systemMessage,
 			});
 		}
-		const channelResponse = await mapChannelToResponse({
+		await dispatchDmChannelDelete({
 			channel,
-			currentUserId: null,
-			userCacheService: this.userCacheService,
-			requestCache,
-		});
-		await this.gatewayService.dispatchPresence({
 			userId: recipientId,
-			event: 'CHANNEL_DELETE',
-			data: channelResponse,
+			requestCache,
+			gatewayService: this.gatewayService,
+			userCacheService: this.userCacheService,
 		});
 		await Promise.all(
 			[...Array.from(updatedRecipientIds), recipientId].map(async (recId) => {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {parseNativeGatewayTransportEvent} from '@electron/common/NativeGatewayTransportEvent';
 import {getDesktopOutboundHTTP} from '@electron/main/DesktopOutboundHTTP';
 import {isDirectProxyRoute} from '@electron/main/DesktopSessionHTTP';
 import type {GatewayOriginRegistry} from '@electron/main/GatewayOriginRegistry';
@@ -8,7 +9,6 @@ import {
 	type GatewaySocketBoundary,
 	warmGatewaySocketTransport,
 } from '@electron/main/GatewaySocketNativeBoundary';
-import {parseNativeGatewayTransportEvent} from '@electron/main/NativeGatewayTransportEventParser';
 import {
 	requireNativeGatewayCloseRequest,
 	requireNativeGatewayConnectionId,
@@ -46,7 +46,7 @@ interface NativeGatewayTransportLogger {
 }
 
 interface DesktopNativeGatewayTransportDependencies {
-	readonly boundary: GatewaySocketBoundary | null;
+	readonly resolveBoundary: () => GatewaySocketBoundary | null;
 	readonly logger: NativeGatewayTransportLogger;
 	readonly originRegistry: GatewayOriginRegistry;
 	readonly rendererDocumentOwners: RendererDocumentOwnerFactory;
@@ -136,10 +136,14 @@ export class DesktopNativeGatewayTransport {
 		this.dependencies = dependencies;
 	}
 
+	public warm(): void {
+		this.dependencies.resolveBoundary();
+	}
+
 	public ipcRoutes(): RendererDocumentIpcRoutes {
 		return Object.freeze({
 			[NATIVE_GATEWAY_TRANSPORT_CHANNELS.isAvailable]: async (): Promise<boolean> =>
-				this.accepting && this.dependencies.boundary != null,
+				this.accepting && this.dependencies.resolveBoundary() != null,
 			[NATIVE_GATEWAY_TRANSPORT_CHANNELS.create]: (event, request) => this.handleCreate(event, request),
 			[NATIVE_GATEWAY_TRANSPORT_CHANNELS.sendText]: async (event, request) => {
 				this.requireAccepting();
@@ -223,7 +227,7 @@ export class DesktopNativeGatewayTransport {
 		request: unknown,
 	): Promise<NativeGatewayTransportCreateResult> {
 		this.requireAccepting();
-		const boundary = this.dependencies.boundary;
+		const boundary = this.dependencies.resolveBoundary();
 		if (boundary == null) {
 			throw new NativeGatewayTransportUnavailableError();
 		}
@@ -334,7 +338,7 @@ export class DesktopNativeGatewayTransport {
 		if (record == null || record.disposing) return;
 		let parsed: NativeGatewayTransportEvent;
 		try {
-			parsed = parseNativeGatewayTransportEvent(connectionId, nativeEvent);
+			parsed = parseNativeGatewayTransportEvent(nativeEvent, connectionId);
 		} catch (error) {
 			this.dependencies.logger.error('[NativeGateway] Rejected a malformed native gateway event', error);
 			this.failConnection(
@@ -396,13 +400,18 @@ interface CreateDesktopNativeGatewayTransportRequest {
 export function createDesktopNativeGatewayTransport(
 	request: CreateDesktopNativeGatewayTransportRequest,
 ): DesktopNativeGatewayTransport {
-	const boundary = createGatewaySocketBoundary();
-	if (boundary != null) {
-		warmGatewaySocketTransport();
-	}
+	let boundary: GatewaySocketBoundary | null | undefined;
 	return new DesktopNativeGatewayTransport({
 		...request,
-		boundary,
+		resolveBoundary: () => {
+			if (boundary === undefined) {
+				boundary = createGatewaySocketBoundary();
+				if (boundary != null) {
+					warmGatewaySocketTransport();
+				}
+			}
+			return boundary;
+		},
 		requireCleartextGatewayAddress: (httpOrigin) =>
 			getDesktopOutboundHTTP().requireCleartextTransportAddress(httpOrigin),
 		resolveProxy: (event, url) => event.sender.session.resolveProxy(url),

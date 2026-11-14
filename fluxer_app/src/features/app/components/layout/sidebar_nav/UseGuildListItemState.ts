@@ -14,8 +14,8 @@ import Keybind, {type KeyCombo} from '@app/features/input/state/InputKeybind';
 import Permission from '@app/features/permissions/state/Permission';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {Permissions as PermissionBits} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -59,7 +59,7 @@ export interface GuildListItemState {
 	readonly hasVoiceActivity: boolean;
 	readonly voiceBadgeActivity: VoiceBadgeActivity | null;
 	readonly guildCounts: GuildCounts | null;
-	readonly currentLocale: string;
+	readonly formattingLocale: string;
 	readonly navigationKeybind: KeyCombo | null;
 	readonly guildARIALabel: string;
 }
@@ -127,7 +127,7 @@ export function useGuildListItemState({
 		badgeActivity: voiceBadgeActivity,
 	} = useSidebarVoiceSummary({
 		scope: SidebarVoiceSummaryScope.GUILD,
-		voiceStates: MediaEngine.getAllVoiceStatesInGuild(guild.id),
+		voiceStates: VoiceRuntime.getAllVoiceStatesInGuild(guild.id),
 		guildId: guild.id,
 	});
 	const guildARIAParts = [guild.name];
@@ -147,7 +147,7 @@ export function useGuildListItemState({
 		hasVoiceActivity,
 		voiceBadgeActivity,
 		guildCounts: GuildCount.getCounts(guild.id),
-		currentLocale: getCurrentLocale(),
+		formattingLocale: getFormattingLocale(),
 		navigationKeybind: resolveNavigationKeybind(guildIndex, selectedGuildIndex),
 		guildARIALabel: guildARIAParts.join(', '),
 	};

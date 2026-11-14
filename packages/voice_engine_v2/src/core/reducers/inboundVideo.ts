@@ -5,7 +5,6 @@ import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice
 import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2InboundVideoFrame,
-	VoiceEngineV2InboundVideoFrameStats,
 	VoiceEngineV2InboundVideoTrackSubscription,
 } from '@fluxer/voice_engine_v2/src/protocol/types';
 
@@ -94,46 +93,6 @@ function applyInboundVideoFrame(
 	};
 }
 
-function applyInboundVideoFrameStats(
-	snapshot: VoiceEngineV2Snapshot,
-	stats: VoiceEngineV2InboundVideoFrameStats,
-): VoiceEngineV2Snapshot {
-	assert.ok(snapshot != null, 'applyInboundVideoFrameStats snapshot must not be null');
-	assert.ok(stats != null, 'applyInboundVideoFrameStats stats must not be null');
-	assert.equal(typeof stats.trackSid, 'string', 'stats.trackSid must be a string');
-	assert.ok(Number.isInteger(stats.frameCount), 'stats.frameCount must be an integer');
-	assert.ok(stats.frameCount >= 0, 'stats.frameCount must be non-negative');
-	const track = snapshot.inboundVideo.tracks[stats.trackSid];
-	if (!track) {
-		return {
-			...snapshot,
-			inboundVideo: {
-				...snapshot.inboundVideo,
-				droppedFrameCount: snapshot.inboundVideo.droppedFrameCount + 1,
-			},
-		};
-	}
-	return {
-		...snapshot,
-		inboundVideo: {
-			...snapshot.inboundVideo,
-			tracks: {
-				...snapshot.inboundVideo.tracks,
-				[stats.trackSid]: {
-					...track,
-					participantSid: stats.participantSid,
-					...(stats.participantIdentity ? {participantIdentity: stats.participantIdentity} : {}),
-					width: stats.width,
-					height: stats.height,
-					frameCount: stats.frameCount,
-					lastFrameTimestampUs: stats.lastFrameTimestampUs,
-					lastFrameByteLength: stats.lastFrameByteLength,
-				},
-			},
-		},
-	};
-}
-
 export function transitionInboundVideo(
 	snapshot: VoiceEngineV2Snapshot,
 	event: VoiceEngineV2InboundVideoEvent,
@@ -145,11 +104,8 @@ export function transitionInboundVideo(
 	switch (event.type) {
 		case 'inboundVideo.trackSubscribed':
 			return {snapshot: upsertInboundVideoTrack(snapshot, event.track), commands: []};
-		case 'inboundVideo.trackUnsubscribed':
-			return {snapshot: removeInboundVideoTrack(snapshot, event.trackSid), commands: []};
+
 		case 'inboundVideo.frameReceived':
 			return {snapshot: applyInboundVideoFrame(snapshot, event.frame), commands: []};
-		case 'inboundVideo.frameStats':
-			return {snapshot: applyInboundVideoFrameStats(snapshot, event.stats), commands: []};
 	}
 }

@@ -2,6 +2,7 @@
 
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {
+	ATTACHMENT_MAX_SIZE_BOT,
 	ATTACHMENT_MAX_SIZE_NON_PREMIUM,
 	ATTACHMENT_MAX_SIZE_PREMIUM,
 	AVATAR_MAX_SIZE,
@@ -10,6 +11,7 @@ import {
 	MAX_BIO_LENGTH,
 	MAX_BOOKMARKS_NON_PREMIUM,
 	MAX_BOOKMARKS_PREMIUM,
+	MAX_CAMERA_RESOLUTION,
 	MAX_CHANNELS_PER_CATEGORY,
 	MAX_EMBEDS_PER_MESSAGE,
 	MAX_FAVORITE_MEME_TAGS,
@@ -38,6 +40,9 @@ import {
 	MAX_PRIVATE_CHANNELS_PER_USER,
 	MAX_REACTIONS_PER_MESSAGE,
 	MAX_RELATIONSHIPS,
+	MAX_SCREEN_SHARE_BITRATE,
+	MAX_SCREEN_SHARE_FRAME_RATE,
+	MAX_SCREEN_SHARE_RESOLUTION,
 	MAX_USERS_PER_MESSAGE_REACTION,
 	MAX_VOICE_MESSAGE_DURATION,
 	MAX_WEBHOOKS_PER_CHANNEL,
@@ -58,10 +63,13 @@ export const DEFAULT_RESTRICTED_LIMITS: Record<LimitKey, number> = {
 	feature_higher_video_quality: 0,
 	feature_per_guild_profiles: 0,
 	feature_voice_entrance_sounds: 0,
+	guild_visit_history_days_unverified: 30,
 	max_attachment_file_size: ATTACHMENT_MAX_SIZE_NON_PREMIUM,
 	max_attachments_per_message: MAX_ATTACHMENTS_PER_MESSAGE,
 	max_bio_length: MAX_BIO_LENGTH,
 	max_bookmarks: MAX_BOOKMARKS_NON_PREMIUM,
+	max_bot_attachment_file_size: ATTACHMENT_MAX_SIZE_BOT,
+	max_camera_resolution: MAX_CAMERA_RESOLUTION,
 	max_channels_per_category: MAX_CHANNELS_PER_CATEGORY,
 	max_custom_backgrounds: 1,
 	max_embeds_per_message: MAX_EMBEDS_PER_MESSAGE,
@@ -80,6 +88,7 @@ export const DEFAULT_RESTRICTED_LIMITS: Record<LimitKey, number> = {
 	max_guild_roles: MAX_GUILD_ROLES,
 	max_guild_stickers_more: MAX_GUILD_STICKERS_MORE_STICKERS,
 	max_guild_stickers: MAX_GUILD_STICKERS,
+	max_guild_visits: 10,
 	max_guilds: 100,
 	max_message_length: MAX_MESSAGE_LENGTH_NON_PREMIUM,
 	max_poll_question_length: MAX_POLL_QUESTION_LENGTH,
@@ -90,6 +99,9 @@ export const DEFAULT_RESTRICTED_LIMITS: Record<LimitKey, number> = {
 	max_private_channels_per_user: MAX_PRIVATE_CHANNELS_PER_USER,
 	max_reactions_per_message: MAX_REACTIONS_PER_MESSAGE,
 	max_relationships: MAX_RELATIONSHIPS,
+	max_screen_share_bitrate: MAX_SCREEN_SHARE_BITRATE,
+	max_screen_share_frame_rate: MAX_SCREEN_SHARE_FRAME_RATE,
+	max_screen_share_resolution: MAX_SCREEN_SHARE_RESOLUTION,
 	max_users_per_message_reaction: MAX_USERS_PER_MESSAGE_REACTION,
 	max_voice_message_duration: MAX_VOICE_MESSAGE_DURATION,
 	max_webhooks_per_channel: MAX_WEBHOOKS_PER_CHANNEL,
@@ -116,6 +128,3 @@ export const DEFAULT_STOCK_LIMITS: Record<LimitKey, number> = {
 	max_guilds: 200,
 	max_message_length: MAX_MESSAGE_LENGTH_PREMIUM,
 };
-
-export const DEFAULT_FREE_LIMITS = DEFAULT_RESTRICTED_LIMITS;
-export const DEFAULT_PREMIUM_LIMITS = DEFAULT_STOCK_LIMITS;

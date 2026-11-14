@@ -8,6 +8,7 @@ import {
 } from '@app/features/moderation/components/report_flow/ReportFlowCopy';
 import styles from '@app/features/moderation/components/report_flow/ReportFlowSummary.module.css';
 import {getReportFlowAnswerLabels} from '@app/features/moderation/components/report_flow/ReportFlowWalk';
+import {TimelineList} from '@app/features/ui/timeline_list/TimelineList';
 import type {ReportFlowResponse, ReportFlowStep} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -24,22 +25,12 @@ export const ReportFlowAnswerList: React.FC<{flow: ReportFlowResponse; steps: Re
 	flow,
 	steps,
 }) => (
-	<ol className={styles.answers} data-flx="moderation.report-flow.report-flow-summary.report-flow-answer-list.answers">
-		{getReportFlowAnswerLabels(flow, steps).map((label, index) => (
-			<li
-				key={`${index}:${label}`}
-				className={styles.answer}
-				data-flx="moderation.report-flow.report-flow-summary.report-flow-answer-list.answer"
-			>
-				<span
-					className={styles.answerText}
-					data-flx="moderation.report-flow.report-flow-summary.report-flow-answer-list.answer-text"
-				>
-					{label}
-				</span>
-			</li>
-		))}
-	</ol>
+	<TimelineList
+		ordered
+		clampLines
+		items={getReportFlowAnswerLabels(flow, steps).map((label, index) => ({key: `${index}:${label}`, content: label}))}
+		data-flx="moderation.report-flow.report-flow-summary.report-flow-answer-list.answers"
+	/>
 );
 
 export const ReportFlowSummary: React.FC<ReportFlowSummaryProps> = ({flow, steps, urgent, previewHeading, preview}) => {
@@ -52,7 +43,7 @@ export const ReportFlowSummary: React.FC<ReportFlowSummaryProps> = ({flow, steps
 					<Trans comment="Report flow: good-faith statement on the summary screen. The linked text opens the community guidelines.">
 						Only report what you honestly believe breaks the rules. Misusing reports goes against our{' '}
 						<ExternalLink href={guidelinesUrl} data-flx="moderation.report-flow.report-flow-summary.external-link">
-							Community Guidelines
+							community guidelines
 						</ExternalLink>
 						.
 					</Trans>

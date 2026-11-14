@@ -7,7 +7,8 @@
 	min-height: 2.25rem;
 	min-width: 0;
 	width: 100%;
-	padding: 0 0.375rem 0 0.75rem;
+	padding-block: 0;
+	padding-inline: 0.75rem 0.375rem;
 	box-sizing: border-box;
 }
 
@@ -48,7 +49,7 @@
 	display: flex;
 	align-items: center;
 	flex: 0 0 auto;
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 
 .button {

@@ -1,96 +1,77 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Admin users
-description: Reading and editing accounts, including contact fields, flags, bans, sessions, deletions, and archives.
+description: Admin API routes for reading and changing accounts, their sessions, flags, suspensions and deletions.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-These routes read and edit any account on the instance. An account has more fields here than the public [Users](/http-api/users/) resource returns, including its contact details, its network addresses, and its lifecycle state.
+These routes read and change any account on the instance. Each field group has its own route and [ACL](/admin-api/#acl-registry), and every route except [Get current Admin user](#get-current-admin-user) records an [Admin audit entry](/admin-api/#admin-audit-entry-object), reads included.
 
-Each mutable field group has its own route, its own [ACL](/admin-api/#acl-registry), and its own [audit action](/admin-api/#audit-actions), so there is no combined update.
-
-On an instance where members sign in with a username, [Change user email](#change-user-email), [Verify user email](#verify-user-email), [Resend verification email](#resend-verification-email) and [Send password reset](#send-password-reset) return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`. [Create password reset link](#create-password-reset-link) is the way to reset a password there, and it returns 400 `USERNAME_SIGN_IN_ONLY` on an email instance.
-
-Every operation on this page records an [Admin audit entry](/admin-api/#admin-audit-entry-object), reads included. [Get current Admin user](#get-current-admin-user) is the exception and records nothing. `POST /v1/admin/users/{user_id}/avatar-block` addresses a user path but belongs to [Blocklists](/admin-api/blocklists/#block-a-users-current-avatar).
-
-:::caution[A missing PII ACL nulls the protected fields]
-A caller without `user:view:email` receives a null `email`. A caller without `user:view:dob` receives a null `date_of_birth`, and a caller without `user:view:ip` receives null `last_active_ip`, `last_active_ip_reverse`, and `last_active_location`. The read still succeeds, so a null field is no evidence that the account has none.
-:::
+On an instance where members sign in with a username, the email routes return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE` and you reset a password with [Create password reset link](#create-password-reset-link), which also works on an email instance that doesn't send email. On routes that record an [enforcement decision](/admin-api/enforcement/), the `X-Audit-Log-Reason` header is required and becomes the decision's first note. Blocking a user's avatar is on [Blocklists](/admin-api/blocklists/#block-a-users-current-avatar).
 
 ## Admin user object
 
-The complete administrative view of one account. It has every stored flag, the private lifecycle fields, and the contact and network fields that the public [user object](/http-api/users/#user-object) never exposes.
-
-When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Fluxer redacts the fields that the missing ACL protects and still returns every key, so the object shape is identical for every caller.
+The full admin view of one account, with the flags, lifecycle, contact and network fields the public [user object](/http-api/users/#user-object) leaves out. Without `user:view:email`, `user:view:dob` or `user:view:ip`, the fields that ACL protects are null (or false for the email booleans) and the request still succeeds.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | id | snowflake | The ID of the account |
-| username | string | The username of the account, unique only together with its discriminator (1-32 characters) |
-| discriminator<sup>1</sup> | integer | Discriminator from 0 to 9999, unpadded |
-| global_name | ?string | The display name of the account, or null when unset |
+| username | string | The username (1-32 characters) |
+| discriminator<sup>1</sup> | integer | The discriminator from 0 to 9999, unpadded |
+| global_name | ?string | The display name |
 | bot | boolean | Whether the account is a bot |
 | system | boolean | Whether the account is an official system account |
-| flags<sup>2</sup> | string | [Account flags](#account-flags) as an unsigned 64-bit decimal string |
+| flags | string | [Account flags](#account-flags) as a decimal string |
 | premium_flags | integer | [Premium flags](#premium-flags) |
-| avatar | ?string | The avatar hash, or null when the account has none |
-| banner | ?string | The profile banner hash, or null when the account has none |
-| bio | ?string | The profile biography, or null when unset |
-| pronouns | ?string | The profile pronouns, or null when unset |
-| accent_color | ?integer | The profile accent colour packed into an integer, or null when unset |
-| email<sup>3</sup> | ?string | The registered email address, or null when the account has none |
-| email_verified<sup>3</sup> | boolean | Whether the registered address has been verified |
-| email_bounced<sup>3</sup> | boolean | Whether delivery to the registered address hard bounced |
-| date_of_birth<sup>4</sup> | ?string | The date of birth in `YYYY-MM-DD` form, or null when none is stored |
-| locale | ?string | The saved [locale](/topics/locales/#supported-locales), or null when the account has never set one |
+| avatar | ?string | The avatar hash |
+| banner | ?string | The profile banner hash |
+| bio | ?string | The profile bio |
+| pronouns | ?string | The profile pronouns |
+| accent_color | ?integer | The profile accent color |
+| email<sup>2</sup> | ?string | The email address |
+| email_verified<sup>2</sup> | boolean | Whether the email address is verified |
+| email_bounced<sup>2</sup> | boolean | Whether mail to the address hard bounced |
+| date_of_birth<sup>3</sup> | ?string | The date of birth as `YYYY-MM-DD` |
+| locale | ?string | The saved [locale](/topics/locales/#supported-locales) |
 | premium_type | ?integer | [Premium type](#premium-types) |
-| premium_since | ?ISO8601 timestamp | The time the premium subscription began, or null when the account has none |
-| premium_until | ?ISO8601 timestamp | The time the premium subscription expires, or null when the account has none |
-| premium_grace_ends_at | ?ISO8601 timestamp | The time the payment grace period ends, or null when no grace period is running |
-| premium_lifetime_sequence | ?integer | The sequence number of the lifetime purchase, or null when the account holds none |
-| temp_banned_until<sup>5</sup> | ?ISO8601 timestamp | The time the ban expires, or null when no ban stands |
-| pending_deletion_at | ?ISO8601 timestamp | The time the scheduled deletion runs, or null when none is scheduled |
-| pending_bulk_message_deletion_at<sup>6</sup> | ?ISO8601 timestamp | The time the account's own scheduled bulk message deletion runs |
+| premium_since | ?ISO8601 timestamp | When premium started |
+| premium_until | ?ISO8601 timestamp | When premium ends |
+| premium_grace_ends_at | ?ISO8601 timestamp | When the payment grace period ends |
+| premium_lifetime_sequence | ?integer | The sequence number of the lifetime purchase |
+| profile_badges | array[[Admin profile badge](#admin-profile-badge-object) object] | Every badge the account qualifies for, including hidden ones |
+| temp_banned_until | ?ISO8601 timestamp | When the current suspension ends, or null when none is in force |
+| pending_deletion_at | ?ISO8601 timestamp | When the scheduled deletion runs |
+| pending_bulk_message_deletion_at | ?ISO8601 timestamp | When the account holder's own scheduled message deletion runs |
 | deletion_reason_code | ?integer | [Deletion reason](#deletion-reasons) |
-| deletion_public_reason | ?string | The reason shown to the account holder, or null when none was supplied |
-| deletion_audit_log_reason | ?string | The private reason stored with the pending deletion, and null without `audit_log:view` |
-| deletion_scheduled_by | ?snowflake | The ID of the account that scheduled the pending deletion, or null when it was not recorded |
-| deletion_scheduled_at | ?ISO8601 timestamp | The time the pending deletion was scheduled, or null when it was not recorded |
-| acls<sup>7</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 106 entries |
-| traits<sup>8</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
-| has_totp<sup>9</sup> | boolean | Whether a TOTP authenticator is registered |
-| authenticator_types<sup>9</sup> <sup>12</sup> | array[integer] | Registered [authenticator types](/http-api/users/#authenticator-types), with at most 10 entries |
-| last_active_at | ?ISO8601 timestamp | The time of the last recorded activity, or null when none is recorded |
-| last_active_ip<sup>10</sup> | ?string | The IP address the account was last active from |
-| last_active_ip_reverse<sup>10</sup> <sup>11</sup> | ?string | The reverse DNS name of that IP address |
-| last_active_location<sup>10</sup> <sup>11</sup> | ?string | The approximate location of that IP address |
+| deletion_public_reason | ?string | The reason shown to the account holder, set only on older deletions |
+| deletion_audit_log_reason | ?string | The private deletion reason, null without `audit_log:view` |
+| deletion_scheduled_by | ?snowflake | The ID of the account that scheduled the deletion |
+| deletion_scheduled_at | ?ISO8601 timestamp | When the deletion was scheduled |
+| enforcement_decision_id | ?snowflake | The [enforcement decision](/admin-api/enforcement/) that owns the account's state |
+| acls | array[string] | The [Admin ACLs](/admin-api/#acl-registry) set on the account |
+| traits | array[string] | The operator labels on the account, sorted (at most 100) |
+| badge_ids | array[snowflake] | The [custom badges](/admin-api/badges/) given to the account (at most 1000) |
+| has_totp | boolean | Whether a TOTP authenticator is registered |
+| has_password | boolean | Whether the account has a password |
+| claimed | boolean | Whether the account can sign in from another device |
+| account_tier | string | The [account tier](/http-api/users/#account-tiers) |
+| date_of_birth_required | boolean | Whether the account still has to set its date of birth |
+| authenticator_types | array[integer] | Second-factor [authenticator types](/http-api/users/#authenticator-types) (at most 10) |
+| last_active_at | ?ISO8601 timestamp | When the account was last active |
+| last_active_ip<sup>4</sup> | ?string | The IP address the account was last active from |
+| last_active_ip_reverse<sup>4</sup> | ?string | The reverse DNS name of that address |
+| last_active_location<sup>4</sup> | ?string | The approximate location of that address |
 
-<sup>1</sup> An unpadded JSON number here, unlike the zero-padded string `discriminator` of the [Admin user summary](/admin-api/#admin-user-summary-object) and the [Admin resolved user](#admin-resolved-user-object) embedded in other Admin objects. On an instance with the `none` tag style every account that is not a bot has `0`, and its username is unique on its own
+<sup>1</sup> Other Admin objects use a zero-padded string. On an instance with the `none` tag style, every account that is not a bot has `0`
 
-<sup>2</sup> Serialised as a decimal string
+<sup>2</sup> Needs `user:view:email`
 
-<sup>3</sup> Requires `user:view:email`. Without it `email` is null while `email_verified` and `email_bounced` are both false regardless of the stored state, so an unverified account and a redacted one are indistinguishable
+<sup>3</sup> Needs `user:view:dob`
 
-<sup>4</sup> Requires `user:view:dob`, and without it the field is null
-
-<sup>5</sup> Set by [Ban user](#ban-user) for both ban modes. An expiry that has already passed is reported as null, so an elapsed temporary ban reads the same as no ban
-
-<sup>6</sup> Written when the account holder schedules its own bulk message deletion, and cleared by [Cancel scheduled message deletion](#cancel-scheduled-message-deletion)
-
-<sup>7</sup> The set written by [Set user ACLs](#set-user-acls), returned in stored order with any value outside the [ACL registry](/admin-api/#acl-registry) left out. This set alone decides whether the account can reach the Admin API, and the `STAFF` [account flag](#account-flags) plays no part in that
-
-<sup>8</sup> Sorted in ascending order, unlike `acls`
-
-<sup>9</sup> Never redacted, and returned in full to any caller the operation admitted
-
-<sup>10</sup> Requires `user:view:ip`, and without it the field is null and no network lookup is attempted
-
-<sup>11</sup> Resolved live from `last_active_ip` for each response, and null when the lookup fails or returns nothing. The reverse DNS result is cached for one day
-
-<sup>12</sup> `WEBAUTHN` is present only while the account chose passkeys as a second factor. A registered credential does not add it, so `has_totp` false with an empty array still describes an account holding passkeys
+<sup>4</sup> Needs `user:view:ip`
 
 ### Example
 
@@ -114,7 +95,12 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
   "deletion_reason_code": null,
   "acls": [],
   "traits": ["early-signup"],
+  "badge_ids": [],
   "has_totp": true,
+  "has_password": true,
+  "claimed": true,
+  "account_tier": "verified",
+  "date_of_birth_required": false,
   "authenticator_types": [1, 2],
   "last_active_at": "2026-08-30T21:04:02.771000+00:00",
   "last_active_ip": "203.0.113.24",
@@ -123,32 +109,53 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 }
 ```
 
+## Admin profile badge object
+
+A [profile badge](/http-api/users/#profile-badge-object) with a `suppressed` field.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key | string | The badge's identity, `custom:{id}` for a custom badge |
+| kind | string | The badge type |
+| label | string | The badge description in the caller's locale |
+| asset | ?string | The badge image hash, or null for a text badge or a custom badge |
+| asset_url | ?string | The image URL of a custom badge |
+| aspect_ratio | ?number | The image width divided by its height |
+| caption | ?string | The short badge text, such as `#42` |
+| href | ?string | The URL a click opens |
+| small_asset? | string | The image hash for 20 pixels and smaller |
+| count? | ?integer | Not used on a self-hosted instance |
+| accessible_label? | ?string | The label for screen readers |
+| details? | ?[badge details](/http-api/users/#badge-details-object) object | The tooltip content |
+| suppressed | boolean | Whether the public profile hides the badge |
+
 ## Account flags
 
-The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bitfield serialised as an unsigned decimal string. It has every stored flag, including the ones the [HTTP API](/http-api/users/#public-user-flags) leaves out of its public subset.
+The `flags` field is a 64-bit bitfield sent as a decimal string. It has every stored flag, including the ones the [public flags](/http-api/users/#public-user-flags) leave out.
 
 | Value | Name | Description |
 | --- | --- | --- |
 | 1 &lt;&lt; 0 | STAFF | Account is a staff member |
 | 1 &lt;&lt; 2 | PARTNER | Account is a partner |
 | 1 &lt;&lt; 3 | BUG_HUNTER | Account is a bug hunter |
-| 1 &lt;&lt; 4 | FRIENDLY_BOT | Bot accepts friend requests from users |
-| 1 &lt;&lt; 5 | FRIENDLY_BOT_MANUAL_APPROVAL | Bot requires manual approval for friend requests |
+| 1 &lt;&lt; 4 | FRIENDLY_BOT | Bot accepts friend requests |
+| 1 &lt;&lt; 5 | FRIENDLY_BOT_MANUAL_APPROVAL | Bot approves friend requests by hand |
 | 1 &lt;&lt; 6 | SPAMMER | Account is flagged as a spammer |
 | 1 &lt;&lt; 7 | PROFILE_HIDDEN | Profile details are hidden from other users |
-| 1 &lt;&lt; 33 | HIGH_GLOBAL_RATE_LIMIT | Account has elevated global rate limits |
-| 1 &lt;&lt; 34 | DELETED | Account has been deleted |
-| 1 &lt;&lt; 36 | SELF_DELETED | Account was self-deleted |
+| 1 &lt;&lt; 33 | HIGH_GLOBAL_RATE_LIMIT | Account has a higher global rate limit |
+| 1 &lt;&lt; 34 | DELETED | Account is deleted |
+| 1 &lt;&lt; 36 | SELF_DELETED | Account holder deleted the account |
 | 1 &lt;&lt; 38 | DISABLED | Account is disabled |
 | 1 &lt;&lt; 39 | HAS_SESSION_STARTED | Account has started a session |
-| 1 &lt;&lt; 47 | RATE_LIMIT_BYPASS | Account can bypass rate limits |
-| 1 &lt;&lt; 48 | REPORT_BANNED | Account is banned from reporting |
-| 1 &lt;&lt; 49 | VERIFIED_NOT_UNDERAGE | Account is verified as not underage |
+| 1 &lt;&lt; 47 | RATE_LIMIT_BYPASS | Account skips rate limits |
+| 1 &lt;&lt; 48 | REPORT_BANNED | Account cannot send reports |
+| 1 &lt;&lt; 49 | VERIFIED_NOT_UNDERAGE | Marks an account as not under the minimum age. Only staff can set it |
 | 1 &lt;&lt; 50 | ACCOUNT_LIMITED | Account is [limited](/http-api/users/#account-limitation) |
-| 1 &lt;&lt; 51 | HAS_DISMISSED_PREMIUM_ONBOARDING | Account has dismissed premium onboarding |
+| 1 &lt;&lt; 51 | HAS_DISMISSED_PREMIUM_ONBOARDING | Account dismissed premium onboarding |
 | 1 &lt;&lt; 53 | APP_STORE_REVIEWER | Account belongs to an app store reviewer |
-| 1 &lt;&lt; 57 | STAFF_HIDDEN | Staff status is hidden from public flags |
-| 1 &lt;&lt; 60 | AGE_VERIFIED_ADULT | Account has verified its age as an adult through card verification |
+| 1 &lt;&lt; 60 | MATURE_CONTENT_UNLOCKED | Account can see mature content in places where a date of birth is not enough. Staff can set it |
 | 1 &lt;&lt; 62 | LIMIT_EXEMPT | Account is never limited |
 
 ## Premium flags
@@ -156,33 +163,33 @@ The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bit
 | Value | Name | Description |
 | --- | --- | --- |
 | 1 &lt;&lt; 0 | DISCRIMINATOR | Account has a premium discriminator |
-| 1 &lt;&lt; 1 | BADGE_HIDDEN | Premium badge is hidden |
 | 1 &lt;&lt; 2 | BADGE_MASKED | Premium badge is masked |
 | 1 &lt;&lt; 3 | BADGE_TIMESTAMP_HIDDEN | Premium badge timestamp is hidden |
-| 1 &lt;&lt; 4 | BADGE_SEQUENCE_HIDDEN | Premium badge sequence is hidden |
-| 1 &lt;&lt; 5 | PERKS_SANITIZED | Premium perks are sanitised |
-| 1 &lt;&lt; 6 | PURCHASE_DISABLED | Premium purchase is disabled |
-| 1 &lt;&lt; 7 | ENABLED_OVERRIDE | Premium status has an enabled override |
-| 1 &lt;&lt; 8 | PERKS_DISABLED | Premium perks are temporarily disabled |
+| 1 &lt;&lt; 5 | PERKS_SANITIZED | Premium perks are sanitized |
+| 1 &lt;&lt; 6 | PURCHASE_DISABLED | Premium purchase is blocked |
+| 1 &lt;&lt; 7 | ENABLED_OVERRIDE | Premium is turned on by override |
+| 1 &lt;&lt; 8 | PERKS_DISABLED | Premium perks are paused |
 
 ## Premium types
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | NONE | No premium subscription |
-| 1 | SUBSCRIPTION | Active premium subscription |
-| 2 | LIFETIME | Lifetime premium subscription |
+| 0 | NONE | No premium |
+| 1 | SUBSCRIPTION | Premium subscription |
+| 2 | LIFETIME | Lifetime premium |
 
 ## Deletion reasons
 
+Values 1, 2, 19, 32 and 33 are not enforcement reasons. Only the others are accepted in an [enforcement decision input](/admin-api/enforcement/#enforcement-decision-input).
+
 | Value | Name | Description |
 | --- | --- | --- |
-| 1 | USER_REQUESTED<sup>1</sup> | Account holder requested deletion |
+| 1 | USER_REQUESTED | Account holder asked for deletion |
 | 2 | OTHER | Other reason |
 | 3 | SPAM | Spam |
 | 4 | CHEATING_OR_EXPLOITATION | Cheating or exploitation |
 | 5 | COORDINATED_RAIDING | Coordinated raiding |
-| 6 | AUTOMATION_OR_SELFBOT | Automation or selfbot use |
+| 6 | AUTOMATION_OR_SELFBOT | Disruptive automation |
 | 7 | NONCONSENSUAL_SEXUAL_CONTENT | Non-consensual sexual content |
 | 8 | SCAM_OR_SOCIAL_ENGINEERING | Scam or social engineering |
 | 9 | CHILD_SEXUAL_CONTENT | Child sexual content |
@@ -199,158 +206,143 @@ The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bit
 | 20 | HATE_SPEECH_OR_EXTREMIST_CONTENT | Hate speech or extremist content |
 | 21 | MALICIOUS_LINKS_OR_MALWARE | Malicious links or malware |
 | 22 | IMPERSONATION_OR_FAKE_IDENTITY | Impersonation or fake identity |
-
-<sup>1</sup> The one value that lowers the minimum scheduling delay to 14 days and suppresses the identifier blocklisting and report auto-resolution described under [Schedule user deletion](#schedule-user-deletion)
-
-A `reason_code` request value outside this registry fails body validation with 400 `INVALID_FORM_BODY`.
+| 23 | THREATS_OR_VIOLENT_SPEECH | Threats or violent speech |
+| 24 | VIOLENT_EXTREMISM | Terrorism or violent extremism |
+| 25 | SELF_HARM_PROMOTION | Promoting self-harm |
+| 26 | SEXUAL_CONTENT_PLACEMENT | Sexual content outside 18+ spaces |
+| 27 | ILLEGAL_GOODS_OR_ACTIVITY | Illegal goods or activity |
+| 28 | HARMFUL_DECEPTION | Harmful deception |
+| 29 | REPORTING_ABUSE | Misuse of reporting |
+| 30 | UNDERAGE_ACCOUNT | Account holder under the minimum age |
+| 31 | COPYRIGHT | Copyright |
+| 32 | BELOW_MINIMUM_AGE | Account holder gave a date of birth below the minimum age |
+| 33 | UNCLAIMED_ACCOUNT_ABANDONED | Account with no way to sign back in was left unused |
 
 ## Profile fields
 
-The values [Clear user profile fields](#clear-user-profile-fields) accepts in `fields`.
+The values [Clear user profile fields](#clear-user-profile-fields) accepts.
 
 | Value | Description |
 | --- | --- |
-| avatar | Profile avatar image |
-| banner | Profile banner image |
-| bio | Profile biography |
-| pronouns | Profile pronouns |
+| avatar | Avatar image |
+| banner | Banner image |
+| bio | Bio |
+| pronouns | Pronouns |
 | global_name | Display name |
 
 ## Relationship categories
 
+The values [Clear user relationships](#clear-user-relationships) and [Remove user relationship](#remove-user-relationship) accept.
+
 | Value | Description |
 | --- | --- |
-| friend | A mutual friendship |
-| incoming_request | A friend request the account has received |
-| outgoing_request | A friend request the account has sent |
-| blocked | An account this account has blocked |
-
-Removing a friendship or friend request removes it for both accounts. Removing a block affects only the account that set it.
+| friend | A friendship |
+| incoming_request | A friend request the account received |
+| outgoing_request | A friend request the account sent |
+| blocked | An account this account blocked |
 
 ## Password reset link object
 
-A password reset link an administrator hands to the account holder.
+A link the account holder opens to choose a password. Anyone with the link can set the password until it expires.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| url<sup>1</sup> | string | The web app reset link, the app base URL followed by `/reset#token=` and the token |
-| expires_at | ISO8601 timestamp | When the link stops working |
+| url | string | The web app link, ending in `/reset#token=` and the token |
+| expires_at | ISO8601 timestamp | When the link stops working, one hour after it is made |
 
-<sup>1</sup> The token is in the URL fragment, which a browser never sends to a server. It is the same 64-character token [reset a password](/http-api/authentication/#reset-a-password) accepts, and it expires one hour after it is issued
+## Sign-in link object
+
+A one-time sign-in link for an admin account. Anyone with the link can sign in as that admin until it is used or expires.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url | string | The web app link, ending in `/login#sign_in_link=` and the token |
+| expires_at | ISO8601 timestamp | When the link stops working, 15 minutes after it is made |
 
 ## Admin user session object
 
-One entry for each authentication session of an account. Terminated sessions remain listed with `deleted_at` set. No operation returns the session token.
+One sign-in session of an account. Ended sessions stay in the list with `deleted_at` set.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| session_id_hash | string | The base64url-encoded hash of the session ID (8-256 characters) |
-| created_at | ISO8601 timestamp | The time the session was created |
-| approx_last_used_at | ISO8601 timestamp | The approximate time the session was last used |
-| client_ip<sup>1</sup> | string | The IP address the session was created from |
-| client_ip_reverse<sup>1</sup> <sup>2</sup> | ?string | The reverse DNS name of that IP address |
-| client_os<sup>3</sup> | ?string | The client operating system derived from the stored user agent |
-| client_platform<sup>3</sup> | ?string | The client platform derived from the stored user agent |
-| client_location<sup>1</sup> <sup>2</sup> | ?string | The approximate location of that IP address |
-| deleted_at | ?ISO8601 timestamp | The time the session was terminated, or null while it is still active |
+| session_id_hash | string | The base64url hash of the session ID (8-256 characters) |
+| created_at | ISO8601 timestamp | When the session started |
+| approx_last_used_at | ISO8601 timestamp | About when the session was last used |
+| client_ip<sup>1</sup> | string | The IP address the session started from |
+| client_ip_reverse<sup>1</sup> | ?string | The reverse DNS name of that address |
+| client_os | ?string | The operating system from the user agent |
+| client_platform | ?string | The platform from the user agent |
+| client_location<sup>1</sup> | ?string | The approximate location of that address |
+| app_platform<sup>2</sup> | ?string | The app platform, one of `android`, `ios`, `linux` or `desktop` |
+| app_version<sup>2</sup> | ?string | The app version |
+| app_release_channel<sup>2</sup> | ?string | The release channel, one of `stable`, `beta` or `canary` |
+| app_build_number<sup>2</sup> | ?integer | The platform build number |
+| app_beta_number<sup>2</sup> | ?integer | The beta number, only on `beta` builds |
+| deleted_at | ?ISO8601 timestamp | When the session ended, or null while it is active |
 
-<sup>1</sup> Requires `user:view:ip`. Without it `client_ip` is the literal string `[redacted]`, both derived fields are null, and no network lookup is attempted
+<sup>1</sup> Needs `user:view:ip`. Without it `client_ip` is `[redacted]` and the other two are null
 
-<sup>2</sup> Resolved live for each response, and null for that entry when its own lookup fails
+<sup>2</sup> From the `X-Fluxer-Client-Properties` header of the last request the session made, and null when that header is missing or on ended sessions
 
-<sup>3</sup> Derived from the stored user agent at read time, so a session recorded without one reports null for both
+## Admin app session object
 
-### Example
+One active session with the app version and build that its last `X-Fluxer-Client-Properties` header sent.
 
-```json
-{
-  "session_id_hash": "Zm9vYmFyLXNlc3Npb24taGFzaC1leGFtcGxl",
-  "created_at": "2026-07-02T11:31:09.400000+00:00",
-  "approx_last_used_at": "2026-08-30T20:58:14.120000+00:00",
-  "client_ip": "203.0.113.24",
-  "client_ip_reverse": "host24.example.com",
-  "client_os": "Windows",
-  "client_platform": "Desktop",
-  "client_location": "Stockholm, Sweden",
-  "deleted_at": null
-}
-```
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The account the session belongs to |
+| session_id_hash | string | The base64url hash of the session ID (8-256 characters) |
+| created_at | ISO8601 timestamp | When the session started |
+| approx_last_used_at | ISO8601 timestamp | About when the session was last used |
+| app_version | ?string | The app version |
+| app_build_number | ?integer | The platform build number |
+| app_beta_number | ?integer | The beta number, only on `beta` builds |
 
 ## Admin resolved user object
 
-The account summary embedded in the Admin direct message channel object and the Admin relationship object. It is the [Admin user summary](/admin-api/#admin-user-summary-object) that audit entries embed, with `avatar` added.
+The account summary in Admin direct message channel and relationship objects.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | id | snowflake | The ID of the account |
-| username | string | The username of the account |
-| discriminator<sup>1</sup> | string | The four-digit discriminator of the account |
-| global_name | ?string | The display name of the account, or null when unset |
-| avatar | ?string | The avatar hash, or null when the account has none |
-
-<sup>1</sup> Left-padded with zeroes to four digits, unlike the unpadded integer `discriminator` of the [Admin user object](#admin-user-object)
-
-### Example
-
-```json
-{
-  "id": "1493004551122763776",
-  "username": "kelsier",
-  "discriminator": "0042",
-  "global_name": "Kelsier",
-  "avatar": "a1b2c3d4e5f60718293a4b5c6d7e8f90"
-}
-```
+| username | string | The username |
+| discriminator | string | The discriminator, zero-padded to four digits |
+| global_name | ?string | The display name |
+| avatar | ?string | The avatar hash |
 
 ## Admin direct message channel object
 
-One entry for each direct message or group direct message channel the account has taken part in. The field names differ from the public [channel object](/http-api/channels/#channel-object).
+A direct message or group direct message channel the account is in.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | channel_id | snowflake | The ID of the channel |
-| channel_type | ?integer | [Channel type](/http-api/channels/#channel-types), or null when the channel record is unavailable |
-| channel_nsfw | ?boolean | Whether the channel is age-restricted, or null when the channel record is unavailable |
-| guild_nsfw_level<sup>1</sup> | ?integer | [NSFW level](/http-api/guilds/#nsfw-levels) of the owning guild |
-| recipient_ids | array[snowflake] | The IDs of the channel recipients, with at most 100 entries |
-| recipients<sup>2</sup> | array[[Admin resolved user](#admin-resolved-user-object) object] | The resolved recipient accounts, with at most 100 entries |
-| last_message_id | ?snowflake | The ID of the latest message, or null when the channel is empty |
-| is_open | boolean | Whether the channel is open in the target account's client |
-| name | ?string | The group name, or null when unnamed |
-| icon | ?string | The group icon hash, or null when the group has none |
-| owner_id | ?snowflake | The ID of the group owner, or null for a one-to-one direct message |
-
-<sup>1</sup> Always null
-
-<sup>2</sup> Contains only the recipients whose accounts still exist, so it can be shorter than `recipient_ids`
-
-### Example
-
-```json
-{
-  "channel_id": "1496118820043030528",
-  "channel_type": 3,
-  "channel_nsfw": false,
-  "guild_nsfw_level": null,
-  "recipient_ids": ["1493004551122763776", "1489200013322551296"],
-  "recipients": [],
-  "last_message_id": "1500992244771848192",
-  "is_open": true,
-  "name": "Weekend plans",
-  "icon": null,
-  "owner_id": "1493004551122763776"
-}
-```
+| channel_type | ?integer | [Channel type](/http-api/channels/#channel-types) |
+| channel_nsfw | ?boolean | Whether the channel is age-restricted |
+| guild_nsfw_level | ?integer | Always null |
+| recipient_ids | array[snowflake] | The IDs of the recipients (at most 100) |
+| recipients | array[[Admin resolved user](#admin-resolved-user-object) object] | The recipients whose accounts still exist (at most 100) |
+| last_message_id | ?snowflake | The ID of the latest message |
+| is_open | boolean | Whether the channel is open in the account's client |
+| name | ?string | The group name |
+| icon | ?string | The group icon hash |
+| owner_id | ?snowflake | The ID of the group owner |
 
 ## Admin relationship object
+
+One relationship between the account and another account.
 
 ### Structure
 
@@ -358,2011 +350,1461 @@ One entry for each direct message or group direct message channel the account ha
 | --- | --- | --- |
 | target_user_id | snowflake | The ID of the other account |
 | category | string | [Relationship category](#relationship-categories) |
-| nickname | ?string | The nickname the account assigned to the other party |
-| since | ?ISO8601 timestamp | The time the relationship was established, or null when unrecorded |
-| target<sup>1</sup> | ?[Admin resolved user](#admin-resolved-user-object) object | The resolved other account |
-
-<sup>1</sup> Null when the other account no longer exists, while `target_user_id` remains present
-
-### Example
-
-```json
-{
-  "target_user_id": "1489200013322551296",
-  "category": "friend",
-  "nickname": null,
-  "since": "2026-04-18T14:22:51.006000+00:00",
-  "target": {
-    "id": "1489200013322551296",
-    "username": "operator",
-    "discriminator": "0042",
-    "global_name": "Operator"
-  }
-}
-```
+| nickname | ?string | The nickname the account gave the other account |
+| since | ?ISO8601 timestamp | When the relationship started |
+| target | ?[Admin resolved user](#admin-resolved-user-object) object | The other account, or null when it no longer exists |
 
 ## Admin user change log object
 
-One recorded change to the account's email address or its username and discriminator. The account holder's own changes appear here, and so do [Change user username](#change-user-username) and [Change user email](#change-user-email).
+One change to the account's email address or tag, by the account holder or an Admin.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| event_id<sup>1</sup> | string | The ID of the change entry as an unsigned 64-bit decimal string |
-| field | string | The field that changed, either `email` or `fluxer_tag` |
-| old_value<sup>2</sup> | ?string | The value before the change, or null when the field was unset |
-| new_value<sup>2</sup> | ?string | The value after the change, or null when the field was cleared |
-| reason<sup>3</sup> | ?string | The recorded reason for the change, or null when unrecorded |
-| actor_user_id | ?snowflake | The ID of the acting Admin, or null for a user-originated change |
-| event_at | ISO8601 timestamp | The time the change was recorded |
+| event_id | string | The ID of the entry, which you send as `page_token` |
+| field | string | `email` or `fluxer_tag` |
+| old_value<sup>1</sup> | ?string | The value before the change |
+| new_value<sup>1</sup> | ?string | The value after the change |
+| reason | ?string | The reason, `admin_action` for an Admin change |
+| actor_user_id | ?snowflake | The ID of the Admin, or null for the account holder's own change |
+| event_at | ISO8601 timestamp | When the change happened |
 
-<sup>1</sup> Sent back as `page_token` to continue the walk. An entry stored without its own event ID reports the account ID here instead
-
-<sup>2</sup> An `email` entry read without `user:view:email` keeps the entry and replaces both value fields with the literal string `[redacted]`. An absent value is null
-
-<sup>3</sup> An Admin change records the literal value `admin_action`
-
-### Example
-
-```json
-{
-  "event_id": "1500992244771848192",
-  "field": "email",
-  "old_value": "[redacted]",
-  "new_value": "[redacted]",
-  "reason": "admin_action",
-  "actor_user_id": "1489200013322551296",
-  "event_at": "2026-08-14T07:55:31.882000+00:00"
-}
-```
-
-## Admin store purchase object
-
-One [in-app purchase](/http-api/in-app-purchases/) with the store state behind it. It has more fields than the public [store purchase](/http-api/in-app-purchases/#store-purchase-object) object, and still never exposes a purchase token or the account token.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| id | snowflake | The ID of the store purchase |
-| user_id | ?snowflake | The ID of the linked account, or null when unlinked |
-| provider | string | Either `app_store` or `google_play` |
-| kind | string | Either `subscription` or `gift` |
-| slot | string | [Store slot](/http-api/in-app-purchases/#store-slots) |
-| environment | string | Either `production` or `sandbox` |
-| app_id | string | Bundle ID or package name of the purchasing app |
-| product_id | string | Store product ID |
-| base_plan_id | ?string | Google Play base plan ID, or null |
-| latest_transaction_id<sup>1</sup> | ?string | Latest store transaction or order ID |
-| ownership_type<sup>2</sup> | ?string | Store ownership type, or null |
-| state | string | [Store purchase state](/http-api/in-app-purchases/#store-purchase-states) |
-| store_state<sup>3</sup> | ?string | Raw state the store reported, or null |
-| entitled | boolean | Whether the purchase grants premium now |
-| expires_at | ?ISO8601 timestamp | End of the paid period |
-| grace_ends_at | ?ISO8601 timestamp | End of the store grace period |
-| auto_renew | ?boolean | Whether the subscription renews |
-| started_at | ?ISO8601 timestamp | The time the subscription or purchase started |
-| purchased_at | ?ISO8601 timestamp | The time of the latest payment |
-| revoked_at | ?ISO8601 timestamp | The time the store refunded or revoked it |
-| revocation_reason | ?string | Reason recorded for the revocation, or null |
-| superseded | boolean | Whether a newer Google Play purchase replaced it |
-| acknowledged<sup>4</sup> | boolean | Whether Fluxer acknowledged it with the store |
-| gift_code | ?string | Gift code minted by a gift purchase, or null |
-| bound_at | ?ISO8601 timestamp | The time the purchase was linked to its account |
-| last_event_at | ?ISO8601 timestamp | Time of the latest store event applied |
-| synced_at | ?ISO8601 timestamp | The time Fluxer last read it from the store |
-| created_at | ISO8601 timestamp | The time Fluxer first saw the purchase |
-| updated_at | ISO8601 timestamp | The time the record last changed |
-
-<sup>1</sup> The App Store transaction ID, or the Google Play order ID
-
-<sup>2</sup> The App Store value, such as `PURCHASED` or `FAMILY_SHARED`. Null for Google Play
-
-<sup>3</sup> The App Store subscription status number as a string, or the Google Play state name. Null for an App Store gift that was never revoked
-
-<sup>4</sup> Always true for the App Store. For a Google Play gift, true once the purchase was consumed
-
-### Example
-
-```json
-{
-  "id": "1501203318237184000",
-  "user_id": "1489200013322551296",
-  "provider": "app_store",
-  "kind": "subscription",
-  "slot": "monthly",
-  "environment": "production",
-  "app_id": "com.fluxer",
-  "product_id": "com.fluxer.plutonium.monthly",
-  "base_plan_id": null,
-  "latest_transaction_id": "2000000712345678",
-  "ownership_type": "PURCHASED",
-  "state": "active",
-  "store_state": "1",
-  "entitled": true,
-  "expires_at": "2026-10-29T09:00:00.000Z",
-  "grace_ends_at": null,
-  "auto_renew": true,
-  "started_at": "2026-09-29T09:00:00.000Z",
-  "purchased_at": "2026-09-29T09:00:00.000Z",
-  "revoked_at": null,
-  "revocation_reason": null,
-  "superseded": false,
-  "acknowledged": true,
-  "gift_code": null,
-  "bound_at": "2026-09-29T09:00:02.000Z",
-  "last_event_at": "2026-09-29T09:00:00.000Z",
-  "synced_at": "2026-09-29T09:00:02.000Z",
-  "created_at": "2026-09-29T09:00:02.000Z",
-  "updated_at": "2026-09-29T09:00:02.000Z"
-}
-```
+<sup>1</sup> An `email` entry shows `[redacted]` without `user:view:email`
 
 ## Message shred entry object
 
+One message to shred.
+
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channel_id | snowflake | The ID of the channel the message was sent in |
-| message_id | snowflake | The ID of the message to shred |
-
-### Example
-
-```json
-{
-  "channel_id": "1496118820043030528",
-  "message_id": "1500992244771848192"
-}
-```
+| channel_id | snowflake | The ID of the channel |
+| message_id | snowflake | The ID of the message |
 
 ## List users
 
 <RouteHeader method="GET" path="/v1/admin/users" auditReason />
 
-Lists and searches accounts. Requires `user:lookup`, and `user:view:email` or `user:view:ip` for the selectors marked below. The response has an array of [Admin user](#admin-user-object) objects and a total.
-
-Fluxer honours exactly one selector, in this precedence order: `user_id`, `resolve`, `email`, `last_active_ip`, then the indexed `q` search. A lower-precedence parameter sent alongside a higher-precedence one is ignored, and the request still succeeds. A request with no selector runs the indexed search with an empty query.
+Finds accounts by one selector and returns [Admin user](#admin-user-object) objects. You need `user:lookup`. When you send more than one selector, the first one in this order wins: `user_id`, `resolve`, `email`, `last_active_ip`, `acl`, then `q`.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user_id?<sup>1</sup> | array[snowflake] | Exact account IDs, with at most 100 values |
-| resolve?<sup>2</sup> | string | One exact identifier to resolve (1-1024 characters) |
-| email?<sup>3</sup> | string | Exact registered email address (1-320 characters) |
-| last_active_ip?<sup>4</sup> | string | Exact last active IP address (1-64 characters) |
-| q?<sup>5</sup> | string | Free-text indexed query (1-1024 characters) |
-| limit?<sup>6</sup> | integer | Maximum accounts to return (1-200, default 50) |
-| offset?<sup>6</sup> | integer | Number of results to skip (0-100000, default 0) |
+| user_id? | array[snowflake] | Exact account IDs, repeated for more than one (at most 100) |
+| resolve?<sup>1</sup> | string | A tag, account ID or email address to match one account (1-1024 characters) |
+| email?<sup>2</sup> | string | An exact email address (1-320 characters) |
+| last_active_ip?<sup>3</sup> | string | An exact last active IP address (1-64 characters) |
+| acl? | string | An [ACL](/admin-api/#acl-registry), to list the accounts that have it |
+| q? | string | A search query (1-1024 characters) |
+| limit?<sup>4</sup> | integer | How many accounts to return (1-200, default 50) |
+| offset?<sup>4</sup> | integer | How many results to skip (0-100000, default 0) |
 
-<sup>1</sup> Repeat the parameter to pass more than one value. The response is unordered and has no entry for an ID that matches no account, so a client matches each returned account by its `id`
+<sup>1</sup> A value with `@` needs `user:view:email`
 
-<sup>2</sup> Resolves at most one account, and a value containing `@` requires `user:view:email`. An unmatched value returns an empty array
+<sup>2</sup> Needs `user:view:email`
 
-<sup>3</sup> Matched exactly after trimming, returns at most one account, and requires `user:view:email`
+<sup>3</sup> Needs `user:view:ip`
 
-<sup>4</sup> Matched exactly after trimming against the account's stored last active address, so a subnet or a partial address matches nothing. Requires `user:view:ip`
-
-<sup>5</sup> Served by the user search index. An instance with no search backend configured returns 403 `FEATURE_TEMPORARILY_DISABLED`
-
-<sup>6</sup> Honoured by the `last_active_ip` and `q` selectors. The `user_id`, `resolve`, and `email` selectors ignore both
-
-Fluxer chooses the `resolve` lookup from the shape of the value. A `username#discriminator` value resolves the tag, a value that is entirely digits resolves the account ID, and a value containing `@` resolves the email address. Every other value resolves a Stripe subscription ID.
-
-A `q` value that is entirely digits also resolves that exact account ID and places it first, even when the search index did not match it, provided `offset` is zero. That direct hit raises `total` by one when the index did not already return it.
+<sup>4</sup> Only for `last_active_ip`, `acl` and `q`
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| users | array[[Admin user](#admin-user-object) object] | The accounts in this page |
-| total<sup>1</sup> | integer | The number of accounts the selector matched |
-
-<sup>1</sup> The `user_id` and `resolve` selectors report the length of `users`, so `total` never exceeds the returned page for those two
+| users | array[[Admin user](#admin-user-object) object] | The matching accounts |
+| total | integer | How many accounts matched |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | response body | Accounts were returned |
-| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL`, because the honoured selector requires `user:view:email` or `user:view:ip` |
-| 403 | [error response](/admin-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED`, because the indexed search ran on an instance with no search backend |
+| 200 | response body | The search finished, even with no matches |
+| 403 | [error response](/admin-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED` when `q` runs on an instance with no search backend |
 
-<sup>1</sup> A selector that matches nothing returns an empty `users` array and a `total` of zero
-
-### Side effects
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `search_users`, target type `user`, and target ID `0`. The metadata keys are `selector`, `result_count` for the accounts in `users`, and `total`. `selector` is the honoured selector, one of `user_id`, `resolve`, `email`, `last_active_ip`, or `search` for the indexed search.
-
-The `user_id` selector adds `user_id_count` for the number of IDs supplied, and `user_id` when exactly one ID was supplied. The `last_active_ip` and `search` selectors add `limit` and `offset`. The indexed search adds `has_query` as `true` when `q` is not blank. The `resolve`, `email`, `last_active_ip`, and `q` values are not recorded. A failed request records nothing.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Get current Admin user
 
 <RouteHeader method="GET" path="/v1/admin/users/@me" />
 
-Returns the account the request authenticated as, wrapped in a `user` member. Requires `admin:authenticate`.
-
-Every Admin credential holds `admin:authenticate`, so every account that can reach the Admin API can read this route. `email`, `date_of_birth`, and the IP fields are returned unredacted whatever the acting credential holds. `acls` reports the ACL set stored on the account. For an Admin API key credential that set can be wider than what the key itself can use.
+Returns the account you are signed in as, unredacted. You need `admin:authenticate`.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The account the request authenticated as |
+| user | [Admin user](#admin-user-object) object | Your account |
+| pending_registration_count | ?integer | The number of [pending registrations](/admin-api/instance/#list-pending-registrations), or null without `registration:review` |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Current Admin was returned |
-| 403 | [error response](/admin-api/#error-response) | Credential type is refused, or the account does not hold `admin:authenticate` |
+| 200 | response body | Your account was returned |
 
-### Side effects
-
-The operation records no [Admin audit entry](/admin-api/#admin-audit-entry-object).
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Get user
 
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}" auditReason />
 
-Returns one account as a single-element array. Requires `user:lookup`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Returns one account. You need `user:lookup`.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| users<sup>1</sup> | array[[Admin user](#admin-user-object) object] | The requested account, or an empty array |
-
-<sup>1</sup> The response is the same envelope [List users](#list-users) returns for its `user_id` selector, without the `total` member
+| users | array[[Admin user](#admin-user-object) object] | The account, or an empty array for an unknown ID |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | response body | The lookup completed |
+| 200 | response body | The lookup finished |
 
-<sup>1</sup> This operation does not answer 404. An ID with no matching account returns 200 with an empty `users` array, so a client checks the array length
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
-An account with a pending or completed deletion is still returned, with its lifecycle state visible through `pending_deletion_at`, `deletion_reason_code`, and `deletion_public_reason`.
+## Create user
 
-### Side effects
+<RouteHeader method="POST" path="/v1/admin/users" auditReason />
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_user`, target type `user`, the path `user_id` as target ID, and a metadata key `found`. `found` is `true` when `users` has the account and `false` when it is empty.
+Creates an account with no password and returns a [password reset link](#password-reset-link-object) the account holder opens to choose one. You need `*`.
 
-### Rate limit
+### JSON body
 
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+| Field | Type | Description |
+| --- | --- | --- |
+| username | string | The username (1-32 characters) |
+| email?<sup>1</sup> | string | The email address |
+| admin? | boolean | Whether to give the account `*` (default false) |
+
+<sup>1</sup> Required on an email instance and refused with `USERNAME_SIGN_IN_ONLY` on a username instance
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [Admin user](#admin-user-object) object | The new account |
+| password_reset | [password reset link](#password-reset-link-object) object | The link the account holder opens to choose a password |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The account was created |
+| 400 | [error response](/admin-api/#error-response) | The username or email address is taken or invalid |
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Change user username
 
 <RouteHeader method="PATCH" path="/v1/admin/users/{user_id}/username" auditReason />
 
-Replaces the username, allocates or claims a discriminator, and returns the resulting account. Requires `user:update:username`.
-
-A target account may hold a custom discriminator on a self-hosted instance in the `everyone` [premium mode](/admin-api/instance/#premium-modes), and on any other instance only when the `feature_custom_discriminator` limit resolves to a value above zero for that account.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Changes the username and returns the account. You need `user:update:username`.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| username<sup>1</sup> | string | Replacement username (1-32 characters) |
-| discriminator?<sup>2</sup> | string | Requested discriminator of one to four decimal digits |
+| username | string | The new username (1-32 characters) |
+| discriminator?<sup>1</sup> | string | A discriminator of one to four digits |
 
-<sup>1</sup> Trimmed before validation, restricted to letters, digits, and underscores, and rejected when it lowercases to `everyone` or `here` or contains `fluxer` or `system message`
-
-<sup>2</sup> Honoured only when the target account may hold a custom discriminator. In every other case, including an omitted field, Fluxer allocates a free discriminator for the submitted username. On an instance with the `none` tag style an account that is not a bot always gets `0`, any other value returns the field code `DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE`, and a username another account holds in any letter case returns `USERNAME_ALREADY_TAKEN`
+<sup>1</sup> Used only when the account may have a custom discriminator. Otherwise Fluxer picks a free one
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Username was replaced |
-| 400 | [error response](/admin-api/#error-response) | Path or body validation fails, or the requested tag is taken and the request returns `TAG_ALREADY_TAKEN` |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The username was changed |
+| 400 | [error response](/admin-api/#error-response) | `TAG_ALREADY_TAKEN` when the tag is taken or no discriminator is free |
 
-`TAG_ALREADY_TAKEN` also covers a submitted username with no free discriminator left, and an allocation lock the operation cannot get within its 10 second wait.
+Fluxer sends [User Update](/gateway/events/#user-update) and [Guild Member Update](/gateway/events/#guild-member-update) to each guild the account is in.
 
-### Side effects
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update). Fluxer reindexes the member in each indexed guild in the background, so a member search result can briefly report the previous tag.
-
-The change is recorded in the contact change log and is returned by [List user change log](#list-user-change-log) with `reason` set to `admin_action` and `actor_user_id` set to the acting Admin.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `change_username`, target type `user`, and metadata keys `old_username`, `new_username`, and `discriminator`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Change user email
 
 <RouteHeader method="PATCH" path="/v1/admin/users/{user_id}/email" auditReason />
 
-Replaces the account's email address and returns the resulting account. Requires `user:update:email`.
-
-The replacement address is stored unverified. Use [Verify user email](#verify-user-email) afterwards to mark it verified, or [Resend verification email](#resend-verification-email) to let the account holder verify it.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Changes the email address and returns the account. You need `user:update:email`. The new address is unverified, or verified when the instance doesn't send email. Nobody is emailed about the change.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| email<sup>1</sup> | string | Replacement email address (1-254 characters) |
-
-<sup>1</sup> Normalised and validated as an email address, but the operation itself does no uniqueness check
+| email | string | The new email address (1-254 characters) |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Email address was replaced |
-| 400 | [error response](/admin-api/#error-response) | `EMAIL_UNAVAILABLE_ON_INSTANCE`, because members sign in with a username |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The email address was changed |
+| 400 | [error response](/admin-api/#error-response) | `EMAIL_ALREADY_IN_USE` when another account has the address |
 
-### Side effects
+Fluxer sends [User Update](/gateway/events/#user-update).
 
-`email_verified` is set to false. The stored bounce marker survives the change, so an address replaced on a bounced account remains marked bounced until a verification clears it.
-
-No notice is sent to the previous or the replacement address. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and no [Guild Member Update](/gateway/events/#guild-member-update) follows.
-
-The change is recorded in the contact change log and is returned by [List user change log](#list-user-change-log), where both values are replaced with `[redacted]` for a caller without `user:view:email`.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `change_email`, target type `user`, and metadata keys `old_email` and `new_email`. The audit log is not redacted on read, so both addresses are visible to any holder of `audit_log:view`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Verify user email
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/email-verification" auditReason />
 
-Marks the account's current email address as verified without a confirmation link, and returns the resulting account. Requires `user:update:email`.
-
-The operation accepts no request body and never clears verification, so the one way to mark an address unverified is to replace it with [Change user email](#change-user-email).
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Marks the email address as verified, clears its bounce marker and returns the account. You need `user:update:email`.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | response body | Email address was marked verified |
-| 400 | [error response](/admin-api/#error-response) | `EMAIL_UNAVAILABLE_ON_INSTANCE`, because members sign in with a username |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The email address was marked verified |
 
-<sup>1</sup> An account that has no stored email address is still accepted, and `email_verified` is set to true while `email` stays null
+Fluxer sends [User Update](/gateway/events/#user-update).
 
-### Side effects
-
-`email_verified` becomes true and `email_bounced` becomes false.
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `verify_email`, target type `user`, and a metadata key `email` with the address as it stood before the write, or the literal `null` when the account had none.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Resend verification email
 
 <RouteHeader method="POST" path="/v1/admin/users/{user_id}/verification-email" auditReason />
 
-Requests a new verification email for the account. Requires `user:update:email`. Returns an empty 204 response.
-
-:::caution[An already verified account gets no email]
-When the account's email is already verified, Fluxer returns 204 without storing a token or sending anything.
-:::
-
-:::note[Delivery is dropped silently]
-Nothing is sent when the instance email transport is disabled or when the address is marked hard bounced. Neither case changes the status code, and the audit entry is recorded either way.
-:::
-
-Each address can receive at most three verification emails in fifteen minutes, independently of the Admin rate limit. Further requests return 429 without issuing a token.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Emails the account holder a new verification link. You need `user:update:email`. Nothing is sent when the address is already verified, has bounced or the instance doesn't send email.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | The request was accepted, whether or not an email was sent |
-| 400<sup>1</sup> | [error response](/admin-api/#error-response) | The path parameter is not a snowflake, or the account has no email address |
-| 403 | [error response](/admin-api/#error-response) | Credential type or ACL evaluation denies the request, or `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED` when the target is a bot |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 204 | empty | The request was accepted |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `USER_DOES_NOT_HAVE_AN_EMAIL_ADDRESS` when the account has no address |
+| 403 | [error response](/admin-api/#error-response) | `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED` when the account is a bot |
+| 429 | [error response](/admin-api/#error-response) | The address already got three verification emails in 15 minutes |
 
-<sup>1</sup> A missing address returns `INVALID_FORM_BODY` with the validation code `USER_DOES_NOT_HAVE_AN_EMAIL_ADDRESS`
-
-### Side effects
-
-A single-use verification token is stored against the account ID and its current address, and the link is emailed to that address. The account's verification state is unchanged until the link is used.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `resend_verification_email`, target type `user`, and a metadata key `email`. No Gateway Dispatch is emitted.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Send password reset
 
 <RouteHeader method="POST" path="/v1/admin/users/{user_id}/password-reset" auditReason />
 
-Creates a password reset token and emails it to the account holder. Requires `user:update:email`. Returns an empty 204 response.
-
-:::caution[A dropped reset email still stores the token]
-Delivery is silently dropped when the instance email transport is disabled and when the address is marked hard bounced. The token is stored either way, so a dropped delivery leaves a usable reset token that nobody received.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Emails the account holder a password reset link. You need `user:update:email`. When the instance doesn't send email, use [Create password reset link](#create-password-reset-link).
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | The request was accepted, whether or not an email was sent |
-| 400<sup>1</sup> | [error response](/admin-api/#error-response) | The path parameter is not a snowflake, or the account has no email address |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 204 | empty | The request was accepted |
+| 400 | [error response](/admin-api/#error-response) | `EMAIL_DELIVERY_OFF` when the instance doesn't send email |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `USER_DOES_NOT_HAVE_AN_EMAIL_ADDRESS` when the account has no address |
 
-<sup>1</sup> A missing address returns `INVALID_FORM_BODY` with the validation code `USER_DOES_NOT_HAVE_AN_EMAIL_ADDRESS`
-
-Unlike [Resend verification email](#resend-verification-email), this operation has no limit of three emails per address in fifteen minutes, and it accepts a bot account.
-
-### Side effects
-
-A single-use password reset token is stored against the account ID and its current email address, and the token is emailed to that address. The account's password, sessions, and other credentials are unchanged until the account holder completes the reset.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `send_password_reset`, target type `user`, and a metadata key `email`. No Gateway Dispatch is emitted.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Create password reset link
 
 <RouteHeader method="POST" path="/v1/admin/users/{user_id}/password-reset-link" auditReason />
 
-Creates a password reset token for the account and returns the link that redeems it, with nothing emailed. Requires `user:create:password_reset_link` and every ACL the target account holds. A target holding an ACL the caller lacks returns 403 `MISSING_ACL`, and a bot target returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`. Returns a [password reset link](#password-reset-link-object) object.
-
-Only an instance where members sign in with a username serves this operation, and an email instance returns 400 `USERNAME_SIGN_IN_ONLY`. The account holder opens the link in the web app, which calls [validate a password reset token](/http-api/authentication/#validate-a-password-reset-token) and then [reset a password](/http-api/authentication/#reset-a-password).
-
-:::caution[The link is a credential]
-Anyone holding the link can set the account's password until it expires. Hand it to the account holder over a channel you trust. The response is the only place the link appears.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Returns a [password reset link](#password-reset-link-object) without emailing it, on an instance where members sign in with a username or one that doesn't send email. You need `user:create:password_reset_link` and every ACL the account has. Earlier reset links and the account's recovery kit stop working.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [password reset link](#password-reset-link-object) object | The token was stored and its link returned |
-| 400 | [error response](/admin-api/#error-response) | The path parameter is not a snowflake, or the instance signs members in with email |
-| 403 | [error response](/admin-api/#error-response) | ACL evaluation denies the request, the target holds an ACL the caller lacks, or the target is a bot |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | [password reset link](#password-reset-link-object) object | The link was created |
+| 400 | [error response](/admin-api/#error-response) | `USERNAME_SIGN_IN_ONLY` on an email instance that sends email |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` when the account has an ACL you lack, or `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED` for a bot |
 
-### Side effects
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
-Every earlier password reset token for the account is deleted, so a link created before this one stops working. The account's recovery kit is deleted too, so its key stops working. A single-use password reset token is then stored against the account ID with no email address. The account's password, sessions, and other credentials are unchanged until the account holder completes the reset.
+## Create admin sign-in link
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `create_password_reset_link` and target type `user`. No Gateway Dispatch is emitted.
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/sign-in-link" auditReason />
 
-### Rate limit
+Returns a [sign-in link](#sign-in-link-object) for an account that has `*`. Only [rexctl](/operator/rexctl/) on the server can call it. The link signs the admin in without a password, a second factor or an email.
 
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [sign-in link](#sign-in-link-object) object | The link was created |
+| 403 | [error response](/admin-api/#error-response) | `ACCESS_DENIED` outside rexctl, `MISSING_ACL` when the account lacks `*` |
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## Exchange admin SSO ID token
+
+<RouteHeader method="POST" path="/v1/admin/sso/sign-in" />
+
+Checks an ID token from the admin single sign-on provider and returns an [OAuth2 token](/http-api/oauth2/#oauth2-token-object) object for the admin panel, with `user_id` added. Only the admin panel calls it, with its OAuth2 client ID and secret as HTTP Basic auth. The ID token must be signed by the provider, be for the admin panel's client ID and have a `fluxer_id` claim with the ID of an account that has `admin:authenticate`. Each ID token works once.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id_token | string | The ID token the admin panel got from the provider (1-16384 characters) |
+| nonce | string | The nonce the admin panel sent to the provider (16-256 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [OAuth2 token](/http-api/oauth2/#oauth2-token-object) object with `user_id` | The admin was signed in |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with the validation code `INVALID_SSO_TOKEN` when the ID token was refused or already used, or `SSO_MISCONFIGURED` when the API can't use the provider's settings |
+| 400 | [OAuth2 error](/http-api/oauth2/#oauth2-error-response-object) object | `invalid_client` when the client ID or secret is wrong |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` when the account doesn't exist, can't sign in or lacks `admin:authenticate`, `FEATURE_TEMPORARILY_DISABLED` when admin single sign-on is off |
+| 503 | [error response](/admin-api/#error-response) | `SSO_PROVIDER_UNAVAILABLE` when the API can't get the provider's settings |
+
+The rate limit is 15 requests per 10 seconds, on the `admin:sso:sign_in` bucket.
 
 ## Revoke user recovery kit
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/recovery-kit" auditReason />
 
-Deletes the account's recovery kit, so its recovery key stops working. Requires `user:delete:recovery_kit` and every ACL the target account holds, and a target holding an ACL the caller lacks returns 403 `MISSING_ACL`. Returns no body.
-
-Only an instance where members sign in with a username serves this operation, and an email instance returns 400 `USERNAME_SIGN_IN_ONLY`. The account holder can issue a new kit from their settings.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Deletes the account's recovery kit, on an instance where members sign in with a username. You need `user:delete:recovery_kit` and every ACL the account has. The account holder can make a new kit in their settings.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | none | The kit was deleted, or the account had none |
-| 400 | [error response](/admin-api/#error-response) | The path parameter is not a snowflake, or the instance signs members in with email |
-| 403 | [error response](/admin-api/#error-response) | ACL evaluation denies the request, or the target holds an ACL the caller lacks |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 204 | none | The kit was deleted, or there was none |
+| 400 | [error response](/admin-api/#error-response) | `USERNAME_SIGN_IN_ONLY` on an email instance |
 
-### Side effects
-
-The account's password, sessions, and other credentials are unchanged. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `revoke_recovery_kit` and target type `user`. No Gateway Dispatch is emitted.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Change user date of birth
 
 <RouteHeader method="PATCH" path="/v1/admin/users/{user_id}/date-of-birth" auditReason />
 
-Replaces the stored date of birth and returns the resulting account. Requires `user:update:dob`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Changes the date of birth and returns the account. You need `user:update:dob`. A deletion scheduled because the account was under the minimum age is canceled.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| date_of_birth<sup>1</sup> | string | Replacement date in `YYYY-MM-DD` form |
-
-<sup>1</sup> Exactly ten characters matching `YYYY-MM-DD`. The field is required, so there is no way to clear a stored date of birth through this operation
+| date_of_birth | string | The new date as `YYYY-MM-DD` |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Date of birth was replaced |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The date of birth was changed |
 
-### Side effects
+Fluxer sends [User Update](/gateway/events/#user-update).
 
-The new date changes what age-restricted content the account may reach. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
-
-The change is not written to the contact change log. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `change_dob`, target type `user`, and metadata keys `old_dob` and `new_dob`, where an absent previous value is the literal `null`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Clear user profile fields
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/profile-fields" auditReason />
 
-Clears the named profile fields and returns the resulting account. Requires `user:update:profile`.
-
-Clearing is the only profile change on this resource. No route sets a biography, display name, avatar, or banner to a new value.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Clears [profile fields](#profile-fields) and returns the account. You need `user:update:profile`. The `enforcement` basis saves the old values as evidence, records a profile reset [decision](/admin-api/enforcement/) and sends its notice.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| fields<sup>1</sup> | array[string] | [Profile fields](#profile-fields) to clear, with at most 10 entries |
-
-<sup>1</sup> Required. An empty array is accepted, clears nothing, and still records an audit entry. A value outside the registry fails body validation
+| fields | array[string] | The [profile fields](#profile-fields) to clear (1-10) |
+| basis | [basis](/admin-api/enforcement/#basis) object | Why the fields are cleared |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The named fields were cleared |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The fields were cleared |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with a [decision validation code](/admin-api/enforcement/#validation) |
 
-### Side effects
+Fluxer sends [User Update](/gateway/events/#user-update), and [Guild Member Update](/gateway/events/#guild-member-update) when `avatar` or `global_name` changed.
 
-Clearing `avatar` or `banner` schedules the previous asset for deletion.
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when the operation changes `avatar` or `global_name`.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `clear_fields`, target type `user`, and a metadata key `fields` with the submitted names joined by commas.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Set user bot status
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/bot-status" auditReason />
 
-Marks the account as a bot or as an ordinary account, and returns the resulting account. Requires `user:update:bot_status`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Marks the account as a bot or not and returns the account. You need `user:update:bot_status`. Setting `bot` to false also clears `system`.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| bot<sup>1</sup> | boolean | Whether the account is a bot |
-
-<sup>1</sup> Required. Setting it to false also clears `system` in the same write
+| bot | boolean | Whether the account is a bot |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Bot status was set |
-| 403<sup>1</sup> | [error response](/admin-api/#error-response) | Credential type or ACL evaluation denies the request. `ACCESS_DENIED` when the target holds an Admin ACL and `bot` is true |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The bot status was set |
+| 403 | [error response](/admin-api/#error-response) | `ACCESS_DENIED` when the account has Admin ACLs and `bot` is true |
 
-<sup>1</sup> A staff account cannot be converted into a bot. Clear its ACL set with [Set user ACLs](#set-user-acls) first
+Fluxer sends [User Update](/gateway/events/#user-update), and [Guild Member Update](/gateway/events/#guild-member-update) when the status changed.
 
-### Side effects
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when the write changes `bot` or `system`.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `set_bot_status`, target type `user`, and a metadata key `bot`. Clearing `system` as a side effect records no second entry.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Set user system status
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/system-status" auditReason />
 
-Marks the account as an official system account or removes that marker, and returns the resulting account. Requires `user:update:bot_status`, the same ACL as [Set user bot status](#set-user-bot-status).
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Marks a bot as an official system account or not and returns the account. You need `user:update:bot_status`.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| system<sup>1</sup> | boolean | Whether the account is a system account |
-
-<sup>1</sup> Required. Setting it to true on an account that is not already a bot fails validation
+| system | boolean | Whether the account is a system account |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | System status was set |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The system status was set |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` when the account is not a bot |
 
-<sup>1</sup> The non-bot case is `INVALID_FORM_BODY` with the validation code `USER_MUST_BE_A_BOT_TO_BE_MARKED_AS_A_SYSTEM_USER` on the `system` path
+Fluxer sends [User Update](/gateway/events/#user-update), and [Guild Member Update](/gateway/events/#guild-member-update) when the status changed.
 
-### Side effects
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when the write changes `system`.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `set_system_status`, target type `user`, and a metadata key `system`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Set user ACLs
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/acls" auditReason />
 
-Replaces the Admin ACL set held by the account and returns the resulting account. Requires `acl:set:user`.
-
-The submitted array replaces the stored set outright. An empty array removes every ACL, which also removes the account's Admin API access and leaves every Admin API key the account created unable to satisfy any operation.
-
-:::caution[A grant cannot exceed the acting Admin]
-A submitted set naming an ACL the acting credential does not hold fails with 403 `MISSING_ACL` on the first offending value. A wildcard holder is exempt. An Admin API key is compared against the set stored on the key.
-:::
-
-:::caution[An Admin cannot write its own ACL set]
-A path naming the acting account fails with 403 `ACCESS_DENIED` before the account is resolved.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Replaces the account's [Admin ACLs](/admin-api/#acl-registry) and returns the account. You need `acl:set:user`, and every ACL you grant unless you have `*`. The account can use the Admin API while its set has `admin:authenticate` or `*`, and a narrower set applies at once to its sessions and Admin API keys.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 106 values |
-
-<sup>1</sup> Required. A value outside the [ACL registry](/admin-api/#acl-registry) fails body validation, and a repeated value is collapsed
+| acls | array[string] | The new [Admin ACLs](/admin-api/#acl-registry) |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The ACL set was replaced |
-| 400 | [error response](/admin-api/#error-response) | Path or body validation fails, including an `acls` value outside the [ACL registry](/admin-api/#acl-registry) |
-| 403 | [error response](/admin-api/#error-response) | Credential type or ACL evaluation denies the request, or `ACCESS_DENIED` when the path names the acting account |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The ACLs were replaced |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` for an ACL you lack, `ACCESS_DENIED` when the account is your own |
 
-The grant bound is evaluated after the account is resolved, so an unknown ID fails first with 404.
+Fluxer sends [User Update](/gateway/events/#user-update).
 
-### Side effects
-
-The stored ACL set is replaced and appears in the next [Admin user object](#admin-user-object). The account can reach the Admin API exactly when the new set holds `admin:authenticate` or `*`. Narrowing the set narrows every existing session and Admin API key of the account without rotating any credential.
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `set_acls`, target type `user`, and a metadata key `acls` with the submitted values joined by commas.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Set user traits
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/traits" auditReason />
 
-Replaces the account's trait set and returns the resulting account. Requires `user:update:traits`.
-
-Traits are free-form operator labels that have no ACL meaning and grant no capability.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Replaces the account's traits and returns the account. You need `user:update:traits`. Traits are lowercase labels that [limit rules](/admin-api/instance/#limit-rule-object) can filter on.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| traits<sup>1</sup> | array[string] | Replacement trait set, with at most 100 values of 1 to 128 characters |
-
-<sup>1</sup> Required. An empty array clears the stored set entirely, and a repeated value is collapsed
+| traits | array[string] | The new traits, each 1-128 characters (at most 100) |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The trait set was replaced |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The traits were replaced |
 
-### Side effects
+Fluxer sends [User Update](/gateway/events/#user-update).
 
-The stored trait set is replaced and is returned sorted by the next [Admin user object](#admin-user-object). [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `set_traits` and target type `user`. A non-empty request has a metadata key `traits` with the submitted values joined by commas, and a request that clears the set has no metadata at all.
+## Update user badges
 
-### Rate limit
+<RouteHeader method="PATCH" path="/v1/admin/users/{user_id}/badges" auditReason />
 
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+Replaces the [custom badges](/admin-api/badges/) given to the account and returns the account. You need `user:update:badges`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badge_ids | array[snowflake] | The user badges to give, replacing the current ones (at most 1000) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [Admin user](#admin-user-object) object | The updated account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The badges were replaced |
+| 400 | [error response](/admin-api/#error-response) | `MAX_BADGES` when the list adds a badge and holds more than `max_per_user` of the [badge settings](/admin-api/badges/#badge-settings-object) |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_BADGE` when an ID isn't a user badge, or `UNKNOWN_USER` |
+
+A list that only removes badges always works, even when the account still has more than the limit after a limit was lowered.
+
+The profile shows the change the next time someone loads it, and Fluxer sends no Gateway event.
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Update user flags
 
 <RouteHeader method="PATCH" path="/v1/admin/users/{user_id}/flags" auditReason />
 
-Adds and removes [account flags](#account-flags) and returns the resulting account. Requires `user:update:flags`.
-
-Additions are applied before removals, so a flag named in both arrays ends up cleared. A bit outside the [account flag](#account-flags) registry is applied unchanged.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Adds and removes [account flags](#account-flags) and returns the account. You need `user:update:flags`. You can't add `DISABLED`, `DELETED`, `SPAMMER` or `REPORT_BANNED`, remove `DELETED`, or remove `DISABLED` from a suspended account. Use [Suspend user](#suspend-user) or [Schedule user deletion](#schedule-user-deletion) for those. [Bulk jobs](/admin-api/bulk-jobs/) can make the same change on many accounts.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| add_flags?<sup>1</sup> | array[string] | [Account flag](#account-flags) values to add, with at most 64 entries (default empty) |
-| remove_flags?<sup>1</sup> | array[string] | [Account flag](#account-flags) values to remove, with at most 64 entries (default empty) |
-
-<sup>1</sup> One 64-bit flag value as an unsigned decimal string, such as `64`. A value with several bits is applied as a mask
+| add_flags? | array[string] | The flag values to add, as decimal strings (at most 64) |
+| remove_flags? | array[string] | The flag values to remove, as decimal strings (at most 64) |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Flags were updated |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The flags were updated |
+| 400 | [error response](/admin-api/#error-response) | `FLAG_REQUIRES_ENFORCEMENT_ROUTE` for a restriction flag |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` when a [feature limit](#limit-user-features) set the flag |
 
-[Bulk jobs](/admin-api/bulk-jobs/) applies the same change to up to 1,000 accounts as a queued `update_user_flags` task.
+Fluxer sends [User Update](/gateway/events/#user-update), and [Guild Member Update](/gateway/events/#guild-member-update) when a public flag changed.
 
-### Side effects
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. A change to the account's public flags also sends [Guild Member Update](/gateway/events/#guild-member-update) to the account's guilds.
-
-Removing `ACCOUNT_LIMITED` or adding `LIMIT_EXEMPT` also lifts any [new conversation limit](/http-api/users/private-channels/#new-conversation-limit) on the account.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_flags`, target type `user`, and the metadata keys `add_flags`, `remove_flags`, and `new_flags`. An empty array is omitted from the metadata map.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Update user premium flags
 
 <RouteHeader method="PATCH" path="/v1/admin/users/{user_id}/premium-flags" auditReason />
 
-Adds and removes [premium flags](#premium-flags) and returns the resulting account. Requires `user:update:flags`, the same ACL as [Update user flags](#update-user-flags).
-
-Premium flags control badge display, the premium override, the purchase block, and perk sanitisation. They do not grant or revoke a subscription.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Adds and removes [premium flags](#premium-flags) and returns the account. You need `user:update:flags`. These flags don't grant or end premium. To end premium, use [Remove user premium](#remove-user-premium). To block purchases, use [Limit user features](#limit-user-features).
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| add_flags?<sup>1</sup> | array[integer] | [Premium flag](#premium-flags) values to add, with at most 64 entries (default empty) |
-| remove_flags?<sup>1</sup> | array[integer] | [Premium flag](#premium-flags) values to remove, with at most 64 entries (default empty) |
-
-<sup>1</sup> Each entry is one 32-bit flag value, such as `2`. Additions are applied before removals
+| add_flags? | array[integer] | The flag values to add (at most 64) |
+| remove_flags? | array[integer] | The flag values to remove (at most 64) |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Premium flags were updated |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The premium flags were updated |
+| 400 | [error response](/admin-api/#error-response) | `FLAG_REQUIRES_ENFORCEMENT_ROUTE` when adding `PURCHASE_DISABLED` |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` when a feature limit set the purchase block |
 
-### Side effects
+Fluxer sends [User Update](/gateway/events/#user-update).
 
-Premium badge display reflects the new flags. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_premium_flags`, target type `user`, and the metadata keys `add_flags`, `remove_flags`, and `new_flags`.
+## Remove user premium
 
-### Rate limit
+<RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/premium" auditReason />
 
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+Ends the premium of an account right away and returns the account. You need `user:update:flags`, and the `X-Audit-Log-Reason` header is required. Use it to take back premium from a [gift code](/admin-api/gift-codes/) or from `ENABLED_OVERRIDE`.
 
-## List user store purchases
+Fluxer ends premium the same way it does when premium expires. It clears the premium type, start, end, gift extension, grace period and billing cycle, and removes `ENABLED_OVERRIDE`. It then sanitizes the account's profile perks in each community, such as a community avatar and banner, and sets `PERKS_SANITIZED`. An animated avatar and banner stop showing at once. When the [tag style](/http-api/instance/#tag-styles) is `random`, a premium discriminator is replaced the next time the account starts a session, as it is when premium expires. Gift codes the account redeemed stay redeemed.
 
-<RouteHeader method="GET" path="/v1/admin/users/{user_id}/store-purchases" auditReason />
+Fluxer refuses the request, and changes nothing, in these cases.
 
-Lists the [in-app purchases](/http-api/in-app-purchases/) linked to an account, newest first. Requires `user:lookup`. A self-hosted instance never serves this route.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+| Case | What to do |
+| --- | --- |
+| The account has a Stripe subscription | Cancel the subscription in Stripe first. Removing premium alone would leave the subscription charging the account. |
+| The account has an App Store or Google Play subscription | Wait until the store subscription ends. Fluxer can't cancel it for the account. |
+| The account has Visionary lifetime premium on the hosted instance | Visionary is a paid purchase, so this route doesn't end it. On a self-hosted instance, lifetime premium from a gift code can be removed. |
+| The account is a bot or has no premium | There is nothing to remove. |
+| The [premium mode](/admin-api/instance/#premium-modes) is `everyone` | Every account has premium in this mode. Switch the premium mode to `mirror` to remove premium from one account. |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| purchases | array[[Admin store purchase](#admin-store-purchase-object) object] | The linked purchases |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The purchases were listed |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | Premium was removed |
+| 400 | [error response](/admin-api/#error-response) | `ENFORCEMENT_INTERNAL_NOTE_REQUIRED` when `X-Audit-Log-Reason` is missing |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with a message that says what to do, for each case in the table above |
 
-### Side effects
+The request records a `remove_premium` [audit entry](/admin-api/#admin-audit-entry-object) with the earlier premium type and end date, and whether `ENABLED_OVERRIDE` was removed.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_store_purchases`, target type `user`, and the metadata key `result_count`.
+Fluxer sends [User Update](/gateway/events/#user-update), and [Guild Member Update](/gateway/events/#guild-member-update) for each community where perks were sanitized.
 
-### Rate limit
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
-
-## Refresh user store purchases
-
-<RouteHeader method="POST" path="/v1/admin/users/{user_id}/store-purchases/refresh" auditReason />
-
-Reads every purchase linked to an account again from its store, applies the result to the account, and returns the updated purchases. Requires `user:update:flags`, the same ACL as [Update user premium flags](#update-user-premium-flags). A self-hosted instance never serves this route.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
-
-### Response body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| purchases | array[[Admin store purchase](#admin-store-purchase-object) object] | The linked purchases after the refresh |
-
-### Response
-
-| Status | Body | Condition |
-| --- | --- | --- |
-| 200 | response body | The purchases were refreshed |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 503 | [error response](/admin-api/#error-response) | `STORE_BILLING_UNAVAILABLE`, because a store could not be reached |
-
-### Side effects
-
-A subscription the store no longer recognises becomes `expired` and stops granting premium. A changed premium state sends [User Update](/gateway/events/#user-update) to the account's own sessions.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `refresh_store_purchases`, target type `user`, and the metadata key `purchase_count`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
-
-## Ban user
+## Suspend user
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/ban" auditReason />
 
-Disables an account temporarily or permanently and returns the resulting account. Requires `user:temp_ban`.
-
-:::note[A permanent ban is a distant expiry]
-Both modes add the `DISABLED` [account flag](#account-flags) and set `temp_banned_until`, a permanent ban to 100 years out. The field cannot tell the modes apart, and [Unban user](#unban-user) clears either one.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Suspends the account for some hours or permanently, records the [enforcement decision](/admin-api/enforcement/) and returns the account. You need `user:temp_ban`. The account is signed out everywhere, and a new suspension replaces the current one. To lift it, [end the decision](/admin-api/enforcement/#end-an-enforcement-decision).
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| duration_hours<sup>1</sup> | integer | Whole-hour ban length, where `0` bans permanently (0-8760) |
-| reason?<sup>2</sup> | string | Statement of reasons sent to the banned account holder (at most 512 characters) |
-| notify_user?<sup>3</sup> | boolean | Whether to email the account holder about a temporary ban (default true) |
+| duration_hours | integer | How many hours to suspend for, or `0` for permanently (0-8760) |
+| decision | [enforcement decision input](/admin-api/enforcement/#enforcement-decision-input) object | Why the account is suspended |
+| remove_evidence?<sup>1</sup> | boolean | Whether to delete the reported messages and the listed evidence once saved. Other report messages are kept |
+| block_networks?<sup>2</sup> | [network block request](#network-block-request) object | The account's addresses to block |
 
-<sup>1</sup> Required. The expiry is computed from the moment the ban is applied, so no absolute-expiry field is accepted. The 8760 ceiling is one year
+<sup>1</sup> Needs `message:shred`
 
-<sup>2</sup> Included in the temporary ban email and in the audit entry, but not stored on the account, so no read operation returns it
+<sup>2</sup> Only for a permanent suspension. Needs `ban:ip:add` and `user:view:ip`
 
-<sup>3</sup> A permanent ban sends no email whatever this field says
+### Network block request
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ips<sup>1</sup> | array[string] | The IP addresses to block (1-20) |
+| days? | integer | How many days the blocks last (1-365, default 90) |
+
+<sup>1</sup> Each must be one [List network block candidates](#list-network-block-candidates) returns
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The suspended account |
+| skipped_ips | array[object] | The addresses not [blocked](/admin-api/enforcement/#network-blocks), each with `ip` and a `reason` of `exempt`, `special_purpose` or `already_blocked` |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The account was banned |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The account was suspended |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with a [decision validation code](/admin-api/enforcement/#validation) |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_ACCOUNT_CLOSED` when the account is closed |
 
-:::caution[The ban signs the account out everywhere]
-Every authentication session of the account is deleted. [Unban user](#unban-user) restores account access, but it does not restore any deleted session.
-:::
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
-### Side effects
+## List network block candidates
 
-`DISABLED` is added to the account flags and `temp_banned_until` is set to the resolved expiry. Every authentication session is then deleted, so the account is signed out on every device.
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/network-block-candidates" />
 
-An authentication attempt while the ban stands fails with 403 `ACCOUNT_SUSPENDED_TEMPORARILY`. An attempt after the expiry has passed clears the `DISABLED` flag and `temp_banned_until` in the same request, so a temporary ban ends without an Admin operation.
+Lists the addresses the account used in the last 30 days, newest first, which you can pass in `block_networks`. You need `user:view:ip`.
 
-When `notify_user` is true, the account has an email address, and `duration_hours` is greater than zero, the account holder is emailed the duration, the expiry, and the supplied `reason`. A permanent ban sends no email. A failed email is logged and the ban still applies.
+### Response body
 
-[User Update](/gateway/events/#user-update) is emitted after the sessions are deleted, so no connection of the account remains to receive it. `DISABLED` is not a public account flag, and no other account observes the change.
+| Field | Type | Description |
+| --- | --- | --- |
+| networks | array[object] | One entry per address, with `ip`, `last_seen_at`, `skip_reason` and `other_unrestricted_accounts` |
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `temp_ban`, target type `user`, and the metadata keys `duration_hours`, `reason`, `banned_until`, `notify_user`, and `notification_sent`.
+`skip_reason` is `exempt` or `special_purpose` for an address Fluxer never blocks. An address with `other_unrestricted_accounts` above zero is shared with an account in good standing and can't be blocked.
 
-### Rate limit
+### Response
 
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The addresses were listed |
 
-## Unban user
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
+
+## Lift a suspension without a decision
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/ban" auditReason />
 
-Clears the account ban and returns the resulting account. Requires `user:temp_ban`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
-
-### JSON body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| notify_user? | boolean | Whether to email the account holder that the ban was lifted (default true) |
-| public_reason?<sup>1</sup> | string | Statement shown to the account holder in the email (at most 512 characters) |
-
-<sup>1</sup> Also recorded in the audit entry. The `X-Audit-Log-Reason` value is never emailed
+Lifts a suspension that no enforcement decision owns and returns the account. You need `user:temp_ban`. The account holder is emailed when the suspension was still in force. Sessions that were signed out stay signed out.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | response body | The ban was cleared |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The suspension was lifted |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` when a decision owns the suspension |
 
-<sup>1</sup> The operation checks no precondition. On an account that was never banned it writes `temp_banned_until` as null, clears `DISABLED`, and sends no email
+Fluxer sends [User Update](/gateway/events/#user-update).
 
-### Side effects
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
-`temp_banned_until` is cleared and `DISABLED` is removed from the account flags.
+## Warn user
 
-Deleted sessions are not restored. Fluxer emails the account holder, with `public_reason` when one is supplied, only when `notify_user` is true, the ban was still in force, the account has an email address, and the account is neither closed nor pending deletion. A failed email is logged and the ban is still cleared. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/warnings" auditReason />
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `unban`, target type `user`, and the metadata keys `notify_user`, `notification_sent`, and `public_reason`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
-
-## Add a note to a user ban
-
-<RouteHeader method="POST" path="/v1/admin/users/{user_id}/ban/notes" />
-
-Appends a note to the ban that currently stands on the account. Requires `user:temp_ban`. The ban entry and earlier notes are never changed.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Records a warning decision and sends its notice by email and system DM. You need `user:update:flags`.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| ban_audit_log_id<sup>1</sup> | snowflake | The ID of the `temp_ban` audit entry of the current ban |
-| note | string | The note (1-512 characters) |
+| decision | [enforcement decision input](/admin-api/enforcement/#enforcement-decision-input) object | Why the account is warned |
 
-<sup>1</sup> The entry must target this account, and its `banned_until` metadata must equal the current `temp_banned_until`
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| decision_id | snowflake | The ID of the warning decision |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | none | The note was recorded |
-| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because `ban_audit_log_id` does not name a ban of this account |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because the named ban is no longer the current ban |
+| 200 | response body | The warning was recorded |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with a [decision validation code](/admin-api/enforcement/#validation) |
 
-### Side effects
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `annotate_ban`, target type `user`, the note as `audit_log_reason`, and a metadata key `ban_audit_log_id`. The `X-Audit-Log-Reason` header is not read.
+## Limit user features
 
-### Rate limit
+<RouteHeader method="PUT" path="/v1/admin/users/{user_id}/feature-limits" auditReason />
 
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+Records a decision that limits one feature, sets its account flag and returns the account. You need `user:update:flags`. [Feature limits](/admin-api/enforcement/#feature-limits) lists each limit's flag and reasons.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit | string | `direct_messages`, `reports` or `purchases` |
+| ends_at?<sup>1</sup> | ISO8601 timestamp | When a `reports` limit ends |
+| decision | [enforcement decision input](/admin-api/enforcement/#enforcement-decision-input) object | Why the feature is limited |
+
+<sup>1</sup> Only for `reports`, at most 365 days away (default 90 days)
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [Admin user](#admin-user-object) object | The updated account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The limit was recorded |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with a [decision validation code](/admin-api/enforcement/#validation) |
+
+Fluxer sends [User Update](/gateway/events/#user-update).
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Schedule user deletion
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Creates an account deletion schedule and returns the resulting account. Requires `user:delete`. A pending schedule is replaced only when the request names it in `replace_pending_deletion_at`, and a schedule cannot be changed once erasure starts.
+Closes the account, signs it out everywhere, schedules its deletion and returns the account. You need `user:delete`. The account is kept for at least 14 days unless you set `immediate`, which queues the deletion right away and can't be undone.
 
-Fluxer raises the submitted delay to the minimum for the [deletion reason](#deletion-reasons), so a request for one day under any reason other than `USER_REQUESTED` is stored as 60 days.
-
-The `X-Audit-Log-Reason` value is also stored on the account as the private deletion reason and reused as the blocklist reason for the identifier bans below.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+| Basis | Effect |
+| --- | --- |
+| `enforcement` | Records a closure decision, sends its notice and blocks the email address, except for minimum age reasons |
+| `holder_request` | Sets `deletion_reason_code` to `USER_REQUESTED`, emails the account holder, and signing in cancels it |
+| `housekeeping` | Sets `deletion_reason_code` to `INACTIVITY`, emails the account holder, and signing in cancels it |
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| reason_code<sup>1</sup> | integer | [Deletion reason](#deletion-reasons) |
-| public_reason?<sup>2</sup> | string | Statement of reasons shown to the account holder (at most 512 characters) |
-| days_until_deletion?<sup>3</sup> | integer | Requested whole-day delay (1-365, default 60) |
-| replace_pending_deletion_at?<sup>4</sup> | ISO8601 timestamp | The `pending_deletion_at` of the schedule this request replaces |
-| notify_user? | boolean | Whether to email the account holder about the scheduled deletion (default true) |
+| days_until_deletion | integer | How many days until deletion, at least 14 (1-365) |
+| basis | [basis](/admin-api/enforcement/#basis) object | Why the account is closed |
+| replace_pending_deletion_at?<sup>1</sup> | ISO8601 timestamp | The `pending_deletion_at` of the schedule you replace |
+| remove_evidence?<sup>2</sup> | boolean | Whether to delete the reported messages and the listed evidence once saved. Other report messages are kept |
+| block_networks?<sup>2</sup> | [network block request](#network-block-request) object | The account's addresses to block |
+| immediate? | boolean | Whether to delete the account now |
 
-<sup>1</sup> Required, and validated against the [deletion reason](#deletion-reasons) registry. `USER_REQUESTED` selects the 14-day minimum, and every other value selects the 60-day minimum
+<sup>1</sup> Required when a deletion is already scheduled
 
-<sup>2</sup> Stored on the account and included in the deletion email. Omitting it stores null
-
-<sup>3</sup> The stored deadline is the request instant plus the greater of this value and the minimum for the reason code. There is no absolute-timestamp field
-
-<sup>4</sup> Required when the account already has a pending deletion, including one the caller scheduled. It must equal the current `pending_deletion_at`
+<sup>2</sup> Only with the `enforcement` basis, with the same ACLs as on [Suspend user](#suspend-user)
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The closed account |
+| skipped_ips | array[object] | The addresses not blocked, as on [Suspend user](#suspend-user) |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The deletion schedule was stored |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because a pending deletion was not named, erasure has started, or the deletion state changed |
+| 200 | response body | The deletion was scheduled |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with a [decision validation code](/admin-api/enforcement/#validation) |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` when a decision owns the account |
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT` when `replace_pending_deletion_at` doesn't match the scheduled deletion, or erasure has started |
 
-`user:delete` also allows scheduling deletion of the acting Admin or an account with broader permissions.
-
-### Side effects
-
-The account can no longer authenticate, and its existing authentication sessions and OAuth2 access and refresh tokens are deleted. The acting Admin and the time are stored as `deletion_scheduled_by` and `deletion_scheduled_at`. Erasure is scheduled for the resulting deadline.
-
-Fluxer cancels a Stripe subscription on the account without proration and refunds the charge behind its latest invoice as fraudulent. When the cancellation or refund fails, Fluxer logs the failure and still keeps the deletion schedule.
-
-The account holder is emailed the deadline and the supplied `public_reason` when `notify_user` is true and the account has an email address. The wording depends on `reason_code`: `USER_REQUESTED` and `INACTIVITY` get a neutral notice, and every other code gets an enforcement notice. A failed email is logged and the schedule is still stored.
-
-For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address. For the reasons `SPAM`, `CHEATING_OR_EXPLOITATION`, `COORDINATED_RAIDING`, `AUTOMATION_OR_SELFBOT`, `SCAM_OR_SOCIAL_ENGINEERING`, `HARASSMENT_OR_BULLYING`, `BAN_EVASION`, `TOKEN_OR_CREDENTIAL_SCAM`, `HATE_SPEECH_OR_EXTREMIST_CONTENT`, `MALICIOUS_LINKS_OR_MALWARE`, and `IMPERSONATION_OR_FAKE_IDENTITY`, Fluxer also resolves the pending reports against the account. A pending report in the `child_safety`, `underage_user`, or `self_harm` category is left for a moderator and stays pending. Every other reason leaves all reports pending. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
-
-[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days`, `reason_code`, `pending_deletion_at`, `notify_user`, and `notification_sent`. An attempted email adds `notification_template`. A replacement adds `replaced_pending_deletion_at`, `replaced_scheduled_by`, `replaced_scheduled_at`, and `replaced_reason_code` for the schedule it replaced. The identifier bans record their own blocklist entries. For each reason that resolves reports, Fluxer also records a second entry with action `auto_resolve_reports_on_deletion`, target type `user`, and the metadata keys `outcome`, `found_count`, `resolved_count`, `failed_count`, and `notified_count`. `found_count` leaves out the reports in the three categories that stay pending. No such entry is written for any other reason. `outcome` is `completed`, `search_unavailable` when the instance has no report search backend and every report stays pending, or `enumeration_failed` when listing the pending reports failed part way and only those already found were resolved. Each resolved report sends its reporter the generic notice [Update report](/admin-api/reports/#update-report) describes, with no public comment.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Cancel user deletion
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Cancels the scheduled deletion named in the request and returns the resulting account. Requires `user:delete`. Erasure cannot be cancelled once it starts.
-
-:::caution[Cancellation does not undo enforcement]
-Clearing the deadline permits the account to authenticate again, but it does not restore deleted sessions, reinstate a cancelled subscription, lift the email and IP blocklist entries the schedule wrote, or reopen the reports it resolved.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Cancels a scheduled deletion that no enforcement decision owns, emails the account holder and returns the account. You need `user:delete`. The account can sign in again, but signed-out sessions stay signed out. To cancel a closure with a decision, [end the decision](/admin-api/enforcement/#end-an-enforcement-decision).
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| expected_pending_deletion_at<sup>1</sup> | ISO8601 timestamp | The `pending_deletion_at` of the deletion being cancelled |
-| notify_user? | boolean | Whether to email the account holder (default false) |
-
-<sup>1</sup> Required. It must equal the current `pending_deletion_at`, so a cancel written against one schedule never clears a different one
+| expected_pending_deletion_at | ISO8601 timestamp | The current `pending_deletion_at` |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The deletion was cancelled |
-| 400 | [error response](/admin-api/#error-response) | `NO_PENDING_DELETION`, because no deletion is scheduled |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because a different deletion is pending, erasure has started, or the deletion state changed |
+| 200 | response body | The deletion was canceled |
+| 400 | [error response](/admin-api/#error-response) | `NO_PENDING_DELETION` when nothing is scheduled |
+| 409 | [error response](/admin-api/#error-response) | `ENFORCEMENT_DECISION_OWNS_STATE` when a decision owns the deletion |
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT` when a different deletion is scheduled or erasure has started |
 
-### Side effects
+Fluxer sends [User Update](/gateway/events/#user-update).
 
-The deletion schedule, its reasons, and the recorded scheduler are cleared, allowing the account to authenticate again unless another restriction applies.
-
-When `notify_user` is true and the account has an email address, Fluxer emails the account holder. The email never includes the `X-Audit-Log-Reason` value.
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_deletion`, target type `user`, the metadata keys `cancelled_pending_deletion_at`, `cancelled_scheduled_by`, `cancelled_scheduled_at`, and `cancelled_reason_code` for the cancelled schedule, and `notify_user`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## List user guilds
 
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}/guilds" auditReason />
 
-Lists the guilds the account is a member of, in ascending guild ID order. Requires `user:list:guilds`. Both cursors apply to the account's own sorted membership list.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Lists the guilds the account is in, by ascending guild ID. You need `user:list:guilds`. Use the last guild ID as the next `after`.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| before?<sup>1</sup> | snowflake | Return guilds ordered before this guild ID |
-| after?<sup>1</sup> | snowflake | Return guilds ordered after this guild ID |
-| limit? | integer | Maximum guilds to return (1-200, default 200) |
-| with_counts?<sup>2</sup> | boolean | Whether to resolve live member and presence counts (default false) |
-
-<sup>1</sup> A cursor naming a guild the account is not a member of is ignored, and the request still succeeds. `after` is applied before `before`, and the two combine to bound a window
-
-<sup>2</sup> Only the exact strings `true`, `True`, and `1` count as true
+| before? | snowflake | Return guilds before this guild ID |
+| after? | snowflake | Return guilds after this guild ID |
+| limit? | integer | How many guilds to return (1-200, default 200) |
+| with_counts? | boolean | Whether to include member and presence counts (default false) |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guilds<sup>1</sup> | array[[Admin guild](/admin-api/guilds/#admin-guild-object) object] | The guilds in this page that the account is a member of |
-
-<sup>1</sup> `approximate_member_count` and `approximate_presence_count` are present only when `with_counts` resolved to true. `owner_username`, `owner_global_name`, and `owner_discriminator` are resolved by this operation and are null only for an owner account that no longer exists
+| guilds | array[[Admin guild](/admin-api/guilds/#admin-guild-object) object] | The guilds in this page |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The membership page was returned |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The guilds were returned |
 
-The response has no paging state. Derive the next cursor from the last returned guild ID, and treat a short page as the end of the list.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
-### Side effects
+## List user SSO identities
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_guilds`, target type `user`, the path `user_id` as target ID, and the metadata keys `limit`, `with_counts`, and `guild_count` for the guilds returned. A supplied cursor adds `before_guild_id` or `after_guild_id`. A failed request records nothing.
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/sso-identities" auditReason />
 
-### Rate limit
+Lists the single sign-on subjects bound to the account. You need `user:lookup`.
 
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sso_identities | array[[Admin SSO identity](#admin-sso-identity-object) object] | The subjects bound to the account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The identities were returned |
+
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
+
+## Look up an SSO identity
+
+<RouteHeader method="GET" path="/v1/admin/sso-identities" auditReason />
+
+Finds the account a single sign-on subject is bound to. You need `user:lookup`.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| provider_id | string | The provider ID (1-2048 characters) |
+| subject | string | The exact provider subject (1-1024 characters) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sso_identity | ?[Admin SSO identity](#admin-sso-identity-object) object | The identity, or null when no account has the subject |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The lookup finished |
+
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
+
+## Bind an SSO subject to a user
+
+<RouteHeader method="PUT" path="/v1/admin/users/{user_id}/sso-identities" auditReason />
+
+Binds a subject from the current provider to the account and releases the subjects bound before. You need `user:update:email`. Use it when the provider sends a new subject for the same person.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| subject | string | The exact provider subject (1-1024 characters) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sso_identities | array[[Admin SSO identity](#admin-sso-identity-object) object] | The subjects bound to the account now |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The subject was bound |
+| 400 | [error response](/admin-api/#error-response) | `SSO_IDENTITY_LINKED_TO_ANOTHER_ACCOUNT` when an account that isn't deleted has the subject |
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## Release the SSO subjects of a user
+
+<RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/sso-identities" auditReason />
+
+Releases every subject bound to the account and signs it out on every device. You need `user:update:email`. On an email instance, the next single sign-on with a matching verified email binds the account again.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sso_identities | array[[Admin SSO identity](#admin-sso-identity-object) object] | The subjects still bound, which is empty |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The subjects were released |
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## Move SSO subjects to the provider in use
+
+<RouteHeader method="POST" path="/v1/admin/sso-identities/migrate" auditReason />
+
+Moves every subject from an earlier provider ID to the current one, keeping each on its account. You need `instance:config:update`. The provider ID is the issuer URL, or the authorization URL without an issuer. Run this once after you change either.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| from_provider_id | string | The earlier provider ID (1-2048 characters) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| to_provider_id | string | The current provider ID |
+| moved_count | integer | How many subjects were moved |
+| skipped_count | integer | How many subjects were left because another account has them or their account is gone |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The move finished |
+| 400 | [error response](/admin-api/#error-response) | `from_provider_id` is the current provider |
+
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
+
+## Admin SSO identity object
+
+One single sign-on subject bound to an account.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| provider_id | string | The provider's issuer URL, or its authorization URL without an issuer |
+| subject | string | The `sub` claim the provider sent |
+| user_id | snowflake | The ID of the account |
+| claimed_at | ISO8601 timestamp | When the subject was bound |
 
 ## List user direct message channels
 
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}/dm-channels" auditReason />
 
-Lists the direct message channels the account has taken part in. Requires `user:list:dm_channels`. The read does not open, reopen, or acknowledge a channel for the target account.
-
-:::note[The channel classes are separate reads]
-`type` selects which channel class is returned. The default returns one-to-one direct message channels, and group direct messages need a second request with `type=group_dm`.
-:::
-
-The group branch ignores `before`, `after`, and `limit`, and returns every group the account is a recipient of in one response.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Lists the direct message channels the account is in, without opening or marking any as read. You need `user:list:dm_channels`. Ask for group direct messages with `type=group_dm`, which returns all of them and ignores the paging fields.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| type? | string | Channel class, either `dm` or `group_dm` (default `dm`) |
-| before?<sup>1</sup> | snowflake | Return channels with IDs lower than this channel ID |
-| after?<sup>1</sup> | snowflake | Return channels with IDs higher than this channel ID |
-| limit? | integer | Maximum channels to return (1-200, default 50) |
+| type? | string | `dm` or `group_dm` (default `dm`) |
+| before?<sup>1</sup> | snowflake | Return channels with lower IDs |
+| after?<sup>1</sup> | snowflake | Return channels with higher IDs |
+| limit? | integer | How many channels to return (1-200, default 50) |
 
-<sup>1</sup> Mutually exclusive. Supplying both fails validation even when `type` is `group_dm` and neither would be used
+<sup>1</sup> Send one or the other
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channels<sup>1</sup> | array[[Admin direct message channel](#admin-direct-message-channel-object) object] | The channels in this page |
-
-<sup>1</sup> Bounded at 200 entries for `dm` and at 500 entries for `group_dm`
+| channels | array[[Admin direct message channel](#admin-direct-message-channel-object) object] | The channels in this page |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The channel page was returned |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The channels were returned |
 
-The response has no paging state. Derive the next cursor from the last returned channel ID.
-
-### Side effects
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_dm_channels`, target type `user`, the path `user_id` as target ID, and the metadata keys `type` and `channel_count` for the channels returned. A `dm` request also records `limit`, and `before_channel_id` or `after_channel_id` when a cursor is supplied. A 404 records nothing.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## List user applications
 
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}/applications" auditReason />
 
-Lists the OAuth2 applications the account owns. Requires `application:lookup` or `application:list:by_owner`, the same pair [List applications](/admin-api/applications/#list-applications) accepts.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the owning account |
+Lists the OAuth2 applications the account owns. You need `application:list:by_owner`.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| applications<sup>1</sup> | array[[Admin application](/admin-api/applications/#admin-application-object) object] | The applications the account owns |
-
-<sup>1</sup> Returned in full in one response. The operation accepts no query string parameters and defines no cursor
+| applications | array[[Admin application](/admin-api/applications/#admin-application-object) object] | The applications the account owns |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The applications were returned |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-### Side effects
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_applications`, target type `user`, the path `user_id` as target ID, and a metadata key `application_count`. A 404 records nothing.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## List user relationships
 
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}/relationships" auditReason />
 
-Lists the friends, friend requests, and blocked accounts of the account, split into one array for each [relationship category](#relationship-categories). Requires `user:list:relationships`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Lists the account's friends, friend requests and blocks. You need `user:list:relationships`.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| friends<sup>1</sup> | array[[Admin relationship](#admin-relationship-object) object] | The mutual friendships of the account |
-| incoming_requests<sup>1</sup> | array[[Admin relationship](#admin-relationship-object) object] | The friend requests the account has received |
-| outgoing_requests<sup>1</sup> | array[[Admin relationship](#admin-relationship-object) object] | The friend requests the account has sent |
-| blocked<sup>1</sup> | array[[Admin relationship](#admin-relationship-object) object] | The accounts this account has blocked |
-
-<sup>1</sup> A stored [relationship type](/http-api/users/relationships/#relationship-types) outside the categories is dropped from the response
-
-The operation accepts no cursor, category filter, or limit, and returns every category in full.
+| friends | array[[Admin relationship](#admin-relationship-object) object] | The account's friends |
+| incoming_requests | array[[Admin relationship](#admin-relationship-object) object] | The friend requests the account received |
+| outgoing_requests | array[[Admin relationship](#admin-relationship-object) object] | The friend requests the account sent |
+| blocked | array[[Admin relationship](#admin-relationship-object) object] | The accounts this account blocked |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The relationships were returned |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-### Side effects
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_relationships`, target type `user`, the path `user_id` as target ID, and the metadata keys `friend_count`, `incoming_request_count`, `outgoing_request_count`, and `blocked_count`. A 404 records nothing.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Clear user relationships
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/relationships" auditReason />
 
-Removes every relationship of the account in one [relationship category](#relationship-categories) and returns the removed count. Requires `user:remove:relationship`.
-
-`category` is required, so there is no request shape that clears every category at once.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Removes all of the account's relationships in one [category](#relationship-categories). You need `user:remove:relationship`.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| category<sup>1</sup> | string | [Relationship category](#relationship-categories) to clear |
-
-<sup>1</sup> Required. There is no confirmation parameter and no dry-run mode
+| category | string | The [relationship category](#relationship-categories) to clear |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| removed_count<sup>1</sup> | integer | The number of relationships that were removed |
-
-<sup>1</sup> Counted from the target account's perspective, so a friendship, which both accounts store, contributes one
+| removed_count | integer | How many relationships were removed |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | response body | Matching relationships were removed |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The relationships were removed |
 
-<sup>1</sup> A category with no matching relationship succeeds with a `removed_count` of zero, and still records the audit entry
+Both accounts get [Relationship Remove](/gateway/events/#relationship-remove) for a removed friendship or request, and only this account for a removed block.
 
-Removals run one at a time, so a failure partway through leaves the earlier removals applied and answers 500.
-
-### Side effects
-
-Friendships and friend requests are removed for both accounts. Blocks are removed only for the target account.
-
-When a friendship or friend request is removed, both accounts receive [Relationship Remove](/gateway/events/#relationship-remove) naming the other account. A `blocked` removal dispatches only to the target account, and ordinary delivery from the unblocked account resumes.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `remove_relationships_by_category`, target type `user`, and the metadata keys `category` and `removed_count`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Remove user relationship
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/relationships/{target_user_id}" auditReason />
 
-Removes one relationship row in one category. Requires `user:remove:relationship`. Returns an empty 204 response.
-
-The operation addresses one category, so an account that is both a former friend and currently blocked needs two requests.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the account that owns the relationship |
-| target_user_id | snowflake | The ID of the other account |
+Removes the account's relationship with `target_user_id` in one category. You need `user:remove:relationship`.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| category | string | [Relationship category](#relationship-categories) to remove |
+| category | string | The [relationship category](#relationship-categories) to remove |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | The relationship was removed |
-| 404<sup>1</sup> | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-<sup>1</sup> The same code covers an owning account that does not exist and a relationship that does not exist in the named category, so a 404 does not distinguish the two
+Fluxer sends [Relationship Remove](/gateway/events/#relationship-remove) as on [Clear user relationships](#clear-user-relationships).
 
-### Side effects
-
-A friendship or friend request is removed for both accounts. A block is removed only for the owning account.
-
-When a friendship or friend request is removed, both accounts receive [Relationship Remove](/gateway/events/#relationship-remove) naming the other account. A `blocked` removal dispatches only to the owning account.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `remove_relationship`, target type `user`, and the metadata keys `target_user_id` and `category`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## List user sessions
 
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}/sessions" auditReason />
 
-Lists the account's active and terminated authentication sessions. Requires `user:list:sessions`. IP, reverse DNS and location fields also require `user:view:ip`.
-
-:::caution[Listing sessions records an audit entry]
-The entry stores the `X-Audit-Log-Reason` value whether or not the caller holds `user:view:ip`, so a listing with redacted addresses is recorded too.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Lists the account's active and ended sessions, active first and then newest first. You need `user:list:sessions`, and `user:view:ip` for the address fields.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| sessions<sup>1</sup> | array[[Admin user session](#admin-user-session-object) object] | The active and terminated sessions of the account |
-
-<sup>1</sup> Active sessions are listed before terminated ones, and each group is ordered by `created_at` descending. The operation accepts no cursor or limit and returns the complete list in one response
+| sessions | array[[Admin user session](#admin-user-session-object) object] | The account's sessions |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The sessions were returned |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 503<sup>1</sup> | [error response](/admin-api/#error-response) | `SERVICE_UNAVAILABLE` when at least one session exists and every location lookup fails |
+| 503 | [error response](/admin-api/#error-response) | `SERVICE_UNAVAILABLE` when every location lookup failed |
 
-<sup>1</sup> Reachable only with `user:view:ip`, because no lookup is attempted without it. The audit entry is written after the lookups, so a request that fails this way records nothing
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
-Without `user:view:ip` the derived fields are null and `client_ip` is the literal string `[redacted]`, so a redacted address is distinguishable from a failed lookup. With it, a partial reverse DNS or location failure yields null for that field alone.
+## List app sessions
 
-### Side effects
+<RouteHeader method="GET" path="/v1/admin/app-sessions" auditReason />
 
-This read does not mutate session state and emits no Gateway Dispatch. It makes outbound reverse DNS and geolocation lookups for each session address when the caller holds `user:view:ip`.
+Lists the active sessions whose last `X-Fluxer-Client-Properties` header sent the given platform and release channel. You need `user:list:sessions`. A page has up to 200 sessions and can have fewer while `next_cursor` is set. Keep reading until it is null.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_sessions`, target type `user`, and a metadata key `session_count` counting active and terminated sessions together.
+### Query parameters
 
-### Rate limit
+| Field | Type | Description |
+| --- | --- | --- |
+| platform | string | One of `android`, `ios`, `linux` or `desktop` |
+| release_channel | string | One of `stable`, `beta` or `canary` |
+| after? | string | The `next_cursor` from the previous page (1-128 characters) |
 
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket. The other lists on this resource use the `admin:lookup` read bucket.
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sessions | array[[Admin app session](#admin-app-session-object) object] | The sessions on this page |
+| next_cursor | ?string | The value to send as `after` for the next page, or null on the last page |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The page was returned, even with no sessions |
+
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## Terminate user sessions
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/sessions" auditReason />
 
-Terminates every active authentication session of the account. Requires `user:update:flags`, the same ACL as [Update user flags](#update-user-flags).
+Signs the account out of every session. You need `user:update:flags`. Admin API keys, bot tokens and OAuth2 tokens keep working.
 
-There is no operation that revokes one session. The account's Admin API keys, bot token, and OAuth2 tokens are separate credentials and are not affected.
-
-### Path parameters
+### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+| terminated_count | integer | How many sessions were ended |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | [terminate sessions response](#terminate-sessions-response) | Active sessions were terminated |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The sessions were ended |
 
-<sup>1</sup> An account with no live session is accepted, returns `terminated_count` 0, and still records the audit entry
-
-#### Terminate sessions response
-
-| Field | Type | Description |
-| --- | --- | --- |
-| terminated_count | integer | The number of sessions that were terminated |
-
-:::caution[A terminated session cannot be restored]
-[List user sessions](#list-user-sessions) still lists the terminated session with `deleted_at` set. The session no longer authenticates any request, and no operation reactivates it.
-:::
-
-### Side effects
-
-Every affected client is disconnected and must authenticate again. Terminated sessions remain listed with `deleted_at` set.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `terminate_sessions`, target type `user`, and no metadata.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## List user WebAuthn credentials
 
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}/webauthn-credentials" auditReason />
 
-Lists the passkeys and security keys registered on the account, as a bare JSON array. Requires `user:update:mfa`, the same ACL as [Disable user MFA](#disable-user-mfa).
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Lists the account's passkeys and security keys as a JSON array. You need `user:update:mfa`.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | array[[WebAuthn credential](/http-api/users/mfa/#webauthn-credential-object) object] | The credentials were returned |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | array[[WebAuthn credential](/http-api/users/mfa/#webauthn-credential-object) object] | The credentials were returned |
 
-<sup>1</sup> An account with no credential receives an empty array
-
-The complete credential set is returned in one response, bounded by the ten credentials an account may register. [Replaced passkeys](/http-api/users/mfa/#replaced-passkeys) are left out, and `credential_count` counts only the returned ones. No public key, attestation object, or signature counter is exposed.
-
-### Side effects
-
-This read does not mutate authenticator state and emits no Gateway Dispatch. It records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_webauthn_credentials`, target type `user`, and a metadata key `credential_count`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Delete user WebAuthn credential
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/webauthn-credentials/{credential_id}" auditReason />
 
-Deletes one passkey or security key from the account. Requires `user:update:mfa`. Returns an empty 204 response.
+Deletes one passkey or security key from the account. You need `user:update:mfa`. An unknown credential returns 404 `UNKNOWN_USER`.
 
 ### Path parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
-| credential_id | string | WebAuthn credential ID (1-512 characters) |
+| user_id | snowflake | The ID of the account |
+| credential_id | string | The WebAuthn credential ID (1-512 characters) |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | The credential was deleted |
-| 404<sup>1</sup> | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-<sup>1</sup> A credential that does not exist on the account also answers `UNKNOWN_USER`, so a 404 with that code does not distinguish an unknown account from an unknown credential. A [replaced passkey](/http-api/users/mfa/#replaced-passkeys) answers `UNKNOWN_WEBAUTHN_CREDENTIAL` and records no audit entry
+Fluxer sends [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update), and [User Update](/gateway/events/#user-update) when the account's last passkey is removed.
 
-:::caution[A deleted passkey cannot be restored]
-The passkey or security key stops authenticating immediately and cannot be restored from its deleted record. The account holder must register it again to use it later.
-:::
-
-### Side effects
-
-The credential record is deleted, together with the [replaced passkeys](/http-api/users/mfa/#replaced-passkeys) it took over from, and every replaced passkey goes once no listed credential remains. When it was the account's final WebAuthn credential and the account had enabled passkeys as a second factor, Fluxer removes the `WEBAUTHN` [authenticator type](/http-api/users/#authenticator-types) from the account, emits [User Update](/gateway/events/#user-update) to the account's own sessions, and copies the account's authenticator types onto the bot user of every application the account owns. An account that never enabled passkeys as a second factor holds no `WEBAUTHN` type to remove.
-
-[WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) is emitted to the target account with its remaining credentials.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `delete_webauthn_credential`, target type `user`, and a metadata key `credential_id`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Disable user MFA
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/mfa" auditReason />
 
-Clears the account's TOTP authenticator, its registered authenticator type set, and its backup codes. Requires `user:update:mfa`. Returns an empty 204 response.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Removes the account's TOTP authenticator, second-factor types and backup codes. You need `user:update:mfa`. Passkeys stay registered and still sign the account in until you remove them with [Delete user WebAuthn credential](#delete-user-webauthn-credential).
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | MFA state was cleared |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 204 | empty | MFA was turned off |
 
-:::caution[Stored WebAuthn credentials survive this operation]
-Clearing the authenticator type set turns passkeys off as a second factor, but the credential records remain and no [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) is emitted. They still answer a sudo mode challenge and a passwordless login. Remove those with [Delete user WebAuthn credential](#delete-user-webauthn-credential).
-:::
+Fluxer sends [User Update](/gateway/events/#user-update).
 
-### Side effects
-
-The account's TOTP secret, authenticator type set, and every multi-factor backup code are deleted. Fluxer clears the authenticator types of the bot user of every application the account owns. Sessions and credentials are not revoked.
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `disable_mfa`, target type `user`, and no metadata.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Delete all user messages
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/messages" auditReason />
 
-Counts every message attributed to the account, and queues their deletion when the request is not a dry run. Requires `message:delete_all`.
+Counts the account's messages and, unless it is a dry run, queues a [shred job](/admin-api/messages/#get-message-shred-job) that deletes them. You need `message:delete_all`. The `enforcement` basis records a content removal [decision](/admin-api/enforcement/) and sends its notice. For child safety and violent extremism reasons, use [Shred user messages](#shred-user-messages).
 
-The request counts messages before responding, so accounts with more messages take longer. A misspelled `dry_run` parameter leaves the request a dry run.
-
-The operation does not resolve the target account, so it never answers `UNKNOWN_USER`. An ID with no matching account is accepted and matches no message.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the message author |
+:::danger[Deleted messages can't be restored]
+Only `dry_run` set to `false`, `False` or `0` deletes messages, and any other value only counts them.
+:::
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| dry_run?<sup>1</sup> | string | Whether the operation only counts matching messages (default `true`) |
+| dry_run? | string | Whether to only count the messages (default `true`) |
 
-<sup>1</sup> Whitespace is trimmed and only the exact values `false`, `False`, and `0` count as false. Every other string, including `no` and `FALSE`, counts as true
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| basis?<sup>1</sup> | [basis](/admin-api/enforcement/#basis) object | Why the messages are removed |
+
+<sup>1</sup> Required unless it is a dry run
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| success | boolean | Whether the request succeeded, always true |
-| dry_run | boolean | Whether the request only counted messages |
-| channel_count<sup>1</sup> | integer | The number of channels the account has messages in |
-| message_count | integer | The number of messages the walk matched |
-| job_id?<sup>2</sup> | string | The ID of the queued shred job |
-
-<sup>1</sup> Summed for each page of 200, so a channel spanning pages is counted once per page. Treat it as an upper bound
-
-<sup>2</sup> Present only when `dry_run` resolved to false and `message_count` is above zero
+| success | boolean | Always true |
+| dry_run | boolean | Whether the request only counted |
+| channel_count | integer | About how many channels have the account's messages |
+| message_count | integer | How many messages matched |
+| job_id? | string | The ID of the queued shred job |
+| decision_id? | snowflake | The content removal decision |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The count completed, and the deletion job was queued when applicable |
+| 200 | response body | The count finished and any job was queued |
+| 400 | [error response](/admin-api/#error-response) | `MODERATION_BASIS_REQUIRED` without a basis, or a [decision validation code](/admin-api/enforcement/#validation) |
 
-:::danger[A non-dry run permanently deletes messages]
-The response only confirms that the job was queued. When `dry_run` resolves to false, the background job deletes every matching message, and no operation restores them.
-:::
+The rate limit is 100 requests per minute, on the `admin:message:operation` bucket.
 
-The queued job is an ordinary shred job, so its progress, totals, skips, and failures are read through [Get message shred job](/admin-api/messages/#get-message-shred-job).
+## Preview user message shred
 
-### Side effects
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/message-shreds/preview" auditReason />
 
-A dry run reads and counts only. A deletion run also queues one shred job with every matched message identity, and the request returns before any message is processed.
+Lists exactly the messages a shred of these entries deletes, without deleting anything or recording a decision. You need `message:shred`. A message is listed only when the account sent it in the named channel. Missing messages, messages someone else sent and repeated entries are returned in `skipped`. Pass `preview_token` to [Shred user messages](#shred-user-messages) to delete exactly these messages.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `message_deletion`, the target account ID as its target ID, and the metadata keys `user_id`, `channel_count`, `message_count`, and `dry_run`. The action is `delete_all_user_messages_dry_run` for a dry run and `delete_all_user_messages` otherwise. A deletion run also records the `queue_message_shred` entry described under [Shred user messages](#shred-user-messages).
+### JSON body
 
-### Rate limit
+| Field | Type | Description |
+| --- | --- | --- |
+| entries | array[[message shred entry](#message-shred-entry-object) object] | The messages to check (1-1000) |
 
-100 requests per minute for each authenticated user, on the `admin:message:operation` bucket.
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| requested | integer | How many entries you sent |
+| message_count | integer | How many messages a shred deletes |
+| messages | array[object] | Each message a shred deletes, with `channel_id`, `message_id`, `timestamp`, `content` and `attachment_count`<sup>1</sup> |
+| skipped | array[object] | Each entry a shred leaves alone, with `channel_id`, `message_id` and a `reason` of `not_found`, `other_author` or `duplicate` |
+| preview_token | string | Pass this with the shred |
+
+<sup>1</sup> `content` holds the first 200 characters of the message
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The preview is ready |
+
+The rate limit is 100 requests per minute, on the `admin:message:operation` bucket.
 
 ## Shred user messages
 
 <RouteHeader method="POST" path="/v1/admin/users/{user_id}/message-shreds" auditReason />
 
-Queues irreversible deletion of an explicit list of message identities and returns a job ID read through [Get message shred job](/admin-api/messages/#get-message-shred-job). Requires `message:shred`.
-
-The operation does not resolve the target account, so it never answers `UNKNOWN_USER`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the message author |
+Queues a job that deletes the listed messages for good, with their reactions and attachments. You need `message:shred`. The job skips a message that is gone or isn't the account's, and you follow it with [Get message shred job](/admin-api/messages/#get-message-shred-job). [Preview](#preview-user-message-shred) the entries first to see exactly what is deleted.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| entries<sup>1</sup> | array[[message shred entry](#message-shred-entry-object) object] | Explicit message identities, with 1 to 1000 values |
+| entries | array[[message shred entry](#message-shred-entry-object) object] | The messages to delete (1-1000) |
+| basis<sup>1</sup> | [basis](/admin-api/enforcement/#basis) object | Why the messages are removed |
+| preview_token?<sup>2</sup> | string | The `preview_token` from a preview of the same entries |
 
-<sup>1</sup> Required and non-empty. The entries are not checked against the target account at submission time
+<sup>1</sup> The `enforcement` basis records a content removal [decision](/admin-api/enforcement/), saves the first 50 deleted messages as evidence and sends the notice
+
+<sup>2</sup> With a token, only the previewed messages are deleted, and the shred is refused with `MESSAGE_SHRED_PREVIEW_CHANGED` when they changed since the preview
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| success | boolean | Whether the request succeeded, always true |
-| job_id | string | The ID of the queued shred job |
-| requested<sup>1</sup> | integer | The number of submitted entries |
-
-<sup>1</sup> An upper bound on the messages the job shreds
+| success | boolean | Always true |
+| job_id | string | The ID of the shred job |
+| requested | integer | How many entries you sent |
+| decision_id? | snowflake | The content removal decision |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The shred job was queued |
+| 200 | response body | The job was queued |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` with `MESSAGE_SHRED_PREVIEW_CHANGED` or a [decision validation code](/admin-api/enforcement/#validation) |
 
-:::danger[Shredding deletes messages permanently]
-A shred deletes every matching message with its reactions, purges the attachments it owned, and removes it from search. Only a preceding [Create user archive](#create-user-archive) retains the original text.
-:::
-
-A failed job is not retried automatically.
-
-### Side effects
-
-The request returns before any message is processed. The job checks each referenced message again before it deletes it, and skips a missing message or one no longer authored by the target account.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `queue_message_shred`, target type `message_shred`, the target account ID as its target ID, and the metadata keys `user_id`, `job_id`, and `requested_entries`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:message:operation` bucket.
+The rate limit is 100 requests per minute, on the `admin:message:operation` bucket.
 
 ## Cancel scheduled message deletion
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/message-deletion" auditReason />
 
-Cancels the bulk message deletion the account holder scheduled for itself and returns the resulting account. Requires `user:cancel:bulk_message_deletion`.
-
-[Delete all user messages](#delete-all-user-messages) queues a separate Admin job over the same messages, and cancelling this schedule leaves that job running.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Cancels the message deletion the account holder scheduled for their own account and returns the account. You need `user:cancel:bulk_message_deletion`.
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| user | [Admin user](#admin-user-object) object | The updated account |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | response body | The scheduled deletion was cancelled, or the account had none |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 200 | response body | The deletion was canceled, or none was scheduled |
 
-<sup>1</sup> The operation is idempotent. Calling it on an account with no scheduled deletion succeeds, returns the account unchanged, and still records the audit entry
-
-### Side effects
-
-`pending_bulk_message_deletion_at` is cleared together with the stored channel and message counts, and the account is removed from the bulk deletion queue, so no further message is deleted. Messages already deleted by an earlier run are not restored.
-
-No [User Update](/gateway/events/#user-update) is emitted, unlike every other mutating user operation on this page, so a connected client learns of the cancellation only on its next read. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_bulk_message_deletion`, target type `user`, and no metadata.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+The rate limit is 100 requests per minute, on the `admin:user:modify` bucket.
 
 ## Create user archive
 
 <RouteHeader method="POST" path="/v1/admin/users/{user_id}/archives" auditReason />
 
-Creates an asynchronous archive of the account's data and returns the created [archive](/admin-api/archives/#archive-object) object. Requires `archive:trigger:user`.
-
-Archive progress, download, and expiry are documented under [Archives](/admin-api/archives/).
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the archive subject |
+Starts building an [archive](/admin-api/archives/) of the account's data. You need `archive:trigger:user`.
 
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| include_attachments?<sup>1</sup> | boolean | Whether uploaded files are included (default false) |
-
-<sup>1</sup> Including attachment binaries makes the archive larger and slower to build, and only an archive that includes them retains the original uploaded media
+| include_attachments? | boolean | Whether to include uploaded files (default false) |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | [archive](/admin-api/archives/#archive-object) object | The archive was queued |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, and no archive record or build job is created |
+| 200 | [archive](/admin-api/archives/#archive-object) object | The archive was queued |
 
-<sup>1</sup> The archive starts with `progress_percent` at zero and `progress_step` set to `Queued`
-
-### Side effects
-
-Fluxer creates the archive record and queues a build job, so the response returns before any data is collected. Generating the archive reads the account's data without changing it.
-
-No Gateway Dispatch is emitted.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `trigger_user_archive`, target type `user`, the path `user_id` as target ID, and the metadata keys `archive_id` for the created archive and `include_attachments` as `true` or `false`.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.
 
 ## List user change log
 
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}/change-log" auditReason />
 
-Lists the identity and contact field changes recorded for the account, newest first. Requires `user:view:contact_log`. Email values also require `user:view:email`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
+Lists the account's email and tag changes, newest first. You need `user:view:contact_log`, and `user:view:email` to see email values.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| limit? | integer | Maximum entries to return (1-200, default 50) |
-| page_token?<sup>1</sup> | string | Cursor returned as `next_page_token` by the previous page (1-64 characters) |
-
-<sup>1</sup> Continues the newest-first walk, so it returns entries recorded before the cursor
+| limit? | integer | How many entries to return (1-200, default 50) |
+| page_token? | string | The `next_page_token` from the previous page (1-64 characters) |
 
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| entries<sup>1</sup> | array[[Admin user change log](#admin-user-change-log-object) object] | The identity and contact changes in this page |
-| next_page_token<sup>2</sup> | ?string | The cursor to send as `page_token`, or null when this is the last page |
-
-<sup>1</sup> Bounded at 200 entries, which is also the maximum `limit`
-
-<sup>2</sup> Set only when the page returned exactly `limit` entries, so a final page that happens to be full reports a cursor whose next page is empty
+| entries | array[[Admin user change log](#admin-user-change-log-object) object] | The changes in this page |
+| next_page_token | ?string | The token for the next page, or null at the end |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | response body | The change page was returned |
+| 200 | response body | The changes were returned |
 
-<sup>1</sup> This operation does not resolve the account, so it never answers `UNKNOWN_USER`. An ID with no matching account returns an empty page
-
-Without `user:view:email`, an `email` entry is still returned with both value fields replaced by the literal string `[redacted]`, so the fact and the time of the change stay visible while the addresses do not.
-
-### Side effects
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_change_log`, target type `user`, the path `user_id` as target ID, and the metadata keys `limit` and `entry_count` for the entries returned. A supplied `page_token` adds `has_page_token` as `true`, and the cursor value is not recorded.
-
-### Rate limit
-
-200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+The rate limit is 200 requests per minute, on the `admin:lookup` bucket.

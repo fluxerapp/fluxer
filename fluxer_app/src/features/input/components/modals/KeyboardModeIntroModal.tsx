@@ -40,7 +40,7 @@ const STEP_THROUGH_MESSAGES_AND_ACTION_BARS_IN_CHAT_DESCRIPTOR = msg({
 	comment: 'Tip explaining up/down arrow navigation in the keyboard mode intro modal.',
 });
 const OPEN_THE_SHORTCUTS_LIST_ANYTIME_FOR_QUICK_ACTIONS_DESCRIPTOR = msg({
-	message: 'Open the shortcuts list for quick actions.',
+	message: 'Open the keybind list for quick actions.',
 	comment: 'Tip explaining the keyboard shortcut for opening the shortcuts list.',
 });
 export function KeyboardModeIntroModal() {

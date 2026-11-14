@@ -14,10 +14,15 @@ use std::time::Duration;
 
 pub type HttpClient = ClientWithMiddleware;
 
+const EXTERNAL_CONNECT_TIMEOUT_MS: u64 = 3_000;
+const EXTERNAL_READ_TIMEOUT_MS: u64 = 10_000;
+const EXTERNAL_RETRY_WINDOW_MS: u64 = 15_000;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct HTTPClientOptions {
     connect_timeout_ms: NonZeroU64,
-    request_timeout_ms: NonZeroU64,
+    request_timeout_ms: Option<NonZeroU64>,
+    read_timeout_ms: Option<NonZeroU64>,
     retries: HTTPRetryPolicy,
     address_policy: HTTPAddressPolicy,
 }
@@ -27,6 +32,7 @@ struct HTTPRetryPolicy {
     max_retries: NonZeroU32,
     min_delay_ms: NonZeroU64,
     max_delay_ms: NonZeroU64,
+    window_ms: Option<NonZeroU64>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -39,9 +45,30 @@ impl HTTPClientOptions {
     pub fn new(connect_timeout_ms: NonZeroU64, timeout_ms: NonZeroU64) -> Self {
         Self {
             connect_timeout_ms,
-            request_timeout_ms: timeout_ms,
+            request_timeout_ms: Some(timeout_ms),
             ..Self::default()
         }
+    }
+
+    pub fn streaming(connect_timeout_ms: NonZeroU64, read_timeout_ms: NonZeroU64) -> Self {
+        Self {
+            connect_timeout_ms,
+            request_timeout_ms: None,
+            read_timeout_ms: Some(read_timeout_ms),
+            ..Self::default()
+        }
+    }
+
+    pub fn external(request_timeout_ms: NonZeroU64) -> Self {
+        let mut options = Self::new(
+            NonZeroU64::new(EXTERNAL_CONNECT_TIMEOUT_MS)
+                .expect("external connection timeout must be nonzero"),
+            request_timeout_ms,
+        )
+        .restrict_to_public();
+        options.read_timeout_ms = NonZeroU64::new(EXTERNAL_READ_TIMEOUT_MS);
+        options.retries.window_ms = NonZeroU64::new(EXTERNAL_RETRY_WINDOW_MS);
+        options
     }
 
     pub fn restrict_to_public(mut self) -> Self {
@@ -55,8 +82,8 @@ impl Default for HTTPClientOptions {
         Self {
             connect_timeout_ms: NonZeroU64::new(1_500)
                 .expect("default connection timeout must be nonzero"),
-            request_timeout_ms: NonZeroU64::new(30_000)
-                .expect("default request timeout must be nonzero"),
+            request_timeout_ms: NonZeroU64::new(30_000),
+            read_timeout_ms: None,
             retries: HTTPRetryPolicy {
                 max_retries: NonZeroU32::new(2)
                     .expect("default maximum retry count must be nonzero"),
@@ -64,6 +91,7 @@ impl Default for HTTPClientOptions {
                     .expect("default minimum retry delay must be nonzero"),
                 max_delay_ms: NonZeroU64::new(500)
                     .expect("default maximum retry delay must be nonzero"),
+                window_ms: None,
             },
             address_policy: HTTPAddressPolicy::Any,
         }
@@ -77,9 +105,18 @@ pub fn build_raw(options: HTTPClientOptions) -> Result<reqwest::Client, reqwest:
     // is the one client that opts out, because it only ever dials this process on loopback.
     let mut builder = reqwest::Client::builder()
         .connect_timeout(Duration::from_millis(options.connect_timeout_ms.get()))
-        .timeout(Duration::from_millis(options.request_timeout_ms.get()))
         .redirect(reqwest::redirect::Policy::none())
-        .user_agent(crate::constants::OUTBOUND_USER_AGENT);
+        .user_agent(crate::constants::OUTBOUND_USER_AGENT)
+        .no_gzip()
+        .no_brotli()
+        .no_zstd()
+        .no_deflate();
+    if let Some(request_timeout_ms) = options.request_timeout_ms {
+        builder = builder.timeout(Duration::from_millis(request_timeout_ms.get()));
+    }
+    if let Some(read_timeout_ms) = options.read_timeout_ms {
+        builder = builder.read_timeout(Duration::from_millis(read_timeout_ms.get()));
+    }
     if options.address_policy == HTTPAddressPolicy::PublicOnly {
         builder = builder.dns_resolver(Arc::new(PinnedDnsResolver));
     }
@@ -96,6 +133,7 @@ pub fn build(
         max_retries,
         min_delay_ms,
         max_delay_ms,
+        window_ms,
     } = options.retries;
     let retry_policy = ExponentialBackoff::builder()
         .retry_bounds(
@@ -105,111 +143,23 @@ pub fn build(
         .build_with_max_retries(max_retries.get());
     Ok(builder
         .with(RetryTransientMiddleware::new_with_policy_and_strategy(
-            ObservableRetryPolicy::new(retry_policy, Arc::clone(&metrics)),
+            ObservableRetryPolicy::new(
+                retry_policy,
+                window_ms.map(|window| Duration::from_millis(window.get())),
+                Arc::clone(&metrics),
+            ),
             MediaProxyRetryStrategy::new(metrics),
         ))
         .build())
 }
 
+#[cfg(test)]
 pub fn build_default(metrics: Arc<HTTPClientMetrics>) -> HttpClient {
     build(HTTPClientOptions::default(), metrics)
         .expect("default HTTP client configuration is valid")
 }
 
+#[cfg(test)]
 pub fn build_raw_default() -> reqwest::Client {
     build_raw(HTTPClientOptions::default()).expect("default HTTP client configuration is valid")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::metrics::Metrics;
-
-    fn millis(value: u64) -> NonZeroU64 {
-        NonZeroU64::new(value).expect("test timeout must be nonzero")
-    }
-
-    #[test]
-    fn builds_retrying_client() {
-        let client = build(
-            HTTPClientOptions::new(millis(1), millis(1)),
-            Metrics::new().http_client(),
-        );
-        assert!(client.is_ok());
-    }
-
-    #[test]
-    fn default_options_keep_the_frozen_timeout_and_retry_budget() {
-        let options = HTTPClientOptions::default();
-        assert_eq!(options.connect_timeout_ms, millis(1_500));
-        assert_eq!(options.request_timeout_ms, millis(30_000));
-        assert_eq!(
-            options.retries,
-            HTTPRetryPolicy {
-                max_retries: NonZeroU32::new(2).expect("nonzero"),
-                min_delay_ms: millis(25),
-                max_delay_ms: millis(500),
-            }
-        );
-        assert_eq!(options.address_policy, HTTPAddressPolicy::Any);
-    }
-
-    #[test]
-    fn new_overrides_only_the_two_timeouts_and_keeps_the_default_retry_budget() {
-        let options = HTTPClientOptions::new(millis(250), millis(4_000));
-        assert_eq!(options.connect_timeout_ms, millis(250));
-        assert_eq!(options.request_timeout_ms, millis(4_000));
-        assert_eq!(options.retries, HTTPClientOptions::default().retries);
-        assert_eq!(options.address_policy, HTTPAddressPolicy::Any);
-    }
-
-    #[test]
-    fn restricting_to_public_changes_only_the_address_policy() {
-        let base = HTTPClientOptions::new(millis(250), millis(4_000));
-        assert_eq!(
-            base.restrict_to_public(),
-            HTTPClientOptions {
-                address_policy: HTTPAddressPolicy::PublicOnly,
-                ..base
-            }
-        );
-    }
-
-    #[test]
-    fn every_option_shape_produces_a_usable_transport_client() {
-        let base = HTTPClientOptions::new(millis(250), millis(4_000));
-        assert!(build_raw(base).is_ok());
-        assert!(build_raw(base.restrict_to_public()).is_ok());
-        assert!(build_raw(HTTPClientOptions::default()).is_ok());
-    }
-
-    #[test]
-    fn every_transport_client_keeps_system_proxy_discovery() {
-        // reqwest hands out no accessor for a built client's proxy matchers and renders the
-        // field only while one survives, so Debug is the only way to catch a stray no_proxy().
-        for options in [
-            HTTPClientOptions::default(),
-            HTTPClientOptions::default().restrict_to_public(),
-            HTTPClientOptions::new(millis(250), millis(4_000)),
-        ] {
-            let client = build_raw(options).expect("transport client builds");
-            assert!(
-                format!("{client:?}").contains("proxies"),
-                "outbound clients must honour HTTP_PROXY/HTTPS_PROXY/ALL_PROXY: {client:?}"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn a_pinned_resolver_rejection_survives_the_transport_error_chain() {
-        let client =
-            build_raw(HTTPClientOptions::new(millis(250), millis(1_000)).restrict_to_public())
-                .expect("the public-only client configuration is valid");
-        let error = client
-            .get("http://localhost/")
-            .send()
-            .await
-            .expect_err("the pinned resolver rejects a loopback host");
-        assert!(crate::public_net_policy::is_pinned_dns_failure(&error));
-    }
 }

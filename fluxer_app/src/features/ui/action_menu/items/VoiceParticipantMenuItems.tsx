@@ -1,10 +1,10 @@
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {LocalMuteIcon, SelfDeafenIcon, SelfMuteIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import styles from '@app/features/ui/action_menu/items/MenuItems.module.css';
 import {MenuItemSlider} from '@app/features/ui/action_menu/MenuItemSlider';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import EntranceSoundListenerPrefs from '@app/features/voice/state/EntranceSoundListenerPrefs';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
 import {VOICE_DEAFEN_DESCRIPTOR, VOICE_USER_VOLUME_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
@@ -35,10 +35,10 @@ interface SelfMuteMenuItemProps {
 export const SelfMuteMenuItem: React.FC<SelfMuteMenuItemProps> = observer(
 	({connectionId, isDeviceSpecific = false, label}) => {
 		const {i18n} = useLingui();
-		const voiceState = connectionId
-			? MediaEngine.getVoiceStateByConnectionId(connectionId)
-			: MediaEngine.getCurrentUserVoiceState();
-		const isSelfMuted = voiceState?.self_mute ?? false;
+		const isSelfMuted =
+			isDeviceSpecific && connectionId
+				? VoiceStateCommands.getSelfMuteForConnection(connectionId)
+				: VoiceStateCommands.getCurrentSelfMute();
 		const handleToggle = useCallback(() => {
 			if (isDeviceSpecific && connectionId) {
 				VoiceStateCommands.toggleSelfMuteForConnection(connectionId);
@@ -75,8 +75,8 @@ export const SelfDeafenMenuItem: React.FC<SelfDeafenMenuItemProps> = observer(
 	({connectionId, isDeviceSpecific = false, label}) => {
 		const {i18n} = useLingui();
 		const voiceState = connectionId
-			? MediaEngine.getVoiceStateByConnectionId(connectionId)
-			: MediaEngine.getCurrentUserVoiceState();
+			? VoiceRuntime.getVoiceStateByConnectionId(connectionId)
+			: VoiceRuntime.getCurrentUserVoiceState();
 		const isSelfDeafened = voiceState?.self_deaf ?? false;
 		const handleToggle = useCallback(() => {
 			if (isDeviceSpecific && connectionId) {
@@ -113,7 +113,7 @@ export const ParticipantVolumeSlider: React.FC<ParticipantVolumeSliderProps> = o
 	const handleChange = useCallback(
 		(value: number) => {
 			ParticipantVolume.setVolume(userId, value);
-			MediaEngine.applyLocalAudioPreferencesForUser(userId);
+			VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(userId);
 		},
 		[userId],
 	);
@@ -201,7 +201,7 @@ export const LocalMuteParticipantMenuItem: React.FC<LocalMuteParticipantMenuItem
 	const handleToggle = useCallback(
 		(checked: boolean) => {
 			ParticipantVolume.setLocalMute(userId, checked);
-			MediaEngine.applyLocalAudioPreferencesForUser(userId);
+			VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(userId);
 		},
 		[userId],
 	);

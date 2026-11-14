@@ -7,6 +7,12 @@ function hostedMarketingUrl(path: string): string | null {
 	return RuntimeConfig.isSelfHosted() ? null : marketingUrl(path);
 }
 
+const CHANNEL_SCOPE_ROOTS: ReadonlySet<string> = new Set(['@me', '@favorites', '@explore', '@discover']);
+
+function channelsRoot(pathname: string): string | null {
+	return pathname.startsWith('/channels/') ? (pathname.split('/')[2] ?? '') : null;
+}
+
 export const Routes = {
 	HOME: '/',
 	APP: '/app',
@@ -29,28 +35,31 @@ export const Routes = {
 	THEME_LOGIN: '/theme/:themeId/login',
 	ME: '/channels/@me',
 	FAVORITES: '/channels/@favorites',
-	DISCOVER: '/channels/@discover',
+	DISCOVER: '/channels/@explore',
+	LEGACY_DISCOVER: '/channels/@discover',
 	BOOKMARKS: '/bookmarks',
 	MENTIONS: '/mentions',
 	NOTIFICATIONS: '/notifications',
 	YOU: '/you',
 	REPORT: '/report',
 	PREMIUM_CALLBACK: '/premium-callback',
-	AGE_VERIFICATION_CALLBACK: '/age-verification-callback',
 	CONNECTION_CALLBACK: '/connection-callback',
 	USER_PROFILE: '/users/:userId',
-	THEME_STUDIO: '/theme-studio',
 	PLUTONIUM: '/channels/@premium',
 	LEGACY_PLUTONIUM: '/plutonium',
-	terms: () => marketingUrl('terms'),
-	privacy: () => marketingUrl('privacy'),
+	OPERATOR_PASS: '/channels/@operator-pass',
+	CHECKOUT: '/channels/@checkout/:product',
+	terms: (): string | null => RuntimeConfig.termsUrl ?? hostedMarketingUrl('terms'),
+	privacy: (): string | null => RuntimeConfig.privacyUrl ?? hostedMarketingUrl('privacy'),
 	guidelines: (): string | null => RuntimeConfig.guidelinesUrl ?? hostedMarketingUrl('guidelines'),
-	careers: () => marketingUrl('careers'),
-	partners: () => marketingUrl('partners'),
-	bugs: () => marketingUrl('help/report-bug'),
-	plutonium: () => marketingUrl('plutonium'),
+	operatorPassInfo: () => marketingUrl('pass'),
 	help: (): string | null => hostedMarketingUrl('help'),
 	helpArticle: (slug: string): string | null => hostedMarketingUrl(`help/${slug}`),
+	patchNotes: (): string | null => hostedMarketingUrl('patch-notes'),
+	feedback: (): string | null => (RuntimeConfig.isSelfHosted() ? null : 'https://feedback.fluxer.com'),
+	donate: (): string | null => hostedMarketingUrl('donate'),
+	operatorPassTerms: () => marketingUrl('operator-pass-terms'),
+	operatorPassPrivacy: () => marketingUrl('operator-pass-privacy'),
 	dmChannel: (channelId: string) => `/channels/@me/${channelId}`,
 	favoritesChannel: (channelId: string) => `/channels/@favorites/${channelId}`,
 	guildMembers: (guildId: string) => `/channels/${guildId}/members`,
@@ -78,13 +87,14 @@ export const Routes = {
 		pathname === Routes.YOU,
 	isDMRoute: (pathname: string) => pathname.startsWith('/channels/@me'),
 	isFavoritesRoute: (pathname: string) => pathname.startsWith('/channels/@favorites'),
-	isDiscoverRoute: (pathname: string) => pathname.startsWith('/channels/@discover'),
-	isPlutoniumRoute: (pathname: string) => pathname === '/channels/@premium',
-	isChannelRoute: (pathname: string) => pathname.startsWith('/channels/') && !pathname.startsWith('/channels/@premium'),
-	isGuildChannelRoute: (pathname: string) =>
-		pathname.startsWith('/channels/') &&
-		!pathname.startsWith('/channels/@me') &&
-		!pathname.startsWith('/channels/@favorites') &&
-		!pathname.startsWith('/channels/@discover') &&
-		!pathname.startsWith('/channels/@premium'),
+	isDiscoverRoute: (pathname: string) =>
+		pathname.startsWith(Routes.DISCOVER) || pathname.startsWith(Routes.LEGACY_DISCOVER),
+	isChannelRoute: (pathname: string) => {
+		const root = channelsRoot(pathname);
+		return root !== null && (!root.startsWith('@') || CHANNEL_SCOPE_ROOTS.has(root));
+	},
+	isGuildChannelRoute: (pathname: string) => {
+		const root = channelsRoot(pathname);
+		return root !== null && !root.startsWith('@');
+	},
 } as const;

@@ -47,7 +47,7 @@
 	min-width: 0;
 	align-items: center;
 	gap: 0.5rem;
-	margin-right: 1rem;
+	margin-inline-end: 1rem;
 }
 
 .title {

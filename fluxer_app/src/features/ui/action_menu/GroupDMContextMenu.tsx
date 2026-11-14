@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GroupRemoveUserFailedModal} from '@app/features/app/components/alerts/GroupRemoveUserFailedModal';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
+
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import Authentication from '@app/features/auth/state/Authentication';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
@@ -56,7 +57,7 @@ import {hasActiveDirectCallWithUser, isActiveCallParticipant} from '@app/feature
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
-import {useLingui} from '@lingui/react/macro';
+import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo} from 'react';
@@ -179,14 +180,16 @@ export const GroupDMMemberContextMenu: React.FC<GroupDMMemberContextMenuProps> =
 							} catch (error) {
 								logger.error('Failed to remove from group:', error);
 								window.setTimeout(() => {
-									ModalCommands.push(
-										modal(() => (
-											<GroupRemoveUserFailedModal
-												username={userDisplayName}
-												data-flx="ui.action-menu.group-dm-context-menu.handle-remove-from-group.group-remove-user-failed-modal"
-											/>
-										)),
-									);
+									showGenericErrorModal({
+										title: () => i18n._(FAILED_TO_REMOVE_FROM_GROUP_DESCRIPTOR),
+										message: () => (
+											<Trans>
+												<strong data-flx="app.group-remove-user-failed-modal.strong">{userDisplayName}</strong> is still
+												in the group. Try again in a moment.
+											</Trans>
+										),
+										dataFlx: 'app.group-remove-user-failed-modal.generic-error-modal',
+									});
 								}, 0);
 							}
 						}}
@@ -409,3 +412,8 @@ export const GroupDMMemberContextMenu: React.FC<GroupDMMemberContextMenuProps> =
 		);
 	},
 );
+
+const FAILED_TO_REMOVE_FROM_GROUP_DESCRIPTOR = msg({
+	message: "Couldn't remove from group",
+	comment: 'Error modal title shown when removing a user from a group DM fails.',
+});

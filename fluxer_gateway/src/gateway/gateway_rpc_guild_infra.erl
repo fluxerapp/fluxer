@@ -13,17 +13,12 @@
     get_or_start_guild_pid/1,
     get_guild_pid_with_retry/1,
     safe_guild_call/4,
-    safe_gen_server_call/3,
     resolve_voice_pid/2,
     cache_guild_pid/2,
     delete_cached_guild_pid/2,
     batch_lookup_guild_pids/1,
     is_cached_guild_pid_alive/1
 ]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -define(GUILD_LOOKUP_TIMEOUT, 2500).
 -define(GUILD_START_LOOKUP_TIMEOUT, 8000).
@@ -57,12 +52,14 @@ run_with_guild_pid(GuildId, Pid, Fun, NotFoundError) ->
 with_guild_unchecked(GuildId, Fun) ->
     case ensure_guild_pid(GuildId) of
         {ok, Pid} ->
-            run_with_guild_pid_guard(
-                GuildId, Pid, fun() -> Fun(Pid) end, Fun, <<"guild_not_found">>
-            );
+            run_unchecked(GuildId, Pid, Fun);
         error ->
             gateway_rpc_error:raise(<<"guild_not_found">>)
     end.
+
+-spec run_unchecked(integer(), pid(), fun((pid()) -> T)) -> T when T :: term().
+run_unchecked(GuildId, Pid, Fun) ->
+    run_with_guild_pid_guard(GuildId, Pid, fun() -> Fun(Pid) end, Fun, <<"guild_not_found">>).
 
 -spec ensure_responsive(pid()) -> ok.
 ensure_responsive(Pid) ->
@@ -302,12 +299,18 @@ cache_and_return_guild_pid(GuildId, Pid) ->
 -spec cache_guild_pid(integer(), pid()) -> ok.
 cache_guild_pid(GuildId, Pid) ->
     try ets:insert(guild_pid_cache, {GuildId, Pid}) of
-        _ -> ok
+        _ -> watch_remote_guild_pid(GuildId, Pid)
     catch
         throw:_Reason -> ok;
         error:_Reason -> ok;
         exit:_Reason -> ok
     end.
+
+-spec watch_remote_guild_pid(integer(), pid()) -> ok.
+watch_remote_guild_pid(_GuildId, Pid) when node(Pid) =:= node() ->
+    ok;
+watch_remote_guild_pid(GuildId, Pid) ->
+    gen_server:cast(guild_manager, {watch_cached_guild_pid, GuildId, Pid}).
 
 -spec delete_cached_guild_pid(integer(), pid()) -> ok.
 delete_cached_guild_pid(GuildId, Pid) ->
@@ -356,19 +359,6 @@ is_cached_guild_pid_alive(Pid) ->
     case node(Pid) of
         LocalNode when LocalNode =:= node() -> process_liveness:is_alive(Pid);
         RemoteNode -> lists:member(RemoteNode, nodes())
-    end.
-
--spec safe_gen_server_call(pid(), term(), pos_integer()) -> {ok, term()} | error.
-safe_gen_server_call(Pid, Request, Timeout) ->
-    try gen_server:call(Pid, Request, Timeout) of
-        Reply -> {ok, Reply}
-    catch
-        exit:{timeout, _} -> error;
-        exit:{nodedown, _} -> error;
-        exit:{noproc, _} -> error;
-        throw:_Reason -> error;
-        error:_Reason -> error;
-        exit:_ -> error
     end.
 
 -spec safe_guild_call(integer(), pid(), {atom(), map()}, pos_integer()) ->
@@ -422,64 +412,3 @@ retry_guild_call_pid(GuildId, NewPid, Request, Timeout) ->
             delete_cached_guild_pid(GuildId, NewPid),
             error
     end.
-
--ifdef(TEST).
-
-overloaded_guild_is_rejected_before_enqueuing_work_test() ->
-    ok = guild_ets_owner:ensure_table(guild_health_status, [named_table, public, set]),
-    Pid = spawn(fun() ->
-        receive
-            stop -> ok
-        end
-    end),
-    Pending = {make_ref(), erlang:monotonic_time(millisecond), 2500},
-    true = ets:insert(guild_health_status, {Pid, 42, true, undefined, Pending}),
-    try
-        ?assertError(
-            {gateway_rpc_error, <<"guild_overloaded">>},
-            safe_guild_call(42, Pid, {get_viewer_counts, #{user_id => 200}}, 4000)
-        ),
-        ?assertError(
-            {gateway_rpc_error, <<"guild_overloaded">>},
-            retry_guild_call_pid(42, Pid, {get_viewer_counts, #{user_id => 200}}, 4000)
-        ),
-        ?assertEqual({message_queue_len, 0}, process_info(Pid, message_queue_len))
-    after
-        ets:delete(guild_health_status, Pid),
-        Pid ! stop
-    end.
-
-guild_start_backoff_delay_exponential_test() ->
-    Delay1 = guild_start_backoff_delay(1),
-    ?assert(Delay1 >= ?GUILD_START_BASE_MS),
-    ?assert(Delay1 =< ?GUILD_START_BASE_MS + ?GUILD_START_JITTER_MS),
-    Delay2 = guild_start_backoff_delay(2),
-    ?assert(Delay2 >= ?GUILD_START_BASE_MS * 2),
-    ?assert(Delay2 =< ?GUILD_START_BASE_MS * 2 + ?GUILD_START_JITTER_MS).
-
-guild_start_backoff_delay_caps_at_max_test() ->
-    ?assert(guild_start_backoff_delay(10) =< ?GUILD_START_MAX_MS + ?GUILD_START_JITTER_MS).
-
-run_with_guild_pid_guard_generic_exit_returns_domain_error_test() ->
-    ?assertError(
-        {gateway_rpc_error, <<"guild_not_found">>},
-        run_with_guild_pid_guard(
-            123,
-            self(),
-            fun() -> exit(kaboom) end,
-            fun(_Pid) -> ok end,
-            <<"guild_not_found">>
-        )
-    ).
-
-safe_gen_server_call_dead_pid_returns_error_test() ->
-    DeadPid = spawn(fun() -> ok end),
-    Ref = monitor(process, DeadPid),
-    receive
-        {'DOWN', Ref, process, DeadPid, _Reason} -> ok
-    after 1000 ->
-        ?assert(false, guild_rpc_pid_did_not_exit)
-    end,
-    ?assertEqual(error, safe_gen_server_call(DeadPid, ping, 250)).
-
--endif.

@@ -2,10 +2,8 @@
 
 import {runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {
-	parseDesktopLocalResourceProxyTarget,
-	unwrapDesktopLocalResourceURL,
-} from '@app/features/messaging/utils/DesktopLocalResourceTarget';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
+import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopLocalResourceTarget';
 import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {
 	LOCAL_APP_REMOTE_PROXY_PATH_PREFIX,
@@ -37,7 +35,7 @@ class DesktopResourceRuntimeKeyError extends Error {
 }
 
 export function wrapDesktopLocalResourceURL(value: string): string {
-	return wrapResolvedDesktopLocalResourceURL(parseDesktopLocalResourceProxyTarget(value), false);
+	return wrapResolvedDesktopLocalResourceURL(unwrapDesktopLocalResourceURL(value), false);
 }
 
 export function wrapDesktopLocalResourceURLForInstance(value: string, instanceKey: string): string {
@@ -45,7 +43,7 @@ export function wrapDesktopLocalResourceURLForInstance(value: string, instanceKe
 	if (instanceKey.trim().length === 0) {
 		throw new DesktopResourceRuntimeKeyError();
 	}
-	const targetValue = parseDesktopLocalResourceProxyTarget(value);
+	const targetValue = unwrapDesktopLocalResourceURL(value);
 	let target: URL;
 	try {
 		target = new URL(targetValue);
@@ -78,7 +76,7 @@ export function resolveDesktopCrossOriginMediaURL(value: string | undefined): st
 
 function parseDisplayTarget(value: string): URL | null {
 	try {
-		return new URL(parseDesktopLocalResourceProxyTarget(value));
+		return new URL(unwrapDesktopLocalResourceURL(value));
 	} catch {
 		return null;
 	}
@@ -94,7 +92,7 @@ function isDocumentAllowedCleartextHost(hostname: string): boolean {
 }
 
 export function updateDesktopLocalResourceURLTarget(value: string, updateTarget: (target: URL) => boolean): string {
-	const targetValue = parseDesktopLocalResourceProxyTarget(value);
+	const targetValue = unwrapDesktopLocalResourceURL(value);
 	let target: URL;
 	try {
 		target = new URL(targetValue);
@@ -107,7 +105,7 @@ export function updateDesktopLocalResourceURLTarget(value: string, updateTarget:
 
 export function wrapDesktopLocalUploadURL(value: string): string {
 	if (!isDesktopLocalAppDocument()) return value;
-	const targetValue = parseDesktopLocalResourceProxyTarget(value);
+	const targetValue = unwrapDesktopLocalResourceURL(value);
 	let target: URL;
 	try {
 		target = new URL(targetValue);
@@ -157,7 +155,7 @@ function isCurrentRuntimeRemoteResourceTarget(target: URL): boolean {
 		const sourceOrigin = originSource(source);
 		if (sourceOrigin != null && sourceOrigin === targetOrigin) return true;
 	}
-	return false;
+	return isApiAttachmentUrl(target.toString());
 }
 
 function originSource(value: string | null): string | null {

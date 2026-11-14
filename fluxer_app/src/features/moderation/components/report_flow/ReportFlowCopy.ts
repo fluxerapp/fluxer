@@ -20,8 +20,12 @@ export const SELECTED_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Report flow: section heading above the preview of the message being reported.',
 });
 export const SELECTED_USER_DESCRIPTOR = msg({
-	message: "Profile you're reporting",
-	comment: 'Report flow: section heading above the card of the user whose profile is being reported.',
+	message: "Person you're reporting",
+	comment: 'Report flow: section heading above the card of the person being reported.',
+});
+export const SELECTED_COMMUNITY_DESCRIPTOR = msg({
+	message: "Community you're reporting",
+	comment: 'Report flow: section heading above the card of the community being reported.',
 });
 export const REPORT_CATEGORY_DESCRIPTOR = msg({
 	message: 'Your answers',
@@ -30,14 +34,6 @@ export const REPORT_CATEGORY_DESCRIPTOR = msg({
 export const SUBMIT_REPORT_DESCRIPTOR = msg({
 	message: 'Send report',
 	comment: 'Report flow: footer button on the summary screen that sends the report to the safety team.',
-});
-export const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'Report flow: footer button that returns to the previous question.',
-});
-export const DONE_DESCRIPTOR = msg({
-	message: 'Done',
-	comment: 'Report flow: footer button on the last screen. Closes the report window.',
 });
 export const THANK_YOU_TITLE_DESCRIPTOR = msg({
 	message: 'Report sent',
@@ -52,6 +48,11 @@ export const THANK_YOU_BODY_DESCRIPTOR = msg({
 	message: "The {productName} safety team will review your report. We won't reveal that it came from you.",
 	comment:
 		'Report flow: body of the final screen after a report was sent. {productName} is the name of the app. The second sentence promises the reported person is not told who reported them.',
+});
+export const THANK_YOU_BODY_SELF_HOSTED_DESCRIPTOR = msg({
+	message: "The administrators of this instance will review your report. We won't reveal that it came from you.",
+	comment:
+		'Report flow: body of the final screen after a report was sent, on a self-hosted instance whose own administrators handle reports. The second sentence promises the reported person is not told who reported them.',
 });
 export const THANK_YOU_NO_REPORT_BODY_DESCRIPTOR = msg({
 	message:
@@ -105,6 +106,10 @@ export const ALREADY_REPORTED_PROFILE_DESCRIPTOR = msg({
 	comment:
 		'Report flow: note on the summary screen when the reporter already reported this user profile in the last day.',
 });
+export const ALREADY_REPORTED_COMMUNITY_DESCRIPTOR = msg({
+	message: "You've already reported this community.",
+	comment: 'Report flow: note on the summary screen when the reporter already reported this community.',
+});
 export const RATE_LIMITED_DESCRIPTOR = msg({
 	message: "You're sending reports too quickly. Try again later.",
 	comment: 'Report flow: note on the summary screen when the reporter hit the report rate limit.',
@@ -120,15 +125,6 @@ export const OPENS_IN_NEW_TAB_DESCRIPTOR = msg({
 export const FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR = msg({
 	message: 'Finish account setup first',
 	comment: 'Report flow: title of the notice on the summary screen when the account cannot send reports yet.',
-});
-export const CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR = msg({
-	message: 'Claim your account and verify your email to send reports.',
-	comment: 'Report flow: body of the notice on the summary screen when the account cannot send reports yet.',
-});
-export const CLAIM_TO_REPORT_DESCRIPTOR = msg({
-	message: 'Claim your account to send reports.',
-	comment:
-		'Report flow: body of the notice on the summary screen when the account cannot send reports yet, on an instance where people sign in with a username.',
 });
 export const FINISH_ACCOUNT_SETUP_DESCRIPTOR = msg({
 	message: 'Finish account setup',

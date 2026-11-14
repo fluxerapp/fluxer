@@ -8,11 +8,15 @@ import {makeAutoObservable} from 'mobx';
 class VoicePrompts {
 	skipHideOwnCameraConfirm = false;
 	skipHideOwnScreenShareConfirm = false;
+	skipP2pJoinConfirm = false;
 
 	constructor() {
 		makeAutoObservable(
 			this,
-			{getSkipHideOwnCameraConfirm: false, getSkipHideOwnScreenShareConfirm: false},
+			{
+				getSkipHideOwnCameraConfirm: false,
+				getSkipP2pJoinConfirm: false,
+			},
 			{autoBind: true},
 		);
 		initializeStore(this, () => this.initPersistence());
@@ -22,14 +26,16 @@ class VoicePrompts {
 		await makeSyncedField(this, {
 			field: 'voicePrompts',
 			schema: VoicePromptsStateSchema,
-			persist: ['skipHideOwnCameraConfirm', 'skipHideOwnScreenShareConfirm'],
+			persist: ['skipHideOwnCameraConfirm', 'skipHideOwnScreenShareConfirm', 'skipP2pJoinConfirm'],
 			toMessage: (s) => ({
 				skipHideOwnCameraConfirm: s.skipHideOwnCameraConfirm,
 				skipHideOwnScreenshareConfirm: s.skipHideOwnScreenShareConfirm,
+				skipP2pJoinConfirm: s.skipP2pJoinConfirm,
 			}),
 			applyMessage: (s, m) => {
 				s.skipHideOwnCameraConfirm = m.skipHideOwnCameraConfirm;
 				s.skipHideOwnScreenShareConfirm = m.skipHideOwnScreenshareConfirm;
+				s.skipP2pJoinConfirm = m.skipP2pJoinConfirm;
 			},
 		});
 	}
@@ -42,12 +48,12 @@ class VoicePrompts {
 		this.skipHideOwnCameraConfirm = value;
 	}
 
-	getSkipHideOwnScreenShareConfirm(): boolean {
-		return this.skipHideOwnScreenShareConfirm;
+	getSkipP2pJoinConfirm(): boolean {
+		return this.skipP2pJoinConfirm;
 	}
 
-	setSkipHideOwnScreenShareConfirm(value: boolean): void {
-		this.skipHideOwnScreenShareConfirm = value;
+	setSkipP2pJoinConfirm(value: boolean): void {
+		this.skipP2pJoinConfirm = value;
 	}
 }
 

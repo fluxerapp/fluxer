@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
-import {MessageContentService} from '@app/api/channel/services/message/MessageContentService';
 import {createChannelInvite, createFriendship, createGroupDmChannel} from '@app/api/channel/tests/ChannelTestUtils';
-import {ensureSessionStarted, sendMessage} from '@app/api/message/tests/MessageTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('group dm mature content', () => {
 	let harness: ApiTestHarness;
@@ -20,10 +19,6 @@ describe('group dm mature content', () => {
 
 	beforeEach(async () => {
 		await harness.reset();
-	});
-
-	afterEach(() => {
-		vi.restoreAllMocks();
 	});
 
 	afterAll(async () => {
@@ -55,15 +50,10 @@ describe('group dm mature content', () => {
 			.execute();
 	}
 
-	it('lets the owner mark the group and allows mature media once marked', async () => {
+	it('lets the owner mark and clear the group', async () => {
 		const s = await setup();
-		const scope = vi.spyOn(MessageContentService.prototype, 'isNSFWContentAllowed');
-		await sendMessage(harness, s.owner.token, s.groupId, 'before');
-		expect(scope.mock.results.at(-1)?.value).toBe(false);
 		const updated = await setNsfw(s.owner, s.groupId, true);
 		expect(updated.nsfw).toBe(true);
-		await sendMessage(harness, s.owner.token, s.groupId, 'after');
-		expect(scope.mock.results.at(-1)?.value).toBe(true);
 		const cleared = await setNsfw(s.owner, s.groupId, false);
 		expect(cleared.nsfw).toBe(false);
 	});

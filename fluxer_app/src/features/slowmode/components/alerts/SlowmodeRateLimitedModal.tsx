@@ -10,17 +10,17 @@ const SLOWMODE_ACTIVE_DESCRIPTOR = msg({
 	comment: 'Short label in the slowmode rate limited modal. Keep it concise.',
 });
 const SLOWMODE_WAIT_SECONDS_DESCRIPTOR = msg({
-	message: 'Slowmode is on — wait {seconds, plural, one {# second} other {# seconds}} before sending another.',
+	message: 'Slowmode is on. Wait {seconds, plural, one {# second} other {# seconds}} before sending another.',
 	comment: 'Modal body shown when slowmode blocks sending a message. {seconds} is the remaining wait, under a minute.',
 });
 const SLOWMODE_WAIT_MINUTES_DESCRIPTOR = msg({
-	message: 'Slowmode is on — wait {minutes, plural, one {# minute} other {# minutes}} before sending another.',
+	message: 'Slowmode is on. Wait {minutes, plural, one {# minute} other {# minutes}} before sending another.',
 	comment:
 		'Modal body shown when slowmode blocks sending a message. {minutes} is the remaining wait, a whole number of minutes.',
 });
 const SLOWMODE_WAIT_MINUTES_AND_SECONDS_DESCRIPTOR = msg({
 	message:
-		'Slowmode is on — wait {minutes, plural, one {# minute} other {# minutes}} and {seconds, plural, one {# second} other {# seconds}} before sending another.',
+		'Slowmode is on. Wait {minutes, plural, one {# minute} other {# minutes}} and {seconds, plural, one {# second} other {# seconds}} before sending another.',
 	comment:
 		'Modal body shown when slowmode blocks sending a message. {minutes} and {seconds} are the two parts of the remaining wait.',
 });

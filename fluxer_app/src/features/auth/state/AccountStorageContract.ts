@@ -39,6 +39,7 @@ export interface StoredAccountData {
 	managedStorageData?: Record<string, string>;
 	lastActive: number;
 	isValid?: boolean;
+	switcherPosition?: number;
 }
 
 export interface StoredAccount extends StoredAccountData {
@@ -127,7 +128,7 @@ export class BrowserAccountStorageTimeoutError extends BrowserAccountStorageUnav
 	}
 }
 
-export class InvalidAccountStorageSnapshotError extends Error {
+class InvalidAccountStorageSnapshotError extends Error {
 	constructor(message: string) {
 		super(message);
 		this.name = 'InvalidAccountStorageSnapshotError';

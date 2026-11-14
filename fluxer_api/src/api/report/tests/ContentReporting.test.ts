@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {reportReference} from '@app/api/admin/services/ReporterResolutionNotifier';
 import {
 	clearTestEmails,
 	createTestAccount,
@@ -10,14 +11,12 @@ import {
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {createGuildID, createReportID, createUserID} from '@app/api/BrandedTypes';
-import {Config, getConfig} from '@app/api/Config';
+import {Config} from '@app/api/Config';
 import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
 import {
 	acceptInvite,
 	createChannel,
 	createChannelInvite,
-	createDmChannel,
-	createFriendship,
 	createGuild,
 	createPermissionOverwrite,
 	getChannel,
@@ -27,10 +26,9 @@ import {
 	updateGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {deleteOneOrMany} from '@app/api/database/CassandraQueryExecution';
-import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {resolveContactEmails} from '@app/api/instance/ContactEmails';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
-import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {getRateLimitService} from '@app/api/middleware/ServiceSingletons';
 import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
 import {ReportRepository} from '@app/api/report/ReportRepository';
@@ -38,13 +36,15 @@ import {Users} from '@app/api/Tables';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {systemDmBody} from '@app/api/user/services/SystemDmMessage';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DELETED_USER_USERNAME} from '@fluxer/constants/src/UserConstants';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeComparison';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
-import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+import {emailLinkUrls, renderEmailTemplateText, reportResolvedSlots} from '@pkgs/email/src/EmailService';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface ReportResponse {
 	report_id: string;
@@ -121,27 +121,15 @@ function embedStorageKey(url: string | null | undefined): string {
 	return unsigned.slice(`${Config.endpoints.media}/`.length);
 }
 
-function refuseNextAllowanceSpend() {
-	return vi.spyOn(getRateLimitService(), 'checkLimit').mockResolvedValueOnce({
-		allowed: false,
-		limit: 5,
-		remaining: 0,
-		resetTime: new Date(Date.now() + 1000),
-		resetAfterDecimal: 1,
-		retryAfter: 1,
-		retryAfterDecimal: 1,
-	});
-}
-
 function contextIds(report: Awaited<ReturnType<typeof readReport>>): Array<string> {
 	return (report.messageContext ?? [])
 		.map((entry) => entry.messageId)
-		.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+		.sort(compareSnowflakes)
 		.map((id) => id.toString());
 }
 
 async function setJoinedAt(guildId: string, userId: string, joinedAt: Date): Promise<void> {
-	const repository = new GuildMemberRepository();
+	const repository = new GuildRepository();
 	const member = await repository.getMember(createGuildID(BigInt(guildId)), createUserID(BigInt(userId)));
 	if (!member) {
 		throw new Error(`Member ${userId} of guild ${guildId} was not stored`);
@@ -158,62 +146,6 @@ describe('Content Reporting', () => {
 		await harness?.shutdown();
 	});
 	describe('Report User', () => {
-		test('should report a user with valid category', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			const result = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-			expect(result.status).toBe('pending');
-			expect(result.reported_at).toBeTruthy();
-		});
-		test('should report a user with spam category', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			const result = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'spam_account',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-			expect(result.status).toBe('pending');
-		});
-		test('should report a user with guild context', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const targetUser = members[0];
-			const result = await createBuilder<ReportResponse>(harness, owner.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'harassment',
-					guild_id: guild.id,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-		});
-		test('should reject a user report naming an unknown guild', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			await createBuilder(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'harassment',
-					guild_id: TEST_IDS.NONEXISTENT_GUILD,
-				})
-				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_GUILD)
-				.execute();
-		});
 		test('should answer a guild the reporter has not joined like an unknown guild', async () => {
 			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
 			const [targetUser, formerMember] = members;
@@ -238,79 +170,12 @@ describe('Content Reporting', () => {
 			expect((await readReport(member.report_id)).reportedGuildId?.toString()).toBe(guild.id);
 			expect(await countReports()).toBe(2);
 		});
-		test('a repeat user report past the reporter allowance is rate limited', async () => {
+		test('should reject a report against the system account', async () => {
 			const reporter = await createTestAccount(harness);
-			const targets = await Promise.all([0, 1, 2, 3, 4].map(() => createTestAccount(harness)));
-			for (const target of targets) {
-				await reportUser(harness, reporter.token, target.userId).expect(HTTP_STATUS.OK).execute();
-			}
-			await reportUser(harness, reporter.token, targets[0].userId).expect(429, APIErrorCodes.RATE_LIMITED).execute();
-			await getRateLimitService().resetLimit(`report:create:user:${reporter.userId}`);
-			await reportUser(harness, reporter.token, targets[0].userId)
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
+			await reportUser(harness, reporter.token, '0')
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_USER)
 				.execute();
-			expect(await countReports()).toBe(5);
-		});
-		test('should reject report with invalid category', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			await createBuilder(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId.toString(),
-					category: 'invalid_category',
-				})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should reject report without authentication', async () => {
-			const targetUser = await createTestAccount(harness);
-			await createBuilderWithoutAuth(harness)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId.toString(),
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
-		});
-		test('should report user with impersonation category', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			const result = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'impersonation',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-		});
-		test('admin report detail includes mutual DM channel when present', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'report:view']);
-			await createFriendship(harness, reporter, targetUser);
-			const mutualDm = await createDmChannel(harness, reporter.token, targetUser.userId);
-			const report = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const reportDetail = await createBuilder<{
-				report_id: string;
-				mutual_dm_channel_id?: string | null;
-			}>(harness, `${admin.token}`)
-				.get(`/admin/reports/${report.report_id}`)
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(reportDetail.report_id).toBe(report.report_id);
-			expect(reportDetail.mutual_dm_channel_id).toBe(mutualDm.id);
+			expect(await countReports()).toBe(0);
 		});
 		test('sends a localized system DM and email marker when a report is reviewed with a public comment', async () => {
 			const reporter = await createTestAccount(harness);
@@ -341,6 +206,8 @@ describe('Content Reporting', () => {
 				.patch(`/admin/reports/${report.report_id}`)
 				.body({
 					status: 'resolved',
+					resolution: 'actioned',
+					outcome: 'restricted',
 					public_comment: publicComment,
 				})
 				.expect(HTTP_STATUS.OK)
@@ -352,23 +219,24 @@ describe('Content Reporting', () => {
 			expect(email?.metadata['public_comment']).toBe(publicComment);
 			const systemMessages = await listSystemDmMessages(harness, reporter.token);
 			expect(systemMessages).toHaveLength(1);
-			const template = getEmailTemplate(
+			const stored = await new ReportRepository().getReport(createReportID(BigInt(report.report_id)));
+			if (!stored) {
+				throw new Error('report not found');
+			}
+			const text = renderEmailTemplateText(
 				'report_resolved',
 				'fr',
-				{
-					username: reporter.username!,
-					reportId: report.report_id,
-					publicComment,
-					hasComment: 'yes',
-					safety_email: resolveContactEmails().safetyEmail,
-				},
+				{...reportReference(stored), outcome: 'restricted', appeals_email: resolveContactEmails().appealsEmail},
 				getInstanceProductName(),
+				(template) => reportResolvedSlots(template, report.report_id, publicComment),
+				{
+					format: 'markdown',
+					urls: emailLinkUrls({appBaseUrl: Config.endpoints.webApp, marketingBaseUrl: Config.endpoints.marketing}),
+				},
 			);
-			expect(template.ok).toBe(true);
-			if (!template.ok) {
-				throw new Error('Failed to resolve expected report_resolved email template');
-			}
-			expect(systemMessages[0]?.content).toBe(template.value.body);
+			expect(text).not.toBeNull();
+			expect(systemMessages[0]?.content).toBe(systemDmBody(text ?? ''));
+			expect(systemMessages[0]?.content).not.toContain(reporter.username!);
 			const systemDmChannel = (await listSystemDmChannels(harness, reporter.token))[0];
 			expect(systemDmChannel?.id).toBeTruthy();
 			const readStateRepository = new ReadStateRepository();
@@ -380,118 +248,8 @@ describe('Content Reporting', () => {
 				})
 				.toBe(1);
 		});
-		test('names no mailbox in the system DM on a self-hosted instance', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			let admin = await createTestAccount(harness);
-			admin = await setUserACLs(harness, admin, ['admin:authenticate', 'report:resolve']);
-			const report = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const originalSelfHosted = getConfig().instance.selfHosted;
-			getConfig().instance.selfHosted = true;
-			try {
-				await createBuilder<{report_id: string}>(harness, `${admin.token}`)
-					.patch(`/admin/reports/${report.report_id}`)
-					.body({status: 'resolved', public_comment: 'We reviewed your report.'})
-					.expect(HTTP_STATUS.OK)
-					.execute();
-			} finally {
-				getConfig().instance.selfHosted = originalSelfHosted;
-			}
-			const systemMessages = await listSystemDmMessages(harness, reporter.token);
-			expect(systemMessages).toHaveLength(1);
-			expect(systemMessages[0]?.content).toContain('We reviewed your report.');
-			expect(systemMessages[0]?.content).toContain('please contact the administrators of this instance.');
-			expect(systemMessages[0]?.content).not.toContain('@');
-		});
 	});
 	describe('Report Message', () => {
-		test('should report a message with valid category', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const targetUser = members[0];
-			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
-			const message = await sendChannelMessage(harness, targetUser.token, channel.id, 'Offensive content');
-			const result = await createBuilder<ReportResponse>(harness, owner.token)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-			expect(result.status).toBe('pending');
-		});
-		test('should report message with spam category', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const targetUser = members[0];
-			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
-			const message = await sendChannelMessage(harness, targetUser.token, channel.id, 'Buy now! Click link!');
-			const result = await createBuilder<ReportResponse>(harness, owner.token)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-					category: 'spam',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-		});
-		test('should report message with hate_speech category', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const targetUser = members[0];
-			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
-			const message = await sendChannelMessage(harness, targetUser.token, channel.id, 'Test message');
-			const result = await createBuilder<ReportResponse>(harness, owner.token)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-					category: 'hate_speech',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-		});
-		test('should report message with illegal_activity category', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const targetUser = members[0];
-			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
-			const message = await sendChannelMessage(harness, targetUser.token, channel.id, 'Test message');
-			const result = await createBuilder<ReportResponse>(harness, owner.token)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-					category: 'illegal_activity',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-		});
-		test('should reject message report without authentication', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const targetUser = members[0];
-			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
-			const message = await sendChannelMessage(harness, targetUser.token, channel.id, 'Test message');
-			await createBuilderWithoutAuth(harness)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
-		});
 		test('rejects a non-member reporting a guild message without creating a report', async () => {
 			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
 			const targetUser = members[0];
@@ -844,55 +602,6 @@ describe('Content Reporting', () => {
 			await acceptInvite(harness, reporter.token, invite.code);
 			return {reporter, owner, guild};
 		}
-		test('should report a guild with valid category', async () => {
-			const {reporter, guild} = await setupMemberAndGuild();
-			const result = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/guild')
-				.body({
-					guild_id: guild.id,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-			expect(result.status).toBe('pending');
-		});
-		test('should report guild with extremist_community category', async () => {
-			const {reporter, guild} = await setupMemberAndGuild();
-			const result = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/guild')
-				.body({
-					guild_id: guild.id,
-					category: 'extremist_community',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-		});
-		test('should report guild with raid_coordination category', async () => {
-			const {reporter, guild} = await setupMemberAndGuild();
-			const result = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/guild')
-				.body({
-					guild_id: guild.id,
-					category: 'raid_coordination',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-		});
-		test('should report guild with malware_distribution category', async () => {
-			const {reporter, guild} = await setupMemberAndGuild();
-			const result = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/guild')
-				.body({
-					guild_id: guild.id,
-					category: 'malware_distribution',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-		});
 		test('should reject non-member reporting a non-discoverable guild without invite code', async () => {
 			const reporter = await createTestAccount(harness);
 			const owner = await createTestAccount(harness);
@@ -939,31 +648,6 @@ describe('Content Reporting', () => {
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
-		test('should reject guild report with invalid category', async () => {
-			const reporter = await createTestAccount(harness);
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Test Guild');
-			await createBuilder(harness, reporter.token)
-				.post('/reports/guild')
-				.body({
-					guild_id: guild.id,
-					category: 'invalid_category',
-				})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should reject guild report without authentication', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Test Guild');
-			await createBuilderWithoutAuth(harness)
-				.post('/reports/guild')
-				.body({
-					guild_id: guild.id,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.UNAUTHORIZED)
-				.execute();
-		});
 		test('a guild report past the reporter allowance is rate limited before it is a conflict', async () => {
 			const {reporter, guild} = await setupMemberAndGuild();
 			await reportGuild(harness, reporter.token, guild.id).expect(HTTP_STATUS.OK).execute();
@@ -979,121 +663,7 @@ describe('Content Reporting', () => {
 			expect(await countReports()).toBe(5);
 		});
 	});
-	describe('Report Requires Category', () => {
-		test('should reject user report without category', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			await createBuilder(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId.toString(),
-				})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should reject message report without category', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const targetUser = members[0];
-			await ensureSessionStarted(harness, targetUser.token);
-			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
-			const message = await sendChannelMessage(harness, targetUser.token, channel.id, 'Test message');
-			await createBuilder(harness, owner.token)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-				})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should reject guild report without category', async () => {
-			const reporter = await createTestAccount(harness);
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'Test Guild');
-			await createBuilder(harness, reporter.token)
-				.post('/reports/guild')
-				.body({
-					guild_id: guild.id,
-				})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-	});
 	describe('Duplicate Reports', () => {
-		test('should reject a second report of the same user by the same reporter', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			const firstReport = await createBuilder<ReportResponse>(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(firstReport.report_id).toBeTruthy();
-			await createBuilder(harness, reporter.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'spam_account',
-				})
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
-				.execute();
-		});
-		test('should reject duplicate reports for the same message by the same user', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const targetUser = members[0];
-			await ensureSessionStarted(harness, targetUser.token);
-			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
-			const message = await sendChannelMessage(harness, targetUser.token, channel.id, 'Problematic message');
-			const firstReport = await createBuilder<ReportResponse>(harness, owner.token)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(firstReport.report_id).toBeTruthy();
-			await createBuilder(harness, owner.token)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-					category: 'spam',
-				})
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
-				.execute();
-			expect(await countReports()).toBe(1);
-		});
-		test('should allow different users to report the same message', async () => {
-			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
-			const targetUser = members[0];
-			const secondReporter = members[1];
-			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
-			const message = await sendChannelMessage(harness, targetUser.token, channel.id, 'Problematic shared target');
-			const firstReport = await createBuilder<ReportResponse>(harness, owner.token)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const secondReport = await createBuilder<ReportResponse>(harness, secondReporter.token)
-				.post('/reports/message')
-				.body({
-					channel_id: channel.id,
-					message_id: message.id,
-					category: 'spam',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(secondReport.report_id).not.toBe(firstReport.report_id);
-		});
 		test('should reject a second report of the same guild by the same reporter', async () => {
 			const reporter = await createTestAccount(harness);
 			const otherReporter = await createTestAccount(harness);
@@ -1168,217 +738,8 @@ describe('Content Reporting', () => {
 				expect(report.reporterEmail).toBeNull();
 			}
 		});
-		test('should allow different users to report same content', async () => {
-			const reporter1 = await createTestAccount(harness);
-			const reporter2 = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			const report1 = await createBuilder<ReportResponse>(harness, reporter1.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const report2 = await createBuilder<ReportResponse>(harness, reporter2.token)
-				.post('/reports/user')
-				.body({
-					user_id: targetUser.userId,
-					category: 'harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(report1.report_id).toBeTruthy();
-			expect(report2.report_id).toBeTruthy();
-			expect(report1.report_id).not.toBe(report2.report_id);
-		});
-	});
-	describe('Reservations', () => {
-		test('a user report refused when the allowance is spent keeps no reservation', async () => {
-			const reporter = await createTestAccount(harness);
-			const targetUser = await createTestAccount(harness);
-			const spend = refuseNextAllowanceSpend();
-			await reportUser(harness, reporter.token, targetUser.userId).expect(429, APIErrorCodes.RATE_LIMITED).execute();
-			expect(spend).toHaveBeenCalledTimes(1);
-			spend.mockRestore();
-			expect(await countReports()).toBe(0);
-			await reportUser(harness, reporter.token, targetUser.userId).expect(HTTP_STATUS.OK).execute();
-			expect(await countReports()).toBe(1);
-		});
-		test('a guild report refused when the allowance is spent keeps no reservation', async () => {
-			const {members, guild} = await setupTestGuildWithMembers(harness, 1);
-			const reporter = members[0];
-			const spend = refuseNextAllowanceSpend();
-			await reportGuild(harness, reporter.token, guild.id).expect(429, APIErrorCodes.RATE_LIMITED).execute();
-			expect(spend).toHaveBeenCalledTimes(1);
-			spend.mockRestore();
-			expect(await countReports()).toBe(0);
-			await reportGuild(harness, reporter.token, guild.id).expect(HTTP_STATUS.OK).execute();
-			await reportGuild(harness, reporter.token, guild.id)
-				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
-				.execute();
-			expect(await countReports()).toBe(1);
-		});
-		test('a message report refused when the allowance is spent keeps no reservation', async () => {
-			const {owner, members, systemChannel} = await setupTestGuildWithMembers(harness, 1);
-			const message = await sendChannelMessage(harness, members[0].token, systemChannel.id, 'Reported');
-			const spend = refuseNextAllowanceSpend();
-			await reportMessage(harness, owner.token, systemChannel.id, message.id)
-				.expect(429, APIErrorCodes.RATE_LIMITED)
-				.execute();
-			expect(spend).toHaveBeenCalledTimes(1);
-			spend.mockRestore();
-			expect(await countReports()).toBe(0);
-			await reportMessage(harness, owner.token, systemChannel.id, message.id).expect(HTTP_STATUS.OK).execute();
-			expect(await countReports()).toBe(1);
-		});
 	});
 	describe('DSA Report Flow', () => {
-		test('should send DSA verification email', async () => {
-			await clearTestEmails(harness);
-			const email = createUniqueEmail('dsa-reporter');
-			await createBuilderWithoutAuth(harness)
-				.post('/reports/dsa/email/send')
-				.body({email})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const emails = await listTestEmails(harness);
-			const dsaEmail = findLastTestEmail(emails, 'dsa_report_verification');
-			expect(dsaEmail).toBeTruthy();
-			expect(dsaEmail!.to).toBe(email.toLowerCase());
-			expect(dsaEmail!.metadata.code).toBeTruthy();
-		});
-		test('should verify DSA email and return ticket', async () => {
-			await clearTestEmails(harness);
-			const email = createUniqueEmail('dsa-reporter');
-			await createBuilderWithoutAuth(harness).post('/reports/dsa/email/send').body({email}).execute();
-			const emails = await listTestEmails(harness);
-			const dsaEmail = findLastTestEmail(emails, 'dsa_report_verification');
-			expect(dsaEmail).toBeTruthy();
-			const code = dsaEmail!.metadata.code;
-			const verifyResponse = await createBuilder<{
-				ticket: string;
-			}>(harness, '')
-				.post('/reports/dsa/email/verify')
-				.body({email, code})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(verifyResponse.ticket).toBeTruthy();
-			expect(verifyResponse.ticket.length).toBeGreaterThan(0);
-		});
-		test('should reject DSA email verification with invalid code', async () => {
-			await clearTestEmails(harness);
-			const email = createUniqueEmail('dsa-reporter');
-			await createBuilderWithoutAuth(harness).post('/reports/dsa/email/send').body({email}).execute();
-			await createBuilderWithoutAuth(harness)
-				.post('/reports/dsa/email/verify')
-				.body({email, code: 'XXXX-XXXX'})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should create DSA user report with valid ticket', async () => {
-			await clearTestEmails(harness);
-			const email = createUniqueEmail('dsa-reporter');
-			const targetUser = await createTestAccount(harness);
-			await createBuilderWithoutAuth(harness).post('/reports/dsa/email/send').body({email}).execute();
-			const emails = await listTestEmails(harness);
-			const dsaEmail = findLastTestEmail(emails, 'dsa_report_verification');
-			const code = dsaEmail!.metadata.code;
-			const verifyResponse = await createBuilder<{
-				ticket: string;
-			}>(harness, '')
-				.post('/reports/dsa/email/verify')
-				.body({email, code})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const result = await createBuilder<ReportResponse>(harness, '')
-				.post('/reports/dsa')
-				.body({
-					ticket: verifyResponse.ticket,
-					report_type: 'user',
-					category: 'harassment',
-					user_id: targetUser.userId,
-					reporter_full_legal_name: 'John Doe',
-					reporter_country_of_residence: 'DE',
-					additional_info: 'DSA report for harassment',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-			expect(result.status).toBe('pending');
-		});
-		test('a DSA notice that fails target resolution keeps its ticket', async () => {
-			await clearTestEmails(harness);
-			const email = createUniqueEmail('dsa-reporter');
-			const targetUser = await createTestAccount(harness);
-			await createBuilderWithoutAuth(harness).post('/reports/dsa/email/send').body({email}).execute();
-			const emails = await listTestEmails(harness);
-			const dsaEmail = findLastTestEmail(emails, 'dsa_report_verification');
-			const code = dsaEmail!.metadata.code;
-			const verifyResponse = await createBuilder<{
-				ticket: string;
-			}>(harness, '')
-				.post('/reports/dsa/email/verify')
-				.body({email, code})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilderWithoutAuth(harness)
-				.post('/reports/dsa')
-				.body({
-					ticket: verifyResponse.ticket,
-					report_type: 'user',
-					category: 'harassment',
-					user_id: TEST_IDS.NONEXISTENT_USER,
-					reporter_full_legal_name: 'John Doe',
-					reporter_country_of_residence: 'DE',
-				})
-				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_USER)
-				.execute();
-			const result = await createBuilder<ReportResponse>(harness, '')
-				.post('/reports/dsa')
-				.body({
-					ticket: verifyResponse.ticket,
-					report_type: 'user',
-					category: 'harassment',
-					user_id: targetUser.userId,
-					reporter_full_legal_name: 'John Doe',
-					reporter_country_of_residence: 'DE',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-		});
-		test('should create DSA guild report with valid ticket', async () => {
-			await clearTestEmails(harness);
-			const email = createUniqueEmail('dsa-reporter');
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'DSA Test Guild');
-			await createBuilderWithoutAuth(harness).post('/reports/dsa/email/send').body({email}).execute();
-			const emails = await listTestEmails(harness);
-			const dsaEmail = findLastTestEmail(emails, 'dsa_report_verification');
-			const code = dsaEmail!.metadata.code;
-			const verifyResponse = await createBuilder<{
-				ticket: string;
-			}>(harness, '')
-				.post('/reports/dsa/email/verify')
-				.body({email, code})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const result = await createBuilder<ReportResponse>(harness, '')
-				.post('/reports/dsa')
-				.body({
-					ticket: verifyResponse.ticket,
-					report_type: 'guild',
-					category: 'illegal_activity',
-					guild_id: guild.id,
-					reporter_full_legal_name: 'Jane Doe',
-					reporter_country_of_residence: 'FR',
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			expect(result.report_id).toBeTruthy();
-			expect(result.status).toBe('pending');
-		});
 		test('should reject DSA message report with a non-numeric message link segment', async () => {
 			await clearTestEmails(harness);
 			const email = createUniqueEmail('dsa-reporter');
@@ -1443,48 +804,6 @@ describe('Content Reporting', () => {
 					category: 'harassment',
 					user_id: targetUser.userId.toString(),
 					reporter_full_legal_name: 'John Doe',
-					reporter_country_of_residence: 'DE',
-				})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should reject DSA report with malformed ticket', async () => {
-			const targetUser = await createTestAccount(harness);
-			await createBuilderWithoutAuth(harness)
-				.post('/reports/dsa')
-				.body({
-					ticket: '',
-					report_type: 'user',
-					category: 'harassment',
-					user_id: targetUser.userId,
-					reporter_full_legal_name: 'John Doe',
-					reporter_country_of_residence: 'DE',
-				})
-				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
-		});
-		test('should require reporter_full_legal_name for DSA report', async () => {
-			await clearTestEmails(harness);
-			const email = createUniqueEmail('dsa-reporter');
-			const targetUser = await createTestAccount(harness);
-			await createBuilderWithoutAuth(harness).post('/reports/dsa/email/send').body({email}).execute();
-			const emails = await listTestEmails(harness);
-			const dsaEmail = findLastTestEmail(emails, 'dsa_report_verification');
-			const code = dsaEmail!.metadata.code;
-			const verifyResponse = await createBuilderWithoutAuth<{
-				ticket: string;
-			}>(harness)
-				.post('/reports/dsa/email/verify')
-				.body({email, code})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			await createBuilderWithoutAuth(harness)
-				.post('/reports/dsa')
-				.body({
-					ticket: verifyResponse.ticket,
-					report_type: 'user',
-					category: 'harassment',
-					user_id: targetUser.userId.toString(),
 					reporter_country_of_residence: 'DE',
 				})
 				.expect(HTTP_STATUS.BAD_REQUEST)

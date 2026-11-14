@@ -67,16 +67,11 @@ impl Store {
         &self,
         bucket: &str,
         status: StatusCode,
-        versioned: bool,
     ) -> Option<StorageError> {
         if status == StatusCode::NOT_FOUND
             || (status == StatusCode::FORBIDDEN && self.read_is_unsigned(bucket))
         {
-            return Some(if versioned {
-                StorageError::ObjectChanged
-            } else {
-                StorageError::NotFound
-            });
+            return Some(StorageError::NotFound);
         }
         if status == StatusCode::PRECONDITION_FAILED {
             return Some(StorageError::ObjectChanged);

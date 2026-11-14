@@ -1,47 +1,152 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::ffi::OsString;
+use std::mem::transmute;
 use std::os::windows::ffi::OsStrExt;
+use std::sync::OnceLock;
 
 use napi::Result;
-use windows::Win32::Foundation::{HWND, LPARAM};
+use windows::Win32::Foundation::{FreeLibrary, HMODULE, HWND, LPARAM};
 use windows::Win32::Networking::WindowsWebServices::{
-    WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM, WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM,
-    WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS,
+    WEBAUTHN_ASSERTION, WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM,
+    WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM, WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS,
     WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS_CURRENT_VERSION,
     WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS,
     WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS_CURRENT_VERSION, WEBAUTHN_CLIENT_DATA,
     WEBAUTHN_CLIENT_DATA_CURRENT_VERSION, WEBAUTHN_COSE_CREDENTIAL_PARAMETER,
     WEBAUTHN_COSE_CREDENTIAL_PARAMETER_CURRENT_VERSION, WEBAUTHN_COSE_CREDENTIAL_PARAMETERS,
-    WEBAUTHN_CREDENTIAL, WEBAUTHN_CREDENTIAL_CURRENT_VERSION, WEBAUTHN_CREDENTIALS,
-    WEBAUTHN_CTAP_TRANSPORT_INTERNAL, WEBAUTHN_CTAP_TRANSPORT_USB, WEBAUTHN_HASH_ALGORITHM_SHA_256,
-    WEBAUTHN_LARGE_BLOB_SUPPORT_NONE, WEBAUTHN_RP_ENTITY_INFORMATION,
-    WEBAUTHN_RP_ENTITY_INFORMATION_CURRENT_VERSION, WEBAUTHN_USER_ENTITY_INFORMATION,
-    WEBAUTHN_USER_ENTITY_INFORMATION_CURRENT_VERSION, WebAuthNAuthenticatorGetAssertion,
-    WebAuthNAuthenticatorMakeCredential, WebAuthNFreeAssertion, WebAuthNFreeCredentialAttestation,
-    WebAuthNGetApiVersionNumber, WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable,
+    WEBAUTHN_CREDENTIAL, WEBAUTHN_CREDENTIAL_ATTESTATION, WEBAUTHN_CREDENTIAL_CURRENT_VERSION,
+    WEBAUTHN_CREDENTIALS, WEBAUTHN_CTAP_TRANSPORT_INTERNAL, WEBAUTHN_CTAP_TRANSPORT_USB,
+    WEBAUTHN_HASH_ALGORITHM_SHA_256, WEBAUTHN_LARGE_BLOB_SUPPORT_NONE,
+    WEBAUTHN_RP_ENTITY_INFORMATION, WEBAUTHN_RP_ENTITY_INFORMATION_CURRENT_VERSION,
+    WEBAUTHN_USER_ENTITY_INFORMATION, WEBAUTHN_USER_ENTITY_INFORMATION_CURRENT_VERSION,
+};
+use windows::Win32::System::LibraryLoader::{
+    GetProcAddress, LOAD_LIBRARY_SEARCH_SYSTEM32, LoadLibraryExW,
 };
 use windows::Win32::System::Threading::GetCurrentProcessId;
 use windows::Win32::UI::WindowsAndMessaging::{
     EnumWindows, GetDesktopWindow, GetForegroundWindow, GetWindowThreadProcessId, IsWindow,
     IsWindowVisible,
 };
-use windows_core::{BOOL, PCWSTR};
+use windows_core::{BOOL, HRESULT, PCSTR, PCWSTR, s, w};
 
 use crate::common::{
     CREATE_PREFIX, CreateInput, CreateResult, DescriptorInput, GET_PREFIX, GetInput, GetResult,
     ceremony_error,
 };
 
+type RawExport = unsafe extern "system" fn() -> isize;
+type GetApiVersionNumberFn = unsafe extern "system" fn() -> u32;
+type IsUserVerifyingPlatformAuthenticatorAvailableFn =
+    unsafe extern "system" fn(*mut BOOL) -> HRESULT;
+type MakeCredentialFn = unsafe extern "system" fn(
+    HWND,
+    *const WEBAUTHN_RP_ENTITY_INFORMATION,
+    *const WEBAUTHN_USER_ENTITY_INFORMATION,
+    *const WEBAUTHN_COSE_CREDENTIAL_PARAMETERS,
+    *const WEBAUTHN_CLIENT_DATA,
+    *const WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS,
+    *mut *mut WEBAUTHN_CREDENTIAL_ATTESTATION,
+) -> HRESULT;
+type GetAssertionFn = unsafe extern "system" fn(
+    HWND,
+    PCWSTR,
+    *const WEBAUTHN_CLIENT_DATA,
+    *const WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS,
+    *mut *mut WEBAUTHN_ASSERTION,
+) -> HRESULT;
+type FreeCredentialAttestationFn =
+    unsafe extern "system" fn(*const WEBAUTHN_CREDENTIAL_ATTESTATION);
+type FreeAssertionFn = unsafe extern "system" fn(*const WEBAUTHN_ASSERTION);
+
+struct WebAuthnApi {
+    version: u32,
+    is_user_verifying_platform_authenticator_available:
+        IsUserVerifyingPlatformAuthenticatorAvailableFn,
+    make_credential: MakeCredentialFn,
+    get_assertion: GetAssertionFn,
+    free_credential_attestation: FreeCredentialAttestationFn,
+    free_assertion: FreeAssertionFn,
+}
+
+static WEBAUTHN_API: OnceLock<Option<WebAuthnApi>> = OnceLock::new();
+
+fn webauthn_api() -> Option<&'static WebAuthnApi> {
+    WEBAUTHN_API
+        .get_or_init(|| load_webauthn_api(w!("webauthn.dll")))
+        .as_ref()
+}
+
+fn load_webauthn_api(library: PCWSTR) -> Option<WebAuthnApi> {
+    let module = unsafe { LoadLibraryExW(library, None, LOAD_LIBRARY_SEARCH_SYSTEM32) }.ok()?;
+    let api = resolve_webauthn_api(module);
+    if api.is_none() {
+        let _ = unsafe { FreeLibrary(module) };
+    }
+    api
+}
+
+fn resolve_webauthn_api(module: HMODULE) -> Option<WebAuthnApi> {
+    let get_api_version_number = unsafe {
+        transmute::<RawExport, GetApiVersionNumberFn>(export(
+            module,
+            s!("WebAuthNGetApiVersionNumber"),
+        )?)
+    };
+    let version = unsafe { get_api_version_number() };
+    if version == 0 {
+        return None;
+    }
+    unsafe {
+        Some(WebAuthnApi {
+            version,
+            is_user_verifying_platform_authenticator_available: transmute::<
+                RawExport,
+                IsUserVerifyingPlatformAuthenticatorAvailableFn,
+            >(export(
+                module,
+                s!("WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable"),
+            )?),
+            make_credential: transmute::<RawExport, MakeCredentialFn>(export(
+                module,
+                s!("WebAuthNAuthenticatorMakeCredential"),
+            )?),
+            get_assertion: transmute::<RawExport, GetAssertionFn>(export(
+                module,
+                s!("WebAuthNAuthenticatorGetAssertion"),
+            )?),
+            free_credential_attestation: transmute::<RawExport, FreeCredentialAttestationFn>(
+                export(module, s!("WebAuthNFreeCredentialAttestation"))?,
+            ),
+            free_assertion: transmute::<RawExport, FreeAssertionFn>(export(
+                module,
+                s!("WebAuthNFreeAssertion"),
+            )?),
+        })
+    }
+}
+
+fn export(module: HMODULE, name: PCSTR) -> Option<RawExport> {
+    unsafe { GetProcAddress(module, name) }
+}
+
 pub fn api_version() -> u32 {
-    unsafe { WebAuthNGetApiVersionNumber() }
+    webauthn_api().map_or(0, |api| api.version)
 }
 
 pub fn is_user_verifying_platform_authenticator_available() -> bool {
-    match unsafe { WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable() } {
-        Ok(b) => b.as_bool(),
-        Err(_) => false,
-    }
+    let Some(api) = webauthn_api() else {
+        return false;
+    };
+    let mut available = BOOL(0);
+    let result =
+        unsafe { (api.is_user_verifying_platform_authenticator_available)(&mut available) };
+    result.is_ok() && available.as_bool()
+}
+
+fn require_webauthn_api(prefix: &str) -> Result<&'static WebAuthnApi> {
+    webauthn_api().ok_or_else(|| ceremony_error(prefix, "WebAuthnApiUnavailable"))
 }
 
 fn to_wide(value: &str) -> Vec<u16> {
@@ -143,6 +248,7 @@ fn copy_buffer(ptr: *const u8, len: u32) -> Result<Vec<u8>> {
 }
 
 pub fn make_credential(input: &mut CreateInput) -> Result<CreateResult> {
+    let api = require_webauthn_api(CREATE_PREFIX)?;
     let rp_id_w = to_wide(&input.rp_id);
     let rp_name_w = to_wide(&input.rp_name);
     let user_name_w = to_wide(&input.user_name);
@@ -187,7 +293,8 @@ pub fn make_credential(input: &mut CreateInput) -> Result<CreateResult> {
     let (_exclude_keep, exclude_list) = build_credential_list(&input.exclude_credentials);
 
     let options = WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS {
-        dwVersion: api_version()
+        dwVersion: api
+            .version
             .min(WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS_CURRENT_VERSION),
         dwTimeoutMilliseconds: input.timeout_ms,
         CredentialList: exclude_list,
@@ -201,18 +308,20 @@ pub fn make_credential(input: &mut CreateInput) -> Result<CreateResult> {
         ..Default::default()
     };
 
-    let attestation_ptr = unsafe {
-        WebAuthNAuthenticatorMakeCredential(
+    let mut attestation_ptr: *mut WEBAUTHN_CREDENTIAL_ATTESTATION = std::ptr::null_mut();
+    unsafe {
+        (api.make_credential)(
             interaction_window(input.window_handle),
             &rp,
             &user,
             &params,
             &client_data,
-            Some(&options),
+            &options,
+            &mut attestation_ptr,
         )
-    };
-    let attestation_ptr = attestation_ptr
-        .map_err(|err| ceremony_error(CREATE_PREFIX, &format!("WebAuthnCallFailed: {err}")))?;
+    }
+    .ok()
+    .map_err(|err| ceremony_error(CREATE_PREFIX, &format!("WebAuthnCallFailed: {err}")))?;
     if attestation_ptr.is_null() {
         return Err(ceremony_error(CREATE_PREFIX, "InvalidWebAuthnResult"));
     }
@@ -226,7 +335,7 @@ pub fn make_credential(input: &mut CreateInput) -> Result<CreateResult> {
         0
     };
 
-    unsafe { WebAuthNFreeCredentialAttestation(Some(attestation_ptr)) };
+    unsafe { (api.free_credential_attestation)(attestation_ptr) };
 
     Ok(CreateResult {
         raw_id,
@@ -237,6 +346,7 @@ pub fn make_credential(input: &mut CreateInput) -> Result<CreateResult> {
 }
 
 pub fn get_assertion(input: &mut GetInput) -> Result<GetResult> {
+    let api = require_webauthn_api(GET_PREFIX)?;
     let rp_id_w = to_wide(&input.rp_id);
 
     let client_data = WEBAUTHN_CLIENT_DATA {
@@ -249,7 +359,9 @@ pub fn get_assertion(input: &mut GetInput) -> Result<GetResult> {
     let (_allow_keep, allow_list) = build_credential_list(&input.allow_credentials);
 
     let options = WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS {
-        dwVersion: api_version().min(WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS_CURRENT_VERSION),
+        dwVersion: api
+            .version
+            .min(WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS_CURRENT_VERSION),
         dwTimeoutMilliseconds: input.timeout_ms,
         CredentialList: allow_list,
         dwAuthenticatorAttachment: input.authenticator_attachment,
@@ -257,16 +369,18 @@ pub fn get_assertion(input: &mut GetInput) -> Result<GetResult> {
         ..Default::default()
     };
 
-    let assertion_ptr = unsafe {
-        WebAuthNAuthenticatorGetAssertion(
+    let mut assertion_ptr: *mut WEBAUTHN_ASSERTION = std::ptr::null_mut();
+    unsafe {
+        (api.get_assertion)(
             interaction_window(input.window_handle),
             PCWSTR(rp_id_w.as_ptr()),
             &client_data,
-            Some(&options),
+            &options,
+            &mut assertion_ptr,
         )
-    };
-    let assertion_ptr = assertion_ptr
-        .map_err(|err| ceremony_error(GET_PREFIX, &format!("WebAuthnCallFailed: {err}")))?;
+    }
+    .ok()
+    .map_err(|err| ceremony_error(GET_PREFIX, &format!("WebAuthnCallFailed: {err}")))?;
     if assertion_ptr.is_null() {
         return Err(ceremony_error(GET_PREFIX, "InvalidWebAuthnResult"));
     }
@@ -291,7 +405,7 @@ pub fn get_assertion(input: &mut GetInput) -> Result<GetResult> {
         0
     };
 
-    unsafe { WebAuthNFreeAssertion(assertion_ptr) };
+    unsafe { (api.free_assertion)(assertion_ptr) };
 
     Ok(GetResult {
         raw_id,
@@ -301,4 +415,19 @@ pub fn get_assertion(input: &mut GetInput) -> Result<GetResult> {
         client_data_json: input.client_data_json.clone(),
         used_transport,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn library_without_webauthn_exports_reports_no_api() {
+        assert!(load_webauthn_api(w!("kernel32.dll")).is_none());
+    }
+
+    #[test]
+    fn missing_library_reports_no_api() {
+        assert!(load_webauthn_api(w!("fluxer-missing-webauthn.dll")).is_none());
+    }
 }

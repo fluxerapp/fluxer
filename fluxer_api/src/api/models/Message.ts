@@ -5,9 +5,9 @@ import type {MessageRow} from '@app/api/database/types/MessageTypes';
 import {Attachment} from '@app/api/models/Attachment';
 import {CallInfo} from '@app/api/models/CallInfo';
 import {Embed} from '@app/api/models/Embed';
-import {Poll} from '@app/api/models/Poll';
 import {MessageRef} from '@app/api/models/MessageRef';
 import {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import {Poll} from '@app/api/models/Poll';
 import {StickerItem} from '@app/api/models/StickerItem';
 import type {MessageTypeValue} from '@fluxer/constants/src/ChannelConstants';
 

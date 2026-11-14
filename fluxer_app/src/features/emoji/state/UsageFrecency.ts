@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {compareStrings} from '@app/lib/list/CompareStrings';
+import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
+
 export type UsageEntry = Readonly<{
 	count: number;
 	lastUsed: number;
@@ -17,7 +20,7 @@ export type UsageRanking = Readonly<{
 	scoreByKey: ReadonlyMap<string, number>;
 }>;
 
-const USAGE_FRECENCY_HALF_LIFE_MS = 7 * 24 * 60 * 60 * 1000;
+const USAGE_FRECENCY_HALF_LIFE_MS = 7 * MS_PER_DAY;
 export const MAX_TRACKED_USAGE_KEYS = 200;
 const MAX_USAGE_COUNT = 100_000;
 const MAX_USAGE_KEY_LENGTH = 256;
@@ -73,7 +76,7 @@ function compareRankedUsage(a: RankedUsage, b: RankedUsage): number {
 	if (a.entry.count !== b.entry.count) {
 		return b.entry.count - a.entry.count;
 	}
-	return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
+	return compareStrings(a.key, b.key);
 }
 
 function rankEntries(usage: Readonly<Record<string, UsageEntry>>, now: number): Array<RankedUsage> {

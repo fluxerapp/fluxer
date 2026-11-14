@@ -22,8 +22,9 @@ export type GuildReadyData = Readonly<{
 	presences?: ReadonlyArray<PresenceRecord>;
 	voice_states?: ReadonlyArray<VoiceState>;
 	roles: ReadonlyArray<GuildRole>;
-	joined_at: string;
+	joined_at: string | null;
 	unavailable?: boolean;
+	visiting?: boolean;
 	unavailable_hidden?: boolean;
 	degraded?: boolean;
 }>;

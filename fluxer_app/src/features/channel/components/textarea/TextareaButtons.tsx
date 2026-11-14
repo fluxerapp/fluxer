@@ -60,7 +60,6 @@ interface TextareaButtonsProps {
 	invisibleExpressionPickerTriggerRef: React.RefObject<HTMLDivElement | null>;
 	onExpressionPickerToggle: (tab: ExpressionPickerTabType) => void;
 	onSubmit: () => void;
-	disableSendButton?: boolean;
 }
 
 export const TextareaButtons = React.forwardRef<HTMLDivElement, TextareaButtonsProps>(
@@ -89,7 +88,6 @@ export const TextareaButtons = React.forwardRef<HTMLDivElement, TextareaButtonsP
 			invisibleExpressionPickerTriggerRef,
 			onExpressionPickerToggle,
 			onSubmit,
-			disableSendButton,
 		},
 		ref,
 	) => {
@@ -123,10 +121,9 @@ export const TextareaButtons = React.forwardRef<HTMLDivElement, TextareaButtonsP
 		}
 		const buttonSwapMotion = getReducedMotionProps(MOBILE_BUTTON_SWAP_MOTION, Accessibility.useReducedMotion);
 		const shouldShowDesktopSendButton = showMessageSendButton;
-		const desktopSendDisabled =
-			isSlowmodeActive || isOverLimit || (!hasContent && !hasAttachments) || disableSendButton;
+		const desktopSendDisabled = isSlowmodeActive || isOverLimit || (!hasContent && !hasAttachments);
 		const shouldShowVoiceButton = buttonModel.visibleButton === 'voice';
-		const mobileSendDisabled = buttonModel.sendButton.disabled || Boolean(disableSendButton);
+		const mobileSendDisabled = buttonModel.sendButton.disabled;
 		return (
 			<div
 				className={clsx(styles.buttonContainerDense, styles.sideButtonPadding)}

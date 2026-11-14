@@ -7,7 +7,10 @@ import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header
 import {MemberListContainer} from '@app/features/channel/components/MemberListContainer';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {getPostForum} from '@app/features/forum/utils/ForumChannelUtils';
-import {BACK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	BACK_DESCRIPTOR,
+	CLOSE_DESCRIPTOR as D_CLOSE_THREAD_PANEL_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {closeThreadPanel, openThreadFullView} from '@app/features/threads/commands/ThreadNavigation';
@@ -24,10 +27,11 @@ import * as D from '@app/features/threads/utils/ThreadMessageDescriptors';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePopout} from '@app/features/ui/hooks/usePopout';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowLeftIcon, ArrowsOutSimpleIcon, ChatsIcon, DotsThreeIcon, UsersIcon, XIcon} from '@phosphor-icons/react';
+import {ArrowsOutSimpleIcon, ChatsIcon, DotsThreeIcon, UsersIcon, XIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useRef} from 'react';
@@ -152,7 +156,7 @@ const PanelHeader = observer(({thread, title}: {thread?: Channel; title: string}
 					<ChannelHeaderIcon
 						icon={XIcon}
 						iconWeight="bold"
-						label={i18n._(D.CLOSE_THREAD_PANEL_DESCRIPTOR)}
+						label={i18n._(D_CLOSE_THREAD_PANEL_DESCRIPTOR)}
 						onClick={closeThreadPanel}
 						className={headerStyles.iconButtonDefault}
 						data-flx="threads.thread-side-panel.panel-header.channel-header-icon.close"
@@ -163,7 +167,7 @@ const PanelHeader = observer(({thread, title}: {thread?: Channel; title: string}
 	);
 });
 
-export const ThreadChat = observer(({thread}: {thread: Channel}) => (
+const ThreadChat = observer(({thread}: {thread: Channel}) => (
 	<ChannelChatLayout
 		messages={<Messages key={thread.id} channel={thread} data-flx="threads.thread-chat.messages" />}
 		textarea={<ThreadComposerArea thread={thread} data-flx="threads.thread-chat.thread-composer-area" />}
@@ -183,7 +187,7 @@ export function useThreadPanelState(parent: Channel | undefined): {
 	return {thread: undefined, createMessageId: target ? target.messageId : undefined};
 }
 
-export const ThreadSidePanel = observer(({parent}: {parent: Channel}) => {
+const ThreadSidePanel = observer(({parent}: {parent: Channel}) => {
 	const {i18n} = useLingui();
 	const {thread, createMessageId} = useThreadPanelState(parent);
 	const handleResizeStart = usePanelResize();

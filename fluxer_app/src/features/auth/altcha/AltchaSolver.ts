@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {CaptchaProviders} from '@fluxer/constants/src/CaptchaConstants';
 import {solveChallengeWorkers} from 'altcha-lib';
 import type {Challenge} from 'altcha-lib/types';
 
@@ -20,7 +21,7 @@ function createSolverWorker(): Worker {
 export function readAltchaChallenge(body: unknown): AltchaChallenge | null {
 	if (typeof body !== 'object' || body === null) return null;
 	const {captcha_provider: provider, altcha_challenge: challenge} = body as Record<string, unknown>;
-	if (provider !== 'altcha' || typeof challenge !== 'object' || challenge === null) return null;
+	if (provider !== CaptchaProviders.ALTCHA || typeof challenge !== 'object' || challenge === null) return null;
 	const {parameters, signature} = challenge as Record<string, unknown>;
 	if (typeof parameters !== 'object' || parameters === null || typeof signature !== 'string') return null;
 	return challenge as AltchaChallenge;

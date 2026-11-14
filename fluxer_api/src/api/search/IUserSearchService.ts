@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-import type {UserID} from '@app/api/BrandedTypes';
 import type {User} from '@app/api/models/User';
 import type {
 	ISearchAdapter as SchemaISearchAdapter,
@@ -12,8 +9,6 @@ export interface IUserSearchService extends SchemaISearchAdapter<UserSearchFilte
 	indexUser(user: User): Promise<void>;
 	indexUsers(users: Array<User>): Promise<void>;
 	updateUser(user: User): Promise<void>;
-	deleteUser(userId: UserID): Promise<void>;
-	deleteUsers(userIds: Array<UserID>): Promise<void>;
 	searchUsers(
 		query: string,
 		filters: UserSearchFilters,

@@ -18,7 +18,9 @@ export interface DiscoveryGuild {
 	member_count: number;
 	online_count: number;
 	features: Array<string>;
+	badge_ids: Array<string>;
 	verification_level: number;
+	visits_enabled?: boolean;
 }
 
 type DiscoveryGuildPayload = Omit<DiscoveryGuild, 'banner'> & {banner?: string | null};
@@ -127,5 +129,5 @@ export async function getChannelPreview(guildId: string, channelId: string): Pro
 
 export async function joinGuild(guildId: string): Promise<void> {
 	await http.post(Endpoints.DISCOVERY_JOIN(guildId));
-	logger.info('Joined guild via discovery', {guildId});
+	logger.debug('Joined guild via discovery', {guildId});
 }

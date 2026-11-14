@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
+import {
+	BLOCKED_USERS_DESCRIPTOR,
+	USERS_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
 
-const BLOCKED_USERS_DESCRIPTOR = msg({
-	message: 'Blocked users',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
 const BLOCKED_DESCRIPTOR = msg({
 	message: 'Blocked',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
@@ -15,10 +15,7 @@ const BLOCK_DESCRIPTOR = msg({
 	message: 'Block',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const USERS_DESCRIPTOR = msg({
-	message: 'Users',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+
 const UNBLOCK_DESCRIPTOR = msg({
 	message: 'Unblock',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

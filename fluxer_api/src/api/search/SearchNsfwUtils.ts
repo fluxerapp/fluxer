@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
 import {
 	channelToContentWarningView,
 	computeEffectiveChannelNsfw,
 	resolveEffectiveThreadNsfw,
 } from '@app/api/channel/utils/EffectiveContentWarning';
 import type {Channel} from '@app/api/models/Channel';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {ContentWarningLevel} from '@fluxer/constants/src/GuildConstants';
 import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 
-export function channelRequiresAgeVerification(
+export function channelIsAgeRestricted(
 	channel: Channel,
 	channelsById: ReadonlyMap<string, Channel>,
 	guildNsfw: boolean,
@@ -30,4 +34,26 @@ export function channelRequiresAgeVerification(
 		parent ? channelToContentWarningView(parent) : null,
 		guild,
 	);
+}
+
+export interface SearchNsfwAccess {
+	adult: boolean;
+	allowed: boolean;
+}
+
+export async function getSearchNsfwAccess(
+	userRepository: UserRepository,
+	userId: UserID,
+	iosApp: boolean,
+): Promise<SearchNsfwAccess> {
+	const user = await userRepository.findUnique(userId);
+	if (!user) {
+		throw new UnknownUserError();
+	}
+	const adult = canUserAccessNsfwContent(user);
+	if (!adult || !iosApp) {
+		return {adult, allowed: adult};
+	}
+	const settings = await userRepository.findSettings(userId);
+	return {adult, allowed: settings?.allowMatureContentOnIos ?? false};
 }

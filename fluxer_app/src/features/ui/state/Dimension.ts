@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {action, makeObservable, observable} from 'mobx';
 
 const BOTTOM_TOLERANCE = 2;
@@ -40,6 +41,7 @@ class Dimension {
 			updateGuildDimensions: action,
 			updateGuildListDimensions: action,
 			forgetChannelDimensions: action,
+			reset: action,
 		});
 	}
 
@@ -127,6 +129,16 @@ class Dimension {
 	handleCallCreate(channelId: string): void {
 		this.forgetChannelDimensions(channelId);
 	}
+
+	reset(): void {
+		this.channelDimensions.clear();
+		this.guildDimensions.clear();
+		this.guildListDimensions.set({scrollTop: 0});
+	}
 }
 
-export default new Dimension();
+const dimension = new Dimension();
+
+ResettableStates.register(dimension, () => dimension.reset());
+
+export default dimension;

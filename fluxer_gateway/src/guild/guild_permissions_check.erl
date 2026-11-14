@@ -61,16 +61,12 @@ viewable_channel_ids(UserId, Base, Channels, State) ->
         {#{}, [], #{}},
         Channels
     ),
-    lists:foldl(
-        fun(Id, Acc) ->
-            case maps:is_key(Id, ViewableParents) andalso is_category(Id, State) of
-                true -> Acc#{Id => true};
-                false -> Acc
-            end
-        end,
-        Viewable,
-        Undecided
-    ).
+    ViewableCategories =
+        #{
+            Id => true
+         || Id <- Undecided, maps:is_key(Id, ViewableParents) andalso is_category(Id, State)
+        },
+    maps:merge(Viewable, ViewableCategories).
 
 -spec classify_channel(
     map(),
@@ -81,21 +77,19 @@ viewable_channel_ids(UserId, Base, Channels, State) ->
     {#{channel_id() => true}, [channel_id()], map()}
 ) -> {#{channel_id() => true}, [channel_id()], map()}.
 classify_channel(Channel, UserId, Base, Virtual, State, {Viewable, Undecided, Parents} = Acc) ->
-    case channel_list_id(Channel) of
-        undefined ->
+    Id = channel_list_id(Channel),
+    case {Id, Id =/= undefined andalso base_has_view(Base, UserId, Id, State)} of
+        {undefined, _} ->
             Acc;
-        Id ->
-            case base_has_view(Base, UserId, Id, State) of
-                true ->
-                    Parent = snowflake_id:parse_maybe(
-                        maps:get(<<"parent_id">>, Channel, undefined)
-                    ),
-                    {Viewable#{Id => true}, Undecided, Parents#{Parent => true}};
-                false when is_map_key(Id, Virtual) ->
-                    {Viewable#{Id => true}, Undecided, Parents};
-                false ->
-                    {Viewable, [Id | Undecided], Parents}
-            end
+        {_, true} ->
+            Parent = snowflake_id:parse_maybe(
+                maps:get(<<"parent_id">>, Channel, undefined)
+            ),
+            {Viewable#{Id => true}, Undecided, Parents#{Parent => true}};
+        {_, false} when is_map_key(Id, Virtual) ->
+            {Viewable#{Id => true}, Undecided, Parents};
+        {_, false} ->
+            {Viewable, [Id | Undecided], Parents}
     end.
 
 -spec channel_list_id(map()) -> channel_id() | undefined.
@@ -115,28 +109,28 @@ is_category(ChannelId, State) ->
     boolean().
 base_has_view(Base, UserId, ChannelId, State) ->
     Perms = guild_permissions:channel_permissions(Base, UserId, ChannelId, State),
-    permission_bits:has(Perms, constants:view_channel_permission()).
+    bitset:has(Perms, constants:view_channel_permission()).
 
 -spec can_view_channel_by_permissions(user_id(), channel_id(), maybe_member(), guild_state()) ->
     boolean().
 can_view_channel_by_permissions(UserId, ChannelId, Member, State) ->
     Perms = guild_permissions:compute_member_permissions(UserId, ChannelId, Member, State),
-    permission_bits:has(Perms, constants:view_channel_permission()).
+    bitset:has(Perms, constants:view_channel_permission()).
 
 -spec can_view_channel_members(user_id(), channel_id(), maybe_member(), guild_state()) ->
     boolean().
 can_view_channel_members(UserId, ChannelId, Member, State) ->
     Perms = guild_permissions:compute_member_permissions(UserId, ChannelId, Member, State),
-    permission_bits:has(Perms, constants:view_channel_members_permission()).
+    bitset:has(Perms, constants:view_channel_members_permission()).
 
 -spec can_manage_channel(user_id(), maybe_channel_id(), guild_state()) -> boolean().
 can_manage_channel(UserId, ChannelId, State) ->
     Perms = guild_permissions:get_member_permissions(UserId, ChannelId, State),
-    permission_bits:has(Perms, constants:manage_channels_permission()).
+    bitset:has(Perms, constants:manage_channels_permission()).
 
 -spec can_access_message_by_permissions(permission(), binary(), guild_state()) -> boolean().
 can_access_message_by_permissions(Permissions, MessageId, State) ->
-    HasReadHistory = permission_bits:has(
+    HasReadHistory = bitset:has(
         Permissions, constants:read_message_history_permission()
     ),
     case HasReadHistory of
@@ -152,7 +146,7 @@ check_message_history_cutoff(MessageId, State) ->
         null ->
             false;
         CutoffMs ->
-            MessageMs = snowflake_util:extract_timestamp(MessageId),
+            MessageMs = snowflake_id:extract_timestamp(MessageId),
             MessageMs >= CutoffMs
     end.
 
@@ -185,7 +179,7 @@ get_max_role_position(UserId, State) ->
         {_, undefined} ->
             -1;
         {Member, Data} ->
-            Roles = guild_data_index:role_index(Data),
+            Roles = guild_data_index_roles:role_index(Data),
             compute_max_position(Member, Roles)
     end.
 
@@ -206,7 +200,7 @@ max_role_position_for_id(RoleId, Roles, MaxPos) ->
         Role -> max(role_position(Role), MaxPos)
     end.
 
--spec find_member_by_user_id(user_id(), guild_state()) -> member() | undefined.
+-spec find_member_by_user_id(term(), guild_state()) -> member() | undefined.
 find_member_by_user_id(UserId, State) when is_integer(UserId) ->
     case guild_permissions_common:resolve_data_map(State) of
         undefined -> undefined;
@@ -287,7 +281,7 @@ find_role_by_id(RoleId, Roles) ->
         undefined ->
             undefined;
         TargetId ->
-            find_role_in_list(TargetId, guild_permissions_common:ensure_list(Roles))
+            find_role_in_list(TargetId, map_utils:ensure_list(Roles))
     end.
 
 -spec find_role_in_list(role_id(), [term()]) -> role() | undefined.
@@ -311,7 +305,9 @@ find_channel_by_id(ChannelId, State) ->
         {snowflake_id:parse_maybe(ChannelId), guild_permissions_common:resolve_data_map(State)}
     of
         {ResolvedChannelId, Data} when is_integer(ResolvedChannelId), is_map(Data) ->
-            maps:get(ResolvedChannelId, guild_data_index:channel_index(Data), undefined);
+            maps:get(
+                ResolvedChannelId, guild_data_index_channels:channel_index(Data), undefined
+            );
         _ ->
             undefined
     end.
@@ -326,36 +322,32 @@ is_category_with_viewable_child(UserId, ChannelId, Base, State) ->
     user_id(), channel_id(), guild_permissions:base_permissions(), guild_state()
 ) -> boolean().
 any_child_viewable(UserId, CategoryId, Base, State) ->
+    IsViewableChild = fun(Channel) ->
+        is_viewable_child(Channel, UserId, CategoryId, Base, State)
+    end,
     case guild_permissions_common:resolve_data_map(State) of
         undefined ->
             false;
         Data ->
             Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
-            lists:any(
-                fun(Channel) -> is_viewable_child(Channel, UserId, CategoryId, Base, State) end,
-                Channels
-            )
+            lists:any(IsViewableChild, Channels)
     end.
 
 -spec is_viewable_child(
     map(), user_id(), channel_id(), guild_permissions:base_permissions(), guild_state()
 ) -> boolean().
 is_viewable_child(Channel, UserId, CategoryId, Base, State) ->
-    case snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Channel, undefined)) of
-        CategoryId ->
-            case channel_list_id(Channel) of
-                ChildId when is_integer(ChildId) -> base_has_view(Base, UserId, ChildId, State);
-                undefined -> false
-            end;
-        _ ->
-            false
-    end.
+    snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Channel, undefined)) =:= CategoryId andalso
+        case channel_list_id(Channel) of
+            ChildId when is_integer(ChildId) -> base_has_view(Base, UserId, ChildId, State);
+            undefined -> false
+        end.
 
 -spec view_inputs(channel_id(), guild_state()) -> term().
 view_inputs(ChannelId, State) ->
     Data = map_utils:ensure_map(guild_permissions_common:resolve_data_map(State)),
     Guild = map_utils:ensure_map(maps:get(<<"guild">>, Data, #{})),
-    Index = guild_data_index:channel_index(Data),
+    Index = guild_data_index_channels:channel_index(Data),
     Cache = map_utils:ensure_map(maps:get(overwrite_perms_cache, Data, #{})),
     {
         maps:get(<<"owner_id">>, Guild, undefined),

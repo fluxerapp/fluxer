@@ -3,7 +3,7 @@
 .indicator {
 	position: absolute;
 	top: 0.5rem;
-	left: 0.5rem;
+	inset-inline-start: 0.5rem;
 	z-index: 10;
 	display: flex;
 	align-items: center;
@@ -14,5 +14,5 @@
 	font-weight: 600;
 	font-size: 0.875rem;
 	line-height: 1;
-	color: var(--text-on-brand-primary);
+	color: var(--text-on-dark);
 }

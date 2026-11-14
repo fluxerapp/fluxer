@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	OPEN_ANIMATED_GIF_IN_FULL_VIEW_DESCRIPTOR,
+	OPEN_ANIMATED_GIF_VIDEO_IN_FULL_VIEW_DESCRIPTOR,
+	OPEN_IMAGE_IN_FULL_VIEW_DESCRIPTOR,
+	OPEN_VIDEO_IN_FULL_VIEW_DESCRIPTOR,
+} from '@app/features/channel/components/embeds/attachments/AttachmentGridItem';
+import {isMediaAttachment} from '@app/features/channel/components/MessageAttachmentUtils';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Emoji from '@app/features/emoji/state/Emoji';
 import styles from '@app/features/forum/components/Forum.module.css';
@@ -7,24 +14,40 @@ import {ForumPostMenuSheet, openForumPostContextMenu} from '@app/features/forum/
 import {ForumEmoji, ForumTagPill} from '@app/features/forum/components/ForumTagPill';
 import ForumPosts from '@app/features/forum/state/ForumPosts';
 import ForumReadState from '@app/features/forum/state/ForumReadState';
-import {getDefaultReaction, getForumTags} from '@app/features/forum/utils/ForumChannelUtils';
+import {getDefaultReaction, getForumTags, isMediaChannel} from '@app/features/forum/utils/ForumChannelUtils';
 import * as D from '@app/features/forum/utils/ForumMessageDescriptors';
 import {isPinnedPost} from '@app/features/forum/utils/ForumPostList';
+import {MESSAGE_COUNT_DESCRIPTOR as D_POST_COUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {formatNumber, getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {isSensitiveMediaHidden} from '@app/features/messaging/hooks/useMatureMedia';
+import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
-import {buildFitInsideMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {buildFitInsideMediaProxyURL, resolvePreferredImageFormat} from '@app/features/messaging/utils/MediaProxyUtils';
+import {
+	attachmentsToViewerItems,
+	determineMediaType,
+	findViewerItemIndex,
+} from '@app/features/messaging/utils/MediaViewerItemUtils';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {buildMessageNotificationBody} from '@app/features/notification/utils/MessageNotificationPreview';
 import Permission from '@app/features/permissions/state/Permission';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import Relationships from '@app/features/relationship/state/Relationships';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {openThread} from '@app/features/threads/commands/ThreadNavigation';
+import {openThreadFromEvent, type ThreadOpenEvent} from '@app/features/threads/commands/ThreadNavigation';
 import {lastActivityId} from '@app/features/threads/state/ChannelThreads';
 import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
+import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {formatShortRelativeTime} from '@app/features/ui/utils/ShortRelativeTimeLabels';
 import Users from '@app/features/user/state/Users';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {MessageAttachmentFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {DefaultReactionEmojiResponse} from '@fluxer/schema/src/domains/channel/ThreadSchemas';
@@ -38,11 +61,17 @@ import {ChatCircleIcon, PlayIcon, PushPinSimpleIcon} from '@phosphor-icons/react
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useMemo, useRef, useState} from 'react';
 
 const MAX_CARD_TAGS = 3;
 const LIST_THUMBNAIL_SIZE = 96;
 const GRID_THUMBNAIL_SIZE = 480;
+
+function formatCompactCount(count: number): string {
+	const locale = getFormattingLocale();
+	if (count < 1000) return formatNumber(count, locale);
+	return getCachedNumberFormat(locale, {notation: 'compact', maximumFractionDigits: 1}).format(count);
+}
 
 function isVisualAttachment(attachment: MessageAttachment): boolean {
 	const type = attachment.content_type ?? '';
@@ -50,16 +79,30 @@ function isVisualAttachment(attachment: MessageAttachment): boolean {
 		(type.startsWith('image/') || type.startsWith('video/')) &&
 		(attachment.flags & MessageAttachmentFlags.IS_SPOILER) === 0 &&
 		!attachment.nsfw &&
+		(attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) === 0 &&
 		!attachment.expired
 	);
 }
 
-function firstMedia(message: WireMessage | null | undefined): {src: string; video: boolean} | null {
+function firstMedia(
+	message: WireMessage | null | undefined,
+	channelId: string,
+): {attachment: MessageAttachment; src: string; video: boolean} | null {
+	if (!message || Relationships.isBlocked(message.author.id) || isSensitiveMediaHidden(false, channelId)) return null;
 	const attachment = message?.attachments?.find(isVisualAttachment);
 	const source = attachment?.proxy_url ?? attachment?.url;
 	if (!attachment || !source) return null;
-	return {src: source, video: (attachment.content_type ?? '').startsWith('video/')};
+	const src = AttachmentUrlRefresher.freshWhenReady(source);
+	if (src === null) return null;
+	return {attachment, src, video: (attachment.content_type ?? '').startsWith('video/')};
 }
+
+const FULL_VIEW_DESCRIPTORS = {
+	image: OPEN_IMAGE_IN_FULL_VIEW_DESCRIPTOR,
+	gif: OPEN_ANIMATED_GIF_IN_FULL_VIEW_DESCRIPTOR,
+	gifv: OPEN_ANIMATED_GIF_VIDEO_IN_FULL_VIEW_DESCRIPTOR,
+	video: OPEN_VIDEO_IN_FULL_VIEW_DESCRIPTOR,
+} as const;
 
 function defaultReactionState(
 	message: WireMessage | null | undefined,
@@ -119,14 +162,27 @@ interface ForumPostCardProps {
 export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) => {
 	const {i18n} = useLingui();
 	const [sheetOpen, setSheetOpen] = useState(false);
+	const cardRef = useRef<HTMLDivElement>(null);
 	const firstMessage = ForumPosts.getFirstMessage(post.id);
+	const record = useMemo(
+		() => (firstMessage ? new Message(firstMessage, {skipReactionHydration: true}) : null),
+		[firstMessage],
+	);
 	const preview = useMemo(() => {
 		if (firstMessage === undefined) return null;
-		if (firstMessage === null) return i18n._(D.ORIGINAL_MESSAGE_DELETED_DESCRIPTOR);
-		const record = new Message(firstMessage, {skipReactionHydration: true});
+		if (record === null) return i18n._(D.ORIGINAL_MESSAGE_DELETED_DESCRIPTOR);
 		return buildMessageNotificationBody(record, i18n);
-	}, [firstMessage, i18n]);
-	const media = firstMedia(firstMessage);
+	}, [firstMessage, record, i18n]);
+	const media = firstMedia(firstMessage, post.id);
+	const viewerAttachments =
+		grid && media && isMediaChannel(forum) && firstMessage
+			? (firstMessage.attachments ?? []).filter(
+					(attachment) => isVisualAttachment(attachment) && isMediaAttachment(attachment),
+				)
+			: [];
+	const opensViewer = media !== null && viewerAttachments.some((attachment) => attachment.id === media.attachment.id);
+	const mediaType = media ? determineMediaType(media.attachment) : 'image';
+	const fullViewLabel = i18n._(FULL_VIEW_DESCRIPTORS[mediaType === 'audio' ? 'image' : mediaType]);
 	const authorId = firstMessage?.author.id ?? post.ownerId;
 	const author = authorId ? Users.getUser(authorId) : undefined;
 	const authorName = author ? NicknameUtils.getNickname(author, forum.guildId, forum.id) : null;
@@ -139,7 +195,7 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 	const pinned = isPinnedPost(post);
 	const open = Navigation.threadId === post.id;
 	const lastActivity = new Date(SnowflakeUtils.extractTimestamp(lastActivityId(post)));
-	const handleOpen = useCallback(() => openThread(post), [post]);
+	const handleOpen = useCallback((event: ThreadOpenEvent) => openThreadFromEvent(post, event), [post]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
 			if (MobileLayout.enabled) {
@@ -153,138 +209,216 @@ export const ForumPostCard = observer(({forum, post, grid}: ForumPostCardProps) 
 	);
 	const thumbnail = media
 		? buildFitInsideMediaProxyURL(media.src, {
+				format: resolvePreferredImageFormat(),
 				width: grid ? GRID_THUMBNAIL_SIZE : LIST_THUMBNAIL_SIZE,
 				height: grid ? GRID_THUMBNAIL_SIZE : LIST_THUMBNAIL_SIZE,
 			})
 		: null;
+	const handleThumbnailError = useAttachmentRefreshOnError(media?.src);
+	const {ref: thumbnailRef, isNearViewport: thumbnailNearViewport} = useNearViewport<HTMLImageElement>({
+		rememberKey: thumbnail,
+	});
+	const thumbnailDisplaySrc = useApiAttachmentSrc(thumbnail ?? '', thumbnailNearViewport);
+	const handleOpenMedia = () => {
+		if (!media || !firstMessage || !record) return;
+		const items = attachmentsToViewerItems(viewerAttachments);
+		MediaViewerCommands.openMediaViewer(items, findViewerItemIndex(items, media.attachment.id), {
+			channelId: post.id,
+			messageId: firstMessage.id,
+			message: record,
+			sourceChannel: post,
+			sourcePost: post,
+		});
+	};
+	const mediaContent = (
+		<>
+			{thumbnail ? (
+				<img
+					ref={thumbnailRef}
+					src={thumbnailDisplaySrc}
+					alt=""
+					className={styles.cardMediaImage}
+					loading="lazy"
+					draggable={false}
+					onError={handleThumbnailError}
+					data-flx="forum.forum-post-card.card-media-image"
+				/>
+			) : (
+				<div className={styles.cardMediaPlaceholder} data-flx="forum.forum-post-card.card-media-placeholder">
+					<ChatCircleIcon size={32} data-flx="forum.forum-post-card.chat-circle-icon" />
+				</div>
+			)}
+			{media?.video && (
+				<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play">
+					<PlayIcon size={20} weight="fill" data-flx="forum.forum-post-card.play-icon" />
+				</span>
+			)}
+		</>
+	);
 	return (
 		<>
-			<FocusRing offset={-2} data-flx="forum.forum-post-card.focus-ring">
-				<div
-					role="button"
-					tabIndex={0}
-					className={clsx(styles.card, grid && styles.cardGrid, unread && styles.cardUnread, open && styles.cardOpen)}
-					aria-current={open ? 'true' : undefined}
-					onClick={handleOpen}
-					onKeyDown={(event) => {
-						if (event.key === 'Enter' || event.key === ' ') {
-							event.preventDefault();
-							handleOpen();
-						}
-					}}
-					onContextMenu={handleContextMenu}
-					data-flx="forum.forum-post-card.card.open"
-				>
-					{grid && (
-						<div className={styles.cardMedia} data-flx="forum.forum-post-card.card-media">
-							{thumbnail ? (
-								<img
-									src={thumbnail}
-									alt=""
-									className={styles.cardMediaImage}
-									loading="lazy"
-									draggable={false}
-									data-flx="forum.forum-post-card.card-media-image"
-								/>
-							) : (
-								<div className={styles.cardMediaPlaceholder} data-flx="forum.forum-post-card.card-media-placeholder">
-									<ChatCircleIcon size={32} data-flx="forum.forum-post-card.chat-circle-icon" />
-								</div>
-							)}
-							{media?.video && (
-								<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play">
-									<PlayIcon size={20} weight="fill" data-flx="forum.forum-post-card.play-icon" />
-								</span>
-							)}
-						</div>
-					)}
-					<div className={styles.cardBody} data-flx="forum.forum-post-card.card-body">
-						<div className={styles.cardHeader} data-flx="forum.forum-post-card.card-header">
-							{pinned && (
-								<PushPinSimpleIcon
-									size={16}
-									weight="fill"
-									aria-label={i18n._(D.PINNED_DESCRIPTOR)}
-									data-flx="forum.forum-post-card.push-pin-simple-icon"
-								/>
-							)}
-							{isNew && (
-								<span className={styles.newBadge} data-flx="forum.forum-post-card.new-badge">
-									{i18n._(D.NEW_BADGE_DESCRIPTOR)}
-								</span>
-							)}
-							{tags.slice(0, MAX_CARD_TAGS).map((tag) => (
-								<ForumTagPill key={tag.id} tag={tag} data-flx="forum.forum-post-card.forum-tag-pill" />
-							))}
-							{tags.length > MAX_CARD_TAGS && (
-								<span
-									className={styles.tag}
-									data-flx="forum.forum-post-card.tag"
-								>{`+${tags.length - MAX_CARD_TAGS}`}</span>
-							)}
-						</div>
-						<div className={styles.cardTitle} data-flx="forum.forum-post-card.card-title">
-							{post.name}
-						</div>
-						{preview != null && (
-							<div className={styles.cardPreview} data-flx="forum.forum-post-card.card-preview">
-								{authorName && (
-									<span
-										className={styles.cardAuthor}
-										data-flx="forum.forum-post-card.card-author"
-									>{`${authorName}: `}</span>
-								)}
-								<span data-flx="forum.forum-post-card.preview-text">{preview}</span>
+			<div
+				ref={cardRef}
+				className={clsx(styles.card, grid && styles.cardGrid, unread && styles.cardUnread, open && styles.cardOpen)}
+				data-flx="forum.forum-post-card.card"
+			>
+				{opensViewer && (
+					<FocusRing offset={-2} data-flx="forum.forum-post-card.card-media.focus-ring">
+						<button
+							type="button"
+							className={clsx(styles.cardMedia, styles.cardMediaViewer)}
+							aria-label={fullViewLabel}
+							onClick={handleOpenMedia}
+							onContextMenu={handleContextMenu}
+							data-flx="forum.forum-post-card.card-media.open-viewer.button"
+						>
+							{mediaContent}
+						</button>
+					</FocusRing>
+				)}
+				<FocusRing offset={-2} ringTarget={cardRef} data-flx="forum.forum-post-card.focus-ring">
+					<div
+						role="button"
+						tabIndex={0}
+						className={styles.cardOpenTarget}
+						aria-current={open ? 'true' : undefined}
+						onClick={handleOpen}
+						onKeyDown={(event) => {
+							if (event.key === 'Enter' || event.key === ' ') {
+								event.preventDefault();
+								handleOpen(event);
+							}
+						}}
+						onContextMenu={handleContextMenu}
+						data-flx="forum.forum-post-card.card.open"
+					>
+						{grid && !opensViewer && (
+							<div className={styles.cardMedia} data-flx="forum.forum-post-card.card-media">
+								{mediaContent}
 							</div>
 						)}
-						<div className={styles.cardFooter} data-flx="forum.forum-post-card.card-footer">
-							<DefaultReactionButton
-								forum={forum}
-								post={post}
-								message={firstMessage}
-								data-flx="forum.forum-post-card.default-reaction-button"
-							/>
-							<span className={styles.cardMeta} data-flx="forum.forum-post-card.card-meta">
-								<ChatCircleIcon
-									size={remFromPx(14)}
-									weight="fill"
-									aria-hidden
-									data-flx="forum.forum-post-card.chat-circle-icon--2"
+						<div className={styles.cardBody} data-flx="forum.forum-post-card.card-body">
+							<div className={styles.cardMain} data-flx="forum.forum-post-card.card-main">
+								<div className={styles.cardText} data-flx="forum.forum-post-card.card-text">
+									<div className={styles.cardHeader} data-flx="forum.forum-post-card.card-header">
+										{pinned && (
+											<PushPinSimpleIcon
+												size={16}
+												weight="fill"
+												aria-label={i18n._(D.PINNED_DESCRIPTOR)}
+												data-flx="forum.forum-post-card.push-pin-simple-icon"
+											/>
+										)}
+										{isNew && (
+											<span className={styles.newBadge} data-flx="forum.forum-post-card.new-badge">
+												{i18n._(D.NEW_BADGE_DESCRIPTOR)}
+											</span>
+										)}
+										{tags.slice(0, MAX_CARD_TAGS).map((tag) => (
+											<ForumTagPill key={tag.id} tag={tag} data-flx="forum.forum-post-card.forum-tag-pill" />
+										))}
+										{tags.length > MAX_CARD_TAGS && (
+											<span
+												className={styles.tag}
+												data-flx="forum.forum-post-card.tag"
+											>{`+${tags.length - MAX_CARD_TAGS}`}</span>
+										)}
+									</div>
+									<div className={styles.cardTitle} data-flx="forum.forum-post-card.card-title">
+										{post.name}
+									</div>
+									{preview != null && (
+										<div className={styles.cardPreview} data-flx="forum.forum-post-card.card-preview">
+											{authorName && (
+												<span
+													className={styles.cardAuthor}
+													data-flx="forum.forum-post-card.card-author"
+												>{`${authorName}: `}</span>
+											)}
+											<span data-flx="forum.forum-post-card.preview-text">{preview}</span>
+										</div>
+									)}
+								</div>
+								{!grid && thumbnail && (
+									<div className={styles.cardThumb} data-flx="forum.forum-post-card.card-thumb">
+										<img
+											ref={thumbnailRef}
+											src={thumbnailDisplaySrc}
+											alt=""
+											className={styles.cardMediaImage}
+											loading="lazy"
+											draggable={false}
+											onError={handleThumbnailError}
+											data-flx="forum.forum-post-card.card-media-image--2"
+										/>
+										{media?.video && (
+											<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play--2">
+												<PlayIcon size={16} weight="fill" data-flx="forum.forum-post-card.play-icon--2" />
+											</span>
+										)}
+									</div>
+								)}
+							</div>
+							<div className={styles.cardFooter} data-flx="forum.forum-post-card.card-footer">
+								<DefaultReactionButton
+									forum={forum}
+									post={post}
+									message={firstMessage}
+									data-flx="forum.forum-post-card.default-reaction-button"
 								/>
-								{i18n._(D.POST_COUNT_DESCRIPTOR, {count: post.messageCount})}
-							</span>
-							{unread && (
-								<span className={styles.cardUnreadLabel} data-flx="forum.forum-post-card.card-unread-label">
-									{unreadCount > 0
-										? i18n._(D.UNREAD_MESSAGES_DESCRIPTOR, {count: unreadCount})
-										: i18n._(D.HAS_UNREAD_MESSAGES_DESCRIPTOR)}
+								<span className={styles.cardMeta} data-flx="forum.forum-post-card.card-meta">
+									<ChatCircleIcon
+										size={remFromPx(14)}
+										weight="fill"
+										aria-hidden
+										data-flx="forum.forum-post-card.chat-circle-icon--2"
+									/>
+									<span aria-hidden data-flx="forum.forum-post-card.message-count">
+										{formatCompactCount(post.messageCount)}
+									</span>
+									<span className={styles.srOnly} data-flx="forum.forum-post-card.message-count-label">
+										{i18n._(D_POST_COUNT_DESCRIPTOR, {count: post.messageCount})}
+									</span>
 								</span>
-							)}
-							<span className={styles.cardMeta} data-flx="forum.forum-post-card.card-meta--2">
-								<span className={styles.cardDot} aria-hidden data-flx="forum.forum-post-card.card-dot" />
-								{DateUtils.getRelativeDateString(lastActivity, i18n)}
-							</span>
+								<div className={styles.cardFooterRest} data-flx="forum.forum-post-card.card-footer-rest">
+									<span
+										className={styles.cardFooterAnchor}
+										aria-hidden
+										data-flx="forum.forum-post-card.card-footer-anchor"
+									/>
+									<time
+										className={styles.cardTime}
+										dateTime={lastActivity.toISOString()}
+										title={DateUtils.getFormattedDateTime(lastActivity)}
+										data-flx="forum.forum-post-card.card-time"
+									>
+										<span aria-hidden data-flx="forum.forum-post-card.time-short">
+											{formatShortRelativeTime(i18n, lastActivity)}
+										</span>
+										<span className={styles.srOnly} data-flx="forum.forum-post-card.time-label">
+											{DateUtils.getRelativeDateString(lastActivity, i18n)}
+										</span>
+									</time>
+									{unread && (
+										<span className={styles.cardUnreadLabel} data-flx="forum.forum-post-card.card-unread-label">
+											<span aria-hidden data-flx="forum.forum-post-card.unread-short">
+												{unreadCount > 0
+													? i18n._(D.UNREAD_MESSAGES_SHORT_DESCRIPTOR, {count: unreadCount})
+													: i18n._(D.HAS_UNREAD_MESSAGES_SHORT_DESCRIPTOR)}
+											</span>
+											<span className={styles.srOnly} data-flx="forum.forum-post-card.unread-label">
+												{unreadCount > 0
+													? i18n._(D.UNREAD_MESSAGES_DESCRIPTOR, {count: unreadCount})
+													: i18n._(D.HAS_UNREAD_MESSAGES_DESCRIPTOR)}
+											</span>
+										</span>
+									)}
+								</div>
+							</div>
 						</div>
 					</div>
-					{!grid && thumbnail && (
-						<div className={styles.cardThumb} data-flx="forum.forum-post-card.card-thumb">
-							<img
-								src={thumbnail}
-								alt=""
-								className={styles.cardMediaImage}
-								loading="lazy"
-								draggable={false}
-								data-flx="forum.forum-post-card.card-media-image--2"
-							/>
-							{media?.video && (
-								<span className={styles.cardMediaPlay} data-flx="forum.forum-post-card.card-media-play--2">
-									<PlayIcon size={16} weight="fill" data-flx="forum.forum-post-card.play-icon--2" />
-								</span>
-							)}
-						</div>
-					)}
-				</div>
-			</FocusRing>
+				</FocusRing>
+			</div>
 			{sheetOpen && (
 				<ForumPostMenuSheet
 					post={post}

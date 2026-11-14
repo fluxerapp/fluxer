@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
-import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
-import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
-import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
+import {getDonationProductData} from '@app/api/donation/DonationProductData';
+import type {DonationRepository} from '@app/api/donation/DonationRepository';
+import type {EmailDnsValidationService} from '@app/api/infrastructure/EmailDnsValidationService';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Logger} from '@app/api/Logger';
-import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {getStripeCheckoutLocale} from '@app/api/stripe/StripeCheckoutLocale';
+import {getPortalConfigurationId} from '@app/api/stripe/StripePortalConfiguration';
 import {shouldDisableAdaptivePricing} from '@app/api/utils/CurrencyUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -20,48 +21,6 @@ import type Stripe from 'stripe';
 type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
 type CheckoutSessionMode = CheckoutSessionCreateParams['mode'];
 type CheckoutSessionLineItem = NonNullable<CheckoutSessionCreateParams['line_items']>[number];
-type CheckoutSessionLocale = NonNullable<CheckoutSessionCreateParams['locale']>;
-
-const STRIPE_CHECKOUT_LOCALES: Record<string, CheckoutSessionLocale> = {
-	bg: 'bg',
-	cs: 'cs',
-	da: 'da',
-	de: 'de',
-	el: 'el',
-	'en-GB': 'en-GB',
-	'en-US': 'en',
-	'es-419': 'es-419',
-	'es-ES': 'es',
-	fi: 'fi',
-	fr: 'fr',
-	hr: 'hr',
-	hu: 'hu',
-	id: 'id',
-	it: 'it',
-	ja: 'ja',
-	ko: 'ko',
-	lt: 'lt',
-	nl: 'nl',
-	no: 'nb',
-	pl: 'pl',
-	'pt-BR': 'pt-BR',
-	ro: 'ro',
-	ru: 'ru',
-	'sv-SE': 'sv',
-	th: 'th',
-	tr: 'tr',
-	vi: 'vi',
-	'zh-CN': 'zh',
-	'zh-TW': 'zh-TW',
-};
-
-function getStripeCheckoutLocale(locale: string | null): CheckoutSessionLocale {
-	if (!locale) {
-		return 'auto';
-	}
-	const checkoutLocale = STRIPE_CHECKOUT_LOCALES[locale];
-	return checkoutLocale ?? 'auto';
-}
 
 function isMissingCustomerError(error: unknown): boolean {
 	return (
@@ -74,31 +33,11 @@ function isMissingCustomerError(error: unknown): boolean {
 	);
 }
 
-function getDonationProductData(interval: 'month' | 'year' | null, locale: string | null) {
-	const variables = {product_name: getInstanceProductName()};
-	if (interval === 'month') {
-		return {
-			name: getContentMessage('billing.donation_name_recurring', locale, variables),
-			description: getContentMessage('billing.donation_description_monthly', locale, variables),
-		};
-	}
-	if (interval === 'year') {
-		return {
-			name: getContentMessage('billing.donation_name_recurring', locale, variables),
-			description: getContentMessage('billing.donation_description_yearly', locale, variables),
-		};
-	}
-	return {
-		name: getContentMessage('billing.donation_name_one_time', locale, variables),
-		description: getContentMessage('billing.donation_description_one_time', locale, variables),
-	};
-}
-
 export class DonationCheckoutService {
 	constructor(
-		private stripe: Stripe | null,
-		private donationRepository: IDonationRepository,
-		private emailDnsValidationService: IEmailDnsValidationService,
+		private readonly stripe: Stripe | null,
+		private readonly donationRepository: DonationRepository,
+		private readonly emailDnsValidationService: EmailDnsValidationService,
 	) {}
 
 	async createCheckout(params: {
@@ -125,7 +64,11 @@ export class DonationCheckoutService {
 			return `${Config.endpoints.marketing}/donate/manage?email=${encodeURIComponent(params.email)}&alert=active_subscription`;
 		}
 		const locale = params.locale ?? null;
-		const donationProductData = getDonationProductData(params.interval, locale);
+		const donationProductData = getDonationProductData({
+			interval: params.interval,
+			locale,
+			productName: getInstanceProductName(),
+		});
 		try {
 			const mode: CheckoutSessionMode = isRecurring ? 'subscription' : 'payment';
 			const lineItem: CheckoutSessionLineItem = isRecurring
@@ -152,18 +95,20 @@ export class DonationCheckoutService {
 			const donationMetadata = {
 				is_donation: 'true',
 				donation_email: params.email,
+				...(locale ? {donation_locale: locale} : {}),
 			};
 			const reusableCustomerId = isRecurring ? (existingDonor?.stripeCustomerId ?? null) : null;
 			const sessionParams: CheckoutSessionCreateParams = {
 				line_items: [lineItem],
 				mode,
 				locale: getStripeCheckoutLocale(locale),
-				...(reusableCustomerId ? {customer: reusableCustomerId} : {customer_email: params.email}),
+				...(reusableCustomerId
+					? {customer: reusableCustomerId, customer_update: {name: 'auto' as const, address: 'auto' as const}}
+					: {customer_email: params.email}),
 				metadata: {
 					...donationMetadata,
 					donation_type: isRecurring ? 'recurring' : 'one_time',
 					is_business: isBusiness ? 'true' : 'false',
-					...(locale ? {donation_locale: locale} : {}),
 				},
 				success_url: `${Config.endpoints.marketing}/donate/success`,
 				cancel_url: `${Config.endpoints.marketing}/donate?type=${isBusiness ? 'business' : 'individual'}&currency=${params.currency}`,
@@ -173,24 +118,29 @@ export class DonationCheckoutService {
 				tax_id_collection: {
 					enabled: true,
 				},
-				...(isBusiness ? {billing_address_collection: 'required' as const} : {}),
-				...(shouldDisableAdaptivePricing(params.currency) ? {adaptive_pricing: {enabled: false}} : {}),
-				...(mode === 'payment'
-					? {
-							customer_creation: 'always' as const,
-							invoice_creation: {
-								enabled: true,
-							},
-							payment_intent_data: {
-								metadata: donationMetadata,
-							},
-						}
-					: {
-							subscription_data: {
-								metadata: donationMetadata,
-							},
-						}),
+				billing_address_collection: isBusiness ? 'required' : 'auto',
+				...(shouldDisableAdaptivePricing() ? {adaptive_pricing: {enabled: false}} : {}),
 			};
+			if (mode === 'payment') {
+				sessionParams.customer_creation = 'always';
+				sessionParams.payment_intent_data = {metadata: donationMetadata};
+				if (params.currency === 'brl') {
+					sessionParams.payment_method_options = {pix: {amount_includes_iof: 'always'}};
+				}
+			} else {
+				sessionParams.subscription_data = {metadata: donationMetadata};
+				if (params.currency === 'brl') {
+					sessionParams.payment_method_options = {
+						pix: {
+							mandate_options: {
+								amount: params.amountCents,
+								amount_includes_iof: 'always',
+								payment_schedule: params.interval === 'year' ? 'yearly' : 'monthly',
+							},
+						},
+					};
+				}
+			}
 			let session: Stripe.Checkout.Session;
 			try {
 				session = await this.stripe.checkout.sessions.create(sessionParams);
@@ -200,16 +150,9 @@ export class DonationCheckoutService {
 				}
 				await this.clearStaleCustomerId(reusableCustomerId);
 				delete sessionParams.customer;
+				delete sessionParams.customer_update;
 				sessionParams.customer_email = params.email;
 				session = await this.stripe.checkout.sessions.create(sessionParams);
-			}
-			try {
-				await getBillingRepository().checkoutSessions.upsertFromStripe(session);
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, sessionId: session.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
 			}
 			if (!session.url) {
 				throw new StripeError('Failed to create checkout session');
@@ -241,6 +184,7 @@ export class DonationCheckoutService {
 		try {
 			const session = await this.stripe.billingPortal.sessions.create({
 				customer: stripeCustomerId,
+				configuration: await getPortalConfigurationId(this.stripe),
 				return_url: `${Config.endpoints.marketing}/donate`,
 			});
 			Logger.debug({stripeCustomerId}, 'Donation portal session created');

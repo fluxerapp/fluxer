@@ -1,15 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ms} from 'itty-time';
 import type Stripe from 'stripe';
 
 const GIFT_TRIAL_KEY_PREFIX = 'gtrial_';
 const GIFT_TRIAL_PAID_UNTIL_KEY = `${GIFT_TRIAL_KEY_PREFIX}paid_until`;
+const STRIPE_MAX_TRIAL_MS = ms('730 days') - ms('1 hour');
+
+export function isPastStripeTrialLimit(endMs: number, nowMs: number): boolean {
+	return endMs > nowMs + STRIPE_MAX_TRIAL_MS;
+}
 
 export function getGiftTrialMetadataKey(giftCode: string): string {
 	return `${GIFT_TRIAL_KEY_PREFIX}${giftCode}`;
 }
 
-function isGiftTrialRunning(subscription: Stripe.Subscription, nowMs: number): boolean {
+export function isGiftTrialRunning(subscription: Stripe.Subscription, nowMs: number): boolean {
 	return subscription.trial_end != null && subscription.trial_end * 1000 > nowMs;
 }
 

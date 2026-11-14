@@ -49,8 +49,6 @@
 	margin-bottom: 0.25rem;
 	font-weight: 600;
 	font-size: 0.75rem;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 	color: var(--text-tertiary);
 }
 
@@ -142,7 +140,7 @@
 	gap: 0.5rem;
 	border-radius: 0.25rem;
 	padding: 0.375rem 0.5rem;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	background: transparent;
 }
@@ -271,7 +269,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 0.875rem;
-	text-align: left;
+	text-align: start;
 	line-height: 1.2;
 	max-height: 1.2em;
 }

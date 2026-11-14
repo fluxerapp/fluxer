@@ -2,7 +2,7 @@
 
 .container {
 	margin-top: 0.25rem;
-	margin-left: 1.5rem;
+	margin-inline-start: 1.5rem;
 	display: flex;
 	flex-direction: column;
 	gap: 0.125rem;

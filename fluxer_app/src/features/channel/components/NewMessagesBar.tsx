@@ -9,6 +9,7 @@ import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {CheckIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
+import type React from 'react';
 
 const JUMP_TO_FIRST_UNREAD_MESSAGE_DESCRIPTOR = msg({
 	message: 'Jump to first unread message',
@@ -52,6 +53,26 @@ export const NewMessagesBar = observer(
 		const sameDay = isSameDayBase(oldestUnreadMessageTimestamp);
 		const compactTime = DateUtils.getFormattedCompactDateTime(oldestUnreadMessageTimestamp);
 		const shortTime = sameDay ? DateUtils.getFormattedTime(oldestUnreadMessageTimestamp) : compactTime;
+		let jumpLabel: React.ReactNode;
+		if (isEstimated && isMobile) {
+			jumpLabel = i18n._(NEW_SINCE_DESCRIPTOR, {unreadCount, shortTime});
+		} else if (isEstimated) {
+			jumpLabel = i18n._(NEW_MESSAGES_SINCE_DESCRIPTOR, {unreadCount, compactTime});
+		} else if (isMobile) {
+			jumpLabel = i18n._(NEW_SINCE_2_DESCRIPTOR, {unreadCount, shortTime});
+		} else {
+			jumpLabel = (
+				<Trans>
+					<Plural
+						value={unreadCount}
+						one="# new message"
+						other="# new messages"
+						data-flx="channel.new-messages-bar.plural"
+					/>{' '}
+					since {compactTime}
+				</Trans>
+			);
+		}
 		return (
 			<div className={styles.newMessagesBarBanner} data-flx="channel.new-messages-bar.new-messages-bar">
 				<button
@@ -61,25 +82,7 @@ export const NewMessagesBar = observer(
 					aria-label={i18n._(JUMP_TO_FIRST_UNREAD_MESSAGE_DESCRIPTOR)}
 					data-flx="channel.new-messages-bar.new-messages-bar-text.jump-to-oldest-unread.button"
 				>
-					{isEstimated ? (
-						isMobile ? (
-							i18n._(NEW_SINCE_DESCRIPTOR, {unreadCount, shortTime})
-						) : (
-							i18n._(NEW_MESSAGES_SINCE_DESCRIPTOR, {unreadCount, compactTime})
-						)
-					) : isMobile ? (
-						i18n._(NEW_SINCE_2_DESCRIPTOR, {unreadCount, shortTime})
-					) : (
-						<Trans>
-							<Plural
-								value={unreadCount}
-								one="# new message"
-								other="# new messages"
-								data-flx="channel.new-messages-bar.plural"
-							/>{' '}
-							since {compactTime}
-						</Trans>
-					)}
+					{jumpLabel}
 				</button>
 				<button
 					type="button"

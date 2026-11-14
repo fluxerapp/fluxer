@@ -6,11 +6,10 @@ import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import {
 	THREAD_CHANNEL_TYPES,
 	THREAD_FEATURE_CHANNEL_TYPES,
-	userActive,
 	viewerActive,
 	viewerFromCtx,
 } from '@app/api/experiment/ChannelThreadsGate';
-import type {ReadStateMarker} from '@app/api/read_state/IReadStateRepository';
+import type {ReadStateMarker} from '@app/api/read_state/ReadStateRepository';
 import {Channels} from '@app/api/Tables';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {ReadStateFlags} from '@fluxer/constants/src/ThreadConstants';
@@ -41,7 +40,7 @@ function rememberChannelMeta(channelId: ChannelID, meta: ReadStateChannelHint): 
 	}
 }
 
-async function loadChannelMeta(channelId: ChannelID): Promise<ReadStateChannelHint | null> {
+export async function loadChannelMeta(channelId: ChannelID): Promise<ReadStateChannelHint | null> {
 	const cached = channelMetaCache.get(channelId.toString());
 	if (cached !== undefined) return cached;
 	const row = await fetchOne<Pick<ChannelRow, 'channel_id' | 'guild_id' | 'type'>>(FETCH_CHANNEL_META_CQL, {
@@ -59,7 +58,7 @@ export function readStateCapable(ctx: Context<HonoEnv>): boolean {
 	return viewer.kind === 'user' && viewer.capable;
 }
 
-export function readStateMarkerFor(channel: ReadStateChannelHint): ReadStateMarker | null {
+function readStateMarkerFor(channel: ReadStateChannelHint): ReadStateMarker | null {
 	if (channel.guildId === null || !THREAD_FEATURE_CHANNEL_TYPES.has(channel.type)) return null;
 	const flags =
 		ReadStateFlags.IS_GUILD_CHANNEL | (THREAD_CHANNEL_TYPES.has(channel.type) ? ReadStateFlags.IS_THREAD : 0);
@@ -73,7 +72,7 @@ export async function resolveReadStateMarker(params: {
 	channel?: ReadStateChannelHint | null;
 }): Promise<ReadStateMarker | null> {
 	const {userId, channelId, capable} = params;
-	if (!capable || !userActive(userId)) return null;
+	if (!capable) return null;
 	const channel = params.channel ?? (await loadChannelMeta(channelId));
 	if (!channel) return null;
 	const marker = readStateMarkerFor(channel);

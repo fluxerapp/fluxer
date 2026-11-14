@@ -2,7 +2,7 @@
 
 use super::{ExternalBody, FetchedExternal, byte_range::ExternalPartial};
 use crate::{
-    constants, http_headers,
+    constants,
     server::{
         download_stream::DownloadStreamPolicy,
         format_policy::{content_type_is_trustworthy, is_svg_content_type},
@@ -62,26 +62,17 @@ pub(super) fn external_partial_response(request: ExternalPartialResponse) -> Res
     let body_len = partial
         .content_length()
         .or_else(|| external_body_length(&body));
-    let mut response = Response::new(external_body(method, body, body_len, stream_policy));
-    *response.status_mut() = StatusCode::PARTIAL_CONTENT;
-    http_headers::add_media_headers(
-        response.headers_mut(),
+    let mut response = media_body_response(
+        external_body(method, body, body_len, stream_policy),
+        StatusCode::PARTIAL_CONTENT,
         body_length_hint(body_len),
         &content_type,
         None,
+        body_len,
+        disposition,
     );
-    if let Some(body_len) = body_len {
-        response
-            .headers_mut()
-            .insert(header::CONTENT_LENGTH, HeaderValue::from(body_len));
-    }
     if let Some(value) = partial.header_value() {
         response.headers_mut().insert(header::CONTENT_RANGE, value);
-    }
-    if let Some(value) = disposition {
-        response
-            .headers_mut()
-            .insert(header::CONTENT_DISPOSITION, value);
     }
     response
 }
@@ -111,25 +102,15 @@ pub(super) fn external_streaming_response(request: ExternalStreamingResponse<'_>
     } else {
         guarded_stream(response, prefix, content_length, stream_policy)
     };
-    let mut http_response = Response::new(body);
-    *http_response.status_mut() = StatusCode::OK;
-    http_headers::add_media_headers(
-        http_response.headers_mut(),
+    media_body_response(
+        body,
+        StatusCode::OK,
         body_length_hint(content_length),
         content_type,
         None,
-    );
-    if let Some(content_length) = content_length {
-        http_response
-            .headers_mut()
-            .insert(header::CONTENT_LENGTH, HeaderValue::from(content_length));
-    }
-    if let Some(value) = disposition {
-        http_response
-            .headers_mut()
-            .insert(header::CONTENT_DISPOSITION, value);
-    }
-    http_response
+        content_length,
+        disposition,
+    )
 }
 
 fn external_body_length(body: &ExternalBody) -> Option<u64> {
@@ -178,3 +159,5 @@ fn body_length_hint(length: Option<u64>) -> usize {
         .and_then(|length| usize::try_from(length).ok())
         .unwrap_or(constants::MAX_MEDIA_PROXY_BYTES)
 }
+
+use crate::server::response::media_body_response;

@@ -41,6 +41,7 @@ interface RoleSidebarProps {
 	hoistOrderMode: boolean;
 	hasCustomHoistOrder: boolean;
 	roleUpdates: Map<string, RoleUpdate>;
+	reserveIconSlot: boolean;
 	isRoleLocked: (role: GuildRole) => boolean;
 	onSelectRole: (roleId: string) => void;
 	onCreateRole: () => void;
@@ -73,6 +74,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 		hoistOrderMode,
 		hasCustomHoistOrder,
 		roleUpdates,
+		reserveIconSlot,
 		isRoleLocked,
 		onSelectRole,
 		onCreateRole,
@@ -155,6 +157,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 										role={roleWithUpdates}
 										isSelected={selectedRoleId === role.id}
 										isLocked={isRoleLocked(role)}
+										reserveIconSlot={reserveIconSlot}
 										isGuildOwner={isGuildOwner}
 										isTerminal={index === hoistedRoles.length - 1}
 										canManageRoles={canManageRoles}
@@ -253,6 +256,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 									role={roleWithUpdates}
 									isSelected={selectedRoleId === role.id}
 									isLocked={isRoleLocked(role)}
+									reserveIconSlot={reserveIconSlot}
 									isGuildOwner={isGuildOwner}
 									isTerminal={index === roles.length - 1}
 									canManageRoles={canManageRoles}

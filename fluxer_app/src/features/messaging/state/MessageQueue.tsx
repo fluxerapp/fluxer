@@ -5,6 +5,7 @@ import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActi
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {describeAccountTierBlock, promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {createSystemMessage} from '@app/features/devtools/utils/CommandUtils';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
@@ -55,6 +56,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {formatUserSettingsPath} from '@app/features/user/components/settings_utils/SettingsConstants';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
+import {accountGateReason} from '@app/features/user/utils/AccountGatePresentation';
 import {Queue} from '@app/lib/list/ListQueue';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {
@@ -72,6 +74,12 @@ const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_THIS_IS_DESCRIPTOR = msg({
 	message:
 		"Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}.",
 	comment: 'Label in the message queue state.',
+});
+const COMMUNITY_MEMBER_DMS_DISABLED_DESCRIPTOR = msg({
+	message:
+		"Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends.",
+	comment:
+		'System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.',
 });
 const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_YOU_NEED_DESCRIPTOR = msg({
 	message: 'Your message could not be delivered. You need to claim your account to send direct messages.',
@@ -127,23 +135,23 @@ interface SendMessagePayload extends BaseMessagePayload {
 	tts?: boolean;
 }
 
-export type MessageQueuePayload = SendMessagePayload;
+type MessageQueuePayload = SendMessagePayload;
 type MessageQueueCompletion<TResult> = {
 	retry: RetryError | null;
 	result?: TResult;
 	error?: unknown;
 };
 
-export interface RetryError {
+interface RetryError {
 	retryAfter?: number;
 }
 
-export interface ApiErrorBody {
+interface ApiErrorBody {
 	code?: number | string;
 	message?: string;
 }
 
-export interface PreparedSendAttachments {
+interface PreparedSendAttachments {
 	attachments?: Array<ApiAttachmentMetadata>;
 	files?: Array<File>;
 }
@@ -225,6 +233,10 @@ function isDMRestrictedError(error: HttpError): boolean {
 	return getApiErrorBody(error)?.code === APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER;
 }
 
+function isCommunityMemberDmsDisabledError(error: HttpError): boolean {
+	return getApiErrorBody(error)?.code === APIErrorCodes.COMMUNITY_MEMBER_DMS_DISABLED;
+}
+
 function getUnclaimedAccountErrorCode(error: HttpError): string | undefined {
 	const code = getApiErrorBody(error)?.code;
 	if (
@@ -253,7 +265,7 @@ class PresignedUploadFallbackUnavailableError extends Error {
 	}
 }
 
-export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | undefined> {
+class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Message> | undefined> {
 	private readonly maxSize: number;
 	private readonly abortControllers = new Map<string, AbortController>();
 	private readonly textareaAttachmentUploads = new Map<number, TextareaAttachmentUpload>();
@@ -434,7 +446,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	}
 
 	cancelRequest(nonce: string): void {
-		logger.info('Cancel message send:', nonce);
+		logger.debug('Cancel message send:', nonce);
 		const messageUpload = CloudUpload.getMessageUpload(nonce);
 		if (messageUpload) {
 			this.cancelTextareaAttachmentUploads(messageUpload.attachments.map((attachment) => attachment.id));
@@ -452,7 +464,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			}
 			const retryAfter = completion.retry.retryAfter;
 			const delay = retryAfter === undefined ? this.defaultRetryAfter : retryAfter;
-			logger.info(`Pausing immediate send retry for ${delay}ms due to retry request`);
+			logger.debug(`Pausing immediate send retry for ${delay}ms due to retry request`);
 			await new Promise<void>((resolve) => window.setTimeout(resolve, delay));
 		}
 	}
@@ -1056,6 +1068,11 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			this.showErrorModal(error, channelId, hasAttachments);
 			return;
 		}
+		if (isCommunityMemberDmsDisabledError(error)) {
+			const systemMessage = createSystemMessage(channelId, i18n._(COMMUNITY_MEMBER_DMS_DISABLED_DESCRIPTOR));
+			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
+			return;
+		}
 		if (isDMRestrictedError(error)) {
 			const directMessagePrivacySettingsPath = formatUserSettingsPath(i18n, 'privacy_safety', 'communication');
 			const systemMessage = createSystemMessage(
@@ -1063,6 +1080,12 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 				i18n._(YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_THIS_IS_DESCRIPTOR, {directMessagePrivacySettingsPath}),
 			);
 			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
+			return;
+		}
+		const tierBlock = describeAccountTierBlock(error);
+		if (tierBlock !== null && promptForAccountTier(error)) {
+			const tierMessage = accountGateReason(i18n, tierBlock);
+			MessageCommands.createOptimistic(channelId, createSystemMessage(channelId, tierMessage).toJSON());
 			return;
 		}
 		const unclaimedErrorCode = getUnclaimedAccountErrorCode(error);

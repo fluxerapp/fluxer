@@ -3,9 +3,9 @@ import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 type Nullish<T> = T | null;
 
 export interface MessagePollAnswerVotersPage {
-	userIds: Array<UserID>,
-	hasMore?: boolean,
-	nextAfter?: string | null,
+	userIds: Array<UserID>;
+	hasMore?: boolean;
+	nextAfter?: string | null;
 }
 
 export interface MessagePollEmoji {
@@ -64,14 +64,14 @@ export interface MessagePollDb {
 }
 
 export interface MessagePollSelectedAnswer {
-    id: number;
+	id: number;
 }
 
 export interface MessagePollVoteRow {
 	bucket: number;
 	channel_id: ChannelID;
 	message_id: MessageID;
-    answer_id: number;
+	answer_id: number;
 	user_id: UserID;
 }
 
@@ -79,6 +79,6 @@ export const MESSAGE_POLL_VOTES_COLUMNS = [
 	'bucket',
 	'channel_id',
 	'message_id',
-    'answer_id',
+	'answer_id',
 	'user_id',
 ] as const satisfies ReadonlyArray<keyof MessagePollVoteRow>;

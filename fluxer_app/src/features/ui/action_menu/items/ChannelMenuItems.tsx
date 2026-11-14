@@ -5,7 +5,7 @@ import {showChannelDeleteFailedModal} from '@app/features/app/components/alerts/
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
-import {createMuteConfig, getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
+import {createMuteConfig} from '@app/features/channel/components/MuteOptions';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {
 	DELETE_CHANNEL_DESCRIPTOR,
@@ -34,6 +34,7 @@ import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	CopyIdIcon,
 	DeleteIcon,
@@ -41,14 +42,13 @@ import {
 	FavoriteIcon,
 	InviteIcon,
 	MarkAsReadIcon,
-	MuteIcon,
 } from '@app/features/ui/action_menu/ContextMenuIcons';
 import itemStyles from '@app/features/ui/action_menu/items/MenuItems.module.css';
+import {MuteTargetMenuItem} from '@app/features/ui/action_menu/items/MuteTargetMenuItem';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import menuItemStyles from '@app/features/ui/action_menu/MenuItem.module.css';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
@@ -208,36 +208,17 @@ const ResolvedMuteChannelMenuItem: React.FC<GuildChannelMenuItemProps> = observe
 		);
 		onClose();
 	}, [guildId, channel.id, onClose]);
-	if (isMuted) {
-		return (
-			<MenuItem
-				icon={<MuteIcon data-flx="ui.action-menu.items.channel-menu-items.mute-channel-menu-item.mute-icon" />}
-				onClick={handleUnmute}
-				hint={mutedText ?? undefined}
-				data-flx="ui.action-menu.items.channel-menu-items.mute-channel-menu-item.menu-item.unmute"
-			>
-				{i18n._(UNMUTE_CHANNEL_DESCRIPTOR)}
-			</MenuItem>
-		);
-	}
+
 	return (
-		<MenuItemSubmenu
-			label={i18n._(MUTE_CHANNEL_DESCRIPTOR)}
-			onTriggerSelect={() => handleMute(null)}
-			render={() => (
-				<MenuGroup data-flx="ui.action-menu.items.channel-menu-items.mute-channel-menu-item.menu-group">
-					{getMuteDurationOptions(i18n).map((option) => (
-						<MenuItem
-							key={option.label}
-							onClick={() => handleMute(option.value)}
-							data-flx="ui.action-menu.items.channel-menu-items.mute-channel-menu-item.menu-item.mute"
-						>
-							{option.label}
-						</MenuItem>
-					))}
-				</MenuGroup>
-			)}
-			data-flx="ui.action-menu.items.channel-menu-items.mute-channel-menu-item.menu-item-submenu"
+		<MuteTargetMenuItem
+			showUnmute={isMuted}
+			mutedText={mutedText}
+			muteLabel={i18n._(MUTE_CHANNEL_DESCRIPTOR)}
+			unmuteLabel={i18n._(UNMUTE_CHANNEL_DESCRIPTOR)}
+			onMute={handleMute}
+			onUnmute={handleUnmute}
+			dataFlx="ui.action-menu.items.channel-menu-items.mute-channel-menu-item"
+			data-flx="ui.action-menu.items.channel-menu-items.mute-target-menu-item"
 		/>
 	);
 });
@@ -260,20 +241,7 @@ export const ChannelNotificationSettingsMenuItem: React.FC<ChannelMenuItemProps>
 	const handleNotificationLevelChange = useCallback(
 		(level: number) => {
 			if (!guildId) return;
-			if (level === MessageNotifications.INHERIT) {
-				UserGuildSettingsCommands.updateChannelOverride(
-					guildId,
-					channel.id,
-					{
-						message_notifications: MessageNotifications.INHERIT,
-					},
-					{persistImmediately: true},
-				);
-			} else {
-				UserGuildSettingsCommands.updateMessageNotifications(guildId, level, channel.id, {
-					persistImmediately: true,
-				});
-			}
+			UserGuildSettingsCommands.updateMessageNotifications(guildId, level, channel.id, {persistImmediately: true});
 		},
 		[guildId, channel.id],
 	);
@@ -292,17 +260,14 @@ export const ChannelNotificationSettingsMenuItem: React.FC<ChannelMenuItemProps>
 	if (!guildId) return null;
 	const channelNotifications = UserGuildSettings.getChannelOverride(guildId, channel.id)?.message_notifications;
 	const currentNotificationLevel = channelNotifications ?? MessageNotifications.INHERIT;
-	const guildNotificationLevel = UserGuildSettings.getGuildMessageNotifications(guildId);
 	const categoryId = channel.parentId;
-	const categoryOverride = UserGuildSettings.getChannelOverride(guildId, categoryId ?? '');
-	const categoryNotifications = categoryId ? categoryOverride?.message_notifications : undefined;
-	const resolveEffectiveLevel = (level: number | undefined, fallback: number): number => {
-		if (level === undefined || level === MessageNotifications.INHERIT) {
-			return fallback;
-		}
-		return level;
-	};
-	const categoryDefaultLevel = resolveEffectiveLevel(categoryNotifications, guildNotificationLevel);
+	const categoryDefaultLevel = guildId
+		? UserGuildSettings.resolveEffectiveMessageNotifications({
+				id: channel.parentId ?? '',
+				guildId: channel.guildId,
+				type: ChannelTypes.GUILD_CATEGORY,
+			})
+		: MessageNotifications.ALL_MESSAGES;
 	const effectiveCurrentNotificationLevel =
 		currentNotificationLevel === MessageNotifications.INHERIT ? categoryDefaultLevel : currentNotificationLevel;
 	const hasCategory = categoryId != null;

@@ -6,7 +6,6 @@ import {
 	type ContentI18nCatalog,
 	type ContentI18nKey,
 } from '@app/api/content_i18n/ContentI18nMessages';
-import {identityLocale} from '@fluxer/i18n/src/normalization/IdentityLocale';
 import {compileMessage} from '@fluxer/i18n/src/runtime/CompileMessage';
 import {createStaticI18n} from '@fluxer/i18n/src/runtime/CreateStaticI18n';
 import type {MessageArgsForTemplate} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
@@ -15,7 +14,7 @@ import {validateMessageTemplateVariables} from '@fluxer/i18n/src/runtime/Message
 const DEFAULT_LOCALE = 'en-US';
 
 type ContentI18nRuntimeVariables = Record<string, unknown>;
-type ContentI18nMessageArgs<TKey extends ContentI18nKey> = TKey extends ContentI18nKey
+export type ContentI18nMessageArgs<TKey extends ContentI18nKey> = TKey extends ContentI18nKey
 	? MessageArgsForTemplate<ContentI18nCatalog[TKey]>
 	: never;
 
@@ -24,7 +23,6 @@ const contentI18n = createStaticI18n<ContentI18nKey, string, ContentI18nRuntimeV
 		defaultLocale: DEFAULT_LOCALE,
 		defaultMessages: CONTENT_I18N_MESSAGES,
 		localeMessages: CONTENT_I18N_LOCALE_MESSAGES,
-		normalizeLocale: (locale) => identityLocale(locale),
 		onWarning: (message) => {
 			console.warn(message);
 		},
@@ -34,6 +32,10 @@ const contentI18n = createStaticI18n<ContentI18nKey, string, ContentI18nRuntimeV
 		return String(compileMessage(mf, template)(variables));
 	},
 );
+
+export function resolveContentLocale(locale: string | null | undefined): string {
+	return locale && Object.hasOwn(CONTENT_I18N_LOCALE_MESSAGES, locale) ? locale : DEFAULT_LOCALE;
+}
 
 export function getContentMessage<TKey extends ContentI18nKey>(
 	key: TKey,

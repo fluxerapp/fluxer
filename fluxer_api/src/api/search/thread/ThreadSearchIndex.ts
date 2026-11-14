@@ -15,10 +15,6 @@ export class ThreadSearchIndex
 {
 	private initializing: Promise<void> | null = null;
 
-	constructor(adapter: ISearchAdapter<ThreadSearchFilters, SearchableThread>) {
-		super(adapter);
-	}
-
 	ready(): Promise<void> {
 		if (this.isAvailable()) return Promise.resolve();
 		this.initializing ??= this.initialize().catch((error) => {

@@ -184,9 +184,9 @@ export function HandoffApprovalFlow({handoff, onRetry}: HandoffApprovalFlowProps
 					</Trans>
 				</h1>
 				<p className={styles.description} data-flx="auth.flow.handoff-approval-flow.description">
-					<Trans comment="Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.">
-						The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code
-						from a device you control.
+					<Trans comment="Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. &quot;Signing in on another device?&quot; is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.">
+						Open the {PRODUCT_NAME} app you're signing in to, select "Signing in on another device?" and type the code
+						it shows here. Only enter a code from a device you control.
 					</Trans>
 				</p>
 				<div className={styles.codeInputSection} data-flx="auth.flow.handoff-approval-flow.code-input-section">

@@ -16,10 +16,15 @@ import type {ForwardModalSuccess} from '@app/features/messaging/components/modal
 import {MediaModal} from '@app/features/messaging/components/modals/MediaModal';
 import styles from '@app/features/messaging/components/modals/MediaViewerModal.module.css';
 import {getMediaViewerPortalRoot} from '@app/features/messaging/components/modals/MediaViewerPortal';
+import {OPEN_POST_DESCRIPTOR} from '@app/features/messaging/components/modals/media_modal/shared';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import apiAttachmentMedia, {fetchedApiAttachmentKey} from '@app/features/messaging/state/ApiAttachmentMedia';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {formatAttachmentDate} from '@app/features/messaging/utils/AttachmentExpiryUtils';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
@@ -32,6 +37,7 @@ import {
 	isGifvRenderedAsImage,
 	isViewerImageItem,
 } from '@app/features/messaging/utils/MediaViewerItemUtils';
+import {openThread} from '@app/features/threads/commands/ThreadNavigation';
 import {
 	copyMediaLinkToClipboard,
 	copyMediaToClipboard,
@@ -47,10 +53,12 @@ import LayerManager from '@app/features/ui/state/LayerManager';
 import MediaViewer, {type MediaViewerItem} from '@app/features/ui/state/MediaViewer';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {snapMediaProxyImageSize} from '@app/features/user/utils/AvatarUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {AudioPlayer} from '@app/features/voice/components/media_player/components/AudioPlayer';
 import {VideoPlayer} from '@app/features/voice/components/media_player/components/VideoPlayer';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {ChatCircleIcon} from '@phosphor-icons/react';
 import {untracked} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import {
@@ -124,6 +132,7 @@ interface MobileMediaOptionsSheetProps {
 	message: Message;
 	onClose: () => void;
 	onDelete: (bypassConfirm?: boolean) => void;
+	onViewPost?: () => void;
 	sourceChannel?: Channel | null;
 }
 
@@ -138,9 +147,11 @@ const RenderReadyImage: FC<RenderReadyImageProps> = ({
 	className,
 	onError,
 	onLoad,
-	src,
+	src: requestedSrc,
 	...imageProps
 }: RenderReadyImageProps) => {
+	const displaySrc = useApiAttachmentSrc(requestedSrc ?? '');
+	const src = requestedSrc === undefined ? undefined : displaySrc;
 	const [isReady, setIsReady] = useState(false);
 	const [renderedSource, setRenderedSource] = useState(src);
 	const [decodedBeforeSwap, setDecodedBeforeSwap] = useState(() => ImageCacheUtils.hasImage(src));
@@ -234,6 +245,7 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 	message,
 	onClose,
 	onDelete,
+	onViewPost,
 	sourceChannel,
 }: MobileMediaOptionsSheetProps) {
 	const {i18n} = useLingui();
@@ -259,12 +271,29 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 		onClose,
 		onDelete,
 		sourceChannel,
+		hideReply: onViewPost != null,
 	});
 	const visibleMessageGroups = useMemo(() => messageGroups.filter((group) => group.items.length > 0), [messageGroups]);
-	const mediaMenuGroupsWithMessageActions = useMemo(
-		() => [...mediaMenuData.groups, ...visibleMessageGroups],
-		[mediaMenuData.groups, visibleMessageGroups],
-	);
+	const mediaMenuGroupsWithMessageActions = useMemo(() => {
+		const groups = [...mediaMenuData.groups, ...visibleMessageGroups];
+		if (!onViewPost) return groups;
+		const viewPostItem = {
+			id: 'media-view-post',
+			icon: (
+				<ChatCircleIcon
+					size={20}
+					weight="bold"
+					data-flx="messaging.media-viewer-modal.mobile-media-options-sheet.chat-circle-icon"
+				/>
+			),
+			label: i18n._(OPEN_POST_DESCRIPTOR),
+			onClick: () => {
+				onClose();
+				onViewPost();
+			},
+		};
+		return [{items: [viewPostItem]}, ...groups];
+	}, [i18n.locale, mediaMenuData.groups, onClose, onViewPost, visibleMessageGroups]);
 	return (
 		<MenuBottomSheet
 			isOpen={isOpen}
@@ -277,18 +306,37 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 });
 function withFreshViewerItemUrls(item: MediaViewerItem): MediaViewerItem {
 	if (!item) return item;
-	const src = AttachmentUrlRefresher.fresh(item.src);
-	const originalSrc = AttachmentUrlRefresher.fresh(item.originalSrc);
+	const src = AttachmentUrlRefresher.fresh(item.src, {refreshUnsigned: true});
+	const originalSrc = AttachmentUrlRefresher.fresh(item.originalSrc, {refreshUnsigned: true});
 	if (src === item.src && originalSrc === item.originalSrc) return item;
 	return {...item, src, originalSrc};
 }
+function resolveAdjacentPinUrls(items: ReadonlyArray<MediaViewerItem>, currentIndex: number, isOpen: boolean): string {
+	const count = items.length;
+	if (!isOpen || count <= 1) return '';
+	const adjacentIndices =
+		count === 2 ? [(currentIndex + 1) % count] : [(currentIndex - 1 + count) % count, (currentIndex + 1) % count];
+	const nowMs = Date.now();
+	return adjacentIndices
+		.map((index) => items[index])
+		.filter(
+			(item) =>
+				item != null &&
+				isViewerImageItem(item) &&
+				!item.src.startsWith('blob:') &&
+				!attachmentUrlMayNeedRefresh(item.src, nowMs),
+		)
+		.map(buildViewerMediaURL)
+		.join('\n');
+}
 const MediaViewerModalComponent: FC = observer(() => {
 	const {i18n} = useLingui();
-	const {isOpen, items, currentIndex, channelId, messageId, message, sourceChannel, allowAttachmentDelete} =
+	const {isOpen, items, currentIndex, channelId, messageId, message, sourceChannel, allowAttachmentDelete, sourcePost} =
 		MediaViewer;
 	const {enabled: isMobile} = MobileLayout;
 	const [isMediaMenuOpen, setIsMediaMenuOpen] = useState(false);
-	const currentItem = withFreshViewerItemUrls(items[currentIndex]);
+	const freshItems = items.map(withFreshViewerItemUrls);
+	const currentItem = freshItems[currentIndex];
 	const currentGifvIsActualGif = currentItem != null && isGifvRenderedAsImage(currentItem);
 	useBottomSheetBackHandler(isOpen, MediaViewerCommands.closeMediaViewer);
 	useEffect(() => {
@@ -298,23 +346,17 @@ const MediaViewerModalComponent: FC = observer(() => {
 			LayerManager.removeLayer('modal', 'media-viewer');
 		};
 	}, [isOpen]);
+	const adjacentPinUrls = resolveAdjacentPinUrls(freshItems, currentIndex, isOpen);
 	useEffect(() => {
-		if (!isOpen || items.length <= 1) return;
-		const count = items.length;
-		const adjacentIndices =
-			count === 2 ? [(currentIndex + 1) % count] : [(currentIndex - 1 + count) % count, (currentIndex + 1) % count];
-		const unpinCallbacks = adjacentIndices.map((index) => {
-			const item = items[index];
-			if (!item) return () => {};
-			AttachmentUrlRefresher.warm(item.src);
-			AttachmentUrlRefresher.warm(item.originalSrc);
-			if (!isViewerImageItem(item) || item.src.startsWith('blob:')) return () => {};
-			return ImageCacheUtils.pinImage(buildViewerMediaURL(item));
+		if (adjacentPinUrls.length === 0) return;
+		const unpinCallbacks = adjacentPinUrls.split('\n').map((url) => {
+			const fetchedKey = fetchedApiAttachmentKey(url);
+			return fetchedKey === null ? ImageCacheUtils.pinImage(url) : apiAttachmentMedia.retain(fetchedKey);
 		});
 		return () => {
 			for (const unpin of unpinCallbacks) unpin();
 		};
-	}, [isOpen, currentIndex, items]);
+	}, [adjacentPinUrls]);
 	const defaultName = useMemo(() => {
 		if (!currentItem) return '';
 		return untracked(() =>
@@ -399,56 +441,47 @@ const MediaViewerModalComponent: FC = observer(() => {
 		},
 		[currentIndex],
 	);
+	const renderMediaMenu = useCallback(
+		(item: MediaViewerItem, menuMessage: Message) =>
+			({onClose}: {onClose: () => void}) => (
+				<MediaContextMenu
+					message={menuMessage}
+					sourceChannel={sourceChannel}
+					originalSrc={item.originalSrc}
+					proxyURL={item.src}
+					type={item.type}
+					contentHash={item.contentHash}
+					attachmentId={item.attachmentId}
+					embedIndex={item.embedIndex}
+					defaultName={defaultName}
+					naturalWidth={item.naturalWidth}
+					naturalHeight={item.naturalHeight}
+					onClose={onClose}
+					onDelete={handleDelete}
+					hideReply={sourcePost != null}
+					data-flx="messaging.media-viewer-modal.render-media-menu.media-context-menu"
+				/>
+			),
+		[defaultName, handleDelete, sourceChannel, sourcePost],
+	);
 	const handleContextMenu = useCallback(
 		(event: MouseEvent<HTMLDivElement>) => {
 			if (!currentItem || !message) return;
-			const renderMenu = ({onClose}: {onClose: () => void}) => (
-				<MediaContextMenu
-					message={message}
-					sourceChannel={sourceChannel}
-					originalSrc={currentItem.originalSrc}
-					proxyURL={currentItem.src}
-					type={currentItem.type}
-					contentHash={currentItem.contentHash}
-					attachmentId={currentItem.attachmentId}
-					embedIndex={currentItem.embedIndex}
-					defaultName={defaultName}
-					naturalWidth={currentItem.naturalWidth}
-					naturalHeight={currentItem.naturalHeight}
-					onClose={onClose}
-					onDelete={handleDelete}
-					data-flx="messaging.media-viewer-modal.render-menu.media-context-menu"
-				/>
-			);
-			ContextMenuCommands.openFromEvent(event, renderMenu);
+			ContextMenuCommands.openFromEvent(event, renderMediaMenu(currentItem, message));
 		},
-		[currentItem, defaultName, handleDelete, message, sourceChannel],
+		[currentItem, message, renderMediaMenu],
 	);
 	const handleMenuOpen = useCallback(() => {
 		if (!currentItem || !message) return;
 		if (isMobile) {
 			setIsMediaMenuOpen(true);
 		} else {
-			ContextMenuCommands.openAtPoint({x: window.innerWidth / 2, y: window.innerHeight / 2}, ({onClose}) => (
-				<MediaContextMenu
-					message={message}
-					sourceChannel={sourceChannel}
-					originalSrc={currentItem.originalSrc}
-					proxyURL={currentItem.src}
-					type={currentItem.type}
-					contentHash={currentItem.contentHash}
-					attachmentId={currentItem.attachmentId}
-					embedIndex={currentItem.embedIndex}
-					defaultName={defaultName}
-					naturalWidth={currentItem.naturalWidth}
-					naturalHeight={currentItem.naturalHeight}
-					onClose={onClose}
-					onDelete={handleDelete}
-					data-flx="messaging.media-viewer-modal.handle-menu-open.media-context-menu"
-				/>
-			));
+			ContextMenuCommands.openAtPoint(
+				{x: window.innerWidth / 2, y: window.innerHeight / 2},
+				renderMediaMenu(currentItem, message),
+			);
 		}
-	}, [currentItem, defaultName, handleDelete, message, sourceChannel, isMobile]);
+	}, [currentItem, message, renderMediaMenu, isMobile]);
 	const permissions = useMemo(
 		() => (message ? untracked(() => getMessagePermissions(message, sourceChannel)) : null),
 		[message, sourceChannel],
@@ -489,6 +522,11 @@ const MediaViewerModalComponent: FC = observer(() => {
 		MediaViewerCommands.closeMediaViewer();
 		requestMessageReply(message, {sourceChannel});
 	}, [message, sourceChannel]);
+	const handleViewPost = useCallback(() => {
+		if (!sourcePost) return;
+		MediaViewerCommands.closeMediaViewer();
+		openThread(sourcePost);
+	}, [sourcePost]);
 	const handleForward = useCallback(() => {
 		if (!message || !forwardMediaSelection) return;
 		const handleForwardSuccess = ({shouldNavigate}: ForwardModalSuccess) => {
@@ -502,9 +540,15 @@ const MediaViewerModalComponent: FC = observer(() => {
 		});
 	}, [forwardMediaSelection, message, sourceChannel]);
 	const imageSrc = useMemo(() => (currentItem ? buildViewerMediaURL(currentItem) : ''), [currentItem]);
+	const handleImageError = useAttachmentRefreshOnError(imageSrc);
+	const handleGifvVideoError = useAttachmentRefreshOnError(currentItem?.src);
+	const gifvVideoSrc = currentItem?.type === 'gifv' && !currentGifvIsActualGif ? currentItem.src : undefined;
+	const gifvDisplaySrc = useApiAttachmentSrc(gifvVideoSrc ?? '', gifvVideoSrc !== undefined);
+	const gifvPlaybackSrc = gifvVideoSrc === undefined ? undefined : gifvDisplaySrc;
+	const freshItemSources = freshItems.map((item) => item.src).join('\n');
 	const thumbnails = useMemo(() => {
 		const snappedThumbnailSize = snapMediaProxyImageSize(MEDIA_VIEWER_THUMBNAIL_SIZE);
-		return items.map((item, index) => {
+		return freshItems.map((item, index) => {
 			const name =
 				item.filename ||
 				item.originalSrc.split('/').pop()?.split('?')[0] ||
@@ -522,7 +566,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 				type: item.type,
 			};
 		});
-	}, [items, i18n.locale]);
+	}, [freshItemSources, items, i18n.locale]);
 	if (!isOpen || !currentItem) {
 		return null;
 	}
@@ -535,7 +579,8 @@ const MediaViewerModalComponent: FC = observer(() => {
 			? `${currentItem.naturalWidth}×${currentItem.naturalHeight}`
 			: undefined;
 	const fileName = currentItem.filename || currentItem.originalSrc.split('/').pop()?.split('?')[0] || 'media';
-	const fileSize = currentItem.fileSize != null ? formatFileSize(i18n.locale, currentItem.fileSize) : undefined;
+	const fileSize =
+		currentItem.fileSize != null ? formatFileSize(getFormattingLocale(), currentItem.fileSize) : undefined;
 	const expiryInfo =
 		currentItem.expiresAt && currentItem.expiresAt.length > 0
 			? {
@@ -572,6 +617,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 							objectFit: 'contain',
 						}}
 						draggable={false}
+						onError={handleImageError}
 						data-flx="messaging.media-viewer-modal.render-media.gifv-image"
 					/>
 				);
@@ -579,7 +625,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 			return (
 				<video
 					key={currentItem.src}
-					src={currentItem.src}
+					src={gifvPlaybackSrc}
 					className={styles.gifvVideo}
 					style={{
 						objectFit: 'contain',
@@ -590,6 +636,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 					playsInline
 					controls={false}
 					aria-label={i18n._(ANIMATED_VIDEO_DESCRIPTOR)}
+					onError={handleGifvVideoError}
 					data-flx="messaging.media-viewer-modal.render-media.gifv-video"
 				>
 					<track kind="captions" data-flx="messaging.media-viewer-modal.render-media.track" />
@@ -671,6 +718,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 					objectFit: 'contain',
 				}}
 				draggable={false}
+				onError={handleImageError}
 				data-flx="messaging.media-viewer-modal.render-media.image"
 			/>
 		);
@@ -705,8 +753,9 @@ const MediaViewerModalComponent: FC = observer(() => {
 				onCopyLink={downloadHidden ? undefined : handleCopyLink}
 				onCopyMedia={downloadHidden ? undefined : handleCopyMedia}
 				onDeleteAttachment={deletableAttachmentId ? handleDeleteAttachment : undefined}
-				onReply={permissions?.canSendMessages ? handleReply : undefined}
+				onReply={!sourcePost && permissions?.canSendMessages ? handleReply : undefined}
 				onForward={canForwardCurrentMedia ? handleForward : undefined}
+				onViewPost={sourcePost ? handleViewPost : undefined}
 				enablePanZoom={currentItem.type === 'image' || currentItem.type === 'gif' || currentItem.type === 'gifv'}
 				currentIndex={currentIndex}
 				totalAttachments={items.length}
@@ -717,7 +766,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 				providerName={currentItem.providerName}
 				videoSrc={currentItem.type === 'video' ? currentItem.src : undefined}
 				initialTime={currentItem.initialTime}
-				mediaType={currentItem.type === 'audio' ? 'audio' : currentItem.type === 'video' ? 'video' : 'image'}
+				mediaType={currentItem.type === 'audio' || currentItem.type === 'video' ? currentItem.type : 'image'}
 				onMenuOpen={handleMenuOpen}
 				data-flx="messaging.media-viewer-modal.media-viewer-modal-component.media-modal"
 			>
@@ -739,6 +788,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 					message={message}
 					onClose={() => setIsMediaMenuOpen(false)}
 					onDelete={handleDelete}
+					onViewPost={sourcePost ? handleViewPost : undefined}
 					sourceChannel={sourceChannel}
 					data-flx="messaging.media-viewer-modal.media-viewer-modal-component.mobile-media-options-sheet"
 				/>

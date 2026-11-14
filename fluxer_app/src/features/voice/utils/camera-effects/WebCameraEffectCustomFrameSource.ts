@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {waitForAbortablePromise} from '@app/features/platform/utils/AbortablePromise';
+import {
+	collectSettledFailures,
+	throwCollectedFailures,
+} from '@app/features/voice/utils/camera-effects/AggregateOperations';
 import {runWithResponseDeadline} from '@app/features/voice/utils/camera-effects/BoundedResponse';
+import {throwIfAborted} from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomImage';
 import {validateCameraEffectFrameDimensions} from '@app/features/voice/utils/camera-effects/WebCameraEffectProtocol';
 
 const MAX_ANIMATED_IMAGE_FRAMES = 300;
@@ -163,7 +169,7 @@ class AnimatedWebCameraEffectCustomFrameSource implements WebCameraEffectCustomF
 		}
 		this.disposed = true;
 		const failures = closeFrameImages(this.frames.map((frame) => frame.image));
-		throwCleanupFailures(failures, 'Animated custom camera background teardown failed');
+		throwCollectedFailures({failures: failures, message: 'Animated custom camera background teardown failed'});
 	}
 
 	private frameIndexAt(nowMilliseconds: number): number {
@@ -406,7 +412,7 @@ class VideoWebCameraEffectCustomFrameSource implements WebCameraEffectCustomFram
 		this.rejectFirstFrame?.(new Error('Custom camera background video source was disposed before its first frame'));
 		this.clearFirstFrameSettlers();
 		const cancellation = Promise.resolve().then(() => this.reader.cancel());
-		const failures = await settledFailures([cancellation, this.pumpPromise]);
+		const failures = await collectSettledFailures([cancellation, this.pumpPromise]);
 		try {
 			this.reader.releaseLock();
 		} catch (error) {
@@ -423,7 +429,7 @@ class VideoWebCameraEffectCustomFrameSource implements WebCameraEffectCustomFram
 		}
 		if (!this.lease.active) this.closeOwnedFrame('currentFrame', failures);
 		this.disposed = true;
-		throwCleanupFailures(failures, 'Custom camera background video teardown failed');
+		throwCollectedFailures({failures: failures, message: 'Custom camera background video teardown failed'});
 	}
 
 	private closeOwnedFrame(key: 'currentFrame' | 'pendingFrame', failures: Array<unknown>): void {
@@ -474,48 +480,6 @@ function closeFrameImages(images: ReadonlyArray<WebCameraEffectCustomFrameImage>
 		}
 	}
 	return failures;
-}
-
-function throwCleanupFailures(failures: ReadonlyArray<unknown>, message: string): void {
-	if (failures.length === 0) return;
-	if (failures.length === 1) throw failures[0];
-	throw new AggregateError(failures, message);
-}
-
-function throwWithCleanupFailures(error: unknown, failures: ReadonlyArray<unknown>, message: string): never {
-	if (failures.length === 0) throw error;
-	throw new AggregateError([error, ...failures], message);
-}
-
-async function settledFailures(promises: ReadonlyArray<Promise<unknown>>): Promise<Array<unknown>> {
-	const outcomes = await Promise.allSettled(promises);
-	const failures: Array<unknown> = [];
-	for (const outcome of outcomes) {
-		if (outcome.status === 'rejected') failures.push(outcome.reason);
-	}
-	return failures;
-}
-
-function waitForAbortablePromise<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
-	if (signal.aborted) return Promise.reject(signal.reason);
-	return new Promise<T>((resolve, reject) => {
-		const handleAbort = (): void => reject(signal.reason);
-		signal.addEventListener('abort', handleAbort, {once: true});
-		promise.then(
-			(value) => {
-				signal.removeEventListener('abort', handleAbort);
-				resolve(value);
-			},
-			(error: unknown) => {
-				signal.removeEventListener('abort', handleAbort);
-				reject(error);
-			},
-		);
-	});
-}
-
-function throwIfAborted(signal: AbortSignal): void {
-	if (signal.aborted) throw signal.reason ?? new Error('Custom camera background operation was aborted');
 }
 
 function requireAnimatedFrameDuration(duration: number | null): number {
@@ -589,7 +553,10 @@ async function decodeFrames(
 		}
 	} catch (error) {
 		const failures = closeFrameImages(decodedFrame == null ? frames : [decodedFrame, ...frames]);
-		throwWithCleanupFailures(error, failures, 'Animated custom camera background decoding failed during cleanup');
+		throwCollectedFailures({
+			failures: [error, ...failures],
+			message: 'Animated custom camera background decoding failed during cleanup',
+		});
 	}
 	const firstFrame = frames[0];
 	if (firstFrame == null) {
@@ -600,7 +567,10 @@ async function decodeFrames(
 		return new AnimatedWebCameraEffectCustomFrameSource(frames, frameEndMicroseconds);
 	} catch (error) {
 		const failures = closeFrameImages(frames);
-		throwWithCleanupFailures(error, failures, 'Animated custom camera background setup failed during cleanup');
+		throwCollectedFailures({
+			failures: [error, ...failures],
+			message: 'Animated custom camera background setup failed during cleanup',
+		});
 	}
 }
 
@@ -671,7 +641,10 @@ async function decodeImageDecoderSource(
 				failures.push(cleanupError);
 			}
 		}
-		throwWithCleanupFailures(error, failures, 'Animated custom camera background initialization failed during cleanup');
+		throwCollectedFailures({
+			failures: [error, ...failures],
+			message: 'Animated custom camera background initialization failed during cleanup',
+		});
 	} finally {
 		signal.removeEventListener('abort', handleAbort);
 	}
@@ -685,7 +658,10 @@ async function decodeStaticSource(blob: Blob, signal: AbortSignal): Promise<WebC
 		return new StaticWebCameraEffectCustomFrameSource(image);
 	} catch (error) {
 		const failures = closeFrameImages([image]);
-		throwWithCleanupFailures(error, failures, 'Custom camera background validation failed during cleanup');
+		throwCollectedFailures({
+			failures: [error, ...failures],
+			message: 'Custom camera background validation failed during cleanup',
+		});
 	}
 }
 

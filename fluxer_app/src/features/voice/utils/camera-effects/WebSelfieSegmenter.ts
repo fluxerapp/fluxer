@@ -175,7 +175,7 @@ function requireFloatMask(output: OrtNamespace.Tensor): Float32Array {
 	return data;
 }
 
-function collectInferenceOutputDisposalFailures(
+export function collectInferenceOutputDisposalFailures(
 	outputs: Readonly<Record<string, OrtNamespace.Tensor>>,
 ): ReadonlyArray<unknown> {
 	const failures: Array<unknown> = [];

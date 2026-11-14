@@ -7,14 +7,16 @@ use crate::{
             AppBrandingConfigUpdateRequest, AppPublicConfigUpdateRequest,
             BILLING_MAX_COUNTRY_CURRENCIES, BILLING_MAX_CURRENCIES,
             BILLING_MAX_LEGACY_PRICES_PER_SLOT, BILLING_MAX_LEGACY_SLOTS, BILLING_PRICE_SLOTS,
-            BillingPriceSet, InstanceBillingUpdateRequest, InstanceConfigUpdateRequest,
+            BillingPriceSet, DISTRIBUTION_PRODUCTS_ALL, DISTRIBUTION_RATE_BPS_MAX,
+            DistributionPricingUpdateRequest, DistributionProduct, DistributionRuleUpdate,
+            InstanceBillingUpdateRequest, InstanceConfigUpdateRequest,
             PREMIUM_PRODUCT_NAME_MAX_CHARS, TRI_STATE_DEFAULT, TRI_STATE_OFF, TRI_STATE_ON,
         },
     },
     middleware::flash::FlashData,
     utils::forms::MultiValueForm,
 };
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, num::NonZeroU64};
 
 const PRICE_ID_MAX_CHARS: usize = 255;
 const INFO_URL_MAX_CHARS: usize = 2048;
@@ -111,6 +113,7 @@ pub(super) fn build_billing_update(
             automatic_tax: parse_tri_state(form, "billing_automatic_tax")?,
             tax_id_collection: parse_tri_state(form, "billing_tax_id_collection")?,
             terms_consent_required: parse_tri_state(form, "billing_terms_consent_required")?,
+            billing_emails: parse_tri_state(form, "billing_billing_emails")?,
         }),
         ..Default::default()
     })
@@ -133,7 +136,7 @@ pub(super) fn billing_result<T>(result: Result<T, ApiError>) -> FlashData {
         Ok(_) => FlashData::success("Premium and billing settings updated"),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: update billing config");
-            match validation_message(&error) {
+            match error.validation_message() {
                 Some(message) => FlashData::error(format!(
                     "Failed to update premium and billing settings: {message}"
                 )),
@@ -141,28 +144,6 @@ pub(super) fn billing_result<T>(result: Result<T, ApiError>) -> FlashData {
             }
         }
     }
-}
-
-fn validation_message(error: &ApiError) -> Option<String> {
-    let ApiError::Http {
-        status: 400,
-        message,
-    } = error
-    else {
-        return None;
-    };
-    let body: serde_json::Value = serde_json::from_str(message).ok()?;
-    let first = body["errors"].as_array().and_then(|errors| errors.first());
-    let detail = first.and_then(|error| {
-        let message = error["message"].as_str()?;
-        Some(
-            match error["path"].as_str().filter(|path| !path.is_empty()) {
-                Some(path) => format!("{path}: {message}"),
-                None => message.to_owned(),
-            },
-        )
-    });
-    detail.or_else(|| body["message"].as_str().map(str::to_owned))
 }
 
 fn secret_update(form: &MultiValueForm, key: &str, clear_key: &str) -> Option<Option<String>> {
@@ -355,243 +336,93 @@ fn parse_legacy_prices(value: &str) -> Result<Option<BTreeMap<String, Vec<String
     Ok((!legacy.is_empty()).then_some(legacy))
 }
 
+pub(super) fn build_distribution_pricing_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    let ids = form.values("distribution_id");
+    let column = |key: &str, index: usize| {
+        form.values(key)
+            .get(index)
+            .map(|value| value.trim())
+            .unwrap_or("")
+    };
+    let mut rules: Vec<DistributionRuleUpdate> = Vec::new();
+    for (index, id) in ids.iter().enumerate() {
+        let id = id.trim();
+        if id.is_empty() {
+            continue;
+        }
+        let parsed = id.parse().map_err(|_| {
+            format!(
+                "\"{id}\" is not a valid distribution id. Use 1 to 32 lowercase letters, digits or underscores"
+            )
+        })?;
+        if rules.iter().any(|rule| rule.id == parsed) {
+            return Err(format!("{id} appears more than once"));
+        }
+        rules.push(DistributionRuleUpdate {
+            rate_bps: parse_distribution_rate(column("distribution_rate", index), id)?,
+            products: parse_distribution_products(column("distribution_products", index), id)?,
+            active: column("distribution_active", index) == TRI_STATE_ON,
+            id: parsed,
+        });
+    }
+    Ok(InstanceConfigUpdateRequest {
+        distribution_pricing: Some(DistributionPricingUpdateRequest { rules }),
+        ..Default::default()
+    })
+}
+
+fn parse_distribution_rate(value: &str, id: &str) -> Result<NonZeroU64, String> {
+    let invalid =
+        || format!("Rate for {id} must be a percentage between 0.01 and 30, like 5 or 2.5");
+    let (whole, fraction) = value.split_once('.').unwrap_or((value, ""));
+    if whole.is_empty()
+        || fraction.len() > 2
+        || !whole.bytes().all(|byte| byte.is_ascii_digit())
+        || !fraction.bytes().all(|byte| byte.is_ascii_digit())
+    {
+        return Err(invalid());
+    }
+    let whole: u64 = whole.parse().map_err(|_| invalid())?;
+    let fraction: u64 = format!("{fraction:0<2}").parse().map_err(|_| invalid())?;
+    let bps = whole
+        .checked_mul(100)
+        .and_then(|bps| bps.checked_add(fraction))
+        .filter(|bps| *bps <= DISTRIBUTION_RATE_BPS_MAX)
+        .and_then(NonZeroU64::new)
+        .ok_or_else(invalid)?;
+    Ok(bps)
+}
+
+fn parse_distribution_products(value: &str, id: &str) -> Result<Vec<DistributionProduct>, String> {
+    if value == DISTRIBUTION_PRODUCTS_ALL {
+        return Ok(vec![
+            DistributionProduct::PlutoniumSubscription,
+            DistributionProduct::PlutoniumGift,
+        ]);
+    }
+    value
+        .parse()
+        .map(|product| vec![product])
+        .map_err(|_| format!("Invalid products choice \"{value}\" for {id}"))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::api::generated::types as generated_types;
-    use serde_json::json;
-
-    fn full_form(extra: &str) -> MultiValueForm {
-        let base = "billing_premium_product_name=%20Gold%20\
-            &billing_premium_info_url=https%3A%2F%2Fexample.com%2Fgold\
-            &billing_enabled=on\
-            &billing_automatic_tax=default&billing_tax_id_collection=on&billing_terms_consent_required=off\
-            &billing_stripe_secret_key=\
-            &billing_stripe_webhook_secret=whsec_new\
-            &billing_default_currency=gbp\
-            &billing_price_currency=gbp&billing_price_monthly=price_1GbpM&billing_price_yearly=price_1GbpY\
-            &billing_price_gift_1_month=&billing_price_gift_1_year=price_1GbpG\
-            &billing_price_currency=SEK&billing_price_monthly=price_1SekM&billing_price_yearly=price_1SekY\
-            &billing_price_gift_1_month=&billing_price_gift_1_year=\
-            &billing_price_currency=&billing_price_monthly=&billing_price_yearly=\
-            &billing_price_gift_1_month=&billing_price_gift_1_year=\
-            &billing_country_currencies=se%3Dsek%0D%0AGB%20%3D%20GBP%0D%0A\
-            &billing_legacy_prices=monthly_GBP%3Dprice_1OldA%0Amonthly_gbp%3Dprice_1OldB%2Cprice_1OldA%0Ayearly_SEK%3Dprice_1OldC";
-        MultiValueForm::parse(format!("{base}{extra}").as_bytes())
-    }
+    use super::parse_distribution_rate;
+    use std::num::NonZeroU64;
 
     #[test]
-    fn full_billing_form_builds_the_expected_patch() {
-        let update = build_billing_update(&full_form("")).expect("valid form");
-        let value = serde_json::to_value(&update).expect("serializable");
-        serde_json::from_value::<generated_types::InstanceConfigUpdateRequest>(value.clone())
-            .expect("generated update contract");
-        assert_eq!(
-            value,
-            json!({
-                "app_public": {
-                    "branding": {
-                        "premium_product_name": "Gold",
-                        "premium_info_url": "https://example.com/gold"
-                    }
-                },
-                "billing": {
-                    "enabled": true,
-                    "stripe_webhook_secret": "whsec_new",
-                    "default_currency": "GBP",
-                    "prices": {
-                        "GBP": {
-                            "monthly": "price_1GbpM",
-                            "yearly": "price_1GbpY",
-                            "gift_1_month": null,
-                            "gift_1_year": "price_1GbpG"
-                        },
-                        "SEK": {
-                            "monthly": "price_1SekM",
-                            "yearly": "price_1SekY",
-                            "gift_1_month": null,
-                            "gift_1_year": null
-                        }
-                    },
-                    "country_currencies": {"GB": "GBP", "SE": "SEK"},
-                    "legacy_prices": {
-                        "monthly_GBP": ["price_1OldA", "price_1OldB"],
-                        "yearly_SEK": ["price_1OldC"]
-                    },
-                    "automatic_tax": null,
-                    "tax_id_collection": true,
-                    "terms_consent_required": false
-                }
-            })
-        );
-    }
-
-    #[test]
-    fn blank_fields_clear_and_the_default_choice_sends_null() {
-        let form = MultiValueForm::parse(
-            b"billing_premium_product_name=&billing_premium_info_url=&billing_enabled=default\
-              &billing_stripe_secret_key=&billing_clear_stripe_secret_key=true\
-              &billing_stripe_webhook_secret=\
-              &billing_default_currency=\
-              &billing_price_currency=&billing_price_monthly=price_1Ignored\
-              &billing_country_currencies=&billing_legacy_prices=",
-        );
-        let value = serde_json::to_value(build_billing_update(&form).expect("valid form")).unwrap();
-        assert_eq!(
-            value,
-            json!({
-                "app_public": {
-                    "branding": {"premium_product_name": null, "premium_info_url": null}
-                },
-                "billing": {
-                    "enabled": null,
-                    "stripe_secret_key": null,
-                    "default_currency": null,
-                    "prices": null,
-                    "country_currencies": null,
-                    "legacy_prices": null
-                }
-            })
-        );
-    }
-
-    #[test]
-    fn a_new_secret_wins_over_the_clear_checkbox() {
-        let form = MultiValueForm::parse(
-            b"billing_stripe_secret_key=%20sk_live_x%20&billing_clear_stripe_secret_key=true",
-        );
-        let billing = build_billing_update(&form)
-            .expect("valid form")
-            .billing
-            .expect("billing");
-        assert_eq!(
-            billing.stripe_secret_key,
-            Some(Some("sk_live_x".to_owned()))
-        );
-        assert_eq!(billing.stripe_webhook_secret, None);
-    }
-
-    #[test]
-    fn absent_form_keys_leave_their_fields_untouched() {
-        let update = build_billing_update(&MultiValueForm::parse(b"billing_enabled=off"))
-            .expect("valid form");
-        assert!(update.app_public.is_none());
-        assert_eq!(
-            serde_json::to_value(update.billing).unwrap(),
-            json!({"enabled": false})
-        );
-        let untouched = build_billing_update(&MultiValueForm::parse(b"")).expect("valid form");
-        assert_eq!(serde_json::to_value(untouched.billing).unwrap(), json!({}));
-    }
-
-    #[test]
-    fn invalid_input_is_rejected_with_a_message() {
-        let cases: &[(&str, &str)] = &[
-            (
-                "billing_premium_info_url=ftp%3A%2F%2Fexample.com",
-                "http or https",
-            ),
-            ("billing_premium_info_url=example.com", "http or https"),
-            ("billing_default_currency=GB", "Invalid currency"),
-            ("billing_enabled=true", "Invalid choice"),
-            ("billing_automatic_tax=maybe", "Invalid choice"),
-            (
-                "billing_price_currency=GBPX&billing_price_monthly=price_1A",
-                "Invalid currency",
-            ),
-            (
-                "billing_price_currency=GBP&billing_price_monthly=prod_1A",
-                "Invalid Stripe price ID",
-            ),
-            (
-                "billing_price_currency=GBP&billing_price_monthly=price_1-A",
-                "Invalid Stripe price ID",
-            ),
-            ("billing_price_currency=GBP", "needs at least one price ID"),
-            (
-                "billing_price_currency=GBP&billing_price_monthly=price_1A&billing_price_currency=gbp&billing_price_monthly=price_1B",
-                "more than once",
-            ),
-            ("billing_country_currencies=SWE%3DSEK", "Invalid country"),
-            ("billing_country_currencies=SE", "KEY=VALUE"),
-            (
-                "billing_country_currencies=SE%3DSEK%0ASE%3DEUR",
-                "mapped more than once",
-            ),
-            (
-                "billing_legacy_prices=weekly_GBP%3Dprice_1A",
-                "Invalid legacy price slot",
-            ),
-            (
-                "billing_legacy_prices=monthly_GBP%3D",
-                "needs at least one price ID",
-            ),
-            (
-                "billing_default_currency=EUR&billing_price_currency=GBP&billing_price_monthly=price_1A",
-                "Default currency EUR has no row",
-            ),
-            (
-                "billing_country_currencies=SE%3DSEK&billing_price_currency=GBP&billing_price_monthly=price_1A",
-                "SE maps to SEK",
-            ),
-        ];
-        let long_name = format!("billing_premium_product_name={}", "A".repeat(41));
-        let emoji_name = format!(
-            "billing_premium_product_name=Gold{}",
-            "%F0%9F%92%8E".repeat(20)
-        );
-        let long_case = [
-            (long_name.as_str(), "at most 40"),
-            (emoji_name.as_str(), "at most 40"),
-        ];
-        for (body, expected) in long_case.iter().chain(cases.iter()) {
-            let error =
-                build_billing_update(&MultiValueForm::parse(body.as_bytes())).expect_err(body);
-            assert!(error.contains(expected), "{body}: {error}");
-        }
-    }
-
-    #[test]
-    fn premium_name_limit_counts_utf16_units() {
-        let name = format!("{}{}", "A".repeat(39), "\u{1F48E}");
-        assert_eq!(name.chars().count(), 40);
-        assert!(parse_premium_product_name(Some(name)).is_err());
-        let fits = format!("{}{}", "A".repeat(38), "\u{E9}\u{E9}");
-        assert_eq!(
-            parse_premium_product_name(Some(fits.clone())),
-            Ok(Some(fits))
-        );
-    }
-
-    #[test]
-    fn country_currencies_are_not_cross_checked_without_a_price_table() {
-        let form = MultiValueForm::parse(b"billing_country_currencies=SE%3DSEK");
-        let billing = build_billing_update(&form).unwrap().billing.unwrap();
-        assert_eq!(
-            billing.country_currencies,
-            Some(Some(BTreeMap::from([("SE".to_owned(), "SEK".to_owned())])))
-        );
-    }
-
-    #[test]
-    fn validation_errors_surface_the_first_api_message() {
-        let error = ApiError::Http {
-            status: 400,
-            message: json!({
-                "code": "VALIDATION_ERROR",
-                "message": "Validation failed",
-                "errors": [{"path": "billing.enabled", "code": "X", "message": "Switch the premium model to mirror first"}]
-            })
-            .to_string(),
-        };
-        assert_eq!(
-            validation_message(&error).as_deref(),
-            Some("billing.enabled: Switch the premium model to mirror first")
-        );
-        let server_error = ApiError::Http {
-            status: 500,
-            message: "{}".to_owned(),
-        };
-        assert_eq!(validation_message(&server_error), None);
+    fn distribution_rate_reads_percent_into_basis_points() {
+        let bps = |value| parse_distribution_rate(value, "x").map(NonZeroU64::get);
+        assert_eq!(bps("5"), Ok(500));
+        assert_eq!(bps("2.5"), Ok(250));
+        assert_eq!(bps("0.01"), Ok(1));
+        assert_eq!(bps("30"), Ok(3000));
+        assert!(parse_distribution_rate("0", "x").is_err());
+        assert!(parse_distribution_rate("30.01", "x").is_err());
+        assert!(parse_distribution_rate("1.234", "x").is_err());
+        assert!(parse_distribution_rate("-5", "x").is_err());
     }
 }

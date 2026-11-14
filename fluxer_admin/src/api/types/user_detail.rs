@@ -13,6 +13,10 @@ pub struct UserSession {
     pub client_os: Option<String>,
     pub client_platform: Option<String>,
     pub client_location: Option<String>,
+    pub app_version: Option<String>,
+    pub app_release_channel: Option<String>,
+    pub app_build_number: Option<i32>,
+    pub app_beta_number: Option<i32>,
     pub deleted_at: Option<String>,
 }
 
@@ -171,6 +175,16 @@ pub struct ReportEntry {
     pub legal_hold_until: Option<String>,
     #[serde(default)]
     pub legal_hold_reason: Option<String>,
+    #[serde(default)]
+    pub notes: Vec<ReportNoteEntry>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ReportNoteEntry {
+    pub note_id: String,
+    pub author_id: String,
+    pub body: String,
+    pub created_at: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -198,6 +212,8 @@ pub struct ReportProfileSnapshotUser {
     pub bio: Option<String>,
     #[serde(default)]
     pub pronouns: Option<String>,
+    #[serde(default)]
+    pub custom_status: Option<String>,
     #[serde(default)]
     pub avatar: Option<ReportProfileSnapshotAsset>,
     #[serde(default)]

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {PasswordResetToken as PasswordResetTokenBrand, UserID} from '@app/api/BrandedTypes';
-import {createEmailRevertToken, createEmailVerificationToken, createPasswordResetToken} from '@app/api/BrandedTypes';
+import {createEmailRevertToken, createEmailVerificationToken} from '@app/api/BrandedTypes';
 import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	EmailRevertTokenRow,
@@ -31,6 +31,7 @@ const FETCH_PASSWORD_RESET_TOKENS_BY_USER_CQL = PasswordResetTokensByUserId.sele
 	where: PasswordResetTokensByUserId.where.eq('user_id'),
 });
 export const PASSWORD_RESET_TOKEN_TTL_SECONDS = seconds('1 hour');
+export const EMAIL_REVERT_TOKEN_TTL_SECONDS = seconds('24 hours');
 
 const FETCH_EMAIL_REVERT_TOKEN_CQL = EmailRevertTokens.selectCql({
 	where: EmailRevertTokens.where.eq('token_'),
@@ -75,21 +76,6 @@ export class TokenRepository {
 		return new PasswordResetToken(tokenData);
 	}
 
-	async deletePasswordResetToken(token: string): Promise<void> {
-		const brandedToken = createPasswordResetToken(token);
-		const tokenRow = await this.getPasswordResetToken(token);
-		if (tokenRow) {
-			const batch = new BatchBuilder();
-			batch.addPrepared(PasswordResetTokens.deleteByPk({token_: brandedToken, user_id: tokenRow.userId}));
-			batch.addPrepared(PasswordResetTokensByUserId.deleteByPk({user_id: tokenRow.userId, token_: brandedToken}));
-			await batch.execute();
-		} else {
-			await deleteOneOrMany(PasswordResetTokens.deleteCql({where: PasswordResetTokens.where.eq('token_')}), {
-				token_: brandedToken,
-			});
-		}
-	}
-
 	async deleteAllPasswordResetTokens(userId: UserID): Promise<void> {
 		const tokens = await fetchMany<{
 			user_id: UserID;
@@ -112,7 +98,7 @@ export class TokenRepository {
 	}
 
 	async createEmailRevertToken(tokenData: EmailRevertTokenRow): Promise<EmailRevertToken> {
-		await upsertOne(EmailRevertTokens.insertWithTtl(tokenData, seconds('24 hours')));
+		await upsertOne(EmailRevertTokens.insertWithTtl(tokenData, EMAIL_REVERT_TOKEN_TTL_SECONDS));
 		return new EmailRevertToken(tokenData);
 	}
 

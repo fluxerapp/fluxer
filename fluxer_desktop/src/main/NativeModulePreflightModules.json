@@ -60,11 +60,6 @@
 		"severity": "fatal"
 	},
 	{
-		"name": "@fluxer/linux-screen-capture",
-		"platforms": ["linux"],
-		"severity": "fatal"
-	},
-	{
 		"name": "@fluxer/system-hunspell",
 		"platforms": ["linux"],
 		"severity": "fatal"

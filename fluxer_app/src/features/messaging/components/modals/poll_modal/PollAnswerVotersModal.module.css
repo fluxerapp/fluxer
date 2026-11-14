@@ -54,7 +54,7 @@
 
 		.answerText {
 			flex-grow: 1;
-			text-align: left;
+			text-align: start;
 		}
 	}
 }
@@ -72,7 +72,7 @@
 }
 
 .voterList {
-	border-left: 1px solid var(--border-color);
+	border-inline-start: 1px solid var(--border-color);
 	width: 50%;
 	max-height: inherit;
 	overflow: hidden;
@@ -92,10 +92,10 @@
 
 		border-radius: var(--radius-lg);
 		transition: var(--message-transition-highlight);
-        cursor: pointer;
+		cursor: pointer;
 
-        &:hover {
-            background: var(--background-tertiary);
-        }
+		&:hover {
+			background: var(--background-tertiary);
+		}
 	}
 }

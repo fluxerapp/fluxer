@@ -28,7 +28,8 @@ ${unionType};
 
 export interface EmailTemplate {
 	subject: string;
-	body: string;
+	intro: string;
+	[field: string]: string;
 }
 `;
 }

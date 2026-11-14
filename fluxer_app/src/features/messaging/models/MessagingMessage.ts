@@ -8,6 +8,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
+import PollVotes from '@app/features/messaging/state/PollVotes';
 import {extractEmbeddableCodeLinkContent} from '@app/features/messaging/utils/EmbeddableCodeLinkContent';
 import {emojiEquals} from '@app/features/messaging/utils/ReactionUtils';
 import Relationships from '@app/features/relationship/state/Relationships';
@@ -31,7 +32,6 @@ import type {
 	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
-import PollVotes from '../state/PollVotes';
 
 type MessageInput = Omit<WireMessage, 'mentions' | 'mention_roles' | 'tts'> &
 	Partial<Pick<WireMessage, 'mentions' | 'mention_roles' | 'tts'>>;
@@ -49,6 +49,13 @@ function transformMessageCall(call?: MessageCall | null): TransformedMessageCall
 		};
 	}
 	return null;
+}
+
+function wireMessageCall(call: TransformedMessageCall | null): MessageCall | null {
+	if (call === null) {
+		return null;
+	}
+	return {participants: call.participants, ended_timestamp: call.endedTimestamp?.toISOString() ?? null};
 }
 
 let embedIdCounter = 0;
@@ -314,7 +321,7 @@ export class Message {
 
 	withUpdates(updates: Partial<WireMessage>): Message {
 		if ('reactions' in updates) {
-			MessageReactions.replaceMessageReactions(this.id, updates.reactions ?? []);
+			MessageReactions.hydrateMessageReactions(this.id, updates.reactions ?? []);
 		}
 		if ('poll' in updates) {
 			PollVotes.replaceMessagePollVotes(this.id, updates.poll?.results?.answer_counts ?? []);
@@ -343,6 +350,7 @@ export class Message {
 							question: updates.poll.question ?? this.poll?.question,
 							answers: updates.poll.answers ?? this.poll?.answers,
 							expiry: updates.poll.expiry ?? this.poll?.expiry,
+							anonymous_voting: updates.poll.anonymous_voting ?? this.poll?.anonymous_voting,
 							allow_multiselect: updates.poll.allow_multiselect ?? this.poll?.allow_multiselect,
 							layout_type: updates.poll.layout_type ?? this.poll?.layout_type,
 							results: updates.poll.results
@@ -370,32 +378,11 @@ export class Message {
 		);
 	}
 
-	withReaction(emoji: ReactionEmoji, add = true, me = false): Message {
-		const existing = this.getReaction(emoji);
-		let newReactions: Array<MessageReaction>;
-		if (add) {
-			if (!existing) {
-				newReactions = [...this.reactions, {emoji, count: 1, me: me ? true : undefined}];
-			} else if (me && existing.me) {
-				return this;
-			} else {
-				newReactions = this.reactions.map((r) =>
-					emojiEquals(r.emoji, emoji) ? {...r, count: r.count + 1, me: me || r.me ? true : undefined} : r,
-				);
-			}
-		} else {
-			if (!existing) return this;
-			if (me && !existing.me) return this;
-			const nextCount = Math.max(0, existing.count - 1);
-			if (nextCount === 0) {
-				newReactions = this.reactions.filter((r) => !emojiEquals(r.emoji, emoji));
-			} else {
-				newReactions = this.reactions.map((r) =>
-					emojiEquals(r.emoji, emoji) ? {...r, count: nextCount, me: me ? undefined : r.me} : r,
-				);
-			}
-		}
-		return this.withUpdates({reactions: newReactions});
+	withoutReferencedMessage(): Message {
+		return new Message(
+			{...this.toJSON(), referenced_message: null},
+			{skipUserCache: true, instanceId: this.instanceId, skipReactionHydration: true},
+		);
 	}
 
 	withPollVote(answerId: number, add = true, me = false): Message {
@@ -601,6 +588,14 @@ export class Message {
 			blocked: this.blocked,
 			_allowedMentions: this._allowedMentions,
 			_favoriteMemeId: this._favoriteMemeId,
+		};
+	}
+
+	toBootStateJSON(): WireMessage {
+		return {
+			...this.toJSON(),
+			referenced_message: this.referencedMessage?.toBootStateJSON(),
+			call: wireMessageCall(this.call),
 		};
 	}
 }

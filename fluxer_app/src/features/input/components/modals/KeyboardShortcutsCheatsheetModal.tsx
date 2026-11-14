@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
 import styles from '@app/features/input/components/modals/KeyboardShortcutsCheatsheetModal.module.css';
 import Keybind, {type KeybindConfig, type KeybindSection} from '@app/features/input/state/InputKeybind';
 import {getSuppressedBuiltinActions} from '@app/features/input/state/KeybindResolution';
 import {formatKeyComboParts} from '@app/features/input/utils/KeybindUtils';
+import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {
 	chipsForDefaultEntry,
@@ -20,11 +20,11 @@ import type React from 'react';
 import {useMemo, useRef} from 'react';
 
 const KEYBOARD_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Keyboard shortcuts',
+	message: 'Keybinds',
 	comment: 'Modal title for the keyboard shortcuts cheatsheet.',
 });
 const DEFAULT_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Default shortcuts',
+	message: 'Default keybinds',
 	comment: 'Short heading in the keyboard shortcuts cheatsheet.',
 });
 const MESSAGES_DESCRIPTOR = msg({
@@ -46,6 +46,10 @@ const CHAT_DESCRIPTOR = msg({
 const VOICE_AND_VIDEO_DESCRIPTOR = msg({
 	message: 'Voice and video',
 	comment: 'Short heading in the keyboard shortcuts cheatsheet.',
+});
+const ACCOUNTS_DESCRIPTOR = msg({
+	message: 'Accounts',
+	comment: 'Short heading in the keyboard shortcuts cheatsheet for shortcuts that switch between signed-in accounts.',
 });
 const MISCELLANEOUS_DESCRIPTOR = msg({
 	message: 'Miscellaneous',
@@ -70,7 +74,7 @@ function getShortcutChipGroups(i18n: I18n, entry: KeybindConfig, hasCustomBindin
 
 const ShortcutLabel: React.FC<{label: string}> = ({label}) => {
 	const labelRef = useRef<HTMLSpanElement>(null);
-	const isLabelOverflowing = useTextOverflow(labelRef);
+	const isLabelOverflowing = useTextOverflow(labelRef, {content: label});
 	return (
 		<Tooltip text={isLabelOverflowing ? label : ''} data-flx="input.keyboard-shortcuts-cheatsheet-modal.tooltip">
 			<span ref={labelRef} className={styles.shortcutLabel} data-flx="input.keyboard-shortcuts-cheatsheet-modal.label">
@@ -114,6 +118,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 		drag_and_drop: i18n._(DRAG_AND_DROP_DESCRIPTOR),
 		chat: i18n._(CHAT_DESCRIPTOR),
 		voice_and_video: i18n._(VOICE_AND_VIDEO_DESCRIPTOR),
+		accounts: i18n._(ACCOUNTS_DESCRIPTOR),
 		misc: i18n._(MISCELLANEOUS_DESCRIPTOR),
 	};
 	const sections = useMemo(() => {
@@ -124,6 +129,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 			drag_and_drop: [],
 			chat: [],
 			voice_and_video: [],
+			accounts: [],
 			misc: [],
 		};
 		for (const sectionId of DEFAULT_KEYBIND_SECTIONS) {

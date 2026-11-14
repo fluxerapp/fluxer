@@ -1,34 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type ChannelID, createGuildID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {MessageUpdateRequest} from '@app/api/channel/MessageTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import {emitMessageUpdated} from '@app/api/channel/services/message/MessageActivity';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
-import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import type {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
-import {isOperationDisabled, isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
 import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
 import {assertThreadInteractionAllowed} from '@app/api/channel/services/thread/ThreadInteractionGuards';
 import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
-import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {assertMayStartConversation, oneToOneDmRecipient} from '@app/api/user/NewConversationLimit';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
@@ -40,13 +41,13 @@ interface EditMessageResult {
 }
 
 interface MessageEditServiceDeps {
-	channelRepository: IChannelRepositoryAggregate;
-	userRepository: IUserRepository;
+	gatewayService: IGatewayService;
+	channelRepository: ChannelRepository;
+	userRepository: UserRepository;
 	validationService: MessageValidationService;
 	persistenceService: MessagePersistenceService;
 	channelAuthService: MessageChannelAuthService;
 	processingService: MessageProcessingService;
-	dispatchService: MessageDispatchService;
 	searchService: MessageSearchService;
 	embedAttachmentResolver: MessageEmbedAttachmentResolver;
 	mentionService: MessageMentionService;
@@ -155,13 +156,12 @@ export class MessageEditService {
 					channel,
 					requestCache,
 					persistenceService: this.deps.persistenceService,
-					dispatchService: this.deps.dispatchService,
 				});
 			});
 			await this.deps.crosspostPropagation.propagateEdit(editedMessage);
 			return {message: editedMessage, authChannel};
 		}
-		if (user && !isPersonalNotesChannel({userId, channelId})) {
+		if (user && !isPersonalNotesChannelId({userId, channelId})) {
 			assertAccountNotLimited(user);
 		}
 		const dmRecipientId = oneToOneDmRecipient(channel, userId);
@@ -174,7 +174,6 @@ export class MessageEditService {
 				channel,
 			});
 		}
-		const isBugHunterBot = !!user?.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
 		const dmNsfwContext = guild ? undefined : await this.deps.persistenceService.resolveDmNsfwContext(channel, userId);
 		const updateResult = await this.deps.messageWriteLock.withFreshMessage(channelId, messageId, async (fresh) => {
 			if (!fresh) throw new UnknownMessageError();
@@ -189,9 +188,9 @@ export class MessageEditService {
 					attachmentUploadUserId: userId,
 					allowEmbeds: canEmbedLinks,
 					isBot: user?.isBot,
-					isBugHunterBot,
 					locale: user?.locale,
 					dmNsfwContext,
+					hasPermission,
 				}),
 			);
 		});
@@ -211,7 +210,7 @@ export class MessageEditService {
 				requestCache.messageMentionChannels.set(updatedMessage.id.toString(), mentionResult.mentionChannels);
 			}
 		}
-		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+		await dispatchMessageUpdateBroadcast({gatewayService: this.deps.gatewayService, channel, message: updatedMessage});
 		await this.deps.crosspostPropagation.propagateEdit(updatedMessage);
 		if (user && ((data.content !== undefined && data.content !== message.content) || hasNewAttachments)) {
 			emitMessageUpdated({

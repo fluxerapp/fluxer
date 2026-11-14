@@ -76,7 +76,7 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
-		it('allows message when the only mutual guild is verified and the guild id is not disqualified', async () => {
+		it('allows message when the only mutual guild is verified', async () => {
 			const sender = await createTestAccount(harness);
 			const target = await createTestAccount(harness);
 			await ensureSessionStarted(harness, sender.token);
@@ -151,6 +151,24 @@ describe('DM Privacy Bidirectional Enforcement', () => {
 			await createBuilder(harness, sender.token)
 				.post(`/channels/${channel.id}/messages`)
 				.body({content: 'after target left'})
+				.expect(HTTP_STATUS.BAD_REQUEST, 'CANNOT_SEND_MESSAGES_TO_USER')
+				.execute();
+		});
+	});
+	describe('teen defaults', () => {
+		it('blocks a non-friend member of a community the teen joined after sign-up', async () => {
+			const sender = await createTestAccount(harness);
+			const teen = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+			await ensureSessionStarted(harness, sender.token);
+			await ensureSessionStarted(harness, teen.token);
+			const guild = await createGuild(harness, sender.token, 'Shared Community');
+			const systemChannel = await getChannel(harness, sender.token, guild.system_channel_id!);
+			const invite = await createChannelInvite(harness, sender.token, systemChannel.id);
+			await acceptInvite(harness, teen.token, invite.code);
+			const channel = await createDmChannel(harness, sender.token, teen.userId);
+			await createBuilder(harness, sender.token)
+				.post(`/channels/${channel.id}/messages`)
+				.body({content: 'hello'})
 				.expect(HTTP_STATUS.BAD_REQUEST, 'CANNOT_SEND_MESSAGES_TO_USER')
 				.execute();
 		});

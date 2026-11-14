@@ -7,9 +7,10 @@
 
 -export([
     error/1,
-    error_category/1
+    error_category/1,
+    voice_error_info/1
 ]).
--export_type([error_atom/0, error_category/0]).
+-export_type([error_atom/0, error_category/0, voice_error_info/0]).
 
 -type error_atom() ::
     voice_connection_not_found
@@ -32,11 +33,14 @@
     | voice_invalid_guild_id
     | voice_moderator_missing_connect
     | voice_unclaimed_account
+    | voice_account_verification_required
     | voice_update_rate_limited
     | voice_nonce_mismatch
     | voice_pending_expired
     | voice_camera_user_limit
     | voice_e2ee_required
+    | voice_p2p_consent_required
+    | voice_p2p_unavailable
     | dm_channel_not_found
     | dm_not_recipient
     | dm_invalid_channel_type
@@ -84,7 +88,8 @@ voice_error_category(ErrorAtom) ->
 
 -spec voice_error_info(error_atom()) -> voice_error_info() | undefined.
 voice_error_info(ErrorAtom) ->
-    maps:get(ErrorAtom, voice_error_infos(), undefined).
+    Infos = maps:merge(voice_error_infos(), voice_access_error_infos()),
+    maps:get(ErrorAtom, maps:merge(Infos, voice_p2p_error_infos()), undefined).
 
 -spec voice_error_infos() -> #{error_atom() => voice_error_info()}.
 voice_error_infos() ->
@@ -102,15 +107,6 @@ voice_error_infos() ->
             {<<"VOICE_USER_NOT_IN_VOICE">>, <<"User is not in a voice channel">>, not_found},
         voice_guild_not_found =>
             {<<"VOICE_GUILD_NOT_FOUND">>, <<"Guild not found">>, not_found},
-        voice_permission_denied =>
-            {<<"VOICE_PERMISSION_DENIED">>, <<"Missing voice permissions">>, permission_denied},
-        voice_member_timed_out =>
-            {<<"VOICE_MEMBER_TIMED_OUT">>, <<"Voice member is timed out">>, permission_denied},
-        voice_channel_full =>
-            {<<"VOICE_CHANNEL_FULL">>, <<"Voice channel is full">>, permission_denied},
-        voice_connection_limit_reached =>
-            {<<"VOICE_CONNECTION_LIMIT_REACHED">>, <<"Voice connection limit reached">>,
-                permission_denied},
         voice_missing_connection_id =>
             {<<"VOICE_MISSING_CONNECTION_ID">>, <<"Connection ID is required">>,
                 validation_error},
@@ -128,12 +124,6 @@ voice_error_infos() ->
             {<<"VOICE_GUILD_ID_MISSING">>, <<"Guild ID is required">>, validation_error},
         voice_invalid_guild_id =>
             {<<"VOICE_INVALID_GUILD_ID">>, <<"Invalid guild ID">>, validation_error},
-        voice_moderator_missing_connect =>
-            {<<"VOICE_PERMISSION_DENIED">>, <<"Moderator missing connect permission">>,
-                permission_denied},
-        voice_unclaimed_account =>
-            {<<"VOICE_UNCLAIMED_ACCOUNT">>, <<"Claim your account to join voice">>,
-                permission_denied},
         voice_update_rate_limited =>
             {<<"VOICE_UPDATE_RATE_LIMITED">>, <<"Voice updates are rate limited">>,
                 rate_limited},
@@ -141,12 +131,47 @@ voice_error_infos() ->
             {<<"VOICE_NONCE_MISMATCH">>, <<"Voice token nonce mismatch">>, validation_error},
         voice_pending_expired =>
             {<<"VOICE_PENDING_EXPIRED">>, <<"Voice pending connection expired">>,
-                validation_error},
+                validation_error}
+    }.
+
+-spec voice_access_error_infos() -> #{error_atom() => voice_error_info()}.
+voice_access_error_infos() ->
+    #{
+        voice_permission_denied =>
+            {<<"VOICE_PERMISSION_DENIED">>, <<"Missing voice permissions">>, permission_denied},
+        voice_member_timed_out =>
+            {<<"VOICE_MEMBER_TIMED_OUT">>, <<"Voice member is timed out">>, permission_denied},
+        voice_channel_full =>
+            {<<"VOICE_CHANNEL_FULL">>, <<"Voice channel is full">>, permission_denied},
+        voice_connection_limit_reached =>
+            {<<"VOICE_CONNECTION_LIMIT_REACHED">>, <<"Voice connection limit reached">>,
+                permission_denied},
+        voice_moderator_missing_connect =>
+            {<<"VOICE_PERMISSION_DENIED">>, <<"Moderator missing connect permission">>,
+                permission_denied},
+        voice_unclaimed_account =>
+            {<<"VOICE_UNCLAIMED_ACCOUNT">>, <<"Claim your account to join voice">>,
+                permission_denied},
+        voice_account_verification_required =>
+            {<<"VOICE_ACCOUNT_VERIFICATION_REQUIRED">>,
+                <<"Confirm an email address to join voice">>, permission_denied},
         voice_camera_user_limit =>
             {<<"VOICE_CAMERA_USER_LIMIT">>, <<"Too many users in channel to enable camera">>,
                 permission_denied},
         voice_e2ee_required =>
             {<<"VOICE_E2EE_REQUIRED">>, voice_e2ee_required_message(), permission_denied}
+    }.
+
+-spec voice_p2p_error_infos() -> #{error_atom() => voice_error_info()}.
+voice_p2p_error_infos() ->
+    #{
+        voice_p2p_consent_required =>
+            {<<"VOICE_P2P_CONSENT_REQUIRED">>,
+                <<"This call is peer-to-peer and requires agreement to join">>,
+                permission_denied},
+        voice_p2p_unavailable =>
+            {<<"VOICE_P2P_UNAVAILABLE">>, <<"Peer-to-peer voice is unavailable for this join">>,
+                voice_error}
     }.
 
 -spec voice_e2ee_required_message() -> binary().

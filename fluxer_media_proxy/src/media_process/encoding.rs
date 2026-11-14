@@ -156,6 +156,9 @@ pub(super) fn encode_vips_image(
     {
         return encode_animated_apng(image, ph, animation, media_limits, animation_loop_count);
     }
+    let width = unsafe { native::fluxer_vips_image_get_width(image.as_ptr()) };
+    let height = unsafe { native::fluxer_vips_image_get_height(image.as_ptr()) };
+    let output_pixels = u64::try_from(width).unwrap_or(0) * u64::try_from(height).unwrap_or(0);
     if format == OutputFormat::GIF
         && let Some(frame_height) = page_height
         && frame_height > 0
@@ -164,7 +167,13 @@ pub(super) fn encode_vips_image(
             image,
             resolve_animation_loop_count(image, animation_loop_count),
         )?;
-        let suffix = output_suffix(format, quality, Some(frame_height), effort_override)?;
+        let suffix = output_suffix(
+            format,
+            quality,
+            Some(frame_height),
+            effort_override,
+            output_pixels,
+        )?;
         return write_vips_image_to_vec(
             image,
             &suffix,
@@ -172,7 +181,7 @@ pub(super) fn encode_vips_image(
             animation.deadline_unix_ms,
         );
     }
-    let suffix = output_suffix(format, quality, page_height, effort_override)?;
+    let suffix = output_suffix(format, quality, page_height, effort_override, output_pixels)?;
     write_vips_image_to_vec(
         image,
         &suffix,

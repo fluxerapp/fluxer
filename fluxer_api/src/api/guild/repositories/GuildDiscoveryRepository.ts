@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID} from '@app/api/BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {BatchBuilder, fetchMany, fetchOne, fetchPage} from '@app/api/database/CassandraQueryExecution';
 import type {GuildDiscoveryByStatusRow, GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
 import {GuildDiscovery, GuildDiscoveryByStatus} from '@app/api/Tables';
 import {DISCOVERY_DEFAULT_LANGUAGE, DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
+import {BACKGROUND_READ_TIMEOUT_MS} from '@pkgs/cassandra/src/Client';
 
 const FETCH_DISCOVERY_BY_GUILD_ID = GuildDiscovery.selectCql({
 	where: GuildDiscovery.where.eq('guild_id'),
@@ -13,35 +14,11 @@ const FETCH_DISCOVERY_BY_GUILD_ID = GuildDiscovery.selectCql({
 const FETCH_DISCOVERY_BY_STATUS = GuildDiscoveryByStatus.selectCql({
 	where: GuildDiscoveryByStatus.where.eq('status'),
 });
-const FETCH_ALL_DISCOVERY_FIRST_PAGE = (limit: number) => GuildDiscovery.select({limit});
-const FETCH_ALL_DISCOVERY_PAGINATED = (limit: number) =>
-	GuildDiscovery.select({
-		where: GuildDiscovery.where.tokenGt('guild_id', 'last_guild_id'),
-		limit,
-	});
+const SCAN_DISCOVERY = GuildDiscovery.selectCql({
+	columns: ['guild_id', 'status', 'applied_at'],
+});
 
-export abstract class IGuildDiscoveryRepository {
-	abstract findByGuildId(guildId: GuildID): Promise<GuildDiscoveryRow | null>;
-
-	abstract listByStatus(status: string): Promise<Array<GuildDiscoveryByStatusRow>>;
-
-	abstract listFullByStatus(status: string): Promise<Array<GuildDiscoveryRow>>;
-
-	abstract listAllPaginated(limit: number, lastGuildId?: GuildID): Promise<Array<GuildDiscoveryRow>>;
-
-	abstract upsert(row: GuildDiscoveryRow): Promise<void>;
-
-	abstract deleteByGuildId(guildId: GuildID, status: string, appliedAt: Date): Promise<void>;
-
-	abstract updateStatus(
-		guildId: GuildID,
-		oldStatus: string,
-		oldAppliedAt: Date,
-		updatedRow: GuildDiscoveryRow,
-	): Promise<void>;
-}
-
-export class GuildDiscoveryRepository extends IGuildDiscoveryRepository {
+export class GuildDiscoveryRepository {
 	async findByGuildId(guildId: GuildID): Promise<GuildDiscoveryRow | null> {
 		const row = await fetchOne<GuildDiscoveryRow>(FETCH_DISCOVERY_BY_GUILD_ID, {
 			guild_id: guildId,
@@ -60,21 +37,34 @@ export class GuildDiscoveryRepository extends IGuildDiscoveryRepository {
 		});
 	}
 
+	async scanStatuses(
+		pageState: string | null,
+		pageSize: number,
+	): Promise<{rows: Array<GuildDiscoveryByStatusRow>; pageState: string | null}> {
+		const result = await fetchPage<GuildDiscoveryByStatusRow>(
+			SCAN_DISCOVERY,
+			{},
+			{pageSize, pageState, readTimeout: BACKGROUND_READ_TIMEOUT_MS},
+		);
+		return {rows: result.rows, pageState: result.pageState};
+	}
+
+	async addStatusEntry(row: GuildDiscoveryByStatusRow): Promise<void> {
+		const batch = new BatchBuilder();
+		batch.addPrepared(
+			GuildDiscoveryByStatus.insert({
+				status: row.status,
+				applied_at: row.applied_at,
+				guild_id: row.guild_id,
+			}),
+		);
+		await batch.execute();
+	}
+
 	async listFullByStatus(status: string): Promise<Array<GuildDiscoveryRow>> {
 		const indexRows = await this.listByStatus(status);
 		const fullRows = await Promise.all(indexRows.map((indexRow) => this.findByGuildId(indexRow.guild_id)));
 		return fullRows.filter((row): row is GuildDiscoveryRow => row !== null);
-	}
-
-	async listAllPaginated(limit: number, lastGuildId?: GuildID): Promise<Array<GuildDiscoveryRow>> {
-		if (lastGuildId) {
-			return fetchMany<GuildDiscoveryRow>(
-				FETCH_ALL_DISCOVERY_PAGINATED(limit).bind({
-					last_guild_id: lastGuildId,
-				}),
-			);
-		}
-		return fetchMany<GuildDiscoveryRow>(FETCH_ALL_DISCOVERY_FIRST_PAGE(limit).bind({}));
 	}
 
 	async upsert(row: GuildDiscoveryRow): Promise<void> {
@@ -126,13 +116,16 @@ export class GuildDiscoveryRepository extends IGuildDiscoveryRepository {
 		updatedRow: GuildDiscoveryRow,
 	): Promise<void> {
 		const batch = new BatchBuilder();
-		batch.addPrepared(
-			GuildDiscoveryByStatus.deleteByPk({
-				status: oldStatus,
-				applied_at: oldAppliedAt,
-				guild_id: guildId,
-			}),
-		);
+		const sameEntry = oldStatus === updatedRow.status && oldAppliedAt.getTime() === updatedRow.applied_at.getTime();
+		if (!sameEntry) {
+			batch.addPrepared(
+				GuildDiscoveryByStatus.deleteByPk({
+					status: oldStatus,
+					applied_at: oldAppliedAt,
+					guild_id: guildId,
+				}),
+			);
+		}
 		batch.addPrepared(
 			GuildDiscovery.insert({
 				guild_id: updatedRow.guild_id,

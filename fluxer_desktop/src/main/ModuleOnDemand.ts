@@ -8,7 +8,7 @@ import {DesktopModuleEnsureStatus, isDesktopModuleName} from '@fluxer/desktop_ip
 const logger = createChildLogger('ModuleOnDemand');
 const ON_DEMAND_MODULE_DISTINCT_INSTALLS_MAX = 8;
 
-export class UnknownDesktopModuleRequestError extends Error {
+class UnknownDesktopModuleRequestError extends Error {
 	public constructor() {
 		super('The renderer requested a module with an unusable name');
 		this.name = 'UnknownDesktopModuleRequestError';

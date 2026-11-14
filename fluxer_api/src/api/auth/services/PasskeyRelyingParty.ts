@@ -32,8 +32,25 @@ export function visibleWebAuthnCredentials(credentials: Array<WebAuthnCredential
 	return credentials.filter((credential) => credential.supersededBy === null);
 }
 
-export function originRpId(ctx: ApiContext, origin: string | null | undefined): string {
-	return isPasskeyTargetOrigin(ctx, origin) ? PASSKEY_MIGRATION_RP_ID : ctx.services.config.auth.passkeys.rpId;
+function requestedPasskeyRpId(ctx: ApiContext, rpId: string | null | undefined): string | null {
+	if (ctx.services.config.instance.selfHosted || !rpId) return null;
+	return rpId === PASSKEY_MIGRATION_RP_ID || rpId === ctx.services.config.auth.passkeys.rpId ? rpId : null;
+}
+
+function prefersMigrationRp(
+	ctx: ApiContext,
+	origin: string | null | undefined,
+	requestedRpId: string | null | undefined,
+): boolean {
+	const requested = requestedPasskeyRpId(ctx, requestedRpId);
+	if (requested !== null) return requested === PASSKEY_MIGRATION_RP_ID;
+	return isPasskeyTargetOrigin(ctx, origin);
+}
+
+export function originRpId(ctx: ApiContext, origin: string | null | undefined, requestedRpId?: string | null): string {
+	return prefersMigrationRp(ctx, origin, requestedRpId)
+		? PASSKEY_MIGRATION_RP_ID
+		: ctx.services.config.auth.passkeys.rpId;
 }
 
 export async function isPasskeyMigrationActive(ctx: ApiContext, origin: string | null | undefined): Promise<boolean> {
@@ -50,10 +67,11 @@ export function selectCredentialRp(
 	ctx: ApiContext,
 	origin: string | null | undefined,
 	credentials: Array<WebAuthnCredential>,
+	requestedRpId?: string | null,
 ): CredentialRpSelection {
 	const legacyRpId = ctx.services.config.auth.passkeys.rpId;
 	const visible = visibleWebAuthnCredentials(credentials);
-	if (isPasskeyTargetOrigin(ctx, origin)) {
+	if (prefersMigrationRp(ctx, origin, requestedRpId)) {
 		const target = credentialGroup(ctx, visible, PASSKEY_MIGRATION_RP_ID);
 		return target.credentials.length > 0 ? target : credentialGroup(ctx, visible, legacyRpId);
 	}

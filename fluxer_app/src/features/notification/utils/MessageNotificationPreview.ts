@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {STICKER_DESCRIPTOR, STICKERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {formatList} from '@app/features/i18n/utils/IntlCache';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
 import {parseAndRenderToPlaintext} from '@app/features/messaging/utils/markdown/Plaintext';
 import {SystemMessageUtils} from '@app/features/messaging/utils/SystemMessageUtils';
+import {formatNameForStreamerMode} from '@app/features/user/utils/NicknameUtils';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {inlineMentionedUserNames} from '@fluxer/desktop_ipc/src/AccountEngineContract';
 import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import type {
 	ChannelMention,
 	MessageAttachment,
-	MessageMention,
 	MessageSnapshot,
 	MessageStickerItem,
 	Message as WireMessage,
@@ -19,7 +21,6 @@ import type {
 import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 
 const MESSAGE_NOTIFICATION_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.STANDARD_WITHOUT_JUMBO);
 const ATTACHMENT_DESCRIPTOR = msg({
@@ -48,6 +49,7 @@ const POLL_NOTIFICATION_DESCRIPTOR = msg({
 interface MarkdownPreviewOptions {
 	channelId: string;
 	mentionChannels?: ReadonlyArray<ChannelMention>;
+	resolveFromStores?: boolean;
 	i18n: I18n;
 }
 
@@ -69,6 +71,7 @@ function renderMarkdownPreview(content: string | null | undefined, options: Mark
 		preserveMarkdown: true,
 		includeEmojiNames: true,
 		mentionChannels: options.mentionChannels,
+		resolveFromStores: options.resolveFromStores,
 		i18n: options.i18n,
 	});
 }
@@ -97,7 +100,7 @@ function buildEmbedNotificationPreview(embeds: ReadonlyArray<MessageEmbed> | nul
 	}
 	if (embed.fields?.length) {
 		const field = embed.fields[0];
-		return `${field.name}: ${field.value}`;
+		return [field.name, field.value].filter(Boolean).join(': ');
 	}
 	return '';
 }
@@ -114,7 +117,7 @@ function buildStickerNotificationPreview(
 	if (stickers.length === 1) {
 		return i18n._(STICKER_NOTIFICATION_BODY_DESCRIPTOR, {stickerName: stickerNames[0]});
 	}
-	const formattedStickerNames = formatListWithConfig(stickerNames, {
+	const formattedStickerNames = formatList(stickerNames, {
 		locale: i18n.locale,
 		style: 'long',
 		type: 'conjunction',
@@ -179,24 +182,17 @@ export function buildMessageNotificationBody(message: Message, i18n: I18n): stri
 	return '';
 }
 
-const USER_MENTION_PATTERN = /<@!?(\d+)>/g;
-
-function inlineUserMentions(content: string, mentions: ReadonlyArray<MessageMention> | undefined): string {
-	if (!content || !mentions?.length) return content;
-	return content.replace(USER_MENTION_PATTERN, (token, userId: string) => {
-		const user = mentions.find((mention) => mention.id === userId);
-		if (!user) return token;
-		return `@${user.member?.nick || user.global_name || user.username}`;
-	});
-}
-
 export function buildWireMessageNotificationBody(message: WireMessage, i18n: I18n): string {
 	const markdownOptions: MarkdownPreviewOptions = {
 		channelId: message.channel_id,
 		mentionChannels: message.mention_channels,
+		resolveFromStores: false,
 		i18n,
 	};
-	const userBody = renderMarkdownPreview(inlineUserMentions(message.content, message.mentions), markdownOptions);
+	const userBody = renderMarkdownPreview(
+		inlineMentionedUserNames(message.content, message.mentions, formatNameForStreamerMode),
+		markdownOptions,
+	);
 	if (userBody) return userBody;
 	const contentFallback = buildMessageContentFallbackPreview(
 		{

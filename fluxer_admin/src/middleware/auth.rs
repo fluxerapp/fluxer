@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::types::AdminUser,
+    api::types::{AdminUser, AdminUserMeResponse, PremiumBranding},
     middleware::flash,
     session::{self, Session},
     state::AppState,
@@ -16,6 +16,22 @@ use axum::{
 pub struct AuthContext {
     pub session: Session,
     pub admin_user: Option<AdminUser>,
+    pub pending_registration_count: Option<u32>,
+    pub branding: Option<PremiumBranding>,
+}
+
+impl AuthContext {
+    pub fn acls(&self) -> &[String] {
+        self.admin_user
+            .as_ref()
+            .map_or(&[], |user| user.acls.as_slice())
+    }
+
+    pub fn discovery_enabled(&self) -> bool {
+        self.branding
+            .as_ref()
+            .is_none_or(|branding| branding.discovery_enabled)
+    }
 }
 
 pub async fn require_auth(
@@ -26,29 +42,30 @@ pub async fn require_auth(
     let config = state.config();
     let session = extract_session(&request, &config.secret_key_base);
     let Some(session) = session else {
-        return Redirect::to(&format!("{}/auth/start", config.base_path)).into_response();
+        let entry = if config.sso.as_ref().is_some_and(|sso| sso.only) {
+            "sso/start"
+        } else if config.sso.is_some() {
+            "login"
+        } else {
+            "auth/start"
+        };
+        return Redirect::to(&format!("{}/{entry}", config.base_path)).into_response();
     };
-    let admin_result = fetch_admin_user(state.http_client(), config, &session).await;
-    match admin_result {
-        AdminFetchResult::Unauthorized => {
-            let login_url = format!("{}/login", config.base_path);
-            return clear_session_and_redirect(&login_url, config);
-        }
-        AdminFetchResult::Ok(admin_user) => {
-            let auth_context = AuthContext {
-                session,
-                admin_user: Some(*admin_user),
-            };
-            request.extensions_mut().insert(auth_context);
-        }
-        AdminFetchResult::None => {
-            let auth_context = AuthContext {
-                session,
-                admin_user: None,
-            };
-            request.extensions_mut().insert(auth_context);
-        }
-    }
+    let (admin_user, pending_registration_count) =
+        match fetch_admin_user(state.http_client(), config, &session).await {
+            AdminFetchResult::Unauthorized => {
+                let login_url = format!("{}/login", config.base_path);
+                return clear_session_and_redirect(&login_url, config);
+            }
+            AdminFetchResult::Ok(me) => (Some(me.user), me.pending_registration_count),
+            AdminFetchResult::None => (None, None),
+        };
+    request.extensions_mut().insert(AuthContext {
+        session,
+        admin_user,
+        pending_registration_count,
+        branding: state.self_hosted_branding().await,
+    });
 
     let had_flash = flash::extract_flash(&request);
     if let Some(ref fd) = had_flash {
@@ -64,42 +81,12 @@ pub async fn require_auth(
     response
 }
 
-fn admin_cookie_path(config: &crate::config::AdminConfig) -> &str {
-    if config.base_path.is_empty() {
-        "/"
-    } else {
-        config.base_path.as_str()
-    }
-}
-
 fn clear_session_and_redirect(url: &str, config: &crate::config::AdminConfig) -> Response {
     let mut response = Redirect::to(url).into_response();
-    let admin_path = admin_cookie_path(config);
-    for path in [admin_path, "/"] {
-        if path != admin_path && admin_path == "/" {
-            continue;
-        }
-        let clear = format!(
-            "{}=; Path={}; HttpOnly; SameSite=Lax; Max-Age=0",
-            crate::session::SESSION_COOKIE_NAME,
-            path
-        );
-        if let Ok(v) = axum::http::HeaderValue::from_str(&clear) {
-            response
-                .headers_mut()
-                .append(axum::http::header::SET_COOKIE, v);
-        }
-        let legacy_clear = format!(
-            "{}=; Path={}; HttpOnly; SameSite=Lax; Max-Age=0",
-            crate::session::LEGACY_SESSION_COOKIE_NAME,
-            path
-        );
-        if let Ok(v) = axum::http::HeaderValue::from_str(&legacy_clear) {
-            response
-                .headers_mut()
-                .append(axum::http::header::SET_COOKIE, v);
-        }
-    }
+    session::append_cookies(
+        &mut response,
+        &session::clear_cookie_values(session::SESSION_COOKIE_NAME, config),
+    );
     response
 }
 
@@ -120,7 +107,7 @@ fn extract_session(request: &Request, secret_key: &str) -> Option<Session> {
 }
 
 enum AdminFetchResult {
-    Ok(Box<AdminUser>),
+    Ok(Box<AdminUserMeResponse>),
     Unauthorized,
     None,
 }
@@ -146,11 +133,8 @@ async fn fetch_admin_user(
     if !response.status().is_success() {
         return AdminFetchResult::None;
     }
-    match response
-        .json::<crate::api::types::AdminUserMeResponse>()
-        .await
-    {
-        Ok(resp) => AdminFetchResult::Ok(Box::new(resp.user)),
+    match response.json::<AdminUserMeResponse>().await {
+        Ok(me) => AdminFetchResult::Ok(Box::new(me)),
         Err(_) => AdminFetchResult::None,
     }
 }

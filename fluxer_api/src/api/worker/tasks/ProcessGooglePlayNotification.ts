@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
+import {KvOnceClaims} from '@app/api/infrastructure/KvOnceClaims';
 import {
 	decodeGooglePlayDeveloperNotification,
 	type GooglePlayDeveloperNotification,
 } from '@app/api/store_billing/google_play/GooglePlayPushVerifier';
 import {isGooglePlayConfigured, isGooglePlayPackageConfigured} from '@app/api/store_billing/StoreBillingConfig';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
-import {
-	googlePlayMessageClaimKey,
-	rescheduleStoreNotification,
-	StoreNotificationClaims,
-} from '@app/api/store_billing/StoreNotificationClaims';
+import {googlePlayMessageClaimKey, rescheduleStoreNotification} from '@app/api/store_billing/StoreNotificationClaims';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {StorePurchaseInvalidError} from '@fluxer/errors/src/domains/payment/StorePurchaseInvalidError';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
@@ -80,7 +77,7 @@ const processGooglePlayNotification: WorkerTaskHandler = async (payload, helpers
 		return;
 	}
 	const {kvClient, storeEntitlementService} = getWorkerDependencies();
-	const claims = new StoreNotificationClaims(kvClient);
+	const claims = new KvOnceClaims(kvClient);
 	const claimKey = googlePlayMessageClaimKey(messageId);
 	const claim = await claims.tryClaim(claimKey);
 	if (claim === 'already_processed') {

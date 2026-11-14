@@ -10,7 +10,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallState from '@app/features/voice/state/CallState';
 import VoiceSessionRestore from '@app/features/voice/state/VoiceSessionRestore';
 import {getVoiceSessionRestoreChannelDisplayName} from '@app/features/voice/utils/VoiceSessionRestoreUtils';
@@ -90,7 +90,9 @@ export const VoiceSessionRestoreNagbar = observer(({isMobile}: {isMobile: boolea
 				VoiceSessionRestore.clearSnapshot();
 				return;
 			}
-			await MediaEngine.restoreVoiceSession(snapshot, restoreOptions);
+			await VoiceRuntime.withEngine('session-restore', (engine) =>
+				engine.restoreVoiceSession(snapshot, restoreOptions),
+			);
 		} catch (error) {
 			logger.error('Failed to restore voice session', error);
 		} finally {

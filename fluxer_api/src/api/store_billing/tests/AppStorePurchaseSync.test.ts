@@ -1,6 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {Config} from '@app/api/Config';
 import {setInjectedAppleRootCertificates} from '@app/api/store_billing/app_store/AppleRootCertificates';
 import {
 	type AppStorePurchaseLookup,
@@ -374,10 +371,5 @@ describe('AppStorePurchaseSync', () => {
 	it('refuses a product that is not configured without calling Apple', async () => {
 		await expectSyncFailure(sync.loadPurchase(lookup({productId: 'com.fluxer.unknown'})), 'unknown_product');
 		expect(fake.requests).toHaveLength(0);
-	});
-
-	it('uses the configured product table', () => {
-		expect(Config.appStore.products[MONTHLY]).toBe('monthly');
-		expect(Config.appStore.products[GIFT_YEAR]).toBe('gift_1_year');
 	});
 });

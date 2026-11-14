@@ -8,16 +8,16 @@ use axum::http::{HeaderValue, StatusCode, header};
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
+use fluxer_common::metrics::is_loopback_peer;
 use std::net::SocketAddr;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, OnceLock};
 use tokio::net::TcpListener;
 
 #[derive(Clone)]
 pub struct HttpState {
     pub is_serving: Arc<AtomicBool>,
-    pub metrics: Arc<ServiceMetrics>,
-    pub service_name: String,
+    pub render: Arc<dyn Fn() -> String + Send + Sync>,
 }
 
 pub async fn run_http(
@@ -25,18 +25,15 @@ pub async fn run_http(
     is_serving: Arc<AtomicBool>,
     metrics: Arc<ServiceMetrics>,
     service_name: String,
+    build_version: String,
 ) -> anyhow::Result<()> {
-    let state = HttpState {
-        is_serving,
-        metrics,
-        service_name,
-    };
-    let app = Router::new()
-        .route("/_health", get(readiness_check))
-        .route("/_healthz", get(|| async { "OK" }))
-        .route("/_metrics", get(metrics_handler))
-        .with_state(state)
-        .layer(middleware::from_fn(add_version_header));
+    let render = Arc::new(move || metrics.render_prometheus(&service_name));
+    let version = HeaderValue::from_str(&build_version).ok();
+    let app = ops_router(is_serving, render)
+        .layer(middleware::from_fn(move |request, next| {
+            add_version_header(version.clone(), request, next)
+        }))
+        .layer(fluxer_common::svc_span::CurrentSpanLayer::new());
     let listener = TcpListener::bind(addr).await?;
     tracing::info!(addr = %addr, "health HTTP server listening");
     axum::serve(
@@ -47,16 +44,23 @@ pub async fn run_http(
     Ok(())
 }
 
+pub fn ops_router(
+    is_serving: Arc<AtomicBool>,
+    render: Arc<dyn Fn() -> String + Send + Sync>,
+) -> Router {
+    Router::new()
+        .route("/_health", get(readiness_check))
+        .route("/_healthz", get(|| async { "OK" }))
+        .route("/_metrics", get(metrics_handler))
+        .with_state(HttpState { is_serving, render })
+}
+
 async fn readiness_check(State(state): State<HttpState>) -> impl IntoResponse {
     if state.is_serving.load(Ordering::SeqCst) {
         (StatusCode::OK, "OK")
     } else {
         (StatusCode::SERVICE_UNAVAILABLE, "NOT READY")
     }
-}
-
-fn is_loopback_peer(peer: &SocketAddr) -> bool {
-    peer.ip().to_canonical().is_loopback()
 }
 
 async fn metrics_handler(
@@ -66,7 +70,7 @@ async fn metrics_handler(
     if !is_loopback_peer(&peer) {
         return (StatusCode::FORBIDDEN, "FORBIDDEN").into_response();
     }
-    let body = state.metrics.render_prometheus(&state.service_name);
+    let body = (state.render)();
     (
         [(
             header::CONTENT_TYPE,
@@ -77,46 +81,14 @@ async fn metrics_handler(
         .into_response()
 }
 
-fn build_version() -> &'static str {
-    static BUILD_VERSION: OnceLock<String> = OnceLock::new();
-    BUILD_VERSION
-        .get_or_init(|| {
-            crate::config::optional_env("BUILD_VERSION").unwrap_or_else(|| "dev".to_owned())
-        })
-        .as_str()
-}
-
-async fn add_version_header(request: Request<Body>, next: Next) -> Response {
+async fn add_version_header(
+    version: Option<HeaderValue>,
+    request: Request<Body>,
+    next: Next,
+) -> Response {
     let mut response = next.run(request).await;
-    if let Ok(value) = HeaderValue::from_str(build_version()) {
+    if let Some(value) = version {
         response.headers_mut().insert("x-fluxer-version", value);
     }
     response
-}
-
-#[cfg(test)]
-mod tests {
-    use super::is_loopback_peer;
-    use std::net::SocketAddr;
-
-    fn peer(value: &str) -> SocketAddr {
-        value.parse().expect("valid socket address")
-    }
-
-    #[test]
-    fn accepts_loopback_peers() {
-        assert!(is_loopback_peer(&peer("127.0.0.1:5000")));
-        assert!(is_loopback_peer(&peer("127.0.0.2:5000")));
-        assert!(is_loopback_peer(&peer("[::1]:5000")));
-        assert!(is_loopback_peer(&peer("[::ffff:127.0.0.1]:5000")));
-    }
-
-    #[test]
-    fn rejects_remote_peers() {
-        assert!(!is_loopback_peer(&peer("8.8.8.8:5000")));
-        assert!(!is_loopback_peer(&peer("10.0.0.5:5000")));
-        assert!(!is_loopback_peer(&peer("172.18.0.4:5000")));
-        assert!(!is_loopback_peer(&peer("[fe80::1]:5000")));
-        assert!(!is_loopback_peer(&peer("[::ffff:8.8.8.8]:5000")));
-    }
 }

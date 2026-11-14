@@ -2,6 +2,7 @@
 
 import {
 	isSupportedHighlightLanguage,
+	registerRetainedCodeSource,
 	useArboriumHighlightedHtml,
 } from '@app/features/code_highlighting/utils/ArboriumHighlighting';
 import {COPY_CODE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -26,7 +27,7 @@ import {
 import {msg} from '@lingui/core/macro';
 import {clsx} from 'clsx';
 import type katexDefault from 'katex';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 const ERROR_RENDERING_LATEX_DESCRIPTOR = msg({
 	message: 'Error rendering LaTeX: {errorAsErrorMessageI18nMsgUnknownError}',
@@ -41,6 +42,7 @@ const logger = new Logger('CodeElementsRenderer');
 const KATEX_CODE_BLOCK_LANGUAGES = new Set(['katex', 'latex', 'tex']);
 const ANSI_CODE_BLOCK_LANGUAGES = new Set(['ansi']);
 const KATEX_CONTROL_SEQUENCE_REGEX = /\\(?:[a-zA-Z@]+|.)/gu;
+const KATEX_MAX_EXPAND = 512;
 
 type KatexModule = typeof katexDefault;
 
@@ -142,6 +144,11 @@ function RichCodeBlockRenderer({
 		shouldHighlight ? normalisedLanguage : null,
 		shouldHighlight ? content : null,
 	);
+	const codeRef = useRef<HTMLElement | null>(null);
+	useLayoutEffect(() => {
+		if (codeRef.current === null || !shouldHighlight || normalisedLanguage == null) return;
+		return registerRetainedCodeSource(codeRef.current, normalisedLanguage, content);
+	}, [normalisedLanguage, content, shouldHighlight]);
 	const copyButton = (
 		<CopyButton
 			value={content}
@@ -183,6 +190,7 @@ function RichCodeBlockRenderer({
 				throwOnError: false,
 				errorColor: 'var(--accent-danger)',
 				trust: false,
+				maxExpand: KATEX_MAX_EXPAND,
 				strict: false,
 				output: 'html',
 			});
@@ -255,6 +263,7 @@ function RichCodeBlockRenderer({
 		highlightedContent = (
 			<code
 				className={clsx(markupStyles.hljs, language)}
+				ref={codeRef}
 				dangerouslySetInnerHTML={{__html: highlightedHtml}}
 				data-flx="messaging.markdown.renderers.common.code-elements.rich-code-block-renderer.code--4"
 			/>

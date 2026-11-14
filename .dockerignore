@@ -1,7 +1,3 @@
-/AGENTS.md
-/CLAUDE.md
-
-/.claude/
 /.direnv/
 /.fluxer/
 /.git/
@@ -14,8 +10,6 @@
 **/.env.*.local
 **/.env.local
 /config/env/local.env
-/deploy/self-hosting/.env.*
-!/deploy/self-hosting/.env.example
 
 **/*.css.d.ts
 **/*.tsbuildinfo
@@ -25,6 +19,7 @@
 **/_build/
 **/coverage/
 **/dist/
+!/tools/dist/
 **/node_modules/
 **/target/
 **/test-results.json
@@ -34,10 +29,13 @@
 /fluxer_app/pkgs/libfluxcore/
 /fluxer_app/pkgs/libfluxwebp/
 /fluxer_app/src/features/i18n/locales/*/messages.mjs
-/fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
+/fluxer_app/pkgs/markdown_parser/
 /fluxer_app/src/features/theme/styles/generated/
 /fluxer_app/src/features/ui/components/SVGMasks.tsx
 /fluxer_app/src/features/ui/constants/AvatarStatusGeometry.ts
+/fluxer_static/desktop/spellcheck/dictionaries/*/*
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-et@2.0.0/LICENSE
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-eu@4.0.0/LICENSE
 /fluxer_gateway/priv/
 
 /fluxer_media_proxy/fuzz/artifacts/
@@ -45,18 +43,15 @@
 /packages/markdown_parser/rust/fuzz/artifacts/
 /packages/markdown_parser/rust/fuzz/corpus/
 
-/fluxer_media_proxy/.benchmark-cache/
-/fluxer_media_proxy/bench-results/
-
 /app-dist-output/
 /artifacts/
 /desktop-shared-assets/
 /desktop-modules/
-/s3_payload/
 /upload_staging/
 
 
-/fluxer_desktop/
+/fluxer_desktop/*
+!/fluxer_desktop/native/
 
 **/.idea/
 **/*.iml
@@ -71,3 +66,5 @@
 
 **/.DS_Store
 **/Thumbs.db
+
+/fluxer_native/fluxerd

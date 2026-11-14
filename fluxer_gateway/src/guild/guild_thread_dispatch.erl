@@ -7,13 +7,14 @@
 
 -export([
     handles/1,
-    handle/3,
+    handle/4,
     dispatch_counts/0,
     count_masked/2,
     init_counters/0
 ]).
 
 -define(RECENT_CREATE_CAP, 256).
+-define(PRIVATE_THREAD, 12).
 -define(COUNTS_KEY, {?MODULE, variant_counts}).
 -define(EVENTS, [
     thread_create,
@@ -51,8 +52,8 @@ handles(thread_member_list_update) -> true;
 handles(forum_unreads) -> true;
 handles(_) -> false.
 
--spec handle(atom(), map(), guild_state()) -> {noreply, guild_state()}.
-handle(Event, EventData, #{id := GuildId} = State) when is_integer(GuildId) ->
+-spec handle(atom(), map(), full | state_only, map()) -> {noreply, map()}.
+handle(Event, EventData, Mode, #{id := GuildId} = State) when is_integer(GuildId) ->
     Data = EventData#{<<"guild_id">> => integer_to_binary(GuildId)},
     try
         State1 =
@@ -60,9 +61,7 @@ handle(Event, EventData, #{id := GuildId} = State) when is_integer(GuildId) ->
                 true -> guild_thread_load:queue_event(Event, Data, State);
                 false -> State
             end,
-        {Deliveries, State2} = handle_event(Event, Data, State1),
-        ok = deliver(Deliveries, GuildId),
-        {noreply, after_delivery(Event, Data, State2)}
+        {noreply, handle_mode(Mode, Event, Data, GuildId, State1)}
     catch
         Class:Reason:Stack ->
             ?LOG_WARNING(
@@ -73,8 +72,16 @@ handle(Event, EventData, #{id := GuildId} = State) when is_integer(GuildId) ->
             ),
             {noreply, State}
     end;
-handle(_Event, _EventData, State) ->
+handle(_Event, _EventData, _Mode, State) ->
     {noreply, State}.
+
+-spec handle_mode(full | state_only, atom(), map(), integer(), guild_state()) -> guild_state().
+handle_mode(state_only, Event, Data, _GuildId, State) ->
+    guild_state_threads:apply_event(Event, Data, State);
+handle_mode(full, Event, Data, GuildId, State) ->
+    {Deliveries, State1} = handle_event(Event, Data, State),
+    ok = deliver(Deliveries, GuildId),
+    after_delivery(Event, Data, State1).
 
 -spec after_delivery(atom(), map(), guild_state()) -> guild_state().
 after_delivery(thread_members_update, Data, State) ->
@@ -170,8 +177,8 @@ shared_memo(Before, After, Memo) when is_map(Before), is_map(After) ->
     ParentId = guild_thread_permissions:parent_id(Before),
     case
         guild_thread_permissions:parent_id(After) =:= ParentId andalso
-            maps:get(<<"type">>, Before, undefined) =/= 12 andalso
-            maps:get(<<"type">>, After, undefined) =/= 12
+            maps:get(<<"type">>, Before, undefined) =/= ?PRIVATE_THREAD andalso
+            maps:get(<<"type">>, After, undefined) =/= ?PRIVATE_THREAD
     of
         true -> Memo;
         false -> #{}
@@ -182,6 +189,7 @@ shared_memo(_Before, _After, _Memo) ->
 -spec unarchive_member_updates(integer(), map(), [session_pair()], guild_state(), map()) ->
     [delivery()].
 unarchive_member_updates(ThreadId, Thread, Viewers, #{id := GuildId} = State, Memo) ->
+    Wants = fun(Session, _Passive) -> is_member(Session, ThreadId, State) end,
     case guild_thread_gate:store(State) of
         undefined ->
             [];
@@ -190,7 +198,7 @@ unarchive_member_updates(ThreadId, Thread, Viewers, #{id := GuildId} = State, Me
                 Thread,
                 Viewers,
                 State,
-                fun(Session, _Passive) -> is_member(Session, ThreadId, State) end,
+                Wants,
                 Memo
             ),
             [
@@ -228,7 +236,7 @@ thread_member_update(Data, State0) ->
     ThreadId = snowflake_id:parse_maybe(maps:get(<<"id">>, Data, undefined)),
     TargetId = snowflake_id:parse_maybe(maps:get(<<"user_id">>, Data, undefined)),
     Thread = member_update_thread(ThreadId, TargetId, Data, State),
-    Payload = guild_thread_gate:strip_internal(Data),
+    Payload = guild_thread_payload:strip_internal(Data),
     Deliveries = [
         {thread_member_update, Pid, Payload}
      || Thread =/= undefined,
@@ -336,7 +344,7 @@ synthesized_creates(Thread, ThreadId, Users, Viewers, State) ->
 
 -spec members_update_payload(map(), guild_state()) -> map().
 members_update_payload(Data, State) ->
-    Base = guild_thread_gate:strip_internal(Data),
+    Base = guild_thread_payload:strip_internal(Data),
     case maps:get(<<"added_members">>, Base, undefined) of
         Added when is_list(Added) ->
             Ctx = guild_member_list_connected:presence_context(State),
@@ -352,7 +360,7 @@ decorate_added(Member, PresenceCtx, State) ->
     Stripped = maps:without([<<"muted">>, <<"mute_config">>], Member),
     case snowflake_id:parse_maybe(maps:get(<<"user_id">>, Member, undefined)) of
         UserId when is_integer(UserId) ->
-            GuildMember = guild_data_members:find_member_by_user_id(UserId, State),
+            GuildMember = guild_permissions_check:find_member_by_user_id(UserId, State),
             Stripped#{
                 <<"member">> => null_if_undefined(GuildMember),
                 <<"presence">> => presence(UserId, PresenceCtx)
@@ -389,17 +397,10 @@ recipients(Thread, Viewers, State, Wants, Memo0) ->
     Small = session_passive:is_small_guild(State),
     {Pairs, Memo} = lists:foldl(
         fun({_Sid, Session} = Pair, {Acc, Memo1}) ->
-            case
-                Wants(Session, (not Small) andalso session_passive:is_passive(GuildId, Session))
-            of
-                true ->
-                    case guild_thread_gate:thread_view_access(Session, Thread, State, Memo1) of
-                        {true, Memo2} -> {[Pair | Acc], Memo2};
-                        {false, Memo2} -> {Acc, Memo2}
-                    end;
-                false ->
-                    {Acc, Memo1}
-            end
+            Passive = (not Small) andalso session_passive:is_passive(GuildId, Session),
+            Candidate = Wants(Session, Passive) andalso Session,
+            {Ok, Memo2} = guild_thread_gate:thread_view_access(Candidate, Thread, State, Memo1),
+            {[Pair || Ok] ++ Acc, Memo2}
         end,
         {[], Memo0},
         Viewers
@@ -415,8 +416,9 @@ joined_or_interested(ThreadId, State) ->
 
 -spec interested(map(), integer(), guild_state()) -> boolean().
 interested(Session, ThreadId, State) ->
-    is_bot(Session) orelse is_member(Session, ThreadId, State) orelse
-        maps:get(thread_subscribed, Session, false) =:= true.
+    type_conv:is_true(maps:get(bot, Session, false)) orelse
+        is_member(Session, ThreadId, State) orelse
+        type_conv:is_true(maps:get(thread_subscribed, Session, false)).
 
 -spec is_member(map(), integer(), guild_state()) -> boolean().
 is_member(#{user_id := UserId}, ThreadId, State) ->
@@ -427,13 +429,9 @@ is_member(#{user_id := UserId}, ThreadId, State) ->
 is_member(_Session, _ThreadId, _State) ->
     false.
 
--spec is_bot(map()) -> boolean().
-is_bot(Session) ->
-    maps:get(bot, Session, false) =:= true.
-
 -spec can_view(map(), map(), guild_state()) -> boolean().
 can_view(#{user_id := UserId}, Thread, State) when is_integer(UserId) ->
-    Member = guild_permissions:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     Member =/= undefined andalso guild_thread_view:can_view(UserId, Thread, Member, State);
 can_view(_Session, _Thread, _State) ->
     false.
@@ -442,10 +440,10 @@ can_view(_Session, _Thread, _State) ->
 viewer_sessions(State) ->
     [
         {Sid, Session}
-     || {Sid, Session} <- maps:to_list(maps:get(sessions, State, #{})),
+     || {Sid, Session} <- maps:to_list(maps:get(sessions, State)),
         is_map(Session),
         guild_thread_gate:session_viewer(Session),
-        maps:get(pending_connect, Session, false) =/= true,
+        not type_conv:is_true(maps:get(pending_connect, Session, false)),
         is_pid(maps:get(pid, Session, undefined))
     ].
 
@@ -455,12 +453,11 @@ union(A, B) ->
 
 -spec thread_or_context(integer(), map(), guild_state()) -> map() | undefined.
 thread_or_context(ThreadId, Data, State) ->
-    case guild_thread_gate:thread(ThreadId, State) of
-        undefined ->
-            case guild_state_threads:thread_context(ThreadId, Data) of
-                undefined -> fallback_context(ThreadId, Data);
-                Context -> Context
-            end;
+    maybe
+        undefined ?= guild_thread_gate:thread(ThreadId, State),
+        undefined ?= guild_state_threads:thread_context(ThreadId, Data),
+        fallback_context(ThreadId, Data)
+    else
         Thread ->
             Thread
     end.
@@ -476,19 +473,19 @@ fallback_context(_ThreadId, _Data) ->
 -spec public_payload(map()) -> map().
 public_payload(Data) ->
     maps:without(
-        [<<"member">>, <<"member_ids_preview">>], guild_thread_gate:strip_internal(Data)
+        [<<"member">>, <<"member_ids_preview">>], guild_thread_payload:strip_internal(Data)
     ).
 
 -spec with_member(map(), integer(), term(), guild_state()) -> map().
 with_member(Base, ThreadId, UserId, State) when is_integer(UserId) ->
-    case guild_thread_gate:store(State) of
-        undefined ->
-            Base;
-        Tab ->
-            case guild_thread_store:get_member(Tab, ThreadId, UserId) of
-                undefined -> Base;
-                Member -> Base#{<<"member">> => Member}
-            end
+    Member =
+        case guild_thread_gate:store(State) of
+            undefined -> undefined;
+            Tab -> guild_thread_store:get_member(Tab, ThreadId, UserId)
+        end,
+    case Member of
+        undefined -> Base;
+        _ -> Base#{<<"member">> => Member}
     end;
 with_member(Base, _ThreadId, _UserId, _State) ->
     Base.

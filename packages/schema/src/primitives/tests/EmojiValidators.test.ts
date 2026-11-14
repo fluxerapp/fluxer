@@ -1,149 +1,47 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {isValidSingleUnicodeEmoji} from '@fluxer/schema/src/primitives/EmojiValidators';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {GuildRoleCreateRequest, GuildRoleUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
+import {UnicodeRoleEmojiType} from '@fluxer/schema/src/primitives/EmojiValidators';
 import {describe, expect, it} from 'vitest';
 
-describe('isValidSingleUnicodeEmoji', () => {
-	describe('valid single emojis', () => {
-		it('accepts simple emoji', () => {
-			expect(isValidSingleUnicodeEmoji('👍')).toBe(true);
-		});
-		it('accepts common face emojis', () => {
-			expect(isValidSingleUnicodeEmoji('😀')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('😂')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🥺')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('😡')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🤔')).toBe(true);
-		});
-		it('accepts emoji with skin tone modifier', () => {
-			expect(isValidSingleUnicodeEmoji('👍🏿')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('👍🏻')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('👍🏽')).toBe(true);
-		});
-		it('accepts ZWJ sequence emojis', () => {
-			expect(isValidSingleUnicodeEmoji('👨‍👩‍👧‍👦')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('👩‍💻')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🧑‍🎄')).toBe(true);
-		});
-		it('accepts ZWJ sequence with skin tone at correct position', () => {
-			expect(isValidSingleUnicodeEmoji('🧑🏿‍🎄')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('👩🏻‍💻')).toBe(true);
-		});
-		it('accepts flag emojis', () => {
-			expect(isValidSingleUnicodeEmoji('🇺🇸')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🇬🇧')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🏳️‍🌈')).toBe(true);
-		});
-		it('accepts single regional indicator symbols', () => {
-			expect(isValidSingleUnicodeEmoji('🇦')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🇧')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🇵')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🇿')).toBe(true);
-		});
-		it('accepts all 26 regional indicator symbols', () => {
-			for (let cp = 0x1f1e6; cp <= 0x1f1ff; cp++) {
-				expect(isValidSingleUnicodeEmoji(String.fromCodePoint(cp))).toBe(true);
-			}
-		});
-		it('accepts keycap emojis', () => {
-			expect(isValidSingleUnicodeEmoji('1️⃣')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('#️⃣')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('*️⃣')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('0️⃣')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('9️⃣')).toBe(true);
-		});
-		it('accepts variation selector emojis', () => {
-			expect(isValidSingleUnicodeEmoji('❤️')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('☀️')).toBe(true);
-		});
-		it('accepts text-style emojis without variation selector', () => {
-			expect(isValidSingleUnicodeEmoji('❤')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('☀')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('☺')).toBe(true);
-		});
-		it('accepts copyright, registered, and trademark symbols', () => {
-			expect(isValidSingleUnicodeEmoji('©')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('©️')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('®')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('®️')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('™')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('™️')).toBe(true);
-		});
-		it('accepts animal and nature emojis', () => {
-			expect(isValidSingleUnicodeEmoji('🐱')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🌸')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🌍')).toBe(true);
-		});
-		it('accepts food and object emojis', () => {
-			expect(isValidSingleUnicodeEmoji('🍕')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🎸')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('💎')).toBe(true);
-		});
-		it('accepts symbol emojis', () => {
-			expect(isValidSingleUnicodeEmoji('✅')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('❌')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('⚠️')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('💯')).toBe(true);
-		});
+const PNG_DATA_URI = 'data:image/png;base64,iVBORw0KGgo=';
+
+describe('UnicodeRoleEmojiType', () => {
+	it('accepts a single emoji, a skin tone variant and a ZWJ sequence', () => {
+		for (const value of ['🔥', '🛡️', '👍🏽', '👩‍💻', '🏳️‍🌈']) {
+			expect(UnicodeRoleEmojiType.safeParse(value).success, value).toBe(true);
+		}
 	});
-	describe('invalid inputs', () => {
-		it('rejects empty string', () => {
-			expect(isValidSingleUnicodeEmoji('')).toBe(false);
-		});
-		it('rejects plain text', () => {
-			expect(isValidSingleUnicodeEmoji('hello')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('abc')).toBe(false);
-		});
-		it('rejects single ascii characters', () => {
-			expect(isValidSingleUnicodeEmoji('a')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('1')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('#')).toBe(false);
-			expect(isValidSingleUnicodeEmoji(' ')).toBe(false);
-		});
-		it('rejects multiple emojis', () => {
-			expect(isValidSingleUnicodeEmoji('👍👍')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('🎉🎊')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('👨‍👩‍👧‍👦👨‍👩‍👧')).toBe(false);
-		});
-		it('rejects multiple regional indicator symbols', () => {
-			expect(isValidSingleUnicodeEmoji('\u{1F1E6}\u{1F1E7}')).toBe(false);
-		});
-		it('rejects emoji with trailing text', () => {
-			expect(isValidSingleUnicodeEmoji('👍abc')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('🎉!')).toBe(false);
-		});
-		it('rejects emoji with leading text', () => {
-			expect(isValidSingleUnicodeEmoji('abc👍')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('!🎉')).toBe(false);
-		});
-		it('rejects unicode characters that are not emoji', () => {
-			expect(isValidSingleUnicodeEmoji('é')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('中')).toBe(false);
-			expect(isValidSingleUnicodeEmoji('α')).toBe(false);
-		});
-		it('rejects regional indicator with trailing text', () => {
-			expect(isValidSingleUnicodeEmoji('\u{1F1F5}abc')).toBe(false);
-		});
-		it('rejects regional indicator with leading text', () => {
-			expect(isValidSingleUnicodeEmoji('abc\u{1F1F5}')).toBe(false);
-		});
+
+	it('rejects text, two emoji and long strings', () => {
+		for (const value of ['abc', '🔥🔥', '', '🔥 ', '🔥'.repeat(40)]) {
+			const result = UnicodeRoleEmojiType.safeParse(value);
+			expect(result.success, value).toBe(false);
+			expect(result.error?.issues[0]?.message).toBe(ValidationErrorCodes.NOT_A_VALID_UNICODE_EMOJI);
+		}
 	});
-	describe('malformed emoji sequences', () => {
-		it('rejects skin tone at wrong position in ZWJ sequence', () => {
-			expect(isValidSingleUnicodeEmoji('🧑‍🎄🏿')).toBe(false);
+});
+
+describe('role icon request fields', () => {
+	for (const [name, schema, base] of [
+		['create', GuildRoleCreateRequest, {name: 'Mods'}],
+		['update', GuildRoleUpdateRequest, {}],
+	] as const) {
+		it(`${name} accepts null and absent icon fields`, () => {
+			expect(schema.safeParse(base).success).toBe(true);
+			expect(schema.safeParse({...base, icon: null, unicode_emoji: null}).success).toBe(true);
+			expect(schema.safeParse({...base, icon: PNG_DATA_URI, unicode_emoji: null}).success).toBe(true);
+			expect(schema.safeParse({...base, icon: null, unicode_emoji: '🔥'}).success).toBe(true);
 		});
-		it('accepts standalone skin tone modifier as valid emoji', () => {
-			expect(isValidSingleUnicodeEmoji('🏿')).toBe(true);
-			expect(isValidSingleUnicodeEmoji('🏻')).toBe(true);
+
+		it(`${name} rejects an image and an emoji together`, () => {
+			const result = schema.safeParse({...base, icon: PNG_DATA_URI, unicode_emoji: '🔥'});
+			expect(result.success).toBe(false);
+			expect(result.error?.issues[0]).toMatchObject({
+				message: ValidationErrorCodes.ROLE_ICON_AND_EMOJI_EXCLUSIVE,
+				path: ['icon'],
+			});
 		});
-		it('rejects standalone ZWJ character', () => {
-			expect(isValidSingleUnicodeEmoji('\u200D')).toBe(false);
-		});
-		it('rejects emoji followed by standalone skin tone', () => {
-			expect(isValidSingleUnicodeEmoji('🎄🏿')).toBe(false);
-		});
-		it('rejects double skin tone modifiers', () => {
-			expect(isValidSingleUnicodeEmoji('👍🏿🏻')).toBe(false);
-		});
-	});
+	}
 });

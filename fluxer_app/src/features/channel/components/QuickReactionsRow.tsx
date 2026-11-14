@@ -17,13 +17,8 @@ export const REACT_WITH_EMOJI_DESCRIPTOR = msg({
 		'Accessible label for a quick reaction emoji button. Preserve {emojiShortcode}; it is inserted by code, usually like :smile:.',
 });
 
-function getQuickReactionEmojiSrc(emoji: FlatEmoji): string {
-	const {url: displayUrl} = getEmojiDisplayData(emoji);
-	return emoji.id ? buildCustomEmojiURL({id: emoji.id, animated: emoji.animated === true}) : (displayUrl ?? '');
-}
-
-export function renderQuickReactionEmoji(emoji: FlatEmoji): React.ReactNode {
-	const emojiSrc = getQuickReactionEmojiSrc(emoji);
+export const QuickReactionEmoji: React.FC<{emoji: FlatEmoji; 'data-flx'?: string}> = ({emoji, 'data-flx': dataFlx}) => {
+	const emojiSrc = useReactionMenuEmojiSrc(emoji);
 	return (
 		<ReactionImage
 			src={emojiSrc}
@@ -31,21 +26,21 @@ export function renderQuickReactionEmoji(emoji: FlatEmoji): React.ReactNode {
 			aria-hidden={true}
 			draggable={false}
 			className={styles.emojiImg}
-			data-flx="channel.quick-reactions-row.render-quick-reaction-emoji.emoji-img"
+			data-flx={dataFlx ?? 'channel.quick-reactions-row.render-quick-reaction-emoji.emoji-img'}
 		/>
 	);
-}
+};
 
-function getReactionSubmenuEmojiSrc(emoji: FlatEmoji, animationAllowed: boolean): string {
+function getReactionMenuEmojiSrc(emoji: FlatEmoji, animationAllowed: boolean): string {
 	const {url: displayUrl} = getEmojiDisplayData(emoji);
 	return emoji.id
 		? buildCustomEmojiURL({id: emoji.id, animated: emoji.animated === true && animationAllowed})
 		: (displayUrl ?? '');
 }
 
-export function useReactionSubmenuEmojiSrc(emoji: FlatEmoji): string {
+export function useReactionMenuEmojiSrc(emoji: FlatEmoji): string {
 	const animationAllowed = useShouldAnimate({kind: 'emoji', isAnimated: emoji.animated === true});
-	return getReactionSubmenuEmojiSrc(emoji, animationAllowed);
+	return getReactionMenuEmojiSrc(emoji, animationAllowed);
 }
 
 const NO_SUBMENU_EMOJIS: ReadonlyArray<FlatEmoji> = [];
@@ -58,10 +53,11 @@ export function useReactionMenuImagePreload(
 	const urls = useMemo(
 		() =>
 			Array.from(
-				new Set([
-					...quickReactionEmojis.map(getQuickReactionEmojiSrc),
-					...submenuReactionEmojis.map((emoji) => getReactionSubmenuEmojiSrc(emoji, animationAllowed)),
-				]),
+				new Set(
+					[...quickReactionEmojis, ...submenuReactionEmojis].map((emoji) =>
+						getReactionMenuEmojiSrc(emoji, animationAllowed),
+					),
+				),
 			).filter(Boolean),
 		[quickReactionEmojis, submenuReactionEmojis, animationAllowed],
 	);

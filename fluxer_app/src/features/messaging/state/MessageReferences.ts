@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {Message as MessageRecord} from '@app/features/messaging/models/MessagingMessage';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {MessageFlags, MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -28,6 +29,8 @@ const DELETED_RESOLUTION: MessageReferenceResolution = Object.freeze({
 	state: MessageReferenceState.DELETED,
 });
 
+const MAX_DELETED_MESSAGE_IDS = 10_000;
+
 type MessageInput = WireMessage | MessageRecord;
 
 const toWireMessage = (message: MessageInput): WireMessage =>
@@ -37,7 +40,7 @@ class MessageReferences {
 	deletedMessageIds = new Set<string>();
 	cachedMessages = new Map<string, MessageRecord>();
 	private referenceVersions = new Map<string, number>();
-	private referenceCount = new Map<string, Set<string>>();
+	private referenceCount = new Map<string, Map<string, string>>();
 	private referencingMessages = new Map<
 		string,
 		{
@@ -52,6 +55,18 @@ class MessageReferences {
 
 	private getKey(channelId: string, messageId: string): string {
 		return `${channelId}:${messageId}`;
+	}
+
+	private recordDeletedMessage(key: string): void {
+		this.deletedMessageIds.delete(key);
+		this.deletedMessageIds.add(key);
+		while (this.deletedMessageIds.size > MAX_DELETED_MESSAGE_IDS) {
+			const oldest = this.deletedMessageIds.values().next().value;
+			if (oldest === undefined) {
+				break;
+			}
+			this.deletedMessageIds.delete(oldest);
+		}
 	}
 
 	private bumpReferenceVersion(refChannelId: string, refMessageId: string): void {
@@ -82,7 +97,7 @@ class MessageReferences {
 		if (this.deletedMessageIds.has(key) && !this.cachedMessages.has(key)) {
 			return false;
 		}
-		this.deletedMessageIds.add(key);
+		this.recordDeletedMessage(key);
 		this.cachedMessages.delete(key);
 		this.bumpReferenceVersion(refChannelId, refMessageId);
 		return true;
@@ -112,14 +127,19 @@ class MessageReferences {
 		this.bumpReferenceVersion(message.channel_id, message.id);
 	}
 
-	private addReference(refChannelId: string, refMessageId: string, referencingMessageId: string): void {
+	private addReference(
+		refChannelId: string,
+		refMessageId: string,
+		referencingChannelId: string,
+		referencingMessageId: string,
+	): void {
 		const key = this.getKey(refChannelId, refMessageId);
-		let refs = this.referenceCount.get(key);
-		if (!refs) {
-			refs = new Set<string>();
-			this.referenceCount.set(key, refs);
+		const refs = this.referenceCount.get(key);
+		if (refs) {
+			refs.set(referencingMessageId, referencingChannelId);
+		} else {
+			this.referenceCount.set(key, new Map([[referencingMessageId, referencingChannelId]]));
 		}
-		refs.add(referencingMessageId);
 		this.referencingMessages.set(referencingMessageId, {channelId: refChannelId, messageId: refMessageId});
 	}
 
@@ -154,7 +174,7 @@ class MessageReferences {
 			return false;
 		}
 		const refChannelId = message.message_reference?.channel_id ?? fallbackChannelId;
-		this.addReference(refChannelId, refMessageId, message.id);
+		this.addReference(refChannelId, refMessageId, message.channel_id, message.id);
 		if (!('referenced_message' in message)) {
 			return false;
 		}
@@ -171,10 +191,16 @@ class MessageReferences {
 
 	handleMessageDelete(channelId: string, messageId: string): void {
 		const key = this.getKey(channelId, messageId);
-		this.deletedMessageIds.add(key);
+		this.recordDeletedMessage(key);
 		this.cachedMessages.delete(key);
 		this.referenceVersions.delete(key);
+		const referencing = this.referenceCount.get(key);
 		this.referenceCount.delete(key);
+		if (referencing) {
+			for (const [referencingMessageId, referencingChannelId] of referencing) {
+				Messages.clearReferencedMessage(referencingChannelId, referencingMessageId);
+			}
+		}
 		const referencedBy = this.referencingMessages.get(messageId);
 		if (referencedBy) {
 			this.removeReference(referencedBy.channelId, referencedBy.messageId, messageId);
@@ -229,6 +255,18 @@ class MessageReferences {
 		}
 		return NOT_LOADED_RESOLUTION;
 	}
+
+	reset(): void {
+		this.deletedMessageIds = new Set();
+		this.cachedMessages = new Map();
+		this.referenceVersions.clear();
+		this.referenceCount.clear();
+		this.referencingMessages.clear();
+	}
 }
 
-export default new MessageReferences();
+const messageReferences = new MessageReferences();
+
+ResettableStates.register(messageReferences, () => messageReferences.reset());
+
+export default messageReferences;

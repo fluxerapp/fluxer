@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
+import Guilds from '@app/features/guild/state/Guilds';
 import {
 	COPY_CHANNEL_ID_DESCRIPTOR,
 	COPY_COMMUNITY_ID_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import {CopyIdIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
+import type {ReportedGuild} from '@app/features/moderation/components/report_flow/ReportFlowModal';
+import {REPORT_COMMUNITY_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
+import {openReportGuildModal} from '@app/features/moderation/utils/ReportActionUtils';
+import {CopyIdIcon, ReportMessageIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMenu';
@@ -20,14 +25,15 @@ interface InviteEmbedContextMenuProps {
 	message?: Message;
 	sourceChannel?: Channel | null;
 	linkUrl?: string;
-	guild?: {id: string; name: string} | null;
+	guild?: ReportedGuild | null;
+	inviteCode?: string;
 	channelId?: string | null;
 	onDelete?: (bypassConfirm?: boolean) => void;
 	onClose: () => void;
 }
 
 export const InviteEmbedContextMenu: React.FC<InviteEmbedContextMenuProps> = observer(
-	({message, sourceChannel, linkUrl, guild, channelId, onDelete, onClose}) => {
+	({message, sourceChannel, linkUrl, guild, inviteCode, channelId, onDelete, onClose}) => {
 		const {i18n} = useLingui();
 		const handleCopyGuildId = useCallback(() => {
 			if (!guild) return;
@@ -39,7 +45,13 @@ export const InviteEmbedContextMenu: React.FC<InviteEmbedContextMenuProps> = obs
 			void TextCopyCommands.copy(i18n, channelId);
 			onClose();
 		}, [channelId, i18n, onClose]);
+		const handleReportGuild = useCallback(() => {
+			if (!guild) return;
+			onClose();
+			openReportGuildModal({guild, inviteCode});
+		}, [guild, inviteCode, onClose]);
 		const hasAnyCopy = guild != null || channelId != null;
+		const canReportGuild = guild != null && Guilds.getGuild(guild.id)?.isOwner(Authentication.currentUserId) !== true;
 		const canRenderMessageMenu = message != null && onDelete != null;
 		if (!canRenderMessageMenu && !hasAnyCopy) {
 			return null;
@@ -55,6 +67,18 @@ export const InviteEmbedContextMenu: React.FC<InviteEmbedContextMenuProps> = obs
 						onDelete={onDelete}
 						data-flx="ui.action-menu.invite-embed-context-menu.message-context-menu"
 					/>
+				)}
+				{canReportGuild && (
+					<MenuGroup data-flx="ui.action-menu.invite-embed-context-menu.menu-group.report">
+						<MenuItem
+							icon={<ReportMessageIcon data-flx="ui.action-menu.invite-embed-context-menu.report-icon" />}
+							onClick={handleReportGuild}
+							danger
+							data-flx="ui.action-menu.invite-embed-context-menu.menu-item.report-guild"
+						>
+							{i18n._(REPORT_COMMUNITY_DESCRIPTOR)}
+						</MenuItem>
+					</MenuGroup>
 				)}
 				{hasAnyCopy && (
 					<MenuGroup data-flx="ui.action-menu.invite-embed-context-menu.menu-group">

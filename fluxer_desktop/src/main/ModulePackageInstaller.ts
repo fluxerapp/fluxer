@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorMessage} from '@electron/common/ErrorMessage';
+
 import {
 	ModulePackageHashMismatchError,
 	ModulePackageIOError,
@@ -11,15 +13,15 @@ import {
 	ModuleStoreDownloadHashMismatchError,
 } from '@electron/main/ModuleStore';
 import type {ModulePlanItem} from '@electron/main/ModuleUpdatePlanner';
+import {DESKTOP_PACKAGE_LOOPBACK_HOSTS} from '@electron/main/ShellDownloadFormats';
 
 const MODULE_PACKAGE_HASH_MISMATCH_RETRIES = 1;
 const MODULE_PACKAGE_HEADER_TIMEOUT_MS = 30000;
-export const MODULE_PACKAGE_STALL_TIMEOUT_MS = 30000;
+const MODULE_PACKAGE_STALL_TIMEOUT_MS = 30000;
 const MODULE_PACKAGE_PROGRESS_INTERVAL_MS = 250;
 const TRANSIENT_HTTP_STATUS_FLOOR = 500;
 const TRANSIENT_PACKAGE_HTTP_STATUSES: ReadonlySet<number> = new Set([408, 425, 429]);
 const CAUSE_CHAIN_LIMIT = 8;
-const MODULE_LOOPBACK_HOSTS: ReadonlySet<string> = new Set(['127.0.0.1', 'localhost']);
 const DETERMINISTIC_PACKAGE_IO_CODES: ReadonlySet<string> = new Set(['EEXIST', 'EISDIR', 'ENOTDIR']);
 const HTTP_PARTIAL_CONTENT = 206;
 const HTTP_RANGE_NOT_SATISFIABLE = 416;
@@ -96,7 +98,7 @@ export class ModulePackageFetchError extends Error {
 	}
 }
 
-export class ModulePackageStallError extends ModulePackageFetchError {
+class ModulePackageStallError extends ModulePackageFetchError {
 	public constructor(moduleName: string, stallMs: number) {
 		super(moduleName, null, `package download stalled for ${stallMs}ms`);
 		this.name = 'ModulePackageStallError';
@@ -115,10 +117,6 @@ class ModulePackageUrlPolicyError extends Error {
 		this.name = 'ModulePackageUrlPolicyError';
 		this.module = moduleName;
 	}
-}
-
-function errorMessage(error: unknown): string {
-	return error instanceof Error ? error.message : String(error);
 }
 
 export function describeErrorChain(error: unknown): string {
@@ -203,6 +201,14 @@ export class ModulePackageInstaller {
 					sha256: item.entry.sha256,
 					download: (resumeFrom) => this.openPackageStream(item, current, total, resumeFrom),
 				});
+				await this.store.recordShellRanges([
+					{
+						module: item.module,
+						sha256: item.entry.sha256,
+						minimum: item.entry.minimumShellVersion?.source ?? null,
+						maximum: item.entry.maximumShellVersion?.source ?? null,
+					},
+				]);
 				this.onProgress({
 					phase: ModulePackageInstallPhase.INSTALLING,
 					current,
@@ -411,14 +417,15 @@ export class ModulePackageInstaller {
 				yield chunk.value;
 			}
 		} catch (error) {
-			transferFailure =
-				controller.signal.reason instanceof ModulePackageFetchError
-					? controller.signal.reason
-					: error instanceof ModulePackageFetchError
-						? error
-						: new ModulePackageFetchError(item.module, null, `package download failed for ${item.module}`, {
-								cause: error,
-							});
+			if (controller.signal.reason instanceof ModulePackageFetchError) {
+				transferFailure = controller.signal.reason;
+			} else if (error instanceof ModulePackageFetchError) {
+				transferFailure = error;
+			} else {
+				transferFailure = new ModulePackageFetchError(item.module, null, `package download failed for ${item.module}`, {
+					cause: error,
+				});
+			}
 			throw transferFailure;
 		} finally {
 			disarm();
@@ -450,7 +457,7 @@ export class ModulePackageInstaller {
 			return url.toString();
 		}
 		const base = new URL(this.packageOrigin);
-		if (url.protocol === 'http:' && url.origin === base.origin && MODULE_LOOPBACK_HOSTS.has(base.hostname)) {
+		if (url.protocol === 'http:' && url.origin === base.origin && DESKTOP_PACKAGE_LOOPBACK_HOSTS.has(base.hostname)) {
 			return url.toString();
 		}
 		throw new ModulePackageUrlPolicyError(item.module, item.entry.url);

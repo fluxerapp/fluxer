@@ -83,7 +83,7 @@ export interface ScreenShareCodecProfile {
 	h264SoftwareClamped?: boolean;
 }
 
-export interface ScreenShareCodecRankingInput {
+interface ScreenShareCodecRankingInput {
 	profile: ScreenShareCodecProfile;
 	encoderModeSetting: ScreenShareEncoderMode;
 	pin: CodecPreference;
@@ -109,14 +109,16 @@ export function rankScreenShareCodecs(input: ScreenShareCodecRankingInput): Scre
 		if (codec === 'h265') return pin === 'h265' || (input.encoderModeSetting !== 'software' && isHardware('h265'));
 		return true;
 	};
-	const preference =
-		input.profile.browser === 'firefox'
-			? GECKO_CODEC_PREFERENCE
-			: h264Clamped
-				? CLAMPED_H264_CODEC_PREFERENCE
-				: isHardware('h264')
-					? CODEC_PREFERENCE
-					: SOFTWARE_H264_CODEC_PREFERENCE;
+	let preference: ReadonlyArray<VideoCodec>;
+	if (input.profile.browser === 'firefox') {
+		preference = GECKO_CODEC_PREFERENCE;
+	} else if (h264Clamped) {
+		preference = CLAMPED_H264_CODEC_PREFERENCE;
+	} else if (isHardware('h264')) {
+		preference = CODEC_PREFERENCE;
+	} else {
+		preference = SOFTWARE_H264_CODEC_PREFERENCE;
+	}
 	const survivors = preference.filter(survives);
 	const ranked =
 		input.encoderModeSetting === 'software'

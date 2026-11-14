@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {RTC_REGION_ID_MAX_LENGTH, RTC_REGION_ID_MIN_LENGTH} from '@fluxer/constants/src/LimitConstants';
+import {
+	RTC_REGION_ID_MAX_LENGTH,
+	RTC_REGION_ID_MIN_LENGTH,
+	VOICE_P2P_MAX_PARTICIPANTS,
+} from '@fluxer/constants/src/LimitConstants';
 import {FORUM_UNREAD_COUNT_CAP, FORUM_UNREADS_MAX_THREADS} from '@fluxer/constants/src/ThreadConstants';
+import {AccountTierSchema} from '@fluxer/schema/src/domains/account/AccountTierSchemas';
 import {ChannelThreadsConfigResponse} from '@fluxer/schema/src/domains/admin/ChannelThreadsSchemas';
 import {GatewayRolloutConfigResponse} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {LegacyPushServiceDeliveryWire} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
@@ -73,6 +78,7 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		latitude: createStringType(1, 32).optional().describe('Client latitude for region selection'),
 		longitude: createStringType(1, 32).optional().describe('Client longitude for region selection'),
 		thread_channels_capable: z.boolean().optional().describe('Whether the session can handle thread channels'),
+		guild_visits_capable: z.boolean().optional().describe('Whether the session can visit guilds without joining'),
 	}),
 	z.object({
 		type: z.literal('guild_collection').describe('Request type for fetching a single guild collection chunk'),
@@ -92,11 +98,6 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		connection_id: createStringType(1, 255).describe('Connection ID to remove from the snapshot'),
 	}),
 	z.object({
-		type: z.literal('log_guild_crash').describe('Request type for logging guild crashes'),
-		guild_id: SnowflakeType.describe('ID of the guild that crashed'),
-		stacktrace: z.string().describe('Error stacktrace from the crash'),
-	}),
-	z.object({
 		type: z.literal('get_user_guild_settings').describe('Request type for fetching user guild settings'),
 		user_ids: z.array(SnowflakeType).max(RPC_USER_BATCH_MAX).describe('IDs of users to fetch settings for'),
 		guild_id: SnowflakeType.describe('ID of the guild'),
@@ -104,14 +105,14 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('get_push_subscriptions').describe('Request type for fetching push notification subscriptions'),
 		user_ids: z.array(SnowflakeType).describe('IDs of users to fetch subscriptions for'),
+		age_restricted: z
+			.boolean()
+			.optional()
+			.describe('Leave out iOS app subscriptions of users who have not allowed 18+ content on iOS'),
 	}),
 	z.object({
 		type: z.literal('get_badge_counts').describe('Request type for fetching notification badge counts'),
 		user_ids: z.array(SnowflakeType).describe('IDs of users to fetch badge counts for'),
-	}),
-	z.object({
-		type: z.literal('geoip_lookup').describe('Request type for IP geolocation lookup'),
-		ip: createStringType(1, 45).describe('IP address to lookup'),
 	}),
 	z.object({
 		type: z.literal('delete_push_subscriptions').describe('Request type for deleting push notification subscriptions'),
@@ -125,19 +126,14 @@ export const RpcRequest = z.discriminatedUnion('type', [
 			.describe('List of subscriptions to delete'),
 	}),
 	z.object({
-		type: z
-			.literal('send_apns_push')
-			.describe('Request type for sending an APNs notification through the API HTTP/2 client'),
-		user_id: SnowflakeType.describe('ID of the user receiving the notification'),
-		subscription_id: createStringType().describe('ID of the APNs subscription to report back to the gateway'),
-		device_token: createStringType(1, 4096).describe('APNs device token'),
-		app_id: createStringType(1, 128).describe('Client app channel or bundle mapping identifier'),
-		provider_environment: z.enum(['production', 'development']).describe('APNs provider environment'),
-		payload: z.record(z.string(), z.unknown()).describe('Notification payload built by the gateway'),
-	}),
-	z.object({
 		type: z.literal('get_user_blocked_ids').describe('Request type for fetching blocked user IDs'),
 		user_ids: z.array(SnowflakeType).max(RPC_USER_BATCH_MAX).describe('IDs of users to fetch blocked lists for'),
+	}),
+	z.object({
+		type: z
+			.literal('get_users_adult_content_allowed')
+			.describe('Request type for checking which users may see 18+ content'),
+		user_ids: z.array(SnowflakeType).max(RPC_USER_BATCH_MAX).describe('IDs of users to check'),
 	}),
 	z.object({
 		type: z.literal('voice_get_token').describe('Request type for getting voice connection token'),
@@ -156,6 +152,20 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		can_stream: z.boolean().optional().describe('Whether the user can stream in the channel'),
 		can_video: z.boolean().optional().describe('Whether the user can use video in the channel'),
 		token_nonce: createStringType(1, 64).optional().describe('Token nonce for replay prevention'),
+		p2p: z.boolean().optional().describe('Whether the gateway asks for a peer-to-peer grant for this connection'),
+		p2p_initiator: z.boolean().optional().describe('Whether this connection would start the peer-to-peer call'),
+		p2p_participant_count: z
+			.number()
+			.int()
+			.min(1)
+			.max(VOICE_P2P_MAX_PARTICIPANTS)
+			.optional()
+			.describe('Peer-to-peer participants in the channel or call once this connection joins'),
+		country_code: z
+			.string()
+			.regex(/^[A-Z]{2}$/u)
+			.optional()
+			.describe('ISO 3166-1 alpha-2 country code of the session, omitted when unknown'),
 	}),
 	z.object({
 		type: z.literal('kick_temporary_member').describe('Request type for kicking temporary guild members'),
@@ -184,22 +194,8 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	}),
 	z.object({
 		type: z
-			.literal('voice_force_disconnect_channel')
-			.describe('Request type for force disconnecting all participants from a channel'),
-		guild_id: SnowflakeType.optional().describe('ID of the guild'),
-		channel_id: SnowflakeType.describe('ID of the voice channel to clear'),
-	}),
-	z.object({
-		type: z.literal('voice_list_participants').describe('Request type for listing voice participants on one server'),
-		guild_id: SnowflakeType.optional().describe('ID of the guild'),
-		channel_id: SnowflakeType.describe('ID of the voice channel'),
-		region_id: createStringType(1, 64).describe('Voice region that hosts the room'),
-		server_id: createStringType(1, 128).describe('Voice server that hosts the room'),
-	}),
-	z.object({
-		type: z
 			.literal('voice_update_participant_permissions')
-			.describe('Request type for updating voice participant permissions'),
+			.describe('Request type for updating the voice permissions of one connection'),
 		guild_id: SnowflakeType.optional().describe('ID of the guild'),
 		channel_id: SnowflakeType.describe('ID of the voice channel'),
 		user_id: SnowflakeType.describe('ID of the user to update'),
@@ -207,7 +203,7 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		can_speak: z.boolean().describe('Whether the user can speak'),
 		can_stream: z.boolean().describe('Whether the user can stream'),
 		can_video: z.boolean().describe('Whether the user can use video'),
-		deaf: z.boolean().optional().describe('Whether the user is deafened'),
+		deaf: z.boolean().describe('Whether the user is deafened'),
 	}),
 	z.object({
 		type: z.literal('call_ended').describe('Request type for notifying that a call has ended'),
@@ -241,11 +237,6 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	}),
 	z.object({
 		type: z.literal('get_channel_threads_config').describe('Request type for fetching channel threads configuration'),
-	}),
-	z.object({
-		type: z.literal('get_thread_memberships').describe('Request type for fetching the thread memberships of a user'),
-		guild_id: SnowflakeType.describe('ID of the guild'),
-		user_id: SnowflakeType.describe('ID of the user'),
 	}),
 	z.object({
 		type: z.literal('list_thread_members').describe('Request type for listing the members of a thread'),
@@ -365,6 +356,10 @@ export const RpcResponseSessionData = z.object({
 	guilds: z.array(GuildReadyResponse).describe('Guilds the user is a member of'),
 	pinned_dms: z.array(SnowflakeStringType).describe('IDs of pinned DM channels'),
 	country_code: z.string().describe('Two-letter country code from IP geolocation'),
+	geoip_country_code: z
+		.string()
+		.nullable()
+		.describe('Two-letter country code from IP geolocation, null when the lookup found none'),
 	latitude: createStringType(1, 32).optional().describe('Latitude from IP geolocation'),
 	longitude: createStringType(1, 32).optional().describe('Longitude from IP geolocation'),
 	rtc_regions: z.array(RtcRegionResponse).describe('Available voice server regions'),
@@ -372,6 +367,17 @@ export const RpcResponseSessionData = z.object({
 		.array(WebAuthnCredentialResponse)
 		.describe('Registered WebAuthn credentials (passkeys) for the authenticated user'),
 	version: z.number().int().describe('Session data version for cache invalidation'),
+	visit_guild_ids: z
+		.array(SnowflakeStringType)
+		.optional()
+		.describe('Guilds the user is visiting, only for sessions that can visit guilds'),
+	operator_visit_guild_ids: z
+		.array(SnowflakeStringType)
+		.optional()
+		.describe('Subset of visit_guild_ids opened by the instance operator entry, which ignore the guild visit setting'),
+	adult_content_allowed: z.boolean().optional().describe('Whether the user may see adult channels while visiting'),
+	account_tier: AccountTierSchema.optional().describe('Account tier of the user'),
+	ip_key: z.string().nullish().describe('Address key of the identifying connection, used to evict visitors on IP bans'),
 });
 
 export type RpcResponseSessionData = z.infer<typeof RpcResponseSessionData>;
@@ -405,14 +411,6 @@ export const RpcResponse = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('session').describe('Response type for session initialization'),
 		data: RpcResponseSessionData.describe('Session initialization data'),
-	}),
-	z.object({
-		type: z.literal('log_guild_crash').describe('Response type for guild crash logging'),
-		data: z
-			.object({
-				success: z.boolean().describe('Whether the crash was logged successfully'),
-			})
-			.describe('Crash logging result'),
 	}),
 	z.object({
 		type: z.literal('guild_collection').describe('Response type for guild collection chunks'),
@@ -464,31 +462,47 @@ export const RpcResponse = z.discriminatedUnion('type', [
 		data: z.object({success: z.boolean().describe('Whether the deletion was successful')}).describe('Deletion result'),
 	}),
 	z.object({
-		type: z.literal('send_apns_push').describe('Response type for APNs push delivery'),
-		data: z
-			.object({
-				success: z.boolean().describe('Whether APNs accepted the notification'),
-				should_delete: z.boolean().describe('Whether the gateway should delete this subscription'),
-				reason: z.string().optional().describe('APNs or local failure reason'),
-				status_code: z.number().optional().describe('APNs HTTP status code'),
-			})
-			.describe('APNs delivery result'),
-	}),
-	z.object({
 		type: z.literal('get_user_blocked_ids').describe('Response type for blocked user IDs'),
 		data: z.record(SnowflakeStringType, z.array(SnowflakeStringType)).describe('Blocked user IDs keyed by user ID'),
 	}),
 	z.object({
+		type: z.literal('get_users_adult_content_allowed').describe('Response type for the 18+ content check'),
+		data: z
+			.object({user_ids: z.array(SnowflakeStringType).describe('IDs of the requested users who may see 18+ content')})
+			.describe('Users who may see 18+ content'),
+	}),
+	z.object({
 		type: z.literal('voice_get_token').describe('Response type for voice connection token'),
 		data: z
-			.object({
-				token: z.string().describe('Voice server authentication token'),
-				endpoint: z.string().describe('Voice server endpoint URL'),
-				connectionId: z.string().describe('Unique connection identifier'),
-				tokenNonce: z.string().describe('Token nonce for webhook confirmation'),
-				regionId: createStringType(1, 64).optional().describe('Voice region selected for the connection'),
-				serverId: createStringType(1, 128).optional().describe('Voice server selected for the connection'),
-			})
+			.union([
+				z.object({
+					token: z.string().describe('Voice server authentication token'),
+					endpoint: z.string().describe('Voice server endpoint URL'),
+					connectionId: z.string().describe('Unique connection identifier'),
+					tokenNonce: z.string().describe('Token nonce for webhook confirmation'),
+					regionId: createStringType(1, 64).optional().describe('Voice region selected for the connection'),
+					serverId: createStringType(1, 128).optional().describe('Voice server selected for the connection'),
+				}),
+				z.object({
+					p2p: z.literal(true).describe('Marks a peer-to-peer grant'),
+					connectionId: z.string().describe('Unique connection identifier'),
+					iceServers: z
+						.array(z.object({urls: z.array(z.string()).describe('STUN URLs of the server')}))
+						.describe('ICE servers the connection uses for its peer connections'),
+					maxParticipants: z
+						.number()
+						.int()
+						.min(1)
+						.max(VOICE_P2P_MAX_PARTICIPANTS)
+						.describe('Configured peer-to-peer participant cap the call enforces on this join'),
+				}),
+				z.object({
+					p2p: z.literal(false).describe('Marks a declined peer-to-peer request'),
+					declineReason: z
+						.literal('channel_full')
+						.describe('The join would take the call past the configured peer-to-peer participant cap'),
+				}),
+			])
 			.describe('Voice connection credentials'),
 	}),
 	z.object({
@@ -524,35 +538,6 @@ export const RpcResponse = z.discriminatedUnion('type', [
 			.describe('Update result'),
 	}),
 	z.object({
-		type: z.literal('voice_force_disconnect_channel').describe('Response type for force disconnect channel'),
-		data: z
-			.object({
-				success: z.boolean().describe('Whether the operation was successful'),
-				disconnected_count: z.number().optional().describe('Number of participants disconnected'),
-			})
-			.describe('Channel disconnect result'),
-	}),
-	z.object({
-		type: z.literal('voice_list_participants').describe('Response type for voice participant listing'),
-		data: z
-			.object({
-				status: z.enum(['ok', 'error']).describe('Whether the participant snapshot is authoritative'),
-				participants: z
-					.array(
-						z.object({
-							identity: z.string().describe('LiveKit participant identity'),
-							user_id: SnowflakeStringType.describe('Participant user ID'),
-							connection_id: createStringType(1, 255).describe('Participant voice connection ID'),
-						}),
-					)
-					.describe('Participants currently present on this voice server'),
-				error_code: z.string().optional().describe('Voice server lookup error code'),
-				retryable: z.boolean().optional().describe('Whether the lookup can be retried'),
-				server_missing: z.boolean().optional().describe('Whether the pinned server no longer exists'),
-			})
-			.describe('Voice participant listing result'),
-	}),
-	z.object({
 		type: z.literal('voice_update_participant_permissions').describe('Response type for voice permissions update'),
 		data: z
 			.object({
@@ -571,16 +556,6 @@ export const RpcResponse = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('validate_custom_status').describe('Response type for custom status validation'),
 		data: RpcResponseValidateCustomStatus.describe('Custom status validation result'),
-	}),
-	z.object({
-		type: z.literal('geoip_lookup').describe('Response type for IP geolocation lookup'),
-		data: z
-			.object({
-				country_code: z.string().describe('Two-letter country code'),
-				latitude: createStringType(1, 32).optional().describe('Latitude from IP geolocation'),
-				longitude: createStringType(1, 32).optional().describe('Longitude from IP geolocation'),
-			})
-			.describe('Geolocation result'),
 	}),
 	z.object({
 		type: z.literal('get_dm_channel').describe('Response type for DM channel fetch'),
@@ -623,14 +598,6 @@ export const RpcResponse = z.discriminatedUnion('type', [
 				config: ChannelThreadsConfigResponse.describe('Channel threads configuration'),
 			})
 			.describe('Channel threads config result'),
-	}),
-	z.object({
-		type: z.literal('get_thread_memberships').describe('Response type for the thread memberships of a user'),
-		data: z
-			.object({
-				members: z.array(ThreadMemberRpcResponse).describe('Thread memberships of the user in the guild'),
-			})
-			.describe('Thread memberships result'),
 	}),
 	z.object({
 		type: z.literal('list_thread_members').describe('Response type for a page of thread members'),

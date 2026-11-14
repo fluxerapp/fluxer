@@ -87,7 +87,7 @@ export class TestRequestBuilder<TResponse = unknown> {
 			try {
 				json = JSON.parse(text) as TResponse;
 			} catch {
-				throw new Error(`Failed to parse response as JSON: ${text}`);
+				throw new Error(`Failed to parse response as JSON: ${JSON.stringify(text)}`);
 			}
 			if (this.expectedErrorCode !== null) {
 				const actualCode = (
@@ -129,7 +129,7 @@ export class TestRequestBuilder<TResponse = unknown> {
 				try {
 					json = JSON.parse(text) as TResponse;
 				} catch {
-					throw new Error(`Failed to parse response as JSON: ${text}`);
+					throw new Error(`Failed to parse response as JSON: ${JSON.stringify(text)}`);
 				}
 			}
 			return {response, json};

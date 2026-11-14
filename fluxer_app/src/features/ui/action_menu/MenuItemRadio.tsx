@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SelectableMenuItem, useContextMenuClose} from '@app/features/ui/action_menu/ContextMenu';
+import {SelectableMenuItem, textValueFromNode, useContextMenuClose} from '@app/features/ui/action_menu/ContextMenu';
 import styles from '@app/features/ui/action_menu/ContextMenu.module.css';
 import radioStyles from '@app/features/ui/action_menu/MenuItemRadio.module.css';
 import React, {useCallback} from 'react';
@@ -15,15 +15,6 @@ interface MenuItemRadioProps {
 	closeOnSelect?: boolean;
 }
 
-const textValueFromNode = (node: React.ReactNode): string => {
-	if (typeof node === 'string') return node;
-	if (typeof node === 'number') return String(node);
-	if (Array.isArray(node)) return node.map(textValueFromNode).join('');
-	if (React.isValidElement(node)) {
-		return textValueFromNode((node.props as {children?: React.ReactNode}).children);
-	}
-	return '';
-};
 export const MenuItemRadio = React.forwardRef<HTMLDivElement, MenuItemRadioProps>(
 	({label, children, icon, selected, disabled = false, onSelect, closeOnSelect = false}, forwardedRef) => {
 		const closeMenu = useContextMenuClose();

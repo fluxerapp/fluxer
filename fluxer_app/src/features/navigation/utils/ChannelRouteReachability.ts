@@ -7,7 +7,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import Location from '@app/features/ui/state/Location';
 
-export function isUnreachableChannelRoute(pathname: string): boolean {
+function isUnreachableChannelRoute(pathname: string): boolean {
 	const [, root, owner, channelId] = pathname.split('/');
 	if (root !== 'channels' || owner === undefined) {
 		return false;

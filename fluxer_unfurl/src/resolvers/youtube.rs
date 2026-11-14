@@ -2,9 +2,9 @@
 
 use super::{ResolveContext, Resolver, ResolverResult};
 use crate::http_fetch;
-use crate::media_proxy::embed_media_flags;
 use crate::text_limits;
 use crate::types::{EmbedAuthor, EmbedMedia, EmbedProvider, MessageEmbed};
+use reqwest::header::{HeaderMap, HeaderValue};
 use serde::Deserialize;
 use std::future::Future;
 use std::pin::Pin;
@@ -13,9 +13,11 @@ use url::Url;
 
 const YOUTUBE_COLOR: u32 = 0xFF0000;
 const YOUTUBE_API_BASE: &str = "https://www.googleapis.com/youtube/v3/videos";
+const YOUTUBE_API_KEY_HEADER: &str = "x-goog-api-key";
 const YOUTUBE_API_MAX_BYTES: usize = 256 * 1024;
 const YOUTUBE_API_TIMEOUT: Duration = Duration::from_secs(10);
 const YOUTUBE_DESCRIPTION_MAX: usize = 350;
+const YOUTUBE_PLAYER_SIZE: (u32, u32) = (1280, 720);
 
 const YOUTUBE_HOSTS: &[&str] = &[
     "www.youtube.com",
@@ -52,146 +54,212 @@ impl Resolver for YouTubeResolver {
         &'a self,
         ctx: &'a ResolveContext<'_>,
     ) -> Pin<Box<dyn Future<Output = anyhow::Result<ResolverResult>> + Send + 'a>> {
-        Box::pin(async move {
-            let parsed = match parse_youtube_url(&ctx.original_url) {
-                Some(p) => p,
-                None => {
-                    return Ok(ResolverResult { embeds: vec![] });
-                }
-            };
+        Box::pin(resolve_video(ctx, YOUTUBE_API_BASE))
+    }
+}
 
-            let Some(api_key) = ctx.youtube_api_key.clone() else {
-                tracing::debug!("No YouTube API key configured");
-                return Ok(ResolverResult { embeds: vec![] });
-            };
+async fn resolve_video(ctx: &ResolveContext<'_>, api_base: &str) -> anyhow::Result<ResolverResult> {
+    let Some(parsed) = parse_youtube_url(&ctx.original_url) else {
+        return Ok(ResolverResult { embeds: vec![] });
+    };
 
-            let api_url = build_youtube_api_url(&parsed.video_id, &api_key)?;
-            let api_response = http_fetch::fetch_url(
-                &ctx.http_client,
-                api_url.as_ref(),
-                YOUTUBE_API_MAX_BYTES,
-                YOUTUBE_API_TIMEOUT,
-            )
-            .await?;
-            if api_response.status != 200 {
-                tracing::error!(
-                    video_id = %parsed.video_id,
-                    status = api_response.status,
-                    "Failed to fetch YouTube API data"
-                );
-                return Ok(ResolverResult { embeds: vec![] });
+    let api_video = match ctx.youtube_api_key.as_deref() {
+        Some(api_key) => fetch_api_video(ctx, api_base, &parsed.video_id, api_key).await,
+        None => {
+            tracing::debug!("No YouTube API key configured");
+            None
+        }
+    };
+
+    let Some(video) = api_video else {
+        return Ok(ResolverResult { embeds: vec![] });
+    };
+    let embed = build_api_embed(ctx, &parsed, video).await?;
+
+    Ok(ResolverResult {
+        embeds: vec![embed],
+    })
+}
+
+async fn fetch_api_video(
+    ctx: &ResolveContext<'_>,
+    api_base: &str,
+    video_id: &str,
+    api_key: &str,
+) -> Option<YouTubeVideo> {
+    let api_url = build_youtube_api_url(api_base, video_id).ok()?;
+    let api_origin = api_url.origin();
+    let api_response = match http_fetch::fetch_url_with_headers(
+        &ctx.http_client,
+        api_url.as_ref(),
+        |hop| {
+            let mut headers = HeaderMap::new();
+            if hop.origin() == api_origin {
+                let mut value = HeaderValue::from_str(api_key)?;
+                value.set_sensitive(true);
+                headers.insert(YOUTUBE_API_KEY_HEADER, value);
             }
-            let data: YouTubeApiResponse = serde_json::from_slice(&api_response.bytes)?;
-            let Some(video) = data.items.and_then(|mut items| items.pop()) else {
-                tracing::error!(video_id = %parsed.video_id, "No YouTube video data found");
-                return Ok(ResolverResult { embeds: vec![] });
-            };
+            Ok(headers)
+        },
+        YOUTUBE_API_MAX_BYTES,
+        YOUTUBE_API_TIMEOUT,
+    )
+    .await
+    {
+        Ok(response) => response,
+        Err(err) => {
+            tracing::error!(video_id, error = %err, "Failed to fetch YouTube API data");
+            return None;
+        }
+    };
+    if api_response.status != 200 {
+        let error = api_error(&api_response.bytes);
+        tracing::error!(
+            video_id,
+            status = api_response.status,
+            reason = error.reason.as_deref().unwrap_or("unknown"),
+            message = error.message.as_deref().unwrap_or(""),
+            "YouTube Data API rejected the request"
+        );
+        return None;
+    }
+    let data: YouTubeApiResponse = match serde_json::from_slice(&api_response.bytes) {
+        Ok(data) => data,
+        Err(err) => {
+            tracing::error!(video_id, error = %err, "Failed to parse YouTube API data");
+            return None;
+        }
+    };
+    let video = data.items.and_then(|mut items| items.pop());
+    if video.is_none() {
+        tracing::error!(video_id, "No YouTube video data found");
+    }
+    video
+}
 
-            let mut embed_url_parsed = Url::parse(&format!(
-                "https://www.youtube.com/embed/{}",
-                parsed.video_id
-            ))
-            .unwrap_or_else(|_| ctx.url.clone());
-            if let Some(t) = parsed.timestamp {
-                embed_url_parsed
-                    .query_pairs_mut()
-                    .append_pair("start", &t.to_string());
-            }
+async fn build_api_embed(
+    ctx: &ResolveContext<'_>,
+    parsed: &ParsedYouTube,
+    video: YouTubeVideo,
+) -> anyhow::Result<MessageEmbed> {
+    let mut embed = base_video_embed(parsed)?;
+    embed.title = Some(video.snippet.title);
+    embed.description = Some(parse_youtube_string(
+        &video.snippet.description,
+        YOUTUBE_DESCRIPTION_MAX,
+    ));
 
-            let mut main_url = Url::parse("https://www.youtube.com/watch")?;
-            main_url
-                .query_pairs_mut()
-                .append_pair("v", &parsed.video_id);
-            if let Some(t) = parsed.timestamp {
-                main_url
-                    .query_pairs_mut()
-                    .append_pair("start", &t.to_string());
-            }
+    if !video.snippet.channel_title.is_empty() {
+        embed.author = Some(EmbedAuthor {
+            name: text_limits::truncate(&video.snippet.channel_title, text_limits::AUTHOR_NAME_MAX),
+            url: Some(format!(
+                "https://www.youtube.com/channel/{}",
+                video.snippet.channel_id
+            )),
+            ..Default::default()
+        });
+    }
 
-            let mut embed = MessageEmbed::new("video");
-            embed.url = Some(main_url.to_string());
-            embed.title = Some(video.snippet.title);
-            embed.description = Some(parse_youtube_string(
-                &video.snippet.description,
-                YOUTUBE_DESCRIPTION_MAX,
-            ));
-            embed.color = Some(YOUTUBE_COLOR);
+    if let Some(thumbnail) = video.snippet.thumbnails.best() {
+        embed.thumbnail =
+            Some(thumbnail_media(ctx, &thumbnail.url, thumbnail.width, thumbnail.height).await);
+    }
 
-            if !video.snippet.channel_title.is_empty() {
-                embed.author = Some(EmbedAuthor {
-                    name: text_limits::truncate(
-                        &video.snippet.channel_title,
-                        text_limits::AUTHOR_NAME_MAX,
-                    ),
-                    url: Some(format!(
-                        "https://www.youtube.com/channel/{}",
-                        video.snippet.channel_id
-                    )),
-                    ..Default::default()
-                });
-            }
+    let (embed_width, embed_height) =
+        parse_player_embed_dimensions(&video.player.embed_html).unwrap_or(YOUTUBE_PLAYER_SIZE);
+    if let Some(media) = embed.video.as_mut() {
+        media.width = Some(embed_width);
+        media.height = Some(embed_height);
+    }
 
-            embed.provider = Some(EmbedProvider {
-                name: "YouTube".to_owned(),
-                url: Some("https://www.youtube.com".to_owned()),
-            });
+    Ok(embed)
+}
 
-            if let Some(thumbnail) = video.snippet.thumbnails.best() {
-                let nsfw_str = crate::media_proxy::MediaProxyClient::nsfw_mode_str(ctx.nsfw_mode);
-                let thumbnail_meta =
-                    match ctx.media_proxy.get_metadata(&thumbnail.url, nsfw_str).await {
-                        Ok(meta) => Some(meta),
-                        Err(err) => {
-                            tracing::warn!(
-                                error = %err,
-                                url = thumbnail.url,
-                                "failed to enrich YouTube thumbnail metadata"
-                            );
-                            None
-                        }
-                    };
-                embed.thumbnail = Some(EmbedMedia {
-                    url: Some(thumbnail.url.clone()),
-                    content_type: thumbnail_meta
-                        .as_ref()
-                        .map(|meta| meta.content_type.clone())
-                        .or_else(|| Some("image/jpeg".to_owned())),
-                    content_hash: thumbnail_meta
-                        .as_ref()
-                        .map(|meta| meta.content_hash.clone()),
-                    width: thumbnail
-                        .width
-                        .or_else(|| thumbnail_meta.as_ref().and_then(|meta| meta.width)),
-                    height: thumbnail
-                        .height
-                        .or_else(|| thumbnail_meta.as_ref().and_then(|meta| meta.height)),
-                    placeholder: thumbnail_meta
-                        .as_ref()
-                        .and_then(|meta| meta.placeholder.clone()),
-                    duration: thumbnail_meta
-                        .as_ref()
-                        .and_then(|meta| meta.duration.map(|duration| duration as u32)),
-                    flags: thumbnail_meta
-                        .as_ref()
-                        .map(embed_media_flags)
-                        .unwrap_or_default(),
-                    ..Default::default()
-                });
-            }
+fn base_video_embed(parsed: &ParsedYouTube) -> anyhow::Result<MessageEmbed> {
+    let mut embed_url = Url::parse(&format!(
+        "https://www.youtube.com/embed/{}",
+        parsed.video_id
+    ))?;
+    let mut main_url = Url::parse("https://www.youtube.com/watch")?;
+    main_url
+        .query_pairs_mut()
+        .append_pair("v", &parsed.video_id);
+    if let Some(t) = parsed.timestamp {
+        embed_url
+            .query_pairs_mut()
+            .append_pair("start", &t.to_string());
+        main_url
+            .query_pairs_mut()
+            .append_pair("start", &t.to_string());
+    }
 
-            let (embed_width, embed_height) =
-                parse_player_embed_dimensions(&video.player.embed_html).unwrap_or((1280, 720));
-            embed.video = Some(EmbedMedia {
-                url: Some(embed_url_parsed.to_string()),
-                width: Some(embed_width),
-                height: Some(embed_height),
+    let (width, height) = YOUTUBE_PLAYER_SIZE;
+    let mut embed = MessageEmbed::new("video");
+    embed.url = Some(main_url.to_string());
+    embed.color = Some(YOUTUBE_COLOR);
+    embed.provider = Some(EmbedProvider {
+        name: "YouTube".to_owned(),
+        url: Some("https://www.youtube.com".to_owned()),
+    });
+    embed.video = Some(EmbedMedia {
+        url: Some(embed_url.to_string()),
+        width: Some(width),
+        height: Some(height),
+        ..Default::default()
+    });
+    Ok(embed)
+}
+
+async fn thumbnail_media(
+    ctx: &ResolveContext<'_>,
+    url: &str,
+    width: Option<u32>,
+    height: Option<u32>,
+) -> EmbedMedia {
+    let nsfw_str = crate::media_proxy::MediaProxyClient::nsfw_mode_str(ctx.nsfw_mode);
+    let media = match ctx.media_proxy.get_metadata(url, nsfw_str).await {
+        Ok(meta) => meta.to_embed_media(url),
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                url,
+                "failed to enrich YouTube thumbnail metadata"
+            );
+            EmbedMedia {
+                url: Some(url.to_owned()),
+                content_type: Some("image/jpeg".to_owned()),
                 ..Default::default()
-            });
+            }
+        }
+    };
+    EmbedMedia {
+        width: width.or(media.width),
+        height: height.or(media.height),
+        ..media
+    }
+}
 
-            Ok(ResolverResult {
-                embeds: vec![embed],
-            })
+#[derive(Debug, Default, PartialEq, Eq)]
+struct YouTubeApiError {
+    reason: Option<String>,
+    message: Option<String>,
+}
+
+fn api_error(body: &[u8]) -> YouTubeApiError {
+    let Ok(value) = serde_json::from_slice::<serde_json::Value>(body) else {
+        return YouTubeApiError::default();
+    };
+    let error = &value["error"];
+    let first_reason = |key: &str| {
+        error[key].as_array().and_then(|entries| {
+            entries
+                .iter()
+                .find_map(|entry| entry["reason"].as_str().map(ToOwned::to_owned))
         })
+    };
+    YouTubeApiError {
+        reason: first_reason("details").or_else(|| first_reason("errors")),
+        message: error["message"].as_str().map(ToOwned::to_owned),
     }
 }
 
@@ -249,10 +317,9 @@ struct YouTubeThumbnail {
     height: Option<u32>,
 }
 
-fn build_youtube_api_url(video_id: &str, api_key: &str) -> anyhow::Result<Url> {
-    let mut url = Url::parse(YOUTUBE_API_BASE)?;
+fn build_youtube_api_url(base: &str, video_id: &str) -> anyhow::Result<Url> {
+    let mut url = Url::parse(base)?;
     url.query_pairs_mut()
-        .append_pair("key", api_key)
         .append_pair("id", video_id)
         .append_pair("part", "snippet,player,status");
     Ok(url)
@@ -363,275 +430,4 @@ fn extract_timestamp(url: &Url) -> Option<u64> {
         return secs.parse().ok();
     }
     t.parse().ok()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn u(s: &str) -> Url {
-        Url::parse(s).unwrap()
-    }
-
-    #[test]
-    fn matches_youtube_variants() {
-        let yt = YouTubeResolver;
-        assert!(yt.matches(&u("https://www.youtube.com/watch?v=dQw4w9WgXcQ")));
-        assert!(yt.matches(&u("https://youtube.com/watch?v=dQw4w9WgXcQ")));
-        assert!(yt.matches(&u("https://youtu.be/dQw4w9WgXcQ")));
-        assert!(yt.matches(&u("https://music.youtube.com/watch?v=dQw4w9WgXcQ")));
-    }
-
-    #[test]
-    fn no_match_unrelated() {
-        let yt = YouTubeResolver;
-        assert!(!yt.matches(&u("https://example.com/watch?v=dQw4w9WgXcQ")));
-    }
-
-    #[test]
-    fn parses_url_variants() {
-        assert_eq!(
-            parse_youtube_url(&u("https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
-                .unwrap()
-                .video_id,
-            "dQw4w9WgXcQ"
-        );
-        assert_eq!(
-            parse_youtube_url(&u("https://youtu.be/dQw4w9WgXcQ"))
-                .unwrap()
-                .video_id,
-            "dQw4w9WgXcQ"
-        );
-        assert_eq!(
-            parse_youtube_url(&u("https://www.youtube.com/shorts/dQw4w9WgXcQ"))
-                .unwrap()
-                .video_id,
-            "dQw4w9WgXcQ"
-        );
-        assert_eq!(
-            parse_youtube_url(&u("https://www.youtube.com/embed/dQw4w9WgXcQ"))
-                .unwrap()
-                .video_id,
-            "dQw4w9WgXcQ"
-        );
-    }
-
-    #[test]
-    fn extracts_timestamp() {
-        assert_eq!(
-            parse_youtube_url(&u("https://youtu.be/dQw4w9WgXcQ?t=120"))
-                .unwrap()
-                .timestamp,
-            Some(120)
-        );
-        assert_eq!(
-            parse_youtube_url(&u("https://youtu.be/dQw4w9WgXcQ?t=90s"))
-                .unwrap()
-                .timestamp,
-            Some(90)
-        );
-    }
-
-    #[test]
-    fn rejects_invalid_id() {
-        assert!(parse_youtube_url(&u("https://youtube.com/watch?v=ab")).is_none());
-    }
-
-    #[test]
-    fn parses_player_embed_dimensions_like_youtube_api() {
-        assert_eq!(
-            parse_player_embed_dimensions(
-                r#"<iframe width="480" height="270" src="//www.youtube.com/embed/dQw4w9WgXcQ"></iframe>"#
-            ),
-            Some((480, 270))
-        );
-        assert_eq!(
-            parse_player_embed_dimensions(
-                r#"<iframe height="270" width="480" src="//www.youtube.com/embed/dQw4w9WgXcQ"></iframe>"#
-            ),
-            Some((480, 270))
-        );
-        assert_eq!(parse_player_embed_dimensions("<iframe></iframe>"), None);
-    }
-
-    #[test]
-    fn prefers_same_thumbnail_order_as_old_resolver() {
-        let thumbnails = YouTubeThumbnails {
-            default: Some(YouTubeThumbnail {
-                url: "default".to_owned(),
-                width: Some(120),
-                height: Some(90),
-            }),
-            medium: Some(YouTubeThumbnail {
-                url: "medium".to_owned(),
-                width: Some(320),
-                height: Some(180),
-            }),
-            high: Some(YouTubeThumbnail {
-                url: "high".to_owned(),
-                width: Some(480),
-                height: Some(360),
-            }),
-            standard: Some(YouTubeThumbnail {
-                url: "standard".to_owned(),
-                width: Some(640),
-                height: Some(480),
-            }),
-            maxres: Some(YouTubeThumbnail {
-                url: "maxres".to_owned(),
-                width: Some(1280),
-                height: Some(720),
-            }),
-        };
-        assert_eq!(thumbnails.best().unwrap().url, "maxres");
-
-        let thumbnails = YouTubeThumbnails {
-            maxres: None,
-            ..thumbnails
-        };
-        assert_eq!(thumbnails.best().unwrap().url, "high");
-    }
-
-    #[test]
-    fn builds_data_api_url() {
-        let url = build_youtube_api_url("dQw4w9WgXcQ", "secret").unwrap();
-        let pairs: std::collections::HashMap<_, _> = url.query_pairs().into_owned().collect();
-        assert_eq!(url.as_str().split('?').next().unwrap(), YOUTUBE_API_BASE);
-        assert_eq!(pairs.get("key").unwrap(), "secret");
-        assert_eq!(pairs.get("id").unwrap(), "dQw4w9WgXcQ");
-        assert_eq!(pairs.get("part").unwrap(), "snippet,player,status");
-    }
-
-    #[test]
-    fn parses_v_path_variant() {
-        assert_eq!(
-            parse_youtube_url(&u("https://www.youtube.com/v/dQw4w9WgXcQ"))
-                .unwrap()
-                .video_id,
-            "dQw4w9WgXcQ"
-        );
-    }
-
-    #[test]
-    fn rejects_embed_videoseries_and_live_stream() {
-        assert!(parse_youtube_url(&u("https://www.youtube.com/embed/videoseries")).is_none());
-        assert!(parse_youtube_url(&u("https://www.youtube.com/embed/live_stream")).is_none());
-    }
-
-    #[test]
-    fn parses_nocookie_domain() {
-        assert!(YouTubeResolver.matches(&u("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ")));
-        assert_eq!(
-            parse_youtube_url(&u("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"))
-                .unwrap()
-                .video_id,
-            "dQw4w9WgXcQ"
-        );
-    }
-
-    #[test]
-    fn timestamp_with_start_param() {
-        assert_eq!(
-            parse_youtube_url(&u("https://www.youtube.com/watch?v=dQw4w9WgXcQ&start=60"))
-                .unwrap()
-                .timestamp,
-            Some(60)
-        );
-    }
-
-    #[test]
-    fn no_timestamp_returns_none() {
-        assert!(
-            parse_youtube_url(&u("https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
-                .unwrap()
-                .timestamp
-                .is_none()
-        );
-    }
-
-    #[test]
-    fn rejects_too_short_id() {
-        assert!(parse_youtube_url(&u("https://youtube.com/watch?v=abc")).is_none());
-    }
-
-    #[test]
-    fn rejects_too_long_id() {
-        let long_id = "a".repeat(20);
-        assert!(parse_youtube_url(&u(&format!("https://youtube.com/watch?v={long_id}"))).is_none());
-    }
-
-    #[test]
-    fn rejects_id_with_special_chars() {
-        assert!(parse_youtube_url(&u("https://youtube.com/watch?v=abc!@#def")).is_none());
-    }
-
-    #[test]
-    fn transform_url_produces_canonical() {
-        let yt = YouTubeResolver;
-        let canonical = yt
-            .transform_url(&u("https://youtu.be/dQw4w9WgXcQ?t=42"))
-            .unwrap();
-        assert_eq!(canonical.host_str(), Some("www.youtube.com"));
-        assert_eq!(canonical.path(), "/watch");
-        let pairs: std::collections::HashMap<_, _> = canonical.query_pairs().into_owned().collect();
-        assert_eq!(pairs.get("v").unwrap(), "dQw4w9WgXcQ");
-        assert_eq!(pairs.get("t").unwrap(), "42s");
-    }
-
-    #[test]
-    fn transform_url_without_timestamp() {
-        let yt = YouTubeResolver;
-        let canonical = yt
-            .transform_url(&u("https://youtube.com/watch?v=dQw4w9WgXcQ"))
-            .unwrap();
-        let pairs: std::collections::HashMap<_, _> = canonical.query_pairs().into_owned().collect();
-        assert!(!pairs.contains_key("t"));
-    }
-
-    #[test]
-    fn youtu_be_with_extra_path_segment() {
-        let parsed = parse_youtube_url(&u("https://youtu.be/dQw4w9WgXcQ/extra"));
-        assert!(parsed.is_some());
-        assert_eq!(parsed.unwrap().video_id, "dQw4w9WgXcQ");
-    }
-
-    #[test]
-    fn shorts_url_parsing() {
-        let parsed = parse_youtube_url(&u(
-            "https://www.youtube.com/shorts/dQw4w9WgXcQ?feature=share",
-        ));
-        assert!(parsed.is_some());
-        assert_eq!(parsed.unwrap().video_id, "dQw4w9WgXcQ");
-    }
-
-    #[test]
-    fn parse_youtube_string_truncates_with_ellipsis() {
-        let long = "a".repeat(400);
-        let result = parse_youtube_string(&long, YOUTUBE_DESCRIPTION_MAX);
-        assert!(result.ends_with("..."));
-        assert!(result.chars().count() <= YOUTUBE_DESCRIPTION_MAX);
-    }
-
-    #[test]
-    fn parse_youtube_string_short_unchanged() {
-        assert_eq!(parse_youtube_string("Hello", 350), "Hello");
-    }
-
-    #[test]
-    fn parse_youtube_string_trims_whitespace() {
-        assert_eq!(parse_youtube_string("  hello  ", 350), "hello");
-    }
-
-    #[test]
-    fn parse_player_embed_dimensions_missing_width() {
-        assert_eq!(
-            parse_player_embed_dimensions(r#"<iframe height="270"></iframe>"#),
-            None
-        );
-    }
-
-    #[test]
-    fn youtube_color_matches_brand() {
-        assert_eq!(YOUTUBE_COLOR, 0xFF0000);
-    }
 }

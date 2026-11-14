@@ -54,6 +54,12 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_DATABASE_BACKEND: {path: ['database', 'backend']},
 	FLUXER_KV_URL: {path: ['internal', 'kv']},
 	FLUXER_KV_MODE: {path: ['internal', 'kv_mode']},
+	FLUXER_KV_POSTGRES_MAX_CONNECTIONS: {path: ['internal', 'kv_postgres', 'max_connections'], parse: parseInteger},
+	FLUXER_KV_POSTGRES_MAX_BYTES: {path: ['internal', 'kv_postgres', 'max_bytes'], parse: parseInteger},
+	FLUXER_STORAGE_BACKEND: {path: ['storage', 'backend']},
+	FLUXER_STORAGE_ROOT: {path: ['storage', 'root']},
+	FLUXER_STORAGE_UPLOADS_TTL: {path: ['storage', 'uploads_ttl']},
+	FLUXER_STORAGE_READ_ONLY: {path: ['storage', 'read_only'], parse: parseBoolean},
 	FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: {path: ['internal', 'media_proxy']},
 	FLUXER_S3_ENDPOINT: {path: ['s3', 'endpoint']},
 	FLUXER_S3_PUBLIC_ENDPOINT: {path: ['s3', 'presigned_url_base']},
@@ -69,9 +75,14 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_NATS_JETSTREAM_URL: {path: ['services', 'nats', 'jetstream_url']},
 	FLUXER_NATS_AUTH_TOKEN: {path: ['services', 'nats', 'auth_token']},
 	FLUXER_API_PORT: {path: ['services', 'api', 'port'], parse: parseInteger},
+	FLUXER_API_HOST: {path: ['services', 'api', 'host']},
 	FLUXER_API_HEADERS_TIMEOUT_MS: {path: ['services', 'api', 'headers_timeout_ms'], parse: parseInteger},
 	FLUXER_API_REQUEST_TIMEOUT_MS: {path: ['services', 'api', 'request_timeout_ms'], parse: parseInteger},
 	FLUXER_API_MAX_INFLIGHT_REQUESTS: {path: ['services', 'api', 'max_inflight_requests'], parse: parseInteger},
+	FLUXER_API_MAX_CONCURRENT_FORM_UPLOADS: {
+		path: ['services', 'api', 'max_concurrent_form_uploads'],
+		parse: parseInteger,
+	},
 	FLUXER_API_AUTOMATED_MESSAGE_DELETION_DELAY_DAYS: {
 		path: ['services', 'api', 'automated_message_deletion_delay_days'],
 		parse: parseInteger,
@@ -95,6 +106,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		parse: parseBoolean,
 	},
 	FLUXER_API_WORKER_METRICS_PORT: {path: ['services', 'api', 'worker', 'metrics_port'], parse: parseInteger},
+	FLUXER_API_EMBEDDED_WORKER: {path: ['services', 'api', 'worker', 'embedded'], parse: parseBoolean},
 	FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES: {
 		path: ['services', 'api', 'worker', 'lane_concurrency_overrides'],
 		parse: parseJsonObject,
@@ -110,6 +122,8 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	},
 	FLUXER_API_UNFURL_IGNORED_HOSTS: {path: ['services', 'api', 'unfurl_ignored_hosts'], parse: parseCsv},
 	FLUXER_APP_ORIGIN_ALIASES: {path: ['services', 'api', 'app_origin_aliases'], parse: parseCsv},
+	FLUXER_API_DISCOVERY_PUBLIC_ENDPOINT: {path: ['services', 'api', 'discovery_public_endpoint']},
+	FLUXER_API_DISCOVERY_TRANSPORT_ENDPOINT: {path: ['services', 'api', 'discovery_transport_endpoint']},
 	FLUXER_MEDIA_PROXY_SECRET_KEY: {path: ['services', 'media_proxy', 'secret_key']},
 	FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: {path: ['services', 'media_proxy', 'upload_relay', 'endpoint']},
 	FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: {path: ['services', 'media_proxy', 'upload_relay', 'secret_base64']},
@@ -131,6 +145,8 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	},
 	FLUXER_ADMIN_SECRET_KEY_BASE: {path: ['services', 'admin', 'secret_key_base']},
 	FLUXER_ADMIN_OAUTH_CLIENT_SECRET: {path: ['services', 'admin', 'oauth_client_secret']},
+	FLUXER_ADMIN_SSO_ISSUER: {path: ['services', 'admin', 'sso', 'issuer']},
+	FLUXER_ADMIN_SSO_CLIENT_ID: {path: ['services', 'admin', 'sso', 'client_id']},
 	FLUXER_GATEWAY_RPC_AUTH_TOKEN: {path: ['services', 'gateway', 'rpc_auth_token']},
 	FLUXER_SUDO_MODE_SECRET: {path: ['auth', 'sudo_mode_secret']},
 	FLUXER_CONNECTION_INITIATION_SECRET: {path: ['auth', 'connection_initiation_secret']},
@@ -154,22 +170,54 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_AUTH_BLUESKY_KEYS: {path: ['auth', 'bluesky', 'keys'], parse: parseJsonArray},
 	FLUXER_EMAIL_ENABLED: {path: ['integrations', 'email', 'enabled'], parse: parseBoolean},
 	FLUXER_EMAIL_PROVIDER: {path: ['integrations', 'email', 'provider']},
+	FLUXER_EMAIL_DELIVERY: {path: ['integrations', 'email', 'delivery']},
 	FLUXER_EMAIL_FROM_EMAIL: {path: ['integrations', 'email', 'from_email']},
 	FLUXER_EMAIL_FROM_NAME: {path: ['integrations', 'email', 'from_name']},
 	FLUXER_EMAIL_REPLY_TO_EMAIL: {path: ['integrations', 'email', 'reply_to_email']},
+	FLUXER_EMAIL_SUPPORT_ALERT_EMAIL: {path: ['integrations', 'email', 'support_alert_email']},
 	FLUXER_EMAIL_APP_BASE_URL: {path: ['integrations', 'email', 'app_base_url']},
 	FLUXER_EMAIL_WEBHOOK_SECRET: {path: ['integrations', 'email', 'webhook_secret']},
 	FLUXER_EMAIL_SMTP_HOST: {path: ['integrations', 'email', 'smtp', 'host']},
 	FLUXER_EMAIL_SMTP_PORT: {path: ['integrations', 'email', 'smtp', 'port'], parse: parseInteger},
 	FLUXER_EMAIL_SMTP_USERNAME: {path: ['integrations', 'email', 'smtp', 'username']},
 	FLUXER_EMAIL_SMTP_PASSWORD: {path: ['integrations', 'email', 'smtp', 'password']},
+	FLUXER_EMAIL_SMTP_TLS_MODE: {path: ['integrations', 'email', 'smtp', 'tls_mode'], parse: parseSmtpTlsMode},
 	FLUXER_EMAIL_SMTP_SECURE: {path: ['integrations', 'email', 'smtp', 'secure'], parse: parseBoolean},
+	FLUXER_EMAIL_FALLBACK_DOMAINS: {path: ['integrations', 'email', 'fallback', 'domains'], parse: parseCsv},
+	FLUXER_EMAIL_FALLBACK_SMTP_HOST: {path: ['integrations', 'email', 'fallback', 'smtp', 'host']},
+	FLUXER_EMAIL_FALLBACK_SMTP_PORT: {path: ['integrations', 'email', 'fallback', 'smtp', 'port'], parse: parseInteger},
+	FLUXER_EMAIL_FALLBACK_SMTP_USERNAME: {path: ['integrations', 'email', 'fallback', 'smtp', 'username']},
+	FLUXER_EMAIL_FALLBACK_SMTP_PASSWORD: {path: ['integrations', 'email', 'fallback', 'smtp', 'password']},
+	FLUXER_EMAIL_FALLBACK_SMTP_TLS_MODE: {
+		path: ['integrations', 'email', 'fallback', 'smtp', 'tls_mode'],
+		parse: parseSmtpTlsMode,
+	},
+	FLUXER_EMAIL_FALLBACK_SMTP_HEADERS: {
+		path: ['integrations', 'email', 'fallback', 'smtp', 'headers'],
+		parse: parseJsonObject,
+	},
 	FLUXER_LIVEKIT_ENABLED: {path: ['integrations', 'voice', 'enabled'], parse: parseBoolean},
 	FLUXER_LIVEKIT_API_KEY: {path: ['integrations', 'voice', 'api_key']},
 	FLUXER_LIVEKIT_API_SECRET: {path: ['integrations', 'voice', 'api_secret']},
 	FLUXER_LIVEKIT_URL: {path: ['integrations', 'voice', 'url']},
 	FLUXER_LIVEKIT_INTERNAL_URL: {path: ['integrations', 'voice', 'internal_url']},
+	FLUXER_LIVEKIT_BUNDLED: {path: ['integrations', 'voice', 'bundled'], parse: parseBoolean},
 	FLUXER_LIVEKIT_DEFAULT_REGION: {path: ['integrations', 'voice', 'default_region'], parse: parseJsonObject},
+	FLUXER_VOICE_P2P_STUN_URLS: {path: ['integrations', 'voice', 'p2p_stun_urls'], parse: parseCsv},
+	FLUXER_LIVEKIT_TURN_SERVERS: {path: ['integrations', 'voice', 'turn_servers'], parse: parseTurnServers},
+	FLUXER_VOICE_JOIN_ALLOW_PRIVATE_ENDPOINTS: {
+		path: ['integrations', 'voice', 'join_allow_private_endpoints'],
+		parse: parseBoolean,
+	},
+	FLUXER_VOICE_HEALTH_INTERVAL_MS: {path: ['integrations', 'voice', 'health_interval_ms'], parse: parseInteger},
+	FLUXER_VOICE_PARTICIPANT_SWEEP_ENABLED: {
+		path: ['integrations', 'voice', 'participant_sweep_enabled'],
+		parse: parseBoolean,
+	},
+	FLUXER_VOICE_PARTICIPANT_SWEEP_DRY_RUN: {
+		path: ['integrations', 'voice', 'participant_sweep_dry_run'],
+		parse: parseBoolean,
+	},
 	FLUXER_SEARCH_ENGINE: {path: ['integrations', 'search', 'engine']},
 	FLUXER_SEARCH_URL: {path: ['integrations', 'search', 'url']},
 	FLUXER_SEARCH_API_KEY: {path: ['integrations', 'search', 'api_key']},
@@ -237,17 +285,17 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['integrations', 'cache_purge', 'http', 'timeout_ms'],
 		parse: parseInteger,
 	},
+	FLUXER_CACHE_PURGE_CONTROLLER_ENDPOINT: {path: ['integrations', 'cache_purge', 'controller', 'endpoint']},
+	FLUXER_CACHE_PURGE_CONTROLLER_TOKEN: {path: ['integrations', 'cache_purge', 'controller', 'token']},
+	FLUXER_CACHE_PURGE_CONTROLLER_TIMEOUT_MS: {
+		path: ['integrations', 'cache_purge', 'controller', 'timeout_ms'],
+		parse: parseInteger,
+	},
 	FLUXER_BLOCKLIST_FEEDS_ENABLED: {path: ['integrations', 'blocklist_feeds', 'enabled'], parse: parseBoolean},
 	FLUXER_BREACHED_PASSWORD_CHECK_ENABLED: {
 		path: ['integrations', 'breached_password_check', 'enabled'],
 		parse: parseBoolean,
 	},
-	FLUXER_PUSH_APNS_ENABLED: {path: ['integrations', 'push', 'apns', 'enabled'], parse: parseBoolean},
-	FLUXER_PUSH_APNS_TEAM_ID: {path: ['integrations', 'push', 'apns', 'team_id']},
-	FLUXER_PUSH_APNS_KEY_ID: {path: ['integrations', 'push', 'apns', 'key_id']},
-	FLUXER_PUSH_APNS_PRIVATE_KEY: {path: ['integrations', 'push', 'apns', 'private_key']},
-	FLUXER_PUSH_APNS_PRIVATE_KEY_PATH: {path: ['integrations', 'push', 'apns', 'private_key_path']},
-	FLUXER_PUSH_APNS_APPS: {path: ['integrations', 'push', 'apns', 'apps'], parse: parseJsonArray},
 	FLUXER_APP_STORE_ENABLED: {path: ['integrations', 'app_store', 'enabled'], parse: parseBoolean},
 	FLUXER_APP_STORE_ISSUER_ID: {path: ['integrations', 'app_store', 'issuer_id']},
 	FLUXER_APP_STORE_KEY_ID: {path: ['integrations', 'app_store', 'key_id']},
@@ -267,32 +315,120 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_GOOGLE_PLAY_PUSH_SERVICE_ACCOUNT_EMAIL: {
 		path: ['integrations', 'google_play', 'push_service_account_email'],
 	},
+	FLUXER_GOOGLE_PLAY_SELF_SERVICE_REFUNDS: {
+		path: ['integrations', 'google_play', 'self_service_refunds'],
+		parse: parseBoolean,
+	},
 	FLUXER_STORE_BILLING_SANDBOX_USER_IDS: {path: ['integrations', 'store_billing', 'sandbox_user_ids'], parse: parseCsv},
 	FLUXER_STORE_BILLING_SANDBOX_ENTITLES_ALL: {
 		path: ['integrations', 'store_billing', 'sandbox_entitles_all'],
+		parse: parseBoolean,
+	},
+	FLUXER_STORE_BILLING_SANDBOX_SUBSCRIPTIONS: {
+		path: ['integrations', 'store_billing', 'sandbox_subscriptions'],
 		parse: parseBoolean,
 	},
 	FLUXER_SELF_HOSTED: {path: ['instance', 'self_hosted'], parse: parseBoolean},
 	FLUXER_AUTO_JOIN_INVITE_CODE: {path: ['instance', 'auto_join_invite_code']},
 	FLUXER_VISIONARIES_GUILD_ID: {path: ['instance', 'visionaries_guild_id']},
 	FLUXER_VISIONARIES_GUILD_VISIONARY_ROLE_ID: {path: ['instance', 'visionaries_guild_visionary_role_id']},
+	FLUXER_LABS_GUILD_ID: {path: ['operator_pass', 'labs_guild_id']},
+	FLUXER_LABS_OPERATOR_ROLE_ID: {path: ['operator_pass', 'labs_operator_role_id']},
+	FLUXER_LABS_VISIONARY_ROLE_ID: {path: ['operator_pass', 'labs_visionary_role_id']},
+	FLUXER_LABS_OPERATORS_CHANNEL_ID: {path: ['operator_pass', 'labs_operators_channel_id']},
+	FLUXER_PAYMENT_DISPUTE_CLOSURE_EFFECTIVE_AT: {path: ['payment_disputes', 'closure_effective_at']},
+	FLUXER_OPERATOR_PASS_PRICE_RISES_AT: {path: ['operator_pass', 'price_rises_at']},
+	FLUXER_OPERATOR_PASS_GRACE_MINUTES: {path: ['operator_pass', 'grace_minutes'], parse: parseInteger},
+	FLUXER_OPERATOR_PASS_NOW: {path: ['operator_pass', 'now_override']},
+	FLUXER_OPERATOR_PASS_STANDARD_PRICE_USD: {
+		path: ['operator_pass', 'standard_prices_minor', 'usd'],
+		parse: parseInteger,
+	},
+	FLUXER_OPERATOR_PASS_STANDARD_PRICE_EUR: {
+		path: ['operator_pass', 'standard_prices_minor', 'eur'],
+		parse: parseInteger,
+	},
+	FLUXER_OPERATOR_PASS_STANDARD_PRICE_BRL: {
+		path: ['operator_pass', 'standard_prices_minor', 'brl'],
+		parse: parseInteger,
+	},
+	FLUXER_OPERATOR_PASS_STANDARD_PRICE_DKK: {
+		path: ['operator_pass', 'standard_prices_minor', 'dkk'],
+		parse: parseInteger,
+	},
+	FLUXER_OPERATOR_PASS_STANDARD_PRICE_INR: {
+		path: ['operator_pass', 'standard_prices_minor', 'inr'],
+		parse: parseInteger,
+	},
+	FLUXER_OPERATOR_PASS_STANDARD_PRICE_NOK: {
+		path: ['operator_pass', 'standard_prices_minor', 'nok'],
+		parse: parseInteger,
+	},
+	FLUXER_OPERATOR_PASS_STANDARD_PRICE_PLN: {
+		path: ['operator_pass', 'standard_prices_minor', 'pln'],
+		parse: parseInteger,
+	},
+	FLUXER_OPERATOR_PASS_STANDARD_PRICE_SEK: {
+		path: ['operator_pass', 'standard_prices_minor', 'sek'],
+		parse: parseInteger,
+	},
+	FLUXER_OPERATOR_PASS_STANDARD_PRICE_TRY: {
+		path: ['operator_pass', 'standard_prices_minor', 'try'],
+		parse: parseInteger,
+	},
+	FLUXER_OPERATOR_PASS_RELEASE_LISTS: {path: ['operator_pass', 'release_lists']},
+	FLUXER_OPERATOR_PASS_WITHDRAWAL_COUNTRIES: {path: ['operator_pass', 'withdrawal_countries']},
+	FLUXER_OPERATOR_PASS_WALL_TIERS: {path: ['operator_pass', 'wall_tiers']},
+	FLUXER_OPERATOR_PASS_MAX_QUANTITY: {path: ['operator_pass', 'max_quantity'], parse: parseInteger},
+	FLUXER_OPERATOR_PASS_PRICE_BRL_ENABLED: {
+		path: ['operator_pass', 'localized_prices_enabled', 'brl'],
+		parse: parseBoolean,
+	},
+	FLUXER_OPERATOR_PASS_PRICE_DKK_ENABLED: {
+		path: ['operator_pass', 'localized_prices_enabled', 'dkk'],
+		parse: parseBoolean,
+	},
+	FLUXER_OPERATOR_PASS_PRICE_INR_ENABLED: {
+		path: ['operator_pass', 'localized_prices_enabled', 'inr'],
+		parse: parseBoolean,
+	},
+	FLUXER_OPERATOR_PASS_PRICE_NOK_ENABLED: {
+		path: ['operator_pass', 'localized_prices_enabled', 'nok'],
+		parse: parseBoolean,
+	},
+	FLUXER_OPERATOR_PASS_PRICE_PLN_ENABLED: {
+		path: ['operator_pass', 'localized_prices_enabled', 'pln'],
+		parse: parseBoolean,
+	},
+	FLUXER_OPERATOR_PASS_PRICE_SEK_ENABLED: {
+		path: ['operator_pass', 'localized_prices_enabled', 'sek'],
+		parse: parseBoolean,
+	},
+	FLUXER_OPERATOR_PASS_PRICE_TRY_ENABLED: {
+		path: ['operator_pass', 'localized_prices_enabled', 'try'],
+		parse: parseBoolean,
+	},
 	FLUXER_APP_PRODUCT_NAME: {path: ['instance', 'branding', 'product_name']},
 	FLUXER_APP_ICON_URL: {path: ['instance', 'branding', 'icon_url']},
 	FLUXER_APP_SYMBOL_URL: {path: ['instance', 'branding', 'symbol_url']},
 	FLUXER_APP_LOGO_URL: {path: ['instance', 'branding', 'logo_url']},
 	FLUXER_APP_WORDMARK_URL: {path: ['instance', 'branding', 'wordmark_url']},
 	FLUXER_APP_FAVICON_URL: {path: ['instance', 'branding', 'favicon_url']},
+	FLUXER_APP_FAVICON_DARK_URL: {path: ['instance', 'branding', 'favicon_dark_url']},
+	FLUXER_APP_SIGN_IN_BACKDROP_URL: {path: ['instance', 'branding', 'sign_in_backdrop_url']},
 	FLUXER_APP_THEME_COLOR: {path: ['instance', 'branding', 'theme_color']},
 	FLUXER_APP_STATUS_PAGE_URL: {path: ['instance', 'branding', 'status_page_url']},
 	FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL: {path: ['instance', 'branding', 'status_page_incident_history_url']},
 	FLUXER_INSTANCE_SETUP_CONFIGURED: {path: ['instance', 'setup', 'configured'], parse: parseBoolean},
+	FLUXER_SETUP_TOKEN: {path: ['instance', 'setup', 'token']},
 	FLUXER_ACCOUNT_IDENTITY: {path: ['instance', 'account_identity'], parse: parseAccountIdentity},
 	FLUXER_TAG_STYLE: {path: ['instance', 'tag_style'], parse: parseTagStyle},
+	FLUXER_AGE_POLICY_ENABLED: {path: ['instance', 'age_policy', 'enabled'], parse: parseBoolean},
+	FLUXER_AGE_POLICY_RESTRICTED_REGIONS: {path: ['instance', 'age_policy', 'restricted_regions'], parse: parseCsv},
 	FLUXER_DISCOVERY_ENABLED: {path: ['discovery', 'enabled'], parse: parseBoolean},
 	FLUXER_DISCOVERY_MIN_MEMBER_COUNT: {path: ['discovery', 'min_member_count'], parse: parseInteger},
 	FLUXER_DELETION_GRACE_PERIOD_HOURS: {path: ['deletion_grace_period_hours'], parse: parseInteger},
 	FLUXER_REPORT_RETENTION_DAYS: {path: ['report_retention', 'days'], parse: parseInteger},
-	FLUXER_RESOLVED_REPORT_RETENTION_DAYS: {path: ['report_retention', 'resolved_days'], parse: parseInteger},
 	FLUXER_REPORT_RETENTION_DRY_RUN: {path: ['report_retention', 'dry_run'], parse: parseBoolean},
 	FLUXER_RELAX_REGISTRATION_RATE_LIMITS: {path: ['dev', 'relax_registration_rate_limits'], parse: parseBoolean},
 	FLUXER_DISABLE_RATE_LIMITS: {path: ['dev', 'disable_rate_limits'], parse: parseBoolean},
@@ -349,6 +485,12 @@ function parseTagStyle(raw: string): string {
 	throw new Error('must be none or random');
 }
 
+function parseSmtpTlsMode(raw: string): string {
+	const value = raw.trim().toLowerCase();
+	if (value === 'implicit' || value === 'starttls' || value === 'opportunistic' || value === 'none') return value;
+	throw new Error('must be implicit, starttls, opportunistic or none');
+}
+
 function parseJson(raw: string): unknown {
 	try {
 		return JSON.parse(raw);
@@ -367,6 +509,49 @@ function parseJsonArray(raw: string): Array<unknown> {
 	const value = parseJson(raw);
 	if (Array.isArray(value)) return value;
 	throw new Error('must be a JSON array');
+}
+
+const TURN_SERVER_FIELDS = new Set(['host', 'port', 'protocol', 'username', 'credential', 'secret', 'ttl']);
+
+function optionalString(entry: ConfigObject, key: string, n: number): string | undefined {
+	const value = entry[key];
+	if (value === undefined) return undefined;
+	if (typeof value !== 'string' || value === '') throw new Error(`entry ${n} must have a text ${key}`);
+	return value;
+}
+
+function parseTurnServers(raw: string): Array<ConfigObject> {
+	if (raw.trim() === '') return [];
+	return parseJsonArray(raw).map((entry, index) => {
+		const n = index + 1;
+		if (!isConfigObject(entry)) throw new Error(`entry ${n} must be a JSON object`);
+		for (const key of Object.keys(entry)) {
+			if (!TURN_SERVER_FIELDS.has(key)) throw new Error(`entry ${n} has the unknown field ${key}`);
+		}
+		const {host, port, protocol, ttl} = entry;
+		if (typeof host !== 'string' || host === '' || /[:/\s[\]]/.test(host)) {
+			throw new Error(`entry ${n} must have a host that is a hostname or an IPv4 address`);
+		}
+		if (typeof port !== 'number' || !Number.isInteger(port) || port < 1 || port > 65535) {
+			throw new Error(`entry ${n} must have a port from 1 to 65535`);
+		}
+		if (protocol !== 'udp' && protocol !== 'tcp' && protocol !== 'tls') {
+			throw new Error(`entry ${n} must have the protocol udp, tcp or tls`);
+		}
+		const username = optionalString(entry, 'username', n);
+		const credential = optionalString(entry, 'credential', n);
+		const secret = optionalString(entry, 'secret', n);
+		if (secret !== undefined && (username !== undefined || credential !== undefined)) {
+			throw new Error(`entry ${n} must have a secret, or a username and credential, and not both`);
+		}
+		if ((username === undefined) !== (credential === undefined)) {
+			throw new Error(`entry ${n} must have both a username and a credential`);
+		}
+		if (ttl !== undefined && (secret === undefined || typeof ttl !== 'number' || !Number.isInteger(ttl) || ttl < 1)) {
+			throw new Error(`entry ${n} may have a ttl only with a secret, as a whole number of seconds`);
+		}
+		return entry;
+	});
 }
 
 function parseInteger(raw: string): number {
@@ -397,7 +582,7 @@ function parsePasskeyOrigins(raw: string): Array<string> {
 	return parseCsv(raw);
 }
 
-export function setNestedValue(target: ConfigContainer, keys: Array<ConfigPathKey>, value: unknown): void {
+function setNestedValue(target: ConfigContainer, keys: Array<ConfigPathKey>, value: unknown): void {
 	if (keys.length === 0) {
 		return;
 	}
@@ -420,9 +605,8 @@ export function setNestedValue(target: ConfigContainer, keys: Array<ConfigPathKe
 const NAMED_FLUXER_ENV_ALIASES: Record<string, string | undefined> = {
 	FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: 'FLUXER_MEDIA_PROXY_ENDPOINT',
 	FLUXER_NATS_URL: 'FLUXER_NATS_CORE_URL',
+	FLUXER_STORAGE_UPLOADS_TTL: 'FLUXER_SEAWEEDFS_UPLOADS_TTL',
 };
-
-export const NAMED_FLUXER_ENV_NAMES = Object.keys(NAMED_FLUXER_ENV_OVERRIDES);
 
 function nonBlank(value: string | undefined): string | undefined {
 	return value === undefined || value.trim().length === 0 ? undefined : value;

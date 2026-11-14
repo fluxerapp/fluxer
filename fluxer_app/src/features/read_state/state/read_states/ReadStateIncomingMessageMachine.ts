@@ -128,14 +128,8 @@ function createReadStateIncomingMessageSnapshot(
 	return initialTransition(readStateIncomingMessageMachine, input)[0];
 }
 
-function selectReadStateIncomingMessageDecision(
-	snapshot: ReadStateIncomingMessageSnapshot,
-): ReadStateIncomingMessageDecision {
-	return getDecision(snapshot);
-}
-
 export function resolveReadStateIncomingMessageDecision(
 	input: ReadStateIncomingMessageInput,
 ): ReadStateIncomingMessageDecision {
-	return selectReadStateIncomingMessageDecision(createReadStateIncomingMessageSnapshot(input));
+	return getDecision(createReadStateIncomingMessageSnapshot(input));
 }

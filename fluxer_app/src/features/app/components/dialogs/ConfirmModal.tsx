@@ -43,12 +43,10 @@ interface ConfirmModalCommonProps {
 	title: React.ReactNode;
 	description: React.ReactNode;
 	message?: MessageModel;
-	secondaryText?: React.ReactNode | false;
 	size?: ModalProps['size'];
 	onSecondary?: (checkboxChecked?: boolean) => void;
 	checkboxContent?: React.ReactElement<ConfirmModalCheckboxProps>;
 	toggleSwitchContent?: React.ReactElement<ConfirmModalSwitchProps>;
-	hideCloseButton?: boolean;
 	showShiftBypassConfirmationTip?: boolean;
 	disableAutoDismiss?: boolean;
 }
@@ -59,8 +57,10 @@ type ConfirmModalProps =
 			primaryText: React.ReactNode;
 			primaryVariant?: ConfirmModalPrimaryVariant;
 			onPrimary: (checkboxChecked?: boolean) => Promise<void> | void;
+			secondaryText?: React.ReactNode | false;
 	  })
 	| (ConfirmModalCommonProps & {
+			secondaryText?: React.ReactNode;
 			primaryText?: never;
 			primaryVariant?: never;
 			onPrimary?: never;
@@ -79,7 +79,6 @@ export const ConfirmModal = observer(
 		onSecondary,
 		checkboxContent,
 		toggleSwitchContent,
-		hideCloseButton,
 		showShiftBypassConfirmationTip = false,
 		disableAutoDismiss = false,
 	}: ConfirmModalProps) => {
@@ -94,6 +93,7 @@ export const ConfirmModal = observer(
 				isEditing: false,
 				isHighlight: false,
 				disableContextMenu: true,
+				disableDoubleClick: true,
 				disableContextMenuTracking: true,
 				contextMenuOpen: false,
 			}),
@@ -139,9 +139,10 @@ export const ConfirmModal = observer(
 				ModalCommands.pop();
 			}
 		}, [onSecondary, checkboxChecked]);
+		const hasFooterAction = Boolean((onPrimary && primaryText) || onSecondary);
 		return (
 			<Modal.Root size={size} initialFocusRef={initialFocusRef} centered data-flx="app.confirm-modal.modal-root">
-				<Modal.Header title={title} hideCloseButton={hideCloseButton} data-flx="app.confirm-modal.modal-header" />
+				<Modal.Header title={title} data-flx="app.confirm-modal.modal-header" />
 				<Modal.Content data-flx="app.confirm-modal.modal-content">
 					<Modal.ContentLayout data-flx="app.confirm-modal.modal-content-layout">
 						<Modal.Description data-flx="app.confirm-modal.modal-description">{description}</Modal.Description>
@@ -183,28 +184,32 @@ export const ConfirmModal = observer(
 						)}
 					</Modal.ContentLayout>
 				</Modal.Content>
-				<Modal.Footer data-flx="app.confirm-modal.footer">
-					{secondaryText !== false && (
-						<Button
-							onClick={handleSecondaryClick}
-							variant="secondary"
-							data-flx="app.confirm-modal.button.secondary-click"
-						>
-							{secondaryText ?? i18n._(CANCEL_DESCRIPTOR)}
-						</Button>
-					)}
-					{onPrimary && primaryText && (
-						<Button
-							onClick={handlePrimaryClick}
-							submitting={submitting}
-							variant={primaryVariant}
-							ref={initialFocusRef}
-							data-flx="app.confirm-modal.button.primary-click"
-						>
-							{primaryText}
-						</Button>
-					)}
-				</Modal.Footer>
+				{hasFooterAction ? (
+					<Modal.Footer data-flx="app.confirm-modal.footer">
+						{secondaryText !== false && (
+							<Button
+								onClick={handleSecondaryClick}
+								variant="secondary"
+								data-flx="app.confirm-modal.button.secondary-click"
+							>
+								{secondaryText ?? i18n._(CANCEL_DESCRIPTOR)}
+							</Button>
+						)}
+						{onPrimary && primaryText && (
+							<Button
+								onClick={handlePrimaryClick}
+								submitting={submitting}
+								variant={primaryVariant}
+								ref={initialFocusRef}
+								data-flx="app.confirm-modal.button.primary-click"
+							>
+								{primaryText}
+							</Button>
+						)}
+					</Modal.Footer>
+				) : (
+					<Modal.DismissFooter label={secondaryText} data-flx="app.confirm-modal.dismiss-footer" />
+				)}
 			</Modal.Root>
 		);
 	},

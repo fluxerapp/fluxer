@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use reqwest::Method;
+
 use crate::api::generated::snowflake;
 
 use super::client::{AdminApiClient, ApiResult};
@@ -52,9 +54,10 @@ impl AdminApiClient {
         job_id: &str,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<CancelJobResponse> {
-        self.put_with_reason(
+        self.send(
+            Method::PUT,
             &format!("/admin/jobs/{}/cancellation", urlencoding::encode(job_id)),
-            None,
+            None::<&serde_json::Value>,
             audit_log_reason,
         )
         .await

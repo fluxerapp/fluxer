@@ -67,9 +67,6 @@ p:geo-utils:
 p:hono:
   - changed-files:
     - any-glob-to-any-file: packages/hono/**/*
-p:hono-types:
-  - changed-files:
-    - any-glob-to-any-file: packages/hono_types/**/*
 p:i18n:
   - changed-files:
     - any-glob-to-any-file: packages/i18n/**/*
@@ -88,6 +85,9 @@ p:logger:
 p:markdown-parser:
   - changed-files:
     - any-glob-to-any-file: packages/markdown_parser/**/*
+p:number-utils:
+  - changed-files:
+    - any-glob-to-any-file: packages/number_utils/**/*
 p:openapi:
   - changed-files:
     - any-glob-to-any-file: packages/openapi/**/*

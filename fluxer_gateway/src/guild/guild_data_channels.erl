@@ -10,7 +10,6 @@
     sort_channels_for_ordering/1,
     derive_member_view/4,
     member_view/4,
-    sanitize_voice_state/1,
     merge_members/2
 ]).
 
@@ -38,7 +37,7 @@ channels_from_state(State) ->
 
 -spec channels_from_data(guild_data_map()) -> channel_list().
 channels_from_data(Data) ->
-    guild_data_index:channel_list(Data).
+    guild_data_index_channels:channel_list(Data).
 
 -spec find_everyone_viewable_text_channel(channel_list(), guild_state()) -> integer() | null.
 find_everyone_viewable_text_channel(Channels, State) ->
@@ -105,7 +104,7 @@ member_view_cache(State) ->
         _ ->
             #{
                 inputs => Inputs,
-                exceptions => guild_maintenance:viewable_exceptions(State),
+                exceptions => guild_viewable_memo:exceptions(State),
                 views => #{}
             }
     end.
@@ -123,7 +122,7 @@ member_view_inputs(State) ->
         maps:get(role_perms_cache, Data, undefined),
         maps:get(overwrite_perms_cache, Data, undefined),
         maps:get(<<"channels">>, Data, undefined),
-        maps:map(fun channel_view_inputs/2, guild_data_index:channel_index(Data))
+        maps:map(fun channel_view_inputs/2, guild_data_index_channels:channel_index(Data))
     }.
 
 -spec channel_view_inputs(integer(), term()) -> term().
@@ -151,10 +150,6 @@ with_missing_parents(Filtered, Channels) ->
     FilteredIds = sets:from_list(channel_ids(Filtered)),
     MissingParentIds = find_missing_parent_ids(Filtered, FilteredIds),
     Filtered ++ collect_extra_categories(MissingParentIds, Channels).
-
--spec sanitize_voice_state(map()) -> map().
-sanitize_voice_state(VS) ->
-    voice_state_utils:sanitize_voice_state_for_broadcast(VS).
 
 -spec merge_members([guild_member()], [guild_member()]) -> [guild_member()].
 merge_members(Primary, Secondary) ->
@@ -184,7 +179,7 @@ filter_viewable_channels(UserId, Member, State, Channels) ->
         fun(Channel) ->
             ChannelId = channel_id(Channel),
             ChannelId =/= undefined andalso
-                guild_permissions:can_view_channel(UserId, ChannelId, Member, State)
+                guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State)
         end,
         Channels
     ).
@@ -226,21 +221,34 @@ select_first_viewable(Channel, GuildId, BasePerms) ->
 -spec check_viewable(integer() | undefined, integer() | undefined, map(), integer(), integer()) ->
     integer() | null.
 check_viewable(ChannelType, ChannelId, Channel, GuildId, BasePerms) when
-    is_integer(ChannelId), ChannelType =:= 0 orelse ChannelType =:= 2 orelse ChannelType =:= 5
+    is_integer(ChannelId)
 ->
-    case permission_bits:has(BasePerms, constants:administrator_permission()) of
-        true -> ChannelId;
-        false -> check_view_permission(ChannelId, Channel, GuildId, BasePerms)
+    case is_landing_channel_type(ChannelType) of
+        true -> check_admin_or_view(ChannelId, Channel, GuildId, BasePerms);
+        false -> null
     end;
 check_viewable(_, _, _, _, _) ->
     null.
 
+-spec is_landing_channel_type(integer() | undefined) -> boolean().
+is_landing_channel_type(0) -> true;
+is_landing_channel_type(2) -> true;
+is_landing_channel_type(5) -> true;
+is_landing_channel_type(_) -> false.
+
+-spec check_admin_or_view(integer(), map(), integer(), integer()) -> integer() | null.
+check_admin_or_view(ChannelId, Channel, GuildId, BasePerms) ->
+    case bitset:has(BasePerms, constants:administrator_permission()) of
+        true -> ChannelId;
+        false -> check_view_permission(ChannelId, Channel, GuildId, BasePerms)
+    end.
+
 -spec check_view_permission(integer(), map(), integer(), integer()) -> integer() | null.
 check_view_permission(ChannelId, Channel, GuildId, BasePerms) ->
-    FinalPerms = guild_permissions:apply_channel_overwrites(
+    FinalPerms = guild_permissions_overwrites:apply_channel_overwrites(
         BasePerms, undefined, [], Channel, GuildId
     ),
-    case permission_bits:has(FinalPerms, constants:view_channel_permission()) of
+    case bitset:has(FinalPerms, constants:view_channel_permission()) of
         true -> ChannelId;
         false -> null
     end.
@@ -256,7 +264,7 @@ role_permissions_for_id(Roles, GuildId) ->
 -spec role_permissions_for_id_fold(map(), guild_id(), integer()) -> integer().
 role_permissions_for_id_fold(Role, GuildId, Acc) ->
     case safe_snowflake_id(maps:get(<<"id">>, Role, undefined)) of
-        GuildId -> permission_bits:parse(maps:get(<<"permissions">>, Role, undefined));
+        GuildId -> bitset:parse(maps:get(<<"permissions">>, Role, undefined));
         _ -> Acc
     end.
 

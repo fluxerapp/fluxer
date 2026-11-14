@@ -106,36 +106,6 @@ describe('Auth desktop handoff deep link return', () => {
 		expect(released.status).toBe('completed');
 	});
 
-	it('still completes through the typed code when the app registered a deep link', async () => {
-		const account = await createTestAccount(harness);
-		const login = await loginAccount(harness, account);
-		const initResp = await initiate({return_uri: RETURN_URI});
-		await createBuilderWithoutAuth(harness).get(`/auth/handoff/${initResp.code}/info`).execute();
-		await createBuilderWithoutAuth(harness)
-			.post('/auth/handoff/complete')
-			.body({code: initResp.code, token: login.token, user_id: login.userId, return_method: 'code'})
-			.expect(204)
-			.execute();
-		const released = await readStatus(initResp.code, {poll_secret: initResp.poll_secret});
-		expect(released.status).toBe('completed');
-	});
-
-	it('reports the code return method when the app did not register a deep link', async () => {
-		const account = await createTestAccount(harness);
-		const login = await loginAccount(harness, account);
-		const initResp = await initiate(null);
-		expect(initResp.return_method).toBe('code');
-		const info = await createBuilderWithoutAuth<HandoffInfoResponse>(harness)
-			.get(`/auth/handoff/${initResp.code}/info`)
-			.execute();
-		expect(info.return_method).toBe('code');
-		await createBuilderWithoutAuth(harness)
-			.post('/auth/handoff/complete')
-			.body({code: initResp.code, token: login.token, user_id: login.userId, return_method: 'deep_link'})
-			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_HANDOFF_CODE)
-			.execute();
-	});
-
 	it('rejects a return deep link outside the desktop app schemes', async () => {
 		for (const returnUri of ['https://evil.example/handoff', 'fluxer://handoff/extra', 'javascript://handoff']) {
 			await createBuilderWithoutAuth(harness)

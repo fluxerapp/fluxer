@@ -1,0 +1,40 @@
+diff --git a/dist/asar-utils.js b/dist/asar-utils.js
+index 636fa9599d23cf1bfc61f9f4b2c4b5e64f9c94d9..964bd54a0bc1b6817268f3bc28cc15655a923e4e 100644
+--- a/dist/asar-utils.js
++++ b/dist/asar-utils.js
+@@ -140,7 +140,34 @@ export const mergeASARs = async ({ x64AsarPath, arm64AsarPath, outputAsarPath, s
+             execFileSync(LIPO, [source, destination, '-create', '-output', destination]);
+         }
+         d(`creating archive at ${outputAsarPath}`);
+-        const resolvedUnpack = Array.from(unpackedFiles).map((file) => path.join(x64Dir, file));
++        const packedFiles = [];
++        for (const [archive, files] of [[x64AsarPath, x64Files], [arm64AsarPath, arm64Files]]) {
++            for (const file of files) {
++                const stat = asar.statFile(archive, file);
++                if ('files' in stat || ('unpacked' in stat && stat.unpacked)) {
++                    continue;
++                }
++                packedFiles.push(file);
++            }
++        }
++        const mixedDirs = new Set();
++        for (const file of packedFiles) {
++            for (let dir = path.dirname(file); dir !== '.' && dir !== '/' && dir !== ''; dir = path.dirname(dir)) {
++                mixedDirs.add(dir);
++            }
++        }
++        const unpackEntries = new Set();
++        for (const file of unpackedFiles) {
++            let top = null;
++            for (let dir = path.dirname(file); dir !== '.' && dir !== '/' && dir !== ''; dir = path.dirname(dir)) {
++                if (mixedDirs.has(dir)) {
++                    break;
++                }
++                top = dir;
++            }
++            unpackEntries.add(top === null ? file : path.join(top, '**'));
++        }
++        const resolvedUnpack = Array.from(unpackEntries).map((entry) => path.join(x64Dir, entry));
+         let unpack;
+         if (resolvedUnpack.length > 1) {
+             unpack = `{${resolvedUnpack.join(',')}}`;

@@ -4,9 +4,12 @@ import {createHash} from 'node:crypto';
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {applyUploadRelayDecision, resolveUploadRelayDecision} from '@app/api/channel/services/UploadRelay';
-import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {
+	type IStorageService,
+	isStorageErrorRecoverable,
+	isStorageObjectMissing,
+} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
-import {S3ServiceException} from '@aws-sdk/client-s3';
 import {STREAM_PREVIEW_CONTENT_TYPE_JPEG, STREAM_PREVIEW_MAX_BYTES} from '@fluxer/constants/src/StreamConstants';
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
 import {PreviewMustBeJpegError} from '@fluxer/errors/src/domains/core/PreviewMustBeJpegError';
@@ -16,15 +19,6 @@ import {ms, seconds} from 'itty-time';
 
 const PREVIEW_TTL_SECONDS = seconds('1 day');
 const PREVIEW_UPLOAD_URL_TTL_SECONDS = seconds('1 day');
-const RECOVERABLE_S3_ERROR_NAMES = new Set([
-	'InternalError',
-	'OperationAborted',
-	'RequestTimeout',
-	'ServiceUnavailable',
-	'SlowDown',
-]);
-const RECOVERABLE_STORAGE_ERROR_CODES = new Set(['EAI_AGAIN', 'ECONNREFUSED', 'ECONNRESET', 'ENOTFOUND', 'ETIMEDOUT']);
-const MISSING_OBJECT_ERROR_NAMES = new Set(['NoSuchKey', 'NotFound']);
 
 interface StreamPreviewMeta {
 	bucket: string;
@@ -32,33 +26,6 @@ interface StreamPreviewMeta {
 	updatedAt: number;
 	ownerId: string;
 	channelId: string;
-	contentType: string;
-}
-
-function getErrorName(error: unknown): string | undefined {
-	if (!error || typeof error !== 'object') return undefined;
-	const name = (error as {name?: unknown}).name;
-	return typeof name === 'string' ? name : undefined;
-}
-
-function getErrorCode(error: unknown): string | undefined {
-	if (!error || typeof error !== 'object') return undefined;
-	const code = (error as {code?: unknown}).code;
-	return typeof code === 'string' ? code : undefined;
-}
-
-function isMissingObjectError(error: unknown): boolean {
-	return error instanceof S3ServiceException && MISSING_OBJECT_ERROR_NAMES.has(error.name);
-}
-
-function isRecoverableStorageError(error: unknown): boolean {
-	if (error instanceof S3ServiceException) {
-		return error.$fault === 'server' || RECOVERABLE_S3_ERROR_NAMES.has(error.name);
-	}
-	const code = getErrorCode(error);
-	if (code && RECOVERABLE_STORAGE_ERROR_CODES.has(code)) return true;
-	const name = getErrorName(error);
-	return name === 'TimeoutError';
 }
 
 function isObjectTooLargeError(error: unknown): boolean {
@@ -121,18 +88,17 @@ export class StreamPreviewService {
 		this.assertJpeg(params.body, params.contentType);
 		const bucket = Config.s3.buckets.uploads;
 		const key = this.getObjectKey(params.streamKey);
-		const contentType = params.contentType ?? STREAM_PREVIEW_CONTENT_TYPE_JPEG;
 		const expiresAt = new Date(Date.now() + ms('1 day'));
 		try {
 			await this.storageService.uploadObject({
 				bucket,
 				key,
 				body: params.body,
-				contentType,
+				contentType: STREAM_PREVIEW_CONTENT_TYPE_JPEG,
 				expiresAt,
 			});
 		} catch (error) {
-			if (isRecoverableStorageError(error)) {
+			if (isStorageErrorRecoverable(error)) {
 				Logger.warn(
 					{error, streamKey: params.streamKey},
 					'Stream preview upload failed due to storage error, skipping',
@@ -147,12 +113,11 @@ export class StreamPreviewService {
 			updatedAt: Date.now(),
 			ownerId: params.userId.toString(),
 			channelId: params.channelId.toString(),
-			contentType,
 		};
 		try {
 			await this.cacheService.set(this.getCacheKey(params.streamKey), meta, PREVIEW_TTL_SECONDS);
 		} catch (error) {
-			if (!isRecoverableStorageError(error)) {
+			if (!isStorageErrorRecoverable(error)) {
 				throw error;
 			}
 			Logger.warn({error, streamKey: params.streamKey}, 'Stream preview metadata cache write failed, skipping');
@@ -169,15 +134,15 @@ export class StreamPreviewService {
 		const bucket = Config.s3.buckets.uploads;
 		const key = this.getObjectKey(params.streamKey);
 		const contentType = this.normalizeUploadUrlContentType(params.contentType);
-		const presignedUrl = await this.storageService.getPresignedUploadURL({
-			bucket,
-			key,
-			contentType,
-			expiresIn: PREVIEW_UPLOAD_URL_TTL_SECONDS,
-		});
 		const relayDecision = await resolveUploadRelayDecision(params.clientIp);
-		const uploadUrl = applyUploadRelayDecision({
-			presignedUrl,
+		const uploadUrl = await applyUploadRelayDecision({
+			presign: () =>
+				this.storageService.getPresignedUploadURL({
+					bucket,
+					key,
+					contentType,
+					expiresIn: PREVIEW_UPLOAD_URL_TTL_SECONDS,
+				}),
 			bucket,
 			key,
 			relayDecision,
@@ -192,7 +157,6 @@ export class StreamPreviewService {
 			updatedAt: Date.now(),
 			ownerId: params.userId.toString(),
 			channelId: params.channelId.toString(),
-			contentType,
 		};
 		await this.cacheService.set(this.getCacheKey(params.streamKey), meta, PREVIEW_TTL_SECONDS);
 		return {
@@ -205,31 +169,26 @@ export class StreamPreviewService {
 		};
 	}
 
-	async getPreview(streamKey: string): Promise<{
-		buffer: Uint8Array;
-		contentType: string;
-	} | null> {
+	async getPreview(streamKey: string): Promise<Uint8Array | null> {
 		const cacheKey = this.getCacheKey(streamKey);
 		const meta = await this.cacheService.get<StreamPreviewMeta>(cacheKey);
 		if (!meta) return null;
-		let buffer: Uint8Array;
 		try {
-			buffer = await this.storageService.readObject(meta.bucket, meta.key, STREAM_PREVIEW_MAX_BYTES);
+			return await this.storageService.readObject(meta.bucket, meta.key, STREAM_PREVIEW_MAX_BYTES);
 		} catch (error) {
-			if (isMissingObjectError(error)) {
+			if (isStorageObjectMissing(error)) {
 				return null;
 			}
 			if (isObjectTooLargeError(error)) {
 				Logger.warn({error, streamKey}, 'Stream preview object exceeded maximum size, returning no preview');
 				return null;
 			}
-			if (isRecoverableStorageError(error)) {
+			if (isStorageErrorRecoverable(error)) {
 				Logger.warn({error, streamKey}, 'Stream preview read failed due to storage error, returning no preview');
 				return null;
 			}
 			throw error;
 		}
-		return {buffer, contentType: meta.contentType || STREAM_PREVIEW_CONTENT_TYPE_JPEG};
 	}
 
 	async deletePreview(streamKey: string): Promise<void> {
@@ -240,10 +199,10 @@ export class StreamPreviewService {
 		try {
 			await this.storageService.deleteObject(meta.bucket, meta.key);
 		} catch (error) {
-			if (isMissingObjectError(error)) {
+			if (isStorageObjectMissing(error)) {
 				return;
 			}
-			if (isRecoverableStorageError(error)) {
+			if (isStorageErrorRecoverable(error)) {
 				Logger.warn({error, streamKey}, 'Stream preview delete failed due to storage error after cache removal');
 				return;
 			}

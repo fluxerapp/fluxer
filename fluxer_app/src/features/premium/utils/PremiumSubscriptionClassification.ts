@@ -9,6 +9,13 @@ const BLOCKING_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set([
 	'paused',
 ]);
 
+const RENEWING_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set(['active', 'trialing']);
+
+export interface BillingSubscriptionPeriod {
+	status: string | null;
+	current_period_end: string | null;
+}
+
 export interface PremiumSubscriptionClassificationInput {
 	hasPaidPremium: boolean;
 	isVisionary: boolean;
@@ -19,7 +26,7 @@ export interface PremiumSubscriptionClassificationInput {
 	isFullyExpired: boolean;
 	billingKnown: boolean;
 	storeOwnershipKnown: boolean;
-	billingSubscription: {status: string | null; current_period_end: string | null} | null;
+	billingSubscription: BillingSubscriptionPeriod | null;
 }
 
 export interface PremiumSubscriptionClassification {
@@ -58,4 +65,18 @@ export function classifyPremiumSubscription(
 		isGiftGrace: input.isInGracePeriod && canStartSubscription && !isPaidLapse,
 		canStartSubscription,
 	};
+}
+
+export function getSubscriptionRenewalDate(
+	premiumUntil: Date | null,
+	billingSubscription: BillingSubscriptionPeriod | null,
+): Date | null {
+	if (
+		!billingSubscription?.current_period_end ||
+		!RENEWING_SUBSCRIPTION_STATUSES.has(billingSubscription.status ?? '')
+	) {
+		return premiumUntil;
+	}
+	const periodEnd = new Date(billingSubscription.current_period_end);
+	return Number.isNaN(periodEnd.getTime()) ? premiumUntil : periodEnd;
 }

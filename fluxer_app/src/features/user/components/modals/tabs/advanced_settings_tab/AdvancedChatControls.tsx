@@ -29,22 +29,25 @@ import {
 	TextSearchEnginesContent,
 	TranslatorsContent,
 } from '@app/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab';
+import {SHOW_DOWNLOAD_BUTTON_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
 import UserSettings from '@app/features/user/state/UserSettings';
+import {
+	AUTOMATICALLY_SEND_GIFS_WHEN_SELECTED_DESCRIPTOR,
+	CONFIGURE_DESCRIPTOR,
+	HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR,
+	SAVE_GIF_FAVORITES_AS_SAVED_MEDIA_DESCRIPTOR,
+	SCROLL_TO_BOTTOM_WHEN_SENDING_A_MESSAGE_DESCRIPTOR,
+	SEQUENTIAL_FILE_SEND_DESCRIPTOR as SEND_FILES_IN_SEQUENTIAL_ORDER_DESCRIPTOR,
+	SKIP_MARK_ALL_AS_READ_CONFIRMATION_DESCRIPTOR,
+	UPLOAD_ATTACHMENTS_BEFORE_SENDING_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {GearIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
-import {useCallback} from 'react';
+import {type ReactNode, useCallback} from 'react';
 
-const AUTOMATICALLY_SEND_GIFS_WHEN_SELECTED_DESCRIPTOR = msg({
-	message: 'Automatically send GIFs when selected',
-	comment: 'Short label for an advanced GIF behavior preference.',
-});
-const SAVE_GIF_FAVORITES_AS_SAVED_MEDIA_DESCRIPTOR = msg({
-	message: 'Save GIF favorites as saved media',
-	comment: 'Short label for an advanced GIF storage preference.',
-});
 const SHOW_MESSAGE_ACTION_BAR_DESCRIPTOR = msg({
 	message: 'Show message action bar',
 	comment: 'Short label for an advanced message action bar preference.',
@@ -71,10 +74,6 @@ const SHOW_ATTACHMENT_EXPIRY_INDICATOR_DESCRIPTOR = msg({
 });
 const SHOW_DELETE_BUTTON_DESCRIPTOR = msg({
 	message: 'Show delete button',
-	comment: 'Short label for an advanced media button preference.',
-});
-const SHOW_DOWNLOAD_BUTTON_DESCRIPTOR = msg({
-	message: 'Show download button',
 	comment: 'Short label for an advanced media button preference.',
 });
 const SHOW_FAVORITE_BUTTON_DESCRIPTOR = msg({
@@ -109,14 +108,7 @@ const SHOW_MEDIA_BUTTON_DESCRIPTOR = msg({
 	message: 'Show media button',
 	comment: 'Short label for an advanced message input preference.',
 });
-const UPLOAD_ATTACHMENTS_BEFORE_SENDING_DESCRIPTOR = msg({
-	message: 'Upload attachments before sending',
-	comment: 'Short label for an advanced message input privacy preference.',
-});
-const SEND_FILES_IN_SEQUENTIAL_ORDER_DESCRIPTOR = msg({
-	message: 'Send file messages in order',
-	comment: 'Short label for an advanced message input preference.',
-});
+
 const SHOW_STICKERS_BUTTON_DESCRIPTOR = msg({
 	message: 'Show stickers button',
 	comment: 'Short label for an advanced message input preference.',
@@ -129,18 +121,13 @@ const SHOW_SEND_BUTTON_DESCRIPTOR = msg({
 	message: 'Show send button',
 	comment: 'Short label for an advanced message input preference.',
 });
-const SCROLL_TO_BOTTOM_WHEN_SENDING_A_MESSAGE_DESCRIPTOR = msg({
-	message: 'Scroll to bottom when sending a message',
-	comment: 'Short label for an advanced message input preference.',
+
+const DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR = msg({
+	message: 'Double-click a message to edit or reply',
+	comment:
+		"Short label for an advanced preference that edits your own message or replies to someone else's when you double-click it.",
 });
-const SKIP_MARK_ALL_AS_READ_CONFIRMATION_DESCRIPTOR = msg({
-	message: 'Skip "Mark all as read" confirmation',
-	comment: 'Short label for an advanced inbox preference.',
-});
-const HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR = msg({
-	message: 'Hide muted channels by default',
-	comment: 'Short label for an advanced sidebar preference.',
-});
+
 const HIDE_MUTED_CHANNELS_BY_DEFAULT_PROMPT_DESCRIPTOR = msg({
 	message: 'Hide muted channels by default?',
 	comment: 'Confirmation prompt in advanced settings.',
@@ -160,10 +147,6 @@ const STOP_HIDING_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR = msg({
 const SHOW_IN_ALL_COMMUNITIES_DESCRIPTOR = msg({
 	message: 'Show in all communities',
 	comment: 'Short confirmation button label in advanced settings.',
-});
-const CONFIGURE_DESCRIPTOR = msg({
-	message: 'Configure',
-	comment: 'Button label that opens a dedicated advanced settings modal.',
 });
 
 export const AutoSendGifsControl = observer(() => {
@@ -272,11 +255,11 @@ const MediaButtonsContent = observer(() => {
 });
 
 export const StripTrackingControl = observer(() => (
-	<StripTrackingParametersControl compact data-flx="user.advanced-settings-tab.strip-tracking-control" />
+	<StripTrackingParametersControl data-flx="user.advanced-settings-tab.strip-tracking-control" />
 ));
 
 export const TrustAllDomainsControl = observer(() => (
-	<TrustAllExternalLinksControl compact data-flx="user.advanced-settings-tab.trust-all-domains-control" />
+	<TrustAllExternalLinksControl data-flx="user.advanced-settings-tab.trust-all-domains-control" />
 ));
 
 export const ConvertEmoticonsAdvancedControl = observer(() => (
@@ -284,10 +267,7 @@ export const ConvertEmoticonsAdvancedControl = observer(() => (
 ));
 
 export const KeepAttachmentsOnEmptyEditAdvancedControl = observer(() => (
-	<KeepAttachmentsOnEmptyEditControl
-		compact
-		data-flx="user.advanced-settings-tab.keep-attachments-on-empty-edit-control"
-	/>
+	<KeepAttachmentsOnEmptyEditControl data-flx="user.advanced-settings-tab.keep-attachments-on-empty-edit-control" />
 ));
 
 interface SearchProviderSettingsModalProps {
@@ -299,14 +279,18 @@ const SearchProviderSettingsModal = observer(({mode, title}: SearchProviderSetti
 	const handleClose = useCallback(() => {
 		ModalCommands.pop();
 	}, []);
-	const content =
-		mode === 'image' ? (
+	let content: ReactNode;
+	if (mode === 'image') {
+		content = (
 			<ReverseImageSearchContent data-flx="user.advanced-settings-tab.provider-settings-modal.reverse-image-search-content" />
-		) : mode === 'translate' ? (
-			<TranslatorsContent data-flx="user.advanced-settings-tab.provider-settings-modal.translators-content" />
-		) : (
+		);
+	} else if (mode === 'translate') {
+		content = <TranslatorsContent data-flx="user.advanced-settings-tab.provider-settings-modal.translators-content" />;
+	} else {
+		content = (
 			<TextSearchEnginesContent data-flx="user.advanced-settings-tab.provider-settings-modal.search-engines-content" />
 		);
+	}
 	return (
 		<Modal.Root
 			size="medium"
@@ -477,16 +461,24 @@ const SwitchGroupSettingsModal = observer(({mode, title}: SwitchGroupSettingsMod
 	const handleClose = useCallback(() => {
 		ModalCommands.pop();
 	}, []);
-	const content =
-		mode === 'message-action-bar' ? (
+	let content: ReactNode;
+	if (mode === 'message-action-bar') {
+		content = (
 			<MessageActionBarContent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.message-action-bar-content" />
-		) : mode === 'media-buttons' ? (
+		);
+	} else if (mode === 'media-buttons') {
+		content = (
 			<MediaButtonsContent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.media-buttons-content" />
-		) : mode === 'expression-autocomplete' ? (
+		);
+	} else if (mode === 'expression-autocomplete') {
+		content = (
 			<ExpressionAutocompleteContent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.expression-autocomplete-content" />
-		) : (
+		);
+	} else {
+		content = (
 			<InputButtonsContent data-flx="user.advanced-settings-tab.advanced-chat-controls.switch-group-settings-modal.input-buttons-content" />
 		);
+	}
 	return (
 		<Modal.Root
 			size="medium"
@@ -637,6 +629,19 @@ export const SkipMarkAllAsReadControl = observer(() => {
 	);
 });
 
+export const DoubleClickMessageActionsControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(DOUBLE_CLICK_MESSAGE_ACTIONS_DESCRIPTOR)}
+			value={Accessibility.messageDoubleClickActions}
+			onChange={(value) => AccessibilityCommands.update({messageDoubleClickActions: value})}
+			compact
+			data-flx="user.advanced-settings-tab.switch.double-click-message-actions"
+		/>
+	);
+});
+
 export const HideMutedChannelsByDefaultControl = observer(() => {
 	const {i18n} = useLingui();
 	const handleChange = useCallback(
@@ -710,7 +715,7 @@ export const HideMutedChannelsByDefaultControl = observer(() => {
 	return (
 		<Switch
 			ariaLabel={i18n._(HIDE_MUTED_CHANNELS_BY_DEFAULT_DESCRIPTOR)}
-			value={UserSettings.getDefaultHideMutedChannels()}
+			value={UserSettings.defaultHideMutedChannels}
 			onChange={handleChange}
 			compact
 			data-flx="user.advanced-settings-tab.switch.hide-muted-channels"

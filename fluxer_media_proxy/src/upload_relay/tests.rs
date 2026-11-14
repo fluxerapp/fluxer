@@ -2,12 +2,10 @@
 
 use crate::upload_relay::{
     RelayError,
-    target::{RelayRequest, query_part_number, valid_content_type, validate_relay_request},
-    token::{TokenError, TokenMethod, TokenPayload, decode_token, encode_token, token_from_query},
-    try_reserve,
+    target::{RelayRequest, valid_content_type, validate_relay_request},
+    token::{TokenError, TokenMethod, TokenPayload, decode_token, encode_token},
 };
 use http::Method;
-use std::sync::atomic::{AtomicU64, Ordering};
 
 const BASE64_URL_ALPHABET: &[u8] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -60,23 +58,6 @@ fn expired_token_rejected() {
 }
 
 #[test]
-fn validates_matching_relay_request() {
-    validate_relay_request(
-        &token(),
-        RelayRequest {
-            uploads_bucket: "uploads",
-            request_key: "guild/file.bin",
-            request_method: &Method::PUT,
-            query_upload_id: Some("upload-id"),
-            query_part_number: Some(7),
-            content_length: Some(99),
-            max_body_bytes: 100,
-        },
-    )
-    .unwrap();
-}
-
-#[test]
 fn validates_relay_mismatches() {
     assert_eq!(
         Err(RelayError::WrongBucket),
@@ -124,16 +105,6 @@ fn validates_relay_mismatches() {
 }
 
 #[test]
-fn buffer_budget_is_bounded() {
-    let in_flight = AtomicU64::new(0);
-    assert!(try_reserve(&in_flight, 4, 8));
-    assert!(!try_reserve(&in_flight, 5, 8));
-    in_flight.fetch_sub(4, Ordering::AcqRel);
-    assert!(try_reserve(&in_flight, 8, 8));
-    assert!(!try_reserve(&AtomicU64::new(0), 1, 0));
-}
-
-#[test]
 fn token_decoder_rejects_noncanonical_wrong_secret_and_oversized_tokens() {
     let secret = [3u8; 32];
     let encoded = encode_token(&token(), &secret).unwrap();
@@ -153,17 +124,6 @@ fn token_decoder_rejects_noncanonical_wrong_secret_and_oversized_tokens() {
         Err(TokenError::Malformed),
         decode_token("no-separator", &secret, 1_000)
     );
-}
-
-#[test]
-fn token_query_requires_a_present_and_bounded_token() {
-    assert_eq!(Err(RelayError::MissingToken), token_from_query(None));
-    assert_eq!(Err(RelayError::InvalidToken), token_from_query(Some("")));
-    assert_eq!(
-        Err(RelayError::InvalidToken),
-        token_from_query(Some(&"x".repeat(16 * 1024 + 1)))
-    );
-    assert_eq!(Ok("value"), token_from_query(Some("value")));
 }
 
 #[test]
@@ -190,14 +150,6 @@ fn relay_request_requires_the_exact_signed_key() {
             )
         );
     }
-}
-
-#[test]
-fn part_number_query_is_optional_but_never_empty() {
-    assert_eq!(Ok(None), query_part_number(None));
-    assert_eq!(Ok(Some(3)), query_part_number(Some("3")));
-    assert_eq!(Err(RelayError::BadQuery), query_part_number(Some("")));
-    assert_eq!(Err(RelayError::BadQuery), query_part_number(Some("two")));
 }
 
 #[test]

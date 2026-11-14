@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createChannelID, createMessageID, type MessageID} from '@app/api/BrandedTypes';
-import type {IMessageRepository} from '@app/api/channel/repositories/IMessageRepository';
+import {type ChannelID, createChannelID, createMessageID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import type {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
+import {buildMessageSearchFilters} from '@app/api/search/BuildMessageSearchFilters';
 import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import type {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponseMapper';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {MessageSearchFilters, SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
+import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
+import type {MessageSearchResultsResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 
 const RECONCILE_BATCH_SIZE = 250;
 const MAX_RECONCILE_PAGES = 40;
@@ -17,7 +23,7 @@ const MAX_STALE_DELETE_RATIO = 0.5;
 const HIT_LOOKUP_CONCURRENCY = 32;
 
 interface MessageLookupRepository {
-	readonly messages: Pick<IMessageRepository, 'getMessage'>;
+	readonly messages: Pick<MessageRepository, 'getMessage'>;
 }
 
 interface MessageSearchLookupResult extends SearchResult<SearchableMessage> {
@@ -86,6 +92,65 @@ export async function searchExistingMessages({
 		hitsPerPage,
 		page,
 	});
+}
+
+export function emptyMessageSearchResponse(searchParams: MessageSearchRequest): MessageSearchResultsResponse {
+	return {
+		channels: [],
+		messages: [],
+		total: 0,
+		hits_per_page: searchParams.hits_per_page ?? 25,
+		page: searchParams.page ?? 1,
+	};
+}
+
+export async function runMessageSearch({
+	searchService,
+	messageRepository,
+	responseMapper,
+	filterParams,
+	searchParams,
+	channelIds,
+	userId,
+	viewer,
+	requestCache,
+}: {
+	searchService: IMessageSearchService;
+	messageRepository: MessageLookupRepository;
+	responseMapper: MessageSearchResponseMapper;
+	filterParams: MessageSearchRequest;
+	searchParams: MessageSearchRequest;
+	channelIds: Array<string>;
+	userId: UserID;
+	viewer: ThreadViewer;
+	requestCache: RequestCache;
+}): Promise<MessageSearchResultsResponse> {
+	const hitsPerPage = searchParams.hits_per_page ?? 25;
+	const page = searchParams.page ?? 1;
+	const result = await searchExistingMessages({
+		searchService,
+		messageRepository,
+		query: searchParams.content ?? '',
+		filters: buildMessageSearchFilters(filterParams, channelIds),
+		hitsPerPage,
+		page,
+		cursor: searchParams.cursor,
+	});
+	const mappedResponses = await responseMapper.mapSearchResultToResponses(
+		result.messages,
+		userId,
+		viewer,
+		requestCache,
+	);
+	return {
+		messages: mappedResponses.messages,
+		channels: mappedResponses.channels,
+		total: result.total,
+		hits_per_page: hitsPerPage,
+		page,
+		cursor: result.cursor,
+		...(mappedResponses.threads ? {threads: mappedResponses.threads, members: mappedResponses.members} : {}),
+	};
 }
 
 async function reconcileOffsetSearchResult({

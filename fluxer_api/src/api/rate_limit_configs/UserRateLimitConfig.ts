@@ -12,6 +12,10 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:profile::target_id',
 		config: {limit: 100, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	USER_ATTACHMENT_TOKEN: {
+		bucket: 'user:attachment_token',
+		config: {limit: 120, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	USER_CHECK_TAG: {
 		bucket: 'user:check_tag',
 		config: {limit: 60, windowMs: ms('10 seconds')},
@@ -140,10 +144,6 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:friend_request:accept',
 		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	USER_BLOCK: {
-		bucket: 'user:block',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
 	USER_BULK_IGNORE_FRIEND_REQUESTS: {
 		bucket: 'user:friend_request:bulk_ignore',
 		config: {limit: 5, windowMs: ms('1 minute')},
@@ -259,5 +259,45 @@ export const UserRateLimitConfigs = {
 	USER_ENTRANCE_SOUND_MUTATE: {
 		bucket: 'user:entrance_sound:mutate',
 		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_APP_ATTEST_CHALLENGE: {
+		bucket: 'user:app_attest:challenge',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_APP_ATTEST_KEY_REGISTER: {
+		bucket: 'user:app_attest:key_register',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_AGE_RANGE_SUBMIT: {
+		bucket: 'user:age_range:submit',
+		config: {limit: 6, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_AGE_RANGE_REMOVE: {
+		bucket: 'user:age_range:remove',
+		config: {limit: 5, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PLAY_INTEGRITY_CHALLENGE: {
+		bucket: 'user:play_integrity:challenge',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PLAY_INTEGRITY_AGE_SUBMIT: {
+		bucket: 'user:play_integrity:age_submit',
+		config: {limit: 10, windowMs: ms('1 hour')},
+	} as RouteRateLimitConfig,
+	USER_DATE_OF_BIRTH: {
+		bucket: 'user:date_of_birth',
+		config: {limit: 5, windowMs: ms('1 hour')},
+	} as RouteRateLimitConfig,
+	USER_CLAIM: {
+		bucket: 'user:claim',
+		config: {limit: 5, windowMs: ms('1 hour')},
+	} as RouteRateLimitConfig,
+	USER_EMAIL_VERIFICATION: {
+		bucket: 'user:email_verification',
+		config: {limit: 3, windowMs: ms('15 minutes')},
+	} as RouteRateLimitConfig,
+	USER_EMAIL_VERIFICATION_CONFIRM: {
+		bucket: 'user:email_verification:confirm',
+		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 } as const;

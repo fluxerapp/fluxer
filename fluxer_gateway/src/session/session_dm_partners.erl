@@ -4,6 +4,7 @@
 -typing([eqwalizer]).
 
 -export([register_all/1, register_guild/3, handle_mutual/3, forget_guild/2]).
+-export_type([session_state/0, guild_id/0]).
 
 -type session_state() :: map().
 -type guild_id() :: integer().
@@ -15,15 +16,18 @@
 register_all(State) ->
     case enabled(State) of
         true ->
-            Partners = partner_ids(State),
-            maps:foreach(
-                fun(_GuildId, GuildRef) -> cast_partners(GuildRef, Partners, State) end,
-                maps:get(guilds, State, #{})
-            ),
+            cast_all_partners(partner_ids(State), State),
             State;
         false ->
             State
     end.
+
+-spec cast_all_partners([user_id()], session_state()) -> ok.
+cast_all_partners(Partners, State) ->
+    maps:foreach(
+        fun(_GuildId, GuildRef) -> cast_partners(GuildRef, Partners, State) end,
+        maps:get(guilds, State, #{})
+    ).
 
 -spec register_guild(guild_id(), pid(), session_state()) -> session_state().
 register_guild(_GuildId, GuildPid, State) ->
@@ -41,7 +45,7 @@ maybe_cast_partners(GuildRef, Partners, State) ->
     ok = cast_partners(GuildRef, Partners, State),
     State.
 
--spec handle_mutual(guild_id(), [user_id()], session_state()) -> {noreply, session_state()}.
+-spec handle_mutual(guild_id(), [term()], session_state()) -> {noreply, session_state()}.
 handle_mutual(GuildId, PartnerIds, State) ->
     case maps:get(GuildId, maps:get(guilds, State, #{}), undefined) of
         {Pid, _Ref} when is_pid(Pid) ->
@@ -55,7 +59,7 @@ forget_guild(GuildId, State) ->
     Current = maps:get(dm_mutual_by_guild, State, #{}),
     State#{dm_mutual_by_guild => maps:remove(GuildId, Current)}.
 
--spec put_guild_partners(guild_id(), [user_id()], session_state()) -> session_state().
+-spec put_guild_partners(guild_id(), [term()], session_state()) -> session_state().
 put_guild_partners(GuildId, PartnerIds, State) ->
     Current = maps:get(dm_mutual_by_guild, State, #{}),
     Next =
@@ -82,5 +86,5 @@ partner_ids(State) ->
 
 -spec enabled(session_state()) -> boolean().
 enabled(State) ->
-    maps:get(bot, State, false) =/= true andalso
+    not type_conv:is_true(maps:get(bot, State, false)) andalso
         presence_targets:dm_partner_presence_enabled(maps:get(user_id, State, undefined)).

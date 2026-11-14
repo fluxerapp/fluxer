@@ -15,12 +15,17 @@ import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {BlockAppOriginMiddleware} from '@app/api/middleware/BlockAppOriginMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {
+	isMultipartFormData,
+	MultipartUploadRoute,
+	RequestBodyLimit,
+} from '@app/api/middleware/RequestBodyLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
-import {Validator} from '@app/api/Validator';
+import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
 import type {WebhookExecuteMessageData} from '@app/api/webhook/WebhookService';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -37,6 +42,7 @@ import {MessageRequestSchema} from '@fluxer/schema/src/domains/message/MessageRe
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
+import {LibredeskWebhook} from '@fluxer/schema/src/domains/webhook/LibredeskWebhookSchemas';
 import {
 	SlackWebhookRequest,
 	WebhookCreateRequest,
@@ -58,6 +64,7 @@ import {
 import type {Context} from 'hono';
 import type {z} from 'zod';
 
+const GITHUB_WEBHOOK_MAX_BODY_BYTES = 25 * 1024 * 1024;
 const FORUM_POST_FIELDS = {thread_name: true, applied_tags: true} as const;
 const WebhookMessagePayload = WebhookMessageRequest.omit(FORUM_POST_FIELDS);
 const WebhookMultipartMessagePayload = WebhookMultipartMessageRequest.omit(FORUM_POST_FIELDS);
@@ -65,7 +72,7 @@ const WebhookMultipartMessagePayload = WebhookMultipartMessageRequest.omit(FORUM
 function validateWebhookMessagePayload(data: unknown): z.infer<typeof WebhookMessagePayload> {
 	const validationResult = WebhookMessagePayload.safeParse(normalizeMessageRequestPayload(data));
 	if (!validationResult.success) {
-		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+		throw inputValidationErrorFromZodIssues(validationResult.error.issues);
 	}
 	return validationResult.data;
 }
@@ -73,7 +80,7 @@ function validateWebhookMessagePayload(data: unknown): z.infer<typeof WebhookMes
 function validateWebhookMultipartMessagePayload(data: unknown): z.infer<typeof WebhookMultipartMessagePayload> {
 	const validationResult = WebhookMultipartMessagePayload.safeParse(normalizeMessageRequestPayload(data));
 	if (!validationResult.success) {
-		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+		throw inputValidationErrorFromZodIssues(validationResult.error.issues);
 	}
 	return validationResult.data;
 }
@@ -374,6 +381,7 @@ export function WebhookController(app: HonoApp) {
 	);
 	app.post(
 		'/webhooks/:webhook_id/:token',
+		MultipartUploadRoute(),
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_EXECUTE),
 		BlockAppOriginMiddleware,
 		OpenAPI({
@@ -392,8 +400,7 @@ export function WebhookController(app: HonoApp) {
 		async (ctx) => {
 			const {webhook_id: webhookId, token} = ctx.req.valid('param');
 			const {wait} = ctx.req.valid('query');
-			const contentType = ctx.req.header('content-type') ?? '';
-			const data = contentType.includes('multipart/form-data')
+			const data = isMultipartFormData(ctx.req.header('content-type'))
 				? await parseWebhookMultipartMessageData(ctx, webhookId, token)
 				: await parseWebhookJsonMessageData(ctx);
 			const response = await ctx.get('webhookRequestService').executeWebhook({
@@ -484,7 +491,7 @@ export function WebhookController(app: HonoApp) {
 		Validator('query', WebhookMessageQueryRequest),
 		async (ctx) => {
 			const {webhook_id: webhookId, token, message_id: messageId} = ctx.req.valid('param');
-			await ctx.get('webhookRequestService').deleteWebhookMessage({
+			await ctx.get('webhookService').deleteWebhookMessage({
 				webhookId: createWebhookID(webhookId),
 				token: createWebhookToken(token),
 				threadId: ctx.req.query('thread_id'),
@@ -496,6 +503,7 @@ export function WebhookController(app: HonoApp) {
 	);
 	app.post(
 		'/webhooks/:webhook_id/:token/github',
+		RequestBodyLimit(GITHUB_WEBHOOK_MAX_BODY_BYTES),
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_GITHUB),
 		BlockAppOriginMiddleware,
 		OpenAPI({
@@ -512,7 +520,7 @@ export function WebhookController(app: HonoApp) {
 		Validator('json', GitHubWebhook),
 		async (ctx) => {
 			const {webhook_id: webhookId, token} = ctx.req.valid('param');
-			await ctx.get('webhookRequestService').executeGitHubWebhook({
+			await ctx.get('webhookService').executeGitHubWebhook({
 				webhookId: createWebhookID(webhookId),
 				token: createWebhookToken(token),
 				threadId: ctx.req.query('thread_id'),
@@ -570,9 +578,37 @@ export function WebhookController(app: HonoApp) {
 		Validator('json', InstatusWebhook),
 		async (ctx) => {
 			const {webhook_id: webhookId, token} = ctx.req.valid('param');
-			await ctx.get('webhookRequestService').executeInstatusWebhook({
+			await ctx.get('webhookService').executeInstatusWebhook({
 				webhookId: createWebhookID(webhookId),
 				token: createWebhookToken(token),
+				data: ctx.req.valid('json'),
+				requestCache: ctx.get('requestCache'),
+			});
+			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/webhooks/:webhook_id/:token/libredesk',
+		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_LIBREDESK),
+		BlockAppOriginMiddleware,
+		OpenAPI({
+			operationId: 'execute_libredesk_webhook',
+			summary: 'Execute Libredesk webhook',
+			description:
+				'Receives and processes Libredesk help desk webhook events, formatting them as messages in the configured channel.',
+			responseSchema: null,
+			statusCode: 204,
+			tags: ['Webhooks'],
+		}),
+		Validator('param', WebhookIdTokenParam),
+		Validator('query', WebhookMessageQueryRequest),
+		Validator('json', LibredeskWebhook),
+		async (ctx) => {
+			const {webhook_id: webhookId, token} = ctx.req.valid('param');
+			await ctx.get('webhookService').executeLibredeskWebhook({
+				webhookId: createWebhookID(webhookId),
+				token: createWebhookToken(token),
+				threadId: ctx.req.query('thread_id'),
 				data: ctx.req.valid('json'),
 				requestCache: ctx.get('requestCache'),
 			});

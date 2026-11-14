@@ -40,6 +40,8 @@ export function useWindowEventListeners(): void {
 		window.addEventListener('mousedown', handleImmediateActivity);
 		window.addEventListener('keydown', handleUserActivity);
 		window.addEventListener('input', handleUserActivity);
+		window.addEventListener('pointermove', handleUserActivity, {passive: true});
+		window.addEventListener('wheel', handleUserActivity, {passive: true});
 		window.addEventListener('resize', handleResize);
 		window.addEventListener('touchstart', handleImmediateActivity);
 		document.addEventListener('touchstart', preventPinchZoom, {passive: false});
@@ -52,6 +54,8 @@ export function useWindowEventListeners(): void {
 			window.removeEventListener('mousedown', handleImmediateActivity);
 			window.removeEventListener('keydown', handleUserActivity);
 			window.removeEventListener('input', handleUserActivity);
+			window.removeEventListener('pointermove', handleUserActivity);
+			window.removeEventListener('wheel', handleUserActivity);
 			window.removeEventListener('resize', handleResize);
 			window.removeEventListener('touchstart', handleImmediateActivity);
 			document.removeEventListener('touchstart', preventPinchZoom);

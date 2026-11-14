@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UpdaterDownloadOption} from '@app/features/platform/types/Electron';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
-
-export type UpdaterState = 'idle' | 'checking' | 'available';
 
 interface NativeUpdateInfo {
 	available: boolean;
@@ -33,7 +30,7 @@ interface UpdaterMachineContext {
 	manualNativeDownloadInFlight: boolean;
 	nativeUnsupported: NativeUnsupportedUpdate | null;
 	nativeManualDownloadUrl: string | null;
-	nativeManualDownloadOptions: ReadonlyArray<UpdaterDownloadOption>;
+	nativeManualDownloadSha256: string | null;
 }
 
 export type UpdaterMachineEvent =
@@ -45,7 +42,7 @@ export type UpdaterMachineEvent =
 			type: 'native.available';
 			version: string | null;
 			downloadUrl: string | null;
-			downloadOptions: ReadonlyArray<UpdaterDownloadOption>;
+			sha256: string | null;
 	  }
 	| {type: 'native.notAvailable'; now: number}
 	| {type: 'native.error'}
@@ -56,10 +53,7 @@ export type UpdaterMachineEvent =
 			now: number;
 	  }
 	| {type: 'manualDownload.started'}
-	| {type: 'manualDownload.finished'}
-	| {type: 'reset'};
-
-const EMPTY_DOWNLOAD_OPTIONS: ReadonlyArray<UpdaterDownloadOption> = Object.freeze([]);
+	| {type: 'manualDownload.finished'};
 
 function createEmptyNativeUpdateInfo(): NativeUpdateInfo {
 	return {
@@ -84,7 +78,7 @@ function createInitialUpdaterContext(): UpdaterMachineContext {
 		manualNativeDownloadInFlight: false,
 		nativeUnsupported: null,
 		nativeManualDownloadUrl: null,
-		nativeManualDownloadOptions: EMPTY_DOWNLOAD_OPTIONS,
+		nativeManualDownloadSha256: null,
 	};
 }
 
@@ -100,7 +94,7 @@ function clearNativeUpdate(context: UpdaterMachineContext): UpdaterMachineContex
 			native: createEmptyNativeUpdateInfo(),
 		},
 		nativeManualDownloadUrl: null,
-		nativeManualDownloadOptions: EMPTY_DOWNLOAD_OPTIONS,
+		nativeManualDownloadSha256: null,
 	};
 }
 
@@ -110,7 +104,6 @@ const updaterStateMachine = setup({
 		events: UpdaterMachineEvent;
 	},
 	actions: {
-		reset: assign(() => createInitialUpdaterContext()),
 		markChecking: assign(() => ({
 			isChecking: true,
 			nativeCheckFailed: false,
@@ -145,7 +138,7 @@ const updaterStateMachine = setup({
 				isChecking: false,
 				nativeUnsupported: null,
 				nativeManualDownloadUrl: event.downloadUrl,
-				nativeManualDownloadOptions: [...event.downloadOptions],
+				nativeManualDownloadSha256: event.sha256,
 			};
 		}),
 		applyNativeNotAvailable: assign(({context, event}) => {
@@ -178,7 +171,6 @@ const updaterStateMachine = setup({
 	},
 	guards: {
 		isChecking: ({context}) => context.isChecking,
-		isNotChecking: ({context}) => !context.isChecking,
 		isNotCheckingAndHasUpdate: ({context}) => !context.isChecking && hasAnyUpdate(context),
 		isNotCheckingAndHasNoUpdate: ({context}) => !context.isChecking && !hasAnyUpdate(context),
 		hasUpdate: ({context}) => hasAnyUpdate(context),
@@ -199,7 +191,6 @@ const updaterStateMachine = setup({
 		'native.unsupported': {actions: 'applyNativeUnsupported'},
 		'manualDownload.started': {actions: 'startManualDownload'},
 		'manualDownload.finished': {actions: 'finishManualDownload'},
-		reset: {actions: 'reset'},
 	},
 	states: {
 		idle: {
@@ -236,19 +227,8 @@ export function transitionUpdaterMachineSnapshot(
 	return transition(updaterStateMachine, snapshot, event)[0] as UpdaterMachineSnapshot;
 }
 
-export function getUpdaterMachineStateValue(snapshot: UpdaterMachineSnapshot): UpdaterState {
-	switch (snapshot.value) {
-		case 'checking':
-			return 'checking';
-		case 'available':
-			return 'available';
-		default:
-			return 'idle';
-	}
-}
-
 export function hasManualNativeDownload(snapshot: UpdaterMachineSnapshot): boolean {
-	return Boolean(snapshot.context.nativeManualDownloadUrl) || snapshot.context.nativeManualDownloadOptions.length > 0;
+	return Boolean(snapshot.context.nativeManualDownloadUrl);
 }
 
 export function getUpdaterDisplayVersion(snapshot: UpdaterMachineSnapshot): string | null {

@@ -228,7 +228,7 @@ class PopoutWindowManagerStore {
 		if (!getElectronAPI()) {
 			const width = descriptor.kind === 'call' ? VOICE_CALL_POPOUT_DEFAULT_WIDTH : VOICE_TILE_POPOUT_DEFAULT_WIDTH;
 			const height = descriptor.kind === 'call' ? VOICE_CALL_POPOUT_DEFAULT_HEIGHT : VOICE_TILE_POPOUT_DEFAULT_HEIGHT;
-			const childWindow = window.open('about:blank', descriptor.key, `width=${width},height=${height}`);
+			const childWindow = window.open('', descriptor.key, `popup=yes,width=${width},height=${height}`);
 			if (!childWindow) {
 				logger.warn('Failed to open browser popout window', {key: descriptor.key});
 				return false;

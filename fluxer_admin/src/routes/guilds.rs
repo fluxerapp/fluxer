@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::{AdminApiClient, ApiResultExt},
+    admin_flags::PLANNED_JOIN_WAVES,
+    api::{
+        client::{AdminApiClient, ApiResultExt},
+        generated::types::CommunityRemovalBasis,
+    },
     middleware::{
         auth::AuthContext,
         csrf,
@@ -10,7 +14,10 @@ use crate::{
     },
     routes::guild_tabs,
     state::AppState,
-    templates,
+    templates::{
+        self,
+        components::enforcement_fields::{BasisSubmission, basis_from_form},
+    },
     utils::forms::MultiValueForm,
 };
 use axum::{
@@ -37,6 +44,8 @@ struct GuildDetailQuery {
     page: Option<u32>,
     reports_page: Option<u32>,
     before: Option<String>,
+    badge_q: Option<String>,
+    badge_pick: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -121,19 +130,12 @@ async fn guild_detail(
     let csrf_token = csrf::get_csrf_token(&request);
 
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let guild = client
-        .lookup_guild(&guild_id)
-        .await
-        .log_error("load guild detail")
-        .flatten();
+    let lookup = client.lookup_guild(&guild_id).await;
+    let load_failed = lookup.is_err();
+    let guild = lookup.log_error("load guild detail").flatten();
 
     let tq = to_tab_query(&query);
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.0.acls();
     let username_sign_in = state.account_identity(&client).await.is_username();
     let tab_body = if let Some(guild) = guild.as_ref() {
         guild_tabs::render(
@@ -169,6 +171,7 @@ async fn guild_detail(
         tab_body,
         is_detail_fragment,
         username_sign_in,
+        load_failed,
     );
     Html(markup.into_string()).into_response()
 }
@@ -186,10 +189,10 @@ async fn guild_detail_post(
     let form = match MultiValueForm::from_request(request).await {
         Some(form) => form,
         None => {
-            return flash::redirect_with_flash(
+            return flash::redirect_error(
+                config,
                 &format!("{base}/guilds/{guild_id}"),
-                FlashData::error("Invalid form data"),
-                config.secure_cookies(),
+                "Invalid form data",
             );
         }
     };
@@ -213,7 +216,8 @@ async fn dispatch_guild_action(
     let get = |k: &str| form.clean(k);
     match action {
         "update_features" => {
-            let (add_features, remove_features) = if form.contains_key("features[]")
+            let (add_features, remove_features, planned_join_waves_until) = if form
+                .contains_key("features[]")
                 || form.contains_key("features")
                 || form.contains_key("custom_features")
             {
@@ -245,27 +249,61 @@ async fn dispatch_guild_action(
                     .filter(|feature| !desired_set.contains(feature.as_str()))
                     .cloned()
                     .collect();
-                (add_features, remove_features)
+                let planned_join_waves_until = if desired_set.contains(PLANNED_JOIN_WAVES) {
+                    match parse_planned_join_waves_until(form) {
+                        Ok(until) => Some(until),
+                        Err(message) => return FlashData::error(message),
+                    }
+                } else {
+                    None
+                };
+                (add_features, remove_features, planned_join_waves_until)
             } else {
                 (
                     form.list_values_any(&["add_features[]", "add_features"]),
                     form.list_values_any(&["remove_features[]", "remove_features"]),
+                    None,
                 )
             };
             action_result(
                 client
-                    .update_guild_features(guild_id, &add_features, &remove_features)
+                    .update_guild_features(
+                        guild_id,
+                        &add_features,
+                        &remove_features,
+                        planned_join_waves_until.as_ref().map(Option::as_deref),
+                    )
                     .await,
                 "Guild features updated",
                 "Failed to update guild features",
             )
         }
+        "update_badges" => action_result(
+            client
+                .update_guild_badges(
+                    guild_id,
+                    &form.list_values_any(&["badge_ids[]", "badge_ids"]),
+                )
+                .await,
+            "Guild badges updated",
+            "Failed to update guild badges",
+        ),
         "clear_fields" => {
             let fields = form.list_values_any(&["fields[]", "fields"]);
             action_result(
                 client.clear_guild_fields(guild_id, &fields).await,
                 "Guild fields cleared",
                 "Failed to clear guild fields",
+            )
+        }
+        "clear_role_icon" => {
+            let Some(role_id) = get("role_id") else {
+                return FlashData::error("Role ID is required");
+            };
+            action_result(
+                client.clear_guild_role_icon(guild_id, &role_id).await,
+                "Role icon cleared",
+                "Failed to clear role icon",
             )
         }
         "update_name" => {
@@ -308,11 +346,7 @@ async fn dispatch_guild_action(
             "Guild shutdown requested",
             "Failed to shut down guild",
         ),
-        "delete_guild" => action_result(
-            client.delete_guild(guild_id).await,
-            "Guild deleted",
-            "Failed to delete guild",
-        ),
+        "delete_guild" => remove_community(client, guild_id, form).await,
         "update_settings" => {
             let mut settings = serde_json::Map::new();
             for key in &[
@@ -455,6 +489,37 @@ async fn dispatch_guild_action(
     }
 }
 
+async fn remove_community(
+    client: &AdminApiClient,
+    guild_id: &str,
+    form: &MultiValueForm,
+) -> FlashData {
+    let basis = match basis_from_form(form) {
+        Ok(basis) => basis,
+        Err(message) => return FlashData::error(message),
+    };
+    let community_basis = match &basis {
+        BasisSubmission::Enforcement(submission) => {
+            CommunityRemovalBasis::Enforcement(submission.decision.clone())
+        }
+        BasisSubmission::HolderRequest(_) => CommunityRemovalBasis::HolderRequest,
+        BasisSubmission::Housekeeping(_) => return FlashData::error("Choose a basis"),
+    };
+    match client
+        .delete_guild(guild_id, community_basis, basis.internal_note())
+        .await
+    {
+        Ok(_) => FlashData::success("Community removed"),
+        Err(error) => {
+            tracing::warn!(%error, guild_id, "admin API request failed: remove community");
+            FlashData::error(error.detail_message().map_or_else(
+                || "Failed to remove the community".to_owned(),
+                |message| format!("Failed to remove the community: {message}"),
+            ))
+        }
+    }
+}
+
 fn action_result<T, E: std::fmt::Display>(
     result: Result<T, E>,
     success_message: &'static str,
@@ -467,6 +532,27 @@ fn action_result<T, E: std::fmt::Display>(
             FlashData::error(error_message)
         }
     }
+}
+
+fn parse_planned_join_waves_until(form: &MultiValueForm) -> Result<Option<String>, &'static str> {
+    let Some(value) = form.clean("planned_join_waves_until") else {
+        return Ok(None);
+    };
+    let with_seconds = if value.len() == 16 {
+        format!("{value}:00")
+    } else {
+        value
+    };
+    let format = time::format_description::parse_borrowed::<2>(
+        "[year]-[month]-[day]T[hour]:[minute]:[second]",
+    )
+    .map_err(|_| "Failed to read the end date")?;
+    time::PrimitiveDateTime::parse(&with_seconds, &format)
+        .map_err(|_| "Enter the end date as a date and time")?
+        .assume_utc()
+        .format(&time::format_description::well_known::Rfc3339)
+        .map(Some)
+        .map_err(|_| "Failed to format the end date")
 }
 
 fn unique_strings(values: Vec<String>) -> Vec<String> {
@@ -485,14 +571,18 @@ async fn guild_tab(
     request: Request,
 ) -> Response {
     let config = state.config();
+    if let Some(redirect) = htmx::tab_page_redirect(
+        request.headers(),
+        request.uri().query(),
+        &format!("{}/guilds", config.base_path),
+        &guild_id,
+        &tab,
+    ) {
+        return redirect;
+    }
     let csrf_token = csrf::get_csrf_token(&request);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.0.acls();
 
     let tq = to_tab_query(&query);
     if let Some(markup) = guild_tabs::render(
@@ -537,6 +627,8 @@ fn to_tab_query(q: &GuildDetailQuery) -> guild_tabs::GuildTabQuery {
         members_page: q.page,
         reports_page: q.reports_page,
         audit_before: q.before.clone(),
+        badge_query: q.badge_q.clone(),
+        badge_picks: crate::api::badges::parse_badge_picks(q.badge_pick.as_deref()),
     }
 }
 

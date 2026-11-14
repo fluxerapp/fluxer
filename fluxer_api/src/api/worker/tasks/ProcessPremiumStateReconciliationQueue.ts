@@ -10,14 +10,16 @@ import {isBillingActive} from '@app/api/stripe/BillingConfigCache';
 import {canProvisionPremiumFromSubscriptionStatus} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
 import {
 	getInvoiceLatestLinePeriodEnd,
-	getPrimarySubscriptionItem,
+	getInvoicePaymentRef,
+	getSubscriptionBillingCycle,
 	getSubscriptionCurrentPeriodStart,
 	getSubscriptionPremiumPeriodEnd,
 	getSubscriptionStartDate,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
 import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
 import {clearPerksSanitizedFlag, createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
@@ -39,30 +41,11 @@ const MAX_USERS_PER_RUN = 250;
 const RETRY_DELAY_MS = 5 * 60 * 1000;
 const CLAIM_LEASE_MS = 10 * 60 * 1000;
 
-function getStripeSubscriptionCustomerId(subscription: Stripe.Subscription): string | null {
-	if (!subscription.customer) {
-		return null;
-	}
-	return typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
-}
-
-function getStripeSubscriptionBillingCycle(subscription: Stripe.Subscription): string | null {
-	const item = getPrimarySubscriptionItem(subscription);
-	const interval = item?.price?.recurring?.interval;
-	if (interval === 'month') {
-		return 'monthly';
-	}
-	if (interval === 'year') {
-		return 'yearly';
-	}
-	return null;
-}
-
 function buildStripePremiumRepairPatch(user: User, subscription: Stripe.Subscription): Partial<UserRow> {
 	const premiumUntil = getSubscriptionPremiumPeriodEnd(subscription);
-	const subscriptionCustomerId = getStripeSubscriptionCustomerId(subscription);
+	const subscriptionCustomerId = extractId(subscription.customer);
 	const premiumWillCancel = Boolean(subscription.cancel_at_period_end || subscription.cancel_at != null);
-	const premiumBillingCycle = getStripeSubscriptionBillingCycle(subscription);
+	const premiumBillingCycle = getSubscriptionBillingCycle(subscription);
 	const patch: Partial<UserRow> = {};
 	if (user.premiumType !== UserPremiumTypes.SUBSCRIPTION) {
 		patch.premium_type = UserPremiumTypes.SUBSCRIPTION;
@@ -116,11 +99,7 @@ async function patchUserAndDispatch(
 	const patchedFields = Object.keys(patch);
 	const updatedUser = await userRepository.patchUpsert(user.id, patch, user.toRow());
 	userCacheService.setUserPartialResponseFromUserInBackground(updatedUser);
-	await gatewayService.dispatchPresence({
-		userId: updatedUser.id,
-		event: 'USER_UPDATE',
-		data: mapUserToPrivateResponse(updatedUser),
-	});
+	await dispatchUserUpdate(gatewayService, updatedUser);
 	return {updatedUser, patchedFields};
 }
 
@@ -184,6 +163,7 @@ async function getPaidThroughFromSubscriptionInvoices(
 			subscription: subscription.id,
 			status: 'paid',
 			limit: PAID_INVOICE_LOOKUP_LIMIT,
+			expand: ['data.payments'],
 		});
 	} catch (error) {
 		Logger.warn(
@@ -195,11 +175,45 @@ async function getPaidThroughFromSubscriptionInvoices(
 	let paidThrough: Date | null = null;
 	for (const invoice of invoices.data) {
 		const periodEnd = getInvoiceLatestLinePeriodEnd(invoice);
-		if (periodEnd && (paidThrough === null || periodEnd.getTime() > paidThrough.getTime())) {
+		if (
+			periodEnd &&
+			(paidThrough === null || periodEnd.getTime() > paidThrough.getTime()) &&
+			!(await wasInvoicePaymentReturned(stripe, invoice))
+		) {
 			paidThrough = periodEnd;
 		}
 	}
 	return paidThrough;
+}
+
+async function wasInvoicePaymentReturned(stripe: Stripe, invoice: Stripe.Invoice): Promise<boolean> {
+	if (invoice.post_payment_credit_notes_amount > 0) {
+		return true;
+	}
+	const charge = await retrieveInvoiceCharge(stripe, invoice);
+	if (!charge) {
+		return false;
+	}
+	if (charge.refunded || charge.amount_refunded > 0) {
+		return true;
+	}
+	if (!charge.disputed) {
+		return false;
+	}
+	const disputes = await stripe.disputes.list({charge: charge.id});
+	return disputes.data.some((dispute) => dispute.status === 'lost');
+}
+
+async function retrieveInvoiceCharge(stripe: Stripe, invoice: Stripe.Invoice): Promise<Stripe.Charge | null> {
+	const paymentRef = getInvoicePaymentRef(invoice);
+	if (paymentRef?.chargeId) {
+		return stripe.charges.retrieve(paymentRef.chargeId);
+	}
+	if (!paymentRef?.paymentIntentId) {
+		return null;
+	}
+	const paymentIntent = await stripe.paymentIntents.retrieve(paymentRef.paymentIntentId, {expand: ['latest_charge']});
+	return typeof paymentIntent.latest_charge === 'object' ? paymentIntent.latest_charge : null;
 }
 
 async function getEffectiveActiveStripeSubscription(

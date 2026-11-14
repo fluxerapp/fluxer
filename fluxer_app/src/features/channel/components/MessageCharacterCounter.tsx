@@ -10,12 +10,11 @@ interface MessageCharacterCounterProps {
 	maxLength: number;
 	canUpgrade: boolean;
 	premiumMaxLength: number;
-	threshold?: number;
 }
 
 export const MessageCharacterCounter = observer(
-	({currentLength, maxLength, canUpgrade, premiumMaxLength, threshold = 0.8}: MessageCharacterCounterProps) => {
-		if (currentLength <= maxLength * threshold) {
+	({currentLength, maxLength, canUpgrade, premiumMaxLength}: MessageCharacterCounterProps) => {
+		if (currentLength <= maxLength * 0.8) {
 			return null;
 		}
 		return (

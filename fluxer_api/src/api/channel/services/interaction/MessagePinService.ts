@@ -2,14 +2,14 @@
 
 import type {MessageID, UserID} from '@app/api/BrandedTypes';
 import {createMessageID} from '@app/api/BrandedTypes';
-import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
-import {MessageInteractionBase} from '@app/api/channel/services/interaction/MessageInteractionBase';
 import {
 	dispatchMessageCreateBroadcast,
 	dispatchMessageUpdateBroadcast,
 } from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {ensureTextChannel, isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {assertThreadInteractionAllowed} from '@app/api/channel/services/thread/ThreadInteractionGuards';
@@ -28,39 +28,17 @@ import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/Invali
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import type {ChannelPinResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
 const PIN_LIST_UNBOUNDED_TIMESTAMP = new Date('9999-12-31T23:59:59.999Z');
 
-export class MessagePinService extends MessageInteractionBase {
+export class MessagePinService {
 	constructor(
-		gatewayService: IGatewayService,
-		private channelRepository: IChannelRepositoryAggregate,
+		private gatewayService: IGatewayService,
+		private channelRepository: ChannelRepository,
 		private snowflakeService: ISnowflakeService,
 		private messagePersistenceService: MessagePersistenceService,
 		private readonly guildAuditLogService: GuildAuditLogService,
-	) {
-		super(gatewayService);
-	}
-
-	private async assertMessageHistoryAccess({
-		authChannel,
-		messageId,
-	}: {
-		authChannel: AuthenticatedChannel;
-		messageId: MessageID;
-	}): Promise<void> {
-		if (!authChannel.guild) {
-			return;
-		}
-		if (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY)) {
-			return;
-		}
-		const cutoff = authChannel.guild.message_history_cutoff;
-		if (!cutoff || snowflakeToDate(messageId).getTime() < new Date(cutoff).getTime()) {
-			throw new UnknownMessageError();
-		}
-	}
+	) {}
 
 	async getChannelPins({
 		authChannel,
@@ -70,7 +48,6 @@ export class MessagePinService extends MessageInteractionBase {
 	}: {
 		authChannel: AuthenticatedChannel;
 		userId: UserID;
-		requestCache: RequestCache;
 		beforeTimestamp?: Date;
 		limit?: number;
 	}): Promise<{
@@ -79,7 +56,7 @@ export class MessagePinService extends MessageInteractionBase {
 	}> {
 		const {channel} = authChannel;
 		if (THREAD_ONLY_CHANNEL_TYPES.has(channel.type)) throw new InvalidChannelTypeError();
-		this.ensureTextChannel(channel);
+		ensureTextChannel(channel);
 		const hasReadHistory = !authChannel.guild || (await authChannel.hasPermission(Permissions.READ_MESSAGE_HISTORY));
 		if (!hasReadHistory) {
 			const cutoff = authChannel.guild?.message_history_cutoff;
@@ -93,23 +70,20 @@ export class MessagePinService extends MessageInteractionBase {
 		let before = beforeTimestamp ?? PIN_LIST_UNBOUNDED_TIMESTAMP;
 		let exhausted = false;
 		while (filtered.length <= pageSize && !exhausted) {
-			const messages = await this.channelRepository.messageInteractions.listChannelPins(
+			const page = await this.channelRepository.messageInteractions.listChannelPins(
 				channel.id,
 				before,
 				pageSize + 1,
+				cutoffTimestamp,
 			);
-			const sorted = messages.sort((a, b) => (b.pinnedTimestamp?.getTime() ?? 0) - (a.pinnedTimestamp?.getTime() ?? 0));
-			exhausted = messages.length <= pageSize;
-			for (const message of sorted) {
-				if (cutoffTimestamp === null || snowflakeToDate(message.id).getTime() >= cutoffTimestamp) {
-					filtered.push(message);
-				}
-			}
-			const last = sorted[sorted.length - 1];
-			if (!last?.pinnedTimestamp) {
+			exhausted = page.scannedCount <= pageSize;
+			filtered.push(
+				...page.messages.sort((a, b) => (b.pinnedTimestamp?.getTime() ?? 0) - (a.pinnedTimestamp?.getTime() ?? 0)),
+			);
+			if (!page.oldestPinnedTimestamp) {
 				break;
 			}
-			before = last.pinnedTimestamp;
+			before = page.oldestPinnedTimestamp;
 		}
 		const hasMore = filtered.length > pageSize;
 		const trimmed = filtered.slice(0, pageSize);
@@ -154,19 +128,8 @@ export class MessagePinService extends MessageInteractionBase {
 		requestCache: RequestCache;
 		auditLogReason?: string | null;
 	}): Promise<void> {
-		const {channel, guild, checkPermission} = authChannel;
-		if (guild) {
-			await checkPermission(Permissions.PIN_MESSAGES);
-			if (this.isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
-				throw new FeatureTemporarilyDisabledError();
-			}
-		}
-		this.ensureTextChannel(channel);
-		assertThreadInteractionAllowed(authChannel, 'pin');
-		await this.assertMessageHistoryAccess({authChannel, messageId});
-		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
-		if (!message) throw new UnknownMessageError();
-		this.validateMessagePinnable(message);
+		const {channel} = authChannel;
+		const message = await this.loadPinnableMessage(authChannel, messageId);
 		if (message.pinnedTimestamp) return;
 		const now = new Date();
 		const updatedMessageData = {...message.toRow(), pinned_timestamp: now};
@@ -181,18 +144,7 @@ export class MessagePinService extends MessageInteractionBase {
 			channel,
 			message: updatedMessage,
 		});
-		if (channel.guildId) {
-			await this.guildAuditLogService
-				.createBuilder(channel.guildId, userId)
-				.withAction(AuditLogActionType.MESSAGE_PIN, messageId.toString())
-				.withMetadata({
-					channel_id: channel.id.toString(),
-					message_id: messageId.toString(),
-				})
-				.withThreadScope(channel.isThread())
-				.withReason(auditLogReason ?? null)
-				.commit();
-		}
+		await this.recordPinAudit(AuditLogActionType.MESSAGE_PIN, channel, messageId, userId, auditLogReason);
 	}
 
 	async unpinMessage({
@@ -204,22 +156,10 @@ export class MessagePinService extends MessageInteractionBase {
 		authChannel: AuthenticatedChannel;
 		messageId: MessageID;
 		userId: UserID;
-		requestCache: RequestCache;
 		auditLogReason?: string | null;
 	}): Promise<void> {
-		const {channel, guild, checkPermission} = authChannel;
-		if (guild) {
-			await checkPermission(Permissions.PIN_MESSAGES);
-			if (this.isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
-				throw new FeatureTemporarilyDisabledError();
-			}
-		}
-		this.ensureTextChannel(channel);
-		assertThreadInteractionAllowed(authChannel, 'pin');
-		await this.assertMessageHistoryAccess({authChannel, messageId});
-		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
-		if (!message) throw new UnknownMessageError();
-		this.validateMessagePinnable(message);
+		const {channel} = authChannel;
+		const message = await this.loadPinnableMessage(authChannel, messageId);
 		if (!message.pinnedTimestamp) return;
 		const updatedMessageData = {...message.toRow(), pinned_timestamp: null};
 		const updatedMessage = await this.channelRepository.messages.upsertMessage(updatedMessageData, message.toRow());
@@ -230,18 +170,43 @@ export class MessagePinService extends MessageInteractionBase {
 			channel,
 			message: updatedMessage,
 		});
-		if (channel.guildId) {
-			await this.guildAuditLogService
-				.createBuilder(channel.guildId, userId)
-				.withAction(AuditLogActionType.MESSAGE_UNPIN, messageId.toString())
-				.withMetadata({
-					channel_id: channel.id.toString(),
-					message_id: messageId.toString(),
-				})
-				.withThreadScope(channel.isThread())
-				.withReason(auditLogReason ?? null)
-				.commit();
+		await this.recordPinAudit(AuditLogActionType.MESSAGE_UNPIN, channel, messageId, userId, auditLogReason);
+	}
+
+	private async loadPinnableMessage(authChannel: AuthenticatedChannel, messageId: MessageID): Promise<Message> {
+		const {channel, guild, checkPermission} = authChannel;
+		if (guild) {
+			await checkPermission(Permissions.PIN_MESSAGES);
+			if (isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
+				throw new FeatureTemporarilyDisabledError();
+			}
 		}
+		ensureTextChannel(channel);
+		assertThreadInteractionAllowed(authChannel, 'pin');
+		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
+		if (!message) throw new UnknownMessageError();
+		this.validateMessagePinnable(message);
+		return message;
+	}
+
+	private async recordPinAudit(
+		action: AuditLogActionType,
+		channel: Channel,
+		messageId: MessageID,
+		userId: UserID,
+		auditLogReason?: string | null,
+	): Promise<void> {
+		if (!channel.guildId) return;
+		await this.guildAuditLogService
+			.createBuilder(channel.guildId, userId)
+			.withAction(action, messageId.toString())
+			.withMetadata({
+				channel_id: channel.id.toString(),
+				message_id: messageId.toString(),
+			})
+			.withThreadScope(channel.isThread())
+			.withReason(auditLogReason ?? null)
+			.commit();
 	}
 
 	private validateMessagePinnable(message: Message): void {

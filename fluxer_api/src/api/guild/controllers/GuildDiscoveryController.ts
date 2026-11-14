@@ -4,11 +4,15 @@ import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
 import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
+import {guildVisitsOffer} from '@app/api/experiment/GuildVisitsGate';
+import {emitGuildJoinRefused} from '@app/api/infrastructure/activity/GuildEvents';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {tierContextFrom} from '@app/api/user/AccountTier';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {Validator} from '@app/api/Validator';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryApplicationStatus, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
@@ -78,7 +82,14 @@ export function GuildDiscoveryController(app: HonoApp) {
 				limit: query.limit,
 				offset: query.offset,
 			});
-			return ctx.json(results);
+			const userId = ctx.get('user').id;
+			return ctx.json({
+				...results,
+				guilds: results.guilds.map((guild) => ({
+					...guild,
+					...guildVisitsOffer(guild.features, userId),
+				})),
+			});
 		},
 	);
 	app.get(
@@ -151,8 +162,11 @@ export function GuildDiscoveryController(app: HonoApp) {
 			if (!status || status.status !== DiscoveryApplicationStatus.APPROVED) {
 				throw new DiscoveryNotDiscoverableError();
 			}
-			const guild = await ctx.get('guildService').data.getGuildSystem(guildId);
+			const guild = await ctx.get('guildService').data.operations.getGuildSystem(guildId);
 			if (guild.features.has(GuildFeatures.INVITES_DISABLED)) {
+				if (!(await ctx.get('gatewayService').hasGuildMember({guildId, userId: user.id}))) {
+					await emitGuildJoinRefused({guildId, userId: user.id, joinSource: 'discovery'});
+				}
 				throw new InvitesDisabledError();
 			}
 			await ctx.get('guildService').members.addUserToGuild({
@@ -161,6 +175,8 @@ export function GuildDiscoveryController(app: HonoApp) {
 				sendJoinMessage: true,
 				joinSourceType: JoinSourceTypes.DISCOVERY,
 				requestCache: ctx.get('requestCache'),
+				tierContext: tierContextFrom(ctx),
+				ip: getRequestClientIp(ctx),
 			});
 			return ctx.body(null, 204);
 		},

@@ -23,12 +23,15 @@ import {ProfileCardLayout} from '@app/features/user/components/profile/profile_c
 import {ProfileCardUserInfo} from '@app/features/user/components/profile/profile_card/ProfileCardUserInfo';
 import {useProfileCardDisplayState} from '@app/features/user/components/profile/useProfileCardDisplayState';
 import {useAutoplayExpandedProfileAnimations} from '@app/features/user/hooks/useAutoplayExpandedProfileAnimations';
+import {useOwnProfileBadges} from '@app/features/user/hooks/useOwnProfileBadges';
 import type {Profile} from '@app/features/user/models/Profile';
 import type {User} from '@app/features/user/models/User';
 import type {CustomStatus} from '@app/features/user/state/CustomStatus';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {ProfilePreviewOverrides} from '@app/features/user/utils/ProfileDisplayUtils';
-import {type BadgeSettings, createMockProfile} from '@app/features/user/utils/ProfileUtils';
+import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
+import {YOU_CAN_T_MESSAGE_YOURSELF_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
+import type {ProfileBadgeResponse} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import type {UserProfile} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -40,10 +43,6 @@ import {useCallback, useMemo} from 'react';
 const PROFILE_PREVIEW_PRESS_ENTER_TO_OPEN_FULL_PREVIEW_DESCRIPTOR = msg({
 	message: 'Profile preview (press Enter to open full preview)',
 	comment: 'Label in the user settings profile preview.',
-});
-const YOU_CAN_T_MESSAGE_YOURSELF_DESCRIPTOR = msg({
-	message: "You can't message yourself",
-	comment: 'Error message in the user settings profile preview.',
 });
 
 interface ProfilePreviewProps {
@@ -61,13 +60,14 @@ interface ProfilePreviewProps {
 	guildId?: string | null;
 	guildMember?: GuildMember | null;
 	guildMemberProfile?: UserProfile | null;
-	previewBadgeSettings?: BadgeSettings;
+	previewProfileBadges?: ReadonlyArray<ProfileBadgeResponse>;
 	ignoreGuildAvatarInPreview?: boolean;
 	ignoreGuildBannerInPreview?: boolean;
 	showMembershipInfo?: boolean;
 	showMessageButton?: boolean;
 	showPreviewLabel?: boolean;
 	previewCustomStatus?: CustomStatus | null;
+	onAvatarClick?: () => void;
 }
 
 export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
@@ -86,13 +86,14 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 		guildId,
 		guildMember,
 		guildMemberProfile,
-		previewBadgeSettings,
+		previewProfileBadges,
 		ignoreGuildAvatarInPreview,
 		ignoreGuildBannerInPreview,
 		showMembershipInfo = true,
 		showMessageButton = true,
 		showPreviewLabel = true,
 		previewCustomStatus,
+		onAvatarClick,
 	}) => {
 		const {i18n} = useLingui();
 		const previewOverrides = useMemo<ProfilePreviewOverrides>(
@@ -114,6 +115,8 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			],
 		);
 		const isCommunityProfile = Boolean(guildId && guildMemberProfile);
+		const cachedProfileBadges = useOwnProfileBadges(user.id);
+		const profileBadges = previewProfileBadges ?? cachedProfileBadges;
 		const previewUser = useMemo(() => {
 			const globalName = previewGlobalName !== undefined ? previewGlobalName : user.globalName;
 			if (isCommunityProfile) {
@@ -127,7 +130,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			if (isCommunityProfile && guildId && guildMemberProfile) {
 				const globalProfile = createMockProfile(previewUser, {
 					previewTimezoneOffset,
-					previewBadgeSettings,
+					profileBadges,
 				});
 				return globalProfile.withGuildId(guildId).withUpdates({
 					guild_member: guildMember?.toJSON(),
@@ -146,7 +149,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 				previewPronouns,
 				previewAccentColor,
 				previewTimezoneOffset,
-				previewBadgeSettings,
+				profileBadges,
 			});
 		}, [
 			previewUser,
@@ -156,7 +159,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			previewPronouns,
 			previewAccentColor,
 			previewTimezoneOffset,
-			previewBadgeSettings,
+			profileBadges,
 			guildId,
 			guildMember,
 			guildMemberProfile,
@@ -248,12 +251,11 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 							avatarUrl={finalAvatarUrl}
 							hoverAvatarUrl={finalHoverAvatarUrl}
 							isClickable={true}
-							onAvatarClick={openMockProfile}
+							onAvatarClick={onAvatarClick ?? openMockProfile}
 							data-flx="user.profile.profile-preview.profile-card-banner"
 						/>
 						<UserProfileBadges
-							user={previewUser}
-							profile={mockProfile}
+							badges={mockProfile.profileBadges}
 							data-flx="user.profile.profile-preview.user-profile-badges"
 						/>
 						<ProfileCardContent data-flx="user.profile.profile-preview.profile-card-content">

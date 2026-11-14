@@ -119,11 +119,17 @@ describe('StoreBillingRepository purchases', () => {
 		const unbound = await repository.findPurchase(purchaseRow().store_key);
 		if (!unbound) throw new Error('missing purchase');
 
-		const boundToA = await repository.bindPurchase(unbound, USER_A, new Date('2026-09-02T00:00:00.000Z'));
+		const boundToA = await repository.updatePurchase(unbound, {
+			user_id: USER_A,
+			bound_at: new Date('2026-09-02T00:00:00.000Z'),
+		});
 		if (!boundToA) throw new Error('bind failed');
 		expect((await repository.listPurchasesForUser(USER_A)).map((row) => row.store_key)).toEqual([unbound.store_key]);
 
-		const boundToB = await repository.bindPurchase(boundToA, USER_B, new Date('2026-09-03T00:00:00.000Z'));
+		const boundToB = await repository.updatePurchase(boundToA, {
+			user_id: USER_B,
+			bound_at: new Date('2026-09-03T00:00:00.000Z'),
+		});
 		if (!boundToB) throw new Error('rebind failed');
 		expect(await repository.listPurchasesForUser(USER_A)).toEqual([]);
 		expect((await repository.listPurchasesForUser(USER_B)).map((row) => row.user_id)).toEqual([USER_B]);
@@ -139,9 +145,9 @@ describe('StoreBillingRepository purchases', () => {
 		await repository.insertPurchase(purchaseRow());
 		const current = await repository.findPurchase(purchaseRow().store_key);
 		if (!current) throw new Error('missing purchase');
-		await repository.bindPurchase(current, USER_A, new Date());
+		await repository.updatePurchase(current, {user_id: USER_A, bound_at: new Date()});
 
-		expect(await repository.bindPurchase(current, USER_B, new Date())).toBeNull();
+		expect(await repository.updatePurchase(current, {user_id: USER_B, bound_at: new Date()})).toBeNull();
 		expect(await repository.listPurchasesForUser(USER_B)).toEqual([]);
 		expect((await repository.listPurchasesForUser(USER_A)).map((row) => row.user_id)).toEqual([USER_A]);
 	});

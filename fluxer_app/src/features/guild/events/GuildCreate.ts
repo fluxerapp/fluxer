@@ -26,7 +26,7 @@ import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserProfile from '@app/features/user/state/UserProfile';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 
 function shouldTreatGuildCreateAsUnavailable(data: GuildReadyData): boolean {
@@ -69,7 +69,7 @@ export function handleGuildCreate(data: GuildReadyData, _context: GatewayHandler
 	GuildMembers.handleGuildCreate(data, {synced: isSync});
 	GuildReadState.handleGuildCreate({guild: data});
 	Presence.handleGuildCreate(data);
-	MediaEngine.handleGuildCreate(data);
+	VoiceRuntime.handleGuildCreate(data);
 	Messages.handleGuildCreate({guild: data});
 	ReadStates.handleGuildCreate({guild: data});
 	if (data.emojis.length > 0) {

@@ -15,7 +15,7 @@ import {
 } from '@app/api/utils/AttachmentDecay';
 import {ms} from 'itty-time';
 
-interface AttachmentDecayPayload {
+export interface AttachmentDecayPayload {
 	attachmentId: AttachmentID;
 	channelId: ChannelID;
 	messageId: MessageID;
@@ -27,7 +27,7 @@ interface AttachmentDecayPayload {
 
 type AttachmentDecayConfigResolver = () => Promise<InstanceAttachmentDecayEffectiveConfig>;
 
-async function resolveDefaultAttachmentDecayConfig(): Promise<InstanceAttachmentDecayEffectiveConfig> {
+export async function resolveDefaultAttachmentDecayConfig(): Promise<InstanceAttachmentDecayEffectiveConfig> {
 	const {getInstanceConfigRepository} = await import('@app/api/middleware/ServiceSingletons');
 	return getInstanceConfigRepository().getEffectiveAttachmentDecayConfig();
 }
@@ -108,26 +108,85 @@ export class AttachmentDecayService {
 					expiresAt = renewed;
 				}
 			}
-			const lifetimeDays = Math.round((expiresAt.getTime() - uploadedAt.getTime()) / ms('1 day'));
-			const cost = computeCost({
-				sizeBytes: attachment.sizeBytes,
-				lifetimeDays,
-				pricePerTBPerMonth: DEFAULT_DECAY_CONSTANTS.PRICE_PER_TB_PER_MONTH,
-			});
-			await this.repo.upsert({
-				attachment_id: attachment.attachmentId,
-				channel_id: attachment.channelId,
-				message_id: attachment.messageId,
-				filename: attachment.filename,
-				size_bytes: attachment.sizeBytes,
-				uploaded_at: uploadedAt,
-				expires_at: expiresAt,
-				last_accessed_at: now,
-				cost,
-				lifetime_days: lifetimeDays,
+			await this.writeRecord(attachment, {
+				uploadedAt,
+				expiresAt,
+				lastAccessedAt: now,
 				status: existing?.status ?? null,
-				expiry_bucket: getExpiryBucket(expiresAt),
 			});
 		}
+	}
+
+	async reconcile(
+		attachments: Array<AttachmentDecayPayload>,
+		fileExists: (attachment: AttachmentDecayPayload) => Promise<boolean>,
+	): Promise<number> {
+		if (attachments.length === 0) return 0;
+		const config = await this.resolveConfig();
+		if (!config.enabled) return 0;
+		const rules = buildDecayRules(config);
+		const existingRecords = await this.repo.fetchByIds(attachments.map((a) => a.attachmentId));
+		const now = new Date();
+		const windowEnd = new Date(now.getTime() + config.renew_window_days * ms('1 day'));
+		const seen = new Set<AttachmentID>();
+		let changed = 0;
+		for (const attachment of attachments) {
+			if (seen.has(attachment.attachmentId)) continue;
+			seen.add(attachment.attachmentId);
+			const existing = existingRecords.get(attachment.attachmentId);
+			const uploadedAt = existing?.uploaded_at ?? attachment.uploadedAt;
+			const decay = computeDecay({sizeBytes: attachment.sizeBytes, uploadedAt, rules});
+			if (!decay) {
+				if (existing) {
+					await this.repo.deleteRecords({
+						expiry_bucket: getExpiryBucket(existing.expires_at),
+						expires_at: existing.expires_at,
+						attachment_id: existing.attachment_id,
+					});
+					changed++;
+				}
+				continue;
+			}
+			const stillPending = existing != null && existing.expires_at.getTime() > now.getTime();
+			if (!stillPending && !(await fileExists(attachment))) continue;
+			const floor =
+				stillPending && existing.expires_at.getTime() < windowEnd.getTime() ? existing.expires_at : windowEnd;
+			const expiresAt = extendExpiry(floor, decay.expiresAt);
+			if (existing && existing.expires_at.getTime() === expiresAt.getTime()) continue;
+			await this.writeRecord(attachment, {
+				uploadedAt,
+				expiresAt,
+				lastAccessedAt: existing?.last_accessed_at ?? uploadedAt,
+				status: existing?.status ?? null,
+			});
+			changed++;
+		}
+		return changed;
+	}
+
+	private async writeRecord(
+		attachment: AttachmentDecayPayload,
+		state: {uploadedAt: Date; expiresAt: Date; lastAccessedAt: Date; status: string | null},
+	): Promise<void> {
+		const lifetimeDays = Math.round((state.expiresAt.getTime() - state.uploadedAt.getTime()) / ms('1 day'));
+		const cost = computeCost({
+			sizeBytes: attachment.sizeBytes,
+			lifetimeDays,
+			pricePerTBPerMonth: DEFAULT_DECAY_CONSTANTS.PRICE_PER_TB_PER_MONTH,
+		});
+		await this.repo.upsert({
+			attachment_id: attachment.attachmentId,
+			channel_id: attachment.channelId,
+			message_id: attachment.messageId,
+			filename: attachment.filename,
+			size_bytes: attachment.sizeBytes,
+			uploaded_at: state.uploadedAt,
+			expires_at: state.expiresAt,
+			last_accessed_at: state.lastAccessedAt,
+			cost,
+			lifetime_days: lifetimeDays,
+			status: state.status,
+			expiry_bucket: getExpiryBucket(state.expiresAt),
+		});
 	}
 }

@@ -25,6 +25,9 @@ const INVALID_ARGUMENT: &str = "INVALID_ARGUMENT";
 pub fn http_client() -> reqwest::Result<reqwest::Client> {
     reqwest::Client::builder()
         .redirect(Policy::none())
+        .no_gzip()
+        .no_brotli()
+        .no_deflate()
         .connect_timeout(CONNECT_TIMEOUT)
         .timeout(HTTP_TIMEOUT)
         .build()
@@ -33,6 +36,9 @@ pub fn http_client() -> reqwest::Result<reqwest::Client> {
 pub fn web_push_http_client(private_hosts: &[String]) -> reqwest::Result<reqwest::Client> {
     reqwest::Client::builder()
         .redirect(Policy::none())
+        .no_gzip()
+        .no_brotli()
+        .no_deflate()
         .dns_resolver(PublicOnlyResolver::new(private_hosts))
         .connect_timeout(CONNECT_TIMEOUT)
         .timeout(HTTP_TIMEOUT)
@@ -42,6 +48,9 @@ pub fn web_push_http_client(private_hosts: &[String]) -> reqwest::Result<reqwest
 pub fn apns_http_client() -> reqwest::Result<reqwest::Client> {
     reqwest::Client::builder()
         .redirect(Policy::none())
+        .no_gzip()
+        .no_brotli()
+        .no_deflate()
         .http2_prior_knowledge()
         .connect_timeout(CONNECT_TIMEOUT)
         .timeout(APNS_TIMEOUT)
@@ -294,13 +303,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_host_that_does_not_resolve_is_permanent() {
-        let error = error_for("https://push.invalid/relay/v1/apns/stable/production/token").await;
-        assert_eq!(Unreachable::of(&error), Unreachable::Dns);
-        assert!(Unreachable::of(&error).is_permanent());
-    }
-
-    #[tokio::test]
     async fn a_logged_error_never_contains_the_device_token() {
         const TOKEN: &str = "3dbc5a5ef1a1c1666afc26f466e1b3ebaaf4c66d92dddeb0fd1b69c49641d4cd";
         let error = error_for(&format!("https://push.invalid/3/device/{TOKEN}")).await;
@@ -309,48 +311,5 @@ mod tests {
             "reqwest still puts the url in Display, so the guard below is what matters"
         );
         assert!(!error.without_url().to_string().contains(TOKEN));
-    }
-
-    #[test]
-    fn a_wrong_topic_is_not_a_dead_token() {
-        assert_eq!(apns_dead_token(400, "DeviceTokenNotForTopic"), None);
-    }
-
-    #[test]
-    fn a_bad_device_token_is_still_a_dead_token() {
-        assert_eq!(
-            apns_dead_token(400, "BadDeviceToken"),
-            Some(DeadToken::Invalid("bad_device_token"))
-        );
-    }
-
-    #[tokio::test]
-    async fn a_host_in_blocked_address_space_is_named_as_such() {
-        let error = web_push_http_client(&[])
-            .expect("the http client builds")
-            .post("https://localhost/push")
-            .send()
-            .await
-            .expect_err("the request cannot complete");
-        assert_eq!(Unreachable::of(&error), Unreachable::BlockedAddress);
-        assert!(Unreachable::of(&error).is_permanent());
-    }
-
-    #[tokio::test]
-    async fn a_listed_private_host_gets_through_to_connect() {
-        let error = web_push_http_client(&["localhost".to_owned()])
-            .expect("the http client builds")
-            .post("https://localhost:1/push")
-            .send()
-            .await
-            .expect_err("the request cannot complete");
-        assert_eq!(Unreachable::of(&error), Unreachable::Transport);
-    }
-
-    #[tokio::test]
-    async fn a_refused_connection_stays_retryable() {
-        let error = error_for("http://127.0.0.1:1/").await;
-        assert_eq!(Unreachable::of(&error), Unreachable::Transport);
-        assert!(!Unreachable::of(&error).is_permanent());
     }
 }

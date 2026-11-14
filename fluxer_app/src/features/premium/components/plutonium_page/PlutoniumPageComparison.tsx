@@ -2,13 +2,15 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
+import {AVAILABLE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {formatNumber} from '@app/features/i18n/utils/IntlCache';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import styles from '@app/features/premium/components/plutonium_page/PlutoniumPage.module.css';
 import {
 	PlutoniumPageIcon,
 	type PlutoniumPageIconName,
 } from '@app/features/premium/components/plutonium_page/PlutoniumPageIcons';
 import {
-	AVAILABLE_DESCRIPTOR,
 	COMPARE_TITLE_DESCRIPTOR,
 	FEATURE_COLUMN_DESCRIPTOR,
 	FREE_COLUMN_DESCRIPTOR,
@@ -32,17 +34,18 @@ import {
 	PERK_VIDEO_QUALITY_PREMIUM_DESCRIPTOR,
 	TAG_FOOTNOTE_MARKER_DESCRIPTOR,
 } from '@app/features/premium/components/plutonium_page/PlutoniumPageMessages';
-import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowFluxerPremiumIcon} from '@app/features/premium/utils/PremiumUtils';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ATTACHMENT_MAX_SIZE_NON_PREMIUM, ATTACHMENT_MAX_SIZE_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {
 	isBooleanTierPerk,
 	isNumericTierPerk,
 	LIMIT_TIER_PERKS,
-	type LimitTierPerk,
+	type NumericTierPerk,
 } from '@fluxer/constants/src/LimitTierPerks';
 import type {MessageDescriptor} from '@lingui/core';
 import {useLingui} from '@lingui/react/macro';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
+import {CrownIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -66,7 +69,7 @@ interface PerkDefinition {
 const PERK_DEFINITIONS: ReadonlyArray<PerkDefinition> = [
 	{perkId: 'custom_discriminator', icon: 'hash', label: PERK_CUSTOM_TAG_DESCRIPTOR},
 	{perkId: 'per_guild_profiles', icon: 'userCircle', label: PERK_PER_COMMUNITY_PROFILES_DESCRIPTOR},
-	{perkId: 'profile_badge', icon: 'fluxerPremium', label: PERK_PROFILE_BADGE_DESCRIPTOR},
+	{perkId: 'profile_badge', icon: 'atom', label: PERK_PROFILE_BADGE_DESCRIPTOR},
 	{perkId: 'custom_video_backgrounds', icon: 'image', label: PERK_VIDEO_BACKGROUNDS_DESCRIPTOR},
 	{perkId: 'max_guilds', icon: 'usersThree', label: PERK_COMMUNITIES_DESCRIPTOR},
 	{perkId: 'max_message_length', icon: 'chatCenteredText', label: PERK_MESSAGE_CHARACTERS_DESCRIPTOR},
@@ -81,37 +84,28 @@ const PERK_DEFINITIONS: ReadonlyArray<PerkDefinition> = [
 	{perkId: 'custom_themes', icon: 'palette', label: PERK_CUSTOM_THEMES_DESCRIPTOR},
 ];
 
-const BYTES_PER_MEGABYTE = 1024 * 1024;
-
-function formatMegabytes(locale: string, bytes: number): string {
-	return new Intl.NumberFormat(locale, {style: 'unit', unit: 'megabyte', unitDisplay: 'short'}).format(
-		Math.floor(bytes / BYTES_PER_MEGABYTE),
-	);
-}
-
 export function resolveUploadSizes(locale: string): {free: string; premium: string} {
 	const perk = LIMIT_TIER_PERKS.find((candidate) => candidate.id === 'max_attachment_file_size');
 	if (!perk || !isNumericTierPerk(perk) || !perk.limitKey) {
 		return {
-			free: formatMegabytes(locale, 25 * BYTES_PER_MEGABYTE),
-			premium: formatMegabytes(locale, 500 * BYTES_PER_MEGABYTE),
+			free: formatFileSize(locale, ATTACHMENT_MAX_SIZE_NON_PREMIUM),
+			premium: formatFileSize(locale, ATTACHMENT_MAX_SIZE_PREMIUM),
 		};
 	}
 	return {
-		free: formatMegabytes(locale, Limits.getRestrictedValue(perk.limitKey, perk.restrictedValue)),
-		premium: formatMegabytes(locale, Limits.getStockValue(perk.limitKey, perk.stockValue)),
+		free: formatFileSize(locale, Limits.getRestrictedValue(perk.limitKey, perk.restrictedValue)),
+		premium: formatFileSize(locale, Limits.getStockValue(perk.limitKey, perk.stockValue)),
 	};
 }
 
-function resolveNumericValue(perk: LimitTierPerk, value: number, premium: boolean, locale: string): string {
-	if (!isNumericTierPerk(perk)) return String(value);
-	const resolved = perk.limitKey
-		? premium
-			? Limits.getStockValue(perk.limitKey, value)
-			: Limits.getRestrictedValue(perk.limitKey, value)
-		: value;
+function resolveNumericValue(perk: NumericTierPerk, value: number, tier: 'free' | 'premium', locale: string): string {
+	let resolved = value;
+	if (perk.limitKey) {
+		resolved =
+			tier === 'premium' ? Limits.getStockValue(perk.limitKey, value) : Limits.getRestrictedValue(perk.limitKey, value);
+	}
 	if (perk.unit === 'bytes') {
-		return formatMegabytes(locale, resolved);
+		return formatFileSize(locale, resolved);
 	}
 	return formatNumber(resolved, locale);
 }
@@ -145,8 +139,8 @@ function buildRows(locale: string, translate: (descriptor: MessageDescriptor) =>
 				id: perk.id,
 				icon: definition.icon,
 				label: definition.label,
-				free: {kind: 'text', value: resolveNumericValue(perk, perk.restrictedValue, false, locale)},
-				premium: {kind: 'text', value: resolveNumericValue(perk, perk.stockValue, true, locale)},
+				free: {kind: 'text', value: resolveNumericValue(perk, perk.restrictedValue, 'free', locale)},
+				premium: {kind: 'text', value: resolveNumericValue(perk, perk.stockValue, 'premium', locale)},
 			});
 			continue;
 		}
@@ -175,6 +169,12 @@ function buildRows(locale: string, translate: (descriptor: MessageDescriptor) =>
 
 function BooleanValue({available, highlighted}: {available: boolean; highlighted: boolean}) {
 	const {i18n} = useLingui();
+	let iconClass: 'booleanIconMissing' | 'booleanIconHighlighted' | 'booleanIconMuted';
+	if (!available) {
+		iconClass = 'booleanIconMissing';
+	} else {
+		iconClass = highlighted ? 'booleanIconHighlighted' : 'booleanIconMuted';
+	}
 	return (
 		<>
 			<span className={styles.srOnly} data-flx="premium.plutonium-page.plutonium-page-comparison.boolean-value.sr-only">
@@ -182,14 +182,7 @@ function BooleanValue({available, highlighted}: {available: boolean; highlighted
 			</span>
 			<PlutoniumPageIcon
 				name={available ? 'check' : 'cross'}
-				className={clsx(
-					styles.booleanIcon,
-					!available
-						? styles.booleanIconMissing
-						: highlighted
-							? styles.booleanIconHighlighted
-							: styles.booleanIconMuted,
-				)}
+				className={clsx(styles.booleanIcon, styles[iconClass])}
 				data-flx="premium.plutonium-page.plutonium-page-comparison.boolean-value.boolean-icon"
 			/>
 		</>
@@ -212,14 +205,30 @@ function PerkValueView({value, highlighted}: {value: PerkValue; highlighted: boo
 interface PlutoniumPageComparisonProps {
 	footnoteId: string;
 	onFootnoteClick: (event: React.MouseEvent<HTMLAnchorElement>) => void;
+	footnote: React.ReactNode;
 	actions: React.ReactNode;
 }
 
 export const PlutoniumPageComparison = observer(
-	({footnoteId, onFootnoteClick, actions}: PlutoniumPageComparisonProps) => {
+	({footnoteId, onFootnoteClick, footnote, actions}: PlutoniumPageComparisonProps) => {
 		const {i18n} = useLingui();
 		const rows = buildRows(i18n.locale, (descriptor) => i18n._(descriptor));
 		const premiumLabel = getPremiumProductName();
+		const showFluxerPremiumIcon = shouldShowFluxerPremiumIcon();
+		const renderPerkIcon = (row: PerkRow, className: string) =>
+			row.icon === 'atom' && !showFluxerPremiumIcon ? (
+				<CrownIcon
+					weight="fill"
+					className={className}
+					data-flx="premium.plutonium-page.plutonium-page-comparison.perk-icon.crown-icon"
+				/>
+			) : (
+				<PlutoniumPageIcon
+					name={row.icon}
+					className={className}
+					data-flx="premium.plutonium-page.plutonium-page-comparison.perk-icon"
+				/>
+			);
 		const renderLabel = (row: PerkRow) => (
 			<>
 				<span data-flx="premium.plutonium-page.plutonium-page-comparison.render-label.span">{i18n._(row.label)}</span>
@@ -247,7 +256,7 @@ export const PlutoniumPageComparison = observer(
 		);
 		return (
 			<section
-				className={clsx(styles.glassPanel, styles.comparison)}
+				className={clsx(styles.board, styles.comparison)}
 				aria-labelledby="plutonium-page-compare-heading"
 				data-flx="premium.plutonium-page.comparison"
 			>
@@ -265,11 +274,7 @@ export const PlutoniumPageComparison = observer(
 								className={styles.perkCardHead}
 								data-flx="premium.plutonium-page.plutonium-page-comparison.perk-card-head"
 							>
-								<PlutoniumPageIcon
-									name={row.icon}
-									className={styles.perkCardIcon}
-									data-flx="premium.plutonium-page.plutonium-page-comparison.perk-card-icon"
-								/>
+								{renderPerkIcon(row, styles.perkCardIcon)}
 								<span
 									className={styles.perkCardLabel}
 									data-flx="premium.plutonium-page.plutonium-page-comparison.perk-card-label"
@@ -368,11 +373,7 @@ export const PlutoniumPageComparison = observer(
 												className={styles.tableRowLabel}
 												data-flx="premium.plutonium-page.plutonium-page-comparison.table-row-label"
 											>
-												<PlutoniumPageIcon
-													name={row.icon}
-													className={styles.tableRowIcon}
-													data-flx="premium.plutonium-page.plutonium-page-comparison.table-row-icon"
-												/>
+												{renderPerkIcon(row, styles.tableRowIcon)}
 												<span data-flx="premium.plutonium-page.plutonium-page-comparison.span">{renderLabel(row)}</span>
 											</span>
 										</th>
@@ -402,6 +403,7 @@ export const PlutoniumPageComparison = observer(
 						</table>
 					</section>
 				</FocusRing>
+				{footnote}
 				{actions && (
 					<div
 						className={clsx(styles.actions, styles.comparisonActions)}

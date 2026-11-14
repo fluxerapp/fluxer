@@ -201,11 +201,7 @@ pub fn job_detail_page(
 ) -> Markup {
     let base = &config.base_path;
     let title = format!("Job {job_id}");
-    let admin_acls = auth
-        .admin_user
-        .as_ref()
-        .map(|u| u.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.acls();
     let can_cancel = acl::has_permission(admin_acls, acl::JOBS_CANCEL);
 
     let content = match job {

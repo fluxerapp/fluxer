@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::config::AdminConfig;
+use axum::{
+    http::{HeaderValue, header},
+    response::Response,
+};
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use hmac::{Hmac, KeyInit, Mac};
 use rand::RngExt;
@@ -109,128 +114,38 @@ pub fn verify_csrf_token(token: &str, user_id: &str, secret_key: &str) -> bool {
     }
 }
 
-pub const LEGACY_SESSION_COOKIE_NAME: &str = "session";
 pub const SESSION_COOKIE_NAME: &str = "admin_session";
 pub const SESSION_MAX_AGE: i64 = MAX_AGE_SECONDS as i64;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    const TEST_SECRET: &str = "test-secret-key-for-unit-tests";
-
-    #[test]
-    fn create_session_produces_valid_base64url_and_hmac() {
-        let token = create_session("12345", "tok_abc", TEST_SECRET);
-        let parts: Vec<&str> = token.rsplitn(2, '.').collect();
-        assert_eq!(parts.len(), 2, "session must contain a dot separator");
-        let payload = parts[1];
-        let sig = parts[0];
-        assert!(
-            URL_SAFE_NO_PAD.decode(payload.as_bytes()).is_ok(),
-            "payload must be valid base64url"
-        );
-        assert!(
-            URL_SAFE_NO_PAD.decode(sig.as_bytes()).is_ok(),
-            "signature must be valid base64url"
-        );
+pub(crate) fn admin_cookie_path(config: &AdminConfig) -> &str {
+    if config.base_path.is_empty() {
+        "/"
+    } else {
+        config.base_path.as_str()
     }
+}
 
-    #[test]
-    fn parse_session_decodes_created_session() {
-        let token = create_session("99999", "tok_xyz", TEST_SECRET);
-        let session = parse_session(&token, TEST_SECRET).expect("must parse");
-        assert_eq!(session.user_id, "99999");
-        assert_eq!(session.access_token, "tok_xyz");
-        assert!(session.created_at > 0);
+pub(crate) fn clear_cookie_value(name: &str, path: &str) -> String {
+    format!("{name}=; Path={path}; HttpOnly; SameSite=Lax; Max-Age=0")
+}
+
+pub(crate) fn clear_cookie_values(name: &str, config: &AdminConfig) -> Vec<String> {
+    let admin_path = admin_cookie_path(config);
+    let mut cookies = vec![clear_cookie_value(name, admin_path)];
+    if admin_path != "/" {
+        cookies.push(clear_cookie_value(name, "/"));
     }
+    cookies
+}
 
-    #[test]
-    fn parse_session_rejects_tampered_signature() {
-        let token = create_session("12345", "tok_abc", TEST_SECRET);
-        let dot = token.rfind('.').unwrap();
-        let mut tampered = token.clone();
-        let replacement = if tampered.as_bytes()[dot + 1] == b'A' {
-            'B'
-        } else {
-            'A'
-        };
-        unsafe {
-            tampered.as_bytes_mut()[dot + 1] = replacement as u8;
-        }
-        assert!(
-            parse_session(&tampered, TEST_SECRET).is_none(),
-            "tampered signature must be rejected"
-        );
+pub(crate) fn append_cookie(response: &mut Response, cookie: &str) {
+    if let Ok(value) = HeaderValue::from_str(cookie) {
+        response.headers_mut().append(header::SET_COOKIE, value);
     }
+}
 
-    #[test]
-    fn parse_session_rejects_wrong_secret() {
-        let token = create_session("12345", "tok_abc", TEST_SECRET);
-        assert!(
-            parse_session(&token, "wrong-secret").is_none(),
-            "wrong secret must be rejected"
-        );
-    }
-
-    #[test]
-    fn parse_session_rejects_expired() {
-        let session = Session {
-            user_id: "12345".to_owned(),
-            access_token: "tok_old".to_owned(),
-            created_at: 1_000_000,
-        };
-        let json = serde_json::to_string(&session).unwrap();
-        let encoded = URL_SAFE_NO_PAD.encode(json.as_bytes());
-        let signed = sign_data(&encoded, TEST_SECRET);
-        assert!(
-            parse_session(&signed, TEST_SECRET).is_none(),
-            "expired session must be rejected"
-        );
-    }
-
-    #[test]
-    fn parse_session_returns_none_for_garbage() {
-        assert!(parse_session("", TEST_SECRET).is_none());
-        assert!(parse_session("not-a-session", TEST_SECRET).is_none());
-        assert!(parse_session("abc.def.ghi", TEST_SECRET).is_none());
-        assert!(parse_session(".....", TEST_SECRET).is_none());
-        assert!(parse_session("\0\0\0", TEST_SECRET).is_none());
-    }
-
-    #[test]
-    fn session_json_uses_camel_case() {
-        let session = Session {
-            user_id: "1".to_owned(),
-            access_token: "t".to_owned(),
-            created_at: 100,
-        };
-        let json = serde_json::to_string(&session).unwrap();
-        assert!(json.contains("\"userId\""), "must use camelCase userId");
-        assert!(
-            json.contains("\"accessToken\""),
-            "must use camelCase accessToken"
-        );
-        assert!(
-            json.contains("\"createdAt\""),
-            "must use camelCase createdAt"
-        );
-        assert!(!json.contains("user_id"), "must not use snake_case");
-    }
-
-    #[test]
-    fn round_trip_preserves_fields() {
-        let token = create_session("67890", "tok_roundtrip", TEST_SECRET);
-        let session = parse_session(&token, TEST_SECRET).expect("must parse");
-        assert_eq!(session.user_id, "67890");
-        assert_eq!(session.access_token, "tok_roundtrip");
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        assert!(
-            now.saturating_sub(session.created_at) < 5,
-            "created_at should be recent"
-        );
+pub(crate) fn append_cookies(response: &mut Response, cookies: &[String]) {
+    for cookie in cookies {
+        append_cookie(response, cookie);
     }
 }

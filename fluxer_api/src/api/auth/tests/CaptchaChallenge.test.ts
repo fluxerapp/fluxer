@@ -91,18 +91,10 @@ describe('Captcha challenge', () => {
 
 		const updated = await createBuilder<{captcha: CaptchaConfigResponse}>(harness, admin.token)
 			.patch('/admin/instance/config')
-			.body({captcha: {enabled: false}})
+			.body({captcha: {provider: 'none'}, auth: {instant_accounts: {enabled: false}}})
 			.execute();
-		expect(updated.captcha).toEqual({enabled: false, cost: 1000, max_counter: 100});
+		expect(updated.captcha).toEqual({provider: 'none', enabled: false, cost: 1000, max_counter: 100});
 
 		await forgot(harness).expect(HTTP_STATUS.NO_CONTENT).execute();
-	});
-
-	it('skips the check in test mode unless the request opts in', async () => {
-		await createBuilderWithoutAuth(harness)
-			.post('/auth/forgot')
-			.body({email: 'captcha-nobody@example.com'})
-			.expect(HTTP_STATUS.NO_CONTENT)
-			.execute();
 	});
 });

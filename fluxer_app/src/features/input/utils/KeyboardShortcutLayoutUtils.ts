@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeyCombo} from '@app/features/input/state/InputKeybind';
+import {isPrintableShortcutKey} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
 
 interface KeyboardLayoutMapReader {
 	get(code: string): string | undefined;
@@ -18,6 +19,12 @@ export interface KeyboardShortcutsOverlayFallbackEvent {
 
 export const DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO: KeyCombo = {key: '/', ctrlOrMeta: true};
 export const SHIFTED_SLASH_FALLBACK_KEYBOARD_SHORTCUTS_OVERLAY_COMBO: KeyCombo = {key: '.', ctrlOrMeta: true};
+export const DEFAULT_START_DM_CALL_COMBO: KeyCombo = {key: '', code: 'Quote', ctrl: true};
+
+interface KeyboardLayoutDefaultCombos {
+	keyboardShortcutsOverlay: KeyCombo;
+	startDmCall: KeyCombo;
+}
 
 const NON_NUMPAD_PRINTABLE_LAYOUT_CODES = [
 	'Backquote',
@@ -110,16 +117,25 @@ function getKeyboardShortcutsOverlayComboForLayoutMap(layoutMap: KeyboardLayoutM
 	return copyKeyCombo(SHIFTED_SLASH_FALLBACK_KEYBOARD_SHORTCUTS_OVERLAY_COMBO);
 }
 
+function getStartDmCallComboForLayoutMap(layoutMap: KeyboardLayoutMapReader): KeyCombo {
+	const key = layoutMap.get('Quote');
+	if (!isPrintableShortcutKey(key)) return copyKeyCombo(DEFAULT_START_DM_CALL_COMBO);
+	return {...DEFAULT_START_DM_CALL_COMBO, key};
+}
+
 function getNavigatorKeyboardLayoutProvider(): KeyboardLayoutProvider | null {
 	if (typeof navigator === 'undefined') return null;
 	return (navigator as NavigatorWithKeyboardLayout).keyboard ?? null;
 }
 
-export async function getKeyboardShortcutsOverlayComboForCurrentLayout(): Promise<KeyCombo | null> {
+export async function getKeyboardLayoutDefaultCombosForCurrentLayout(): Promise<KeyboardLayoutDefaultCombos | null> {
 	const keyboard = getNavigatorKeyboardLayoutProvider();
 	if (typeof keyboard?.getLayoutMap !== 'function') return null;
 	const layoutMap = await keyboard.getLayoutMap();
-	return getKeyboardShortcutsOverlayComboForLayoutMap(layoutMap);
+	return {
+		keyboardShortcutsOverlay: getKeyboardShortcutsOverlayComboForLayoutMap(layoutMap),
+		startDmCall: getStartDmCallComboForLayoutMap(layoutMap),
+	};
 }
 
 export function shouldUseKeyboardShortcutsOverlayFallbackFromEvent(

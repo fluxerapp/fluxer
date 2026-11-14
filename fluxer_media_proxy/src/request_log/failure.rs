@@ -19,11 +19,4 @@ impl ErrorReason {
             source: Some(format!("{source:?}")),
         }
     }
-
-    pub fn with_message(code: &'static str, message: impl Into<String>) -> Self {
-        Self {
-            code,
-            source: Some(message.into()),
-        }
-    }
 }

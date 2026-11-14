@@ -501,23 +501,3 @@ int fluxer_validate_complete_apng(
         &validation, out_width, out_height, out_expected_frames,
         out_num_plays);
 }
-
-int fluxer_apng_probe(
-    const void *buffer,
-    size_t len,
-    int max_frames,
-    size_t max_total_pixels,
-    int *width,
-    int *height,
-    int *frames
-) {
-    if (width != NULL) *width = 0;
-    if (height != NULL) *height = 0;
-    if (frames != NULL) *frames = 0;
-    if (width == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    if (height == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    if (frames == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    return fluxer_validate_complete_apng(
-        buffer, len, max_frames, max_total_pixels, width, height, frames,
-        NULL);
-}

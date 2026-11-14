@@ -7,7 +7,7 @@ import {
 	createGuildID,
 	createUserID,
 } from '@app/api/BrandedTypes';
-import {ChannelRepository} from '@app/api/channel/repositories/ChannelRepository';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {setCassandraQueryExecutorForTesting, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import {
@@ -18,10 +18,10 @@ import {
 } from '@app/api/infrastructure/KVThreadAutoArchiveQueueService';
 import {Channels} from '@app/api/Tables';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ChannelFlags} from '@fluxer/constants/src/ThreadConstants';
 import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
+import {MockKVProvider} from '@pkgs/kv_client/src/testing/MockKVProvider';
 import {beforeEach, describe, expect, it} from 'vitest';
 
 const GUILD_ID = createGuildID(1_910_000_000_000_000_000n);
@@ -50,6 +50,7 @@ function threadRow(threadId: ChannelID): ChannelRow {
 		user_limit: null,
 		voice_connection_limit: null,
 		rtc_region: null,
+		rtc_p2p: null,
 		last_message_id: null,
 		last_pin_timestamp: null,
 		permission_overwrites: null,

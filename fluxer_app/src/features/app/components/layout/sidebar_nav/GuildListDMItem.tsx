@@ -38,7 +38,7 @@ import {
 	createVoiceParticipantSortSnapshot,
 	sortVoiceParticipantItemsWithSnapshot,
 } from '@app/features/voice/components/VoiceParticipantSortUtils';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallState from '@app/features/voice/state/CallState';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -135,7 +135,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 	const voiceUserSortSnapshotRef = useRef(createVoiceParticipantSortSnapshot());
 	const streamingUserSortSnapshotRef = useRef(createVoiceParticipantSortSnapshot());
 	const dmChannelVoiceStates =
-		hasActiveCall || voiceCallActive ? MediaEngine.getAllVoiceStatesInChannel(ME, channel.id) : null;
+		hasActiveCall || voiceCallActive ? VoiceRuntime.getAllVoiceStatesInChannel(ME, channel.id) : null;
 	const voiceSummary = useMemo<DMVoiceSummary>(() => {
 		if (!dmChannelVoiceStates) {
 			return {

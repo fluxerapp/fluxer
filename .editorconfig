@@ -39,7 +39,3 @@ indent_size = 2
 [*.{yml,yaml,Dockerfile}]
 indent_style = space
 indent_size = 2
-
-[justfile]
-indent_style = space
-indent_size = 4

@@ -1,16 +1,18 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorMessage as getErrorMessage} from '@electron/common/ErrorMessage';
 import {checkDesktopUpdateNow} from '@electron/main/DesktopUpdateGate';
+import {getFlatpakAppId} from '@electron/main/LinuxSandbox';
+import {compareShellVersions} from '@electron/main/ModuleVersion';
 import {MANUAL_DESKTOP_FORMATS, type ManualDesktopFormat} from '@electron/main/ShellDownloadFormats';
 import {resolveShellUpdatePlan, ShellUpdateCapability} from '@electron/main/ShellUpdateCapability';
 import {
 	DOWNLOAD_PAGE_URL,
-	getManualDownloadOptions,
-	getManualDownloadUrl,
+	getManualDownloadFile,
 	type ManualLatestFile,
 	type ManualLatestInfo,
 	UPDATE_BASE_URL,
-	type UpdaterDownloadOption,
 } from '@electron/main/UpdaterDownloads';
 import {app, type BrowserWindow, ipcMain, net} from 'electron';
 import log from 'electron-log';
@@ -26,7 +28,7 @@ type UpdaterEvent =
 			context: UpdaterContext;
 			version?: string | null;
 			downloadUrl?: string;
-			downloadOptions?: Array<UpdaterDownloadOption>;
+			sha256?: string | null;
 	  }
 	| {
 			type: 'not-available';
@@ -40,7 +42,7 @@ type UpdaterEvent =
 	| {
 			type: 'unsupported';
 			context: UpdaterContext;
-			reason: 'platform' | 'unpackaged' | 'managed-package';
+			reason: 'platform' | 'unpackaged';
 			downloadUrl?: string;
 	  };
 
@@ -48,46 +50,10 @@ function send(win: BrowserWindow | null, event: UpdaterEvent) {
 	win?.webContents.send('updater-event', event);
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function getErrorMessage(error: unknown): string {
-	if (error instanceof Error) {
-		return error.message;
-	}
-	return String(error);
-}
-
 let manualLatestCache: {at: number; info: ManualLatestInfo} | null = null;
 
 const MANUAL_CACHE_TTL_MS = 5 * 60 * 1000;
-
-function parseSemverTuple(input: string): [number, number, number, string] {
-	const trimmed = input.trim().replace(/^v/, '');
-	const [core, ...preParts] = trimmed.split('-');
-	const pre = preParts.join('-');
-	const segments = core.split('.').map((part) => Number.parseInt(part, 10));
-	const [major = 0, minor = 0, patch = 0] = segments;
-	return [
-		Number.isFinite(major) ? major : 0,
-		Number.isFinite(minor) ? minor : 0,
-		Number.isFinite(patch) ? patch : 0,
-		pre,
-	];
-}
-
-function compareVersions(a: string, b: string): number {
-	const [aMaj, aMin, aPat, aPre] = parseSemverTuple(a);
-	const [bMaj, bMin, bPat, bPre] = parseSemverTuple(b);
-	if (aMaj !== bMaj) return aMaj < bMaj ? -1 : 1;
-	if (aMin !== bMin) return aMin < bMin ? -1 : 1;
-	if (aPat !== bPat) return aPat < bPat ? -1 : 1;
-	if (aPre === bPre) return 0;
-	if (!aPre) return 1;
-	if (!bPre) return -1;
-	return aPre < bPre ? -1 : 1;
-}
+const FLATHUB_APPSTREAM_URL = 'https://flathub.org/api/v2/appstream';
 
 function parseManualLatestFiles(value: unknown): Partial<Record<ManualDesktopFormat, ManualLatestFile>> {
 	if (!isRecord(value)) {
@@ -107,11 +73,7 @@ function parseManualLatestFiles(value: unknown): Partial<Record<ManualDesktopFor
 	return files;
 }
 
-async function fetchManualLatest(options: {forceRefresh?: boolean} = {}): Promise<ManualLatestInfo> {
-	const now = Date.now();
-	if (!options.forceRefresh && manualLatestCache && now - manualLatestCache.at < MANUAL_CACHE_TTL_MS) {
-		return manualLatestCache.info;
-	}
+async function fetchFluxerLatest(): Promise<ManualLatestInfo> {
 	const response = await net.fetch(`${UPDATE_BASE_URL}/latest`, {
 		cache: 'no-store',
 		headers: {
@@ -127,22 +89,69 @@ async function fetchManualLatest(options: {forceRefresh?: boolean} = {}): Promis
 	if (typeof payload.version !== 'string' || payload.version.length === 0) {
 		throw new Error('Latest version response missing version string');
 	}
-	const info: ManualLatestInfo = {
+	return {
 		version: payload.version,
 		pubDate: typeof payload.pub_date === 'string' ? payload.pub_date : null,
 		files: parseManualLatestFiles(payload.files),
 	};
+}
+
+function newestFlathubReleaseVersion(payload: unknown): string | null {
+	if (!isRecord(payload) || !Array.isArray(payload.releases)) {
+		return null;
+	}
+	let newest: string | null = null;
+	for (const release of payload.releases) {
+		if (!isRecord(release) || typeof release.version !== 'string') {
+			continue;
+		}
+		if (newest == null || compareShellVersions(release.version, newest) > 0) {
+			newest = release.version;
+		}
+	}
+	return newest;
+}
+
+async function fetchFlathubLatest(): Promise<ManualLatestInfo> {
+	const appId = getFlatpakAppId();
+	if (appId == null) {
+		throw new Error('The Flatpak app id is unknown, so Flathub cannot be asked for a release');
+	}
+	const response = await net.fetch(`${FLATHUB_APPSTREAM_URL}/${encodeURIComponent(appId)}?locale=en`, {
+		cache: 'no-store',
+		headers: {Accept: 'application/json'},
+	});
+	if (!response.ok) {
+		throw new Error(`Flathub release request failed: ${response.status}`);
+	}
+	const version = newestFlathubReleaseVersion(await response.json());
+	if (version == null) {
+		throw new Error('Flathub lists no release version');
+	}
+	return {version, pubDate: null, files: {}};
+}
+
+async function fetchManualLatest(options: {forceRefresh?: boolean} = {}): Promise<ManualLatestInfo> {
+	const now = Date.now();
+	if (!options.forceRefresh && manualLatestCache && now - manualLatestCache.at < MANUAL_CACHE_TTL_MS) {
+		return manualLatestCache.info;
+	}
+	const plan = resolveShellUpdatePlan();
+	const fromFlathub = plan.capability === ShellUpdateCapability.MANAGED_PACKAGE && plan.releaseFeed === 'flathub';
+	const info = fromFlathub ? await fetchFlathubLatest() : await fetchFluxerLatest();
 	manualLatestCache = {at: now, info};
 	return info;
 }
 
 export async function findNewerManualShell(): Promise<ManualLatestInfo | null> {
 	const plan = resolveShellUpdatePlan();
-	if (plan.capability !== ShellUpdateCapability.MANUAL_DOWNLOAD || plan.reason !== 'platform') {
+	const managed = plan.capability === ShellUpdateCapability.MANAGED_PACKAGE;
+	const manual = plan.capability === ShellUpdateCapability.MANUAL_DOWNLOAD && plan.reason === 'platform';
+	if (!managed && !manual) {
 		return null;
 	}
 	const latest = await fetchManualLatest({forceRefresh: true});
-	return compareVersions(latest.version, app.getVersion()) > 0 ? latest : null;
+	return compareShellVersions(latest.version, app.getVersion()) > 0 ? latest : null;
 }
 
 function sendManualUpdateAvailable(
@@ -150,13 +159,13 @@ function sendManualUpdateAvailable(
 	context: UpdaterContext,
 	latest: ManualLatestInfo,
 ): void {
-	const downloadOptions = getManualDownloadOptions(latest);
+	const file = getManualDownloadFile(latest);
 	send(getMainWindow(), {
 		type: 'available',
 		context,
 		version: latest.version,
-		downloadUrl: getManualDownloadUrl(latest),
-		...(downloadOptions.length > 0 ? {downloadOptions} : {}),
+		downloadUrl: file.url,
+		sha256: file.sha256,
 	});
 }
 
@@ -165,7 +174,7 @@ async function checkManualUpdate(context: UpdaterContext, getMainWindow: () => B
 	try {
 		const latest = await fetchManualLatest({forceRefresh: context === 'user'});
 		const current = app.getVersion();
-		if (compareVersions(latest.version, current) > 0) {
+		if (compareShellVersions(latest.version, current) > 0) {
 			sendManualUpdateAvailable(getMainWindow, context, latest);
 		} else {
 			send(getMainWindow(), {type: 'not-available', context});
@@ -182,7 +191,7 @@ function registerSelfUpdater(getMainWindow: () => BrowserWindow | null): void {
 			return;
 		}
 		try {
-			await checkDesktopUpdateNow();
+			await checkDesktopUpdateNow({manual: true});
 			send(getMainWindow(), {type: 'not-available', context});
 		} catch (error) {
 			log.warn('Desktop update check failed', error);
@@ -191,25 +200,17 @@ function registerSelfUpdater(getMainWindow: () => BrowserWindow | null): void {
 	});
 }
 
-function registerManualUpdater(
-	getMainWindow: () => BrowserWindow | null,
-	reason: 'platform' | 'unpackaged' | 'managed-package',
-): void {
+function registerManualUpdater(getMainWindow: () => BrowserWindow | null, unpackaged: boolean): void {
 	ipcMain.handle('updater-check', async (_e, context: UpdaterContext) => {
 		if (context === 'user') {
 			try {
-				await checkDesktopUpdateNow();
+				await checkDesktopUpdateNow({manual: true});
 			} catch (error) {
 				log.warn('Desktop module update check failed', error);
 			}
 		}
-		if (reason !== 'platform') {
-			send(getMainWindow(), {
-				type: 'unsupported',
-				context,
-				reason,
-				...(reason === 'unpackaged' ? {downloadUrl: DOWNLOAD_PAGE_URL} : {}),
-			});
+		if (unpackaged) {
+			send(getMainWindow(), {type: 'unsupported', context, reason: 'unpackaged', downloadUrl: DOWNLOAD_PAGE_URL});
 			return;
 		}
 		await checkManualUpdate(context, getMainWindow);
@@ -218,14 +219,12 @@ function registerManualUpdater(
 
 export function registerUpdater(getMainWindow: () => BrowserWindow | null) {
 	const plan = resolveShellUpdatePlan();
-	switch (plan.capability) {
-		case ShellUpdateCapability.SELF_UPDATE:
-			registerSelfUpdater(getMainWindow);
-			return;
-		case ShellUpdateCapability.MANAGED_PACKAGE:
-			registerManualUpdater(getMainWindow, 'managed-package');
-			return;
-		default:
-			registerManualUpdater(getMainWindow, plan.reason);
+	if (plan.capability === ShellUpdateCapability.SELF_UPDATE) {
+		registerSelfUpdater(getMainWindow);
+		return;
 	}
+	registerManualUpdater(
+		getMainWindow,
+		plan.capability === ShellUpdateCapability.MANUAL_DOWNLOAD && plan.reason === 'unpackaged',
+	);
 }

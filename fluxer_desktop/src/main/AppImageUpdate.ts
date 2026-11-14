@@ -16,6 +16,7 @@ import {
 } from 'node:fs';
 import {open} from 'node:fs/promises';
 import {basename, dirname, join, resolve, sep} from 'node:path';
+import {errorMessage} from '@electron/common/ErrorMessage';
 
 type AppImageUnavailableReason =
 	| 'appimage-path-missing'
@@ -45,7 +46,8 @@ const APPDIR_ENTRYPOINT = 'AppRun';
 const APPIMAGE_MODE = 0o755;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 const STAGING_FREE_SPACE_MARGIN_BYTES = 16 * 1024 * 1024;
-export const APPIMAGE_DOWNLOAD_STALL_MS = 30_000;
+const APPIMAGE_DOWNLOAD_STALL_MS = 30_000;
+const APPIMAGE_MAX_DOWNLOAD_BYTES = 2 * 1024 * 1024 * 1024;
 const NON_RETRYABLE_STAGING_ERRNOS = new Set([
 	'ENOSPC',
 	'EDQUOT',
@@ -58,14 +60,14 @@ const NON_RETRYABLE_STAGING_ERRNOS = new Set([
 	'ENOSYS',
 ]);
 
-export class AppImageChecksumError extends Error {
+class AppImageChecksumError extends Error {
 	constructor(expected: string, actual: string) {
 		super(`Update checksum mismatch: expected ${expected}, downloaded ${actual}`);
 		this.name = 'AppImageChecksumError';
 	}
 }
 
-export class AppImageStagingError extends Error {
+class AppImageStagingError extends Error {
 	readonly code: string;
 
 	constructor(code: string, message: string) {
@@ -90,7 +92,7 @@ function asStagingError(error: unknown): unknown {
 	if (code === null || !NON_RETRYABLE_STAGING_ERRNOS.has(code)) {
 		return error;
 	}
-	return new AppImageStagingError(code, error instanceof Error ? error.message : String(error));
+	return new AppImageStagingError(code, errorMessage(error));
 }
 
 function stagingDirectoryPrefix(installedPath: string): string {
@@ -212,7 +214,15 @@ async function downloadAndStageAppImage(
 	}
 	const declaredTotal = Number.parseInt(response.headers.get('content-length') ?? '', 10);
 	const total = Number.isFinite(declaredTotal) && declaredTotal > 0 ? declaredTotal : 0;
+	const contentEncoding = (response.headers.get('content-encoding') ?? '').trim().toLowerCase();
+	const limit =
+		total > 0 && (contentEncoding === '' || contentEncoding === 'identity')
+			? Math.min(total, APPIMAGE_MAX_DOWNLOAD_BYTES)
+			: APPIMAGE_MAX_DOWNLOAD_BYTES;
 	try {
+		if (total > APPIMAGE_MAX_DOWNLOAD_BYTES) {
+			throw new Error(`Update download is ${total} bytes, above the ${APPIMAGE_MAX_DOWNLOAD_BYTES} byte limit.`);
+		}
 		assertRoomToStage(options.target.directory, total);
 	} catch (error) {
 		await response.body.cancel().catch(() => {});
@@ -249,6 +259,9 @@ async function downloadAndStageAppImage(
 					break;
 				}
 				onData();
+				if (transferred + value.byteLength > limit) {
+					throw new Error(`Update download exceeded ${limit} bytes.`);
+				}
 				let written = 0;
 				while (written < value.byteLength) {
 					const result = await handle.write(value, written, value.byteLength - written);
@@ -293,7 +306,7 @@ export function applyStagedAppImageUpdate(target: AppImageTarget, staged: Staged
 	discardStagedAppImageUpdate(staged);
 }
 
-export function discardStagedAppImageUpdate(staged: StagedAppImageUpdate): void {
+function discardStagedAppImageUpdate(staged: StagedAppImageUpdate): void {
 	try {
 		rmSync(staged.stagingDirectory, {recursive: true, force: true});
 	} catch {}

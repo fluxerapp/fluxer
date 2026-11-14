@@ -27,7 +27,6 @@ class Window {
 	windowSize: WindowSize = getWindowSize();
 	windowId: string = generateWindowId();
 	lastFocusedAt: number = Date.now();
-	createdAt: number = Date.now();
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -61,10 +60,6 @@ class Window {
 
 	isFocused(): boolean {
 		return this.focused;
-	}
-
-	isVisible(): boolean {
-		return this.visible;
 	}
 }
 

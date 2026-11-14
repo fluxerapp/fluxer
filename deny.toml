@@ -19,7 +19,12 @@ unmaintained = "all"
 # Placeholder for future per-advisory ignores. Prefer fixing/upgrading the
 # crate before adding an entry here. Each entry should be a string ID, e.g.
 # "RUSTSEC-2024-0000", optionally as { id = "...", reason = "..." }.
-ignore = []
+ignore = [
+	{ id = "RUSTSEC-2026-0370", reason = "zvariant merged into zbus 6.0.0; the Linux desktop crates stay on zbus 5 until they move off its removed blocking API" },
+	{ id = "RUSTSEC-2026-0371", reason = "zbus_names merged into zbus 6.0.0; the Linux desktop crates stay on zbus 5 until they move off its removed blocking API" },
+	{ id = "RUSTSEC-2026-0372", reason = "zvariant_derive merged into zbus 6.0.0; the Linux desktop crates stay on zbus 5 until they move off its removed blocking API" },
+	{ id = "RUSTSEC-2026-0441", reason = "pin-utils is unmaintained, not vulnerable. Only wasmtimer uses it, through reqwest-retry, and wasmtimer 0.4.3 is the newest release" },
+]
 
 # ---------------------------------------------------------------------------
 # Licenses
@@ -34,6 +39,7 @@ version = 2
 confidence-threshold = 0.93
 allow = [
     "MIT",
+    "MIT-0",
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
     "BSD-2-Clause",
@@ -80,24 +86,32 @@ deny = [
 ]
 skip = [
     { crate = "base64@0.22.1", reason = "transitive dependency requires the older release line" },
+    { crate = "bindgen@0.61.0", reason = "hunspell-sys in the desktop spellchecker requires the prior bindgen" },
+    { crate = "bitflags@1.3.2", reason = "hunspell bindgen requires the legacy bitflags API" },
     { crate = "block-buffer@0.10.4", reason = "transitive dependency requires the older digest API" },
     { crate = "const-oid@0.9.6", reason = "transitive dependency requires the older digest API" },
     { crate = "cpufeatures@0.2.17", reason = "transitive dependency requires the older crypto API" },
-    { crate = "crypto-common@0.1.6", reason = "transitive dependency requires the older digest API" },
-    { crate = "cssparser@0.37.0", reason = "transitive dependency requires the older release line" },
+    { crate = "crypto-common@0.1.7", reason = "transitive dependency requires the older digest API" },
+    { crate = "der@0.7.10", reason = "transitive dependency requires the older DER API" },
     { crate = "digest@0.10.7", reason = "transitive dependency requires the older digest API" },
+    { crate = "fallible-iterator@0.2.0", reason = "postgres-protocol requires the prior iterator API while the desktop native crates use the current one" },
     { crate = "getrandom@0.2.17", reason = "transitive dependency requires the older randomness API" },
     { crate = "getrandom@0.3.4", reason = "transitive dependency requires the prior randomness API" },
     { crate = "hashbrown@0.14.5", reason = "transitive dependency requires the older hashbrown API" },
-    { crate = "hmac@0.12.1", reason = "transitive dependency requires the older digest API" },
-    { crate = "html5ever@0.39.0", reason = "transitive dependency requires the older release line" },
-    { crate = "http@0.2.12", reason = "transitive dependency requires the older HTTP API" },
-    { crate = "http-body@0.4.6", reason = "transitive dependency requires the older HTTP body API" },
-    { crate = "markup5ever@0.39.0", reason = "transitive dependency requires the older release line" },
+    { crate = "hermit-abi@0.3.9", reason = "udev requires the prior Hermit ABI" },
+    { crate = "itertools@0.13.0", reason = "bindgen and criterion require the prior iterator API" },
+    { crate = "libloading@0.8.9", reason = "bindgen requires the prior dynamic loading API" },
+    { crate = "linux-raw-sys@0.4.15", reason = "rustix 0.38 under the hunspell bindgen requires the prior Linux syscall bindings" },
+    { crate = "lock_api@0.4.14", reason = "dashmap and scylla require the prior lock API while the desktop native crates use the current one" },
+    { crate = "nix@0.29.0", reason = "evdev requires the prior Unix API" },
+    { crate = "nom@7.1.3", reason = "bindgen requires the prior parser API" },
+    { crate = "parking_lot@0.12.5", reason = "the server crates use the prior parking_lot while the desktop native crates use the current one" },
+    { crate = "parking_lot_core@0.9.12", reason = "dashmap and scylla require the prior parking_lot core" },
+    { crate = "pem-rfc7468@0.7.0", reason = "transitive dependency requires the older PEM API" },
     { crate = "phf@0.13.1", reason = "transitive dependency requires the older release line" },
-    { crate = "phf_codegen@0.13.1", reason = "transitive dependency requires the older release line" },
-    { crate = "phf_generator@0.13.1", reason = "transitive dependency requires the older release line" },
     { crate = "phf_shared@0.13.1", reason = "transitive dependency requires the older release line" },
+    { crate = "pkcs8@0.10.2", reason = "transitive dependency requires the older PKCS#8 API" },
+    { crate = "prettyplease@0.2.37", reason = "bindgen 0.72 for libfido2 requires the prior pretty printer" },
     { crate = "r-efi@5.3.0", reason = "transitive dependency requires the older WASI API" },
     { crate = "rand@0.8.8", reason = "transitive dependency requires the older randomness API" },
     { crate = "rand@0.9.5", reason = "transitive dependency requires the prior randomness API" },
@@ -105,15 +119,30 @@ skip = [
     { crate = "rand_chacha@0.9.0", reason = "transitive dependency requires the prior randomness API" },
     { crate = "rand_core@0.6.4", reason = "transitive dependency requires the older randomness API" },
     { crate = "rand_core@0.9.5", reason = "transitive dependency requires the prior randomness API" },
+    { crate = "redox_syscall@0.5.18", reason = "parking_lot_core 0.9 requires the prior Redox syscall bindings" },
+    { crate = "rustc-hash@1.1.0", reason = "hunspell bindgen requires the legacy hash API" },
+    { crate = "rustix@0.38.44", reason = "which 4 under the hunspell bindgen requires the prior rustix" },
     { crate = "sha1@0.10.7", reason = "transitive dependency requires the older digest API" },
     { crate = "sha2@0.10.9", reason = "transitive dependency requires the older digest API" },
-    { crate = "string_cache@0.9.0", reason = "transitive dependency requires the older release line" },
-    { crate = "string_cache_codegen@0.6.1", reason = "transitive dependency requires the older release line" },
+    { crate = "shlex@1.3.0", reason = "bindgen requires the prior shell parsing API" },
+    { crate = "signature@2.2.0", reason = "transitive dependency requires the older signature API" },
+    { crate = "spin@0.9.9", reason = "multer, which axum multipart uses in fluxer_admin, requires the older release line" },
+    { crate = "spki@0.7.3", reason = "transitive dependency requires the older SPKI API" },
+    { crate = "syn@1.0.109", reason = "hunspell bindgen requires the legacy macro API" },
     { crate = "syn@2.0.119", reason = "transitive dependency requires the older release line" },
     { crate = "tower-http@0.6.11", reason = "transitive dependency requires the older release line" },
     { crate = "wasi@0.11.1+wasi-snapshot-preview1", reason = "transitive dependency requires the legacy WASI API" },
-    { crate = "web_atoms@0.2.6", reason = "transitive dependency requires the older release line" },
+    { crate = "windows-sys@0.48.0", reason = "udev requires the legacy Windows API" },
     { crate = "windows-sys@0.52.0", reason = "transitive dependency requires the older Windows API" },
+    { crate = "windows-sys@0.59.0", reason = "hunspell build tooling requires the prior Windows API" },
+    { crate = "windows-targets@0.48.5", reason = "udev pulls windows-sys 0.48, which requires the prior Windows targets" },
+    { crate = "windows_aarch64_gnullvm@0.48.5", reason = "windows-targets 0.48 for udev" },
+    { crate = "windows_aarch64_msvc@0.48.5", reason = "windows-targets 0.48 for udev" },
+    { crate = "windows_i686_gnu@0.48.5", reason = "windows-targets 0.48 for udev" },
+    { crate = "windows_i686_msvc@0.48.5", reason = "windows-targets 0.48 for udev" },
+    { crate = "windows_x86_64_gnu@0.48.5", reason = "windows-targets 0.48 for udev" },
+    { crate = "windows_x86_64_gnullvm@0.48.5", reason = "windows-targets 0.48 for udev" },
+    { crate = "windows_x86_64_msvc@0.48.5", reason = "windows-targets 0.48 for udev" },
 ]
 skip-tree = []
 

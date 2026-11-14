@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const {execFile} = require('node:child_process');
+const {readFileSync} = require('node:fs');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
@@ -62,7 +63,32 @@ if (!channel) {
 
 const isCanary = buildChannel === 'canary';
 const isStable = buildChannel === 'stable';
-const isLinuxBuild = process.argv.includes('--linux');
+const platformArguments = new Set(process.argv.map((argument) => argument.split('=', 1)[0]));
+const linuxRequested = ['--linux', '-l'].some((selector) => platformArguments.has(selector));
+const macRequested = ['--mac', '--macos', '-m', '-o'].some((selector) => platformArguments.has(selector));
+const windowsRequested = ['--win', '--windows', '-w'].some((selector) => platformArguments.has(selector));
+let targetPlatform;
+if (linuxRequested) {
+	targetPlatform = 'linux';
+} else if (macRequested) {
+	targetPlatform = 'darwin';
+} else if (windowsRequested) {
+	targetPlatform = 'win32';
+} else {
+	targetPlatform = process.platform;
+}
+const isLinuxBuild = targetPlatform === 'linux';
+const customLinuxElectron =
+	isLinuxBuild && process.env.FLUXER_ELECTRON_DIST?.trim() ? require('./scripts/custom-electron.cjs') : null;
+const linuxElectronDist = customLinuxElectron?.resolveLinuxElectronDist() ?? null;
+const allowStockLinuxElectron = isLinuxBuild && process.env.FLUXER_ALLOW_STOCK_ELECTRON === '1';
+const pinnedElectronVersion = require('./electron/runtime.json').electronVersion;
+if (allowStockLinuxElectron && customLinuxElectron) {
+	throw new Error(
+		'FLUXER_ALLOW_STOCK_ELECTRON=1 cannot be combined with FLUXER_ELECTRON_DIST. Release builds package the patched Electron, and distro builds set only FLUXER_ALLOW_STOCK_ELECTRON=1.',
+	);
+}
+const verifiedLinuxElectronArtifacts = new Map();
 const productName = channel.productName;
 const linuxOptDirName = channel.linuxOptDirName;
 const installedProductName = isLinuxBuild ? linuxOptDirName : productName;
@@ -98,10 +124,11 @@ const legacyLinuxCanaryOptDir = '/opt/Fluxer Canary';
 const legacyLinuxOptDirSweepScript = path.resolve(__dirname, 'packaging/linux/rpm-post-transaction.sh');
 const legacyLinuxOptDirRpmFpmArgs = isCanary ? ['--rpm-posttrans', legacyLinuxOptDirSweepScript] : [];
 const macOSMinimumSystemVersion = '13.0';
-const isMacBuild = process.argv.includes('--mac');
-const isWindowsBuild = process.argv.includes('--win');
-const targetPlatform = isLinuxBuild ? 'linux' : isMacBuild ? 'darwin' : isWindowsBuild ? 'win32' : process.platform;
 const metadataName = isLinuxBuild ? linuxPackageName : packageName;
+if (process.env.VERSION && !process.env.BUILD_VERSION) {
+	throw new Error('The desktop packaging no longer reads VERSION. Set BUILD_VERSION instead.');
+}
+const shellVersion = process.env.BUILD_VERSION || readBundledRendererVersion();
 const supportedTargetArchs = ['x64', 'arm64'];
 const supportedMacTargetArchs = [...supportedTargetArchs, 'universal'];
 const electronArch = process.env.ELECTRON_ARCH;
@@ -148,7 +175,6 @@ const fluxerNativePackages = [
 	'@fluxer/windows-input-hook',
 	'@fluxer/linux-audio-capture',
 	'@fluxer/linux-portals',
-	'@fluxer/linux-screen-capture',
 	'@fluxer/linux-notifications',
 	'@fluxer/linux-evdev',
 	'@fluxer/linux-input-hook',
@@ -186,7 +212,6 @@ const fluxerNativePackagesByPlatform = {
 	linux: [
 		'@fluxer/linux-audio-capture',
 		'@fluxer/linux-portals',
-		'@fluxer/linux-screen-capture',
 		'@fluxer/linux-notifications',
 		'@fluxer/linux-evdev',
 		'@fluxer/linux-input-hook',
@@ -254,12 +279,6 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/linux-portals/index.js',
 	'node_modules/@fluxer/linux-portals/loader-diagnostics.cjs',
 	'node_modules/@fluxer/linux-portals/*.node',
-	'node_modules/@fluxer/linux-screen-capture/package.json',
-	'node_modules/@fluxer/linux-screen-capture/index.js',
-	'node_modules/@fluxer/linux-screen-capture/loader-diagnostics.cjs',
-	'node_modules/@fluxer/linux-screen-capture/*.node',
-	'node_modules/@fluxer/linux-screen-capture/THIRD_PARTY_OBS_VKCAPTURE.md',
-	'node_modules/@fluxer/linux-screen-capture/obs-vkcapture/**/*',
 	'node_modules/@fluxer/linux-notifications/package.json',
 	'node_modules/@fluxer/linux-notifications/index.js',
 	'node_modules/@fluxer/linux-notifications/loader-diagnostics.cjs',
@@ -286,7 +305,6 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/linux-input-hook/*.node',
 	'node_modules/@fluxer/platform-info/package.json',
 	'node_modules/@fluxer/platform-info/index.js',
-	'node_modules/@fluxer/platform-info/pure.cjs',
 	'node_modules/@fluxer/platform-info/loader-diagnostics.cjs',
 	'node_modules/@fluxer/platform-info/*.node',
 	'node_modules/@fluxer/webauthn/package.json',
@@ -302,12 +320,10 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/hardware-encoder/*.node',
 	'node_modules/@fluxer/app-store/package.json',
 	'node_modules/@fluxer/app-store/index.js',
-	'node_modules/@fluxer/app-store/pure.cjs',
 	'node_modules/@fluxer/app-store/loader-diagnostics.cjs',
 	'node_modules/@fluxer/app-store/*.node',
 	'node_modules/@fluxer/gateway-socket/package.json',
 	'node_modules/@fluxer/gateway-socket/index.js',
-	'node_modules/@fluxer/gateway-socket/pure.cjs',
 	'node_modules/@fluxer/gateway-socket/loader-diagnostics.cjs',
 	'node_modules/@fluxer/gateway-socket/*.node',
 	'node_modules/.pnpm/@fluxer+*/node_modules/@fluxer/*/loader-diagnostics.cjs',
@@ -322,9 +338,6 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/.pnpm/@fluxer+windows-input-hook@*/node_modules/@fluxer/windows-input-hook/*.node',
 	'node_modules/.pnpm/@fluxer+linux-audio-capture@*/node_modules/@fluxer/linux-audio-capture/*.node',
 	'node_modules/.pnpm/@fluxer+linux-portals@*/node_modules/@fluxer/linux-portals/*.node',
-	'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/*.node',
-	'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/THIRD_PARTY_OBS_VKCAPTURE.md',
-	'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/obs-vkcapture/**/*',
 	'node_modules/.pnpm/@fluxer+linux-notifications@*/node_modules/@fluxer/linux-notifications/*.node',
 	'node_modules/.pnpm/@fluxer+linux-evdev@*/node_modules/@fluxer/linux-evdev/*.node',
 	'node_modules/.pnpm/@fluxer+linux-input-hook@*/node_modules/@fluxer/linux-input-hook/*.node',
@@ -346,7 +359,6 @@ const nativeBuildArtifactExcludes = [
 	'!node_modules/@fluxer/**/target/**/*',
 	'!node_modules/@fluxer/**/build/**/*',
 	'!node_modules/@fluxer/**/Cargo.toml',
-	'!node_modules/@fluxer/**/Cargo.lock',
 	'!node_modules/@fluxer/**/CMakeLists.txt',
 	'!node_modules/@fluxer/**/tsconfig.json',
 	'!node_modules/@fluxer/**/*.d.ts',
@@ -600,10 +612,6 @@ function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 			relativePath: `linux-portals.${tag}.node`,
 		});
 		artifacts.push({
-			packageName: '@fluxer/linux-screen-capture',
-			relativePath: `linux-screen-capture.${tag}.node`,
-		});
-		artifacts.push({
 			packageName: '@fluxer/linux-notifications',
 			relativePath: `linux-notifications.${tag}.node`,
 		});
@@ -635,7 +643,7 @@ async function expectedNativeRuntimeArtifactsForAppDir(platform, arch, appDir) {
 	const artifacts = expectedNativeRuntimeArtifacts(platform, arch);
 	if (platform !== 'linux') return artifacts;
 	const webAuthnRoot = path.join(appDir, 'node_modules', '@fluxer', 'webauthn');
-	const linuxWebAuthnRuntimeLibraries = new Set(['libfido2.so.1']);
+	const linuxWebAuthnRuntimeLibraries = new Set(process.env.FLUXER_SYSTEM_LIBS === '1' ? [] : ['libfido2.so.1']);
 	try {
 		for (const entry of await fs.readdir(webAuthnRoot, {withFileTypes: true})) {
 			if (entry.isFile() && isLinuxSharedLibraryArtifact(entry.name)) {
@@ -660,6 +668,15 @@ function packagePathParts(packageName) {
 		return parts;
 	}
 	return [packageName];
+}
+
+function readBundledRendererVersion() {
+	try {
+		const {version} = JSON.parse(readFileSync(path.join(__dirname, 'dist', 'renderer', 'version.json'), 'utf8'));
+		return typeof version === 'string' && /^\d+\.\d+\.\d+$/u.test(version) ? version : null;
+	} catch {
+		return null;
+	}
 }
 
 function isNonEmptyString(value) {
@@ -802,6 +819,63 @@ async function verifyNativePackageInputs(context) {
 		);
 	}
 	await verifyDarwinNativeArchitectures(platform, arch, entries, 'before packaging');
+}
+
+async function stockLinuxElectronVersion(context) {
+	const electronDist = context.packager.config.electronDist;
+	if (typeof electronDist === 'string' && electronDist !== '') {
+		try {
+			const version = await fs.readFile(
+				path.join(path.resolve(context.packager.projectDir, electronDist), 'version'),
+				'utf8',
+			);
+			return version.trim().replace(/^v/u, '');
+		} catch (error) {
+			if (error?.code !== 'ENOENT') throw error;
+		}
+	}
+	return context.packager.framework.version;
+}
+
+async function verifyStockLinuxElectronMajor(context) {
+	const expected = pinnedElectronVersion.split('.')[0];
+	const actual = await stockLinuxElectronVersion(context);
+	if (actual.split('.')[0] !== expected) {
+		throw new Error(
+			`FLUXER_ALLOW_STOCK_ELECTRON=1 packages Electron ${actual}, but this shell is built for Electron ${expected}. Use an Electron ${expected} release.`,
+		);
+	}
+	console.log(`Packaging stock Electron ${actual} without the VA-API patch (FLUXER_ALLOW_STOCK_ELECTRON=1).`);
+}
+
+async function beforePack(context) {
+	if (linuxElectronDist && context.electronPlatformName !== 'linux') {
+		throw new Error(
+			'The patched Linux Electron distribution cannot package other platforms. Use separate electron-builder invocations for Linux and macOS or Windows.',
+		);
+	}
+	if (context.electronPlatformName === 'linux' && allowStockLinuxElectron) {
+		await verifyStockLinuxElectronMajor(context);
+	} else if (context.electronPlatformName === 'linux') {
+		if (!linuxElectronDist) {
+			throw new Error(
+				'Linux packaging requires patched Electron. Set FLUXER_ELECTRON_DIST to the directory containing its ZIP and build manifest, or set FLUXER_ALLOW_STOCK_ELECTRON=1 to package any Electron of the same major version.',
+			);
+		}
+		let arch;
+		if (context.arch === 1) {
+			arch = 'x64';
+		} else if (context.arch === 3) {
+			arch = 'arm64';
+		} else {
+			arch = context.arch;
+		}
+		verifiedLinuxElectronArtifacts.set(
+			arch,
+			await customLinuxElectron.verifyLinuxElectronArchive(linuxElectronDist, arch),
+		);
+	}
+	await verifyNativePackageInputs(context);
 }
 
 async function verifyPackagedNativeArtifacts(context) {
@@ -1154,6 +1228,15 @@ async function readAsarEntry(asarPath, entryPath) {
 }
 
 async function afterPack(context) {
+	if (context.electronPlatformName === 'linux' && !allowStockLinuxElectron) {
+		if (!customLinuxElectron) {
+			throw new Error('Custom Electron was not configured before Linux packaging.');
+		}
+		await customLinuxElectron.verifyPackagedLinuxElectron(
+			path.join(context.appOutDir, linuxPackageName),
+			verifiedLinuxElectronArtifacts.get(normalizeArch(context.arch)),
+		);
+	}
 	await copyMissingPackagedNativeArtifacts(context);
 	await cleanupNativeBuildIntermediates(context);
 	await addLinuxLegacyBinarySymlink(context);
@@ -1496,13 +1579,14 @@ async function verifyRpmArtifactsSweepTheRenamedInstallDirectory(buildResult) {
 	const violations = [];
 	for (const artifactPath of rpmArtifacts) {
 		const scriptlet = await readRpmPostTransactionScriptlet(artifactPath);
-		const detail = !scriptlet.includes(legacyLinuxCanaryOptDir)
-			? `does not reference ${legacyLinuxCanaryOptDir}`
-			: !scriptlet.includes('rmdir')
-				? 'does not sweep the directory with rmdir'
-				: /\brm\s+-[a-zA-Z]*[rf]/.test(scriptlet)
-					? 'removes files rather than only empty directories'
-					: null;
+		let detail = null;
+		if (!scriptlet.includes(legacyLinuxCanaryOptDir)) {
+			detail = `does not reference ${legacyLinuxCanaryOptDir}`;
+		} else if (!scriptlet.includes('rmdir')) {
+			detail = 'does not sweep the directory with rmdir';
+		} else if (/\brm\s+-[a-zA-Z]*[rf]/.test(scriptlet)) {
+			detail = 'removes files rather than only empty directories';
+		}
 		if (detail !== null) {
 			violations.push({artifactPath, detail});
 		}
@@ -1620,6 +1704,9 @@ async function verifyLinuxArtifactContracts(buildResult) {
 }
 
 module.exports = {
+	...(customLinuxElectron
+		? {electronVersion: customLinuxElectron.expectedElectronVersion, electronDist: linuxElectronDist}
+		: {}),
 	appId,
 	productName: installedProductName,
 	copyright: 'Copyright © 2026 Fluxer Platform AB',
@@ -1641,7 +1728,7 @@ module.exports = {
 	extraMetadata: {
 		main: 'dist/main/index.js',
 		name: metadataName,
-		...(process.env.VERSION ? {version: process.env.VERSION} : {}),
+		...(shellVersion ? {version: shellVersion} : {}),
 		...(targetPlatform === 'linux' ? {desktopName: `${linuxDesktopId}.desktop`} : {}),
 	},
 	extraResources: [
@@ -1668,7 +1755,7 @@ module.exports = {
 			to: 'badges',
 			filter: ['**/*'],
 		},
-		...(buildChannel === 'development' && targetPlatform === 'darwin'
+		...(targetPlatform === 'darwin'
 			? [{from: `build_resources/${iconDir}/_compiled/Assets.car`, to: 'Assets.car'}]
 			: []),
 	],
@@ -1685,8 +1772,6 @@ module.exports = {
 			'node_modules/@fluxer/win-shell/*.node',
 			'node_modules/@fluxer/linux-audio-capture/*.node',
 			'node_modules/@fluxer/linux-portals/*.node',
-			'node_modules/@fluxer/linux-screen-capture/*.node',
-			'node_modules/@fluxer/linux-screen-capture/obs-vkcapture/**/*',
 			'node_modules/@fluxer/linux-notifications/*.node',
 			'node_modules/@fluxer/linux-evdev/*.node',
 			'node_modules/@fluxer/system-hunspell/*.node',
@@ -1713,8 +1798,6 @@ module.exports = {
 			'node_modules/.pnpm/@fluxer+windows-input-hook@*/node_modules/@fluxer/windows-input-hook/*.node',
 			'node_modules/.pnpm/@fluxer+linux-audio-capture@*/node_modules/@fluxer/linux-audio-capture/*.node',
 			'node_modules/.pnpm/@fluxer+linux-portals@*/node_modules/@fluxer/linux-portals/*.node',
-			'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/*.node',
-			'node_modules/.pnpm/@fluxer+linux-screen-capture@*/node_modules/@fluxer/linux-screen-capture/obs-vkcapture/**/*',
 			'node_modules/.pnpm/@fluxer+linux-notifications@*/node_modules/@fluxer/linux-notifications/*.node',
 			'node_modules/.pnpm/@fluxer+linux-evdev@*/node_modules/@fluxer/linux-evdev/*.node',
 			'node_modules/.pnpm/@fluxer+linux-input-hook@*/node_modules/@fluxer/linux-input-hook/*.node',
@@ -1743,7 +1826,7 @@ module.exports = {
 			schemes: [channel.protocolScheme],
 		},
 	],
-	beforePack: verifyNativePackageInputs,
+	beforePack,
 	afterPack,
 	afterAllArtifactBuild: verifyLinuxArtifactContracts,
 	toolsets: {
@@ -1778,9 +1861,8 @@ module.exports = {
 			NSMicrophoneUsageDescription: 'Fluxer needs access to your microphone to enable voice chat features.',
 			NSCameraUsageDescription: 'Fluxer needs access to your camera to enable video chat features.',
 			NSAppleEventsUsageDescription: 'Fluxer needs access to Apple Events for automation features.',
-			NSAudioCaptureUsageDescription: 'Fluxer captures audio from the screen or window you choose to share.',
 			NSScreenCaptureUsageDescription: 'Fluxer captures the screen or window you choose to share.',
-			...(buildChannel === 'development' ? {CFBundleIconName: 'AppIcon'} : {}),
+			CFBundleIconName: 'AppIcon',
 			NSLocalNetworkUsageDescription:
 				'Fluxer needs local network access to reach a Fluxer instance you host on your own network. It never scans your network or connects to devices you have not pointed it at.',
 		},
@@ -1804,7 +1886,7 @@ module.exports = {
 		target: winTargets,
 	},
 	linux: {
-		icon: `build_resources/${iconDir}/1024x1024.png`,
+		icon: `build_resources/${iconDir}`,
 		category: 'Network;InstantMessaging;Chat;',
 		target: [
 			{

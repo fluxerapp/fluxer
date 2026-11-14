@@ -3,8 +3,6 @@
 -module(presence_cache_safe).
 -typing([eqwalizer]).
 
--include_lib("fluxer_gateway/include/timeout_config.hrl").
-
 -export([get/1, get_visible/1, bulk_get/1, visible_bulk_get/1]).
 
 -define(LIVE_FALLBACK_LOOKUP_TIMEOUT_MS, 250).

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import accountStorage, {BrowserAccountStorageUnavailableError} from '@app/features/auth/state/AccountStorage';
+import accountStorage from '@app/features/auth/state/AccountStorage';
+import {BrowserAccountStorageUnavailableError} from '@app/features/auth/state/AccountStorageContract';
 import type {AppStorageSessionAccount} from '@app/features/platform/state/AppStorageBootstrapContract';
 import type {DesktopLegacyImportRequest} from '@app/features/platform/state/DesktopLegacyImport';
 import {

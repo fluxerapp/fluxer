@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
+import {useDebouncedAsyncResource} from '@app/features/platform/hooks/useDebouncedAsyncResource';
+import {isAccountTransitionAbortError} from '@app/features/platform/state/AccountTransitionAbort';
 import type {InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
-import {useEffect, useState} from 'react';
+import {HttpError} from '@app/features/platform/types/EndpointError';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import {useMemo} from 'react';
 
-export type UsernameAvailability = 'idle' | 'checking' | 'available' | 'taken';
+type UsernameAvailability = 'idle' | 'checking' | 'available' | 'taken';
 
+const logger = new Logger('useUsernameAvailability');
 const CHECK_DELAY_MS = 350;
 
 export function useUsernameAvailability(
@@ -13,34 +18,29 @@ export function useUsernameAvailability(
 	username: string,
 	enabled: boolean,
 ): UsernameAvailability {
-	const [result, setResult] = useState<{username: string; availability: UsernameAvailability}>({
-		username: '',
-		availability: 'idle',
-	});
-	useEffect(() => {
+	const request = useMemo(() => {
 		if (!enabled || username.length === 0) {
-			return;
+			return null;
 		}
-		const controller = new AbortController();
-		const timer = window.setTimeout(() => {
-			setResult({username, availability: 'checking'});
-			AuthenticationCommands.checkUsernameAvailability(username, target, controller.signal)
-				.then((available) => {
-					if (controller.signal.aborted) return;
-					setResult({username, availability: available ? 'available' : 'taken'});
-				})
-				.catch(() => {
-					if (controller.signal.aborted) return;
-					setResult({username, availability: 'idle'});
-				});
-		}, CHECK_DELAY_MS);
-		return () => {
-			window.clearTimeout(timer);
-			controller.abort();
+		return {
+			input: username,
+			load: (name: string, signal: AbortSignal) =>
+				AuthenticationCommands.checkUsernameAvailability(name, target, signal),
 		};
 	}, [enabled, target, username]);
-	if (!enabled || username.length === 0 || result.username !== username) {
+	const result = useDebouncedAsyncResource(request, CHECK_DELAY_MS, (error, name) => {
+		if (!(error instanceof HttpError) && !isAccountTransitionAbortError(error)) {
+			logger.warn('Failed to check username availability', {username: name, error});
+		}
+	});
+	if (!enabled || username.length === 0 || result?.input !== username) {
 		return 'idle';
 	}
-	return result.availability;
+	if (result.status === 'pending') {
+		return 'checking';
+	}
+	if (result.status === 'ready') {
+		return result.value ? 'available' : 'taken';
+	}
+	return 'idle';
 }

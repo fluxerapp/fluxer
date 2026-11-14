@@ -16,7 +16,7 @@ import {
 	type StoredAccountList,
 	type UserData,
 } from '@app/features/auth/state/AccountStorageContract';
-import {accountKeyUserId, accountStorageKey} from '@app/features/auth/state/AccountStorageKey';
+import {accountKeyUserId, accountStorageKey, deriveAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import {BrowserAccountStorageRepository} from '@app/features/auth/state/BrowserAccountStorageRepository';
 import {
 	type DesktopAccountStorageRepository,
@@ -28,40 +28,7 @@ import type {
 } from '@app/features/auth/state/StoredAccountInventoryContract';
 import {storedAccountRecordsFromInventory} from '@app/features/auth/state/StoredAccountInventoryPolicy';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-
-export {
-	type AccountPresenceIntent,
-	type AccountRekeyContext,
-	type AccountRekeyOutcome,
-	type AccountRekeyPlan,
-	type AccountRekeyTarget,
-	type BrowserAccountStorageOperation,
-	BrowserAccountStorageTimeoutError,
-	BrowserAccountStorageUnavailableError,
-	CrossInstanceAccountCollisionError,
-	DesktopAccountStorageAuthorityError,
-	type KeyedStoredAccount,
-	planAccountRekey,
-	type QualifiedStoredAccount,
-	type StoredAccount,
-	type StoredAccountData,
-	type StoredAccountList,
-	type StoredAccountSource,
-	type UserData,
-} from '@app/features/auth/state/AccountStorageContract';
-
-export {
-	type ReadyStoredAccountEntry,
-	type ReplaceableStoredAccountEntry,
-	type StoredAccountInventory,
-	type StoredAccountInventoryReplacement,
-	StoredAccountInventoryReplacementConflictError,
-	type StoredAccountRevision,
-	type StoredAccountRuntimeRecoveryCandidate,
-	StoredAccountRuntimeRecoveryError,
-	type UnavailableStoredAccount,
-	type UnqualifiedStoredAccount,
-} from '@app/features/auth/state/StoredAccountInventoryContract';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const logger = new Logger('AccountStorage');
 
@@ -111,7 +78,8 @@ class AccountStorage {
 		}
 		let existing = await active.repository.read(storageKey ?? userId);
 		if (active.source === 'idb' && existing === null && storageKey !== null) {
-			existing = await active.repository.read(userId);
+			const unqualified = await active.repository.read(userId);
+			existing = unqualified !== null && deriveAccountStorageKey(unqualified) === null ? unqualified : null;
 		}
 		const resolvedInstance = instance ?? existing?.instance;
 		const resolvedStorageKey = storageKey ?? existing?.storageKey;
@@ -213,6 +181,36 @@ class AccountStorage {
 		return {status, source: 'idb', ...plan, written: changed.length};
 	}
 
+	async rekeyAccountsOnInstance(instance: RuntimeConfigSnapshot): Promise<Map<string, string>> {
+		const moves = new Map<string, string>();
+		if (this.activeRepository().source !== 'idb') {
+			return moves;
+		}
+		const rekeyed: Array<StoredAccount> = [];
+		for (const value of await this.browserRepository.listRaw()) {
+			if (!isRecord(value) || typeof value.userId !== 'string' || typeof value.storageKey !== 'string') {
+				continue;
+			}
+			const record = value as unknown as StoredAccount & {storageKey: string};
+			const storageKey = accountStorageKey(record.userId, instance);
+			if (
+				storageKey === null ||
+				storageKey === record.storageKey ||
+				accountKeyUserId(record.storageKey) !== record.userId ||
+				!runtimeConfigSnapshotsAreSameInstance(record.instance, instance)
+			) {
+				continue;
+			}
+			rekeyed.push({...record, storageKey});
+			moves.set(record.storageKey, storageKey);
+		}
+		if (rekeyed.length > 0) {
+			await this.browserRepository.writeMigration(rekeyed);
+			logger.debug(`Re-keyed ${rekeyed.length} stored accounts onto ${instance.apiEndpoint}`);
+		}
+		return moves;
+	}
+
 	async importAccounts(records: ReadonlyArray<StoredAccount>): Promise<void> {
 		const active = this.activeRepository();
 		for (const record of records) {
@@ -248,6 +246,20 @@ class AccountStorage {
 	async updateAccountValidity(accountKey: string, isValid: boolean, expectedToken?: string): Promise<void> {
 		await this.updateAccountRecord(accountKey, 'validity', (record) =>
 			expectedToken !== undefined && record.token !== expectedToken ? record : {...record, isValid},
+		);
+	}
+
+	async updateAccountSwitcherPositions(positions: ReadonlyMap<string, number>): Promise<void> {
+		for (const [accountKey, switcherPosition] of positions) {
+			await this.updateAccountRecord(accountKey, 'switcher position', (record) =>
+				record.switcherPosition === switcherPosition ? record : {...record, switcherPosition},
+			);
+		}
+	}
+
+	async updateAccountToken(accountKey: string, expectedToken: string, token: string): Promise<void> {
+		await this.updateAccountRecord(accountKey, 'token', (record) =>
+			record.token === expectedToken ? {...record, token} : record,
 		);
 	}
 

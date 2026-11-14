@@ -4,6 +4,7 @@ import {createRequire} from 'node:module';
 import {createChildLogger} from '@electron/common/Logger';
 import type {LinuxAppearanceSnapshot} from '@electron/common/Types';
 import {getLinuxPortalsMode} from '@electron/main/LaunchOptions';
+import {loadOptionalNativeAddon} from '@electron/main/NativeAddon';
 
 export type {LinuxAppearanceSnapshot} from '@electron/common/Types';
 
@@ -27,35 +28,6 @@ interface PortalsModule {
 	readAccentColor: () => {r: number; g: number; b: number} | null;
 	Settings: SettingsCtor | null;
 	loadError: Error | null;
-}
-
-let cached: PortalsModule | null | undefined;
-
-function loadAddon(): PortalsModule | null {
-	if (cached !== undefined) return cached;
-	if (process.platform !== 'linux') {
-		cached = null;
-		return cached;
-	}
-	if (getLinuxPortalsMode(process.argv) === 'off') {
-		logger.info('@fluxer/linux-portals disabled by launch diagnostics; appearance reads disabled');
-		cached = null;
-		return cached;
-	}
-	try {
-		const mod = requireModule('@fluxer/linux-portals') as PortalsModule;
-		if (mod.loadError) {
-			logger.info('@fluxer/linux-portals reported load error', {error: mod.loadError});
-			cached = null;
-			return cached;
-		}
-		cached = mod;
-		return cached;
-	} catch (error) {
-		logger.info('@fluxer/linux-portals not available; appearance reads disabled', {error});
-		cached = null;
-		return cached;
-	}
 }
 
 export function readLinuxAppearance(): LinuxAppearanceSnapshot {
@@ -89,16 +61,22 @@ export function subscribeLinuxAppearance(listener: LinuxAppearanceListener): Lin
 				contrast: mod.readContrast(),
 				accent: mod.readAccentColor(),
 			};
-			if (event.namespace === 'org.freedesktop.appearance') {
-				if (event.key === 'color-scheme' && event.uint32 != null) {
-					snapshot.colorScheme =
-						event.uint32 === 1 ? 'prefer-dark' : event.uint32 === 2 ? 'prefer-light' : 'no-preference';
-				} else if (event.key === 'contrast' && event.uint32 != null) {
-					snapshot.contrast = event.uint32 === 1 ? 'high' : 'no-preference';
-				} else if (event.key === 'accent-color') {
-					snapshot.accent =
-						event.accent && event.accent.r >= 0 && event.accent.g >= 0 && event.accent.b >= 0 ? event.accent : null;
+			if (event.namespace !== 'org.freedesktop.appearance') {
+				listener(snapshot);
+				return;
+			}
+			if (event.key === 'color-scheme' && event.uint32 != null) {
+				snapshot.colorScheme = 'no-preference';
+				if (event.uint32 === 1) {
+					snapshot.colorScheme = 'prefer-dark';
+				} else if (event.uint32 === 2) {
+					snapshot.colorScheme = 'prefer-light';
 				}
+			} else if (event.key === 'contrast' && event.uint32 != null) {
+				snapshot.contrast = event.uint32 === 1 ? 'high' : 'no-preference';
+			} else if (event.key === 'accent-color') {
+				snapshot.accent =
+					event.accent && event.accent.r >= 0 && event.accent.g >= 0 && event.accent.b >= 0 ? event.accent : null;
 			}
 			listener(snapshot);
 		});
@@ -118,3 +96,13 @@ export function subscribeLinuxAppearance(listener: LinuxAppearanceListener): Lin
 		},
 	};
 }
+
+const loadAddon = loadOptionalNativeAddon<PortalsModule>({
+	platform: 'linux',
+	load: () => requireModule('@fluxer/linux-portals'),
+	logger: logger,
+	level: 'info',
+	unavailableMessage: '@fluxer/linux-portals not available; appearance reads disabled',
+	disabled: () => getLinuxPortalsMode(process.argv) === 'off',
+	disabledMessage: '@fluxer/linux-portals disabled by launch diagnostics; appearance reads disabled',
+});

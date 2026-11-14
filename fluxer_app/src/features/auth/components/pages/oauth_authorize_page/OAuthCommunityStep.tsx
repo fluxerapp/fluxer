@@ -150,7 +150,7 @@ export const OAuthCommunityStep: React.FC<OAuthCommunityStepProps> = ({
 						{destinationsError}
 					</div>
 				)}
-				{!destinationsLoading && destinationOptions.length === 0 && (
+				{!destinationsLoading && !destinationsError && destinationOptions.length === 0 && (
 					<div className={styles.emptyState} data-flx="auth.o-auth-authorize-page.community-step.empty-state">
 						{guildSelectorEmptyState}
 					</div>

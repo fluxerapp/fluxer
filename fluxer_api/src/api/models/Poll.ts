@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessagePoll, MessagePollDb} from '../database/types/PollTypes';
-import {PollAnswer} from './PollAnswer';
-import {PollMedia} from './PollMedia';
-import {PollResults} from './PollResults';
+import type {MessagePoll, MessagePollDb} from '@app/api/database/types/PollTypes';
+import {PollAnswer} from '@app/api/models/PollAnswer';
+import {PollMedia} from '@app/api/models/PollMedia';
+import {PollResults} from '@app/api/models/PollResults';
 
 export class Poll {
 	readonly question: PollMedia | null;
@@ -17,7 +17,7 @@ export class Poll {
 	constructor(poll: MessagePollDb) {
 		this.question = poll.question ? new PollMedia(poll.question) : null;
 		this.answers = (poll.answers ?? []).map((answer) => new PollAnswer(answer));
-		this.expiry = poll.expiry ?? null;
+		this.expiry = poll.expiry == null ? null : new Date(poll.expiry).toISOString();
 		this.anonymous_voting = poll.anonymous_voting ?? null;
 		this.allow_multiselect = poll.allow_multiselect ?? null;
 		this.layout_type = poll.layout_type ?? null;

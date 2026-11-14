@@ -3,20 +3,20 @@
 import assert from 'node:assert/strict';
 import {Store} from '@app/features/voice/engine/Store';
 import type {VoiceEngineV2AppControllerHost} from '@app/features/voice/engine/v2/VoiceEngineV2AppControllerHost';
-import type {VoiceEngineV2Model, VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2';
-import {isVoiceEngineV2FrameReceivedEvent} from '@fluxer/voice_engine_v2/runtime';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Model} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {isVoiceEngineV2FrameReceivedEvent} from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
 
 const FRAME_NOTIFY_FLUSH_INTERVAL_MS = 1000;
 
 export class VoiceEngineV2AppProjectionStore extends Store {
-	private readonly unsubscribeHost: () => void;
 	private frameFlushTimer: ReturnType<typeof setTimeout> | null = null;
 	private notifyFlushScheduled = false;
 	private disposed = false;
 
 	constructor(private readonly host: VoiceEngineV2AppControllerHost) {
 		super();
-		this.unsubscribeHost = host.subscribe(({event}) => {
+		host.subscribe(({event}) => {
 			if (isVoiceEngineV2FrameReceivedEvent(event)) {
 				this.scheduleFrameFlush();
 				return;
@@ -54,16 +54,6 @@ export class VoiceEngineV2AppProjectionStore extends Store {
 
 	get model(): VoiceEngineV2Model {
 		return this.host.model;
-	}
-
-	dispose(): void {
-		this.disposed = true;
-		this.notifyFlushScheduled = false;
-		if (this.frameFlushTimer !== null) {
-			clearTimeout(this.frameFlushTimer);
-			this.frameFlushTimer = null;
-		}
-		this.unsubscribeHost();
 	}
 }
 

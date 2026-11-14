@@ -5,6 +5,9 @@
 
 -export([
     scope/2,
+    is_candidate/4,
+    role_visible/2,
+    role_adds/4,
     push_message_data/4,
     forum_starter/3,
     mark_forum_thread_created/1,
@@ -18,8 +21,13 @@
 -define(FORUM_THREAD_CREATED_KEY, <<"__forum_thread_created">>).
 -define(MEMBER_SETTING_KEYS, [<<"flags">>, <<"muted">>, <<"mute_config">>]).
 
+-define(MAX_ROLE_MENTION_THREAD_ADDS, 250).
+-define(MAX_THREAD_MEMBERS, 1000).
+
 -type user_id() :: integer().
--type scope() :: #{thread := map(), members := #{user_id() => map()}} | undefined.
+-type member_source() :: {ets, ets:tid()} | {map, map()}.
+
+-type scope() :: #{thread := map(), members := #{integer() => map()}} | undefined.
 
 -spec scope(integer(), map()) -> scope().
 scope(ChannelId, State) ->
@@ -42,7 +50,7 @@ safe_scope(Tab, ChannelId) ->
         error:badarg -> undefined
     end.
 
--spec push_message_data(map(), integer(), [user_id()], map()) -> {map(), binary()} | undefined.
+-spec push_message_data(map(), integer(), [integer()], map()) -> {map(), binary()} | undefined.
 push_message_data(MessageData, ChannelId, UserIds, Data) ->
     case scope(ChannelId, Data) of
         undefined ->
@@ -52,8 +60,8 @@ push_message_data(MessageData, ChannelId, UserIds, Data) ->
                 maps:get(<<"parent_id">>, Thread, undefined)
             ),
             Parent = parent_channel(ParentId, Data),
-            {ForumThreadCreated, MessageData1} = take_forum_thread_created(MessageData),
-            ThreadPush = #{
+            {ForumFields, MessageData1} = take_forum_thread_created(MessageData),
+            ThreadPush = ForumFields#{
                 <<"parent_id">> => ParentId,
                 <<"parent_name">> => binary_or_undefined(
                     maps:get(<<"name">>, Parent, undefined)
@@ -64,45 +72,35 @@ push_message_data(MessageData, ChannelId, UserIds, Data) ->
                 <<"members">> => member_settings(UserIds, Members)
             },
             {
-                MessageData1#{
-                    ?THREAD_PUSH_KEY => with_forum_thread_created(
-                        ForumThreadCreated, ThreadPush
-                    )
-                },
+                MessageData1#{?THREAD_PUSH_KEY => ThreadPush},
                 thread_name(Thread)
             }
     end.
 
--spec take_forum_thread_created(map()) -> {boolean(), map()}.
+-spec take_forum_thread_created(map()) -> {#{binary() => true}, map()}.
 take_forum_thread_created(MessageData) ->
     case maps:take(?FORUM_THREAD_CREATED_KEY, MessageData) of
-        {true, Rest} -> {true, Rest};
-        {_Other, Rest} -> {false, Rest};
-        error -> {false, MessageData}
+        {true, Rest} -> {#{<<"forum_thread_created">> => true}, Rest};
+        {_Other, Rest} -> {#{}, Rest};
+        error -> {#{}, MessageData}
     end.
-
--spec with_forum_thread_created(boolean(), map()) -> map().
-with_forum_thread_created(true, ThreadPush) ->
-    ThreadPush#{<<"forum_thread_created">> => true};
-with_forum_thread_created(false, ThreadPush) ->
-    ThreadPush.
 
 -spec mark_forum_thread_created(map()) -> map().
 mark_forum_thread_created(MessageData) ->
     MessageData#{?FORUM_THREAD_CREATED_KEY => true}.
 
--spec forum_starter(map(), integer(), map()) -> {integer(), #{user_id() => map()}} | undefined.
+-spec forum_starter(map(), integer(), map()) -> {integer(), #{integer() => map()}} | undefined.
 forum_starter(MessageData, ChannelId, Data) ->
     case snowflake_id:parse_maybe(maps:get(<<"id">>, MessageData, undefined)) of
         ChannelId -> forum_starter_scope(scope(ChannelId, Data), Data);
         _ -> undefined
     end.
 
--spec forum_starter_scope(scope(), map()) -> {integer(), #{user_id() => map()}} | undefined.
+-spec forum_starter_scope(scope(), map()) -> {integer(), #{integer() => map()}} | undefined.
 forum_starter_scope(#{thread := Thread, members := Members}, Data) ->
     ParentId = snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Thread, undefined)),
     case
-        guild_thread_gate:is_thread_only_type(
+        channel_types:is_thread_only(
             maps:get(<<"type">>, parent_channel(ParentId, Data), undefined)
         )
     of
@@ -114,14 +112,14 @@ forum_starter_scope(undefined, _Data) ->
 
 -spec parent_channel(integer() | undefined, map()) -> map().
 parent_channel(ParentId, Data) when is_integer(ParentId) ->
-    case maps:get(ParentId, guild_data_index:channel_index(Data), undefined) of
+    case maps:get(ParentId, guild_data_index_channels:channel_index(Data), undefined) of
         Parent when is_map(Parent) -> Parent;
         _ -> #{}
     end;
 parent_channel(_ParentId, _Data) ->
     #{}.
 
--spec member_settings([user_id()], #{user_id() => map()}) -> #{user_id() => map()}.
+-spec member_settings([integer()], #{integer() => map()}) -> #{integer() => map()}.
 member_settings(UserIds, Members) ->
     maps:map(
         fun(_UserId, Member) -> maps:with(?MEMBER_SETTING_KEYS, Member) end,
@@ -139,7 +137,7 @@ thread_name(Thread) ->
 binary_or_undefined(Value) when is_binary(Value), byte_size(Value) > 0 -> Value;
 binary_or_undefined(_Value) -> undefined.
 
--spec mention_universe(integer(), map()) -> #{user_id() => true} | undefined.
+-spec mention_universe(integer(), map()) -> #{integer() => true} | undefined.
 mention_universe(ChannelId, State) ->
     case scope(ChannelId, State) of
         undefined ->
@@ -169,140 +167,96 @@ joined_threads(Tab, UserId) ->
         error:badarg -> []
     end.
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
+-spec is_candidate(integer(), map(), scope(), map()) -> boolean().
+is_candidate(_UserId, _Member, undefined, _Mentions) ->
+    true;
+is_candidate(UserId, _Member, #{members := Members}, Mentions) ->
+    maps:is_key(UserId, Members) orelse
+        maps:is_key(UserId, maps:get(direct_mentions, Mentions)) orelse
+        maps:is_key(UserId, maps:get(role_adds, Mentions)).
 
-with_store(Fun) ->
-    Tab = guild_thread_store:new(),
-    try
-        guild_thread_store:load(
-            Tab,
-            [
-                #{
-                    <<"id">> => 500,
-                    <<"parent_id">> => 200,
-                    <<"type">> => 11,
-                    <<"name">> => <<"t">>
-                }
-            ],
-            [
-                #{<<"id">> => <<"500">>, <<"user_id">> => <<"1">>, <<"flags">> => 2},
-                #{
-                    <<"id">> => <<"500">>,
-                    <<"user_id">> => <<"2">>,
-                    <<"flags">> => 1,
-                    <<"muted">> => true,
-                    <<"join_timestamp">> => <<"x">>
-                }
-            ]
-        ),
-        Fun(#{
-            thread_gate => #{active => true, version => 1},
-            thread_store => Tab,
-            <<"channels">> => [
-                #{<<"id">> => 200, <<"name">> => <<"general">>, <<"parent_id">> => 100},
-                #{<<"id">> => 100, <<"name">> => <<"cat">>, <<"type">> => 4}
-            ]
-        })
-    after
-        guild_thread_store:destroy(Tab)
+-spec role_visible(integer(), map()) -> fun((integer(), map()) -> boolean()).
+role_visible(ChannelId, State) ->
+    Recipient = guild_thread_gate:recipient_active(ChannelId, State),
+    fun(UserId, Member) ->
+        Recipient(UserId) andalso
+            guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State)
     end.
 
-scope_is_undefined_for_plain_channels_and_inactive_guilds_test() ->
-    ?assertEqual(undefined, scope(200, #{<<"channels">> => []})),
-    with_store(fun(Data) ->
-        ?assertEqual(undefined, scope(200, Data)),
-        ?assertEqual(undefined, scope(500, Data#{thread_gate => #{active => false}})),
-        ?assertMatch(#{members := #{1 := _, 2 := _}}, scope(500, Data))
-    end).
+-type role_add_request() :: #{
+    members := map(),
+    mentions := map(),
+    mention_roles := map(),
+    source := member_source(),
+    visible := fun((user_id(), map()) -> boolean())
+}.
 
-push_message_data_stamps_parent_and_member_settings_test() ->
-    with_store(fun(Data) ->
-        ?assertEqual(undefined, push_message_data(#{}, 200, [1], Data)),
-        {MessageData, Name} = push_message_data(#{<<"id">> => <<"9">>}, 500, [2, 3], Data),
-        ?assertEqual(<<"t">>, Name),
-        ?assertEqual(
-            #{
-                <<"parent_id">> => 200,
-                <<"parent_name">> => <<"general">>,
-                <<"category_id">> => 100,
-                <<"members">> => #{2 => #{<<"flags">> => 1, <<"muted">> => true}}
-            },
-            maps:get(?THREAD_PUSH_KEY, MessageData)
-        )
-    end).
-
-with_forum_store(Fun) ->
-    Tab = guild_thread_store:new(),
-    try
-        guild_thread_store:load(
-            Tab,
-            [
-                #{
-                    <<"id">> => 700,
-                    <<"parent_id">> => 300,
-                    <<"type">> => 11,
-                    <<"name">> => <<"post">>
-                },
-                #{
-                    <<"id">> => 500,
-                    <<"parent_id">> => 200,
-                    <<"type">> => 11,
-                    <<"name">> => <<"t">>
-                }
-            ],
-            [#{<<"id">> => <<"700">>, <<"user_id">> => <<"1">>, <<"flags">> => 1}]
-        ),
-        Fun(#{
-            thread_gate => #{active => true, version => 1},
-            thread_store => Tab,
-            <<"channels">> => [
-                #{<<"id">> => 300, <<"name">> => <<"ideas">>, <<"type">> => 15},
-                #{<<"id">> => 200, <<"name">> => <<"general">>, <<"type">> => 0}
-            ]
-        })
-    after
-        guild_thread_store:destroy(Tab)
-    end.
-
-forum_starter_needs_the_starter_message_of_a_forum_post_test() ->
-    with_forum_store(fun(Data) ->
-        ?assertMatch({300, #{1 := _}}, forum_starter(#{<<"id">> => <<"700">>}, 700, Data)),
-        ?assertEqual(undefined, forum_starter(#{<<"id">> => <<"701">>}, 700, Data)),
-        ?assertEqual(undefined, forum_starter(#{<<"id">> => <<"500">>}, 500, Data)),
-        ?assertEqual(
-            undefined,
-            forum_starter(#{<<"id">> => <<"700">>}, 700, Data#{
-                thread_gate => #{active => false}
+-spec role_adds(
+    map(), map(), {ets, ets:tid()} | {map, map()}, fun((integer(), map()) -> boolean())
+) -> #{integer() => true}.
+role_adds(#{thread := Thread, members := Members}, Mentions, Source, Visible) ->
+    MentionRoles = maps:get(mention_roles, Mentions),
+    case map_size(MentionRoles) of
+        0 ->
+            #{};
+        _ ->
+            select_role_adds(Thread, #{
+                members => Members,
+                mentions => Mentions,
+                mention_roles => MentionRoles,
+                source => Source,
+                visible => Visible
             })
-        )
-    end).
+    end.
 
-forum_thread_created_marker_moves_into_the_thread_push_test() ->
-    with_forum_store(fun(Data) ->
-        Marked = mark_forum_thread_created(#{<<"id">> => <<"700">>}),
-        {MessageData, <<"post">>} = push_message_data(Marked, 700, [2], Data),
-        ?assertNot(maps:is_key(<<"__forum_thread_created">>, MessageData)),
-        ?assertMatch(
-            #{
-                <<"parent_id">> := 300,
-                <<"parent_name">> := <<"ideas">>,
-                <<"forum_thread_created">> := true
-            },
-            maps:get(?THREAD_PUSH_KEY, MessageData)
-        ),
-        {Plain, _} = push_message_data(#{<<"id">> => <<"701">>}, 700, [2], Data),
-        ?assertNot(maps:is_key(<<"forum_thread_created">>, maps:get(?THREAD_PUSH_KEY, Plain)))
-    end).
+-spec select_role_adds(map(), role_add_request()) -> #{user_id() => true}.
+select_role_adds(#{<<"type">> := 12}, _Request) ->
+    #{};
+select_role_adds(#{<<"thread_metadata">> := #{<<"archived">> := true}}, _Request) ->
+    #{};
+select_role_adds(_Thread, #{
+    members := Members,
+    mentions := Mentions,
+    mention_roles := MentionRoles,
+    source := Source,
+    visible := Visible
+}) ->
+    Direct = maps:get(direct_mentions, Mentions),
+    AuthorId = maps:get(author_id, Mentions),
+    Candidates = guild_push_candidates:filtermap_members(
+        fun(UserId, Member) ->
+            UserId =/= AuthorId andalso
+                not maps:is_key(UserId, Members) andalso
+                not maps:is_key(UserId, Direct) andalso
+                guild_push_candidates:has_mentioned_role(Member, MentionRoles) andalso
+                not guild_members_common:is_member_bot(Member) andalso
+                {true, UserId}
+        end,
+        Source
+    ),
+    Room = max(0, ?MAX_THREAD_MEMBERS - map_size(Members)),
+    take_role_adds(
+        lists:sort(Candidates),
+        Source,
+        Visible,
+        min(?MAX_ROLE_MENTION_THREAD_ADDS, Room),
+        #{}
+    ).
 
-passive_threads_need_a_viewer_session_test() ->
-    with_store(fun(Data) ->
-        State = #{data => Data},
-        ?assertEqual([], passive_threads(#{thread_viewer => false}, 1, State)),
-        ?assertEqual([], passive_threads(#{thread_viewer => true}, 3, State)),
-        ?assertMatch(
-            [#{<<"id">> := 500}], passive_threads(#{thread_viewer => true}, 1, State)
-        )
-    end).
-
--endif.
+-spec take_role_adds(
+    [user_id()],
+    member_source(),
+    fun((user_id(), map()) -> boolean()),
+    non_neg_integer(),
+    map()
+) -> #{user_id() => true}.
+take_role_adds([], _Source, _Visible, _Left, Acc) ->
+    Acc;
+take_role_adds(_UserIds, _Source, _Visible, 0, Acc) ->
+    Acc;
+take_role_adds([UserId | Rest], Source, Visible, Left, Acc) ->
+    Member = guild_push_candidates:lookup_member(UserId, Source),
+    case is_map(Member) andalso Visible(UserId, Member) of
+        true -> take_role_adds(Rest, Source, Visible, Left - 1, Acc#{UserId => true});
+        false -> take_role_adds(Rest, Source, Visible, Left, Acc)
+    end.

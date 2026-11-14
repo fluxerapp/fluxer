@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {cleanupChannelLocalState} from '@app/features/channel/events/ChannelDelete';
 import Channels from '@app/features/channel/state/Channels';
 import ForumPosts from '@app/features/forum/state/ForumPosts';
@@ -14,6 +15,7 @@ import ThreadPanel from '@app/features/threads/state/ThreadPanel';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import {isObjectLike} from '@fluxer/record_utils/src/RecordGuards';
 import {makeAutoObservable, observable} from 'mobx';
 
 class ThreadGuilds {
@@ -87,12 +89,12 @@ class ThreadGuilds {
 
 	purgeGuild(guildId: string): void {
 		const openThreadId = Navigation.guildId === guildId ? (Navigation.threadId ?? Navigation.channelId) : null;
-		const fallbackChannelId =
-			Navigation.threadId != null
-				? Navigation.channelId
-				: openThreadId != null
-					? (Channels.getChannel(openThreadId)?.parentId ?? null)
-					: null;
+		let fallbackChannelId: string | null = null;
+		if (Navigation.threadId != null) {
+			fallbackChannelId = Navigation.channelId;
+		} else if (openThreadId != null) {
+			fallbackChannelId = Channels.getChannel(openThreadId)?.parentId ?? null;
+		}
 		const createTarget = ThreadPanel.createTarget;
 		if (createTarget && Channels.getChannel(createTarget.parentId)?.guildId === guildId) ThreadPanel.closeCreate();
 		const threadIds = ChannelThreads.purgeGuild(guildId);
@@ -110,14 +112,17 @@ class ThreadGuilds {
 		ContextMenuCommands.close();
 		PopoutCommands.closeAll();
 		if (openThreadId != null && threadIds.includes(openThreadId)) {
-			const keepChannel = fallbackChannelId != null && Channels.getChannel(fallbackChannelId) !== undefined;
-			RouterUtils.replaceWith(Routes.guildChannel(guildId, keepChannel ? fallbackChannelId : undefined));
+			let routeChannelId: string | undefined;
+			if (fallbackChannelId != null && Channels.getChannel(fallbackChannelId) !== undefined) {
+				routeChannelId = fallbackChannelId;
+			}
+			RouterUtils.replaceWith(Routes.guildChannel(guildId, routeChannelId));
 		}
 	}
 
 	isPurgedEvent(data: unknown): boolean {
-		if (this.purgedThreadIds.size === 0 || data == null || typeof data !== 'object') return false;
-		const channelId = (data as {channel_id?: unknown}).channel_id;
+		if (this.purgedThreadIds.size === 0 || !isObjectLike(data)) return false;
+		const channelId = data.channel_id;
 		return typeof channelId === 'string' && this.purgedThreadIds.has(channelId);
 	}
 
@@ -128,4 +133,8 @@ class ThreadGuilds {
 	}
 }
 
-export default new ThreadGuilds();
+const threadGuilds = new ThreadGuilds();
+
+ResettableStates.register(threadGuilds, () => threadGuilds.reset());
+
+export default threadGuilds;

@@ -3,10 +3,15 @@
 import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
+	CaptchaProviderSchema,
+	InstantAccountAvailabilitySchema,
+} from '@fluxer/schema/src/domains/account/AccountTierSchemas';
+import {
 	WebAuthnAuthenticationOptions,
 	WebAuthnAuthenticationResponse,
 	WebAuthnRegistrationResponse,
 } from '@fluxer/schema/src/domains/auth/WebAuthnSchemas';
+import {GuildEntryResult} from '@fluxer/schema/src/domains/user/AccountSchemas';
 import {UserPartialResponse, UserPrivateResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {
 	createNamedStringLiteralUnion,
@@ -27,6 +32,8 @@ const RegisterThemeType = createNamedStringLiteralUnion(
 	'UI theme preference',
 );
 
+const SixDigitCodeType = createStringType(6, 6).refine((value) => /^\d{6}$/.test(value), 'Invalid code');
+
 export const RegisterRequest = z.object({
 	email: EmailType.optional().describe('Email address for the new account'),
 	username: UsernameType.optional().describe('Username for the new account (1-32 characters)'),
@@ -36,12 +43,20 @@ export const RegisterRequest = z.object({
 		.refine((value) => /^\d{4}-\d{2}-\d{2}$/.test(value), 'Invalid date format')
 		.optional()
 		.describe('Date of birth in YYYY-MM-DD format'),
-	consent: z.boolean().default(false).describe('Whether user consents to terms of service'),
+	consent: z
+		.boolean()
+		.default(false)
+		.describe(
+			'Whether the person submitted the step that says creating the account accepts the terms of service. Must be true when the instance publishes terms or a privacy policy',
+		),
 	invite_code: createStringType(0, 256).nullish().describe('Guild invite code to join after registration'),
-	registration_url_code: createStringType(1, 256)
+	registration_url_code: createStringType(1, 128)
 		.nullish()
 		.describe('Admin-issued registration URL code to use for this registration'),
 	theme: RegisterThemeType.optional().describe('Initial UI theme preference for the new account'),
+	setup_token: createStringType(1, 256)
+		.nullish()
+		.describe('Setup token of a new self-hosted instance. Required until the first admin account exists'),
 });
 
 export type RegisterRequest = z.infer<typeof RegisterRequest>;
@@ -147,18 +162,34 @@ export const SudoVerificationSchema = z.object({
 		[
 			['totp', 'TOTP', 'Time-based one-time password authentication via authenticator app'],
 			['webauthn', 'WebAuthn', 'Security key or biometric authentication'],
+			['email_code', 'Email code', 'A 6-digit code sent to the account email address'],
 		],
 		'MFA method to use for verification',
 	).optional(),
 	mfa_code: createStringType(1, 32).optional().describe('MFA verification code from an authenticator app'),
+	email_code_ticket: createStringType(1, 128)
+		.optional()
+		.describe('Ticket from POST /users/@me/sudo/email-code, sent with mfa_method email_code'),
+	email_code: SixDigitCodeType.optional().describe('The 6-digit code from the email, sent with mfa_method email_code'),
 	webauthn_response: WebAuthnAuthenticationResponse.optional().describe('WebAuthn authentication response'),
 	webauthn_challenge: createStringType().optional().describe('WebAuthn challenge string'),
 });
 export const SsoStatusResponse = z.object({
 	enabled: z.boolean().describe('Whether SSO is enabled for this instance'),
 	enforced: z.boolean().describe('Whether SSO is required for all users'),
+	username_from_provider: z
+		.boolean()
+		.describe('Whether each SSO sign-in sets the username from the provider, so SSO accounts cannot change it'),
 	display_name: z.string().nullable().describe('Display name of the SSO provider'),
+	button_label: z
+		.string()
+		.nullable()
+		.describe('Text for the SSO sign-in button, or null when the client shows its default label'),
 	redirect_uri: z.string().describe('OAuth redirect URI for SSO'),
+	provider_trait: z
+		.string()
+		.optional()
+		.describe('User trait that marks an account as linked to the current SSO provider'),
 });
 
 export type SsoStatusResponse = z.infer<typeof SsoStatusResponse>;
@@ -167,23 +198,23 @@ export const SsoStartResponse = z.object({
 	authorization_url: z.string().describe('URL to redirect user to for SSO authentication'),
 	state: z.string().describe('State parameter for CSRF protection'),
 	redirect_uri: z.string().describe('OAuth redirect URI used for the SSO provider callback'),
+	client_binding: z
+		.string()
+		.describe('Secret the client keeps and sends back with the code and state to complete this sign-in'),
 });
 
 export type SsoStartResponse = z.infer<typeof SsoStartResponse>;
-
-export const SsoCompleteResponse = z.object({
-	token: z.string().describe('Authentication token for the session'),
-	user_id: SnowflakeStringType.describe('ID of the authenticated user'),
-	user: UserPartialResponse.describe('Partial user data for the authenticated account'),
-	redirect_to: z.string().describe('URL to redirect the user to after completion'),
-});
-
-export type SsoCompleteResponse = z.infer<typeof SsoCompleteResponse>;
 
 export const AuthTokenWithUserIdResponse = z.object({
 	token: z.string().describe('Authentication token for API requests'),
 	user_id: SnowflakeStringType.describe('ID of the authenticated user'),
 	user: UserPartialResponse.describe('Partial user data for the authenticated account'),
+	device_proof: z
+		.string()
+		.optional()
+		.describe(
+			'Opaque value to keep beside this account and send on later sign-ins from this device. It is not a credential',
+		),
 });
 
 export type AuthTokenWithUserIdResponse = z.infer<typeof AuthTokenWithUserIdResponse>;
@@ -207,6 +238,22 @@ const AuthMfaRequiredResponse = z.object({
 export const AuthLoginResponse = z.union([AuthTokenWithUserIdResponse, AuthMfaRequiredResponse]);
 
 export type AuthLoginResponse = z.infer<typeof AuthLoginResponse>;
+
+const SsoRedirectField = {
+	redirect_to: z.string().describe('URL to redirect the user to after completion'),
+};
+
+export const SsoCompleteResponse = z.union([
+	AuthTokenWithUserIdResponse.extend(SsoRedirectField),
+	AuthMfaRequiredResponse.extend(SsoRedirectField),
+	z
+		.object({
+			linked: z.literal(true).describe('The SSO identity is now connected to the account that started the link'),
+		})
+		.extend(SsoRedirectField),
+]);
+
+export type SsoCompleteResponse = z.infer<typeof SsoCompleteResponse>;
 
 export const RecoverAccountRequest = z.object({
 	login: LoginIdentifierType.describe('Username of the account to recover'),
@@ -232,7 +279,13 @@ export const RecoverAccountResponse = z.union([
 
 export type RecoverAccountResponse = z.infer<typeof RecoverAccountResponse>;
 
-export const AuthRegisterResponse = z.union([AuthTokenWithUserIdResponse, AuthRegistrationPendingApprovalResponse]);
+export const AuthRegisterSuccessResponse = AuthTokenWithUserIdResponse.extend({
+	entry: GuildEntryResult.nullable().optional().describe('Community to open next, from an invite used during sign-up'),
+});
+
+export type AuthRegisterSuccessResponse = z.infer<typeof AuthRegisterSuccessResponse>;
+
+export const AuthRegisterResponse = z.union([AuthRegisterSuccessResponse, AuthRegistrationPendingApprovalResponse]);
 
 export type AuthRegisterResponse = z.infer<typeof AuthRegisterResponse>;
 
@@ -285,7 +338,7 @@ export const UsernameAvailabilityResponse = z.object({
 
 export type UsernameAvailabilityResponse = z.infer<typeof UsernameAvailabilityResponse>;
 
-export const DESKTOP_HANDOFF_RETURN_URI_PATTERN = /^fluxer(?:-canary|-development)?:\/\/handoff$/u;
+const DESKTOP_HANDOFF_RETURN_URI_PATTERN = /^fluxer(?:-canary|-development)?:\/\/handoff$/u;
 
 export const DesktopHandoffReturnMethod = z.enum(['deep_link', 'code']);
 
@@ -349,6 +402,9 @@ export type SsoStartRequest = z.infer<typeof SsoStartRequest>;
 export const SsoCompleteRequest = z.object({
 	code: createStringType(1, 4096).describe('Authorization code from the SSO provider'),
 	state: createStringType(1, 4096).describe('State parameter for CSRF protection'),
+	client_binding: createStringType(1, 128)
+		.nullish()
+		.describe('The client_binding returned by SSO start. Required except for the mobile app callback'),
 });
 
 export type SsoCompleteRequest = z.infer<typeof SsoCompleteRequest>;
@@ -371,6 +427,12 @@ export const AuthorizeIpRequest = z.object({
 });
 
 export type AuthorizeIpRequest = z.infer<typeof AuthorizeIpRequest>;
+
+export const SignInLinkRequest = z.object({
+	token: createStringType().describe('The token from the sign-in link'),
+});
+
+export type SignInLinkRequest = z.infer<typeof SignInLinkRequest>;
 
 export const IpAuthorizationPollQuery = z.object({
 	ticket: createStringType().describe('The IP authorization ticket'),
@@ -567,8 +629,149 @@ export const SudoMfaMethodsResponse = z.object({
 	webauthn: z.boolean().describe('Whether the account has at least one registered WebAuthn credential'),
 	backup_codes: z.boolean().describe('Whether the account has at least one unconsumed backup code'),
 	has_mfa: z.boolean().describe('Whether the account can satisfy a sudo mode challenge'),
+	email_code: z
+		.boolean()
+		.optional()
+		.describe('Whether a code sent to the confirmed email address can verify the account, for accounts without MFA'),
+	password: z.boolean().optional().describe('Whether the account password can verify the account'),
 });
 
 export type SudoMfaMethodsResponse = z.infer<typeof SudoMfaMethodsResponse>;
 
 export const LogoutAuthSessionsWithVerificationRequest = LogoutAuthSessionsRequest.extend(SudoVerificationSchema.shape);
+
+const DeviceProofType = createStringType(1, 128).describe('device_proof from an earlier sign-in on this device');
+
+export const IdentifyRequest = z.object({
+	email: EmailType.optional().describe(
+		'Email address to sign in or sign up with, on instances that sign in with an email',
+	),
+	login: UsernameType.optional().describe('Username to sign in or sign up with, on username instances'),
+	device_proof: DeviceProofType.optional(),
+	registration_url_code: createStringType(1, 128)
+		.nullish()
+		.describe('Admin-issued registration URL code, for sign-ups'),
+});
+
+export type IdentifyRequest = z.infer<typeof IdentifyRequest>;
+
+export const IdentifyResponse = z.object({
+	ticket: z.string().describe('Opaque ticket for the next step, valid for 15 minutes'),
+	account: z.enum(['existing', 'new']).describe('Whether an account already uses this address'),
+	sign_in_method: z
+		.enum(['password', 'code'])
+		.nullable()
+		.describe(
+			'How the existing account signs in: password for an account that has a password, code for one without. Null when account is new',
+		),
+	registration: z
+		.object({
+			mode: z.enum(['open', 'approval', 'closed']).describe('How new accounts are admitted'),
+			consent_required: z.boolean().describe('Whether sign-up needs agreement to the terms and privacy policy'),
+			requires_password: z.boolean().describe('Whether sign-up needs a password because email codes are off'),
+			instant_account_availability: InstantAccountAvailabilitySchema.optional().describe(
+				'Whether an account can be created from just a display name, taking the registration URL code into account',
+			),
+		})
+		.nullable()
+		.describe('Sign-up details, present when account is new'),
+});
+
+export type IdentifyResponse = z.infer<typeof IdentifyResponse>;
+
+export const EmailCodeSendRequest = z.object({
+	ticket: createStringType(1, 128).describe('Ticket from POST /auth/identify'),
+	registration_url_code: createStringType(1, 128)
+		.nullish()
+		.describe('Admin-issued registration URL code, for sign-ups'),
+});
+
+export type EmailCodeSendRequest = z.infer<typeof EmailCodeSendRequest>;
+
+export const EmailCodeSendResponse = z.object({
+	purpose: z.enum(['sign_in', 'sign_up']).describe('Whether the code signs in or creates an account'),
+	code_expires_at: z.iso.datetime().describe('When the emailed code stops working'),
+	resend_available_at: z.iso.datetime().describe('When another code can be requested'),
+});
+
+export type EmailCodeSendResponse = z.infer<typeof EmailCodeSendResponse>;
+
+export const EmailCodeVerifyRequest = z.object({
+	ticket: createStringType(1, 128).describe('Ticket from POST /auth/identify'),
+	code: SixDigitCodeType.describe('The 6-digit code from the email'),
+	consent: z
+		.boolean()
+		.optional()
+		.describe(
+			'For sign-ups, whether the person submitted the step that says creating the account accepts the terms of service. Must be true when the instance publishes terms or a privacy policy',
+		),
+	registration_url_code: createStringType(1, 128)
+		.nullish()
+		.describe('Admin-issued registration URL code, for sign-ups'),
+	invite_code: createStringType(0, 256).nullish().describe('Invite to open after the date of birth step, for sign-ups'),
+	username: UsernameType.optional().describe('For sign-ups, the username for the new account. Ignored when signing in'),
+	global_name: GlobalNameType.optional().describe(
+		'For sign-ups, the display name shown to other people. Ignored when signing in',
+	),
+});
+
+export type EmailCodeVerifyRequest = z.infer<typeof EmailCodeVerifyRequest>;
+
+export const EmailCodeVerifyResponse = z.union([
+	AuthRegisterSuccessResponse,
+	AuthMfaRequiredResponse,
+	AuthRegistrationPendingApprovalResponse,
+]);
+
+export type EmailCodeVerifyResponse = z.infer<typeof EmailCodeVerifyResponse>;
+
+export const AccountHandoffRequest = z.object({
+	global_name: GlobalNameType.describe(
+		'Display name for the new account. The username is derived from it and given a tag on the server',
+	),
+	nonce_hash: z
+		.string()
+		.regex(/^[0-9a-f]{64}$/u)
+		.describe('Hex SHA-256 of the nonce the browser keeps until redeeming'),
+	locale: z.string().min(2).max(16).optional().describe('Locale of the page the account was created from'),
+	registration_url_code: createStringType(1, 128)
+		.nullish()
+		.describe('Admin-issued registration URL code, for sign-ups'),
+});
+
+export type AccountHandoffRequest = z.infer<typeof AccountHandoffRequest>;
+
+export const AccountHandoffResponse = z.object({
+	handoff_code: z.string().describe('Single-use code to redeem in the app within 15 minutes'),
+});
+
+export type AccountHandoffResponse = z.infer<typeof AccountHandoffResponse>;
+
+export const AccountHandoffRedeemRequest = z.object({
+	handoff_code: z
+		.string()
+		.regex(/^[A-Za-z0-9_-]{43}$/u)
+		.describe('Code from POST /auth/register/handoff'),
+	nonce: z
+		.string()
+		.regex(/^[A-Za-z0-9_-]{16,256}$/u)
+		.describe('The nonce whose hash was sent with the handoff'),
+	consent: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether the person submitted the step that says creating the account accepts the terms of service. Must be true when the instance publishes terms or a privacy policy',
+		),
+	global_name: GlobalNameType.optional().describe(
+		'Display name for the new account, when the person changed it in the app. Defaults to the one sent with the handoff',
+	),
+});
+
+export type AccountHandoffRedeemRequest = z.infer<typeof AccountHandoffRedeemRequest>;
+
+export const CaptchaChallengeResponse = z.object({
+	captcha_provider: CaptchaProviderSchema.describe('Captcha the next request must solve'),
+	altcha_challenge: z.record(z.string(), z.unknown()).optional().describe('ALTCHA challenge to solve'),
+});
+
+export type CaptchaChallengeResponse = z.infer<typeof CaptchaChallengeResponse>;

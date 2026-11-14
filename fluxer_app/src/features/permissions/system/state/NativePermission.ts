@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import MacPermissions from '@app/features/permissions/system/state/MacPermissions';
-import type {NativePermissionResult} from '@app/features/permissions/system/utils/NativePermissions';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {getElectronAPI, getNativePlatform, isDesktop, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
@@ -10,7 +8,6 @@ import {makeAutoObservable, runInAction} from 'mobx';
 const logger = new Logger('NativePermission');
 
 class NativePermission {
-	private _initialized = false;
 	private _isDesktop = false;
 	private _platform: NativePlatform = 'unknown';
 	private _waylandSession = false;
@@ -41,12 +38,7 @@ class NativePermission {
 			this._isDesktop = desktop;
 			this._platform = platform;
 			this._waylandSession = waylandSession;
-			this._initialized = true;
 		});
-	}
-
-	get initialized(): boolean {
-		return this._initialized;
 	}
 
 	get isDesktop(): boolean {
@@ -59,22 +51,6 @@ class NativePermission {
 
 	get isLinuxWaylandDesktop(): boolean {
 		return this._isDesktop && this._platform === 'linux' && this._waylandSession;
-	}
-
-	get platform(): NativePlatform {
-		return this._platform;
-	}
-
-	get inputMonitoringStatus(): NativePermissionResult {
-		return MacPermissions.statuses['input-monitoring'];
-	}
-
-	get isInputMonitoringGranted(): boolean {
-		return MacPermissions.statuses['input-monitoring'] === 'granted';
-	}
-
-	setInputMonitoringStatus(status: NativePermissionResult): void {
-		MacPermissions.applyPermissionResult('input-monitoring', status);
 	}
 }
 

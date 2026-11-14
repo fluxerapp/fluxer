@@ -8,12 +8,16 @@ import {LARGE_GUILD_THRESHOLD} from '@fluxer/constants/src/GatewayConstants';
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import {GuildFeatures, GuildNSFWLevel, GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
-import {MAX_GUILD_EMOJIS, MAX_GUILD_STICKERS} from '@fluxer/constants/src/LimitConstants';
+import {
+	EMOJI_MAX_SIZE,
+	MAX_GUILD_EMOJIS,
+	MAX_GUILD_STICKERS,
+	STICKER_MAX_SIZE,
+} from '@fluxer/constants/src/LimitConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRole as WireGuildRole} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
-import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 
 interface GuildRecordOptions {
 	instanceId?: string;
@@ -41,6 +45,7 @@ export class Guild {
 	readonly embedSplashWidth: number | null;
 	readonly embedSplashHeight: number | null;
 	readonly features: ReadonlySet<string>;
+	readonly badgeIds: ReadonlyArray<string>;
 	readonly vanityURLCode: string | null;
 	readonly ownerId: string;
 	readonly systemChannelId: string | null;
@@ -59,6 +64,7 @@ export class Guild {
 	private readonly _disabledOperations: number;
 	readonly joinedAt: string | null;
 	readonly unavailable: boolean;
+	readonly visiting: boolean;
 	readonly messageHistoryCutoff: string | null;
 	readonly memberCount: number;
 
@@ -80,6 +86,7 @@ export class Guild {
 		this.embedSplashWidth = this.normalizeEmbedSplashWidth(guild);
 		this.embedSplashHeight = this.normalizeEmbedSplashHeight(guild);
 		this.features = new Set(guild.features);
+		this.badgeIds = this.normalizeFieldWithDefault(guild, 'badge_ids', 'badgeIds', []);
 		this.vanityURLCode = this.normalizeVanityUrlCode(guild);
 		this.ownerId = this.normalizeOwnerId(guild);
 		this.systemChannelId = this.normalizeSystemChannelId(guild);
@@ -99,6 +106,7 @@ export class Guild {
 		this.joinedAt = this.normalizeJoinedAt(guild);
 		this.messageHistoryCutoff = this.normalizeMessageHistoryCutoff(guild);
 		this.unavailable = guild.unavailable ?? false;
+		this.visiting = guild.visiting === true;
 		this.memberCount = this.normalizeMemberCount(guild);
 	}
 
@@ -280,8 +288,9 @@ export class Guild {
 			{
 				...guildData.properties,
 				roles,
-				joined_at: guildData.joined_at,
+				joined_at: guildData.joined_at ?? undefined,
 				unavailable: guildData.unavailable,
+				visiting: guildData.visiting === true ? true : undefined,
 			},
 			{instanceId},
 		);
@@ -303,6 +312,7 @@ export class Guild {
 			embed_splash_width: this.embedSplashWidth,
 			embed_splash_height: this.embedSplashHeight,
 			features: [...this.features],
+			badge_ids: this.badgeIds,
 			vanity_url_code: this.vanityURLCode,
 			owner_id: this.ownerId,
 			system_channel_id: this.systemChannelId,
@@ -322,6 +332,7 @@ export class Guild {
 			message_history_cutoff: this.messageHistoryCutoff,
 			joined_at: this.joinedAt ?? undefined,
 			unavailable: this.unavailable,
+			visiting: this.visiting ? true : undefined,
 			member_count: this.memberCount,
 			roles: Object.values(this.roles).map((role) => role.toJSON()),
 		};
@@ -329,10 +340,6 @@ export class Guild {
 
 	getRole(roleId: string): GuildRole | undefined {
 		return this.roles[roleId];
-	}
-
-	get createdAt(): Date {
-		return new Date(SnowflakeUtils.extractTimestamp(this.id));
 	}
 
 	isOwner(userId?: string | null): boolean {
@@ -351,6 +358,14 @@ export class Guild {
 			return Number.POSITIVE_INFINITY;
 		}
 		return this.resolveGuildLimit('max_guild_stickers', MAX_GUILD_STICKERS);
+	}
+
+	get maxEmojiSize(): number {
+		return this.resolveGuildLimit('emoji_max_size', EMOJI_MAX_SIZE);
+	}
+
+	get maxStickerSize(): number {
+		return this.resolveGuildLimit('sticker_max_size', STICKER_MAX_SIZE);
 	}
 
 	private resolveGuildLimit(key: LimitKey, fallback: number): number {
@@ -393,54 +408,5 @@ export class Guild {
 			return MessageNotifications.ONLY_MENTIONS;
 		}
 		return this.defaultMessageNotifications;
-	}
-
-	equals(other: Guild): boolean {
-		if (this === other) return true;
-		if (this.instanceId !== other.instanceId) return false;
-		if (this.id !== other.id) return false;
-		if (this.name !== other.name) return false;
-		if (this.icon !== other.icon) return false;
-		if (this.banner !== other.banner) return false;
-		if (this.bannerWidth !== other.bannerWidth) return false;
-		if (this.bannerHeight !== other.bannerHeight) return false;
-		if (this.splash !== other.splash) return false;
-		if (this.splashWidth !== other.splashWidth) return false;
-		if (this.splashHeight !== other.splashHeight) return false;
-		if (this.splashCardAlignment !== other.splashCardAlignment) return false;
-		if (this.embedSplash !== other.embedSplash) return false;
-		if (this.embedSplashWidth !== other.embedSplashWidth) return false;
-		if (this.embedSplashHeight !== other.embedSplashHeight) return false;
-		if (this.vanityURLCode !== other.vanityURLCode) return false;
-		if (this.ownerId !== other.ownerId) return false;
-		if (this.systemChannelId !== other.systemChannelId) return false;
-		if (this.systemChannelFlags !== other.systemChannelFlags) return false;
-		if (this.rulesChannelId !== other.rulesChannelId) return false;
-		if (this.afkChannelId !== other.afkChannelId) return false;
-		if (this.afkTimeout !== other.afkTimeout) return false;
-		if (this.verificationLevel !== other.verificationLevel) return false;
-		if (this.mfaLevel !== other.mfaLevel) return false;
-		if (this.nsfw !== other.nsfw) return false;
-		if (this.contentWarningLevel !== other.contentWarningLevel) return false;
-		if (this.contentWarningText !== other.contentWarningText) return false;
-		if (this.explicitContentFilter !== other.explicitContentFilter) return false;
-		if (this.defaultMessageNotifications !== other.defaultMessageNotifications) return false;
-		if (this._disabledOperations !== other._disabledOperations) return false;
-		if (this.joinedAt !== other.joinedAt) return false;
-		if (this.messageHistoryCutoff !== other.messageHistoryCutoff) return false;
-		if (this.unavailable !== other.unavailable) return false;
-		if (this.memberCount !== other.memberCount) return false;
-		if (this.features.size !== other.features.size) return false;
-		for (const feature of this.features) {
-			if (!other.features.has(feature)) return false;
-		}
-		const thisRoleIds = Object.keys(this.roles);
-		const otherRoleIds = Object.keys(other.roles);
-		if (thisRoleIds.length !== otherRoleIds.length) return false;
-		for (const roleId of thisRoleIds) {
-			const otherRole = other.roles[roleId];
-			if (!otherRole || !this.roles[roleId].equals(otherRole)) return false;
-		}
-		return true;
 	}
 }

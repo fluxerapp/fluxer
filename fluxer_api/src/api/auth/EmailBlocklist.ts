@@ -6,8 +6,12 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 
 const adminRepository = new AdminRepository();
 
+export async function isEmailBlocklisted(email: string): Promise<boolean> {
+	return adminRepository.isEmailBanned(email.trim());
+}
+
 export async function assertEmailNotBlocklisted(email: string, field: string): Promise<void> {
-	if (await adminRepository.isEmailBanned(email.trim())) {
+	if (await isEmailBlocklisted(email)) {
 		throw InputValidationError.fromCode(field, ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
 	}
 }

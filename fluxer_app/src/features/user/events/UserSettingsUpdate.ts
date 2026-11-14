@@ -9,6 +9,8 @@ export interface UserSettingsPayload {
 	status: string;
 	theme: string;
 	time_format: number;
+	timestamp_format?: number;
+	regional_format?: string | null;
 	guild_positions: Array<string>;
 	locale: string;
 	synced_preferences?: string;

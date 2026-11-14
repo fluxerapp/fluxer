@@ -272,18 +272,13 @@ static int fluxer_webp_next_container_bound(
     return 0;
 }
 
-static int fluxer_webp_deadline_status_at(long long deadline_monotonic_ms) {
-    int status = fluxer_monotonic_deadline_status(deadline_monotonic_ms);
-    return status == FLUXER_DEADLINE_PENDING
-        ? FLUXER_NATIVE_STATUS_OK
-        : FLUXER_NATIVE_STATUS_DEADLINE_EXCEEDED;
-}
+
 
 static int fluxer_webp_deadline_status(
     const struct fluxer_webp_animation_encoder *encoder
 ) {
     assert(encoder != NULL);
-    return fluxer_webp_deadline_status_at(encoder->deadline_monotonic_ms);
+    return fluxer_native_deadline_status(encoder->deadline_monotonic_ms);
 }
 
 static int fluxer_webp_encode_progress(
@@ -785,13 +780,13 @@ static int scale_webp_bgra_frame(
     if (state->source_width == state->target_width) {
         if (state->source_height == state->target_height) {
             *out_bgra = source_bgra;
-            return fluxer_webp_deadline_status_at(state->deadline_monotonic_ms);
+            return fluxer_native_deadline_status(state->deadline_monotonic_ms);
         }
     }
     if (state->scaled_bgra == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
     for (int clip_y = 0; clip_y < state->target_height;
          clip_y += FLUXER_WEBP_SCALE_DEADLINE_ROWS) {
-        int deadline_status = fluxer_webp_deadline_status_at(
+        int deadline_status = fluxer_native_deadline_status(
             state->deadline_monotonic_ms);
         if (deadline_status != FLUXER_NATIVE_STATUS_OK) return deadline_status;
         int clip_height = state->target_height - clip_y;
@@ -816,7 +811,7 @@ static int scale_webp_bgra_frame(
         if (rc > 0) return FLUXER_NATIVE_STATUS_ALLOCATION_FAILED;
         if (rc < 0) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
     }
-    int deadline_status = fluxer_webp_deadline_status_at(
+    int deadline_status = fluxer_native_deadline_status(
         state->deadline_monotonic_ms);
     if (deadline_status != FLUXER_NATIVE_STATUS_OK) return deadline_status;
     *out_bgra = state->scaled_bgra;
@@ -831,7 +826,7 @@ static int transform_webp_animation_frame(
     uint8_t *source_bgra = NULL;
     int next_source_timestamp = 0;
     if (!WebPAnimDecoderGetNext(state->decoder, &source_bgra, &next_source_timestamp)) {
-        int deadline_status = fluxer_webp_deadline_status_at(
+        int deadline_status = fluxer_native_deadline_status(
             state->deadline_monotonic_ms);
         if (deadline_status != FLUXER_NATIVE_STATUS_OK) return deadline_status;
         return FLUXER_NATIVE_STATUS_CODEC_FAILURE;

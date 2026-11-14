@@ -18,7 +18,7 @@
 -type channel_id() :: pos_integer().
 -type inputs() :: {term(), [term()]}.
 
--export_type([guild_state/0, list_id/0]).
+-export_type([guild_state/0, list_id/0, channel_id/0]).
 
 -define(INPUTS_KEY, channel_member_list_engine_inputs).
 
@@ -49,13 +49,23 @@ find_current_twin(_Inputs, [], _Recorded, _AccessByChannel, _State) ->
 find_current_twin(Inputs, [ListId | Rest], Recorded, AccessByChannel, State) ->
     case {maps:find(ListId, Recorded), channel_id(ListId)} of
         {{ok, Inputs}, TwinChannelId} when is_integer(TwinChannelId) ->
-            case inputs(TwinChannelId, State, AccessByChannel) of
-                Inputs -> {ok, ListId};
-                _ -> find_current_twin(Inputs, Rest, Recorded, AccessByChannel, State)
-            end;
+            current_twin_or_next(
+                inputs(TwinChannelId, State, AccessByChannel),
+                ListId,
+                Inputs,
+                {Rest, Recorded, AccessByChannel, State}
+            );
         _ ->
             find_current_twin(Inputs, Rest, Recorded, AccessByChannel, State)
     end.
+
+-spec current_twin_or_next(
+    inputs(), list_id(), inputs(), {[list_id()], map(), #{term() => [term()]}, guild_state()}
+) -> {ok, list_id()} | none.
+current_twin_or_next(Inputs, ListId, Inputs, _Rest) ->
+    {ok, ListId};
+current_twin_or_next(_Current, _ListId, Inputs, {Rest, Recorded, AccessByChannel, State}) ->
+    find_current_twin(Inputs, Rest, Recorded, AccessByChannel, State).
 
 -spec record(list_id(), channel_id(), guild_state(), guild_state()) -> guild_state().
 record(ListId, ChannelId, BuiltFrom, State) ->
@@ -79,15 +89,19 @@ latch_stale(State) ->
     put_recorded(
         maps:filter(
             fun(ListId, Recorded) ->
-                case channel_id(ListId) of
-                    undefined -> false;
-                    ChannelId -> Recorded =:= inputs(ChannelId, State, AccessByChannel)
-                end
+                still_current(ListId, Recorded, State, AccessByChannel)
             end,
             recorded(State)
         ),
         State
     ).
+
+-spec still_current(list_id(), inputs(), guild_state(), #{term() => [term()]}) -> boolean().
+still_current(ListId, Recorded, State, AccessByChannel) ->
+    case channel_id(ListId) of
+        undefined -> false;
+        ChannelId -> Recorded =:= inputs(ChannelId, State, AccessByChannel)
+    end.
 
 -spec inputs(channel_id(), guild_state()) -> inputs().
 inputs(ChannelId, State) ->
@@ -95,26 +109,30 @@ inputs(ChannelId, State) ->
 
 -spec inputs(channel_id(), guild_state(), #{term() => [term()]}) -> inputs().
 inputs(ChannelId, State, AccessByChannel) ->
-    {guild_permissions:view_inputs(ChannelId, State), maps:get(ChannelId, AccessByChannel, [])}.
+    {
+        guild_permissions_check:view_inputs(ChannelId, State),
+        maps:get(ChannelId, AccessByChannel, [])
+    }.
 
 -spec virtual_access_by_channel(guild_state()) -> #{term() => [term()]}.
 virtual_access_by_channel(State) ->
     ByChannel = maps:fold(
-        fun(UserId, Channels, Acc) ->
-            sets:fold(
-                fun(ChannelId, Inner) ->
-                    maps:update_with(
-                        ChannelId, fun(Users) -> [UserId | Users] end, [UserId], Inner
-                    )
-                end,
-                Acc,
-                Channels
-            )
-        end,
+        fun add_user_channels/3,
         #{},
         map_utils:ensure_map(maps:get(virtual_channel_access, State, #{}))
     ),
     maps:map(fun(_ChannelId, Users) -> lists:sort(Users) end, ByChannel).
+
+-spec add_user_channels(term(), sets:set(term()), #{term() => [term()]}) ->
+    #{term() => [term()]}.
+add_user_channels(UserId, Channels, Acc) ->
+    sets:fold(
+        fun(ChannelId, Inner) -> add_channel_user(ChannelId, UserId, Inner) end, Acc, Channels
+    ).
+
+-spec add_channel_user(term(), term(), #{term() => [term()]}) -> #{term() => [term()]}.
+add_channel_user(ChannelId, UserId, ByChannel) ->
+    maps:update_with(ChannelId, fun(Users) -> [UserId | Users] end, [UserId], ByChannel).
 
 -spec recorded(guild_state()) -> #{list_id() => inputs()}.
 recorded(State) ->

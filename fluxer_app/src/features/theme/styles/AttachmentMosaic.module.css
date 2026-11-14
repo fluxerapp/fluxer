@@ -14,15 +14,6 @@
 	}
 }
 
-@keyframes loading {
-	0% {
-		background-position: 200% 0;
-	}
-	100% {
-		background-position: -200% 0;
-	}
-}
-
 .mosaicContainer {
 	max-width: min(100%, var(--message-media-max-width, var(--attachment-media-max-width, 34.375rem)));
 	width: 100%;

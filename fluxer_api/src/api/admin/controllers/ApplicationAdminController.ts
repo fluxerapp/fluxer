@@ -3,7 +3,7 @@
 import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
 import {createApplicationID, createGuildID, createUserID} from '@app/api/BrandedTypes';
-import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {requireAdminACL, requireAnyAdminACL, requireGrantedAdminACLs} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
@@ -11,7 +11,6 @@ import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {
 	AdminApplicationIdParam,
 	ApplicationUpdateResponse,
@@ -21,12 +20,6 @@ import {
 	TransferApplicationOwnershipRequest,
 } from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-
-function requireRequestAdminACL(granted: ReadonlySet<string>, required: string): void {
-	if (!granted.has(required) && !granted.has(AdminACLs.WILDCARD)) {
-		throw new MissingACLError(required);
-	}
-}
 
 export function ApplicationAdminController(app: HonoApp) {
 	app.get(
@@ -51,7 +44,7 @@ export function ApplicationAdminController(app: HonoApp) {
 				throw InputValidationError.create('guild_id', 'Only one of owner_id and guild_id may be supplied');
 			}
 			if (guildId != null) {
-				requireRequestAdminACL(ctx.get('adminUserAcls'), AdminACLs.APPLICATION_LOOKUP);
+				requireGrantedAdminACLs(ctx.get('adminUserAcls'), [AdminACLs.APPLICATION_LOOKUP]);
 				const response = await adminService.applicationService.listGuildApplications(createGuildID(guildId));
 				await recordAdminRead(ctx, {
 					targetType: 'guild',
@@ -62,7 +55,7 @@ export function ApplicationAdminController(app: HonoApp) {
 				return ctx.json(response);
 			}
 			if (ownerId != null) {
-				requireRequestAdminACL(ctx.get('adminUserAcls'), AdminACLs.APPLICATION_LIST_BY_OWNER);
+				requireGrantedAdminACLs(ctx.get('adminUserAcls'), [AdminACLs.APPLICATION_LIST_BY_OWNER]);
 				const response = await adminService.applicationService.listUserApplications(createUserID(ownerId));
 				await recordAdminRead(ctx, {
 					targetType: 'user',

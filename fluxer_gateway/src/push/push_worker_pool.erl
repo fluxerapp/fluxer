@@ -3,11 +3,13 @@
 -module(push_worker_pool).
 -typing([eqwalizer]).
 
--export([init_counter/0, maybe_spawn/1, active_count/0, utilization_pct/0]).
+-export([init_counter/0, maybe_spawn/1, active_count/0]).
+-export([bump_counter/2, read_counter/1, counter_table_status/0]).
 
 -define(MAX_PUSH_WORKERS, 256).
 -define(PUSH_WORKER_COUNTER, push_worker_counter).
 -define(UTILIZATION_WARN_THRESHOLD, 80).
+-define(UTILIZATION_WARNING_INTERVAL_SECONDS, 10).
 
 -spec init_counter() -> ok.
 init_counter() ->
@@ -33,22 +35,22 @@ ensure_active_counter() ->
 
 -spec maybe_spawn(fun(() -> term())) -> ok | dropped.
 maybe_spawn(Fun) ->
-    maybe_spawn(Fun, false).
-
--spec maybe_spawn(fun(() -> term()), boolean()) -> ok | dropped.
-maybe_spawn(Fun, RetryAfterInit) ->
     try ets:update_counter(?PUSH_WORKER_COUNTER, active, {2, 1}) of
-        N when N > ?MAX_PUSH_WORKERS ->
-            _ = ets:update_counter(?PUSH_WORKER_COUNTER, active, {2, -1}),
-            dropped;
-        N ->
-            maybe_warn_high_utilization(N),
-            spawn_tracked_worker(Fun),
-            ok
+        N -> spawn_with_capacity(Fun, N)
     catch
         error:badarg ->
-            maybe_spawn_after_missing_counter(Fun, RetryAfterInit)
+            ok = init_counter(),
+            retry_spawn(Fun)
     end.
+
+-spec spawn_with_capacity(fun(() -> term()), integer()) -> ok | dropped.
+spawn_with_capacity(_Fun, N) when N > ?MAX_PUSH_WORKERS ->
+    _ = ets:update_counter(?PUSH_WORKER_COUNTER, active, {2, -1}),
+    dropped;
+spawn_with_capacity(Fun, N) ->
+    maybe_warn_high_utilization(N),
+    spawn_tracked_worker(Fun),
+    ok.
 
 -spec active_count() -> non_neg_integer().
 active_count() ->
@@ -59,17 +61,12 @@ active_count() ->
         error:badarg -> 0
     end.
 
--spec utilization_pct() -> non_neg_integer().
-utilization_pct() ->
-    (active_count() * 100) div ?MAX_PUSH_WORKERS.
-
 -spec maybe_warn_high_utilization(non_neg_integer()) -> ok.
 maybe_warn_high_utilization(Active) ->
-    Pct = (Active * 100) div ?MAX_PUSH_WORKERS,
-    case Pct >= ?UTILIZATION_WARN_THRESHOLD of
-        true ->
+    case (Active * 100) div ?MAX_PUSH_WORKERS of
+        Pct when Pct >= ?UTILIZATION_WARN_THRESHOLD ->
             throttled_utilization_warning(Active, Pct);
-        false ->
+        _ ->
             ok
     end.
 
@@ -81,23 +78,24 @@ throttled_utilization_warning(Active, Pct) ->
             undefined -> 0;
             V -> V
         end,
-    case Now - Last >= 10 of
-        true ->
+    case Now - Last of
+        Elapsed when Elapsed >= ?UTILIZATION_WARNING_INTERVAL_SECONDS ->
             persistent_term:put({?MODULE, last_util_warn}, Now),
             logger:warning("Push worker pool high utilisation", #{
                 utilisation_pct => Pct, active => Active, max => ?MAX_PUSH_WORKERS
             }),
             ok;
-        false ->
+        _ ->
             ok
     end.
 
--spec maybe_spawn_after_missing_counter(fun(() -> term()), boolean()) -> ok | dropped.
-maybe_spawn_after_missing_counter(Fun, false) ->
-    ok = init_counter(),
-    maybe_spawn(Fun, true);
-maybe_spawn_after_missing_counter(_Fun, true) ->
-    dropped.
+-spec retry_spawn(fun(() -> term())) -> ok | dropped.
+retry_spawn(Fun) ->
+    try ets:update_counter(?PUSH_WORKER_COUNTER, active, {2, 1}) of
+        N -> spawn_with_capacity(Fun, N)
+    catch
+        error:badarg -> dropped
+    end.
 
 -spec spawn_tracked_worker(fun(() -> term())) -> pid().
 spawn_tracked_worker(Fun) ->
@@ -122,84 +120,43 @@ run_tracked_worker(Fun) ->
 log_worker_crash(Class, Reason, Stack) ->
     logger:error("Push worker crash", #{class => Class, reason => Reason, stacktrace => Stack}).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-init_counter_test() ->
-    cleanup_test_counter(),
-    ?assertEqual(ok, init_counter()),
-    ?assertEqual(0, active_count()),
-    ?assertEqual(ok, init_counter()),
-    cleanup_test_counter().
-
-active_count_returns_zero_when_no_table_test() ->
-    cleanup_test_counter(),
-    ?assertEqual(0, active_count()).
-
-maybe_spawn_initializes_missing_counter_and_tracks_worker_test() ->
-    run_maybe_spawn_counter_test(fun() -> ok end).
-
-maybe_spawn_repairs_missing_active_counter_test() ->
-    run_maybe_spawn_counter_test(fun() ->
-        _ = ets:new(?PUSH_WORKER_COUNTER, [named_table, public, set]),
-        ok
-    end).
-
-run_maybe_spawn_counter_test(Setup) ->
-    cleanup_test_counter(),
-    Self = self(),
-    ok = Setup(),
-    try
-        ?assertEqual(ok, maybe_spawn(fun() -> Self ! worker_started end)),
-        ?assertEqual(ok, receive_worker_started()),
-        ok = gateway_retry_timer:wait(50),
-        ?assertEqual(0, active_count())
-    after
-        cleanup_test_counter()
+-spec counter_table_status() -> live | unavailable.
+counter_table_status() ->
+    case ets:info(?PUSH_WORKER_COUNTER, size) of
+        Size when is_integer(Size) -> live;
+        _ -> unavailable
     end.
 
-utilization_pct_zero_when_idle_test() ->
-    cleanup_test_counter(),
-    init_counter(),
-    ?assertEqual(0, utilization_pct()),
-    cleanup_test_counter().
+-spec read_counter(atom()) -> non_neg_integer() | unavailable.
+read_counter(Key) ->
+    try ets:lookup(?PUSH_WORKER_COUNTER, Key) of
+        [{Key, Value}] when is_integer(Value), Value >= 0 -> Value;
+        _ -> unavailable
+    catch
+        error:badarg -> unavailable
+    end.
 
-maybe_spawn_increments_counter_test() ->
-    cleanup_test_counter(),
-    init_counter(),
-    ok = maybe_spawn(fun() -> ok end),
-    ok = gateway_retry_timer:wait(50),
-    ?assertEqual(0, active_count()),
-    cleanup_test_counter().
+-spec bump_counter(atom(), non_neg_integer()) -> ok.
+bump_counter(Key, Increment) ->
+    try ets:update_counter(?PUSH_WORKER_COUNTER, Key, {2, Increment}) of
+        _Value -> ok
+    catch
+        error:badarg -> insert_missing_counter(Key, Increment)
+    end.
 
-maybe_spawn_drops_when_full_test() ->
-    cleanup_test_counter(),
-    init_counter(),
-    ets:insert(?PUSH_WORKER_COUNTER, {active, ?MAX_PUSH_WORKERS}),
-    ?assertEqual(dropped, maybe_spawn(fun() -> ok end)),
-    ?assertEqual(?MAX_PUSH_WORKERS, active_count()),
-    cleanup_test_counter().
-
-worker_crash_decrements_counter_test() ->
-    cleanup_test_counter(),
-    init_counter(),
-    ok = maybe_spawn(fun() -> error(deliberate_crash) end),
-    ok = gateway_retry_timer:wait(100),
-    ?assertEqual(0, active_count()),
-    cleanup_test_counter().
-
-cleanup_test_counter() ->
-    try ets:delete(?PUSH_WORKER_COUNTER) of
-        _ -> ok
+-spec insert_missing_counter(atom(), non_neg_integer()) -> ok.
+insert_missing_counter(Key, Increment) ->
+    try ets:insert_new(?PUSH_WORKER_COUNTER, {Key, Increment}) of
+        true -> ok;
+        false -> retry_bump_counter(Key, Increment)
     catch
         error:badarg -> ok
     end.
 
-receive_worker_started() ->
-    receive
-        worker_started -> ok
-    after 100 ->
-        timeout
+-spec retry_bump_counter(atom(), non_neg_integer()) -> ok.
+retry_bump_counter(Key, Increment) ->
+    try ets:update_counter(?PUSH_WORKER_COUNTER, Key, {2, Increment}) of
+        _Value -> ok
+    catch
+        error:badarg -> ok
     end.
-
--endif.

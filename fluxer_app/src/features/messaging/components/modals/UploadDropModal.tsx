@@ -4,6 +4,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import {UNKNOWN_CHANNEL_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import styles from '@app/features/messaging/components/modals/UploadDropModal.module.css';
+import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowFatUpIcon, FileIcon} from '@phosphor-icons/react';
@@ -46,11 +47,22 @@ interface UploadDropModalProps {
 
 export const UploadDropModal = ({channel, isShiftHeld, isSlowmodeActive}: UploadDropModalProps) => {
 	const {i18n} = useLingui();
-	const displayName = channel.isPrivate()
-		? ChannelUtils.getDMDisplayName(channel)
-		: channel.name
-			? `#${channel.name}`
-			: i18n._(UNKNOWN_CHANNEL_DESCRIPTOR);
+	let displayName: string;
+	if (channel.isPrivate()) {
+		displayName = ChannelUtils.getDMDisplayName(channel);
+	} else if (channel.name) {
+		displayName = `#${channel.name}`;
+	} else {
+		displayName = i18n._(UNKNOWN_CHANNEL_DESCRIPTOR);
+	}
+	let descriptionDescriptor: MessageDescriptor;
+	if (isShiftHeld) {
+		descriptionDescriptor = FILES_WILL_BE_SENT_IMMEDIATELY_WITHOUT_PREVIEW_DESCRIPTOR;
+	} else if (isSlowmodeActive) {
+		descriptionDescriptor = YOU_CAN_ADD_COMMENTS_BEFORE_UPLOADING_DIRECT_UPLOAD_DESCRIPTOR;
+	} else {
+		descriptionDescriptor = YOU_CAN_ADD_COMMENTS_BEFORE_UPLOADING_HOLD_SHIFT_DESCRIPTOR;
+	}
 	return (
 		<div className={styles.overlay} data-flx="messaging.upload-drop-modal.overlay">
 			<div className={styles.dialog} data-flx="messaging.upload-drop-modal.dialog">
@@ -64,11 +76,7 @@ export const UploadDropModal = ({channel, isShiftHeld, isSlowmodeActive}: Upload
 							: i18n._(UPLOAD_TO_DESCRIPTOR, {displayName})}
 					</h2>
 					<p className={styles.dialogDescription} data-flx="messaging.upload-drop-modal.dialog-description">
-						{isShiftHeld
-							? i18n._(FILES_WILL_BE_SENT_IMMEDIATELY_WITHOUT_PREVIEW_DESCRIPTOR)
-							: isSlowmodeActive
-								? i18n._(YOU_CAN_ADD_COMMENTS_BEFORE_UPLOADING_DIRECT_UPLOAD_DESCRIPTOR)
-								: i18n._(YOU_CAN_ADD_COMMENTS_BEFORE_UPLOADING_HOLD_SHIFT_DESCRIPTOR)}
+						{i18n._(descriptionDescriptor)}
 					</p>
 				</div>
 				<div

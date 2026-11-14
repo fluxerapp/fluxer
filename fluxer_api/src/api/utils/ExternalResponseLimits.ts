@@ -1,25 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const EXTERNAL_RESPONSE_LIMITS = {
-	unfurlDocumentBytes: 8 * 1024 * 1024,
-	unfurlResourceBytes: 500 * 1024 * 1024,
 	ssoUserInfoBytes: 512 * 1024,
 	ssoTokenBytes: 256 * 1024,
 	ssoDiscoveryBytes: 256 * 1024,
 	ssoJwksBytes: 256 * 1024,
-	domainVerificationBytes: 16 * 1024,
-	registrationWebhookBytes: 16 * 1024,
-	alertWebhookBytes: 16 * 1024,
-	youtubeApiBytes: 256 * 1024,
-	hackerNewsItemBytes: 128 * 1024,
-	blueskyResolveBytes: 128 * 1024,
-	blueskyDidBytes: 256 * 1024,
-	blueskyPostBytes: 512 * 1024,
-	blueskyProfileBytes: 256 * 1024,
-	wikipediaSummaryBytes: 256 * 1024,
-	oEmbedBytes: 256 * 1024,
 	pwnedPasswordsBytes: 1024 * 1024,
-	externalTemplateBytes: 512 * 1024,
+	statusPageSummaryBytes: 1024 * 1024,
 	fileBlocklistBytes: 25 * 1024 * 1024,
 	urlBlocklistBytes: 25 * 1024 * 1024,
 } as const;

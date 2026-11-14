@@ -56,8 +56,7 @@ function staleSessionCommand(snapshot: VoiceEngineV2Snapshot, command: VoiceEngi
 			return snapshot.outputDevice.operationId !== command.operationId;
 		case 'stats.collect':
 			return snapshot.statsOperationId !== command.operationId;
-		case 'capabilities.queryHardwareEncoder':
-			return snapshot.hardwareEncoder.operationId !== command.operationId;
+
 		case 'gateway.voiceState.write':
 		case 'gateway.voiceState.clear':
 			return snapshot.gateway.operationId !== command.operationId;

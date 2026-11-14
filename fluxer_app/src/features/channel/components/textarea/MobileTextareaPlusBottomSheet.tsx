@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	CREATE_POLL_DESCRIPTOR,
+	SEND_GIFT_DESCRIPTOR,
+	UPLOAD_FILE_DESCRIPTOR,
+	UPLOAD_YOUR_MESSAGE_AS_A_FILE_DESCRIPTOR,
+} from '@app/features/channel/components/textarea/TextareaPlusMenu';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {useCanSendGift} from '@app/features/premium/hooks/useCanSendGift';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -8,15 +14,10 @@ import {useLingui} from '@lingui/react/macro';
 import {GiftIcon, PaperclipIcon, TableIcon, UploadSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useMemo} from 'react';
-import {
-	CREATE_POLL_DESCRIPTOR,
-	SEND_GIFT_DESCRIPTOR,
-	UPLOAD_FILE_DESCRIPTOR,
-	UPLOAD_YOUR_MESSAGE_AS_A_FILE_DESCRIPTOR,
-} from './TextareaPlusMenu';
 
 interface MobileTextareaPlusBottomSheetProps {
 	canSendPolls: boolean;
+	giftChannelId?: string;
 	isOpen: boolean;
 	onClose: () => void;
 	onUploadFile: () => void;
@@ -26,7 +27,16 @@ interface MobileTextareaPlusBottomSheetProps {
 }
 
 export const MobileTextareaPlusBottomSheet = observer(
-	({canSendPolls, isOpen, onClose, onUploadFile, onSendPoll, textareaValue, onUploadAsFile}: MobileTextareaPlusBottomSheetProps) => {
+	({
+		canSendPolls,
+		giftChannelId,
+		isOpen,
+		onClose,
+		onUploadFile,
+		onSendPoll,
+		textareaValue,
+		onUploadAsFile,
+	}: MobileTextareaPlusBottomSheetProps) => {
 		const {i18n} = useLingui();
 		const canSendGift = useCanSendGift(isOpen);
 		const groups: Array<MenuGroupType> = useMemo(() => {
@@ -75,12 +85,24 @@ export const MobileTextareaPlusBottomSheet = observer(
 					icon: <GiftIcon data-flx="channel.textarea.mobile-textarea-plus-bottom-sheet.groups.gift-icon" />,
 					label: i18n._(SEND_GIFT_DESCRIPTOR),
 					onClick: () => {
-						ModalCommands.runAfterBottomSheetClose(onClose, () => PremiumModalCommands.open(true));
+						ModalCommands.runAfterBottomSheetClose(onClose, () =>
+							PremiumModalCommands.open({defaultGiftMode: true, giftChannelId}),
+						);
 					},
 				});
 			}
 			return [{items}];
-		}, [canSendGift, onClose, onUploadFile, textareaValue, onUploadAsFile, i18n.locale]);
+		}, [
+			canSendGift,
+			canSendPolls,
+			giftChannelId,
+			onClose,
+			onUploadFile,
+			onSendPoll,
+			textareaValue,
+			onUploadAsFile,
+			i18n.locale,
+		]);
 		return (
 			<MenuBottomSheet
 				isOpen={isOpen}

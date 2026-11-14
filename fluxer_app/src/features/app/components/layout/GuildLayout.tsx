@@ -14,6 +14,7 @@ import Accounts from '@app/features/auth/state/Accounts';
 import {MatureContentChannelGate} from '@app/features/channel/components/MatureContentChannelGate';
 import Channels from '@app/features/channel/state/Channels';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
+import {GuildPreviewNagbar} from '@app/features/guild/components/visits/GuildPreviewNagbar';
 import GuildAvailability from '@app/features/guild/state/GuildAvailability';
 import GuildMatureContentAgree, {MatureContentGateReason} from '@app/features/guild/state/GuildMatureContentAgree';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -422,7 +423,8 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 	const showGuildLevelGate = guildLevelGateReason !== MatureContentGateReason.NONE;
 	const topNagbarCount = useContext(TopNagbarContext);
 	const maxVisibleNagbars = 2;
-	const availableGuildNagbarSlots = Math.max(0, maxVisibleNagbars - topNagbarCount);
+	const showGuildPreviewNagbar = guild?.visiting === true;
+	const availableGuildNagbarSlots = Math.max(0, maxVisibleNagbars - topNagbarCount - (showGuildPreviewNagbar ? 1 : 0));
 	const showStaffOnlyGuildNagbar = shouldShowStaffOnlyGuild && availableGuildNagbarSlots > 0;
 	const showGuildMfaRequirementNagbar =
 		shouldShowGuildMfaRequirement && availableGuildNagbarSlots > (showStaffOnlyGuildNagbar ? 1 : 0);
@@ -430,7 +432,10 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 		shouldShowInvitesDisabled &&
 		availableGuildNagbarSlots > (showStaffOnlyGuildNagbar ? 1 : 0) + (showGuildMfaRequirementNagbar ? 1 : 0);
 	const guildNagbarCount =
-		(showStaffOnlyGuildNagbar ? 1 : 0) + (showGuildMfaRequirementNagbar ? 1 : 0) + (showInvitesDisabledNagbar ? 1 : 0);
+		(showGuildPreviewNagbar ? 1 : 0) +
+		(showStaffOnlyGuildNagbar ? 1 : 0) +
+		(showGuildMfaRequirementNagbar ? 1 : 0) +
+		(showInvitesDisabledNagbar ? 1 : 0);
 	const hasGuildNagbars = guildNagbarCount > 0;
 	const nagbarCount = topNagbarCount + guildNagbarCount;
 	const prevNagbarCount = useRef<number>(nagbarCount);
@@ -454,6 +459,13 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 	}, [viewLive, guild, guildId, channelId, firstAccessibleTextChannel, guildUnavailable]);
 	const guildNagbars = (
 		<>
+			{showGuildPreviewNagbar && guild && (
+				<GuildPreviewNagbar
+					guild={guild}
+					isMobile={mobileLayout.enabled}
+					data-flx="app.guild-layout.guild-preview-nagbar"
+				/>
+			)}
 			{showStaffOnlyGuildNagbar && guildId && (
 				<StaffOnlyGuildNagbar
 					isMobile={mobileLayout.enabled}
@@ -563,6 +575,13 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 						className={channelId ? styles.mobileNavbarHidden : styles.mobileNavbarSlot}
 						data-flx="app.guild-layout.mobile-navbar"
 					>
+						{!channelId && showGuildPreviewNagbar && (
+							<GuildPreviewNagbar
+								guild={guild}
+								isMobile={true}
+								data-flx="app.guild-layout.mobile-navbar.guild-preview-nagbar"
+							/>
+						)}
 						<GuildNavbar guild={guild} data-flx="app.guild-layout.guild-navbar" />
 					</div>
 				)}
@@ -612,7 +631,6 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 				>
 					{guildNagbars}
 					<div className={styles.guildLayoutContent} data-flx="app.guild-layout.guild-layout-content--3">
-						<GuildSidebarSkeleton guildId={guildId} data-flx="app.guild-layout.guild-sidebar-skeleton--3" />
 						<div className={styles.guildMainContent} data-flx="app.guild-layout.guild-main-content--5">
 							<GuildUnavailable
 								icon={SmileySadIcon}

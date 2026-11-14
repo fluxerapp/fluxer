@@ -16,7 +16,7 @@ const removeChannelFollowers: WorkerTaskHandler = async (payload, helpers) => {
 	const {channelRepository, webhookRepository, gatewayService} = getWorkerDependencies();
 	const sourceChannelId = createChannelID(BigInt(validated.sourceChannelId));
 	if (validated.reason === 'converted') {
-		const channel = await channelRepository.findUnique(sourceChannelId);
+		const channel = await channelRepository.channelData.findUnique(sourceChannelId);
 		if (channel?.type === ChannelTypes.GUILD_ANNOUNCEMENT) {
 			helpers.logger.info(
 				{sourceChannelId: validated.sourceChannelId},

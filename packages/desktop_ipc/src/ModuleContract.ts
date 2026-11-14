@@ -16,11 +16,7 @@ export const DESKTOP_UPDATE_EVENTS = Object.freeze({
 
 const DESKTOP_MODULE_NAME_PATTERN = /^[a-z][a-z0-9_]{0,63}$/u;
 export const DESKTOP_RENDERER_MODULE_NAME = 'fluxer_renderer';
-export const DESKTOP_TWEMOJI_MODULE_NAME = 'fluxer_twemoji';
-export const DESKTOP_DEEP_FILTER_MODULE_NAME = 'fluxer_deepfilter';
 export const DESKTOP_CAMERA_EFFECTS_MODULE_NAME = 'fluxer_camera_effects';
-export const DESKTOP_EMOJI_SPRITES_MODULE_NAME = 'fluxer_emoji_sprites';
-export const DESKTOP_EXTRAS_MODULE_NAME = 'fluxer_extras';
 export const DESKTOP_SOURCEMAP_MODULE_NAME = 'fluxer_sourcemaps';
 
 export const DESKTOP_FONT_MODULE_NAMES = Object.freeze({
@@ -46,7 +42,7 @@ export interface DesktopModuleEnsureResult {
 	readonly status: DesktopModuleEnsureStatus;
 }
 
-export interface DesktopPendingModuleUpdate {
+interface DesktopPendingModuleUpdate {
 	readonly modules: ReadonlyArray<string>;
 }
 
@@ -61,6 +57,7 @@ export interface DesktopModuleAPI {
 export interface DesktopUpdateState {
 	readonly available: boolean;
 	readonly updating?: boolean;
+	readonly replacesShell?: boolean;
 }
 
 export interface DesktopUpdateAPI {

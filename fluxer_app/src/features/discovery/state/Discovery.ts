@@ -2,10 +2,13 @@
 
 import type {DiscoveryGuild} from '@app/features/discovery/commands/DiscoveryCommands';
 import * as DiscoveryCommands from '@app/features/discovery/commands/DiscoveryCommands';
-import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import {AccountScopedWork, AccountScopedWorkTransitionReason} from '@app/features/platform/state/AccountScopedWork';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 const DEFAULT_DISCOVERY_PAGE_SIZE = 36;
+const logger = new Logger('Discovery');
 
 class Discovery {
 	guilds: Array<DiscoveryGuild> = [];
@@ -27,6 +30,8 @@ class Discovery {
 	categoriesLoaded = false;
 	categoriesError = false;
 	private activeSearchToken = 0;
+	private browsing = false;
+	private reloadAfterTransition = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -51,6 +56,7 @@ class Discovery {
 		const searchToken = ++this.activeSearchToken;
 		const searchModeChanged = query.length > 0 !== this.query.length > 0;
 		runInAction(() => {
+			this.browsing = true;
 			this.loading = true;
 			this.error = false;
 			if (offset === 0 && searchModeChanged) {
@@ -89,19 +95,24 @@ class Discovery {
 				this.categoryCounts = result.categoryCounts;
 				this.loading = false;
 			});
-		} catch {
+		} catch (error) {
 			runInAction(() => {
 				if (searchToken !== this.activeSearchToken) {
 					return;
 				}
 				this.loading = false;
 				this.error = true;
+				if (!isAbortError(error)) {
+					logger.warn('Failed to load discovery search results', {offset, limit, error});
+				}
 			});
 		}
 	}
 
 	async loadCategories(): Promise<void> {
-		if (this.categoriesLoaded) return;
+		if (this.categoriesLoaded) {
+			return;
+		}
 		try {
 			const categories = await DiscoveryCommands.getCategories();
 			runInAction(() => {
@@ -109,9 +120,12 @@ class Discovery {
 				this.categoriesLoaded = true;
 				this.categoriesError = false;
 			});
-		} catch {
+		} catch (error) {
 			runInAction(() => {
 				this.categoriesError = true;
+				if (!isAbortError(error)) {
+					logger.warn('Failed to load discovery categories', {error});
+				}
 			});
 		}
 	}
@@ -139,6 +153,8 @@ class Discovery {
 	}
 
 	reset(): void {
+		this.browsing = false;
+		this.reloadAfterTransition = false;
 		this.activeSearchToken += 1;
 		this.guilds = [];
 		this.loadedCount = 0;
@@ -152,10 +168,32 @@ class Discovery {
 		this.tag = null;
 		this.sortBy = 'member_count';
 	}
+
+	suspendForAccountTransition(reason: AccountScopedWorkTransitionReason): void {
+		const reload = reason === AccountScopedWorkTransitionReason.ACCOUNT_SWITCH && this.browsing;
+		this.reset();
+		this.categories = [];
+		this.categoriesLoaded = false;
+		this.categoriesError = false;
+		this.reloadAfterTransition = reload;
+	}
+
+	reloadAfterAccountTransition(): void {
+		if (!this.reloadAfterTransition) {
+			return;
+		}
+		this.reloadAfterTransition = false;
+		void this.loadCategories();
+		void this.search({offset: 0});
+	}
 }
 
 const discovery = new Discovery();
 
-AccountScopedWork.registerCancellation(() => discovery.reset());
+AccountScopedWork.registerTransition({
+	suspend: (reason) => discovery.suspendForAccountTransition(reason),
+	resume: () => {},
+	released: () => discovery.reloadAfterAccountTransition(),
+});
 
 export default discovery;

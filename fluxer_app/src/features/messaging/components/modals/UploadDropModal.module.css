@@ -52,9 +52,12 @@
 	flex-direction: column;
 	justify-content: center;
 	gap: 0.35rem;
+	max-width: 100%;
+	min-width: 0;
 }
 
 .dialogTitle {
+	overflow-wrap: anywhere;
 	font-weight: 600;
 	font-size: 1.05rem;
 	color: var(--text-primary);
@@ -109,10 +112,14 @@
 }
 
 .statusIndicatorActive .statusIcon {
-	color: var(--brand-primary-fill);
+	color: var(--brand-primary-light-fill);
 }
 
 :global(.theme-light) .statusIndicatorActive {
 	border-color: var(--brand-primary);
 	background-color: var(--brand-primary);
+}
+
+:global(.theme-light) .statusIndicatorActive .statusIcon {
+	color: var(--brand-primary-fill);
 }

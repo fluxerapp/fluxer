@@ -39,6 +39,8 @@ import {
 	GUILD_JOIN_MESSAGES_SHOWN_ROW,
 	GUILD_MATURE_CONTENT_TURNED_OFF_ROW,
 	GUILD_MATURE_CONTENT_TURNED_ON_ROW,
+	GUILD_MEMBER_DMS_DISABLED_ROW,
+	GUILD_MEMBER_DMS_ENABLED_ROW,
 	GUILD_MESSAGE_HISTORY_THRESHOLD_CHANGED_ROW,
 	GUILD_MESSAGE_HISTORY_THRESHOLD_REMOVED_ROW,
 	GUILD_MESSAGE_HISTORY_THRESHOLD_SET_ROW,
@@ -87,6 +89,7 @@ import {
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages';
 import {
 	actorPlaceholder,
+	channelPlaceholder,
 	featureDelta,
 	readBitfield,
 	readBoolean,
@@ -96,6 +99,7 @@ import {
 	readString,
 	readStringArray,
 	readTimestamp,
+	textPlaceholder,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
 import {
 	ContentWarningLevel,
@@ -222,6 +226,10 @@ const OWNER_CROWN_HIDDEN_TOGGLE: Toggle = {
 	on: {tone: 'neutral', descriptor: GUILD_OWNER_CROWN_HIDDEN_ROW},
 	off: {tone: 'neutral', descriptor: GUILD_OWNER_CROWN_SHOWN_ROW},
 };
+const MEMBER_DMS_DISABLED_TOGGLE: Toggle = {
+	on: {tone: 'neutral', descriptor: GUILD_MEMBER_DMS_DISABLED_ROW},
+	off: {tone: 'neutral', descriptor: GUILD_MEMBER_DMS_ENABLED_ROW},
+};
 const EMOJI_CLONING_TOGGLE: Toggle = {
 	on: {tone: 'add', descriptor: GUILD_EMOJI_CLONING_ALLOWED_ROW},
 	off: {tone: 'remove', descriptor: GUILD_EMOJI_CLONING_STOPPED_ROW},
@@ -264,14 +272,6 @@ function summarizedChange(
 		row: {id, tone, sentence: {descriptor: rowDescriptor, values}},
 		summary: {descriptor: summaryDescriptor, values: {actor, ...values}},
 	};
-}
-
-function channelPlaceholder(id: string): AuditLogPlaceholder {
-	return {kind: 'channel', id, recordedName: null, fallback: 'channel'};
-}
-
-function textPlaceholder(value: string): AuditLogPlaceholder {
-	return {kind: 'text', value};
 }
 
 function readNullableText(value: unknown): string | null | undefined {
@@ -580,6 +580,11 @@ export function presentGuildUpdate(entry: GuildAuditLogEntryResponse): AuditLogD
 			'hide_owner_crown',
 			readFeatureAdded(features, GuildFeatures.HIDE_OWNER_CROWN),
 			OWNER_CROWN_HIDDEN_TOGGLE,
+		),
+		toggleChange(
+			'member_dms_disabled',
+			readFeatureAdded(features, GuildFeatures.MEMBER_DMS_DISABLED),
+			MEMBER_DMS_DISABLED_TOGGLE,
 		),
 		presentMessageHistoryCutoff(entry),
 		presentInvitesPaused(features, actor),

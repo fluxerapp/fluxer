@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import accountStorage, {BrowserAccountStorageUnavailableError} from '@app/features/auth/state/AccountStorage';
+import accountStorage from '@app/features/auth/state/AccountStorage';
+import {BrowserAccountStorageUnavailableError} from '@app/features/auth/state/AccountStorageContract';
 import {accountStorageKey} from '@app/features/auth/state/AccountStorageKey';
 import type {AppStorageSessionAccount} from '@app/features/platform/state/AppStorageBootstrapContract';
 import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
@@ -57,7 +58,7 @@ export interface DesktopStorageImport {
 	readonly candidate: DesktopStorageAuthorityCandidate | null;
 }
 
-export class DesktopStorageAuthorityUnavailableError extends Error {
+class DesktopStorageAuthorityUnavailableError extends Error {
 	public constructor(message: string, options?: ErrorOptions) {
 		super(message, options);
 		this.name = 'DesktopStorageAuthorityUnavailableError';
@@ -223,7 +224,7 @@ async function verifyDesktopSession(
 	}
 }
 
-export class DesktopStorageAuthorityCandidate {
+class DesktopStorageAuthorityCandidate {
 	private constructor(
 		public readonly request: DesktopLegacyImportRequest,
 		public readonly result: DesktopLegacyImportResult,

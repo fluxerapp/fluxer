@@ -19,10 +19,6 @@ export const STREAM_ENDED_DESCRIPTOR = msg({
 	message: 'Stream ended',
 	comment: 'Status overlay on a voice participant tile when the remote screen share has ended.',
 });
-export const STREAM_HIDDEN_DESCRIPTOR = msg({
-	message: 'Stream hidden',
-	comment: 'Overlay text on a participant tile when the local user hid the remote screen share.',
-});
 export const STREAM_BUFFERING_DESCRIPTOR = msg({
 	message: 'Stream buffering',
 	comment: 'Accessible status label for the black buffering frame shown while a screen share codec is renegotiated.',

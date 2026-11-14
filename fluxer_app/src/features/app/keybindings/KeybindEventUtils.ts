@@ -1,19 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeybindConfig, KeyCombo} from '@app/features/input/state/InputKeybind';
-import {shouldPreferLayoutKeyForShortcut} from '@app/features/input/utils/KeybindComboUtils';
+import {shouldPreferLayoutKey} from '@fluxer/desktop_ipc/src/GlobalShortcutKeyNames';
 
 export type KeyboardShortcutEvent = Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'altKey' | 'shiftKey' | 'metaKey'> &
 	Partial<Pick<KeyboardEvent, 'code'>>;
 export type KeyboardShortcutPressEvent = KeyboardShortcutEvent & Pick<KeyboardEvent, 'repeat'>;
 
-const normalizeKeyboardShortcutKey = (key: string): string => {
+export const normalizeKeyboardShortcutKey = (key: string): string => {
 	if (key === ' ') return 'space';
 	if (key === 'Break') return 'pause';
 	return key.toLowerCase();
 };
 const isPrintableNonLetterShortcutKey = (key: string | undefined | null): boolean =>
 	!!key && key.length === 1 && !/^[a-z]$/i.test(key);
+const latinKeyCode = (key: string): string | null => {
+	if (/^[a-z]$/i.test(key)) return `Key${key.toUpperCase()}`;
+	if (/^[0-9]$/.test(key)) return `Digit${key}`;
+	return null;
+};
+const isNonAsciiLayoutKey = (key: string): boolean => key.length === 1 && key.charCodeAt(0) > 0x7f;
 const hasTriggerKey = (combo: KeyCombo): boolean => (combo.key ?? '') !== '' || (combo.code ?? '') !== '';
 const keyboardEventIsModifierKey = (
 	event: Pick<KeyboardShortcutEvent, 'key' | 'code'>,
@@ -32,8 +38,12 @@ const keyboardEventIsModifierKey = (
 };
 export const keyboardEventTriggerMatchesCombo = (combo: KeyCombo, event: KeyboardShortcutEvent): boolean => {
 	const expectedLayoutKey = combo.key || combo.code;
-	if (shouldPreferLayoutKeyForShortcut(combo) && expectedLayoutKey) {
+	if (shouldPreferLayoutKey(combo) && expectedLayoutKey) {
 		if (normalizeKeyboardShortcutKey(event.key) === normalizeKeyboardShortcutKey(expectedLayoutKey)) return true;
+		const hasCommandModifier = Boolean(combo.ctrl || combo.ctrlOrMeta || combo.alt || combo.meta);
+		if (hasCommandModifier && isNonAsciiLayoutKey(event.key) && event.code === latinKeyCode(expectedLayoutKey)) {
+			return true;
+		}
 		return Boolean(combo.code && event.code === combo.code && combo.ctrlOrMeta && combo.alt);
 	}
 	const expectedCode = combo.code;
@@ -91,6 +101,16 @@ export const keyboardEventReleasesComboModifier = (
 	if (combo.shift && keyboardEventIsModifierKey(event, 'shift')) return true;
 	return false;
 };
+const TEXT_EDITING_KEY_CODES: ReadonlySet<string> = new Set(['KeyV', 'KeyC', 'KeyX', 'KeyA', 'KeyZ', 'KeyY']);
+const TEXT_NAVIGATION_KEYS: ReadonlySet<string> = new Set(['ArrowLeft', 'ArrowRight', 'Backspace', 'Delete']);
+
+export const isTextEditingShortcutEvent = (event: KeyboardShortcutEvent): boolean => {
+	const commandModifierCount = Number(event.ctrlKey) + Number(event.altKey) + Number(event.metaKey);
+	if (commandModifierCount !== 1) return false;
+	if ((event.ctrlKey || event.metaKey) && TEXT_EDITING_KEY_CODES.has(event.code ?? '')) return true;
+	return TEXT_NAVIGATION_KEYS.has(event.key);
+};
+
 export const shouldAllowLocalShortcutForChannelTextarea = (
 	entry: Pick<KeybindConfig, 'editableFocusBehavior'>,
 	textareaValue: string,

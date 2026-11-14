@@ -356,14 +356,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn current_time_conversion_has_epoch_baseline() {
-        assert_eq!(format_timestamp(1970, 1, 1, 0, 0, 0), {
-            let (y, m, d) = civil_from_days(0);
-            format_timestamp(y as u32, m, d, 0, 0, 0)
-        });
-    }
-
     const ACCESS_KEY_ID: &str = "AKIAIOSFODNN7EXAMPLE";
     const SECRET_ACCESS_KEY: &str = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
     const OBJECT_URL: &str = "https://examplebucket.s3.amazonaws.com/test.txt";
@@ -421,86 +413,6 @@ mod tests {
     }
 
     #[test]
-    fn extra_signed_headers_are_canonical_whatever_order_they_arrive_in() {
-        let ascending = sign_get(
-            "",
-            &[
-                Header {
-                    name: "Accept-Encoding",
-                    value: "identity",
-                },
-                Header {
-                    name: "Range",
-                    value: "bytes=0-9",
-                },
-                Header {
-                    name: "X-Amz-Meta-Album",
-                    value: "covers",
-                },
-            ],
-        );
-        let descending = sign_get(
-            "",
-            &[
-                Header {
-                    name: "\tX-AMZ-META-ALBUM ",
-                    value: "covers",
-                },
-                Header {
-                    name: "  range",
-                    value: "bytes=0-9",
-                },
-                Header {
-                    name: "accept-encoding",
-                    value: "identity",
-                },
-            ],
-        );
-        assert_eq!(
-            "accept-encoding;host;range;x-amz-content-sha256;x-amz-date;x-amz-meta-album",
-            ascending.signed_headers
-        );
-        assert_eq!(ascending.signed_headers, descending.signed_headers);
-        assert_eq!(ascending.authorization, descending.authorization);
-    }
-
-    #[test]
-    fn signed_header_values_are_trimmed_and_their_inner_runs_collapsed() {
-        let exact = sign_get(
-            "",
-            &[Header {
-                name: "X-Amz-Meta-Note",
-                value: "one two",
-            }],
-        );
-        for padded in ["  one two  ", "\tone two\r\n", "one  \t  two"] {
-            assert_eq!(
-                exact.authorization,
-                sign_get(
-                    "",
-                    &[Header {
-                        name: "X-Amz-Meta-Note",
-                        value: padded,
-                    }],
-                )
-                .authorization,
-                "{padded:?}"
-            );
-        }
-        assert_ne!(
-            exact.authorization,
-            sign_get(
-                "",
-                &[Header {
-                    name: "X-Amz-Meta-Note",
-                    value: "onetwo",
-                }],
-            )
-            .authorization
-        );
-    }
-
-    #[test]
     fn a_configured_session_token_is_signed_as_x_amz_security_token() {
         let anonymous = sign_get("", &[]);
         assert_eq!(
@@ -522,34 +434,5 @@ mod tests {
             session.authorization,
             sign_get("FQoGZXIvYXdzANOTHERSESSIONTOKEN", &[]).authorization
         );
-    }
-
-    #[test]
-    fn empty_credentials_and_broken_urls_are_refused_before_signing() {
-        let mut opts = Options::new("GET", OBJECT_URL, "", ACCESS_KEY_ID, SECRET_ACCESS_KEY);
-        opts.timestamp = Some(format_timestamp(2013, 5, 24, 0, 0, 0));
-        assert_eq!(Err(Error::MissingAwsCredentials), sign(opts));
-        let mut opts = Options::new(
-            "GET",
-            "https://",
-            "us-east-1",
-            ACCESS_KEY_ID,
-            SECRET_ACCESS_KEY,
-        );
-        opts.timestamp = Some(format_timestamp(2013, 5, 24, 0, 0, 0));
-        assert_eq!(Err(Error::InvalidUrl), sign(opts));
-        let mut opts = Options::new(
-            "GET",
-            OBJECT_URL,
-            "us-east-1",
-            ACCESS_KEY_ID,
-            SECRET_ACCESS_KEY,
-        );
-        opts.extra_signed_headers = &[Header {
-            name: "   ",
-            value: "x",
-        }];
-        opts.timestamp = Some(format_timestamp(2013, 5, 24, 0, 0, 0));
-        assert_eq!(Err(Error::InvalidHeader), sign(opts));
     }
 }

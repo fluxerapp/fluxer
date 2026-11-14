@@ -11,7 +11,7 @@ is_positive_int() {
 	esac
 }
 
-available_cpu_count() {
+cpu_quota_count() {
 	cpu_quota=""
 	cpu_period=""
 	if [ -r /sys/fs/cgroup/cpu.max ]; then
@@ -27,14 +27,17 @@ available_cpu_count() {
 	fi
 	if is_positive_int "$cpu_quota" && is_positive_int "$cpu_period"; then
 		echo "$(((cpu_quota + cpu_period - 1) / cpu_period))"
-		return 0
 	fi
+}
+
+available_cpu_count() {
 	cpu_count="$(nproc 2>/dev/null || echo 1)"
-	if is_positive_int "$cpu_count"; then
-		echo "$cpu_count"
-	else
-		echo 1
+	is_positive_int "$cpu_count" || cpu_count=1
+	quota_count="$(cpu_quota_count)"
+	if is_positive_int "$quota_count" && [ "$quota_count" -lt "$cpu_count" ]; then
+		cpu_count="$quota_count"
 	fi
+	echo "$cpu_count"
 }
 
 clamp_int() {
@@ -95,7 +98,11 @@ if ! is_positive_int "${FLUXER_ERLANG_SCHEDULERS:-}"; then
 fi
 
 if ! is_positive_int "${FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS:-}"; then
-	FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS="$(((FLUXER_ERLANG_SCHEDULERS * 2 + 2) / 3))"
+	FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS="$(clamp_int "$((FLUXER_ERLANG_SCHEDULERS / 2))" 1 "$FLUXER_ERLANG_SCHEDULERS")"
+fi
+
+if ! is_positive_int "${FLUXER_ERLANG_DIRTY_IO_SCHEDULERS:-}"; then
+	FLUXER_ERLANG_DIRTY_IO_SCHEDULERS="$(clamp_int "$FLUXER_ERLANG_SCHEDULERS" 2 4)"
 fi
 
 export FLUXER_ERLANG_NODE_NAME
@@ -103,6 +110,7 @@ export FLUXER_ERLANG_COOKIE
 export FLUXER_ERLANG_DIST_PORT
 export FLUXER_ERLANG_SCHEDULERS
 export FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS
+export FLUXER_ERLANG_DIRTY_IO_SCHEDULERS
 export RELX_REPLACE_OS_VARS="${RELX_REPLACE_OS_VARS:-true}"
 
 exec /opt/fluxer_gateway/bin/fluxer_gateway foreground

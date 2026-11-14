@@ -5,6 +5,8 @@ import selectorStyles from '@app/features/app/components/dialogs/shared/Selector
 import {Limits} from '@app/features/app/utils/UserLimits';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import styles from '@app/features/messaging/components/modals/poll_modal/CreatePollModal.module.css';
+import {PollAnswerInput} from '@app/features/messaging/components/modals/poll_modal/PollAnswerInput';
+import {useTextareaSegments} from '@app/features/messaging/hooks/useTextareaSegments';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
@@ -18,8 +20,6 @@ import {useLingui} from '@lingui/react';
 import {PlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useMemo, useRef, useState} from 'react';
-import {useTextareaSegments} from '../../../hooks/useTextareaSegments';
-import {PollAnswerInput} from './PollAnswerInput';
 
 export const CREATE_A_POLL_DESCRIPTOR = msg({
 	message: 'Create a poll',
@@ -150,7 +150,7 @@ export const CreatePollModal = observer(
 	({size = 'small', hideCloseButton, onSubmit, disableAutoDismiss, channelId}: CreatePollModalProps) => {
 		const {i18n} = useLingui();
 		const initialFocusRef = useRef<HTMLTextAreaElement | null>(null);
-		const {previousValueRef, displayToActual, handleTextChange} = useTextareaSegments();
+		const {displayToActual} = useTextareaSegments();
 		const [submitting, setSubmitting] = useState(false);
 
 		const [question, setQuestion] = useState('');
@@ -243,12 +243,8 @@ export const CreatePollModal = observer(
 									showCharacterCount={true}
 									error={forgotToEnterQuestion ? i18n._(POLL_ERROR_YOU_FORGOT_TO_ENTER_A_QUESTION) : undefined}
 									onChange={(e) => {
-										const nativeEvent = e.nativeEvent as InputEvent;
-										const newValue = e.target.value;
-										const inputType = typeof nativeEvent.inputType === 'string' ? nativeEvent.inputType : undefined;
 										setForgotToEnterQuestion(false);
-										handleTextChange(newValue, previousValueRef.current, inputType);
-										setQuestion(newValue);
+										setQuestion(e.target.value);
 									}}
 									data-flx="messaging.create-poll-modal.textarea.question"
 								/>
@@ -291,11 +287,12 @@ export const CreatePollModal = observer(
 											}
 											showDelete={answers.length > 1}
 											channelId={channelId}
+											data-flx="messaging.poll-modal.create-poll-modal.poll-answer-input"
 										/>
 									))}
 
 									<Button
-										leftIcon={<PlusIcon weight="bold" />}
+										leftIcon={<PlusIcon weight="bold" data-flx="messaging.poll-modal.create-poll-modal.plus-icon" />}
 										variant="secondary"
 										hidden={answers.length >= maxAnswerCount}
 										onClick={() => {
@@ -310,6 +307,7 @@ export const CreatePollModal = observer(
 												];
 											});
 										}}
+										data-flx="messaging.poll-modal.create-poll-modal.button.set-answers"
 									>
 										{i18n._(POLL_ADD_ANSWER_DESCRIPTOR)}
 									</Button>

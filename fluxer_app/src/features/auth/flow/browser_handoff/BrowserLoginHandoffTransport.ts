@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
-import type {UserData} from '@app/features/auth/state/AccountStorage';
+import type {UserData} from '@app/features/auth/state/AccountStorageContract';
 import type {InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import type {DesktopHandoffAPI} from '@fluxer/desktop_ipc/src/BrowserHandoffContract';
@@ -20,19 +20,19 @@ export interface BrowserLoginHandoffSession {
 	readonly target: BrowserLoginHandoffTarget;
 }
 
-export interface BrowserLoginHandoffStatusResult {
+interface BrowserLoginHandoffStatusResult {
 	readonly status: DesktopHandoffStatus;
 	readonly token: string | null;
 	readonly userId: string | null;
 	readonly userData: UserData | undefined;
 }
 
-export const BrowserLoginHandoffTransportKind = Object.freeze({
+const BrowserLoginHandoffTransportKind = Object.freeze({
 	IPC: 'ipc',
 	RENDERER: 'renderer',
 } as const);
 
-export type BrowserLoginHandoffTransportKind =
+type BrowserLoginHandoffTransportKind =
 	(typeof BrowserLoginHandoffTransportKind)[keyof typeof BrowserLoginHandoffTransportKind];
 
 export interface BrowserLoginHandoffTransport {

@@ -175,6 +175,13 @@ function readStoredAccountData(source: Record<string, unknown>): StoredAccountDa
 	if (isValid !== undefined && typeof isValid !== 'boolean') {
 		throw new StoredAccountRuntimeRecoveryError('Stored account validity must be a boolean or absent');
 	}
+	const switcherPosition = source.switcherPosition;
+	if (
+		switcherPosition !== undefined &&
+		(typeof switcherPosition !== 'number' || !Number.isSafeInteger(switcherPosition) || switcherPosition < 0)
+	) {
+		throw new StoredAccountRuntimeRecoveryError('Stored account switcher position must be a whole number or absent');
+	}
 	const data: StoredAccountData = {
 		userId,
 		token,
@@ -195,6 +202,9 @@ function readStoredAccountData(source: Record<string, unknown>): StoredAccountDa
 	}
 	if (Object.hasOwn(source, 'isValid')) {
 		data.isValid = isValid;
+	}
+	if (switcherPosition !== undefined) {
+		data.switcherPosition = switcherPosition;
 	}
 	return data;
 }

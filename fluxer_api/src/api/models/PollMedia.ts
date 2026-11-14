@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessagePollMedia} from '../database/types/PollTypes';
-import {PollEmoji} from './PollEmoji';
+import type {MessagePollMedia} from '@app/api/database/types/PollTypes';
+import {PollEmoji} from '@app/api/models/PollEmoji';
 
 export class PollMedia {
 	readonly emoji: PollEmoji | null;

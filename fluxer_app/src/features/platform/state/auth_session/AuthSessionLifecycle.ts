@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
-import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorage';
+import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
 import {
 	type AccountScopedWorkSuspension,
@@ -51,7 +51,7 @@ export interface AuthSessionValidatedSwitchOptions {
 	readonly validatedToken: string;
 }
 
-export class AccountSwitchPreparedCredentialChangedError extends Error {
+class AccountSwitchPreparedCredentialChangedError extends Error {
 	constructor(accountKey: string) {
 		super(`Prepared credentials changed before ${accountKey} could be activated`);
 		this.name = 'AccountSwitchPreparedCredentialChangedError';
@@ -105,7 +105,10 @@ export interface AuthSessionLifecycleState {
 	readonly markAccountInvalid: (accountKey: string, expectedToken?: string) => void;
 }
 
-function requireRuntimeSnapshot(snapshot: RuntimeConfigSnapshot | null, operation: string): RuntimeConfigSnapshot {
+export function requireRuntimeSnapshot(
+	snapshot: RuntimeConfigSnapshot | null,
+	operation: string,
+): RuntimeConfigSnapshot {
 	if (snapshot == null) {
 		throw new AuthSessionRuntimeUnavailableError(operation);
 	}
@@ -365,7 +368,7 @@ export class AuthSessionLifecycle {
 		});
 	}
 
-	async logout(): Promise<void> {
+	async logout({notifyServer = true}: {notifyServer?: boolean} = {}): Promise<void> {
 		return await this.transitionGate.runAccountTransition(async () => {
 			const state = this.state.getState();
 			if (
@@ -379,7 +382,7 @@ export class AuthSessionLifecycle {
 			}
 			const reason = AccountScopedWorkTransitionReason.LOGOUT;
 			return await this.transitionGate.runAccountScoped(reason, async (transition) => {
-				await this.removeCurrentSession(this.state.getCurrentAccountKey(), reason, true, transition);
+				await this.removeCurrentSession(this.state.getCurrentAccountKey(), reason, notifyServer, transition);
 			});
 		});
 	}

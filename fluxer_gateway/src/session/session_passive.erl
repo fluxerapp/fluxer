@@ -15,9 +15,7 @@
     is_user_mentioned/2,
     is_guild_synced/2,
     mark_guild_synced/2,
-    clear_guild_synced/2,
-    extract_role_ids/1,
-    mention_role_set/1
+    clear_guild_synced/2
 ]).
 
 -export_type([guild_id/0, user_id/0, event/0, session_data/0, guild_state/0]).
@@ -213,7 +211,7 @@ add_mention_role(_, Acc) ->
 
 -spec get_user_roles_for_guild(user_id(), guild_state()) -> [integer()].
 get_user_roles_for_guild(UserId, GuildState) ->
-    case guild_permissions:find_member_by_user_id(UserId, GuildState) of
+    case guild_permissions_check:find_member_by_user_id(UserId, GuildState) of
         undefined -> [];
         Member -> extract_role_ids(maps:get(<<"roles">>, Member, []))
     end.

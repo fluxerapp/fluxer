@@ -3,8 +3,12 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {AppStoreAppConfig} from '@app/api/config/APIConfig';
+import {hasText} from '@app/api/store_billing/StoreBillingCredentials';
 import type {StorePurchaseKind, StoreSlot} from '@app/api/store_billing/StoreBillingTypes';
 import type {RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
+import {ms} from 'itty-time';
+
+const SANDBOX_SUBSCRIPTION_WINDOW_MS = ms('7 days');
 
 interface StoreProductSlotShape {
 	kind: StorePurchaseKind;
@@ -23,10 +27,6 @@ export interface GooglePlayProductEntry {
 	productId: string;
 	basePlanId: string | null;
 	slot: StoreSlot;
-}
-
-function hasText(value: string | undefined): boolean {
-	return value !== undefined && value.trim().length > 0;
 }
 
 export function isAppStoreConfigured(): boolean {
@@ -105,7 +105,20 @@ export function isGooglePlaySubscriptionProduct(productId: string): boolean {
 	);
 }
 
-export function isSandboxEntitlementAllowed(userId: UserID): boolean {
+export function isSandboxEntitlementAllowed(
+	userId: UserID,
+	kind: StorePurchaseKind,
+	purchasedAt: Date | null,
+	now: number = Date.now(),
+): boolean {
 	const cfg = Config.storeBilling;
-	return cfg.sandboxEntitlesAll || cfg.sandboxUserIds.includes(userId.toString());
+	if (cfg.sandboxEntitlesAll || cfg.sandboxUserIds.includes(userId.toString())) {
+		return true;
+	}
+	return (
+		kind === 'subscription' &&
+		cfg.sandboxSubscriptions &&
+		purchasedAt !== null &&
+		now - purchasedAt.getTime() <= SANDBOX_SUBSCRIPTION_WINDOW_MS
+	);
 }

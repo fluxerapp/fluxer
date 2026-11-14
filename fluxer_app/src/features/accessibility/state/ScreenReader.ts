@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {makeAutoObservable, runInAction} from 'mobx';
@@ -13,10 +12,6 @@ class ScreenReader {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-	}
-
-	get isActive(): boolean {
-		return this.nativeScreenReaderActive || Accessibility.screenReaderAnnounceNewMessages;
 	}
 
 	startDesktopBridge(): void {

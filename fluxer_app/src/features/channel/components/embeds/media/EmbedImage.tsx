@@ -274,7 +274,13 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const messageViewContext = useMaybeMessageViewContext();
-		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
+		const {
+			shouldBlur,
+			shouldBlock,
+			gateReason,
+			canReveal,
+			reveal: revealSensitiveMedia,
+		} = useMatureMedia(nsfw, channelId);
 		const shouldAnimateImage = useShouldAnimate({kind: 'gif', isAnimated: animated});
 		const {style: containerStyle, dimensions} = imageCalculator.calculate(
 			{width, height},
@@ -331,6 +337,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 		const animatedImageSource =
 			animated && !src.startsWith('blob:') && shouldAnimateImage && shouldLoadMedia && effectiveSrc === src ? src : '';
 		const {
+			src: staticDisplaySrc,
 			loaded,
 			error,
 			thumbHashURL,
@@ -339,6 +346,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 			onError: handleImageError,
 		} = useMediaLoading(staticImageSrc, placeholder, {enabled: shouldLoadMedia});
 		const {
+			src: animatedDisplaySrc,
 			loaded: animatedLoaded,
 			error: animatedError,
 			cachedOnMount: animatedCachedOnMount,
@@ -440,6 +448,9 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 		const handleCloseMediaSheet = useCallback(() => {
 			setMediaSheetOpen(false);
 		}, []);
+		if (shouldBlock) {
+			return null;
+		}
 		if (shouldBlur) {
 			return (
 				<div
@@ -542,7 +553,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 								>
 									<img
 										alt={alt || i18n._(IMAGE_DESCRIPTOR)}
-										src={shouldLoadMedia ? staticImageSrc : undefined}
+										src={shouldLoadMedia ? staticDisplaySrc : undefined}
 										ref={mediaRef}
 										width={naturalWidth}
 										height={naturalHeight}
@@ -574,11 +585,11 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 											</motion.div>
 										)}
 									</AnimatePresence>
-									{animatedImageSource.length > 0 && (
+									{animatedDisplaySrc !== undefined && animatedDisplaySrc.length > 0 && (
 										<motion.img
 											alt=""
 											aria-hidden="true"
-											src={animatedImageSource}
+											src={animatedDisplaySrc}
 											ref={animatedMediaRef}
 											width={naturalWidth}
 											height={naturalHeight}

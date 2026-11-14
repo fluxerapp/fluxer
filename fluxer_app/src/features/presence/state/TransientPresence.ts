@@ -82,14 +82,6 @@ class TransientPresenceRegistryClass {
 		this.stopCleanupIfIdle();
 	}
 
-	cleanup(): void {
-		if (this.cleanupInterval) {
-			clearInterval(this.cleanupInterval);
-			this.cleanupInterval = null;
-		}
-		this.presences.clear();
-	}
-
 	private stopCleanupIfIdle(): void {
 		if (this.presences.size > 0) return;
 		if (!this.cleanupInterval) return;

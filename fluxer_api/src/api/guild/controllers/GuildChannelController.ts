@@ -40,14 +40,20 @@ export function GuildChannelController(app: HonoApp) {
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],
-			description: 'List guild channels. Returns all channels in the guild that the user has access to view.',
+			description:
+				'List guild channels. Returns all channels in the guild that the user has access to view. Someone visiting the guild gets the channels that @everyone can see, with only the @everyone permission overwrite.',
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const requestCache = ctx.get('requestCache');
+			const viewer = viewerFromCtx(ctx);
+			const visitorChannels = await ctx
+				.get('guildVisitService')
+				.listChannelsForVisitor({userId, guildId, viewer, requestCache});
 			return ctx.json(
-				await ctx.get('guildService').channels.getChannels({userId, guildId, requestCache, viewer: viewerFromCtx(ctx)}),
+				visitorChannels ??
+					(await ctx.get('guildService').channels.getChannels({userId, guildId, requestCache, viewer})),
 			);
 		},
 	);

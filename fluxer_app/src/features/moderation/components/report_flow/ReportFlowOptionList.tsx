@@ -4,10 +4,10 @@ import {OPENS_IN_NEW_TAB_DESCRIPTOR} from '@app/features/moderation/components/r
 import styles from '@app/features/moderation/components/report_flow/ReportFlowOptionList.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import type {ReportFlowOption} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 import {useLingui} from '@lingui/react/macro';
-import {ArrowSquareOutIcon, CaretRightIcon} from '@phosphor-icons/react';
-import clsx from 'clsx';
+import {ArrowSquareOutIcon} from '@phosphor-icons/react';
 import type React from 'react';
 
 interface ReportFlowOptionListProps {
@@ -50,7 +50,7 @@ export const ReportFlowOptionList: React.FC<ReportFlowOptionListProps> = ({optio
 									</>
 								) : (
 									<CaretRightIcon
-										className={clsx(styles.icon, styles.chevron)}
+										className={styles.icon}
 										weight="bold"
 										size={remFromPx(18)}
 										aria-hidden={true}
