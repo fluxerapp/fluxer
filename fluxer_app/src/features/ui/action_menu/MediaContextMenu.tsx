@@ -66,6 +66,7 @@ interface MediaContextMenuProps {
 	snapshotIndex?: number;
 	onClose: () => void;
 	onDelete: (bypassConfirm?: boolean) => void;
+	hideReply?: boolean;
 }
 
 const INLINE_MEDIA_ITEM_IDS = new Set<string>([
@@ -91,6 +92,7 @@ export const MediaContextMenu: React.FC<MediaContextMenuProps> = observer(
 		snapshotIndex,
 		onClose,
 		onDelete,
+		hideReply,
 	}) => {
 		const {i18n} = useLingui();
 		const mediaProps: MediaMenuDataProps = useMemo(
@@ -208,6 +210,7 @@ export const MediaContextMenu: React.FC<MediaContextMenuProps> = observer(
 					attachmentId={attachmentId}
 					attachmentExtraContent={attachmentExtraContent}
 					inlineMediaItems={inlineMediaItems}
+					hideReply={hideReply}
 					data-flx="ui.action-menu.media-context-menu.message-context-menu"
 				/>
 				{isDev && attachmentId && (

@@ -186,6 +186,10 @@ export const SsoStatusResponse = z.object({
 		.nullable()
 		.describe('Text for the SSO sign-in button, or null when the client shows its default label'),
 	redirect_uri: z.string().describe('OAuth redirect URI for SSO'),
+	provider_trait: z
+		.string()
+		.optional()
+		.describe('User trait that marks an account as linked to the current SSO provider'),
 });
 
 export type SsoStatusResponse = z.infer<typeof SsoStatusResponse>;

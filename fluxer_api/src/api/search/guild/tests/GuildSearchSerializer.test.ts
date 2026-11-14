@@ -52,6 +52,7 @@ function guildRow(features: Set<string>, nsfw = false): GuildRow {
 		members_indexed_at: null,
 		message_history_cutoff: null,
 		invites_paused_until: null,
+		planned_join_waves_until: null,
 		version: 1,
 	};
 }

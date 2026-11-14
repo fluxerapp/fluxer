@@ -12,6 +12,7 @@ import {GuildBanCreateRequest} from '@fluxer/schema/src/domains/guild/GuildReque
 import {GuildFeatureSchema} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {AuditLogActionTypeSchema} from '@fluxer/schema/src/primitives/AuditLogValidators';
 import {VanityURLCodeType} from '@fluxer/schema/src/primitives/ChannelValidators';
+import {IsoTimestampStringType} from '@fluxer/schema/src/primitives/DateValidators';
 import {
 	ContentWarningLevelSchema,
 	DefaultMessageNotificationsSchema,
@@ -276,6 +277,11 @@ export const UpdateGuildRequest = UpdateGuildSettingsRequest.omit({guild_id: tru
 	new_owner_id: TransferGuildOwnershipRequest.shape.new_owner_id.optional(),
 	add_features: UpdateGuildFeaturesRequest.shape.add_features.unwrap().optional(),
 	remove_features: UpdateGuildFeaturesRequest.shape.remove_features.unwrap().optional(),
+	planned_join_waves_until: IsoTimestampStringType.nullable()
+		.optional()
+		.describe(
+			'When PLANNED_JOIN_WAVES ends, as an ISO 8601 timestamp in the future. Null keeps it on with no end, and leaving it out keeps the current end. Only accepted while the guild has or gains PLANNED_JOIN_WAVES',
+		),
 	badge_ids: CustomBadgeIdsType.optional(),
 	fields: ClearGuildFieldsRequest.shape.fields.optional(),
 });

@@ -30,7 +30,6 @@ import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
@@ -175,7 +174,6 @@ export class MessageEditService {
 				channel,
 			});
 		}
-		const isBugHunterBot = !!user?.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
 		const dmNsfwContext = guild ? undefined : await this.deps.persistenceService.resolveDmNsfwContext(channel, userId);
 		const updateResult = await this.deps.messageWriteLock.withFreshMessage(channelId, messageId, async (fresh) => {
 			if (!fresh) throw new UnknownMessageError();
@@ -190,7 +188,6 @@ export class MessageEditService {
 					attachmentUploadUserId: userId,
 					allowEmbeds: canEmbedLinks,
 					isBot: user?.isBot,
-					isBugHunterBot,
 					locale: user?.locale,
 					dmNsfwContext,
 					hasPermission,

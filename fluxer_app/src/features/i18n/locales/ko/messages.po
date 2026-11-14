@@ -3409,6 +3409,26 @@ msgstr "단축키 추가"
 msgid "Add a passkey to sign in with your fingerprint, face or screen lock. You can also do this later in settings."
 msgstr "패스키를 추가하면 지문, 얼굴 또는 화면 잠금으로 로그인할 수 있습니다. 나중에 설정에서 추가할 수도 있습니다."
 
+#. Description of the account settings row for single sign-on when the account has no other way to sign in. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect {providerName}."
+msgstr "{providerName} 연결을 해제하기 전에 계정에 비밀번호나 패스키를 추가하세요."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect single sign-on."
+msgstr "SSO 로그인 연결을 해제하기 전에 계정에 비밀번호나 패스키를 추가하세요."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the instance allows sign-in with codes sent by email. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect {providerName}."
+msgstr "{providerName} 연결을 해제하기 전에 비밀번호나 패스키를 추가하거나, 이메일로 받은 코드로 로그인할 수 있도록 이메일 주소를 인증하세요."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in, the instance allows sign-in with codes sent by email and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect single sign-on."
+msgstr "SSO 로그인 연결을 해제하기 전에 비밀번호나 패스키를 추가하거나, 이메일로 받은 코드로 로그인할 수 있도록 이메일 주소를 인증하세요."
+
 #. Form placeholder for the tag input on an expression form.
 #: src/features/expressions/components/modals/TagListField.tsx
 msgid "Add a tag"
@@ -10075,6 +10095,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "코네티컷"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr "SSO 로그인 연결 중…"
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10956,6 +10981,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "로그인을 완료할 수 없습니다. 다시 시도해 주세요."
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "SSO 로그인을 연결할 수 없습니다"
@@ -11071,6 +11098,11 @@ msgstr "이 웹훅을 삭제할 수 없습니다"
 #: src/features/guild/hooks/useDeleteMyMessagesInGuild.tsx
 msgid "Couldn't delete your messages"
 msgstr "내 메시지를 삭제할 수 없습니다"
+
+#. Error title shown when disconnecting single sign-on fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Couldn't disconnect single sign-on"
+msgstr "SSO 로그인 연결을 해제할 수 없습니다"
 
 #. Modal title shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13538,6 +13570,7 @@ msgstr "DM 미리보기"
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -13784,6 +13817,17 @@ msgstr "음성 메시지 삭제"
 msgid "Disconnect"
 msgstr "연결 끊기"
 
+#. Button that disconnects the account from single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgctxt "sso"
+msgid "Disconnect"
+msgstr "연결 해제"
+
+#. Confirmation title when disconnecting the current account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect {providerName}?"
+msgstr "{providerName} 연결을 해제하시겠습니까?"
+
 #. Voice menu action that disconnects every active device or session from voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Disconnect all devices"
@@ -13805,6 +13849,11 @@ msgstr "{channel}에서 연결 끊기"
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Disconnect from voice"
 msgstr "음성 연결 끊기"
+
+#. Confirmation title when disconnecting the current account from single sign-on and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect single sign-on?"
+msgstr "SSO 로그인 연결을 해제하시겠습니까?"
 
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Disconnect socket"
@@ -17595,6 +17644,11 @@ msgstr "친구는 언제든지 메시지를 보낼 수 있습니다."
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "친구는 항상 메시지를 보낼 수 있습니다. 이 설정은 커뮤니티만 공유하는 사람 및 봇에 적용됩니다."
+
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "친구끼리는 계속 DM을 주고받을 수 있으며, 다른 커뮤니티를 함께 이용하는 멤버끼리도 마찬가지입니다. 봇은 영향을 받지 않습니다."
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -21955,6 +22009,11 @@ msgstr "{localizedTime}에 예정된 점검이 있습니다. 예상 소요 시�
 msgid "Make {userName} the group owner? You'll lose owner privileges."
 msgstr "{userName}님을 그룹 소유자로 지정하시겠어요? 소유자 권한을 잃게 됩니다."
 
+#. Description of the community ownership transfer section in community settings.
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
+msgid "Make another member the owner of this community. You cannot undo this."
+msgstr "다른 멤버를 이 커뮤니티의 소유자로 지정합니다. 이 작업은 되돌릴 수 없습니다."
+
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx
@@ -26291,6 +26350,11 @@ msgstr "결제 페이지 다시 열기"
 #: src/features/ui/components/form/FormCombobox.tsx
 msgid "Open popup"
 msgstr "팝업 열기"
+
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "게시물 열기"
 
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
@@ -31782,6 +31846,11 @@ msgstr "언어 코드 검색…"
 msgid "Search languages…"
 msgstr "언어 검색…"
 
+#. Placeholder of the member search in the community ownership transfer section.
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
+msgid "Search members"
+msgstr "멤버를 검색하세요"
+
 #. Placeholder of the search box in the add members or roles step of the create channel modal.
 #: src/features/channel/components/modals/ChannelCreateAccessStep.tsx
 msgid "Search members or roles"
@@ -34273,7 +34342,7 @@ msgid "Single line"
 msgstr "한 줄"
 
 #. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
-#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
+#. Label of the account settings row for single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
@@ -37676,6 +37745,11 @@ msgstr "이 커뮤니티는 초대 기능을 일시 중지했습니다."
 msgid "This community has paused invites. You can try again later."
 msgstr "커뮤니티에서 초대를 일시 중지했습니다. 나중에 다시 시도해 주세요."
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "이 커뮤니티에서 친구가 아닌 멤버 간 DM을 껐습니다"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -37959,7 +38033,17 @@ msgstr "이 인스턴스는 HTTPS를 사용하지 않습니다"
 #. Explanation shown in place of the single sign-on description when the instance offers no SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
-msgstr "이 인스턴스에서 싱글 사인온 설정을 완료하지 않았습니다. 관리자에게 활성화해 달라고 요청하세요."
+msgstr "이 인스턴스에서 SSO 로그인 설정을 완료하지 않았습니다. 관리자에게 활성화해 달라고 요청하세요."
+
+#. Description of the account settings row for single sign-on when the instance requires it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with {providerName}."
+msgstr "이 인스턴스에서는 {providerName}(으)로 로그인해야 합니다."
+
+#. Description of the account settings row for single sign-on when the instance requires it and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with single sign-on."
+msgstr "이 인스턴스에서는 SSO 로그인을 사용해야 합니다."
 
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -38788,6 +38872,11 @@ msgstr "웹훅을 생성하려면 <0>{channelWebhooksSettingsPath}</0>을(를) �
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "사람들을 들어오게 하려면 관리자 패널에서 가입 링크를 만드세요."
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr "{providerName}(으)로 이 계정에 로그인하려면 브라우저의 웹 앱에서 연결하세요."
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "소유권을 이전하려면 {generalSettingsPath}으로 이동하여 소유권 이전 옵션을 사용하세요."
@@ -39021,8 +39110,8 @@ msgstr "추적"
 msgid "Tracking parameters"
 msgstr "추적 매개변수"
 
-#. Short label in the transfer ownership modal. Keep it concise.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
+#. Title of the community ownership transfer section in community settings and of its confirmation modal.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer community ownership"
 msgstr "커뮤니티 소유권 이전"
 
@@ -39032,10 +39121,14 @@ msgid "Transfer group ownership to {userName}?"
 msgstr "{userName}님에게 그룹 소유권을 이전하시겠어요?"
 
 #. Action label in community settings that hands ownership of the community to another member.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer ownership"
 msgstr "소유권 이전"
+
+#. Disabled confirm button in the transfer ownership modal. The number is a countdown in seconds until the button can be pressed.
+#: src/features/guild/components/modals/TransferOwnershipModal.tsx
+msgid "Transfer ownership ({secondsRemaining})"
+msgstr "소유권 이전 ({secondsRemaining})"
 
 #. Activity log detail line under a community settings update, shown when the community got a new owner. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {user} is the new owner, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -39392,6 +39485,11 @@ msgstr "기기 카메라 끄기"
 msgid "Turn off device stream"
 msgstr "기기 스트림 끄기"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "친구가 아닌 멤버 간 DM 끄기"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39464,6 +39562,16 @@ msgstr "텍스트 스마일리를 이모티콘으로 바꾸기"
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "이 테마를 켜야 앱에서 변경사항을 볼 수 있어요."
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "친구가 아닌 멤버 간 DM을 다시 켰습니다"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "친구가 아닌 멤버 간 DM을 껐습니다"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43469,10 +43577,11 @@ msgstr "이미 연결된 계정입니다."
 msgid "You are about to leave {productName}"
 msgstr "{productName}을(를) 떠나려고 합니다"
 
+#. Warning in the ownership transfer confirmation. {0} is the new owner's display name and targetUserId is their numeric user ID, shown in brackets after the name.
 #. placeholder {0}: NicknameUtils.getNickname(targetUser, guildId)
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx
-msgid "You are about to transfer ownership of this community to <0>{0}</0>. This action is <1>irreversible</1> and you will lose all owner privileges."
-msgstr "커뮤니티 소유권을 <0>{0}</0>님에게 이전합니다. 이 작업은 <1>되돌릴 수 없으며</1> 모든 소유자 권한을 잃게 됩니다."
+msgid "You are about to transfer ownership of this community to <0>{0}</0> ({targetUserId}). This action is <1>irreversible</1> and you will lose all owner privileges."
+msgstr "커뮤니티 소유권을 <0>{0}</0>님({targetUserId})에게 이전합니다. 이 작업은 <1>되돌릴 수 없으며</1> 모든 소유자 권한을 잃게 됩니다."
 
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
 #: src/features/invite/commands/InviteCommands.tsx
@@ -43640,6 +43749,16 @@ msgstr "<2>{rolesSettingsPath}</2>에서 <1>{EVERYONE_MENTION}</1> 역할의 <0>
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx
 msgid "You can sign back in at any time."
 msgstr "언제든지 다시 로그인할 수 있습니다."
+
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with {providerName}."
+msgstr "{providerName}(으)로 이 계정에 로그인할 수 있습니다."
+
+#. Description of the account settings row that disconnects the account from single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with single sign-on."
+msgstr "SSO 로그인으로 이 계정에 로그인할 수 있습니다."
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -44182,6 +44301,16 @@ msgstr "모더레이터가 소리를 껐습니다"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "승인 후 {redirectHostname}(으)로 이동합니다."
+
+#. Warning shown before disconnecting single sign-on. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with {providerName} anymore. You can still use your other sign-in methods."
+msgstr "앞으로 {providerName}(으)로 로그인할 수 없습니다. 다른 로그인 방법은 계속 사용할 수 있습니다."
+
+#. Warning shown before disconnecting single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with single sign-on anymore. You can still use your other sign-in methods."
+msgstr "앞으로 SSO 로그인을 사용할 수 없습니다. 다른 로그인 방법은 계속 사용할 수 있습니다."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
@@ -44865,6 +44994,11 @@ msgstr "회원님의 메시지가 안전 시스템에 의해 차단되어 전송
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "회원님의 메시지가 안전 시스템에 의해 차단되어 전송되지 못했습니다. 오류라고 생각하시면 이 인스턴스의 관리자에게 문의해 주세요."
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "메시지를 보낼 수 없습니다. 이 사람과 함께 있는 커뮤니티에서 친구가 아닌 멤버 간 DM을 껐습니다."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

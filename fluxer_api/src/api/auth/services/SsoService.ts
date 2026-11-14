@@ -19,9 +19,11 @@ import {
 } from '@app/api/auth/services/OidcClient';
 import {
 	isLinkedToSsoProvider,
+	SsoIdentityLinkService,
 	ssoIdentityTrait,
 	ssoIdentityTraits,
 	ssoProviderIdOf,
+	ssoProviderTrait,
 } from '@app/api/auth/services/SsoIdentityLinks';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
 import {extractInviteCodeFromRedirect, sanitizeSsoRedirectTo} from '@app/api/auth/services/SsoUtils';
@@ -57,7 +59,12 @@ import {
 	reserveUsername,
 	type UsernameReservation,
 } from '@app/api/user/UniqueUsernames';
-import {isEnforcementDeletion, isProfileSubstringExempt, isSignInRefused} from '@app/api/user/UserHelpers';
+import {
+	isEnforcementDeletion,
+	isProfileSubstringExempt,
+	isSignInRefused,
+	isSsoLinkedUser,
+} from '@app/api/user/UserHelpers';
 import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {renameUser} from '@app/api/user/UserRename';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
@@ -126,6 +133,7 @@ interface PublicSsoStatus {
 	display_name: string | null;
 	button_label: string | null;
 	redirect_uri: string;
+	provider_trait: string;
 }
 
 interface ResolvedSsoConfig extends InstanceSsoConfig {
@@ -451,6 +459,7 @@ export class SsoService {
 			display_name: config.displayName ?? null,
 			button_label: config.buttonLabel,
 			redirect_uri: config.redirectUri,
+			provider_trait: ssoProviderTrait(config.providerId),
 		};
 	}
 
@@ -650,6 +659,17 @@ export class SsoService {
 		const linkedUser = await this.bindSsoIdentity(user, claims.sub, config);
 		await dispatchUserUpdate(gateway, linkedUser);
 		getLogger().info({user_id: user.id.toString()}, 'Connected an SSO identity from account settings');
+	}
+
+	async unlinkSignedInUser(user: User): Promise<void> {
+		if (!isSsoLinkedUser(user)) {
+			return;
+		}
+		const {users, gateway} = this.apiContext.services;
+		const providerId = ssoProviderIdOf(await this.instanceConfigRepository.getSsoConfig());
+		await new SsoIdentityLinkService(users).unlink(user, providerId);
+		await dispatchUserUpdate(gateway, await users.findUniqueAssert(user.id));
+		getLogger().info({user_id: user.id.toString()}, 'Disconnected an SSO identity from account settings');
 	}
 
 	private async challengeSecondFactor(
@@ -926,16 +946,13 @@ export class SsoService {
 	}
 
 	private async bindSsoIdentity(user: User, sub: string, config: ResolvedSsoConfig): Promise<User> {
-		const identityTrait = ssoIdentityTrait(config.providerId, sub);
-		const traits = user.traits;
 		this.assertLinkable(user, sub, config);
 		await this.claimSsoIdentity(user.id, sub, config);
-		if (traits.has(identityTrait)) {
+		const missing = ssoIdentityTraits(config.providerId, sub).filter((trait) => !user.traits.has(trait));
+		if (missing.length === 0) {
 			return user;
 		}
-		for (const trait of ssoIdentityTraits(config.providerId, sub)) {
-			traits.add(trait);
-		}
+		const traits = new Set([...user.traits, ...missing]);
 		const {users} = this.apiContext.services;
 		return users.patchUpsert(user.id, {traits}, user.toRow());
 	}

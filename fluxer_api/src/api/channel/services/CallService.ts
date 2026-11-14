@@ -17,7 +17,11 @@ import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import {canTierPerform, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import {
+	isRegionPickable,
+	type VoiceAccessContext,
+	type VoiceAvailabilityService,
+} from '@app/api/voice/VoiceAvailabilityService';
 import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {AUTOMATIC_VOICE_REGION_ID, ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {IncomingCallFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
@@ -270,7 +274,7 @@ export class CallService {
 			throw new NoActiveCallError();
 		}
 		if (region !== undefined) {
-			if (region !== null && region !== AUTOMATIC_VOICE_REGION_ID) {
+			if (region !== null && region !== AUTOMATIC_VOICE_REGION_ID && region !== call.region) {
 				this.ensureCallRegionAccessible(userId, region);
 			}
 			const selectedRegion =
@@ -452,7 +456,7 @@ export class CallService {
 		};
 		const availableRegions = this.voiceAvailabilityService.getAvailableRegions(context);
 		const isAllowed = availableRegions.some(
-			(availableRegion) => availableRegion.id === region && availableRegion.isAccessible,
+			(availableRegion) => availableRegion.id === region && isRegionPickable(availableRegion),
 		);
 		if (!isAllowed) {
 			throw InputValidationError.fromCode('region', ValidationErrorCodes.INVALID_OR_RESTRICTED_RTC_REGION, {

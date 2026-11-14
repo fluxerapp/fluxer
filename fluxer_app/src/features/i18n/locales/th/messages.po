@@ -3409,6 +3409,26 @@ msgstr "เพิ่มปุ่มลัด"
 msgid "Add a passkey to sign in with your fingerprint, face or screen lock. You can also do this later in settings."
 msgstr "เพิ่มพาสคีย์เพื่อลงชื่อเข้าใช้ด้วยลายนิ้วมือ ใบหน้า หรือการล็อกหน้าจอของคุณ คุณสามารถทำสิ่งนี้ได้ในภายหลังในการตั้งค่า"
 
+#. Description of the account settings row for single sign-on when the account has no other way to sign in. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect {providerName}."
+msgstr "เพิ่มรหัสผ่านหรือพาสคีย์ให้บัญชีของคุณก่อนยกเลิกการเชื่อมต่อ {providerName}"
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect single sign-on."
+msgstr "เพิ่มรหัสผ่านหรือพาสคีย์ให้บัญชีของคุณก่อนยกเลิกการเชื่อมต่อการลงชื่อเข้าใช้แบบครั้งเดียว"
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the instance allows sign-in with codes sent by email. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect {providerName}."
+msgstr "เพิ่มรหัสผ่านหรือพาสคีย์ หรือยืนยันที่อยู่อีเมลของคุณเพื่อลงชื่อเข้าใช้ด้วยรหัสที่ส่งทางอีเมล ก่อนยกเลิกการเชื่อมต่อ {providerName}"
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in, the instance allows sign-in with codes sent by email and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect single sign-on."
+msgstr "เพิ่มรหัสผ่านหรือพาสคีย์ หรือยืนยันที่อยู่อีเมลของคุณเพื่อลงชื่อเข้าใช้ด้วยรหัสที่ส่งทางอีเมล ก่อนยกเลิกการเชื่อมต่อการลงชื่อเข้าใช้แบบครั้งเดียว"
+
 #. Form placeholder for the tag input on an expression form.
 #: src/features/expressions/components/modals/TagListField.tsx
 msgid "Add a tag"
@@ -10075,6 +10095,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "คอนเนตทิคัต"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr "กำลังเชื่อมต่อการลงชื่อเข้าใช้แบบครั้งเดียว…"
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10956,6 +10981,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "ลงชื่อเข้าใช้ไม่สำเร็จ โปรดลองอีกครั้ง"
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "เชื่อมต่อการลงชื่อเข้าใช้แบบครั้งเดียวไม่สำเร็จ"
@@ -11071,6 +11098,11 @@ msgstr "ไม่สามารถลบ webhook นี้ได้"
 #: src/features/guild/hooks/useDeleteMyMessagesInGuild.tsx
 msgid "Couldn't delete your messages"
 msgstr "ลบข้อความของคุณไม่ได้"
+
+#. Error title shown when disconnecting single sign-on fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Couldn't disconnect single sign-on"
+msgstr "ยกเลิกการเชื่อมต่อการลงชื่อเข้าใช้แบบครั้งเดียวไม่สำเร็จ"
 
 #. Modal title shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13538,6 +13570,7 @@ msgstr "แสดงตัวอย่างข้อความส่วนต
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -13784,6 +13817,17 @@ msgstr "ทิ้งข้อความเสียง"
 msgid "Disconnect"
 msgstr "ตัดการเชื่อมต่อ"
 
+#. Button that disconnects the account from single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgctxt "sso"
+msgid "Disconnect"
+msgstr "ยกเลิกการเชื่อมต่อ"
+
+#. Confirmation title when disconnecting the current account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect {providerName}?"
+msgstr "ยกเลิกการเชื่อมต่อ {providerName} หรือไม่"
+
 #. Voice menu action that disconnects every active device or session from voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Disconnect all devices"
@@ -13805,6 +13849,11 @@ msgstr "ตัดการเชื่อมต่อจาก {channel}"
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Disconnect from voice"
 msgstr "ตัดการเชื่อมต่อจากช่องเสียง"
+
+#. Confirmation title when disconnecting the current account from single sign-on and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect single sign-on?"
+msgstr "ยกเลิกการเชื่อมต่อการลงชื่อเข้าใช้แบบครั้งเดียวหรือไม่"
 
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Disconnect socket"
@@ -17595,6 +17644,11 @@ msgstr "เพื่อนๆ สามารถส่งข้อความ�
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "เพื่อนๆ สามารถส่งข้อความถึงคุณได้เสมอ การตั้งค่าเหล่านี้จะครอบคลุมถึงผู้คนและบอทที่คุณแชร์ชุมชนด้วยเท่านั้น"
+
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "เพื่อนยังคงส่งข้อความส่วนตัวหากันได้ รวมถึงสมาชิกที่อยู่ในคอมมูนิตี้อื่นร่วมกันด้วย บอทจะไม่ได้รับผลกระทบ"
 
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
@@ -21955,6 +22009,11 @@ msgstr "มีกำหนดการบำรุงรักษาในเว
 msgid "Make {userName} the group owner? You'll lose owner privileges."
 msgstr "ต้องการให้ {userName} เป็นเจ้าของกลุ่มใช่หรือไม่ คุณจะสูญเสียสิทธิ์เจ้าของกลุ่ม"
 
+#. Description of the community ownership transfer section in community settings.
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
+msgid "Make another member the owner of this community. You cannot undo this."
+msgstr "ตั้งสมาชิกคนอื่นเป็นเจ้าของคอมมูนิตี้นี้ คุณไม่สามารถย้อนกลับการดำเนินการนี้ได้"
+
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx
@@ -26291,6 +26350,11 @@ msgstr "เปิดหน้าชำระเงินอีกครั้ง
 #: src/features/ui/components/form/FormCombobox.tsx
 msgid "Open popup"
 msgstr "เปิดป๊อปอัป"
+
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "เปิดโพสต์"
 
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
@@ -31782,6 +31846,11 @@ msgstr "ค้นหารหัสภาษา…"
 msgid "Search languages…"
 msgstr "ค้นหาภาษา…"
 
+#. Placeholder of the member search in the community ownership transfer section.
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
+msgid "Search members"
+msgstr "ค้นหาสมาชิก"
+
 #. Placeholder of the search box in the add members or roles step of the create channel modal.
 #: src/features/channel/components/modals/ChannelCreateAccessStep.tsx
 msgid "Search members or roles"
@@ -34081,7 +34150,7 @@ msgstr "ลงชื่อเข้าใช้ด้วยแอป {productNam
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 msgid "Sign in with your organization's single sign-on provider."
-msgstr "ลงชื่อเข้าใช้ด้วยผู้ให้บริการ Single Sign-On ขององค์กรคุณ"
+msgstr "ลงชื่อเข้าใช้ด้วยผู้ให้บริการการลงชื่อเข้าใช้แบบครั้งเดียวขององค์กรคุณ"
 
 #. Generic action label that signs the current user out of the app.
 #. Quiet text button on the date of birth step that signs out instead.
@@ -34273,7 +34342,7 @@ msgid "Single line"
 msgstr "บรรทัดเดียว"
 
 #. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
-#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
+#. Label of the account settings row for single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
@@ -37676,6 +37745,11 @@ msgstr "คอมมูนิตี้นี้หยุดรับคำเช
 msgid "This community has paused invites. You can try again later."
 msgstr "คอมมูนิตี้นี้หยุดรับคำเชิญชั่วคราว ลองใหม่อีกครั้งในภายหลังได้เลย"
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "คอมมูนิตี้นี้ปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกัน"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -37959,7 +38033,17 @@ msgstr "อินสแตนซ์นี้ไม่ได้ใช้ HTTPS"
 #. Explanation shown in place of the single sign-on description when the instance offers no SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
-msgstr "อินสแตนซ์นี้ยังตั้งค่าการลงชื่อเข้าระบบครั้งเดียวไม่เสร็จสมบูรณ์ โปรดขอให้ผู้ดูแลระบบเปิดใช้งาน"
+msgstr "อินสแตนซ์นี้ยังตั้งค่าการลงชื่อเข้าใช้แบบครั้งเดียวไม่เสร็จสมบูรณ์ โปรดขอให้ผู้ดูแลระบบเปิดใช้งาน"
+
+#. Description of the account settings row for single sign-on when the instance requires it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with {providerName}."
+msgstr "อินสแตนซ์นี้กำหนดให้คุณลงชื่อเข้าใช้ด้วย {providerName}"
+
+#. Description of the account settings row for single sign-on when the instance requires it and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with single sign-on."
+msgstr "อินสแตนซ์นี้กำหนดให้คุณใช้การลงชื่อเข้าใช้แบบครั้งเดียว"
 
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -38788,6 +38872,11 @@ msgstr "หากต้องการสร้าง webhook ให้เปิ
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "หากต้องการให้ผู้คนเข้ามา ให้สร้างลิงก์ลงทะเบียนในแผงผู้ดูแลระบบ"
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr "หากต้องการลงชื่อเข้าใช้บัญชีนี้ด้วย {providerName} ให้เชื่อมต่อในเว็บแอปผ่านเบราว์เซอร์"
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "หากต้องการโอนความเป็นเจ้าของ ให้ไปที่ {generalSettingsPath} แล้วใช้ตัวเลือกโอนความเป็นเจ้าของ"
@@ -39021,8 +39110,8 @@ msgstr "การติดตาม"
 msgid "Tracking parameters"
 msgstr "พารามิเตอร์การติดตาม"
 
-#. Short label in the transfer ownership modal. Keep it concise.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
+#. Title of the community ownership transfer section in community settings and of its confirmation modal.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer community ownership"
 msgstr "โอนความเป็นเจ้าของคอมมูนิตี้"
 
@@ -39032,10 +39121,14 @@ msgid "Transfer group ownership to {userName}?"
 msgstr "โอนความเป็นเจ้าของกลุ่มให้ {userName} ใช่หรือไม่"
 
 #. Action label in community settings that hands ownership of the community to another member.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer ownership"
 msgstr "โอนความเป็นเจ้าของ"
+
+#. Disabled confirm button in the transfer ownership modal. The number is a countdown in seconds until the button can be pressed.
+#: src/features/guild/components/modals/TransferOwnershipModal.tsx
+msgid "Transfer ownership ({secondsRemaining})"
+msgstr "โอนความเป็นเจ้าของ ({secondsRemaining})"
 
 #. Activity log detail line under a community settings update, shown when the community got a new owner. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {user} is the new owner, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -39392,6 +39485,11 @@ msgstr "ปิดกล้องของอุปกรณ์"
 msgid "Turn off device stream"
 msgstr "ปิดสตรีมของอุปกรณ์"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "ปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกัน"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39464,6 +39562,16 @@ msgstr "เปลี่ยนอิโมติคอนแบบข้อคว
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "เปิดธีมนี้เพื่อดูการเปลี่ยนแปลงในแอป"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "เปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกันอีกครั้งแล้ว"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "ปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกันแล้ว"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43469,10 +43577,11 @@ msgstr "คุณมีการเชื่อมต่อนี้อยู่
 msgid "You are about to leave {productName}"
 msgstr "คุณกำลังจะออกจาก {productName}"
 
+#. Warning in the ownership transfer confirmation. {0} is the new owner's display name and targetUserId is their numeric user ID, shown in brackets after the name.
 #. placeholder {0}: NicknameUtils.getNickname(targetUser, guildId)
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx
-msgid "You are about to transfer ownership of this community to <0>{0}</0>. This action is <1>irreversible</1> and you will lose all owner privileges."
-msgstr "คุณกำลังจะโอนความเป็นเจ้าของคอมมูนิตี้นี้ให้ <0>{0}</0> การดำเนินการนี้ <1>ไม่สามารถย้อนกลับได้</1> และคุณจะสูญเสียสิทธิ์เจ้าของทั้งหมด"
+msgid "You are about to transfer ownership of this community to <0>{0}</0> ({targetUserId}). This action is <1>irreversible</1> and you will lose all owner privileges."
+msgstr "คุณกำลังจะโอนความเป็นเจ้าของคอมมูนิตี้นี้ให้ <0>{0}</0> ({targetUserId}) การดำเนินการนี้ <1>ไม่สามารถย้อนกลับได้</1> และคุณจะสูญเสียสิทธิ์เจ้าของทั้งหมด"
 
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
 #: src/features/invite/commands/InviteCommands.tsx
@@ -43640,6 +43749,16 @@ msgstr "คุณสามารถนำสิทธิ์ <0>{readMessageHisto
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx
 msgid "You can sign back in at any time."
 msgstr "คุณสามารถลงชื่อเข้าใช้ได้ทุกเมื่อ"
+
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with {providerName}."
+msgstr "คุณลงชื่อเข้าใช้บัญชีนี้ด้วย {providerName} ได้"
+
+#. Description of the account settings row that disconnects the account from single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with single sign-on."
+msgstr "คุณลงชื่อเข้าใช้บัญชีนี้ด้วยการลงชื่อเข้าใช้แบบครั้งเดียวได้"
 
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
@@ -44182,6 +44301,16 @@ msgstr "คุณถูกผู้ดูแลปิดเสียงทั้
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "คุณจะถูกนำไปยัง {redirectHostname} หลังจากให้สิทธิ์"
+
+#. Warning shown before disconnecting single sign-on. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with {providerName} anymore. You can still use your other sign-in methods."
+msgstr "คุณจะลงชื่อเข้าใช้ด้วย {providerName} ไม่ได้อีกต่อไป คุณยังใช้วิธีลงชื่อเข้าใช้อื่นๆ ได้ตามเดิม"
+
+#. Warning shown before disconnecting single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with single sign-on anymore. You can still use your other sign-in methods."
+msgstr "คุณจะใช้การลงชื่อเข้าใช้แบบครั้งเดียวไม่ได้อีกต่อไป คุณยังใช้วิธีลงชื่อเข้าใช้อื่นๆ ได้ตามเดิม"
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
@@ -44865,6 +44994,11 @@ msgstr "ไม่สามารถส่งข้อความของคุ
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "ไม่สามารถส่งข้อความของคุณได้ เนื่องจากถูกระบบความปลอดภัยของเราตรวจจับไว้ หากคุณคิดว่านี่เป็นความผิดพลาด โปรดติดต่อผู้ดูแลระบบของอินสแตนซ์นี้"
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "ส่งข้อความของคุณไม่ได้ คอมมูนิตี้ที่คุณอยู่ร่วมกับบุคคลนี้ได้ปิดข้อความส่วนตัวระหว่างสมาชิกที่ไม่ได้เป็นเพื่อนกัน"
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

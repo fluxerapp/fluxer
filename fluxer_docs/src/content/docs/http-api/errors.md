@@ -127,6 +127,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `CHANNEL_HAS_THREADS` | Channels with threads can't be converted to announcement channels |
 | `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED` | Only text and announcement channels can be converted into each other |
 | `COMMUNICATION_DISABLED` | Communication is disabled |
+| `COMMUNITY_MEMBER_DMS_DISABLED` | A community you share with this person has turned off direct messages between members who aren't friends |
 | `CONFLICT` | Conflict |
 | `CONNECTION_ALREADY_EXISTS` | A connection of this type with this identifier already exists |
 | `CONNECTION_INITIATION_TOKEN_INVALID` | The connection initiation token is invalid or has expired |
@@ -233,6 +234,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED` | IP authorization resend limit exceeded |
 | `IP_BAN_DECLINED` | This IP address cannot be added to the blocklist |
 | `IP_BAN_LINKED_TO_DECISION` | This network block belongs to an enforcement decision |
+| `LOCAL_SIGN_IN_METHOD_REQUIRED` | Add another way to sign in, such as a password or passkey, before you disconnect single sign-on |
 | `MAX_ACTIVE_THREADS` | This community is at its active thread limit of {count} |
 | `MAX_APPLICATIONS` | You can't have more than {limit} applications |
 | `MAX_BADGES` | The limit is {count} badges |

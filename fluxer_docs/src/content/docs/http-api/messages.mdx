@@ -1014,6 +1014,7 @@ A message with the `VOICE_MESSAGE` flag has one audio attachment with `duration`
 | 200 | [message](#message-object) object | The message was sent |
 | 400 | [error response](/http-api/#error-response) | `CANNOT_SEND_EMPTY_MESSAGE` when the message has nothing in it |
 | 400 | [error response](/http-api/#error-response) | `CANNOT_SEND_MESSAGES_TO_USER` when the recipient's DM settings block you |
+| 400 | [error response](/http-api/#error-response) | `COMMUNITY_MEMBER_DMS_DISABLED` when the only guilds you share with the recipient have `MEMBER_DMS_DISABLED` |
 | 400 | [error response](/http-api/#error-response) | `SLOWMODE_RATE_LIMITED` with `retry_after` when slowmode is on |
 | 400 | [error response](/http-api/#error-response) | `THREAD_LOCKED` or `MAX_ACTIVE_THREADS` in a thread |
 | 403 | [error response](/http-api/#error-response) | `COMMUNICATION_DISABLED` when you're timed out |
@@ -1244,6 +1245,7 @@ Pins a `DEFAULT` or `REPLY` message. In a guild you need `PIN_MESSAGES`, and Flu
 | 204 | empty | The message is pinned |
 | 400 | [error response](/http-api/#error-response) | `CANNOT_MODIFY_SYSTEM_WEBHOOK` for a system message |
 | 400 | [error response](/http-api/#error-response) | `CANNOT_SEND_MESSAGES_TO_USER` when the recipient's DM settings block you |
+| 400 | [error response](/http-api/#error-response) | `COMMUNITY_MEMBER_DMS_DISABLED` when the only guilds you share with the recipient have `MEMBER_DMS_DISABLED` |
 
 The rate limit is 20 requests per 10 seconds, on the `channel:pins::channel_id` bucket.
 

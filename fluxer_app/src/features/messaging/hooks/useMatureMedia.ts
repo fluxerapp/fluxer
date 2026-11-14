@@ -67,6 +67,12 @@ export function isSensitiveMediaBlocked(mature: boolean | undefined, channelId: 
 	);
 }
 
+export function isSensitiveMediaHidden(mature: boolean | undefined, channelId: string | undefined): boolean {
+	return (
+		isEffectiveMatureMedia(mature, channelId) && getSensitiveFilterLevel(channelId) !== SensitiveMediaFilterLevel.SHOW
+	);
+}
+
 export function useMatureMedia(mature: boolean | undefined, channelId: string | undefined): MatureMediaResult {
 	const mockMatureMediaGateReason = DeveloperOptions.mockMatureMediaGateReason;
 	const forceMatureMedia = DeveloperOptions.forceMatureMedia;

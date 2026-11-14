@@ -10,7 +10,11 @@ import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {hasDiscoveryAutoApproval} from '@app/api/guild/services/GuildDiscoveryService';
-import {staffEditTouchesInvitePause} from '@app/api/guild/services/GuildInvitePauseApplier';
+import {
+	GUILD_PLANNED_JOIN_WAVES_KEY,
+	GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY,
+	staffEditTouchesInvitePause,
+} from '@app/api/guild/services/GuildInvitePauseApplier';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import {onGuildVisitSettingsChanged} from '@app/api/guild/visits/GuildVisitLifecycle';
 import {emitGuildFeaturesChanged} from '@app/api/infrastructure/activity/GuildEvents';
@@ -19,6 +23,7 @@ import type {CustomBadgeCatalog} from '@app/api/instance/custom_badges/CustomBad
 import {Logger} from '@app/api/Logger';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildRoleError} from '@fluxer/errors/src/domains/guild/UnknownGuildRoleError';
 import type {
@@ -27,6 +32,7 @@ import type {
 	UpdateGuildNameRequest,
 	UpdateGuildSettingsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 interface AdminGuildUpdateServiceDeps {
 	guildRepository: GuildRepository;
@@ -36,6 +42,11 @@ interface AdminGuildUpdateServiceDeps {
 	updatePropagator: AdminGuildUpdatePropagator;
 	guildService: Pick<GuildService, 'withUpdateLock'>;
 	customBadgeCatalog: Pick<CustomBadgeCatalog, 'getByIds' | 'state'>;
+	schedule: Pick<IKVProvider, 'zadd' | 'zrem' | 'sadd' | 'srem'>;
+}
+
+function sameMinute(a: Date, b: Date | null): boolean {
+	return b !== null && Math.floor(a.getTime() / 60_000) === Math.floor(b.getTime() / 60_000);
 }
 
 export class AdminGuildUpdateService {
@@ -45,20 +56,29 @@ export class AdminGuildUpdateService {
 		guildId,
 		addFeatures,
 		removeFeatures,
+		plannedJoinWavesUntil,
 		adminUserId,
 		auditLogReason,
 	}: {
 		guildId: GuildID;
 		addFeatures: Array<string>;
 		removeFeatures: Array<string>;
+		plannedJoinWavesUntil?: Date | null;
 		adminUserId: UserID;
 		auditLogReason: string | null;
 	}) {
-		const {guildRepository, discoveryRepository, auditService, updatePropagator, guildService} = this.deps;
+		const {guildRepository, discoveryRepository, auditService, updatePropagator, guildService, schedule} = this.deps;
 		const {guild, newFeatures, updatedGuild} = await guildService.withUpdateLock(guildId, async () => {
 			const guild = await guildRepository.findUnique(guildId);
 			if (!guild) {
 				throw new UnknownGuildError();
+			}
+			let wavesUntil = plannedJoinWavesUntil;
+			if (wavesUntil && wavesUntil.getTime() <= Date.now()) {
+				if (!sameMinute(wavesUntil, guild.plannedJoinWavesUntil)) {
+					throw InputValidationError.create('planned_join_waves_until', 'The end date must be in the future');
+				}
+				wavesUntil = undefined;
 			}
 			const newFeatures = new Set(guild.features);
 			for (const feature of addFeatures) {
@@ -83,7 +103,34 @@ export class AdminGuildUpdateService {
 			if (staffEditTouchesInvitePause(guild, [...addFeatures, ...removeFeatures])) {
 				patch.invites_paused_until = null;
 			}
+			const hasWaves = newFeatures.has(GuildFeatures.PLANNED_JOIN_WAVES);
+			if (hasWaves) {
+				if (wavesUntil !== undefined) patch.planned_join_waves_until = wavesUntil;
+			} else if (wavesUntil != null) {
+				throw InputValidationError.create(
+					'planned_join_waves_until',
+					'Planned join waves must be on to set an end date',
+				);
+			} else if (guild.plannedJoinWavesUntil !== null) {
+				patch.planned_join_waves_until = null;
+			}
+			if (hasWaves) {
+				await schedule.sadd(GUILD_PLANNED_JOIN_WAVES_KEY, guildId.toString());
+			}
+			if (patch.planned_join_waves_until) {
+				await schedule.zadd(
+					GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY,
+					patch.planned_join_waves_until.getTime(),
+					guildId.toString(),
+				);
+			}
 			const updatedGuild = await guildRepository.upsertPartial(guildId, patch, guild.toRow());
+			if (patch.planned_join_waves_until === null && guild.plannedJoinWavesUntil !== null) {
+				await schedule.zrem(GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY, guildId.toString());
+			}
+			if (!hasWaves && guild.features.has(GuildFeatures.PLANNED_JOIN_WAVES)) {
+				await schedule.srem(GUILD_PLANNED_JOIN_WAVES_KEY, guildId.toString());
+			}
 			return {guild, newFeatures, updatedGuild};
 		});
 		await onGuildVisitSettingsChanged({guildId, before: guild, after: updatedGuild});
@@ -107,6 +154,7 @@ export class AdminGuildUpdateService {
 				['add_features', addFeatures.join(',')],
 				['remove_features', removeFeatures.join(',')],
 				['new_features', Array.from(newFeatures).join(',')],
+				['planned_join_waves_until', updatedGuild.plannedJoinWavesUntil?.toISOString() ?? ''],
 			]),
 		});
 		return {

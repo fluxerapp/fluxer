@@ -28,6 +28,7 @@ pub(crate) fn build_region_body(form: &MultiValueForm) -> serde_json::Value {
     let mut body = serde_json::Map::new();
     insert_cleaned_fields(&mut body, form, &["id", "name", "emoji"]);
     body.insert("is_default".into(), form.bool_value("is_default").into());
+    body.insert("hidden".into(), form.bool_value("hidden").into());
     body.insert("vip_only".into(), form.bool_value("vip_only").into());
     insert_submitted_list(&mut body, form, "required_guild_features");
     insert_submitted_list(&mut body, form, "allowed_guild_ids");

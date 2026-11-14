@@ -51,6 +51,7 @@ export class Guild {
 	readonly membersIndexedAt: Date | null;
 	readonly messageHistoryCutoff: Date | null;
 	readonly invitesPausedUntil: Date | null;
+	readonly plannedJoinWavesUntil: Date | null;
 	readonly version: number;
 
 	constructor(row: GuildRow) {
@@ -93,6 +94,7 @@ export class Guild {
 		this.membersIndexedAt = row.members_indexed_at ?? null;
 		this.messageHistoryCutoff = row.message_history_cutoff ?? null;
 		this.invitesPausedUntil = row.invites_paused_until ?? null;
+		this.plannedJoinWavesUntil = row.planned_join_waves_until ?? null;
 		this.version = row.version;
 	}
 
@@ -134,6 +136,7 @@ export class Guild {
 			members_indexed_at: this.membersIndexedAt,
 			message_history_cutoff: this.messageHistoryCutoff,
 			invites_paused_until: this.invitesPausedUntil,
+			planned_join_waves_until: this.plannedJoinWavesUntil,
 			version: this.version,
 		};
 	}
