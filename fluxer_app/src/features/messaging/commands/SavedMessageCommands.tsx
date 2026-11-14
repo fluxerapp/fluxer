@@ -122,8 +122,10 @@ export function ensureAllLoaded(): Promise<void> {
 	if (SavedMessages.fetched && !SavedMessages.getHasMore()) return Promise.resolve();
 	loadingAll ??= (async () => {
 		try {
-			if (!SavedMessages.fetched) await fetch();
-			while (SavedMessages.getHasMore() && (await loadMore()).length > 0) {}
+			while (!SavedMessages.fetched || SavedMessages.getHasMore()) {
+				const entries = SavedMessages.fetched ? await loadMore() : await fetch();
+				if (entries.length === 0) break;
+			}
 		} catch {
 		} finally {
 			loadingAll = null;

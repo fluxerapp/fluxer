@@ -93,6 +93,10 @@ class SavedMessages {
 	private reset(): void {
 		this.savedMessages = [];
 		this.missingSavedMessages = [];
+		this.invalidate();
+	}
+
+	private invalidate(): void {
 		this.fetched = false;
 		this.hasMore = true;
 		this.isLoadingMore = false;
@@ -100,6 +104,11 @@ class SavedMessages {
 	}
 
 	handleGatewayReady(): void {
+		this.invalidate();
+		this.fetchGeneration++;
+	}
+
+	handleAccountReset(): void {
 		this.reset();
 		this.fetchGeneration++;
 	}
@@ -141,5 +150,5 @@ class SavedMessages {
 }
 
 const savedMessages = new SavedMessages();
-ResettableStates.register(savedMessages, savedMessages.handleGatewayReady);
+ResettableStates.register(savedMessages, savedMessages.handleAccountReset);
 export default savedMessages;
