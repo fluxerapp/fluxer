@@ -20,6 +20,7 @@ import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {ListGuildAuditLogsRequest} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 interface AdminGuildServiceDeps {
 	guildRepository: GuildRepository;
@@ -33,6 +34,7 @@ interface AdminGuildServiceDeps {
 	discoveryRepository: GuildDiscoveryRepository;
 	enforcement: EnforcementDecisionService;
 	customBadgeCatalog: Pick<CustomBadgeCatalog, 'getByIds' | 'state'>;
+	kvClient: Pick<IKVProvider, 'zadd' | 'zrem' | 'sadd' | 'srem'>;
 }
 
 export class AdminGuildService {
@@ -64,6 +66,7 @@ export class AdminGuildService {
 			updatePropagator: this.updatePropagator,
 			guildService: deps.guildService,
 			customBadgeCatalog: deps.customBadgeCatalog,
+			schedule: deps.kvClient,
 		});
 		this.vanityService = new AdminGuildVanityService({
 			guildRepository: deps.guildRepository,

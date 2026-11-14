@@ -279,6 +279,8 @@ A token without `--lat` and `--long` puts the new region where your instance's G
 
 A channel with a region set in its settings uses that region. Other calls go to the nearest region of the person who starts them. Within a region, Fluxer takes turns between the servers and prefers servers below their soft limit. Restrictions on a server or region in the admin panel apply to new calls on it.
 
+To keep a region working without offering it in the region picker, tick **Hide from the region picker** on the region in the admin panel, or send `{"hidden": true}` to [Update voice region](/admin-api/voice/#update-voice-region). Calls still go there when it is the nearest region, and channels and calls already set to it keep using it. Nobody can pick it again once they move away from it. See [Hidden regions](/admin-api/voice/#hidden-regions).
+
 Every API node checks every active server every 15 seconds. A server that fails two checks in a row gets no new calls, and calls that reconnect move to another server. When every server in a region is down or draining, new calls for that region go to a server in another region. When every server is down, Fluxer places calls as before.
 
 Fluxer lists the address of every voice server in its discovery document, and the web app allows browsers to connect to them. Anyone can read that list, as anyone who joins a call already sees the address of its server.

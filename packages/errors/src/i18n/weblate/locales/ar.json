@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "لا يمكنك إرسال طلب صداقة إلى مستخدم محظور.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "لا يمكنك إرسال طلب صداقة لنفسك.",
 	"friends_and_dms.cannot_send_messages_to_user": "لا يمكنك إرسال رسائل إلى هذا المستخدم.",
+	"friends_and_dms.community_member_dms_disabled": "أوقف مجتمع تشترك فيه مع هذا الشخص الرسائل المباشرة بين الأعضاء الذين ليسوا أصدقاء.",
 	"friends_and_dms.direct_messages_disabled": "الرسائل المباشرة معطلة في هذا المثيل.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "لا يُسمح بتكرار المستلمين.",
 	"friends_and_dms.friend_request_blocked": "المستخدم لا يقبل طلبات الصداقة في الوقت الحالي.",

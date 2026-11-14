@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "차단된 사용자에게 친구 요청을 보낼 수 없어요.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "자신에게 친구 요청을 보낼 수 없어요.",
 	"friends_and_dms.cannot_send_messages_to_user": "이 사용자에게 메시지를 보낼 수 없어요.",
+	"friends_and_dms.community_member_dms_disabled": "이 사람과 함께 있는 커뮤니티에서 친구가 아닌 멤버 간 DM을 껐어요.",
 	"friends_and_dms.direct_messages_disabled": "이 인스턴스에서는 DM이 비활성화되어 있어요.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "중복된 수신자는 추가할 수 없어요.",
 	"friends_and_dms.friend_request_blocked": "이 사용자는 현재 친구 요청을 수락하지 않아요.",

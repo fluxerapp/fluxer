@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {makeSignedAttachmentCdnUrl} from '@app/api/attachment/AttachmentUrls';
+import {makePublicAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {userIdToChannelId} from '@app/api/BrandedTypes';
 import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
 import {assertSafeByteSize} from '@app/api/utils/ByteSizeUtils';
 import type {FavoriteMemeResponse} from '@fluxer/schema/src/domains/meme/MemeSchemas';
 
 export function mapFavoriteMemeToResponse(meme: FavoriteMeme): FavoriteMemeResponse {
-	const url = makeSignedAttachmentCdnUrl(userIdToChannelId(meme.userId), meme.attachmentId, meme.filename);
+	const url = makePublicAttachmentUrl(userIdToChannelId(meme.userId), meme.attachmentId, meme.filename);
 	return {
 		id: meme.id.toString(),
 		user_id: meme.userId.toString(),

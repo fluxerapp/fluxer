@@ -2,6 +2,10 @@
 
 import {DESKTOP_APP_SCHEME, STABLE_APP_URL} from '@electron/common/Constants';
 import {isPlainRecord} from '@electron/common/PlainRecord';
+import {type ApiAttachmentAuthorization, ATTACHMENT_WINDOW_HEADER} from '@electron/main/ApiAttachmentAuthorization';
+import {parseLocalAppRuntimeRoute} from '@electron/main/LocalAppRuntimePlans';
+import {isLocalAppURL} from '@electron/main/LocalAppURL';
+import {LOCAL_APP_REMOTE_PROXY_PATH_PREFIX} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
 
 const SUB_FRAME_RESOURCE_TYPE = 'subFrame';
 
@@ -25,6 +29,7 @@ interface DesktopLocalAppRequestAuthorization {
 interface DesktopRuntimeSecurityDependencies {
 	readonly logger: DesktopRuntimeSecurityLogger;
 	readonly localAppAuthorization?: DesktopLocalAppRequestAuthorization;
+	readonly attachmentAuthorization?: ApiAttachmentAuthorization;
 }
 
 class InvalidWebRequestDetailsError extends TypeError {
@@ -44,11 +49,23 @@ class InvalidWebRequestCallbackError extends TypeError {
 export class DesktopRuntimeSecurity {
 	private readonly logger: DesktopRuntimeSecurityLogger;
 	private readonly localAppAuthorization: DesktopLocalAppRequestAuthorization | null;
+	private readonly attachmentAuthorization: ApiAttachmentAuthorization | null;
 	private readonly installedSessions = new Set<Electron.Session>();
 
 	constructor(dependencies: DesktopRuntimeSecurityDependencies) {
 		this.logger = dependencies.logger;
 		this.localAppAuthorization = dependencies.localAppAuthorization ?? null;
+		this.attachmentAuthorization = dependencies.attachmentAuthorization ?? null;
+		this.attachmentAuthorization?.onChange(() => {
+			for (const session of [...this.installedSessions]) {
+				try {
+					this.listen(session);
+				} catch (error) {
+					this.logger.error('Failed to update desktop runtime security listeners', error);
+					this.uninstall(session);
+				}
+			}
+		});
 	}
 
 	install(session: Electron.Session): void {
@@ -57,16 +74,25 @@ export class DesktopRuntimeSecurity {
 		}
 		this.installedSessions.add(session);
 		try {
-			session.webRequest.onBeforeSendHeaders(
-				{urls: DESKTOP_RUNTIME_SECURITY_REQUEST_URL_PATTERNS},
-				(details: unknown, callback: unknown) => {
-					this.settleRequestHeaders(details, callback);
-				},
-			);
+			this.listen(session);
 		} catch (installationError) {
 			this.uninstall(session);
 			throw installationError;
 		}
+	}
+
+	private listen(session: Electron.Session): void {
+		session.webRequest.onBeforeSendHeaders(
+			{
+				urls: [
+					...DESKTOP_RUNTIME_SECURITY_REQUEST_URL_PATTERNS,
+					...(this.attachmentAuthorization?.urlPatterns() ?? []),
+				],
+			},
+			(details: unknown, callback: unknown) => {
+				this.settleRequestHeaders(details, callback);
+			},
+		);
 	}
 
 	private uninstall(session: Electron.Session): void {
@@ -94,7 +120,38 @@ export class DesktopRuntimeSecurity {
 	}
 
 	private rewriteRequestHeaders(detailsValue: unknown): Record<string, unknown> {
-		return injectEmbedFrameReferrer(detailsValue, this.authorizeLocalAppRequest(detailsValue));
+		return injectEmbedFrameReferrer(
+			detailsValue,
+			this.authorizeAttachmentRequest(detailsValue, this.authorizeLocalAppRequest(detailsValue)),
+		);
+	}
+
+	private authorizeAttachmentRequest(
+		detailsValue: unknown,
+		settlement: Record<string, unknown>,
+	): Record<string, unknown> {
+		const authorization = this.attachmentAuthorization;
+		if (authorization == null || !authorization.hasGrants()) {
+			return settlement;
+		}
+		const details = readWebRequestDetails(detailsValue);
+		const headers = readRequestHeaderRecord(settlement.requestHeaders ?? details.requestHeadersValue);
+		if (headers == null) {
+			return settlement;
+		}
+		const topFrameWebContentsId = readTopFrameWebContentsId(detailsValue, details.resourceType);
+		if (isRemoteProxyURL(details.url)) {
+			const next = withoutHeader(headers, ATTACHMENT_WINDOW_HEADER);
+			if (topFrameWebContentsId !== null && authorization.hasGrantFor(topFrameWebContentsId)) {
+				next[ATTACHMENT_WINDOW_HEADER] = String(topFrameWebContentsId);
+			}
+			return {...settlement, requestHeaders: next};
+		}
+		const next = authorization.applyRequestHeaders(
+			{topFrameWebContentsId, method: readRequestMethod(detailsValue), url: details.url},
+			headers,
+		);
+		return next === headers ? settlement : {...settlement, requestHeaders: next};
 	}
 
 	private authorizeLocalAppRequest(detailsValue: unknown): Record<string, unknown> {
@@ -173,6 +230,46 @@ interface WebRequestDetails {
 	readonly resourceType: string;
 	readonly url: string;
 	readonly requestHeadersValue: unknown;
+}
+
+function isRemoteProxyURL(value: string): boolean {
+	return isLocalAppURL(value) && parseLocalAppRuntimeRoute(value, LOCAL_APP_REMOTE_PROXY_PATH_PREFIX) != null;
+}
+
+function withoutHeader(headers: Record<string, string>, name: string): Record<string, string> {
+	const lowerName = name.toLowerCase();
+	const next: Record<string, string> = Object.create(null) as Record<string, string>;
+	for (const [headerName, value] of Object.entries(headers)) {
+		if (headerName.toLowerCase() !== lowerName) {
+			next[headerName] = value;
+		}
+	}
+	return next;
+}
+
+function readRequestMethod(detailsValue: unknown): string {
+	return isPlainRecord(detailsValue) && typeof detailsValue.method === 'string' ? detailsValue.method : '';
+}
+
+function readTopFrameWebContentsId(detailsValue: unknown, resourceType: string): number | null {
+	if (!isPlainRecord(detailsValue) || resourceType === SUB_FRAME_RESOURCE_TYPE) {
+		return null;
+	}
+	const webContentsId = detailsValue.webContentsId;
+	const frame = detailsValue.frame;
+	if (
+		typeof webContentsId !== 'number' ||
+		!Number.isInteger(webContentsId) ||
+		frame == null ||
+		typeof frame !== 'object'
+	) {
+		return null;
+	}
+	try {
+		return Reflect.get(frame, 'parent') == null ? webContentsId : null;
+	} catch {
+		return null;
+	}
 }
 
 function readWebRequestDetails(value: unknown): WebRequestDetails {

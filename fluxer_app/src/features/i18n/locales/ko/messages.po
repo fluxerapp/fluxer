@@ -7936,7 +7936,7 @@ msgid "Channel access"
 msgstr "채널 접근"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "채널 접근이 거부되었습니다"
 
@@ -10053,6 +10053,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "코네티컷"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr ""
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10934,6 +10939,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "로그인을 완료할 수 없습니다. 다시 시도해 주세요."
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "SSO 로그인을 연결할 수 없습니다"
@@ -13358,13 +13365,13 @@ msgstr "개발자 상태"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "개발자 도구"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "채널 헤더의 스태프 배지에서 개발자 도구를 사용할 수 있습니다."
 
@@ -13516,6 +13523,7 @@ msgstr "DM 미리보기"
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -17559,6 +17567,11 @@ msgstr "친구는 언제든지 메시지를 보낼 수 있습니다."
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "친구는 항상 메시지를 보낼 수 있습니다. 이 설정은 커뮤니티만 공유하는 사람 및 봇에 적용됩니다."
 
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "친구끼리는 계속 DM을 주고받을 수 있으며, 다른 커뮤니티를 함께 이용하는 멤버끼리도 마찬가지입니다. 봇은 영향을 받지 않습니다."
+
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Friends of friends"
@@ -21527,7 +21540,7 @@ msgid "Link styling"
 msgstr "링크 스타일"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "링크를 사용할 수 없습니다"
 
@@ -26254,6 +26267,11 @@ msgstr "결제 페이지 다시 열기"
 #: src/features/ui/components/form/FormCombobox.tsx
 msgid "Open popup"
 msgstr "팝업 열기"
+
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "게시물 열기"
 
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
@@ -37624,6 +37642,11 @@ msgstr "이 커뮤니티는 초대 기능을 일시 중지했습니다."
 msgid "This community has paused invites. You can try again later."
 msgstr "커뮤니티에서 초대를 일시 중지했습니다. 나중에 다시 시도해 주세요."
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "이 커뮤니티에서 친구가 아닌 멤버 간 DM을 껐습니다"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -38057,7 +38080,7 @@ msgid "This link has expired"
 msgstr "이 링크는 만료되었습니다"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "회원님의 계정에서는 이 링크를 사용할 수 없습니다."
 
@@ -38736,6 +38759,11 @@ msgstr "웹훅을 생성하려면 <0>{channelWebhooksSettingsPath}</0>을(를) �
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "사람들을 들어오게 하려면 관리자 패널에서 가입 링크를 만드세요."
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr ""
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "소유권을 이전하려면 {generalSettingsPath}으로 이동하여 소유권 이전 옵션을 사용하세요."
@@ -39335,6 +39363,11 @@ msgstr "기기 카메라 끄기"
 msgid "Turn off device stream"
 msgstr "기기 스트림 끄기"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "친구가 아닌 멤버 간 DM 끄기"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39407,6 +39440,16 @@ msgstr "텍스트 스마일리를 이모티콘으로 바꾸기"
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "이 테마를 켜야 앱에서 변경사항을 볼 수 있어요."
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "친구가 아닌 멤버 간 DM을 다시 켰습니다"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "친구가 아닌 멤버 간 DM을 껐습니다"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43839,7 +43882,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "{PREMIUM_PRODUCT_NAME} 사용 중에 태그를 변경했습니다. 구독이 갱신되지 않고 {PREMIUM_PRODUCT_NAME}이(가) 만료되면 태그가 무작위로 다시 지정됩니다."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "이 메시지가 전송된 채널에 접근할 수 없습니다."
 
@@ -44803,6 +44846,11 @@ msgstr "회원님의 메시지가 안전 시스템에 의해 차단되어 전송
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "회원님의 메시지가 안전 시스템에 의해 차단되어 전송되지 못했습니다. 오류라고 생각하시면 이 인스턴스의 관리자에게 문의해 주세요."
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "메시지를 보낼 수 없습니다. 이 사람과 함께 있는 커뮤니티에서 친구가 아닌 멤버 간 DM을 껐습니다."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

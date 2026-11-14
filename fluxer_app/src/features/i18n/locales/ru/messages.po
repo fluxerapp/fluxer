@@ -7936,7 +7936,7 @@ msgid "Channel access"
 msgstr "Доступ к каналам"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "Доступ к каналу запрещён"
 
@@ -10053,6 +10053,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "Коннектикут"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr ""
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10934,6 +10939,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "Не удалось завершить вход. Повторите попытку."
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "Не удалось подключить единый вход"
@@ -13358,13 +13365,13 @@ msgstr "Состояние разработчика"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "Инструменты разработчика"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Инструменты разработчика доступны по значку сотрудника в заголовке канала."
 
@@ -13516,6 +13523,7 @@ msgstr "Предпросмотр личных сообщений"
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -17559,6 +17567,11 @@ msgstr "Друзья всегда смогут вам написать."
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "Друзья всегда могут вам написать. Эти настройки касаются людей и ботов, с которыми вы состоите только в одном сообществе."
 
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "Друзья по-прежнему могут писать друг другу в личные сообщения, как и участники, которые вместе состоят в другом сообществе. На ботов это не распространяется."
+
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Friends of friends"
@@ -21527,7 +21540,7 @@ msgid "Link styling"
 msgstr "Стили ссылок"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "Ссылка недоступна"
 
@@ -26254,6 +26267,11 @@ msgstr "Снова открыть страницу оплаты"
 #: src/features/ui/components/form/FormCombobox.tsx
 msgid "Open popup"
 msgstr "Открыть всплывающее окно"
+
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "Открыть публикацию"
 
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
@@ -37624,6 +37642,11 @@ msgstr "Приглашения в это сообщество приостано
 msgid "This community has paused invites. You can try again later."
 msgstr "Приглашения в это сообщество приостановлены. Попробуйте позже."
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "В этом сообществе отключены личные сообщения между участниками, которые не являются друзьями"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -38057,7 +38080,7 @@ msgid "This link has expired"
 msgstr "Срок действия ссылки истёк"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "Эта ссылка недоступна для вашего аккаунта."
 
@@ -38736,6 +38759,11 @@ msgstr "Чтобы создать вебхук, откройте <0>{channelWebh
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "Чтобы впустить людей, создайте ссылку для регистрации в панели администратора."
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr ""
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "Чтобы передать права владельца, перейдите в {generalSettingsPath} и выберите опцию передачи прав."
@@ -39335,6 +39363,11 @@ msgstr "Выключить камеру устройства"
 msgid "Turn off device stream"
 msgstr "Отключить трансляцию с устройства"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "Отключить личные сообщения между участниками, которые не являются друзьями"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39407,6 +39440,16 @@ msgstr "Преобразовывать текстовые смайлики в э
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "Включите эту тему, чтобы увидеть изменения в приложении."
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "Снова включены личные сообщения между участниками, которые не являются друзьями"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "Отключены личные сообщения между участниками, которые не являются друзьями"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43839,7 +43882,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Вы изменили свой тег, пока у вас была подписка {PREMIUM_PRODUCT_NAME}. Он будет случайно изменен, когда срок действия подписки {PREMIUM_PRODUCT_NAME} истечет, если она не будет продлена."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "У вас нет доступа к каналу, в котором было отправлено это сообщение."
 
@@ -44803,6 +44846,11 @@ msgstr "Ваше сообщение не было доставлено, так �
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "Ваше сообщение не было доставлено, так как оно было помечено нашей системой безопасности. Если вы считаете, что это ошибка, обратитесь к администраторам этого экземпляра."
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "Ваше сообщение не удалось доставить. В сообществе, где вы состоите вместе с этим человеком, отключены личные сообщения между участниками, которые не являются друзьями."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

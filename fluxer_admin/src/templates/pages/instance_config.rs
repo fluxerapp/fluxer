@@ -49,7 +49,7 @@ use self::{
     connections::connection_providers_section,
     experiments::{domain_migration_section, voice_p2p_section},
     integrations::integrations_config_section,
-    media::{HostingMode, media_config_section},
+    media::{HostingMode, media_access_section, media_config_section},
     policy::policy_config_section,
     sso::sso_config_section,
 };
@@ -273,8 +273,9 @@ pub fn instance_config_page(
                 ))
                 (config_group(
                     "Media & retention",
-                    "Attachment expiry rules that can be changed without editing environment variables.",
-                    media_config_section(
+                    "Attachment expiry and access rules that can be changed without editing environment variables.",
+                    html! {
+                        (media_config_section(
                             base,
                             config_form,
                             &instance_config.media,
@@ -283,7 +284,9 @@ pub fn instance_config_page(
                             } else {
                                 HostingMode::Hosted
                             },
-                        ),
+                        ))
+                        (media_access_section(base, config_form, &instance_config.media))
+                    },
                 ))
                 (config_group(
                     "Infrastructure & limits",

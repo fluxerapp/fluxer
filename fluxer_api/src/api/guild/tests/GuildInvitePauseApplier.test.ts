@@ -6,9 +6,13 @@ import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {
 	applyPauseGuildInvites,
+	endExpiredPlannedJoinWaves,
 	GUILD_INVITE_PAUSE_SCHEDULE_KEY,
+	GUILD_PLANNED_JOIN_WAVES_KEY,
+	GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY,
 	type GuildInvitePauseDeps,
 	liftExpiredGuildInvitePauses,
+	restatePlannedJoinWaves,
 } from '@app/api/guild/services/GuildInvitePauseApplier';
 import {resetActivityEventsForTests, startActivityEvents} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {ActivityPublisher} from '@app/api/infrastructure/activity/ActivitySpool';
@@ -42,7 +46,11 @@ function pauseEnvelope(overrides: Partial<PauseEnvelope> = {}): PauseEnvelope {
 	};
 }
 
-function guildRow(features: Iterable<string>, pausedUntil: Date | null = null): GuildRow {
+function guildRow(
+	features: Iterable<string>,
+	pausedUntil: Date | null = null,
+	wavesUntil: Date | null = null,
+): GuildRow {
 	return {
 		guild_id: createGuildID(BigInt(GUILD_ID)),
 		owner_id: createUserID(1472623911696138262n),
@@ -76,6 +84,7 @@ function guildRow(features: Iterable<string>, pausedUntil: Date | null = null): 
 		members_indexed_at: null,
 		message_history_cutoff: null,
 		invites_paused_until: pausedUntil,
+		planned_join_waves_until: wavesUntil,
 		version: 1,
 	};
 }
@@ -325,6 +334,9 @@ describe('guild invite pause', () => {
 			},
 			zrem: h.schedule.zrem.bind(h.schedule),
 			zrangebyscore: h.schedule.zrangebyscore.bind(h.schedule),
+			sadd: h.schedule.sadd.bind(h.schedule),
+			srem: h.schedule.srem.bind(h.schedule),
+			smembers: h.schedule.smembers.bind(h.schedule),
 		};
 		await expect(applyPauseGuildInvites(h.deps, pauseEnvelope())).rejects.toThrow('kv unavailable');
 		expect(h.guilds.writes).toBe(0);
@@ -365,6 +377,13 @@ describe('guild invite pause', () => {
 		expect((await applyPauseGuildInvites(h.deps, pauseEnvelope())).status).toBe('ineligible');
 	});
 
+	it('never pauses a guild that expects planned join waves', async () => {
+		h.guilds.row = guildRow([...BASE_FEATURES, GuildFeatures.PLANNED_JOIN_WAVES]);
+		expect((await applyPauseGuildInvites(h.deps, pauseEnvelope())).status).toBe('ineligible');
+		expect(h.guilds.writes).toBe(0);
+		expect(await scheduled(h)).toEqual([]);
+	});
+
 	it('lifts an expired pause on the sweep without any action', async () => {
 		h.guilds.row = guildRow(BASE_FEATURES);
 		await applyPauseGuildInvites(h.deps, pauseEnvelope());
@@ -399,5 +418,139 @@ describe('guild invite pause', () => {
 			GUILD_ID,
 		]);
 		expect(h.guilds.writes).toBe(0);
+	});
+
+	describe('planned join waves end date', () => {
+		async function wavesScheduled(): Promise<Array<string>> {
+			return h.schedule.zrangebyscore(GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY, '-inf', '+inf');
+		}
+
+		it('never ends planned join waves that have no end date', async () => {
+			h.guilds.row = guildRow([...BASE_FEATURES, GuildFeatures.PLANNED_JOIN_WAVES]);
+			h.clock.now = NOW + 10_000 * HOUR_MS;
+			expect(await endExpiredPlannedJoinWaves(h.deps, 100)).toBe(0);
+			expect(h.guilds.current().features.has(GuildFeatures.PLANNED_JOIN_WAVES)).toBe(true);
+			expect(h.guilds.writes).toBe(0);
+		});
+
+		it('ends planned join waves on the sweep once the end date passes and not before', async () => {
+			h.guilds.row = guildRow([...BASE_FEATURES, GuildFeatures.PLANNED_JOIN_WAVES], null, new Date(NOW + 2 * HOUR_MS));
+			await h.schedule.zadd(GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY, NOW + 2 * HOUR_MS, GUILD_ID);
+			await h.schedule.sadd(GUILD_PLANNED_JOIN_WAVES_KEY, GUILD_ID);
+			h.clock.now = NOW + 2 * HOUR_MS - 1;
+			expect(await endExpiredPlannedJoinWaves(h.deps, 100)).toBe(0);
+			expect(h.guilds.current().features.has(GuildFeatures.PLANNED_JOIN_WAVES)).toBe(true);
+			expect(h.guilds.writes).toBe(0);
+			h.clock.now = NOW + 2 * HOUR_MS;
+			expect(await endExpiredPlannedJoinWaves(h.deps, 100)).toBe(1);
+			const guild = h.guilds.current();
+			expect([...guild.features]).toEqual(BASE_FEATURES);
+			expect(guild.plannedJoinWavesUntil).toBeNull();
+			expect(await wavesScheduled()).toEqual([]);
+			expect(await h.schedule.smembers(GUILD_PLANNED_JOIN_WAVES_KEY)).toEqual([]);
+			expect(h.dispatched).toHaveLength(1);
+			expect(h.audits).toEqual([
+				{
+					userId: SYSTEM_USER_ID,
+					action: AuditLogActionType.GUILD_UPDATE,
+					changes: [
+						{
+							key: 'features',
+							old_value: [...BASE_FEATURES, GuildFeatures.PLANNED_JOIN_WAVES].sort(),
+							new_value: [...BASE_FEATURES],
+						},
+					],
+				},
+			]);
+			expect(publisher.featureChanges().at(-1)?.data).toEqual({
+				guild_id: GUILD_ID,
+				actor_id: null,
+				source: 'system',
+				added: [],
+				removed: [GuildFeatures.PLANNED_JOIN_WAVES],
+				invites_paused_until_ms: null,
+			});
+			expect(
+				(
+					await applyPauseGuildInvites(
+						h.deps,
+						pauseEnvelope({issued_at_ms: h.clock.now, until_ms: h.clock.now + HOUR_MS}),
+					)
+				).status,
+			).toBe('applied');
+		});
+
+		it('reschedules an entry whose end date moved later', async () => {
+			h.guilds.row = guildRow([...BASE_FEATURES, GuildFeatures.PLANNED_JOIN_WAVES], null, new Date(NOW + 3 * HOUR_MS));
+			await h.schedule.zadd(GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY, NOW + HOUR_MS, GUILD_ID);
+			h.clock.now = NOW + HOUR_MS;
+			expect(await endExpiredPlannedJoinWaves(h.deps, 100)).toBe(0);
+			expect(
+				await h.schedule.zrangebyscore(GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY, NOW + 3 * HOUR_MS, NOW + 3 * HOUR_MS),
+			).toEqual([GUILD_ID]);
+			expect(h.guilds.current().features.has(GuildFeatures.PLANNED_JOIN_WAVES)).toBe(true);
+			expect(h.guilds.writes).toBe(0);
+		});
+
+		it('drops an entry once the end date was cleared', async () => {
+			h.guilds.row = guildRow([...BASE_FEATURES, GuildFeatures.PLANNED_JOIN_WAVES]);
+			await h.schedule.zadd(GUILD_PLANNED_JOIN_WAVES_SCHEDULE_KEY, NOW - 1, GUILD_ID);
+			expect(await endExpiredPlannedJoinWaves(h.deps, 100)).toBe(0);
+			expect(await wavesScheduled()).toEqual([]);
+			expect(h.guilds.current().features.has(GuildFeatures.PLANNED_JOIN_WAVES)).toBe(true);
+			expect(h.guilds.writes).toBe(0);
+		});
+	});
+
+	describe('planned join waves restatement', () => {
+		const DAY_MS = 86_400_000;
+
+		it('restates every tracked guild once a day with a fresh event id and the current pause', async () => {
+			h.guilds.row = guildRow(
+				[...BASE_FEATURES, GuildFeatures.PLANNED_JOIN_WAVES, GuildFeatures.INVITES_DISABLED],
+				new Date(NOW + HOUR_MS),
+			);
+			await h.schedule.sadd(GUILD_PLANNED_JOIN_WAVES_KEY, GUILD_ID);
+			expect(await restatePlannedJoinWaves(h.deps)).toBe(1);
+			h.clock.now = NOW + DAY_MS;
+			expect(await restatePlannedJoinWaves(h.deps)).toBe(1);
+			const events = publisher.featureChanges();
+			expect(events.map((event) => event.data)).toEqual([
+				{
+					guild_id: GUILD_ID,
+					actor_id: null,
+					source: 'staff',
+					added: [GuildFeatures.PLANNED_JOIN_WAVES],
+					removed: [],
+					invites_paused_until_ms: NOW + HOUR_MS,
+				},
+				expect.objectContaining({source: 'staff', added: [GuildFeatures.PLANNED_JOIN_WAVES]}),
+			]);
+			const ids = events.map((event) => event.id);
+			expect(new Set(ids).size).toBe(2);
+			expect(ids).not.toContain(`guild_features_changed:${GUILD_ID}:${h.guilds.row.version}`);
+			expect(events[0]?.meta.channel).toBe('worker');
+			expect(h.guilds.writes).toBe(0);
+			expect(h.dispatched).toEqual([]);
+			expect(h.audits).toEqual([]);
+		});
+
+		it('keeps restating a guild whose end date is still ahead and skips one that is about to end', async () => {
+			h.guilds.row = guildRow([...BASE_FEATURES, GuildFeatures.PLANNED_JOIN_WAVES], null, new Date(NOW + HOUR_MS));
+			await h.schedule.sadd(GUILD_PLANNED_JOIN_WAVES_KEY, GUILD_ID);
+			expect(await restatePlannedJoinWaves(h.deps)).toBe(1);
+			h.clock.now = NOW + HOUR_MS;
+			expect(await restatePlannedJoinWaves(h.deps)).toBe(0);
+			expect(publisher.featureChanges()).toHaveLength(1);
+			expect(await h.schedule.smembers(GUILD_PLANNED_JOIN_WAVES_KEY)).toEqual([GUILD_ID]);
+		});
+
+		it('stops tracking a guild that no longer has planned join waves', async () => {
+			h.guilds.row = guildRow(BASE_FEATURES);
+			await h.schedule.sadd(GUILD_PLANNED_JOIN_WAVES_KEY, GUILD_ID);
+			expect(await restatePlannedJoinWaves(h.deps)).toBe(0);
+			expect(await h.schedule.smembers(GUILD_PLANNED_JOIN_WAVES_KEY)).toEqual([]);
+			expect(publisher.featureChanges()).toEqual([]);
+		});
 	});
 });

@@ -88,6 +88,11 @@ function resolveDmActionErrorContent(code: string | undefined, apiMessage?: stri
 				title: i18nGlobal._(CANNOT_MESSAGE_USER_TITLE_DESCRIPTOR),
 				message: i18nGlobal._(CANNOT_MESSAGE_USER_MESSAGE_DESCRIPTOR),
 			};
+		case APIErrorCodes.COMMUNITY_MEMBER_DMS_DISABLED:
+			return {
+				title: i18nGlobal._(CANNOT_MESSAGE_USER_TITLE_DESCRIPTOR),
+				message: apiMessage || i18nGlobal._(CANNOT_MESSAGE_USER_MESSAGE_DESCRIPTOR),
+			};
 		case APIErrorCodes.UNKNOWN_USER:
 			return {
 				title: i18nGlobal._(USER_NOT_FOUND_TITLE_DESCRIPTOR),

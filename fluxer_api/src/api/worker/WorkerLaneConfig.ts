@@ -67,6 +67,8 @@ const LANE_CONFIG = {
 			'bulkDeleteMessagesForUsers',
 			'drainActivitySpool',
 			'liftExpiredGuildInvitePauses',
+			'endExpiredPlannedJoinWaves',
+			'restatePlannedJoinWaves',
 			'endGuildVisitsForCode',
 			'pruneGuildVisits',
 			'endUnassignedGuildVisits',

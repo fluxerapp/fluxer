@@ -1,10 +1,57 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    media_process::native_runtime::ensure_vips_init,
+    image_quality::ImageQuality,
+    image_transform::{ImageOptions, ResizeMode},
+    media_limits::MediaLimits,
+    media_process::{native_runtime::ensure_vips_init, transform_image},
+    metrics::transform::TransformMetrics,
     native::{self, NativeStatus},
+    output_format::OutputFormat,
+    test_fixtures::{synthetic_png, synthetic_png16},
 };
 use std::ffi::CString;
+
+fn transformed(input: &[u8], options: ImageOptions) -> Vec<u8> {
+    transform_image(
+        input,
+        &options,
+        &MediaLimits::default_from_config(),
+        &TransformMetrics::default(),
+    )
+    .expect("the transform succeeds")
+    .bytes
+}
+
+#[test]
+fn sixteen_bit_png_converts_like_its_eight_bit_twin() {
+    let jpeg = ImageOptions {
+        format: OutputFormat::JPEG,
+        quality: ImageQuality::High,
+        ..Default::default()
+    };
+    assert!(
+        transformed(&synthetic_png(64, 48), jpeg) == transformed(&synthetic_png16(64, 48), jpeg),
+        "a 16-bit png encodes to the same jpeg as its 8-bit twin"
+    );
+}
+
+#[test]
+fn sixteen_bit_png_cover_resize_encodes_eight_bit_png() {
+    let png = transformed(
+        &synthetic_png16(800, 600),
+        ImageOptions {
+            width: Some(96),
+            height: Some(72),
+            format: OutputFormat::PNG,
+            quality: ImageQuality::Lossless,
+            resize_mode: ResizeMode::Cover,
+            ..Default::default()
+        },
+    );
+    assert_eq!(b"\x89PNG\r\n\x1a\n", &png[..8]);
+    assert_eq!(8, png[24]);
+}
 
 #[test]
 fn blocked_libvips_loaders_cannot_decode_untrusted_input() {

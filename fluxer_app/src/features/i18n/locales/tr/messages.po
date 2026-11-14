@@ -7936,7 +7936,7 @@ msgid "Channel access"
 msgstr "Kanal erişimi"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "Kanala erişim reddedildi"
 
@@ -10053,6 +10053,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "Connecticut"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr ""
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10934,6 +10939,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "Oturum açılamadı. Tekrar deneyin."
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "Tekli oturum açma bağlanamadı"
@@ -13358,13 +13365,13 @@ msgstr "Geliştirici durumu"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "Geliştirici araçları"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Geliştirici araçlarına kanal başlığındaki personel rozetinden erişilebilir."
 
@@ -13516,6 +13523,7 @@ msgstr "Doğrudan mesaj önizlemeleri"
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -17559,6 +17567,11 @@ msgstr "Arkadaşların sana her zaman mesaj gönderebilir."
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "Arkadaşların sana her zaman mesaj gönderebilir. Bu ayarlar, yalnızca bir topluluğu paylaştığın kişiler ve botlar için geçerlidir."
 
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "Arkadaşlar birbirine DM göndermeye devam edebilir, başka bir topluluğu paylaşan üyeler de öyle. Botlar bundan etkilenmez."
+
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Friends of friends"
@@ -21527,7 +21540,7 @@ msgid "Link styling"
 msgstr "Bağlantı stili"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "Bağlantı kullanılamıyor"
 
@@ -26254,6 +26267,11 @@ msgstr "Ödeme sayfasını yeniden aç"
 #: src/features/ui/components/form/FormCombobox.tsx
 msgid "Open popup"
 msgstr "Açılır listeyi aç"
+
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "Gönderiyi aç"
 
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
@@ -37624,6 +37642,11 @@ msgstr "Bu topluluk davetleri duraklattı."
 msgid "This community has paused invites. You can try again later."
 msgstr "Bu topluluk davetleri duraklattı. Daha sonra tekrar deneyebilirsiniz."
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "Bu topluluk, arkadaş olmayan üyeler arasındaki DM'leri kapattı"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -38057,7 +38080,7 @@ msgid "This link has expired"
 msgstr "Bu bağlantının süresi doldu"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "Bu bağlantı hesabınız için kullanılamıyor."
 
@@ -38736,6 +38759,11 @@ msgstr "Webhook oluşturmak için <0>{channelWebhooksSettingsPath}</0> bölümü
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "Kullanıcıları içeri almak için yönetici panelinde bir kayıt bağlantısı oluşturun."
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr ""
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "Sahipliği devretmek için {generalSettingsPath} bölümüne gidin ve sahiplik devri seçeneğini kullanın."
@@ -39335,6 +39363,11 @@ msgstr "Cihaz kamerasını kapat"
 msgid "Turn off device stream"
 msgstr "Cihaz akışını kapat"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "Arkadaş olmayan üyeler arasındaki DM'leri kapat"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39407,6 +39440,16 @@ msgstr "Metin emotikonlarını emojiye dönüştür"
 #: src/features/theme_settings/components/QuickCssFiles.tsx
 msgid "Turn this theme on to see your changes in the app."
 msgstr "Yaptığın değişiklikleri uygulamada görmek için bu temayı aç."
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "Arkadaş olmayan üyeler arasındaki DM'ler yeniden açıldı"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "Arkadaş olmayan üyeler arasındaki DM'ler kapatıldı"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43839,7 +43882,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "{PREMIUM_PRODUCT_NAME} aboneliğiniz varken etiketinizi değiştirdiniz. Yenilenmediği takdirde, {PREMIUM_PRODUCT_NAME} aboneliğiniz sona erdiğinde etiketiniz rastgele yeniden belirlenecektir."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Bu mesajın gönderildiği kanala erişiminiz yok."
 
@@ -44803,6 +44846,11 @@ msgstr "Mesajınız güvenlik sistemlerimiz tarafından işaretlendiği için g�
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "Mesajınız güvenlik sistemlerimiz tarafından işaretlendiği için gönderilemedi. Bunun bir hata olduğunu düşünüyorsanız lütfen bu kurulumun yöneticileriyle iletişime geçin."
+
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "Mesajınız gönderilemedi. Bu kişiyle paylaştığınız bir topluluk, arkadaş olmayan üyeler arasındaki doğrudan mesajları kapattı."
 
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx

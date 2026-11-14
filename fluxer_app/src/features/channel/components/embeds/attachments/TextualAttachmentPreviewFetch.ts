@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {fetchApiAttachmentBlob, fetchedApiAttachmentKey} from '@app/features/messaging/state/ApiAttachmentMedia';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {TEXT_PREVIEW_MAX_BYTES} from '@app/features/messaging/utils/AttachmentPreviewUtils';
 import {wrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopResourceUrl';
@@ -60,12 +61,22 @@ async function readPreviewText(response: Response): Promise<string> {
 	return new TextDecoder().decode(bytes);
 }
 
+async function readPreviewBlob(blob: Blob): Promise<string> {
+	if (blob.size > TEXT_PREVIEW_MAX_BYTES) {
+		throw new PreviewSizeLimitError();
+	}
+	return new TextDecoder().decode(await blob.arrayBuffer());
+}
+
 function requestFailed(response: Response): Error {
 	return new Error(`Attachment preview request failed: ${response.status} ${response.statusText}`);
 }
 
 export async function fetchTextualPreviewText(url: string, signal: AbortSignal): Promise<string> {
 	const target = await AttachmentUrlRefresher.refresh(url);
+	if (fetchedApiAttachmentKey(target) !== null) {
+		return readPreviewBlob(await fetchApiAttachmentBlob(target, signal));
+	}
 	const response = await fetch(wrapDesktopLocalResourceURL(target), {signal});
 	if (response.ok) {
 		return readPreviewText(response);

@@ -285,6 +285,7 @@ function readFeatures(value: unknown): InstanceFeatures {
 		'email_codes',
 		'date_of_birth_step',
 		'discovery_enabled',
+		'proxy_attachments_through_api',
 	] as const) {
 		const value = readOptionalBoolean(source, key, `features.${key}`);
 		if (value !== undefined) {
@@ -349,6 +350,10 @@ function readSso(value: unknown): InstanceSso | null {
 	const available = readOptionalBoolean(source, 'available', 'sso.available');
 	if (available !== undefined) {
 		sso.available = available;
+	}
+	const providerTrait = readOptionalText(source, 'provider_trait');
+	if (providerTrait != null) {
+		sso.provider_trait = providerTrait;
 	}
 	return sso;
 }

@@ -5,6 +5,7 @@ import {
 	REVERSE_IMAGE_SEARCH_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {SearchProviderPickerModal} from '@app/features/search/components/modals/SearchProviderPickerModal';
 import ReverseImageSearch from '@app/features/search/state/ReverseImageSearch';
@@ -99,7 +100,7 @@ export function buildReverseImageSearchMenuGroups(
 			},
 		});
 	}
-	if (state.enabledEngines.length > 0) {
+	if (state.enabledEngines.length > 0 && !isApiAttachmentUrl(imageUrl)) {
 		const handleDefault = () => {
 			const defaultEngine = ReverseImageSearch.defaultEngine;
 			if (defaultEngine) {

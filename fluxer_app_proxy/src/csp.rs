@@ -84,6 +84,7 @@ fn has_src_attribute(attributes: &str) -> bool {
 pub struct InstanceCspSources {
     pub static_cdn_endpoint: Option<HttpEndpoint>,
     pub media_endpoint: Option<HttpEndpoint>,
+    pub attachment_api_endpoint: Option<HttpEndpoint>,
     pub connect_origins: Vec<String>,
 }
 
@@ -306,11 +307,16 @@ fn build_csp_directives(
     for origin in branding_image_origins {
         push_endpoint_source(&mut img, Some(origin));
     }
+    push_endpoint_source(&mut img, instance_sources.attachment_api_endpoint.as_ref());
     directives.push(format!("img-src {}", img.join(" ")));
 
     let mut media = vec!["'self'".to_owned(), "blob:".to_owned()];
     extend_from(&mut media, &config.extra_media_src, MEDIA_SOURCES);
     extend_runtime_sources(&mut media, runtime_sources, instance_sources, true, true);
+    push_endpoint_source(
+        &mut media,
+        instance_sources.attachment_api_endpoint.as_ref(),
+    );
     directives.push(format!("media-src {}", media.join(" ")));
 
     let mut font = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
@@ -531,5 +537,30 @@ mod tests {
                 .unwrap()
                 .contains("example.test")
         );
+    }
+
+    #[test]
+    fn the_attachment_api_origin_is_granted_to_images_and_media_only_when_set() {
+        let policy = CompiledCspPolicy::compile(default_csp_config(), &runtime_sources()).unwrap();
+        let without = policy.spa_headers(&[], &[], &InstanceCspSources::default());
+        let api = endpoint("https://api.example.test");
+        let with = policy.spa_headers(
+            &[],
+            &[],
+            &InstanceCspSources {
+                attachment_api_endpoint: Some(api.clone()),
+                ..InstanceCspSources::default()
+            },
+        );
+        let without = without.enforced.to_str().unwrap().to_owned();
+        let with = with.enforced.to_str().unwrap().to_owned();
+        assert!(!without.contains(api.csp_origin()));
+        for directive in with.split("; ") {
+            let grants = directive
+                .split(' ')
+                .any(|source| source == api.csp_origin());
+            let expected = directive.starts_with("img-src ") || directive.starts_with("media-src ");
+            assert_eq!(grants, expected, "{directive}");
+        }
     }
 }

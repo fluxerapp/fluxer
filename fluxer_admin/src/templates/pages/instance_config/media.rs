@@ -6,7 +6,7 @@ use crate::{
     api::types::InstanceMediaResponse,
     templates::components::{
         badge::{BadgeVariant, badge},
-        form::{NumberField, form_actions, submit_button},
+        form::{NumberField, form_actions, select_input, submit_button},
         section_card::section_card_with_description,
     },
 };
@@ -161,6 +161,37 @@ pub(super) fn media_config_section(
                     }
                     (form_actions(html! {
                         (submit_button("Save media expiry"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+pub(super) fn media_access_section(
+    base: &str,
+    config_form: ConfigForm<'_>,
+    media: &InstanceMediaResponse,
+) -> Markup {
+    let options: &[(&str, &str)] = &[("true", "Enabled"), ("false", "Disabled")];
+    section_card_with_description(
+        "Attachment Access",
+        "Choose where attachment links point. When this is on, every link points at the API, which checks that the viewer can read the message before it hands over the file. Data exports keep their own links.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_media_access"} {
+                (config_form.fields())
+                div class="space-y-4" {
+                    (select_input(
+                        "media_proxy_attachments_through_api",
+                        "Serve attachments through the API",
+                        options,
+                        if media.proxy_attachments_through_api { "true" } else { "false" },
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Links handed out before the change keep working until they expire. Set the media proxy to enforce signatures, or anyone who guesses a file link can fetch it without signing in. Turning this off again breaks links handed out while it was on, such as favorite GIFs saved from attachments."
+                    }
+                    (form_actions(html! {
+                        (submit_button("Save attachment access"))
                     }))
                 }
             }

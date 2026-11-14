@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "ブロックしているユーザーに友だち申請を送信することはできません。",
 	"friends_and_dms.cannot_send_friend_request_to_self": "自分自身に友だち申請を送信することはできません。",
 	"friends_and_dms.cannot_send_messages_to_user": "このユーザーにメッセージを送信することはできません。",
+	"friends_and_dms.community_member_dms_disabled": "この相手と共通のコミュニティで、フレンドではないメンバー同士のダイレクトメッセージがオフになっています。",
 	"friends_and_dms.direct_messages_disabled": "このインスタンスでは、ダイレクトメッセージは無効になっています。",
 	"friends_and_dms.duplicate_recipients_not_allowed": "重複する受信者は許可されていません。",
 	"friends_and_dms.friend_request_blocked": "このユーザーは現在、友だち申請を受け付けていません。",

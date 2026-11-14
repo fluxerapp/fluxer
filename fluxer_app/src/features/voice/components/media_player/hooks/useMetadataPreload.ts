@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {useApiAttachmentPlaybackSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useCallback, useState} from 'react';
 
 type MediaPreloadAttribute = 'none' | 'metadata';
@@ -15,9 +16,10 @@ export function useMetadataPreload(src: string, hasStarted: boolean): UseMetadat
 	const escalateToMetadata = useCallback(() => {
 		setWantsMetadata(true);
 	}, []);
+	const sourceAttribute = useApiAttachmentPlaybackSrc(hasStarted || wantsMetadata ? src : undefined);
 	return {
 		escalateToMetadata,
-		sourceAttribute: hasStarted || wantsMetadata ? src : undefined,
+		sourceAttribute,
 		preloadAttribute: wantsMetadata ? 'metadata' : 'none',
 	};
 }

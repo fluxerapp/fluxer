@@ -6,6 +6,7 @@ import type {GuildSticker} from '@app/features/expressions/models/GuildSticker';
 import * as GifSlugUtils from '@app/features/expressions/utils/GifSlugUtils';
 import {UploadingAttachment} from '@app/features/messaging/models/UploadingAttachment';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
@@ -101,27 +102,25 @@ export const useTextareaExpressionHandlers = ({
 			};
 			const providerShareUrl =
 				meme.gifProvider && meme.gifSlug ? GifSlugUtils.buildShareUrl(meme.gifProvider, meme.gifSlug) : null;
-			if (autoSend) {
-				if (providerShareUrl) {
+			if (providerShareUrl) {
+				if (autoSend) {
 					sendOptimisticMessage({content: providerShareUrl}, {hasAttachments: false});
 				} else {
-					const uploadingAttachment = UploadingAttachment.fromDescriptor({
-						filename: meme.filename,
-						title: meme.name,
-						size: meme.size,
-						contentType: meme.contentType,
-					}).toJSON();
-					sendOptimisticMessage(
-						{content: '', attachments: [uploadingAttachment]},
-						{hasAttachments: false, favoriteMemeId: meme.id},
-					);
-				}
-			} else {
-				if (providerShareUrl) {
 					appendText(providerShareUrl);
-				} else {
-					void insertMemeUrl();
 				}
+			} else if (autoSend || isApiAttachmentUrl(meme.url)) {
+				const uploadingAttachment = UploadingAttachment.fromDescriptor({
+					filename: meme.filename,
+					title: meme.name,
+					size: meme.size,
+					contentType: meme.contentType,
+				}).toJSON();
+				sendOptimisticMessage(
+					{content: '', attachments: [uploadingAttachment]},
+					{hasAttachments: false, favoriteMemeId: meme.id},
+				);
+			} else {
+				void insertMemeUrl();
 			}
 		};
 		return ComponentBus.subscribe('FAVORITE_MEME_SELECT', handleFavoriteMemeSelect);

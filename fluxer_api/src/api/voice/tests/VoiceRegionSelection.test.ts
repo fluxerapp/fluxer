@@ -27,6 +27,7 @@ function createRegionAvailability({
 		latitude,
 		longitude,
 		isDefault,
+		hidden: false,
 		vipOnly: false,
 		requiredGuildFeatures: [],
 		isAccessible: true,

@@ -63,19 +63,19 @@ const OPEN_AUDIO_IN_FULL_VIEW_DESCRIPTOR = msg({
 	message: 'Open audio in full view',
 	comment: 'Button or menu action label in the channel and chat attachment grid item. Keep it concise.',
 });
-const OPEN_VIDEO_IN_FULL_VIEW_DESCRIPTOR = msg({
+export const OPEN_VIDEO_IN_FULL_VIEW_DESCRIPTOR = msg({
 	message: 'Open video in full view',
 	comment: 'Button or menu action label in the channel and chat attachment grid item. Keep it concise.',
 });
-const OPEN_ANIMATED_GIF_VIDEO_IN_FULL_VIEW_DESCRIPTOR = msg({
+export const OPEN_ANIMATED_GIF_VIDEO_IN_FULL_VIEW_DESCRIPTOR = msg({
 	message: 'Open animated GIF video in full view',
 	comment: 'Button or menu action label in the channel and chat attachment grid item. Keep it concise.',
 });
-const OPEN_ANIMATED_GIF_IN_FULL_VIEW_DESCRIPTOR = msg({
+export const OPEN_ANIMATED_GIF_IN_FULL_VIEW_DESCRIPTOR = msg({
 	message: 'Open animated GIF in full view',
 	comment: 'Button or menu action label in the channel and chat attachment grid item. Keep it concise.',
 });
-const OPEN_IMAGE_IN_FULL_VIEW_DESCRIPTOR = msg({
+export const OPEN_IMAGE_IN_FULL_VIEW_DESCRIPTOR = msg({
 	message: 'Open image in full view',
 	comment: 'Button or menu action label in the channel and chat attachment grid item. Keep it concise.',
 });
@@ -171,6 +171,7 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: thumbnailSrc});
 		const shouldLoadMedia = isNearViewport && !shouldBlur && !spoilerHidden;
 		const {
+			src: displaySrc,
 			loaded,
 			error,
 			thumbHashURL,
@@ -401,7 +402,7 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 										</div>
 									)}
 									<img
-										src={shouldLoadMedia ? thumbnailSrc : undefined}
+										src={shouldLoadMedia ? displaySrc : undefined}
 										ref={mediaRef}
 										alt={attachment.filename}
 										loading="eager"

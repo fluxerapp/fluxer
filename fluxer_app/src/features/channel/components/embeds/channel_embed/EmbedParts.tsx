@@ -6,6 +6,7 @@ import type {LinkComponentProps} from '@app/features/channel/components/embeds/c
 import {EmbedLink} from '@app/features/channel/components/embeds/channel_embed/EmbedLink';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import type {EmbedAuthor, EmbedField, EmbedFooter} from '@fluxer/schema/src/domains/message/EmbedSchemas';
@@ -43,7 +44,7 @@ export const EmbedProvider: FC<{provider?: EmbedAuthor} & LinkContext> = observe
 });
 export const EmbedAuthorComponent: FC<{author?: EmbedAuthor} & LinkContext> = observer(({author, ...context}) => {
 	const allowIconMotion = useShouldAnimate({kind: 'gif'});
-	const iconSrc = resolveEmbedIconSrc(author?.proxy_icon_url, allowIconMotion);
+	const iconSrc = useApiAttachmentSrc(resolveEmbedIconSrc(author?.proxy_icon_url, allowIconMotion) ?? '');
 	if (!author) return null;
 	return (
 		<div className={styles.embedAuthor} data-flx="channel.embeds.embed.embed-author-component.embed-author">
@@ -210,7 +211,7 @@ export const EmbedFooterComponent: FC<{
 	const {i18n} = useLingui();
 	const allowIconMotion = useShouldAnimate({kind: 'gif'});
 	const formattedTimestamp = timestamp ? DateUtils.getRelativeDateString(timestamp, i18n) : undefined;
-	const iconSrc = resolveEmbedIconSrc(footer?.proxy_icon_url, allowIconMotion);
+	const iconSrc = useApiAttachmentSrc(resolveEmbedIconSrc(footer?.proxy_icon_url, allowIconMotion) ?? '');
 	if (!(footer || formattedTimestamp)) return null;
 	return (
 		<div

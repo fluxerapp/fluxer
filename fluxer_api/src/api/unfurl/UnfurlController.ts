@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
+import {isGuardedAttachmentUrl, publicAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -16,11 +16,11 @@ import type {
 import {UnfurlRequest, UnfurlResponse} from '@fluxer/schema/src/domains/unfurl/UnfurlSchemas';
 
 function signIfSet<T extends string | null | undefined>(url: T): T | string {
-	return url ? signAttachmentUrl(url) : url;
+	return url ? publicAttachmentUrl(url) : url;
 }
 
 function signMedia(media: EmbedMediaResponse | null | undefined) {
-	return media && {...media, url: signAttachmentUrl(media.url), proxy_url: signIfSet(media.proxy_url)};
+	return media && {...media, url: publicAttachmentUrl(media.url), proxy_url: signIfSet(media.proxy_url)};
 }
 
 function signEmbedUrls(embed: MessageEmbedChildResponse): MessageEmbedChildResponse {
@@ -69,6 +69,7 @@ export function UnfurlController(app: HonoApp) {
 		Validator('json', UnfurlRequest),
 		async (ctx) => {
 			const {url} = ctx.req.valid('json');
+			if (isGuardedAttachmentUrl(url)) return ctx.json([]);
 			const result = await getUnfurlerService().unfurlWithCachePolicy(url, 'block', {bypassCache: true});
 			return ctx.json(result.embeds.map(signEmbedTree));
 		},

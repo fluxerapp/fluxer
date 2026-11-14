@@ -75,6 +75,7 @@ import {applyLegacyRawLocalStorage} from '@electron/preload/LegacyRawStorageSeed
 import {createLocalAppPreloadAPI} from '@electron/preload/LocalAppPreload';
 import {createNativeGatewayPreloadAPI} from '@electron/preload/NativeGatewayPreload';
 import {createOtherPlatformTemplatePreloadAPI} from '@electron/preload/OtherPlatformTemplatePreload';
+import {DESKTOP_API_ATTACHMENT_AUTHORIZATION_CHANNEL} from '@fluxer/desktop_ipc/src/ApiAttachmentAuthorizationContract';
 import type {DesktopCapabilityManifest} from '@fluxer/desktop_ipc/src/CapabilityManifest';
 import {DESKTOP_CAPABILITY_MANIFEST_CHANNEL} from '@fluxer/desktop_ipc/src/CapabilityManifest';
 import {DESKTOP_DIRECT_MESSAGES_AVAILABLE_CHANNEL} from '@fluxer/desktop_ipc/src/DirectMessagesContract';
@@ -427,6 +428,8 @@ const api: ElectronAPI = {
 	reportLastRoute: (routePath: string): void => {
 		ipcRenderer.send(DESKTOP_LAST_ROUTE_CHANNEL, routePath);
 	},
+	setApiAttachmentAuthorization: (apiEndpoint: string, token: string | null): Promise<boolean> =>
+		ipcRenderer.invoke(DESKTOP_API_ATTACHMENT_AUTHORIZATION_CHANNEL, {apiEndpoint, token}) as Promise<boolean>,
 	reportInstanceProductName: (instanceKey: string, productName: string): void => {
 		ipcRenderer.send(DESKTOP_INSTANCE_PRODUCT_NAME_CHANNEL, {instanceKey, productName});
 	},

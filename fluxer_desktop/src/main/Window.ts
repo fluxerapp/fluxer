@@ -12,6 +12,7 @@ import {
 import {getDesktopWindowBehaviorSettings, getLaunchProductName, getPrebootTheme} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
 import type {DesktopWindowBehaviorSettings} from '@electron/common/Types';
+import {getApiAttachmentAuthorization} from '@electron/main/ApiAttachmentAuthorization';
 import {createAppLoadRetry} from '@electron/main/AppLoadRetry';
 import {readBootFrameInputs, replayBootFrameInputs} from '@electron/main/BootFrameInputReplay';
 import {prepareBootStateReload, requestBootStateFlush} from '@electron/main/BootState';
@@ -56,6 +57,7 @@ const logger = createChildLogger('Window');
 const runtimeSecurity = new DesktopRuntimeSecurity({
 	logger: createChildLogger('DesktopRuntimeSecurity'),
 	localAppAuthorization: getDesktopLocalAppAuthorization(),
+	attachmentAuthorization: getApiAttachmentAuthorization(),
 });
 const LIVE_RESIZE_IDLE_MS = 400;
 const MAXIMIZED_REVEAL_REPAINT_TIMEOUT_MS = 250;

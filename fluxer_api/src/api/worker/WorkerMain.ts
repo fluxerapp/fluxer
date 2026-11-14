@@ -174,6 +174,8 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number, kvCli
 		enabled: () => singleCommunityJoinPending(kvClient),
 	});
 	cron.upsert('liftExpiredGuildInvitePauses', 'liftExpiredGuildInvitePauses', {}, '0 * * * * *', {ledger: false});
+	cron.upsert('endExpiredPlannedJoinWaves', 'endExpiredPlannedJoinWaves', {}, '0 * * * * *', {ledger: false});
+	cron.upsert('restatePlannedJoinWaves', 'restatePlannedJoinWaves', {}, '0 20 4 * * *', {ledger: false});
 	cron.upsert('archiveInactiveThreads', 'archiveInactiveThreads', {}, '0 * * * * *', {
 		ledger: false,
 		enabled: () => true,

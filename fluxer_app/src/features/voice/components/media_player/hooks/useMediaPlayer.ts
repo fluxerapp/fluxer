@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import apiAttachmentFileTokens from '@app/features/messaging/state/ApiAttachmentFileTokens';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {useMediaSourceResume} from '@app/features/voice/components/media_player/hooks/useMediaSourceResume';
@@ -113,7 +115,7 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 	} = options;
 	const mediaRef = useRef<HTMLMediaElement | null>(null);
 	useInAppMediaSoundCapture(mediaRef);
-	const sourceResumeRef = useMediaSourceResume(mediaRef);
+	const {resumeRef: sourceResumeRef, playOnSwapRef} = useMediaSourceResume(mediaRef);
 	const refreshedSourceRef = useRef<string | null>(null);
 	const callbacksRef = useRef({onEnded, onError, onPlay, onLoadedMetadata});
 	callbacksRef.current = {onEnded, onError, onPlay, onLoadedMetadata};
@@ -233,7 +235,7 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		};
 		const handleResourceLoadStart = () => {
 			clearPendingSeekTarget(media);
-			holdReasonRef.current = null;
+			if (sourceResumeRef.current === null) holdReasonRef.current = null;
 			recoverPlaybackWhenReadyRef.current = false;
 			setState((prev) => ({
 				...prev,
@@ -341,6 +343,10 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 	const play = useCallback(async () => {
 		const media = mediaRef.current;
 		if (!media) return;
+		if (media.paused && apiAttachmentFileTokens.renew(unwrapDesktopLocalResourceURL(media.currentSrc))) {
+			playOnSwapRef.current = true;
+			return;
+		}
 		try {
 			await media.play();
 			setState((prev) => (prev.error === null ? prev : {...prev, error: null}));
@@ -357,13 +363,17 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 			logger.error('Play failed:', normalizedError);
 			setState((prev) => ({...prev, error: normalizedError}));
 		}
-	}, []);
-	const pause = useCallback((reason: PlaybackHoldReason = 'user') => {
-		const media = mediaRef.current;
-		if (!media) return;
-		holdReasonRef.current = reason;
-		media.pause();
-	}, []);
+	}, [playOnSwapRef]);
+	const pause = useCallback(
+		(reason: PlaybackHoldReason = 'user') => {
+			const media = mediaRef.current;
+			if (!media) return;
+			playOnSwapRef.current = false;
+			holdReasonRef.current = reason;
+			media.pause();
+		},
+		[playOnSwapRef],
+	);
 	const resumeHold = useCallback(
 		(reason: PlaybackHoldReason) => {
 			if (holdReasonRef.current !== reason) return false;

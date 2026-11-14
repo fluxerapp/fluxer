@@ -96,6 +96,7 @@ The owner fields are null when the owner account doesn't exist.
 | rules_channel_id | ?snowflake | The rules channel |
 | disabled_operations | integer | The [disabled guild operations](/http-api/guilds/#disabled-guild-operations) bitfield |
 | member_count | integer | The number of members |
+| planned_join_waves_until | ?ISO8601 timestamp | When `PLANNED_JOIN_WAVES` ends, or null when it has no end or is off |
 | channels | array[[Admin guild channel](#admin-guild-channel-object) object] | Every channel in the guild except threads |
 | roles | array[[Admin guild role](#admin-guild-role-object) object] | Every role in the guild |
 
@@ -270,7 +271,7 @@ Changes a guild, including its owner, and returns the [Admin guild update](#admi
 | --- | --- |
 | `guild:update:name` | Renaming the guild (`name`) |
 | `guild:update:settings` | Clearing images and changing settings (`fields` and every field from `verification_level` to `disabled_operations`) |
-| `guild:update:features` | Adding and removing features (`add_features`, `remove_features`) |
+| `guild:update:features` | Adding and removing features (`add_features`, `remove_features`, `planned_join_waves_until`) |
 | `guild:update:badges` | Replacing the [custom badges](/admin-api/badges/) (`badge_ids`) |
 | `guild:update:vanity` | Changing the custom invite code (`vanity_url_code`) |
 | `guild:transfer_ownership` | Transferring ownership (`new_owner_id`) |
@@ -286,6 +287,7 @@ To change `afk_channel_id`, `system_channel_id` or `afk_timeout`, use [Modify gu
 | new_owner_id?<sup>2</sup> | snowflake | The new owner |
 | add_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to add (at most 100) |
 | remove_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to remove (at most 100) |
+| planned_join_waves_until?<sup>5</sup> | ?ISO8601 timestamp | When `PLANNED_JOIN_WAVES` ends, or null to keep it on with no end |
 | badge_ids?<sup>4</sup> | array[snowflake] | The guild badges to give, replacing the current ones |
 | fields? | array[string] | Images to clear, each `icon`, `banner`, `splash` or `embed_splash` (at most 10) |
 | verification_level? | integer | The new [verification level](/http-api/guilds/#verification-levels) |
@@ -305,6 +307,8 @@ To change `afk_channel_id`, `system_channel_id` or `afk_timeout`, use [Modify gu
 <sup>3</sup> A feature in both lists ends up removed. Adding `DISCOVERABLE` approves the guild's [discovery](/admin-api/discovery/) application, and removing it takes the guild out of discovery
 
 <sup>4</sup> A list that adds a badge can hold up to `max_per_guild` of the [badge settings](/admin-api/badges/#badge-settings-object), which is at most 200. A list that only removes badges always works
+
+<sup>5</sup> Only accepted while the guild has `PLANNED_JOIN_WAVES` or this request adds it, and the time must be in the future. Sending the current end again, to the minute, changes nothing even if it has just passed. Leaving it out keeps the current end. When the time passes, Fluxer removes the feature. Removing the feature also clears its end
 
 ### Response body
 

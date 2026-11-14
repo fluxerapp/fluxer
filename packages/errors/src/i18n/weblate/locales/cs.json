@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Nemůžete poslat žádost o přátelství uživateli, kterého jste zablokovali.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Nemůžete poslat žádost o přátelství sami sobě.",
 	"friends_and_dms.cannot_send_messages_to_user": "Tomuto uživateli nemůžete posílat zprávy.",
+	"friends_and_dms.community_member_dms_disabled": "Komunita, kterou s touto osobou sdílíte, vypnula soukromé zprávy mezi členy, kteří nejsou přátelé.",
 	"friends_and_dms.direct_messages_disabled": "Přímé zprávy jsou na této instanci zakázány.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Duplicitní příjemci nejsou přípustní.",
 	"friends_and_dms.friend_request_blocked": "Uživatel právě teď nepřijímá žádosti o přátelství.",

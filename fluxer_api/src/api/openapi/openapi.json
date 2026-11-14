@@ -156,7 +156,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Reissues the expiring signature on attachment URLs. Returns one entry per requested URL, in the order they were requested, each pairing the URL exactly as it was sent with a freshly signed copy. A URL that is not an attachment URL of this instance is returned unchanged. No membership or existence check is performed.",
+				"description": "Reissues the expiring signature on attachment URLs. Returns one entry per requested URL, in the order they were requested, each pairing the URL exactly as it was sent with a freshly signed copy. A URL that is not an attachment URL of this instance is returned unchanged. No membership or existence check is performed. When the instance serves attachments through the API, the refreshed URL points at the API and has no signature.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -18254,6 +18254,63 @@
 				"security": [{"sessionToken": []}]
 			}
 		},
+		"/users/@me/attachment-token": {
+			"post": {
+				"operationId": "create_attachment_token",
+				"summary": "Create an attachment token",
+				"tags": ["Messages"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AttachmentAccessTokenResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Creates a token for the one attachment in the given link, for places that cannot send a header, such as a video player, a download or a link opened in the browser. The token works for five minutes, only for that file and only while the session that asked for it stays signed in and can still read the message. Only active when the instance serves attachments through the API.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AttachmentAccessTokenRequest"}}}
+				}
+			}
+		},
 		"/users/@me/authorized-ips": {
 			"delete": {
 				"operationId": "forget_authorized_ips",
@@ -30641,7 +30698,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -30652,7 +30709,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -31028,7 +31085,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -31039,7 +31096,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -32205,6 +32262,31 @@
 			"BillingDocumentListResponse": {
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/BillingDocumentResponse"}
+			},
+			"AttachmentAccessTokenRequest": {
+				"type": "object",
+				"properties": {
+					"url": {
+						"type": "string",
+						"maxLength": 2048,
+						"description": "The attachment link on the API that the token is for"
+					}
+				},
+				"required": ["url"]
+			},
+			"AttachmentAccessTokenResponse": {
+				"type": "object",
+				"properties": {
+					"token": {"type": "string", "description": "Value for the mt query parameter on the link it was made for"},
+					"expires_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the token stops working"
+					}
+				},
+				"required": ["token", "expires_at"],
+				"additionalProperties": false
 			},
 			"ApplicationListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/ApplicationResponse"}},
 			"AppAttestKeyRegisterRequest": {
@@ -35696,7 +35778,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -35815,7 +35897,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -36439,7 +36521,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -38450,7 +38532,11 @@
 						"description": "Text for the SSO sign-in button, or null when the client shows its default label",
 						"type": ["string", "null"]
 					},
-					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
+					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"},
+					"provider_trait": {
+						"description": "User trait that marks an account as linked to the current SSO provider",
+						"type": "string"
+					}
 				},
 				"required": ["enabled", "enforced", "username_from_provider", "display_name", "button_label", "redirect_uri"],
 				"additionalProperties": false
@@ -40013,6 +40099,10 @@
 						"type": ["string", "null"]
 					},
 					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"},
+					"provider_trait": {
+						"description": "User trait that marks an account as linked to the current SSO provider",
+						"type": "string"
+					},
 					"available": {"description": "Whether an SSO provider is configured for this instance", "type": "boolean"}
 				},
 				"required": ["enabled", "enforced", "username_from_provider", "display_name", "button_label", "redirect_uri"],
@@ -40053,6 +40143,10 @@
 					"presigned_attachment_uploads": {
 						"type": "boolean",
 						"description": "Whether clients can request presigned attachment upload URLs"
+					},
+					"proxy_attachments_through_api": {
+						"description": "Whether attachment links point at the API and need the viewer to be signed in. Missing means false",
+						"type": "boolean"
 					},
 					"emails_enabled": {
 						"type": "boolean",
@@ -41355,7 +41449,7 @@
 				"description": "IDs of the custom badges assigned to it"
 			},
 			"GuildFeatureSchema": {
-				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED, VISITS_ENABLED (other values allowed)",
+				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED, VISITS_ENABLED, MEMBER_DMS_DISABLED, PLANNED_JOIN_WAVES (other values allowed)",
 				"x-enumNames": [
 					"ANIMATED_ICON",
 					"ANIMATED_BANNER",
@@ -41391,7 +41485,9 @@
 					"LARGE_GUILD_OVERRIDE",
 					"VERY_LARGE_GUILD",
 					"ANNOUNCEMENT_CHANNELS_DISABLED",
-					"VISITS_ENABLED"
+					"VISITS_ENABLED",
+					"MEMBER_DMS_DISABLED",
+					"PLANNED_JOIN_WAVES"
 				],
 				"x-enumDescriptions": [
 					"Guild can have an animated icon",
@@ -41428,7 +41524,9 @@
 					"Guild has large guild overrides enabled",
 					"Guild has increased member capacity enabled",
 					"Guild cannot publish announcement messages or gain new followers",
-					"People with an invite or a discovery listing can read channels that @everyone can see without joining"
+					"People with an invite or a discovery listing can read channels that @everyone can see without joining",
+					"Members who aren't friends can't use the guild as a shared guild for direct messages",
+					"Guild expects large planned waves of new members. Invites are not paused after a raid"
 				],
 				"type": "string"
 			},
@@ -47299,6 +47397,7 @@
 					"CHANNEL_HAS_THREADS",
 					"CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED",
 					"COMMUNICATION_DISABLED",
+					"COMMUNITY_MEMBER_DMS_DISABLED",
 					"CONNECTION_ALREADY_EXISTS",
 					"CONNECTION_INITIATION_TOKEN_INVALID",
 					"CONNECTION_INVALID_TYPE",
@@ -47694,6 +47793,7 @@
 					"Channels with threads can't be converted to announcement channels.",
 					"Only text and announcement channels can be converted into each other.",
 					"Communication is disabled.",
+					"A community you share with this person has turned off direct messages between members who aren't friends.",
 					"A connection of this type with this identifier already exists.",
 					"The connection initiation token is invalid or has expired.",
 					"The connection type is not supported.",

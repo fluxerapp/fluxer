@@ -410,6 +410,7 @@ export interface ElectronAPI {
 	desktopModules: DesktopModuleAPI;
 	desktopUpdate: DesktopUpdateAPI;
 	reportLastRoute: (routePath: string) => void;
+	setApiAttachmentAuthorization: (apiEndpoint: string, token: string | null) => Promise<boolean>;
 	reportInstanceProductName: (instanceKey: string, productName: string) => void;
 	notifyFirstContentPainted: (view?: 'restored') => void;
 	desktopAccounts: DesktopAccountStorageAPI;

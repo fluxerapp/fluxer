@@ -10,6 +10,7 @@ interface MediaViewerOpenOptions {
 	message?: Message;
 	sourceChannel?: Channel | null;
 	allowAttachmentDelete?: boolean;
+	sourcePost?: Channel;
 }
 
 export function openMediaViewer(
@@ -25,6 +26,7 @@ export function openMediaViewer(
 		options?.message,
 		options?.sourceChannel,
 		options?.allowAttachmentDelete,
+		options?.sourcePost,
 	);
 }
 

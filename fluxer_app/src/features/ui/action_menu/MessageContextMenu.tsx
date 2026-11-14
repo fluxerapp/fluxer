@@ -120,6 +120,7 @@ interface MessageContextMenuProps {
 	attachmentExtraContent?: React.ReactNode;
 	inlineMediaItems?: React.ReactNode;
 	inlineStickerOrEmojiItems?: React.ReactNode;
+	hideReply?: boolean;
 }
 
 interface RemoveReactionsSubmenuProps {
@@ -306,6 +307,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 		attachmentExtraContent,
 		inlineMediaItems,
 		inlineStickerOrEmojiItems,
+		hideReply,
 	}) => {
 		const {i18n} = useLingui();
 		const closeMenu = useContextMenuClose();
@@ -434,6 +436,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 				onOpenEmojiPicker: handleOpenEmojiPickerAction,
 				quickReactionCount: 4,
 				submenuReactionCount: 16,
+				hideReply,
 			});
 		useReactionMenuImagePreload(quickReactionEmojis, submenuReactionEmojis);
 		const handleQuickReact = useCallback(

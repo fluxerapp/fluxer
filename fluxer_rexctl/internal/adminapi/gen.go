@@ -2011,6 +2011,9 @@ type CreateVoiceRegionRequest struct {
 	// Emoji Emoji representing the region
 	Emoji string `json:"emoji"`
 
+	// Hidden Whether to leave the region out of the region lists clients show, while placement still uses it
+	Hidden *bool `json:"hidden,omitempty"`
+
 	// Id Unique identifier for the voice region
 	Id string `json:"id"`
 
@@ -2586,6 +2589,7 @@ type InstanceConfigResponse struct {
 			RenewThresholdDays *int     `json:"renew_threshold_days"`
 			RenewWindowDays    *int     `json:"renew_window_days"`
 		} `json:"attachment_decay"`
+		ProxyAttachmentsThroughApi bool `json:"proxy_attachments_through_api"`
 	} `json:"media"`
 
 	// Notice Notice shown to everyone on the instance, or null
@@ -2801,6 +2805,9 @@ type InstanceConfigUpdateRequest struct {
 			RenewThresholdDays *int     `json:"renew_threshold_days,omitempty"`
 			RenewWindowDays    *int     `json:"renew_window_days,omitempty"`
 		} `json:"attachment_decay,omitempty"`
+
+		// ProxyAttachmentsThroughApi Whether attachment links point at the API, which checks that the viewer can read the message before it hands over the file
+		ProxyAttachmentsThroughApi *bool `json:"proxy_attachments_through_api,omitempty"`
 	} `json:"media,omitempty"`
 
 	// Notice Notice shown to everyone on the instance, such as planned maintenance
@@ -3031,6 +3038,9 @@ type ListVoiceRegionsResponse struct {
 
 		// Emoji Emoji representing the region
 		Emoji string `json:"emoji"`
+
+		// Hidden Whether the region is left out of the region lists clients show, while placement still uses it
+		Hidden bool `json:"hidden"`
 
 		// Id Unique identifier for the voice region
 		Id string `json:"id"`
@@ -3451,6 +3461,9 @@ type VoiceRegionAdminResponse struct {
 
 	// Emoji Emoji representing the region
 	Emoji string `json:"emoji"`
+
+	// Hidden Whether the region is left out of the region lists clients show, while placement still uses it
+	Hidden bool `json:"hidden"`
 
 	// Id Unique identifier for the voice region
 	Id string `json:"id"`

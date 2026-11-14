@@ -70,6 +70,7 @@ export class AdminGuildLookupService {
 				rules_channel_id: guild.rulesChannelId?.toString() ?? null,
 				disabled_operations: guild.disabledOperations,
 				member_count: guild.memberCount,
+				planned_join_waves_until: guild.plannedJoinWavesUntil?.toISOString() ?? null,
 				channels: channels.map((c) => ({
 					id: c.id.toString(),
 					name: c.name,

@@ -116,6 +116,7 @@ fn region_card(config: &AdminConfig, region: &VoiceRegion, csrf_token: &str) -> 
                 (data_field_text("Latitude", &lat))
                 (data_field_text("Longitude", &lng))
                 (data_field_text("Servers", &servers.len().to_string()))
+                (data_field_text("Region picker", if region.hidden { "Hidden" } else { "Listed" }))
             }
             (voice_features_list(&region.required_guild_features))
             (voice_guild_ids_list(&region.allowed_guild_ids))
@@ -220,6 +221,7 @@ fn edit_region_form(config: &AdminConfig, region: &VoiceRegion, csrf_token: &str
                         checked: is_default,
                         enabled: true,
                     }.render())
+                    (hidden_checkbox(region.hidden))
                     (voice_restriction_fields("edit", vip_only, &features_csv, &guild_ids_csv))
                     button type="submit"
                         class="inline-flex items-center justify-center gap-2 font-medium \
@@ -233,6 +235,17 @@ fn edit_region_form(config: &AdminConfig, region: &VoiceRegion, csrf_token: &str
             }
         }
     }
+}
+
+fn hidden_checkbox(checked: bool) -> Markup {
+    Checkbox {
+        name: "hidden",
+        value: "true",
+        label: "Hide from the region picker",
+        checked,
+        enabled: true,
+    }
+    .render()
 }
 
 fn create_region_form(config: &AdminConfig, csrf_token: &str) -> Markup {
@@ -257,6 +270,7 @@ fn create_region_form(config: &AdminConfig, csrf_token: &str) -> Markup {
                         checked: false,
                         enabled: true,
                     }.render())
+                    (hidden_checkbox(false))
                     (voice_restriction_fields("create", false, "", ""))
                     button type="submit"
                         class="inline-flex items-center justify-center gap-2 font-medium \

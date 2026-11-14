@@ -266,6 +266,7 @@ export class VoiceNodeService {
 					latitude: row.region_latitude ?? point?.latitude ?? 0,
 					longitude: row.region_longitude ?? point?.longitude ?? 0,
 					isDefault: false,
+					hidden: false,
 					restrictions: emptyRestrictions(),
 				});
 			}

@@ -2,10 +2,10 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
+import {isLinkedToSsoProvider, ssoProviderIdOf} from '@app/api/auth/services/SsoIdentityLinks';
 import {hasOwnedEmail} from '@app/api/auth/services/SudoEmailCode';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
-import {isSsoLinkedUser} from '@app/api/user/UserHelpers';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {type SudoModeMethods, SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
 
@@ -59,7 +59,7 @@ export function deriveSudoMethods(
 	user: User,
 	hasPasskeyCredentials: boolean,
 	hasBackupCodes: boolean,
-	ssoEnabled: boolean,
+	ssoProviderId: string | null,
 ): SudoModeMethods {
 	return {
 		totp: hasTotpEnrolled(user),
@@ -68,8 +68,8 @@ export function deriveSudoMethods(
 		email_code: emailCodeSudoAvailable(user, hasPasskeyCredentials),
 		password: (user.passwordHash ?? null) !== null && !userHasUsableMfa(user, hasPasskeyCredentials),
 		sso_reauth:
-			ssoEnabled &&
-			isSsoLinkedUser(user) &&
+			ssoProviderId !== null &&
+			isLinkedToSsoProvider(user, ssoProviderId) &&
 			hasNoVerifiableCredential(user, userHasUsableMfa(user, hasPasskeyCredentials), hasPasskeyCredentials),
 	};
 }
@@ -81,9 +81,10 @@ export async function createSudoModeRequiredError(
 ): Promise<SudoModeRequiredError> {
 	const hasPasskeys = hasPasskeyCredentials ?? (await ctx.services.users.listWebAuthnCredentials(user.id)).length > 0;
 	const hasBackupCodes = await AuthMfa.hasUnconsumedBackupCodes(ctx, user.id);
-	const ssoEnabled = (await getInstanceConfigRepository().getSsoConfig()).enabled;
+	const ssoConfig = await getInstanceConfigRepository().getSsoConfig();
+	const ssoProviderId = ssoConfig.enabled ? ssoProviderIdOf(ssoConfig) : null;
 	return new SudoModeRequiredError(
 		userHasSudoCapability(user, hasPasskeys),
-		deriveSudoMethods(user, hasPasskeys, hasBackupCodes, ssoEnabled),
+		deriveSudoMethods(user, hasPasskeys, hasBackupCodes, ssoProviderId),
 	);
 }

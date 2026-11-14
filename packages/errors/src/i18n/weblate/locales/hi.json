@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "आप किसी ब्लॉक किए गए यूज़र को फ्रेंड रिक्वेस्ट नहीं भेज सकते हैं।",
 	"friends_and_dms.cannot_send_friend_request_to_self": "आप खुद को फ्रेंड रिक्वेस्ट नहीं भेज सकते हैं।",
 	"friends_and_dms.cannot_send_messages_to_user": "आप इस यूज़र को मैसेज नहीं भेज सकते हैं।",
+	"friends_and_dms.community_member_dms_disabled": "आप जिस कम्युनिटी में इस व्यक्ति के साथ हैं, उसने उन सदस्यों के बीच डायरेक्ट मैसेज बंद कर दिए हैं जो दोस्त नहीं हैं।",
 	"friends_and_dms.direct_messages_disabled": "इस इंस्टेंस पर डायरेक्ट मैसेज डिसेबल हैं।",
 	"friends_and_dms.duplicate_recipients_not_allowed": "डुप्लीकेट रिसीपिएंट की अनुमति नहीं है।",
 	"friends_and_dms.friend_request_blocked": "यूज़र इस समय फ्रेंड रिक्वेस्ट स्वीकार नहीं कर रहा है।",
