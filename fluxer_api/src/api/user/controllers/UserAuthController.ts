@@ -248,7 +248,7 @@ export function UserAuthController(app: HonoApp) {
 			const instanceConfig = getInstanceConfigRepository();
 			const ssoConfig = await instanceConfig.getSsoConfig();
 			if (ssoConfig.enforced) {
-				throw new SsoRequiredError(SsoRequiredReasons.SIGN_IN);
+				throw new SsoRequiredError(SsoRequiredReasons.SSO_ENFORCED);
 			}
 
 			const hasLocalPassword = user.passwordHash !== null;
