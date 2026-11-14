@@ -38,8 +38,32 @@ pub fn synthetic_png(width: u32, height: u32) -> Vec<u8> {
     synthetic_image(width, height, ".png[strip]")
 }
 
+pub fn synthetic_png16(width: u32, height: u32) -> Vec<u8> {
+    let pixels: Vec<u8> = synthetic_rgba(width, height)
+        .into_iter()
+        .flat_map(|value| (u16::from(value) * 257).to_ne_bytes())
+        .collect();
+    encode_rgba(
+        &pixels,
+        width,
+        height,
+        unsafe { native::fluxer_vips_format_ushort },
+        ".png[strip,bitdepth=16]",
+    )
+}
+
 pub fn synthetic_image(width: u32, height: u32, suffix: &str) -> Vec<u8> {
-    ensure_vips_init().unwrap();
+    let pixels = synthetic_rgba(width, height);
+    encode_rgba(
+        &pixels,
+        width,
+        height,
+        unsafe { native::fluxer_vips_format_uchar },
+        suffix,
+    )
+}
+
+fn synthetic_rgba(width: u32, height: u32) -> Vec<u8> {
     let mut pixels = vec![0u8; width as usize * height as usize * 4];
     for y in 0..height {
         for x in 0..width {
@@ -50,6 +74,11 @@ pub fn synthetic_image(width: u32, height: u32, suffix: &str) -> Vec<u8> {
             pixels[i + 3] = 255;
         }
     }
+    pixels
+}
+
+fn encode_rgba(pixels: &[u8], width: u32, height: u32, format: c_int, suffix: &str) -> Vec<u8> {
+    ensure_vips_init().unwrap();
     let image = unsafe {
         native::fluxer_vips_image_new_from_memory_copy(
             pixels.as_ptr().cast(),
@@ -57,7 +86,7 @@ pub fn synthetic_image(width: u32, height: u32, suffix: &str) -> Vec<u8> {
             width as c_int,
             height as c_int,
             4,
-            native::fluxer_vips_format_uchar,
+            format,
         )
     };
     let image = unsafe { native::VipsImageHandle::from_raw_owned(image) }.unwrap();
