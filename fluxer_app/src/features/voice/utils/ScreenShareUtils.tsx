@@ -14,6 +14,18 @@ import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/Sc
 
 const logger = new Logger('ScreenShareUtils');
 const SCREEN_SHARE_ROLLBACK_INCOMPLETE_MODAL_KEY = 'screen-share-rollback-incomplete';
+const SCREEN_SHARE_PORTAL_UNAVAILABLE_MODAL_KEY = 'screen-share-portal-unavailable';
+export function showScreenSharePortalUnavailableModal(): void {
+	ModalCommands.pushWithKey(
+		modal(() => (
+			<ScreenShareUnsupportedModal
+				variant="portal-empty"
+				data-flx="voice.screen-share-utils.show-screen-share-portal-unavailable-modal.screen-share-unsupported-modal"
+			/>
+		)),
+		SCREEN_SHARE_PORTAL_UNAVAILABLE_MODAL_KEY,
+	);
+}
 const isScreenShareUnsupportedError = (error: unknown): boolean => {
 	if (!(error instanceof Error)) return false;
 	return (
@@ -26,9 +38,8 @@ export const handleScreenShareError = (error: unknown): void => {
 		return;
 	}
 	if (isScreenSharePortalUnavailableError(error)) {
-		logger.warn('Wayland screen share portal unavailable; portal modal is surfaced by the picker IPC handler', {
-			reason: error.reason,
-		});
+		logger.warn('Wayland screen share portal unavailable', {reason: error.reason, message: error.message});
+		showScreenSharePortalUnavailableModal();
 		return;
 	}
 	if (isScreenShareAudioCaptureError(error)) {
