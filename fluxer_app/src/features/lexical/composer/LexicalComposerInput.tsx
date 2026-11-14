@@ -523,10 +523,14 @@ const ComposerInner = ({
 				cleanups.push(registerComposerBlockquote(editor, markdownParserFlags));
 			}
 			cleanups.push(
-				registerComposerEmojiShortcode(editor, (shortcodeName) => {
-					const resolver = emojiResolverRef.current;
-					return resolver == null ? null : resolver(shortcodeName);
-				}),
+				registerComposerEmojiShortcode(
+					editor,
+					(shortcodeName) => {
+						const resolver = emojiResolverRef.current;
+						return resolver == null ? null : resolver(shortcodeName);
+					},
+					markdownParserFlags,
+				),
 			);
 		}
 		const modeChanged = previousPlainTextRef.current !== plainText;
