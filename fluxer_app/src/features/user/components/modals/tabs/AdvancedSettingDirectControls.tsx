@@ -13,6 +13,7 @@ import {
 	HelpCenterButtonControl,
 	HideKeyboardHintsControl,
 	KeepNekoStillControl,
+	PlutoniumButtonControl,
 	ShowNekoControl,
 	VoiceChannelJoinBehaviorControl,
 	WindowsFluxerSansControl,
@@ -203,6 +204,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'appearance-show-help-center-button':
 			return (
 				<HelpCenterButtonControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.help-center-button-control" />
+			);
+		case 'appearance-show-plutonium-button':
+			return (
+				<PlutoniumButtonControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.plutonium-button-control" />
 			);
 		case 'appearance-show-download-button':
 			return (

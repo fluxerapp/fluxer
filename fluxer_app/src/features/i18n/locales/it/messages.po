@@ -18836,6 +18836,11 @@ msgstr "Nascondi {appName}"
 msgid "Hide {premiumProductName} purchase date"
 msgstr "Nascondi la data di acquisto di {premiumProductName}"
 
+#. Context menu item on the Plutonium button in the direct messages list. Hides the button. productName is the premium product name, Plutonium on fluxer.com.
+#: src/features/channel/components/direct_message/DirectMessageList.tsx
+msgid "Hide {productName} button"
+msgstr ""
+
 #. Accessible label for the button that collapses the other accounts section in the inbox.
 #: src/features/messaging/components/popouts/inbox/OtherAccountsInboxSection.tsx
 msgid "Hide activity on other accounts"
@@ -27937,6 +27942,11 @@ msgstr "Attendi un istante e prova a eliminare di nuovo."
 msgid "Please wait a moment and try renaming again."
 msgstr "Attendi un momento e prova a rinominare di nuovo."
 
+#. Settings search entry description. One-line summary of what the setting controls. Plutonium is the product name.
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts
+msgid "Plutonium button in the direct messages list"
+msgstr ""
+
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Poland"
@@ -33869,6 +33879,11 @@ msgstr "Mostra password"
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Mostra i controlli del volume dei partecipanti per dispositivo nei menu vocali"
+
+#. Toggle label and settings search entry for showing the Plutonium button in the direct messages list. Plutonium is the product name.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
+msgid "Show Plutonium button"
+msgstr ""
 
 #. Row in the quick CSS editor shortcuts dialog.
 #: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
