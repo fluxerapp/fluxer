@@ -44,12 +44,12 @@ handle_dm_disconnect(ConnectionId, UserId, VoiceStates, State) ->
 handle_existing_dm_disconnect(ConnectionId, UserId, OldVoiceState, VoiceStates, State) ->
     case guild_voice_state:user_matches_voice_state(OldVoiceState, UserId) of
         false -> {reply, gateway_errors:error(voice_user_mismatch), State};
-        true -> do_dm_disconnect(ConnectionId, OldVoiceState, VoiceStates, State)
+        true -> do_dm_disconnect(ConnectionId, UserId, OldVoiceState, VoiceStates, State)
     end.
 
--spec do_dm_disconnect(binary(), voice_state(), voice_state_map(), dm_state()) ->
+-spec do_dm_disconnect(binary(), integer(), voice_state(), voice_state_map(), dm_state()) ->
     {reply, map(), dm_state()}.
-do_dm_disconnect(ConnectionId, OldVoiceState, VoiceStates, State) ->
+do_dm_disconnect(ConnectionId, UserId, OldVoiceState, VoiceStates, State) ->
     NewVoiceStates = maps:remove(ConnectionId, VoiceStates),
     NewState0 = State#{dm_voice_states => NewVoiceStates},
     OldChannelId = maps:get(<<"channel_id">>, OldVoiceState, null),
@@ -59,8 +59,35 @@ do_dm_disconnect(ConnectionId, OldVoiceState, VoiceStates, State) ->
     },
     SessionId = maps:get(id, State),
     leave_call_if_needed(OldChannelId, SessionId, ConnectionId, State),
+    force_disconnect_participant(OldChannelId, UserId, ConnectionId, State),
     broadcast_disconnect_if_needed(OldChannelId, DisconnectVS, NewState),
     {reply, #{success => true}, NewState}.
+
+-spec force_disconnect_participant(term(), integer(), binary(), dm_state()) -> ok.
+force_disconnect_participant(ChannelId, UserId, ConnectionId, State) ->
+    spawn_force_disconnect(
+        snowflake_id:parse_maybe(ChannelId), UserId, ConnectionId, force_disconnect_fun(State)
+    ).
+
+-spec spawn_force_disconnect(
+    integer() | undefined,
+    integer(),
+    binary(),
+    fun((null, integer(), integer(), binary()) -> {ok, map()} | {error, term()})
+) -> ok.
+spawn_force_disconnect(undefined, _UserId, _ConnectionId, _ForceDisconnect) ->
+    ok;
+spawn_force_disconnect(ChannelId, UserId, ConnectionId, ForceDisconnect) ->
+    _ = spawn(fun() -> ForceDisconnect(null, ChannelId, UserId, ConnectionId) end),
+    ok.
+
+-spec force_disconnect_fun(dm_state()) ->
+    fun((null, integer(), integer(), binary()) -> {ok, map()} | {error, term()}).
+force_disconnect_fun(State) ->
+    case maps:get(test_force_disconnect_fun, State, undefined) of
+        Fun when is_function(Fun, 4) -> Fun;
+        _ -> fun guild_voice_disconnect_user:force_disconnect_participant/4
+    end.
 
 -spec leave_call_if_needed(term(), term(), binary(), dm_state()) -> ok.
 leave_call_if_needed(null, _SessionId, ConnectionId, _State) ->
