@@ -4,6 +4,7 @@ import {spawn} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import {homedir} from 'node:os';
 import {createChildLogger} from '@electron/common/Logger';
+import {getFlatpakAppId} from '@electron/main/LinuxSandbox';
 import {app} from 'electron';
 
 const logger = createChildLogger('LinuxLaunchPath');
@@ -25,34 +26,46 @@ export function getStableLinuxLaunchPath(): string {
 	return getAppImagePath() ?? (PACKAGE_LAUNCH_COMMAND || process.execPath);
 }
 
+function getFlatpakRelaunchCommand(): string | null {
+	const appId = getFlatpakAppId();
+	if (appId == null) return null;
+	return process.env.FLUXER_FLATPAK_COMMAND?.trim() || appId;
+}
+
+function spawnAfterExit(target: string, args: ReadonlyArray<string>): void {
+	const child = spawn(
+		existsSync(PREFERRED_RELAUNCH_SHELL) ? PREFERRED_RELAUNCH_SHELL : FALLBACK_RELAUNCH_SHELL,
+		['-c', RELAUNCH_AFTER_EXIT, 'fluxer-relaunch', String(process.pid), target, homedir(), ...args],
+		{
+			cwd: homedir(),
+			detached: true,
+			stdio: 'ignore',
+		},
+	);
+	child.unref();
+	logger.info('Relaunching once this process exits', {target, pid: child.pid});
+}
+
 export function relaunchStableLaunchPath(): void {
 	const appImagePath = getAppImagePath();
-	if (appImagePath == null) {
-		app.relaunch();
+	if (appImagePath != null) {
+		try {
+			spawnAfterExit(appImagePath, process.argv.slice(1));
+		} catch (error) {
+			logger.error('Failed to start the AppImage replacement process', {error});
+			app.relaunch({execPath: appImagePath});
+		}
 		return;
 	}
-	try {
-		const child = spawn(
-			existsSync(PREFERRED_RELAUNCH_SHELL) ? PREFERRED_RELAUNCH_SHELL : FALLBACK_RELAUNCH_SHELL,
-			[
-				'-c',
-				RELAUNCH_AFTER_EXIT,
-				'fluxer-relaunch',
-				String(process.pid),
-				appImagePath,
-				homedir(),
-				...process.argv.slice(1),
-			],
-			{
-				cwd: homedir(),
-				detached: true,
-				stdio: 'ignore',
-			},
-		);
-		child.unref();
-		logger.info('Relaunching the AppImage once this process exits', {path: appImagePath, pid: child.pid});
-	} catch (error) {
-		logger.error('Failed to start the AppImage replacement process', {error});
-		app.relaunch({execPath: appImagePath});
+	const flatpakCommand = getFlatpakRelaunchCommand();
+	if (flatpakCommand != null) {
+		try {
+			spawnAfterExit('flatpak-spawn', ['--latest-version', flatpakCommand, ...process.argv.slice(1)]);
+		} catch (error) {
+			logger.error('Failed to start the Flatpak replacement process', {error});
+			app.relaunch();
+		}
+		return;
 	}
+	app.relaunch();
 }
