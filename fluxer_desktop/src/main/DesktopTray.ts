@@ -23,8 +23,9 @@ import {getDesktopUpdateState, observeDesktopUpdateState} from '@electron/main/D
 import {checkForUpdatesFromShell, startDesktopUpdateFromShell} from '@electron/main/DesktopUpdatePrompt';
 import {shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
+import {getLinuxDesktop} from '@electron/main/LinuxSession';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
-import {renderTrayIcon, resolveTrayIconAppearance} from '@electron/main/TrayIconImage';
+import {renderTrayIcon, resolveTrayIconAppearance, trayIconFollowsSystemTheme} from '@electron/main/TrayIconImage';
 import {describeUnreadBadge} from '@electron/main/UnreadBadge';
 import {app, type BrowserWindow, clipboard, Menu, nativeImage, nativeTheme, Tray} from 'electron';
 
@@ -299,8 +300,12 @@ function resolveTrayIcon(): {key: string; image: Electron.NativeImage} | null {
 	if (!trayBaseIcon) return null;
 	const appearance = resolveTrayIconAppearance({
 		platform: process.platform,
+		linuxDesktop: getLinuxDesktop(),
 		coloredTrayIcon: getDesktopWindowBehaviorSettings().coloredTrayIcon,
-		darkSystemUI: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI,
+		darkSystemUI:
+			process.platform === 'linux'
+				? nativeTheme.shouldUseDarkColors
+				: nativeTheme.shouldUseDarkColorsForSystemIntegratedUI,
 	});
 	const indicator = trayUnreadBadge !== 0;
 	const key = `${appearance}:${indicator}`;
@@ -651,7 +656,7 @@ export function initializeDesktopTray(nextController: DesktopTrayController): vo
 			}
 			refreshDesktopTrayMenu();
 		});
-		if (process.platform === 'win32') {
+		if (trayIconFollowsSystemTheme(process.platform, getLinuxDesktop())) {
 			nativeTheme.on('updated', () => syncTrayIcon(false));
 		}
 		observeDesktopUpdateState(refreshDesktopTrayMenu);
