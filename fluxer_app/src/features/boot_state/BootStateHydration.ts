@@ -157,6 +157,8 @@ function seedViewport(payload: BootStatePayload): void {
 		seedRetainedMarkdownParses(payload.viewport.markdownParses);
 	}
 	for (const profile of payload.viewport.dmProfiles ?? []) UserProfile.handleProfileCreate(new Profile(profile));
+	for (const {guildId, profile} of payload.viewport.guildProfiles ?? [])
+		UserProfile.handleProfileCreate(new Profile(profile, guildId));
 	recordUserAreaOverlayHeight(payload.viewport.userAreaOverlayHeightPx);
 }
 

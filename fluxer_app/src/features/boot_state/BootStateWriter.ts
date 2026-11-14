@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import Config from '@app/features/app/config/Config';
 import Initialization from '@app/features/app/state/Initialization';
 import {TRANSIENT_UI_SELECTOR} from '@app/features/boot_state/BootDomFrame';
@@ -68,6 +69,7 @@ import ThemeProfile from '@app/features/theme/state/ThemeProfile';
 import Dimension from '@app/features/ui/state/Dimension';
 import LayerManager, {LayerType} from '@app/features/ui/state/LayerManager';
 import {flushPendingGuildSettings} from '@app/features/user/commands/UserGuildSettingsCommands';
+import type {Profile, ProfileWire} from '@app/features/user/models/Profile';
 import UserProfile from '@app/features/user/state/UserProfile';
 import {MessageStates} from '@fluxer/constants/src/ChannelConstants';
 import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
@@ -260,14 +262,31 @@ function withMessageMembers(
 	return {...shell, entries: {...shell.entries, [GUILD_MEMBER_ENTITY]: rows}};
 }
 
+function selfAssignableRolesGuildId(): string | null {
+	const guildId = Navigation.guildId;
+	return guildId !== null && Navigation.pathname === Routes.guildRoles(guildId) ? guildId : null;
+}
+
+function profileJson(profile: Profile | null): ProfileWire | null {
+	if (profile === null) return null;
+	const json = profile.toJSON();
+	return JSON.stringify(json).length <= 128 * 1024 ? json : null;
+}
+
 function captureDmProfiles() {
 	const channel =
 		SelectedChannel.currentChannelId === null ? null : Channels.getChannel(SelectedChannel.currentChannelId);
 	if (!channel?.isDM()) return [];
-	const profile = UserProfile.getProfile(channel.recipientIds[0]);
-	if (profile === null) return [];
-	const json = profile.toJSON();
-	return JSON.stringify(json).length <= 128 * 1024 ? [json] : [];
+	const profile = profileJson(UserProfile.getProfile(channel.recipientIds[0]));
+	return profile === null ? [] : [profile];
+}
+
+function captureGuildProfiles() {
+	const guildId = selfAssignableRolesGuildId();
+	const userId = SessionManager.userId;
+	if (guildId === null || userId === null) return [];
+	const profile = profileJson(UserProfile.getProfile(userId, guildId));
+	return profile === null ? [] : [{guildId, profile}];
 }
 
 function captureBootState(accountKey: string, frame: BootStateFrameRecord | null): BootStateEncodablePayload | null {
@@ -309,6 +328,7 @@ function captureBootState(accountKey: string, frame: BootStateFrameRecord | null
 				new Set(windows.flatMap((window) => window.messages.map((message) => message.id))),
 			),
 			dmProfiles: captureDmProfiles(),
+			guildProfiles: captureGuildProfiles(),
 			markdownParses: captureRetainedMarkdownParses(),
 			rendererBuild: Config.BUILD_VERSION,
 			userAreaOverlayHeightPx: currentUserAreaOverlayHeight(),
@@ -370,7 +390,7 @@ function frameCaptureBlocker(domFrames: boolean): string | null {
 		})
 	)
 		return 'visible images are still loading';
-	if (SelectedChannel.currentChannelId === null) {
+	if (SelectedChannel.currentChannelId === null && selfAssignableRolesGuildId() === null) {
 		return 'no channel is open';
 	}
 	if (LayerManager.hasType(LayerType.MODAL)) {

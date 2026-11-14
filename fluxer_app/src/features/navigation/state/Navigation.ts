@@ -57,6 +57,12 @@ class Navigation {
 		return this.currentLocation?.pathname ?? '';
 	}
 
+	async preloadCurrentRoute(): Promise<void> {
+		const location = this.currentLocation;
+		if (this.router === null || location === null) return;
+		await this.router.preload(`${location.pathname}${location.search}`);
+	}
+
 	get context(): 'dm' | 'favorites' | 'guild' {
 		const guildId = this.guildId;
 		if (!guildId || guildId === ME) return 'dm';

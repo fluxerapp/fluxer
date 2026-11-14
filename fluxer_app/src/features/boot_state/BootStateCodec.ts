@@ -118,8 +118,14 @@ export interface BootStateViewportChannel {
 	readonly tailHeightPx?: number;
 }
 
+interface BootStateGuildProfile {
+	readonly guildId: string;
+	readonly profile: ProfileWire;
+}
+
 interface BootStateViewport {
 	readonly dmProfiles?: ReadonlyArray<ProfileWire>;
+	readonly guildProfiles?: ReadonlyArray<BootStateGuildProfile>;
 	readonly channels: Readonly<Record<string, BootStateViewportChannel>>;
 	readonly guildListScrollTop: number;
 	readonly imageSources: ReadonlyArray<string>;
@@ -608,22 +614,26 @@ function isUnreadView(value: unknown): boolean {
 	);
 }
 
+function isProfileWire(value: unknown): boolean {
+	return isRecord(value) && isRecord(value.user) && typeof value.user.id === 'string' && isRecord(value.user_profile);
+}
+
+function isGuildProfile(value: unknown): boolean {
+	return isRecord(value) && typeof value.guildId === 'string' && isProfileWire(value.profile);
+}
+
+function isOptionalProfileList(value: unknown, isProfile: (profile: unknown) => boolean): boolean {
+	return value === undefined || (Array.isArray(value) && value.length <= 1 && value.every(isProfile));
+}
+
 function decodeViewport(source: ByteSource): BootStateViewport {
 	const viewport = parseJson(source.string(), 'VIEWPORT');
 	source.finish();
 	if (
 		!isRecord(viewport) ||
 		!isRecord(viewport.channels) ||
-		(viewport.dmProfiles !== undefined &&
-			(!Array.isArray(viewport.dmProfiles) ||
-				viewport.dmProfiles.length > 1 ||
-				viewport.dmProfiles.some(
-					(profile) =>
-						!isRecord(profile) ||
-						!isRecord(profile.user) ||
-						typeof profile.user.id !== 'string' ||
-						!isRecord(profile.user_profile),
-				))) ||
+		!isOptionalProfileList(viewport.dmProfiles, isProfileWire) ||
+		!isOptionalProfileList(viewport.guildProfiles, isGuildProfile) ||
 		Object.values(viewport.channels).some(
 			(channel) =>
 				!isRecord(channel) ||

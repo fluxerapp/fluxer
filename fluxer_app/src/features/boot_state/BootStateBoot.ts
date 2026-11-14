@@ -11,6 +11,7 @@ import SnapshotSync from '@app/features/gateway/snapshot/SnapshotSync';
 import Drafts from '@app/features/messaging/state/MessagingDrafts';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {loadMarkdownParserWasm} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
+import Navigation from '@app/features/navigation/state/Navigation';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 
@@ -54,7 +55,7 @@ export async function restoreBootState(read: PendingBootStateRead, ready: Promis
 		if (!BootStateRestore.isCurrent(generation)) return false;
 		hydrationStarted = true;
 		const hydrated = hydrateBootState(accountKey, userId, payload);
-		await Promise.all([hydrated, markdownParser, Drafts.ready]);
+		await Promise.all([hydrated, markdownParser, Drafts.ready, Navigation.preloadCurrentRoute()]);
 		if (!BootStateRestore.isCurrent(generation)) return false;
 		if (bootHydrationPhase() === 'idle' || !BootStateRestore.enterStale(generation)) {
 			throw new Error('The boot view did not enter the stale state');
