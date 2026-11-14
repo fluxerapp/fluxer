@@ -22316,7 +22316,7 @@
 					"author_avatar": {"nullable": true, "type": "string"},
 					"author_bot": {"type": "boolean"},
 					"webhook_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
-					"content": {"type": "string", "maxLength": 4000},
+					"content": {"type": "string"},
 					"timestamp": {"type": "string"},
 					"attachments": {
 						"maxItems": 10,
