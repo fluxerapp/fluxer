@@ -2,7 +2,7 @@
 
 .card {
 	overflow: hidden;
-	border: 2px solid var(--background-modifier-accent);
+	border: 0.0625rem solid var(--background-modifier-accent);
 	border-radius: 0.5rem;
 	user-select: text;
 }

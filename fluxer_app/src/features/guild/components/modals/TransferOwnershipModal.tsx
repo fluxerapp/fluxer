@@ -4,7 +4,10 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import {GroupOwnershipTransferFailedModal} from '@app/features/guild/components/alerts/GroupOwnershipTransferFailedModal';
 import styles from '@app/features/guild/components/modals/TransferOwnershipModal.module.css';
-import type {GuildMember} from '@app/features/member/models/GuildMember';
+import {
+	TRANSFER_COMMUNITY_OWNERSHIP_DESCRIPTOR,
+	TRANSFER_OWNERSHIP_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import {Button} from '@app/features/ui/button/Button';
@@ -20,16 +23,16 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useEffect, useState} from 'react';
 
-const TRANSFER_COMMUNITY_OWNERSHIP_DESCRIPTOR = msg({
-	message: 'Transfer community ownership',
-	comment: 'Short label in the transfer ownership modal. Keep it concise.',
+const TRANSFER_OWNERSHIP_COUNTDOWN_DESCRIPTOR = msg({
+	message: 'Transfer ownership ({secondsRemaining})',
+	comment:
+		'Disabled confirm button in the transfer ownership modal. The number is a countdown in seconds until the button can be pressed.',
 });
 const logger = new Logger('TransferOwnershipModal');
 const TRANSFER_CONFIRMATION_SECONDS = 10;
 export const TransferOwnershipModal: React.FC<{
 	guildId: string;
 	targetUser: User;
-	targetMember: GuildMember;
 }> = observer(({guildId, targetUser}) => {
 	const {i18n} = useLingui();
 	const targetUserId = targetUser.id;
@@ -84,14 +87,14 @@ export const TransferOwnershipModal: React.FC<{
 							data-flx="guild.transfer-ownership-modal.warning-icon"
 						/>
 						<Modal.Description className={styles.warningText} data-flx="guild.transfer-ownership-modal.warning-text">
-							<Trans>
+							<Trans comment="Warning in the ownership transfer confirmation. {0} is the new owner's display name and targetUserId is their numeric user ID, shown in brackets after the name.">
 								You are about to transfer ownership of this community to{' '}
 								<strong data-flx="guild.transfer-ownership-modal.strong">
 									{NicknameUtils.getNickname(targetUser, guildId)}
 								</strong>{' '}
 								({targetUserId}). This action is{' '}
 								<strong className={styles.dangerText} data-flx="guild.transfer-ownership-modal.danger-text">
-									irreversible,
+									irreversible
 								</strong>{' '}
 								and you will lose all owner privileges.
 							</Trans>
@@ -115,11 +118,9 @@ export const TransferOwnershipModal: React.FC<{
 					leftIcon={<WarningIcon size={16} weight="fill" data-flx="guild.transfer-ownership-modal.warning-icon--2" />}
 					data-flx="guild.transfer-ownership-modal.button.transfer"
 				>
-					{secondsRemaining > 0 ? (
-						<Trans>Transfer ownership in {secondsRemaining}s</Trans>
-					) : (
-						<Trans>Transfer ownership</Trans>
-					)}
+					{secondsRemaining > 0
+						? i18n._(TRANSFER_OWNERSHIP_COUNTDOWN_DESCRIPTOR, {secondsRemaining})
+						: i18n._(TRANSFER_OWNERSHIP_DESCRIPTOR)}
 				</Button>
 			</Modal.Footer>
 		</Modal.Root>

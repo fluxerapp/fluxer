@@ -179,11 +179,8 @@ const GuildOverviewTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 						canManageGuild={canManageGuild}
 						data-flx="guild.guild-tabs.guild-overview-tab.owner-crown-section"
 					/>
-					<OwnerTransferSection
-						guildId={guildId}
-						data-flx="guild.guild-tabs.guild-overview-tab.owner-transfer-section"
-					/>
 				</SettingsSection>
+				<OwnerTransferSection guildId={guildId} data-flx="guild.guild-tabs.guild-overview-tab.owner-transfer-section" />
 			</Form>
 		</div>
 	);

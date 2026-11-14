@@ -42,11 +42,6 @@ msgstr "(modifié)"
 msgid "(only visible to you)"
 msgstr "(visible uniquement par vous)"
 
-#. Placeholder of the user ID field in the community ownership transfer section. Explains that entering an ID can also selects a member.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
-msgid "(Optional) Enter a specific user ID to select a member"
-msgstr ""
-
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx
 msgid "(unassigned)"
@@ -7633,10 +7628,6 @@ msgstr "Changer le nombre sous le curseur de 1"
 #: src/features/theme_settings/components/QuickCssShortcutsModal.tsx
 msgid "Change the number under the cursor by 10"
 msgstr "Changer le nombre sous le curseur de 10"
-
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
-msgid "Change the ownership of this community. Once completed, this is irreversible."
-msgstr ""
 
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx
 msgid "Change username"
@@ -21940,6 +21931,11 @@ msgstr "Une maintenance est prévue pour {localizedTime}. Durée estimée : {dur
 msgid "Make {userName} the group owner? You'll lose owner privileges."
 msgstr "Faire de {userName} le propriétaire du groupe ? Vous perdrez vos privilèges de propriétaire."
 
+#. Description of the community ownership transfer section in community settings.
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
+msgid "Make another member the owner of this community. You cannot undo this."
+msgstr "Faites d'un autre membre le propriétaire de cette communauté. Vous ne pourrez pas annuler cette action."
+
 #. Group DM action that transfers ownership of the group to the selected member.
 #. Group DM action that transfers ownership of the group to the selected member.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx
@@ -24789,16 +24785,6 @@ msgstr "Aucun membre ou rôle correspondant"
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "No matching posts"
 msgstr "Aucun message correspondant"
-
-#. Shown in the community ownership transfer section when the entered user ID cannot be found.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
-msgid "No member of this community has that ID"
-msgstr ""
-
-#. Empty state of the member search in the community ownership transfer section.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
-msgid "No members match that search"
-msgstr ""
 
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx
 msgid "No mentions yet"
@@ -31780,7 +31766,7 @@ msgstr "Rechercher des langues…"
 #. Placeholder of the member search in the community ownership transfer section.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
 msgid "Search members"
-msgstr ""
+msgstr "Rechercher des membres"
 
 #. Placeholder of the search box in the add members or roles step of the create channel modal.
 #: src/features/channel/components/modals/ChannelCreateAccessStep.tsx
@@ -38157,11 +38143,6 @@ msgstr "Ce média pour adultes n’est pas accessible avec votre compte."
 msgid "This mature media is not available to your account. <0>Learn more</0>"
 msgstr "Ce média pour adultes n’est pas accessible avec votre compte. <0>En savoir plus</0>"
 
-#. Shown in the community ownership transfer section when the entered user ID belongs to a bot or to the current owner.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
-msgid "This member is ineligble for selection"
-msgstr ""
-
 #. Body of the error modal shown when a voice moderation action targets a member who no longer exists.
 #: src/features/app/components/alerts/VoiceMemberModerationFailedModal.tsx
 msgid "This member is no longer in the community. Refresh and try again."
@@ -39021,14 +39002,10 @@ msgstr "Suivi"
 msgid "Tracking parameters"
 msgstr "Paramètres de suivi"
 
-#. Short label in the transfer ownership modal. Keep it concise.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
+#. Title of the community ownership transfer section in community settings and of its confirmation modal.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer community ownership"
 msgstr "Transférer la propriété de la communauté"
-
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
-msgid "Transfer Community Ownership"
-msgstr ""
 
 #. Confirm dialog body before transferring ownership of a group DM.
 #: src/features/ui/action_menu/UserContextMenu.tsx
@@ -39036,18 +39013,14 @@ msgid "Transfer group ownership to {userName}?"
 msgstr "Transférer la propriété du groupe à {userName} ?"
 
 #. Action label in community settings that hands ownership of the community to another member.
-#: src/features/guild/components/modals/TransferOwnershipModal.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Transfer ownership"
 msgstr "Transférer la propriété"
 
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerTransferSection.tsx
-msgid "Transfer Ownership"
-msgstr ""
-
+#. Disabled confirm button in the transfer ownership modal. The number is a countdown in seconds until the button can be pressed.
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx
-msgid "Transfer ownership in {secondsRemaining}s"
-msgstr ""
+msgid "Transfer ownership ({secondsRemaining})"
+msgstr "Transférer la propriété ({secondsRemaining})"
 
 #. Activity log detail line under a community settings update, shown when the community got a new owner. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {user} is the new owner, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -43491,10 +43464,11 @@ msgstr "Vous avez déjà cette connexion."
 msgid "You are about to leave {productName}"
 msgstr "Vous êtes sur le point de quitter {productName}"
 
+#. Warning in the ownership transfer confirmation. {0} is the new owner's display name and targetUserId is their numeric user ID, shown in brackets after the name.
 #. placeholder {0}: NicknameUtils.getNickname(targetUser, guildId)
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx
-msgid "You are about to transfer ownership of this community to <0>{0}</0> ({targetUserId}). This action is <1>irreversible,</1> and you will lose all owner privileges."
-msgstr ""
+msgid "You are about to transfer ownership of this community to <0>{0}</0> ({targetUserId}). This action is <1>irreversible</1> and you will lose all owner privileges."
+msgstr "Vous êtes sur le point de transférer la propriété de cette communauté à <0>{0}</0> ({targetUserId}). Cette action est <1>irréversible</1> et vous perdrez tous les privilèges de propriétaire."
 
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
 #: src/features/invite/commands/InviteCommands.tsx
