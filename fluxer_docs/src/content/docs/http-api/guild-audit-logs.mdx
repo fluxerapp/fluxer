@@ -12,7 +12,7 @@ Each new entry is also sent as [Guild Audit Log Entry Create](/gateway/events/#g
 
 ## Audit log reason
 
-A route marked Audit reason accepts the `X-Audit-Log-Reason` header, listed with the [standard request headers](/http-api/#standard-request-headers). The value is trimmed and used as sent, with no percent-decoding. A blank value or one over 512 characters is dropped and the request still succeeds.
+A route marked Audit reason accepts the `X-Audit-Log-Reason` header, listed with the [standard request headers](/http-api/#standard-request-headers). The API percent-decodes the value and then trims it, so you can send any UTF-8 text encoded with `encodeURIComponent`. A value that is not valid percent-encoding is used as sent. Encode a literal `%` as `%25`. A blank value or one over 512 characters is dropped and the request still succeeds.
 
 When the header is absent, [Create or replace guild ban](/http-api/guild-moderation/#create-or-replace-guild-ban) uses the body `reason`, and [Modify guild member](/http-api/guild-members/#modify-guild-member) uses `timeout_reason` if the body sets `communication_disabled_until`. Bot additions, message deletions made by [Delete message attachment](/http-api/messages/#delete-message-attachment) and entries made by [message deletion consolidation](#list-guild-audit-logs) never have a reason.
 
