@@ -144,7 +144,7 @@ import {isSystemTitleBarActive} from '@app/features/window/hooks/useNativeTitleB
 import {create} from '@bufbuild/protobuf';
 import {KeybindSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import type {I18n} from '@lingui/core';
-import {computed, makeAutoObservable, runInAction} from 'mobx';
+import {computed, makeAutoObservable, observableRef, runInAction} from 'mobx';
 
 const KEYBIND_STORE_NAME = 'Keybind';
 
@@ -1002,12 +1002,21 @@ class Keybind {
 	private keyboardShortcutsOverlayCombo: KeyCombo = {...DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO};
 	private startDmCallCombo: KeyCombo = {...DEFAULT_START_DM_CALL_COMBO};
 	private holdSources = new HoldSources(() => this.pushToTalkReleaseDelay);
+	private voiceActivityDeniedResolver: (() => boolean) | null = null;
 
 	constructor() {
-		makeAutoObservable<this, 'holdSources' | 'defaultKeybinds' | 'runtimeDispatchDefaults' | 'effectiveCustomKeybinds'>(
+		makeAutoObservable<
+			this,
+			| 'holdSources'
+			| 'voiceActivityDeniedResolver'
+			| 'defaultKeybinds'
+			| 'runtimeDispatchDefaults'
+			| 'effectiveCustomKeybinds'
+		>(
 			this,
 			{
 				holdSources: false,
+				voiceActivityDeniedResolver: observableRef,
 				defaultKeybinds: computed({keepAlive: true}),
 				runtimeDispatchDefaults: computed({keepAlive: true}),
 				effectiveCustomKeybinds: computed({keepAlive: true}),
@@ -1390,8 +1399,16 @@ class Keybind {
 		);
 	}
 
+	setVoiceActivityDeniedResolver(resolver: () => boolean): void {
+		this.voiceActivityDeniedResolver = resolver;
+	}
+
+	isPushToTalkRequired(): boolean {
+		return this.voiceActivityDeniedResolver?.() === true;
+	}
+
 	isPushToTalkEffective(): boolean {
-		return this.isPushToTalkEnabled() && this.hasPushToTalkKeybind();
+		return this.isPushToTalkRequired() || (this.isPushToTalkEnabled() && this.hasPushToTalkKeybind());
 	}
 
 	setPushToTalkReleaseDelay(delayMs: number): void {

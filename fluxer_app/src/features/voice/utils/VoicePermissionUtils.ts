@@ -35,16 +35,31 @@ export function getVoiceChannelPermissions(channelId: string | null | undefined)
 	};
 }
 
+function getGuildVoiceChannelPermissions(
+	guildId: string | null | undefined,
+	channelId: string | null | undefined,
+): VoiceChannelPermissions | null {
+	if (!channelId) return null;
+	const channel = Channels.getChannel(channelId);
+	const effectiveGuildId = guildId ?? channel?.guildId ?? null;
+	if (!effectiveGuildId || channel?.guildId !== effectiveGuildId) return null;
+	return getVoiceChannelPermissions(channelId);
+}
+
 export function isVoiceSpeakPermissionDenied(
 	guildId: string | null | undefined,
 	channelId: string | null | undefined,
 ): boolean {
-	if (!channelId) return false;
-	const channel = Channels.getChannel(channelId);
-	const effectiveGuildId = guildId ?? channel?.guildId ?? null;
-	if (!effectiveGuildId || channel?.guildId !== effectiveGuildId) return false;
-	const voicePermissions = getVoiceChannelPermissions(channelId);
+	const voicePermissions = getGuildVoiceChannelPermissions(guildId, channelId);
 	return voicePermissions !== null && !voicePermissions.canSpeak;
+}
+
+export function isVoiceActivityPermissionDenied(
+	guildId: string | null | undefined,
+	channelId: string | null | undefined,
+): boolean {
+	const voicePermissions = getGuildVoiceChannelPermissions(guildId, channelId);
+	return voicePermissions !== null && !voicePermissions.canUseVad;
 }
 
 function getVoicePermissionMuteState(

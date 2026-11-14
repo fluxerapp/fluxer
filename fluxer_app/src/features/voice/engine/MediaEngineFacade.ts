@@ -1486,6 +1486,7 @@ class MediaEngineFacade extends Store {
 	}
 
 	private isPushToTalkActive(): boolean {
+		if (Keybind.isPushToTalkRequired()) return true;
 		if (getActiveVoiceProcessingMode(VoiceSettings) === 'studio') return false;
 		return Keybind.isPushToTalkEffective();
 	}
