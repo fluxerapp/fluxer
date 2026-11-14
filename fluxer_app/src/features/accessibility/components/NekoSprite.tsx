@@ -4,7 +4,6 @@
 import styles from '@app/features/accessibility/components/NekoSprite.module.css';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {getNativeTitlebarInset} from '@app/features/app/hooks/useAntiShiftFloating';
-import {isElectron} from '@app/features/ui/utils/ElectronRuntime';
 import nekoSpriteUrl from '@app/media/images/neko.png';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -233,14 +232,12 @@ const NekoEngine = observer((): React.ReactElement => {
 		const neko = nekoRef.current;
 		if (!neko) return;
 
-		const currentTitlebarInset = (): number => (isElectron() ? getNativeTitlebarInset(document) : 0);
-		let titlebarInset = currentTitlebarInset();
-		const minXBound = (): number => NEKO_HALF;
+		let titlebarInset = getNativeTitlebarInset(document);
 		const maxXBound = (): number => Math.max(NEKO_HALF, window.innerWidth - NEKO_HALF);
 		const minYBound = (): number => titlebarInset + NEKO_HALF;
 		const maxYBound = (): number => Math.max(minYBound(), window.innerHeight - NEKO_HALF);
 
-		let nekoPosX = clamp(window.innerWidth - 48, minXBound(), maxXBound());
+		let nekoPosX = clamp(window.innerWidth - 48, NEKO_HALF, maxXBound());
 		let nekoPosY = clamp(window.innerHeight - 96, minYBound(), maxYBound());
 		let mousePosX = nekoPosX;
 		let mousePosY = nekoPosY;
@@ -348,7 +345,7 @@ const NekoEngine = observer((): React.ReactElement => {
 			if (idleTime > 10 && Math.random() < 0.005 && idleAnimation == null) {
 				const available = ['sleeping', 'scratchSelf'];
 				if (nekoPosX < NEKO_CELL) available.push('scratchWallW');
-				if (nekoPosY <= minYBound() + 1) available.push('scratchWallN');
+				if (nekoPosY < titlebarInset + NEKO_CELL) available.push('scratchWallN');
 				if (nekoPosX > window.innerWidth - NEKO_CELL) available.push('scratchWallE');
 				if (nekoPosY > window.innerHeight - NEKO_CELL) available.push('scratchWallS');
 				idleAnimation = available[Math.floor(Math.random() * available.length)];
@@ -404,7 +401,7 @@ const NekoEngine = observer((): React.ReactElement => {
 			setSprite(direction, frameCount);
 			nekoPosX -= (diffX / distance) * NEKO_SPEED;
 			nekoPosY -= (diffY / distance) * NEKO_SPEED;
-			nekoPosX = clamp(nekoPosX, minXBound(), maxXBound());
+			nekoPosX = clamp(nekoPosX, NEKO_HALF, maxXBound());
 			nekoPosY = clamp(nekoPosY, minYBound(), maxYBound());
 			setPosition();
 		};
@@ -420,7 +417,7 @@ const NekoEngine = observer((): React.ReactElement => {
 				nekoPosY,
 				velocityRef.current.vx,
 				velocityRef.current.vy,
-				minXBound(),
+				NEKO_HALF,
 				maxX,
 				minYBound(),
 				maxY,
@@ -450,7 +447,7 @@ const NekoEngine = observer((): React.ReactElement => {
 			const impactVx = Math.abs(velocityRef.current.vx);
 			const impactVy = Math.abs(velocityRef.current.vy);
 			const impactSpeed = Math.hypot(impactVx, impactVy);
-			const nextX = reflectAxis(nekoPosX, velocityRef.current.vx, simDt, minXBound(), maxX);
+			const nextX = reflectAxis(nekoPosX, velocityRef.current.vx, simDt, NEKO_HALF, maxX);
 			const nextY = reflectAxis(nekoPosY, velocityRef.current.vy, simDt, minYBound(), maxY);
 			nekoPosX = nextX.position;
 			nekoPosY = nextY.position;
@@ -496,7 +493,18 @@ const NekoEngine = observer((): React.ReactElement => {
 			if (!drawSmash(timestamp)) setFlyingSprite();
 		};
 
+		const clampToBounds = (): void => {
+			nekoPosX = clamp(nekoPosX, NEKO_HALF, maxXBound());
+			nekoPosY = clamp(nekoPosY, minYBound(), maxYBound());
+			setPosition();
+		};
+
 		const tick = (timestamp: number): void => {
+			const nextTitlebarInset = getNativeTitlebarInset(document);
+			if (nextTitlebarInset !== titlebarInset) {
+				titlebarInset = nextTitlebarInset;
+				clampToBounds();
+			}
 			const dt = lastTimestamp === null ? 16.67 : timestamp - lastTimestamp;
 			lastTimestamp = timestamp;
 
@@ -574,7 +582,7 @@ const NekoEngine = observer((): React.ReactElement => {
 				resetIdleAnimation();
 				idleTime = 0;
 			}
-			nekoPosX = clamp(event.clientX, minXBound(), maxXBound());
+			nekoPosX = clamp(event.clientX, NEKO_HALF, maxXBound());
 			nekoPosY = clamp(event.clientY, minYBound(), maxYBound());
 			mousePosX = nekoPosX;
 			mousePosY = nekoPosY;
@@ -632,13 +640,6 @@ const NekoEngine = observer((): React.ReactElement => {
 		const onNekoPointerUp = (event: PointerEvent): void => endDrag(event, true);
 		const onNekoPointerCancel = (event: PointerEvent): void => endDrag(event, false);
 
-		const onResize = (): void => {
-			titlebarInset = currentTitlebarInset();
-			nekoPosX = clamp(nekoPosX, minXBound(), maxXBound());
-			nekoPosY = clamp(nekoPosY, minYBound(), maxYBound());
-			setPosition();
-		};
-
 		neko.style.transform = '';
 		setPosition();
 		setSprite('idle', 0);
@@ -647,7 +648,7 @@ const NekoEngine = observer((): React.ReactElement => {
 		neko.addEventListener('pointermove', onNekoPointerMove);
 		neko.addEventListener('pointerup', onNekoPointerUp);
 		neko.addEventListener('pointercancel', onNekoPointerCancel);
-		window.addEventListener('resize', onResize);
+		window.addEventListener('resize', clampToBounds);
 		rafId = requestAnimationFrame(tick);
 
 		return () => {
@@ -657,7 +658,7 @@ const NekoEngine = observer((): React.ReactElement => {
 			neko.removeEventListener('pointermove', onNekoPointerMove);
 			neko.removeEventListener('pointerup', onNekoPointerUp);
 			neko.removeEventListener('pointercancel', onNekoPointerCancel);
-			window.removeEventListener('resize', onResize);
+			window.removeEventListener('resize', clampToBounds);
 			neko.querySelectorAll(`.${styles.heart}`).forEach((heart) => heart.remove());
 		};
 	}, []);
