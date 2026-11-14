@@ -6,7 +6,6 @@ import {
 	getPasskeyMigration,
 	getPasskeyMigrationRegistrationOptions,
 } from '@app/api/auth/services/PasskeyMigrationService';
-import {SsoIdentityLinkService, ssoProviderIdOf} from '@app/api/auth/services/SsoIdentityLinks';
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {
 	RequireEmailAccountIdentity,
@@ -18,18 +17,17 @@ import {LocalAuthMiddleware} from '@app/api/middleware/LocalAuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {SsoManagedCredentialsMiddleware} from '@app/api/middleware/SsoManagedCredentialsMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {getLocalCredential} from '@app/api/user/AccountTier';
 import {assertValidTotpSetupCode} from '@app/api/user/services/UserAuth';
 import {isSsoUserWithoutPassword} from '@app/api/user/UserHelpers';
 import {Validator} from '@app/api/Validator';
-import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
-import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
-import {UserTraits} from '@fluxer/constants/src/UserTraitConstants';
+import {LocalCredentialKinds} from '@fluxer/constants/src/AccountTierConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {LocalSignInMethodRequiredError} from '@fluxer/errors/src/domains/auth/LocalSignInMethodRequiredError';
-import {SsoRequiredError, SsoRequiredReasons} from '@fluxer/errors/src/domains/auth/SsoRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
 import {
@@ -229,6 +227,7 @@ export function UserAuthController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_SSO_UNLINK),
 		LoginRequired,
 		DefaultUserOnly,
+		SsoManagedCredentialsMiddleware,
 		SudoModeMiddleware,
 		Validator('json', SudoVerificationSchema),
 		OpenAPI({
@@ -239,38 +238,20 @@ export function UserAuthController(app: HonoApp) {
 			security: ['sessionToken'],
 			tags: ['Users'],
 			description:
-				'Disconnect the instance single sign-on provider from the current account. Requires sudo mode verification and an alternative local sign-in method.',
+				"Disconnects the instance's single sign-on provider from the current account. Needs sudo mode and a password, a passkey or email code sign-in, otherwise the route returns LOCAL_SIGN_IN_METHOD_REQUIRED.",
 		}),
 		async (ctx) => {
 			const user = ctx.get('user');
 			const body = ctx.req.valid('json');
-
-			const instanceConfig = getInstanceConfigRepository();
-			const ssoConfig = await instanceConfig.getSsoConfig();
-			if (ssoConfig.enforced) {
-				throw new SsoRequiredError(SsoRequiredReasons.SSO_ENFORCED);
-			}
-
-			const hasLocalPassword = user.passwordHash !== null;
-			const {identifierFirst} = await instanceConfig.getSignInFeatures();
-			const hasEmailCodeSignIn =
-				identifierFirst &&
-				(await instanceConfig.getAccountIdentityMode()) === AccountIdentityModes.EMAIL &&
-				user.email !== null &&
-				user.emailVerified &&
-				!user.emailBounced &&
-				(await instanceConfig.isEmailEnabled());
-			const hasLocalPasskey =
-				user.traits.has(UserTraits.PASSKEY) || user.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN);
-			if (!hasLocalPassword && !hasEmailCodeSignIn && !hasLocalPasskey) {
+			const {emailCodes} = await getInstanceConfigRepository().getSignInFeatures();
+			const canSignInLocally =
+				getLocalCredential(user) !== LocalCredentialKinds.NONE ||
+				(emailCodes && user.email !== null && user.emailVerified && !user.emailBounced);
+			if (!canSignInLocally) {
 				throw new LocalSignInMethodRequiredError();
 			}
-
 			await requireSudoMode(ctx, user, body);
-
-			if (user.traits.has(UserTraits.SSO)) {
-				await new SsoIdentityLinkService(ctx.get('userRepository')).unlink(user, ssoProviderIdOf(ssoConfig));
-			}
+			await ctx.get('ssoService').unlinkSignedInUser(user);
 			return ctx.body(null, 204);
 		},
 	);

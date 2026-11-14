@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {RateLimitedConfirmModal} from '@app/features/app/components/alerts/RateLimitedConfirmModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -11,24 +10,20 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {disconnectSso} from '@app/features/user/commands/SsoLinkCommands';
 import {AccountSecurityRow} from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecurityCard';
+import {SINGLE_SIGN_ON_DESCRIPTOR} from '@app/features/user/components/modals/tabs/account_security_tab/SsoConnectRow';
 import type {User} from '@app/features/user/models/User';
 import * as FormUtils from '@app/lib/forms';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
+import {LocalCredentialKinds} from '@fluxer/constants/src/AccountTierConstants';
 import {UserTraits} from '@fluxer/constants/src/UserTraitConstants';
-import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
 
-const SINGLE_SIGN_ON_DESCRIPTOR = msg({
-	message: 'Single sign-on',
-	comment: 'Fallback label for the SSO provider in account security when no display name is configured.',
-});
 const DISCONNECT_SSO_BUTTON_DESCRIPTOR = msg({
 	message: 'Disconnect',
-	comment: 'Button to disconnect the account from single sign-on.',
+	context: 'sso',
+	comment: 'Button that disconnects the account from single sign-on.',
 });
 const DISCONNECT_SSO_FAILED_DESCRIPTOR = msg({
 	message: "Couldn't disconnect single sign-on",
@@ -39,67 +34,98 @@ export function isSsoLinked(user: User): boolean {
 	return user.traits.includes(UserTraits.SSO);
 }
 
-export function canDisconnectSso(user: User): boolean {
-	if (!isSsoLinked(user) || RuntimeConfig.getSnapshot().sso?.enforced === true) return false;
-	const hasPasskey =
-		user.traits.includes(UserTraits.PASSKEY) ||
-		user.authenticatorTypes?.includes(UserAuthenticatorTypes.WEBAUTHN) === true;
-	if (user.hasPassword || hasPasskey) return true;
+function isSsoEnforced(): boolean {
+	return RuntimeConfig.getSnapshot().sso?.enforced === true;
+}
+
+function offersEmailCodes(): boolean {
+	return RuntimeConfig.getSnapshot().features.email_codes === true;
+}
+
+function canDisconnectSso(user: User): boolean {
+	if (isSsoEnforced()) return false;
 	return (
-		RuntimeConfig.getSnapshot().features.identifier_first === true &&
-		!RuntimeConfig.usesUsernameSignIn &&
-		RuntimeConfig.emailsEnabled &&
-		user.email != null &&
-		user.verified === true &&
-		user.emailBounced !== true
+		user.localCredential !== LocalCredentialKinds.NONE ||
+		(offersEmailCodes() && user.email != null && user.verified === true && user.emailBounced !== true)
 	);
 }
 
-function getDisconnectDescription(canDisconnect: boolean, isEnforced: boolean, providerName: string) {
-	if (canDisconnect)
-		return (
-			<Trans comment="Description of the account settings row that disconnects the account from the instance's single sign-on provider.">
-				Connected. You can disconnect this sign-in method.
+function getDisconnectDescription(canDisconnect: boolean, providerName: string | null) {
+	if (canDisconnect) {
+		return providerName == null ? (
+			<Trans comment="Description of the account settings row that disconnects the account from single sign-on when the admin has not given the provider a name.">
+				You can sign in to this account with single sign-on.
 			</Trans>
-		);
-	if (isEnforced)
-		return (
+		) : (
 			<Trans comment="Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.">
-				This instance requires {providerName}.
+				You can sign in to this account with {providerName}.
 			</Trans>
 		);
-	return (
-		<Trans comment="Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.">
-			Add a local sign-in method before disconnecting {providerName}.
+	}
+	if (isSsoEnforced()) {
+		return providerName == null ? (
+			<Trans comment="Description of the account settings row for single sign-on when the instance requires it and the admin has not given the provider a name.">
+				This instance requires you to sign in with single sign-on.
+			</Trans>
+		) : (
+			<Trans comment="Description of the account settings row for single sign-on when the instance requires it. providerName is the provider name typed by the admin.">
+				This instance requires you to sign in with {providerName}.
+			</Trans>
+		);
+	}
+	if (offersEmailCodes()) {
+		return providerName == null ? (
+			<Trans comment="Description of the account settings row for single sign-on when the account has no other way to sign in, the instance allows sign-in with codes sent by email and the admin has not given the provider a name.">
+				Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect
+				single sign-on.
+			</Trans>
+		) : (
+			<Trans comment="Description of the account settings row for single sign-on when the account has no other way to sign in and the instance allows sign-in with codes sent by email. providerName is the provider name typed by the admin.">
+				Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect{' '}
+				{providerName}.
+			</Trans>
+		);
+	}
+	return providerName == null ? (
+		<Trans comment="Description of the account settings row for single sign-on when the account has no other way to sign in and the admin has not given the provider a name.">
+			Add a password or passkey to your account before you disconnect single sign-on.
+		</Trans>
+	) : (
+		<Trans comment="Description of the account settings row for single sign-on when the account has no other way to sign in. providerName is the provider name typed by the admin.">
+			Add a password or passkey to your account before you disconnect {providerName}.
 		</Trans>
 	);
 }
 
-function isLocalSignInMethodRequiredError(error: unknown): boolean {
-	if (!(error instanceof HttpError)) return false;
-
-	return isRecord(error.body) && error.body.code === APIErrorCodes.LOCAL_SIGN_IN_METHOD_REQUIRED;
-}
-
 export const SsoDisconnectRow = observer(({user}: {user: User}) => {
 	const {i18n} = useLingui();
-	const providerName = RuntimeConfig.getSnapshot().sso?.display_name ?? i18n._(SINGLE_SIGN_ON_DESCRIPTOR);
+	const providerName = RuntimeConfig.getSnapshot().sso?.display_name ?? null;
 	const canDisconnect = canDisconnectSso(user);
-	const isEnforced = RuntimeConfig.getSnapshot().sso?.enforced === true;
 	const handleDisconnect = useCallback(() => {
 		ModalCommands.push(
 			modal(() => (
 				<ConfirmModal
 					title={
-						<Trans comment="Confirmation title when disconnecting the current account from the instance's single sign-on provider.">
-							Disconnect {providerName}?
-						</Trans>
+						providerName == null ? (
+							<Trans comment="Confirmation title when disconnecting the current account from single sign-on and the admin has not given the provider a name.">
+								Disconnect single sign-on?
+							</Trans>
+						) : (
+							<Trans comment="Confirmation title when disconnecting the current account from the instance's single sign-on provider. providerName is the provider name typed by the admin.">
+								Disconnect {providerName}?
+							</Trans>
+						)
 					}
 					description={
-						<Trans comment="Warning shown before disconnecting single sign-on.">
-							You will disconnect {providerName} from your account. You will be able to sign in to your account using a
-							different method.
-						</Trans>
+						providerName == null ? (
+							<Trans comment="Warning shown before disconnecting single sign-on when the admin has not given the provider a name.">
+								You won't be able to sign in with single sign-on anymore. You can still use your other sign-in methods.
+							</Trans>
+						) : (
+							<Trans comment="Warning shown before disconnecting single sign-on. providerName is the provider name typed by the admin.">
+								You won't be able to sign in with {providerName} anymore. You can still use your other sign-in methods.
+							</Trans>
+						)
 					}
 					primaryText={i18n._(DISCONNECT_SSO_BUTTON_DESCRIPTOR)}
 					primaryVariant="danger"
@@ -122,19 +148,6 @@ export const SsoDisconnectRow = observer(({user}: {user: User}) => {
 								return;
 							}
 
-							if (isLocalSignInMethodRequiredError(error)) {
-								ModalCommands.push(
-									modal(() => (
-										<GenericErrorModal
-											title={i18n._(DISCONNECT_SSO_FAILED_DESCRIPTOR)}
-											message={getDisconnectDescription(false, false, providerName)}
-											data-flx="user.account-security-tab.sso-disconnect-row.local-sign-in-required-modal"
-										/>
-									)),
-								);
-								return;
-							}
-
 							FormUtils.pushApiErrorModal(i18n, error, i18n._(DISCONNECT_SSO_FAILED_DESCRIPTOR));
 						}
 					}}
@@ -142,12 +155,16 @@ export const SsoDisconnectRow = observer(({user}: {user: User}) => {
 				/>
 			)),
 		);
-	}, [i18n]);
+	}, [i18n, providerName]);
 
 	return (
 		<AccountSecurityRow
-			label={<bdi data-flx="user.account-security-tab.sso-disconnect-row.provider-name">{providerName}</bdi>}
-			description={getDisconnectDescription(canDisconnect, isEnforced, providerName)}
+			label={
+				<bdi data-flx="user.account-security-tab.sso-disconnect-row.provider-name">
+					{providerName ?? i18n._(SINGLE_SIGN_ON_DESCRIPTOR)}
+				</bdi>
+			}
+			description={getDisconnectDescription(canDisconnect, providerName)}
 			data-flx="user.account-security-tab.sso-disconnect-row"
 		>
 			{canDisconnect && (
@@ -157,7 +174,7 @@ export const SsoDisconnectRow = observer(({user}: {user: User}) => {
 					onClick={handleDisconnect}
 					data-flx="user.account-security-tab.sso-disconnect-row.button.disconnect"
 				>
-					<Trans>Disconnect</Trans>
+					{i18n._(DISCONNECT_SSO_BUTTON_DESCRIPTOR)}
 				</Button>
 			)}
 		</AccountSecurityRow>

@@ -234,6 +234,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED` | IP authorization resend limit exceeded |
 | `IP_BAN_DECLINED` | This IP address cannot be added to the blocklist |
 | `IP_BAN_LINKED_TO_DECISION` | This network block belongs to an enforcement decision |
+| `LOCAL_SIGN_IN_METHOD_REQUIRED` | Add another way to sign in, such as a password or passkey, before you disconnect single sign-on |
 | `MAX_ACTIVE_THREADS` | This community is at its active thread limit of {count} |
 | `MAX_APPLICATIONS` | You can't have more than {limit} applications |
 | `MAX_BADGES` | The limit is {count} badges |

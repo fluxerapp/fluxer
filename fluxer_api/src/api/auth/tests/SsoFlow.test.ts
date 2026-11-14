@@ -1155,6 +1155,25 @@ describe('Auth SSO flow', () => {
 			expect(await new SsoIdentityRepository().listForUser(createUserID(BigInt(account.userId)))).toHaveLength(0);
 		});
 
+		it('lets a user disconnect a stale SSO link after the instance turns SSO off', async () => {
+			const account = await createTestAccount(harness);
+			await enableSso(harness, admin.token, {enforced: false});
+			const sub = `itest-sso-unlink-disabled-${Date.now()}`;
+			await complete(await startLink(account), providerCode(createUniqueEmail('sso-unlink-disabled'), sub));
+			await disableSso(harness, admin.token);
+
+			await createBuilder(harness, account.token)
+				.delete('/users/@me/sso')
+				.body({password: account.password})
+				.expect(204)
+				.execute();
+
+			expect(await new SsoIdentityRepository().listForUser(createUserID(BigInt(account.userId)))).toHaveLength(0);
+			const user = await createBuilder<{traits: Array<string>}>(harness, account.token).get('/users/@me').execute();
+			expect(user.traits).not.toContain('sso');
+			expect(user.traits.some((trait) => trait.startsWith('sso_identity:'))).toBe(false);
+		});
+
 		it('does not allow users to disconnect SSO while the instance enforces it', async () => {
 			const account = await accountThenSso();
 			await enableSso(harness, admin.token, {enforced: true});

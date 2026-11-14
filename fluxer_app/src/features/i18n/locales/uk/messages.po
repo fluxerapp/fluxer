@@ -3399,15 +3399,30 @@ msgstr "Додайте друга, щоб почати."
 msgid "Add a keybind"
 msgstr "Додати комбінацію клавіш"
 
-#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
-#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
-msgid "Add a local sign-in method before disconnecting {providerName}."
-msgstr "Додайте локальний спосіб входу перед відключенням {providerName}."
-
 #. Body of the optional, dismissible offer to add a passkey.
 #: src/features/auth/components/modals/AuthenticatorOfferModal.tsx
 msgid "Add a passkey to sign in with your fingerprint, face or screen lock. You can also do this later in settings."
 msgstr "Додайте ключ доступу, щоб входити за відбитком пальця, обличчям або блокуванням екрана. Ви також можете зробити це пізніше в налаштуваннях."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect {providerName}."
+msgstr "Перш ніж від'єднати {providerName}, додай до облікового запису пароль або ключ доступу."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect single sign-on."
+msgstr "Перш ніж від'єднати єдиний вхід, додай до облікового запису пароль або ключ доступу."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the instance allows sign-in with codes sent by email. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect {providerName}."
+msgstr "Перш ніж від'єднати {providerName}, додай пароль або ключ доступу чи підтвердь адресу електронної пошти, щоб входити за кодами з листа."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in, the instance allows sign-in with codes sent by email and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect single sign-on."
+msgstr "Перш ніж від'єднати єдиний вхід, додай пароль або ключ доступу чи підтвердь адресу електронної пошти, щоб входити за кодами з листа."
 
 #. Form placeholder for the tag input on an expression form.
 #: src/features/expressions/components/modals/TagListField.tsx
@@ -10052,11 +10067,6 @@ msgstr "Підключено до дзвінка"
 msgid "Connected to voice"
 msgstr "Підключено до голосового чату"
 
-#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
-#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
-msgid "Connected. You can disconnect this sign-in method."
-msgstr "Підключено. Ви можете відключити цей спосіб входу."
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -10066,7 +10076,7 @@ msgstr "Коннектикут"
 #. Heading on the SSO callback page while connecting single sign-on from account settings.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Connecting single sign-on…"
-msgstr ""
+msgstr "Під'єднання єдиного входу…"
 
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -11070,7 +11080,7 @@ msgstr "Не вдалося видалити ваші повідомлення"
 #. Error title shown when disconnecting single sign-on fails.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Couldn't disconnect single sign-on"
-msgstr "Не вдалося відключити єдиний вхід"
+msgstr "Не вдалося від'єднати єдиний вхід"
 
 #. Modal title shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13780,17 +13790,21 @@ msgstr "Скасувати допис"
 msgid "Discard voice message"
 msgstr "Видалити голосове повідомлення"
 
-#. Button to disconnect the account from single sign-on.
 #. Voice action label. Leaves the current voice call or disconnects a user from voice chat.
-#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Disconnect"
 msgstr "Від'єднатися"
 
-#. Confirmation title when disconnecting the current account from the instance's single sign-on provider.
+#. Button that disconnects the account from single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgctxt "sso"
+msgid "Disconnect"
+msgstr "Від'єднати"
+
+#. Confirmation title when disconnecting the current account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Disconnect {providerName}?"
-msgstr "Відключити {providerName}?"
+msgstr "Від'єднати {providerName}?"
 
 #. Voice menu action that disconnects every active device or session from voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
@@ -13813,6 +13827,11 @@ msgstr "Від'єднатися від {channel}"
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Disconnect from voice"
 msgstr "Від'єднатися від голосового чату"
+
+#. Confirmation title when disconnecting the current account from single sign-on and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect single sign-on?"
+msgstr "Від'єднати єдиний вхід?"
 
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Disconnect socket"
@@ -34275,12 +34294,10 @@ msgstr "Один шар"
 msgid "Single line"
 msgstr "Один рядок"
 
-#. Fallback label for the SSO provider in account security when no display name is configured.
 #. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
-#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
+#. Label of the account settings row for single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
-#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Single sign-on"
 msgstr "Єдиний вхід"
 
@@ -37966,10 +37983,15 @@ msgstr "Цей інстанс не використовує HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Цей екземпляр ще не налаштував єдиний вхід. Попросіть адміністратора увімкнути його."
 
-#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#. Description of the account settings row for single sign-on when the instance requires it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
-msgid "This instance requires {providerName}."
-msgstr "Цей екземпляр потребує {providerName}."
+msgid "This instance requires you to sign in with {providerName}."
+msgstr "Цей екземпляр вимагає входу через {providerName}."
+
+#. Description of the account settings row for single sign-on when the instance requires it and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with single sign-on."
+msgstr "Цей екземпляр вимагає використовувати єдиний вхід."
 
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -38801,7 +38823,7 @@ msgstr "Щоб впустити людей, створіть посилання 
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
-msgstr ""
+msgstr "Щоб входити в цей обліковий запис через {providerName}, під'єднай його у вебзастосунку в браузері."
 
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
@@ -43666,6 +43688,16 @@ msgstr "Ви можете вилучити дозвіл <0>{readMessageHistoryPe
 msgid "You can sign back in at any time."
 msgstr "Ви можете ввійти знову в будь-який час."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with {providerName}."
+msgstr "Ти можеш входити в цей обліковий запис через {providerName}."
+
+#. Description of the account settings row that disconnects the account from single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with single sign-on."
+msgstr "Ти можеш входити в цей обліковий запис через єдиний вхід."
+
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
@@ -44208,10 +44240,15 @@ msgstr "Модератори вимкнули вам звук"
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Після авторизації вас буде перенаправлено на {redirectHostname}."
 
-#. Warning shown before disconnecting single sign-on.
+#. Warning shown before disconnecting single sign-on. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
-msgid "You will disconnect {providerName} from your account. You will be able to sign in to your account using a different method."
-msgstr "Ви відключите {providerName} від свого облікового запису. Ви зможете увійти у свій обліковий запис, використовуючи інший спосіб."
+msgid "You won't be able to sign in with {providerName} anymore. You can still use your other sign-in methods."
+msgstr "Ти більше не зможеш входити через {providerName}. Інші способи входу залишаться доступними."
+
+#. Warning shown before disconnecting single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with single sign-on anymore. You can still use your other sign-in methods."
+msgstr "Ти більше не зможеш користуватися єдиним входом. Інші способи входу залишаться доступними."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx

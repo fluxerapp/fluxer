@@ -81,7 +81,7 @@ When an instance enforces single sign-on, these [login and registration routes](
 
 The single sign-on callback returns the same code when the provider claims match no account and the instance doesn't create accounts automatically.
 
-An account linked to the provider can't change its email or password while enforcement is active. [Email and password](/http-api/users/email-and-password/) operations return 403 `SSO_REQUIRED`, and so does [Update current user](/http-api/users/current-user/) when the body sets `new_password` or `email_token`.
+An account linked to the provider can't change its email or password while enforcement is active. [Email and password](/http-api/users/email-and-password/) operations return 403 `SSO_REQUIRED`, and so does [Update current user](/http-api/users/current-user/) when the body sets `new_password` or `email_token`. It also can't [disconnect SSO](/http-api/authentication/#disconnect-sso).
 
 ## Account restrictions
 

@@ -3399,15 +3399,30 @@ msgstr "Dodaj znajomego, aby zacząć."
 msgid "Add a keybind"
 msgstr "Dodaj skrót"
 
-#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
-#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
-msgid "Add a local sign-in method before disconnecting {providerName}."
-msgstr "Dodaj lokalną metodę logowania przed odłączeniem {providerName}."
-
 #. Body of the optional, dismissible offer to add a passkey.
 #: src/features/auth/components/modals/AuthenticatorOfferModal.tsx
 msgid "Add a passkey to sign in with your fingerprint, face or screen lock. You can also do this later in settings."
 msgstr "Dodaj klucz dostępu, aby logować się odciskiem palca, za pomocą rozpoznawania twarzy lub blokady ekranu. Możesz też zrobić to później w ustawieniach."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect {providerName}."
+msgstr "Zanim odłączysz {providerName}, dodaj do konta hasło lub klucz dostępu."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect single sign-on."
+msgstr "Zanim odłączysz logowanie jednokrotne, dodaj do konta hasło lub klucz dostępu."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the instance allows sign-in with codes sent by email. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect {providerName}."
+msgstr "Zanim odłączysz {providerName}, dodaj hasło lub klucz dostępu albo potwierdź adres e-mail, aby logować się kodami wysyłanymi e-mailem."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in, the instance allows sign-in with codes sent by email and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect single sign-on."
+msgstr "Zanim odłączysz logowanie jednokrotne, dodaj hasło lub klucz dostępu albo potwierdź adres e-mail, aby logować się kodami wysyłanymi e-mailem."
 
 #. Form placeholder for the tag input on an expression form.
 #: src/features/expressions/components/modals/TagListField.tsx
@@ -10052,11 +10067,6 @@ msgstr "Połączono z rozmową"
 msgid "Connected to voice"
 msgstr "Połączono z czatem głosowym"
 
-#. Description of the account settings row that disconnects the account from the instance's single sign-on provider.
-#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
-msgid "Connected. You can disconnect this sign-in method."
-msgstr "Połączono. Możesz odłączyć tę metodę logowania."
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts
 msgctxt "us-state"
@@ -10066,7 +10076,7 @@ msgstr "Connecticut"
 #. Heading on the SSO callback page while connecting single sign-on from account settings.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Connecting single sign-on…"
-msgstr ""
+msgstr "Łączenie logowania jednokrotnego…"
 
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -11070,7 +11080,7 @@ msgstr "Nie udało się usunąć Twoich wiadomości"
 #. Error title shown when disconnecting single sign-on fails.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Couldn't disconnect single sign-on"
-msgstr "Nie udało się odłączyć pojedynczego logowania"
+msgstr "Nie udało się odłączyć logowania jednokrotnego"
 
 #. Modal title shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13780,14 +13790,18 @@ msgstr "Odrzuć post"
 msgid "Discard voice message"
 msgstr "Odrzuć wiadomość głosową"
 
-#. Button to disconnect the account from single sign-on.
 #. Voice action label. Leaves the current voice call or disconnects a user from voice chat.
-#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Disconnect"
 msgstr "Rozłącz"
 
-#. Confirmation title when disconnecting the current account from the instance's single sign-on provider.
+#. Button that disconnects the account from single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgctxt "sso"
+msgid "Disconnect"
+msgstr "Odłącz"
+
+#. Confirmation title when disconnecting the current account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Disconnect {providerName}?"
 msgstr "Odłączyć {providerName}?"
@@ -13813,6 +13827,11 @@ msgstr "Rozłącz z kanałem {channel}"
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Disconnect from voice"
 msgstr "Rozłącz z kanałem głosowym"
+
+#. Confirmation title when disconnecting the current account from single sign-on and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect single sign-on?"
+msgstr "Odłączyć logowanie jednokrotne?"
 
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Disconnect socket"
@@ -34275,12 +34294,10 @@ msgstr "Pojedyncza warstwa"
 msgid "Single line"
 msgstr "Pojedyncza linia"
 
-#. Fallback label for the SSO provider in account security when no display name is configured.
 #. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
-#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
+#. Label of the account settings row for single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
-#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
 msgid "Single sign-on"
 msgstr "Logowanie jednokrotne"
 
@@ -37966,10 +37983,15 @@ msgstr "Ta instancja nie używa HTTPS"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Ta instancja nie zakończyła konfiguracji logowania jednokrotnego. Poproś administratora o jego włączenie."
 
-#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#. Description of the account settings row for single sign-on when the instance requires it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
-msgid "This instance requires {providerName}."
-msgstr "Ta instancja wymaga {providerName}."
+msgid "This instance requires you to sign in with {providerName}."
+msgstr "Ta instancja wymaga logowania przez {providerName}."
+
+#. Description of the account settings row for single sign-on when the instance requires it and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with single sign-on."
+msgstr "Ta instancja wymaga logowania jednokrotnego."
 
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -38801,7 +38823,7 @@ msgstr "Aby wpuścić ludzi, utwórz link rejestracyjny w panelu administratora.
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
-msgstr ""
+msgstr "Aby logować się na to konto przez {providerName}, połącz je w aplikacji webowej w przeglądarce."
 
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
@@ -43666,6 +43688,16 @@ msgstr "Możesz usunąć uprawnienie <0>{readMessageHistoryPermissionLabel}</0> 
 msgid "You can sign back in at any time."
 msgstr "Zawsze możesz zalogować się ponownie."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with {providerName}."
+msgstr "Możesz logować się na to konto przez {providerName}."
+
+#. Description of the account settings row that disconnects the account from single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with single sign-on."
+msgstr "Możesz logować się na to konto przez logowanie jednokrotne."
+
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
@@ -44208,10 +44240,15 @@ msgstr "Moderatorzy wyłączyli Ci dźwięk"
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Po autoryzacji nastąpi przekierowanie do witryny {redirectHostname}."
 
-#. Warning shown before disconnecting single sign-on.
+#. Warning shown before disconnecting single sign-on. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
-msgid "You will disconnect {providerName} from your account. You will be able to sign in to your account using a different method."
-msgstr "Odłączysz {providerName} od swojego konta. Będziesz mógł zalogować się do swojego konta za pomocą innej metody."
+msgid "You won't be able to sign in with {providerName} anymore. You can still use your other sign-in methods."
+msgstr "Nie będzie już można logować się przez {providerName}. Nadal możesz używać innych metod logowania."
+
+#. Warning shown before disconnecting single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with single sign-on anymore. You can still use your other sign-in methods."
+msgstr "Nie będzie już można logować się przez logowanie jednokrotne. Nadal możesz używać innych metod logowania."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
