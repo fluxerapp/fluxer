@@ -1,0 +1,164 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.trigger {
+	position: relative;
+}
+
+.badge {
+	position: absolute;
+	top: 2px;
+	inset-inline-end: 2px;
+	min-width: 14px;
+	height: 14px;
+	padding: 0 3px;
+	box-sizing: border-box;
+	border-radius: 7px;
+	background: var(--brand-primary);
+	color: var(--text-on-brand-primary);
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 14px;
+	text-align: center;
+	pointer-events: none;
+}
+
+.panel {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 18rem;
+	padding: 12px;
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: var(--popout-radius, 8px);
+	background: var(--background-secondary);
+	color: var(--text-secondary);
+	font-size: 14px;
+}
+
+.title {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.clearList {
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-tertiary);
+	font: inherit;
+	font-size: 12px;
+	cursor: pointer;
+	transition: color 100ms ease;
+}
+
+.clearList:hover {
+	color: var(--text-secondary);
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	max-height: 13rem;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+.item {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+	padding-inline-end: 4px;
+	border-radius: 6px;
+	transition: background-color 120ms ease;
+}
+
+.item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.itemButton {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+	padding: 6px 8px;
+	border: none;
+	border-radius: 6px;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.itemButton:disabled {
+	cursor: default;
+}
+
+.itemBody {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+	min-width: 0;
+}
+
+.itemName {
+	color: var(--text-primary);
+	overflow-wrap: anywhere;
+	word-break: break-all;
+}
+
+.itemMeta {
+	color: var(--text-tertiary);
+	font-size: 12px;
+}
+
+.itemControls {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	flex-shrink: 0;
+	cursor: default;
+}
+
+.cancelOrDismiss {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--text-tertiary);
+	cursor: pointer;
+	transition:
+		background-color 100ms ease,
+		color 100ms ease;
+}
+
+.cancelOrDismiss:hover {
+	background: var(--background-modifier-accent);
+	color: var(--text-primary);
+}
+
+.cancelOrDismissDanger:hover {
+	background: var(--background-modifier-accent);
+	color: var(--status-danger);
+}

@@ -2196,6 +2196,11 @@ msgstr "A(z) {productName} nem frissül indulás közben. Ha elérhető egy fris
 msgid "{productName} wordmark"
 msgstr "{productName} szöveges logó"
 
+#. Download progress shown under a file name in the downloads panel. {progress} is the formatted percentage downloaded so far, for example 42%. {total} is the formatted size of the whole file, for example 3.2 MB.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "{progress} of {total}"
+msgstr "{progress} / {total}"
+
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "{providerName} opens in your browser. Sign in there to connect your account."
 msgstr "A(z) {providerName} megnyílik a böngésződben. Jelentkezz be ott a fiókod összekapcsolásához."
@@ -7265,6 +7270,11 @@ msgstr "Ide nem tölthetsz fel fájlokat"
 msgid "Cancel"
 msgstr "Mégse"
 
+#. Stops an in-progress download and deletes the partial file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancel download"
+msgstr "Letöltés megszakítása"
+
 #. Button or menu action label in the channel and chat edit bar. Keep it concise.
 #: src/features/channel/components/ChannelEditBar.tsx
 msgid "Cancel editing message"
@@ -7340,6 +7350,11 @@ msgstr "Visszavonod a(z) {displayName} részére küldött ismerősjelölésedet
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
 msgid "Cancellation"
 msgstr "Visszhangszűrés"
+
+#. Status shown under a file name in the downloads panel after the user cancels the download. The part of the file that had already downloaded is deleted.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancelled. The partial file was deleted."
+msgstr "Megszakítva. A részben letöltött fájl törölve lett."
 
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionDescription.tsx
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
@@ -8795,6 +8810,11 @@ msgstr "Törlöd az összes reakciót erről az üzenetről?"
 msgid "Clear friends search"
 msgstr "Ismerőskeresés törlése"
 
+#. Removes finished downloads from the downloads panel. Downloaded files stay on disk and in-progress downloads stay in the list.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Clear list"
+msgstr "Lista ürítése"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Clear message text"
@@ -9629,6 +9649,11 @@ msgstr "Összehasonlítás"
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Complete payment"
 msgstr "Fizetés befejezése"
+
+#. Status shown under a file name in the downloads panel once the file has finished downloading. Keep it short.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Completed"
+msgstr "Kész"
 
 #: src/features/auth/components/pages/SignInLinkPage.tsx
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
@@ -14315,6 +14340,11 @@ msgstr "Töltsd le az új verziót a(z) {appName} frissítéséhez."
 msgid "Download video"
 msgstr "Videó letöltése"
 
+#. Heading of the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Downloads"
+msgstr "Letöltések"
+
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
@@ -16255,6 +16285,11 @@ msgstr "Üzenetbetöltési hibák szimulálása"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "Fail message sends"
 msgstr "Üzenetküldési hibák szimulálása"
+
+#. Status shown under a file name in the downloads panel when the download did not finish. Keep it short.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Failed"
+msgstr "Sikertelen"
 
 #: src/features/moderation/components/modals/BanMemberModal.tsx
 msgid "Failed to ban member. Try again."
@@ -29680,6 +29715,11 @@ msgstr "Eltávolítás a kedvencekből"
 msgid "Remove from group"
 msgstr "Eltávolítás a csoportból"
 
+#. Removes a finished download from the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Remove from list"
+msgstr "Eltávolítás a listából"
+
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Remove from recent instances"
@@ -33658,6 +33698,11 @@ msgstr "Ikon megjelenítése összecsukott állapotban"
 msgid "Show in all communities"
 msgstr "Megjelenítés az összes közösségben"
 
+#. Opens the folder containing a downloaded file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Show in folder"
+msgstr "Megjelenítés mappában"
+
 #. Setting label that shows a badge for incoming friend requests.
 #: src/features/ui/action_menu/FluxerButtonContextMenu.tsx
 msgid "Show incoming friend request count"
@@ -35301,6 +35346,11 @@ msgstr "Indította: {name}"
 msgid "Started displaying members with this role separately"
 msgstr "A szerepkörrel rendelkező tagok külön megjelenítése elindult"
 
+#. Status shown under a file name in the downloads panel while the download is starting and no data has arrived yet. Keep it short.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Starting"
+msgstr "Indul"
+
 #. SMTP encryption option that upgrades only when the mail server offers STARTTLS.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "STARTTLS when the server offers it"
@@ -36859,6 +36909,11 @@ msgstr "Az emojit {user} töltötte fel"
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</0>."
 msgstr "A fájl tartalmazza az ellenőrző tokent, amelyet a következő helyről fogunk lekérni: <0>{dnsUrl}</0>."
+
+#. Status shown under a file name in the downloads panel when the download finished but the file is no longer where it was saved.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "The file was moved or deleted."
+msgstr "A fájlt áthelyezték vagy törölték."
 
 #. Body of the file-too-large alert when a single file exceeds the per-file size limit.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx
@@ -38912,6 +38967,11 @@ msgstr "Mentett média megjelenítése/elrejtése"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx
 msgid "Toggle switches on and off to see state changes."
 msgstr "Kapcsold be és ki a kapcsolókat az állapotváltozások megtekintéséhez."
+
+#. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
+#: src/features/input/state/input_keybind/shared.ts
+msgid "Toggle the downloads panel"
+msgstr "Letöltések panel megnyitása/bezárása"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
@@ -41881,6 +41941,16 @@ msgstr "Részletek megtekintése"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts
 msgid "View devices that are signed in to your account"
 msgstr "A fiókodba bejelentkezett eszközök megtekintése"
+
+#. Button in the app layout native titlebar that opens the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads"
+msgstr "Letöltések megtekintése"
+
+#. Screen reader label of the titlebar button that opens the downloads panel, used while downloads are running. {count} is the number of downloads in progress.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads. {count, plural, one {# download in progress} other {# downloads in progress}}"
+msgstr "Letöltések megtekintése. {count, plural, one {# letöltés folyamatban} other {# letöltés folyamatban}}"
 
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "View full profile"

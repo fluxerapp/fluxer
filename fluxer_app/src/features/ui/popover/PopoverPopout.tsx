@@ -46,6 +46,7 @@ interface PopoutProps {
 	freezePosition?: boolean;
 	offsetMainAxis?: number;
 	offsetCrossAxis?: number;
+	ignoreTitlebarBoundary?: boolean;
 	animationType?: PopoutAnimationType;
 	constrainHeight?: boolean;
 	containerClass?: string;
@@ -82,6 +83,7 @@ export const openPopout = (target: HTMLElement, props: OpenPopoutOptions, key: s
 		shouldAutoUpdate: props.shouldAutoUpdate,
 		offsetMainAxis: props.offsetMainAxis,
 		offsetCrossAxis: props.offsetCrossAxis,
+		ignoreTitlebarBoundary: props.ignoreTitlebarBoundary,
 		animationType: props.animationType,
 		constrainHeight: props.constrainHeight,
 		clickPos,

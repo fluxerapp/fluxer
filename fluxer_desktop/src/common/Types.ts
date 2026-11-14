@@ -149,6 +149,17 @@ export interface DownloadFileResult {
 	error?: string;
 }
 
+type DownloadEntryState = 'started' | 'progressing' | 'completed' | 'failed' | 'canceled';
+
+export interface DownloadEntryEvent {
+	id: string;
+	fileName: string;
+	state: DownloadEntryState;
+	receivedBytes: number;
+	totalBytes: number | null;
+	fileExists: boolean;
+}
+
 export interface DesktopSource {
 	id: string;
 	name: string;
@@ -293,7 +304,13 @@ export interface ElectronAPI {
 	windowMaximize: () => void;
 	windowClose: () => void;
 	windowIsMaximized: () => Promise<boolean>;
-
+	onDownloadsChanged: (handler: (entries: Array<DownloadEntryEvent>) => void) => () => void;
+	downloadsList: () => Promise<Array<DownloadEntryEvent>>;
+	downloadCancel: (id: string) => void;
+	downloadOpen: (id: string) => void;
+	downloadReveal: (id: string) => void;
+	downloadDismiss: (id: string) => void;
+	downloadsClear: () => void;
 	popoutSetAlwaysOnTop: (key: string, flag: boolean) => Promise<boolean>;
 	popoutFocus: (key: string) => Promise<boolean>;
 	cssEditorWindow: true;

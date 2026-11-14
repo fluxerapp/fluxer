@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {NativeDownloads} from '@app/features/app/components/layout/NativeDownloads';
 import {NativeWindowControls} from '@app/features/app/components/layout/NativeWindowControls';
 import {FluxerWordmark} from '@app/features/ui/components/icons/FluxerWordmark';
 import {getElectronAPI, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
@@ -44,11 +45,13 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 				<>
 					<div className={NATIVE_TITLEBAR_CLASS.spacer} data-flx="app.native-titlebar.spacer" />
 					{brand}
+					<NativeDownloads data-flx="app.native-titlebar.native-downloads" />
 				</>
 			) : (
 				<>
 					{brand}
 					<div className={NATIVE_TITLEBAR_CLASS.spacer} data-flx="app.native-titlebar.spacer" />
+					<NativeDownloads data-flx="app.native-titlebar.native-downloads" />
 					<NativeWindowControls data-flx="app.native-titlebar.controls" />
 				</>
 			)}

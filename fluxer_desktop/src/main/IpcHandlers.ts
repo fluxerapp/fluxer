@@ -30,7 +30,7 @@ import {
 	updateTrayRuntimeState,
 } from '@electron/main/DesktopTray';
 import {getDesktopUpdateState, observeDesktopUpdateState, startDesktopUpdate} from '@electron/main/DesktopUpdateGate';
-import {DownloadChecksumError, downloadFile} from '@electron/main/FileDownloads';
+import {DownloadChecksumError} from '@electron/main/FileDownloads';
 import {getGatewayOriginRegistry} from '@electron/main/GatewayOriginRegistry';
 import {retryBlockedGlobalShortcutHooks} from '@electron/main/GlobalShortcutsIpc';
 import {setDirectMessagesAvailable} from '@electron/main/JumpList';
@@ -71,6 +71,7 @@ import {
 	releaseStreamingPriority,
 } from '@electron/main/StreamingPriority';
 import {registerThemeLocalFileHandlers} from '@electron/main/ThemeLocalFiles';
+import {downloadTrackedFile, registerTrackedDownloadsIpcHandlers} from '@electron/main/TrackedDownloads';
 import {
 	relaunchAndExit,
 	setHardwareAccelerationDisabled,
@@ -451,7 +452,10 @@ export function registerIpcHandlers(): void {
 					return {success: false, canceled: true};
 				}
 				const filePath = withDefaultExtension(result.filePath, options.defaultPath);
-				await downloadFile(options.url, filePath, {sha256: options.sha256});
+				const outcome = await downloadTrackedFile(event.sender, options.url, filePath, options.sha256);
+				if (outcome === 'canceled') {
+					return {success: false, canceled: true};
+				}
 				return {success: true, path: filePath};
 			} catch (error) {
 				if (error instanceof DownloadChecksumError) {
@@ -461,6 +465,7 @@ export function registerIpcHandlers(): void {
 			}
 		},
 	);
+	registerTrackedDownloadsIpcHandlers();
 	ipcMain.handle('check-media-access', async (_event, type: MediaAccessType): Promise<string> => {
 		if (process.platform !== 'darwin') {
 			return 'granted';

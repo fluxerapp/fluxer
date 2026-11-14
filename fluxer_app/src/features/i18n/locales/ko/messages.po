@@ -2196,6 +2196,11 @@ msgstr "{productName}이(가) 시작 중에는 업데이트되지 않습니다. 
 msgid "{productName} wordmark"
 msgstr "{productName} 워드마크"
 
+#. Download progress shown under a file name in the downloads panel. {progress} is the formatted percentage downloaded so far, for example 42%. {total} is the formatted size of the whole file, for example 3.2 MB.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "{progress} of {total}"
+msgstr "{total} 중 {progress}"
+
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "{providerName} opens in your browser. Sign in there to connect your account."
 msgstr "브라우저에서 {providerName}이(가) 열려요. 그곳에서 로그인하여 계정을 연결하세요."
@@ -7265,6 +7270,11 @@ msgstr "여기에 파일을 올릴 수 없습니다"
 msgid "Cancel"
 msgstr "취소"
 
+#. Stops an in-progress download and deletes the partial file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancel download"
+msgstr "다운로드 취소"
+
 #. Button or menu action label in the channel and chat edit bar. Keep it concise.
 #: src/features/channel/components/ChannelEditBar.tsx
 msgid "Cancel editing message"
@@ -7340,6 +7350,11 @@ msgstr "{displayName}님에게 보낸 친구 요청을 취소하시겠어요?"
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
 msgid "Cancellation"
 msgstr "에코 제거"
+
+#. Status shown under a file name in the downloads panel after the user cancels the download. The part of the file that had already downloaded is deleted.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancelled. The partial file was deleted."
+msgstr "취소되었습니다. 일부만 받은 파일은 삭제되었습니다."
 
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionDescription.tsx
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
@@ -8795,6 +8810,11 @@ msgstr "이 메시지의 모든 반응을 지울까요?"
 msgid "Clear friends search"
 msgstr "친구 검색 지우기"
 
+#. Removes finished downloads from the downloads panel. Downloaded files stay on disk and in-progress downloads stay in the list.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Clear list"
+msgstr "목록 지우기"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Clear message text"
@@ -9629,6 +9649,11 @@ msgstr "비교"
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Complete payment"
 msgstr "결제 완료하기"
+
+#. Status shown under a file name in the downloads panel once the file has finished downloading. Keep it short.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Completed"
+msgstr "완료"
 
 #: src/features/auth/components/pages/SignInLinkPage.tsx
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
@@ -14315,6 +14340,11 @@ msgstr "새 버전을 다운로드하여 {appName}을(를) 업데이트하세요
 msgid "Download video"
 msgstr "비디오 다운로드"
 
+#. Heading of the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Downloads"
+msgstr "다운로드"
+
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
@@ -16255,6 +16285,11 @@ msgstr "메시지 로드 강제 실패"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "Fail message sends"
 msgstr "메시지 전송 강제 실패"
+
+#. Status shown under a file name in the downloads panel when the download did not finish. Keep it short.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Failed"
+msgstr "실패"
 
 #: src/features/moderation/components/modals/BanMemberModal.tsx
 msgid "Failed to ban member. Try again."
@@ -29680,6 +29715,11 @@ msgstr "즐겨찾기에서 삭제"
 msgid "Remove from group"
 msgstr "그룹에서 내보내기"
 
+#. Removes a finished download from the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Remove from list"
+msgstr "목록에서 제거"
+
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Remove from recent instances"
@@ -33658,6 +33698,11 @@ msgstr "접었을 때 아이콘 표시"
 msgid "Show in all communities"
 msgstr "모든 커뮤니티에 표시"
 
+#. Opens the folder containing a downloaded file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Show in folder"
+msgstr "폴더에서 보기"
+
 #. Setting label that shows a badge for incoming friend requests.
 #: src/features/ui/action_menu/FluxerButtonContextMenu.tsx
 msgid "Show incoming friend request count"
@@ -35301,6 +35346,11 @@ msgstr "{name}님이 시작했습니다."
 msgid "Started displaying members with this role separately"
 msgstr "이 역할이 있는 멤버를 별도로 표시하기 시작했습니다"
 
+#. Status shown under a file name in the downloads panel while the download is starting and no data has arrived yet. Keep it short.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Starting"
+msgstr "시작 중"
+
 #. SMTP encryption option that upgrades only when the mail server offers STARTTLS.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "STARTTLS when the server offers it"
@@ -36859,6 +36909,11 @@ msgstr "이모티콘은 {user}님이 업로드했습니다"
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</0>."
 msgstr "파일에 <0>{dnsUrl}</0>에서 가져올 인증 토큰이 포함되어 있습니다."
+
+#. Status shown under a file name in the downloads panel when the download finished but the file is no longer where it was saved.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "The file was moved or deleted."
+msgstr "파일이 이동되었거나 삭제되었습니다."
 
 #. Body of the file-too-large alert when a single file exceeds the per-file size limit.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx
@@ -38912,6 +38967,11 @@ msgstr "저장된 미디어 전환"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx
 msgid "Toggle switches on and off to see state changes."
 msgstr "스위치를 켜고 끄면서 상태 변화를 확인하세요."
+
+#. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
+#: src/features/input/state/input_keybind/shared.ts
+msgid "Toggle the downloads panel"
+msgstr "다운로드 패널 전환"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
@@ -41881,6 +41941,16 @@ msgstr "자세히 보기"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts
 msgid "View devices that are signed in to your account"
 msgstr "내 계정에 로그인된 기기 보기"
+
+#. Button in the app layout native titlebar that opens the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads"
+msgstr "다운로드 보기"
+
+#. Screen reader label of the titlebar button that opens the downloads panel, used while downloads are running. {count} is the number of downloads in progress.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads. {count, plural, one {# download in progress} other {# downloads in progress}}"
+msgstr "다운로드 보기. {count, plural, one {#개 다운로드 진행 중} other {#개 다운로드 진행 중}}"
 
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "View full profile"

@@ -224,6 +224,17 @@ export interface DownloadResult {
 	error?: string;
 }
 
+type DownloadEntryState = 'started' | 'progressing' | 'completed' | 'failed' | 'canceled';
+
+export interface DownloadEntryEvent {
+	id: string;
+	fileName: string;
+	state: DownloadEntryState;
+	receivedBytes: number;
+	totalBytes: number | null;
+	fileExists: boolean;
+}
+
 interface DesktopLocalAppUploadAPI {
 	subscribe: (listener: (progress: DesktopLocalAppUploadProgress) => void) => () => void;
 }
@@ -378,6 +389,13 @@ export interface ElectronAPI {
 	windowMinimize?(): void;
 	windowMaximize?(): void;
 	windowClose?(): void;
+	onDownloadsChanged?(callback: (entries: Array<DownloadEntryEvent>) => void): () => void;
+	downloadsList?(): Promise<Array<DownloadEntryEvent>>;
+	downloadCancel?(id: string): void;
+	downloadOpen?(id: string): void;
+	downloadReveal?(id: string): void;
+	downloadDismiss?(id: string): void;
+	downloadsClear?(): void;
 	passkeyIsSupported?(): Promise<boolean>;
 	passkeyRegister?(
 		options: unknown,

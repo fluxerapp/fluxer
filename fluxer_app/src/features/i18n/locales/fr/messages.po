@@ -2196,6 +2196,11 @@ msgstr "{productName} ne se mettra pas à jour pendant le démarrage. Lorsqu'une
 msgid "{productName} wordmark"
 msgstr "Logotype {productName}"
 
+#. Download progress shown under a file name in the downloads panel. {progress} is the formatted percentage downloaded so far, for example 42%. {total} is the formatted size of the whole file, for example 3.2 MB.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "{progress} of {total}"
+msgstr "{progress} sur {total}"
+
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "{providerName} opens in your browser. Sign in there to connect your account."
 msgstr "{providerName} s'ouvre dans votre navigateur. Connectez-vous-y pour associer votre compte."
@@ -7265,6 +7270,11 @@ msgstr "Impossible d’envoyer des fichiers ici"
 msgid "Cancel"
 msgstr "Annuler"
 
+#. Stops an in-progress download and deletes the partial file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancel download"
+msgstr "Annuler le téléchargement"
+
 #. Button or menu action label in the channel and chat edit bar. Keep it concise.
 #: src/features/channel/components/ChannelEditBar.tsx
 msgid "Cancel editing message"
@@ -7340,6 +7350,11 @@ msgstr "Annuler votre demande d'ami à {displayName} ?"
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts
 msgid "Cancellation"
 msgstr "Annulation de l’écho"
+
+#. Status shown under a file name in the downloads panel after the user cancels the download. The part of the file that had already downloaded is deleted.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Cancelled. The partial file was deleted."
+msgstr "Annulé. Le fichier partiel a été supprimé."
 
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionDescription.tsx
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
@@ -8795,6 +8810,11 @@ msgstr "Effacer toutes les réactions de ce message ?"
 msgid "Clear friends search"
 msgstr "Effacer la recherche d'amis"
 
+#. Removes finished downloads from the downloads panel. Downloaded files stay on disk and in-progress downloads stay in the list.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Clear list"
+msgstr "Vider la liste"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts
 msgid "Clear message text"
@@ -9629,6 +9649,11 @@ msgstr "Comparaison"
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Complete payment"
 msgstr "Finaliser le paiement"
+
+#. Status shown under a file name in the downloads panel once the file has finished downloading. Keep it short.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Completed"
+msgstr "Terminé"
 
 #: src/features/auth/components/pages/SignInLinkPage.tsx
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
@@ -14315,6 +14340,11 @@ msgstr "Téléchargez la nouvelle version pour mettre à jour {appName}."
 msgid "Download video"
 msgstr "Télécharger la vidéo"
 
+#. Heading of the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Downloads"
+msgstr "Téléchargements"
+
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx
@@ -16255,6 +16285,11 @@ msgstr "Simuler des échecs de chargement des messages"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
 msgid "Fail message sends"
 msgstr "Simuler des échecs d’envoi des messages"
+
+#. Status shown under a file name in the downloads panel when the download did not finish. Keep it short.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Failed"
+msgstr "Échec"
 
 #: src/features/moderation/components/modals/BanMemberModal.tsx
 msgid "Failed to ban member. Try again."
@@ -29680,6 +29715,11 @@ msgstr "Retirer des favoris"
 msgid "Remove from group"
 msgstr "Retirer du groupe"
 
+#. Removes a finished download from the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Remove from list"
+msgstr "Retirer de la liste"
+
 #. Context menu item that removes a self-hosted instance from the authentication instance picker history.
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Remove from recent instances"
@@ -33658,6 +33698,11 @@ msgstr "Afficher l'icône lorsque le dossier est réduit"
 msgid "Show in all communities"
 msgstr "Afficher dans toutes les communautés"
 
+#. Opens the folder containing a downloaded file.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Show in folder"
+msgstr "Afficher dans le dossier"
+
 #. Setting label that shows a badge for incoming friend requests.
 #: src/features/ui/action_menu/FluxerButtonContextMenu.tsx
 msgid "Show incoming friend request count"
@@ -35301,6 +35346,11 @@ msgstr "Commencé par {name}"
 msgid "Started displaying members with this role separately"
 msgstr "A commencé à afficher séparément les membres ayant ce rôle"
 
+#. Status shown under a file name in the downloads panel while the download is starting and no data has arrived yet. Keep it short.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "Starting"
+msgstr "Démarrage"
+
 #. SMTP encryption option that upgrades only when the mail server offers STARTTLS.
 #: src/features/app/components/setup/SetupEmailSteps.tsx
 msgid "STARTTLS when the server offers it"
@@ -36859,6 +36909,11 @@ msgstr "L'emoji a été mis en ligne par {user}"
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</0>."
 msgstr "Le fichier contient le jeton de vérification que nous allons récupérer depuis <0>{dnsUrl}</0>."
+
+#. Status shown under a file name in the downloads panel when the download finished but the file is no longer where it was saved.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "The file was moved or deleted."
+msgstr "Le fichier a été déplacé ou supprimé."
 
 #. Body of the file-too-large alert when a single file exceeds the per-file size limit.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx
@@ -38912,6 +38967,11 @@ msgstr "Afficher/masquer les médias enregistrés"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx
 msgid "Toggle switches on and off to see state changes."
 msgstr "Activez et désactivez les interrupteurs pour voir les changements d'état."
+
+#. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
+#: src/features/input/state/input_keybind/shared.ts
+msgid "Toggle the downloads panel"
+msgstr "Ouvrir/fermer le panneau des téléchargements"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
@@ -41881,6 +41941,16 @@ msgstr "Voir les détails"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts
 msgid "View devices that are signed in to your account"
 msgstr "Voir les appareils connectés à votre compte"
+
+#. Button in the app layout native titlebar that opens the downloads panel.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads"
+msgstr "Voir les téléchargements"
+
+#. Screen reader label of the titlebar button that opens the downloads panel, used while downloads are running. {count} is the number of downloads in progress.
+#: src/features/app/components/layout/NativeDownloads.tsx
+msgid "View downloads. {count, plural, one {# download in progress} other {# downloads in progress}}"
+msgstr "Voir les téléchargements. {count, plural, one {# téléchargement en cours} other {# téléchargements en cours}}"
 
 #: src/features/user/components/popouts/UserProfileShared.tsx
 msgid "View full profile"

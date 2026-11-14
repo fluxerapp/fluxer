@@ -26,6 +26,19 @@ export class DownloadChecksumError extends Error {
 interface DownloadFileOptions {
 	maxBytes?: number;
 	sha256?: string | null;
+	signal?: AbortSignal;
+	onProgress?: DownloadProgressHandler;
+}
+
+type DownloadProgressHandler = (receivedBytes: number, totalBytes: number | null) => void;
+
+function parseContentLength(value: string | Array<string> | undefined): number | null {
+	const raw = Array.isArray(value) ? value[0] : value;
+	if (raw == null) {
+		return null;
+	}
+	const parsed = Number.parseInt(raw, 10);
+	return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
 function parseExpectedSha256(value: string | null | undefined): string | null {
@@ -51,6 +64,8 @@ async function writeCappedResponse(
 	destPath: string,
 	maxBytes: number,
 	hash: Hash | null,
+	totalBytes: number | null,
+	onProgress: DownloadProgressHandler | undefined,
 ): Promise<void> {
 	let received = 0;
 	response.on('data', (chunk: Buffer) => {
@@ -60,6 +75,7 @@ async function writeCappedResponse(
 			return;
 		}
 		hash?.update(chunk);
+		onProgress?.(received, totalBytes);
 	});
 	await pipeline(response, fs.createWriteStream(destPath));
 }
@@ -70,11 +86,14 @@ async function downloadFileWithRedirects(
 	redirects: number,
 	maxBytes: number,
 	hash: Hash | null,
+	signal: AbortSignal | null,
+	onProgress: DownloadProgressHandler | undefined,
 ): Promise<void> {
 	const message = await getDesktopOutboundHTTP().get({
 		context: DOWNLOAD_CONTEXT,
 		timeoutMs: DOWNLOAD_DEADLINE_MS,
 		url,
+		signal,
 	});
 	const statusCode = message.status;
 	if (statusCode >= 300 && statusCode < 400) {
@@ -86,12 +105,13 @@ async function downloadFileWithRedirects(
 		if (nextUrl == null) {
 			throw new Error(`HTTP ${statusCode} redirect target is unusable`);
 		}
-		await downloadFileWithRedirects(nextUrl, destPath, redirects + 1, maxBytes, hash);
+		await downloadFileWithRedirects(nextUrl, destPath, redirects + 1, maxBytes, hash, signal, onProgress);
 		return;
 	}
 	if (statusCode === 204 || statusCode === 205) {
 		message.message.destroy();
 		await fs.promises.writeFile(destPath, new Uint8Array());
+		onProgress?.(0, 0);
 		return;
 	}
 	if (statusCode < 200 || statusCode >= 300) {
@@ -99,7 +119,14 @@ async function downloadFileWithRedirects(
 		throw new Error(`HTTP ${statusCode}`);
 	}
 	try {
-		await writeCappedResponse(message.message, destPath, maxBytes, hash);
+		await writeCappedResponse(
+			message.message,
+			destPath,
+			maxBytes,
+			hash,
+			parseContentLength(message.headers['content-length']),
+			onProgress,
+		);
 	} catch (error) {
 		await removePartialDownload(destPath);
 		throw error;
@@ -115,7 +142,7 @@ export async function downloadFile(url: string, destPath: string, options: Downl
 	const hash = expectedSha256 === null ? null : createHash('sha256');
 	const maxBytes = options.maxBytes ?? DOWNLOAD_MAX_BYTES;
 	await removePartialDownload(destPath);
-	await downloadFileWithRedirects(target, destPath, 0, maxBytes, hash);
+	await downloadFileWithRedirects(target, destPath, 0, maxBytes, hash, options.signal ?? null, options.onProgress);
 	if (expectedSha256 === null || hash === null) {
 		return;
 	}

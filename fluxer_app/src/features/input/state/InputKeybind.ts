@@ -100,6 +100,7 @@ import {
 	TOGGLE_PINNED_MESSAGES_DESCRIPTOR,
 	TOGGLE_QUICK_SWITCHER_DESCRIPTOR,
 	TOGGLE_SAVED_MEDIA_DESCRIPTOR,
+	TOGGLE_THE_DOWNLOADS_PANEL_DESCRIPTOR,
 	TOGGLE_THE_EMOJI_PICKER_DESCRIPTOR,
 	TOGGLE_THE_GIF_PICKER_DESCRIPTOR,
 	TOGGLE_THE_INBOX_DESCRIPTOR,
@@ -139,6 +140,7 @@ import {isElectron} from '@app/features/ui/utils/ElectronRuntime';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {VOICE_TOGGLE_DEAFEN_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {isSystemTitleBarActive} from '@app/features/window/hooks/useNativeTitleBar';
 import {create} from '@bufbuild/protobuf';
 import {KeybindSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import type {I18n} from '@lingui/core';
@@ -792,6 +794,17 @@ const getDefaultKeybinds = (
 			combo: {key: 'f', ctrlOrMeta: true},
 			section: 'misc',
 		},
+		...(isElectron() && !isSystemTitleBarActive()
+			? [
+					{
+						action: 'system_toggle_downloads',
+						label: i18n._(TOGGLE_THE_DOWNLOADS_PANEL_DESCRIPTOR),
+						combo: {key: ''},
+						assignable: true,
+						section: 'misc',
+					} as const,
+				]
+			: []),
 		{
 			action: 'misc_open_context_menu',
 			label: i18n._(OPEN_THE_CONTEXT_MENU_DESCRIPTOR),

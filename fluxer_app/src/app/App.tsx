@@ -18,6 +18,7 @@ import {useKeybindManager} from '@app/features/app/hooks/useKeybindManager';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {usePlatformClasses} from '@app/features/app/hooks/usePlatformClasses';
 import {useServiceWorkerBadge} from '@app/features/app/hooks/useServiceWorkerBadge';
+import DownloadsStore from '@app/features/app/state/DownloadsStore';
 import {getInstanceBrandStyle, getInstanceCssOrigins} from '@app/features/app/state/InstanceBrandStyle';
 import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state/LayoutVariantContext';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -125,6 +126,10 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	useEffect(() => {
 		showMyselfTypingHelper.start();
 		return () => showMyselfTypingHelper.stop();
+	}, []);
+	useEffect(() => {
+		DownloadsStore.subscribe();
+		return DownloadsStore.unsubscribe;
 	}, []);
 	useEffect(() => {
 		let active = true;

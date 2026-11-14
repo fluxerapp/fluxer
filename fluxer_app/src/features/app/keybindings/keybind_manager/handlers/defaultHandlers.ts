@@ -137,6 +137,10 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		ComponentBus.dispatch('MESSAGE_SEARCH_OPEN');
 	});
+	host.register('system_toggle_downloads', ({type}) => {
+		if (type !== 'press') return;
+		ComponentBus.dispatch('DOWNLOADS_POPOUT_OPEN');
+	});
 	host.register('voice_toggle_mute', ({type}) => {
 		if (type !== 'press') return;
 		const connectedGuildId = VoiceRuntime.guildId;
