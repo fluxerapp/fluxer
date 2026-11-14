@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
 import {getExtensionWhitelist} from '@fluxer/constants/src/AssetFormatPolicy';
-import {Config} from '../../../Config';
-import type {IAssetDeletionQueue} from '../../../infrastructure/IAssetDeletionQueue';
 
 const STICKER_EXTENSIONS = getExtensionWhitelist('sticker');
 

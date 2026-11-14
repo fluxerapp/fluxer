@@ -1,98 +1,48 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {lookupAsnByIp, lookupGeoipByIp} from '@pkgs/geoip/src/GeoipLookup';
-import {createIpInfoService, createUnavailableIpInfoService, type IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-import {createMiddleware} from 'hono/factory';
-import type {ApiContext} from '../ApiContext';
-import {AdminService} from '../admin/AdminService';
-import {AuthRequestService} from '../auth/AuthRequestService';
-import {DesktopHandoffService} from '../auth/services/DesktopHandoffService';
-import {
-	CassandraInboundSmsChallengeRepository,
-	InboundSmsChallengeService,
-} from '../auth/services/InboundSmsChallengeService';
-import type {IRegistrationRiskEvaluator} from '../auth/services/IRegistrationRiskEvaluator';
-import {noopRegistrationRiskEvaluator, RegistrationRiskEvaluator} from '../auth/services/RegistrationRiskEvaluator';
-import {SsoService} from '../auth/services/SsoService';
-import type {IBlueskyOAuthService} from '../bluesky/IBlueskyOAuthService';
-import {Config} from '../Config';
-import {createApiContext} from '../CreateApiContext';
-import {ChannelRepository} from '../channel/ChannelRepository';
-import {ChannelRequestService} from '../channel/services/ChannelRequestService';
-import {MessageRequestService} from '../channel/services/message/MessageRequestService';
-import {createMessageResponseDataService} from '../channel/services/message/MessageResponseDataService';
-import {StreamService} from '../channel/services/StreamService';
-import {ConnectionRequestService} from '../connection/ConnectionRequestService';
-import {ConnectionService} from '../connection/ConnectionService';
-import {DonationService} from '../donation/DonationService';
-import {DonationCheckoutService} from '../donation/services/DonationCheckoutService';
-import {DonationMagicLinkService} from '../donation/services/DonationMagicLinkService';
-import {FavoriteMemeRequestService} from '../favorite_meme/FavoriteMemeRequestService';
-import {FavoriteMemeService} from '../favorite_meme/FavoriteMemeService';
-import {GuildRepository} from '../guild/repositories/GuildRepository';
-import {DisabledLiveKitService} from '../infrastructure/DisabledLiveKitService';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {ILiveKitService} from '../infrastructure/ILiveKitService';
-import type {IMediaService} from '../infrastructure/IMediaService';
-import {InMemoryVoiceRoomStore} from '../infrastructure/InMemoryVoiceRoomStore';
-import type {IVoiceRoomStore} from '../infrastructure/IVoiceRoomStore';
-import {LiveKitService} from '../infrastructure/LiveKitService';
-import {LiveKitWebhookService} from '../infrastructure/LiveKitWebhookService';
-import {VoiceRoomStore} from '../infrastructure/VoiceRoomStore';
-import {SingleCommunityService} from '../instance/SingleCommunityService';
-import {InviteRequestService} from '../invite/InviteRequestService';
-import {JobLedgerRepository} from '../jobs/JobLedgerRepository';
-import {Logger} from '../Logger';
-import {ApplicationService} from '../oauth/ApplicationService';
-import {OAuth2ApplicationsRequestService} from '../oauth/OAuth2ApplicationsRequestService';
-import {OAuth2RequestService} from '../oauth/OAuth2RequestService';
-import {OAuth2Service} from '../oauth/OAuth2Service';
-import {ReportRequestService} from '../report/ReportRequestService';
-import {ReportService} from '../report/ReportService';
-import type {IAccountPolicyEvaluator} from '../risk/AccountPolicyEvaluator';
-import {
-	getAccountPolicyEvaluator,
-	setInjectedAccountPolicyEvaluator as setInjectedAccountPolicyEvaluatorInService,
-} from '../risk/AccountPolicyService';
-import {createIpInfoChecker} from '../risk/adapters/IpInfoAdapter';
-import {createReverseDnsLookup} from '../risk/adapters/ReverseDnsAdapter';
-import {DeterministicRiskEngine} from '../risk/DeterministicRiskEngine';
-import {CassandraHistoricalOutcomeRepository} from '../risk/HistoricalOutcomeRepository';
-import {createKvIpInfoLookupBudget} from '../risk/IpInfoBudget';
-import {buildIpInfoCache, buildIpInfoRequestAuditLogger} from '../risk/IpInfoCacheFactory';
-import {CassandraRegistrationEventsRepository} from '../risk/RegistrationEventsRepository';
-import {
-	type IpInfoPrescreenVerdict,
-	ipInfoPrescreenOptionsFromEnv,
-	prescreenIpInfoLookup,
-} from '../risk/RegistrationIpPrescreen';
-import {CassandraRiskAssessmentRepository} from '../risk/RiskAssessmentRepository';
-import {createRiskToolbox} from '../risk/RiskToolboxFactory';
-import {CassandraSuspiciousIpRepository} from '../risk/SuspiciousIpRepository';
-import {RpcService} from '../rpc/RpcService';
-import {getReportSearchService} from '../SearchFactory';
-import {SearchService} from '../search/SearchService';
-import {StripeService} from '../stripe/StripeService';
-import {AgeVerificationService} from '../stripe/services/AgeVerificationService';
-import type {HonoEnv} from '../types/HonoEnv';
-import type {UserRepository} from '../user/repositories/UserRepository';
-import {EmailChangeService} from '../user/services/EmailChangeService';
-import {MfaBackupCodesChallengeService} from '../user/services/MfaBackupCodesChallengeService';
-import {PasswordChangeService} from '../user/services/PasswordChangeService';
-import {UserAccountRequestService} from '../user/services/UserAccountRequestService';
-import {UserAuthRequestService} from '../user/services/UserAuthRequestService';
-import {UserChannelRequestService} from '../user/services/UserChannelRequestService';
-import {UserContentRequestService} from '../user/services/UserContentRequestService';
-import {UserRelationshipRequestService} from '../user/services/UserRelationshipRequestService';
-import {UserService} from '../user/services/UserService';
-import {getRequestClientIp} from '../utils/RequestClientIp';
-import {VoiceService} from '../voice/VoiceService';
-import {WebhookRequestService} from '../webhook/WebhookRequestService';
-import {WebhookService} from '../webhook/WebhookService';
-import {createGuildStackServices, type GuildStackServices} from './GuildStackServiceFactory';
-import {installLazyServices, type RequestScopedServices} from './LazyServiceProvider';
-import type {RequestCache} from './RequestCacheMiddleware';
+import type {ApiContext} from '@app/api/ApiContext';
+import {AdminService} from '@app/api/admin/AdminService';
+import {AuthRequestService} from '@app/api/auth/AuthRequestService';
+import {DesktopHandoffService} from '@app/api/auth/services/DesktopHandoffService';
+import {SsoService} from '@app/api/auth/services/SsoService';
+import type {IBlueskyOAuthService} from '@app/api/bluesky/IBlueskyOAuthService';
+import {Config} from '@app/api/Config';
+import {createApiContext} from '@app/api/CreateApiContext';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {ChannelRequestService} from '@app/api/channel/services/ChannelRequestService';
+import {CrosspostSourceService} from '@app/api/channel/services/message/CrosspostSourceService';
+import {MessageRequestService} from '@app/api/channel/services/message/MessageRequestService';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {ThreadMessageResponses} from '@app/api/channel/services/message/ThreadMessageResponses';
+import {StreamService} from '@app/api/channel/services/StreamService';
+import {ThreadService} from '@app/api/channel/services/thread/ThreadService';
+import {ConnectionRequestService} from '@app/api/connection/ConnectionRequestService';
+import {ConnectionService} from '@app/api/connection/ConnectionService';
+import {OAuthConnectionService} from '@app/api/connection/OAuthConnectionService';
+import {DonationService} from '@app/api/donation/DonationService';
+import {DonationCheckoutService} from '@app/api/donation/services/DonationCheckoutService';
+import {DonationMagicLinkService} from '@app/api/donation/services/DonationMagicLinkService';
+import {FavoriteMemeRequestService} from '@app/api/favorite_meme/FavoriteMemeRequestService';
+import {FavoriteMemeService} from '@app/api/favorite_meme/FavoriteMemeService';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {GuildVisitService} from '@app/api/guild/visits/GuildVisitService';
+import {DisabledLiveKitService} from '@app/api/infrastructure/DisabledLiveKitService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {IMediaService} from '@app/api/infrastructure/IMediaService';
+import {InMemoryVoiceRoomStore} from '@app/api/infrastructure/InMemoryVoiceRoomStore';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import {LiveKitService} from '@app/api/infrastructure/LiveKitService';
+import {LiveKitWebhookService} from '@app/api/infrastructure/LiveKitWebhookService';
+import {VoiceRoomStore} from '@app/api/infrastructure/VoiceRoomStore';
+import {SingleCommunityService} from '@app/api/instance/SingleCommunityService';
+import {InviteRequestService} from '@app/api/invite/InviteRequestService';
+import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
+import {createGuildStackServices, type GuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
+import {installLazyServices, type RequestScopedServices} from '@app/api/middleware/LazyServiceProvider';
+import {createOperatorPassServices, type OperatorPassServices} from '@app/api/middleware/OperatorPassServiceFactory';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {
 	ensureVoiceResourcesInitialized,
 	getBillingRepository,
@@ -106,9 +56,8 @@ import {
 	getVoiceTopology,
 	getWorkerService,
 	resolveBlueskyOAuthService,
-} from './ServiceRegistry';
+} from '@app/api/middleware/ServiceRegistry';
 import {
-	ensureVirusScanInitialized,
 	getAdminApiKeyService,
 	getAdminArchiveService,
 	getAdminRepository,
@@ -123,7 +72,6 @@ import {
 	getContactChangeLogService,
 	getDiscriminatorService,
 	getDonationRepository,
-	getDownloadService,
 	getEmailChangeRepository,
 	getEmailDnsValidationService,
 	getEmailService,
@@ -136,6 +84,7 @@ import {
 	getGatewayRequestService,
 	getGifService,
 	getGuildAuditLogService,
+	getGuildDiscoveryRepository,
 	getGuildDiscoveryService,
 	getGuildRepository,
 	getInstanceConfigRepository,
@@ -143,9 +92,11 @@ import {
 	getKVAccountDeletionQueue,
 	getKVActivityTracker,
 	getKVBulkMessageDeletionQueue,
+	getKVThreadAutoArchiveQueue,
 	getLimitConfigService,
-	getNcmecSubmissionService,
 	getOAuth2TokenRepository,
+	getOperatorPassEntitlementService,
+	getOperatorPassRepository,
 	getPasswordChangeRepository,
 	getPremiumStateReconciliationQueueService,
 	getPurgeQueue,
@@ -154,6 +105,8 @@ import {
 	getReadStateService,
 	getReportRepository,
 	getStorageService,
+	getStoreBillingRepository,
+	getStoredSecretVerifier,
 	getStreamPreviewService,
 	getSweegoWebhookService,
 	getThemeService,
@@ -165,13 +118,44 @@ import {
 	getVirusScanServiceInstance,
 	getVoiceRepository,
 	getWebhookRepository,
-} from './ServiceSingletons';
+} from '@app/api/middleware/ServiceSingletons';
+import {ApplicationService} from '@app/api/oauth/ApplicationService';
+import {OAuth2ApplicationsRequestService} from '@app/api/oauth/OAuth2ApplicationsRequestService';
+import {OAuth2RequestService} from '@app/api/oauth/OAuth2RequestService';
+import {OAuth2Service} from '@app/api/oauth/OAuth2Service';
+import {OperatorPassCheckoutService} from '@app/api/operator_pass/OperatorPassCheckoutService';
+import type {OperatorPassEntitlementService} from '@app/api/operator_pass/OperatorPassEntitlementService';
+import {ReportRequestService} from '@app/api/report/ReportRequestService';
+import {ReportService} from '@app/api/report/ReportService';
+import {RpcService} from '@app/api/rpc/RpcService';
+import {getReportSearchService} from '@app/api/SearchFactory';
+import {SearchService} from '@app/api/search/SearchService';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {createStoreEntitlementService} from '@app/api/store_billing/StoreEntitlementServiceFactory';
+import {StripeService} from '@app/api/stripe/StripeService';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {EmailChangeService} from '@app/api/user/services/EmailChangeService';
+import {MfaBackupCodesChallengeService} from '@app/api/user/services/MfaBackupCodesChallengeService';
+import {PasswordChangeService} from '@app/api/user/services/PasswordChangeService';
+import {UserAccountRequestService} from '@app/api/user/services/UserAccountRequestService';
+import {UserAuthRequestService} from '@app/api/user/services/UserAuthRequestService';
+import {UserChannelRequestService} from '@app/api/user/services/UserChannelRequestService';
+import {UserContentRequestService} from '@app/api/user/services/UserContentRequestService';
+import {UserRelationshipRequestService} from '@app/api/user/services/UserRelationshipRequestService';
+import {UserService} from '@app/api/user/services/UserService';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
+import {VoiceService} from '@app/api/voice/VoiceService';
+import {ChannelFollowService} from '@app/api/webhook/ChannelFollowService';
+import {WebhookRequestService} from '@app/api/webhook/WebhookRequestService';
+import {WebhookService} from '@app/api/webhook/WebhookService';
+import {parseAcceptLanguage} from '@fluxer/i18n/src/locale/resolution/AcceptLanguageNegotiation';
+import {createMiddleware} from 'hono/factory';
 
-export {initializeServiceSingletons} from './ServiceSingletons';
+export {initializeServiceSingletons} from '@app/api/middleware/ServiceSingletons';
 
 let _reportService: ReportService | null = null;
 
-function getReportServiceInstance(): ReportService {
+export function getReportServiceInstance(): ReportService {
 	if (!_reportService) {
 		_reportService = new ReportService(
 			getReportRepository(),
@@ -185,6 +169,7 @@ function getReportServiceInstance(): ReportService {
 			getStorageService(),
 			getGatewayService(),
 			getRateLimitService(),
+			getWebhookRepository(),
 			getReportSearchService(),
 		);
 	}
@@ -196,139 +181,6 @@ export function shutdownReportService(): void {
 		_reportService.shutdown();
 		_reportService = null;
 	}
-}
-
-let _inboundSmsChallengeService: InboundSmsChallengeService | null = null;
-
-function getInboundSmsChallengeService(): InboundSmsChallengeService {
-	if (!_inboundSmsChallengeService) {
-		_inboundSmsChallengeService = new InboundSmsChallengeService(
-			new CassandraInboundSmsChallengeRepository(),
-			getKVClient(),
-		);
-	}
-	return _inboundSmsChallengeService;
-}
-
-export function getInboundSmsChallengeServiceInstance(): InboundSmsChallengeService {
-	return getInboundSmsChallengeService();
-}
-
-export function getUserRepositoryInstance(): UserRepository {
-	return getUserRepository();
-}
-
-let _registrationEventsRepository: CassandraRegistrationEventsRepository | null = null;
-
-function getRegistrationEventsRepository(): CassandraRegistrationEventsRepository {
-	if (!_registrationEventsRepository) {
-		_registrationEventsRepository = new CassandraRegistrationEventsRepository();
-	}
-	return _registrationEventsRepository;
-}
-
-let _riskAssessmentRepository: CassandraRiskAssessmentRepository | null = null;
-
-function getRiskAssessmentRepository(): CassandraRiskAssessmentRepository {
-	if (!_riskAssessmentRepository) {
-		_riskAssessmentRepository = new CassandraRiskAssessmentRepository();
-	}
-	return _riskAssessmentRepository;
-}
-
-let _historicalOutcomeRepository: CassandraHistoricalOutcomeRepository | null = null;
-
-function getHistoricalOutcomeRepository(): CassandraHistoricalOutcomeRepository {
-	if (_historicalOutcomeRepository) return _historicalOutcomeRepository;
-	_historicalOutcomeRepository = new CassandraHistoricalOutcomeRepository();
-	return _historicalOutcomeRepository;
-}
-
-let _suspiciousIpRepository: CassandraSuspiciousIpRepository | null = null;
-
-function getSuspiciousIpRepository(): CassandraSuspiciousIpRepository {
-	if (_suspiciousIpRepository) return _suspiciousIpRepository;
-	_suspiciousIpRepository = new CassandraSuspiciousIpRepository();
-	return _suspiciousIpRepository;
-}
-
-let _ipInfoService: IpInfoService | null = null;
-let _injectedIpInfoService: IpInfoService | undefined;
-
-export function setInjectedIpInfoService(service: IpInfoService | undefined): void {
-	_injectedIpInfoService = service;
-}
-
-export function getIpInfoService(): IpInfoService {
-	if (_injectedIpInfoService) {
-		return _injectedIpInfoService;
-	}
-	if (_ipInfoService) return _ipInfoService;
-	if (!Config.risk.ipinfoApiKey) {
-		_ipInfoService = createUnavailableIpInfoService('IPInfo API key not configured');
-		return _ipInfoService;
-	}
-	const cache = buildIpInfoCache({
-		hot: getCacheService(),
-	});
-	_ipInfoService = createIpInfoService({
-		apiKey: Config.risk.ipinfoApiKey,
-		cache,
-		auditLogger: buildIpInfoRequestAuditLogger(),
-		budget: createKvIpInfoLookupBudget({getKvClient: getKVClient}),
-	});
-	return _ipInfoService;
-}
-
-let _registrationRiskEvaluator: IRegistrationRiskEvaluator | null = null;
-
-export function setInjectedRegistrationRiskEvaluator(evaluator: IRegistrationRiskEvaluator | undefined): void {
-	_registrationRiskEvaluator = evaluator ?? null;
-}
-
-export function setInjectedAccountPolicyEvaluator(evaluator: IAccountPolicyEvaluator | undefined): void {
-	setInjectedAccountPolicyEvaluatorInService(evaluator);
-}
-
-function getRegistrationRiskEvaluator(): IRegistrationRiskEvaluator {
-	if (_registrationRiskEvaluator) return _registrationRiskEvaluator;
-	if (!Config.risk.enabled) {
-		Logger.info(
-			{},
-			'[ServiceMiddleware] integrations.risk_integration.enabled is false — account risk scoring is disabled',
-		);
-		_registrationRiskEvaluator = noopRegistrationRiskEvaluator;
-		return _registrationRiskEvaluator;
-	}
-	const ipInfoService = getIpInfoService();
-	const lookupLocalCity = (ip: string) => lookupGeoipByIp(ip, Config.geoip.maxmindDbPath);
-	const lookupLocalAsn = (ip: string) => lookupAsnByIp(ip, Config.geoip.maxmindAsnDbPath);
-	const prescreenOptions = ipInfoPrescreenOptionsFromEnv();
-	const prescreen = async (ip: string): Promise<IpInfoPrescreenVerdict> => {
-		const [city, asn] = await Promise.all([lookupLocalCity(ip), lookupLocalAsn(ip)]);
-		return prescreenIpInfoLookup({countryIso: city.countryCode, asn: asn.asn, asnOrg: asn.asnOrg}, prescreenOptions);
-	};
-	const ipInfoChecker = Config.risk.ipinfoApiKey ? createIpInfoChecker({ipInfoService, prescreen}) : undefined;
-	const cacheService = getCacheService();
-	const reverseDnsLookup = createReverseDnsLookup({cacheService});
-	const toolbox = createRiskToolbox({
-		adminRepository: getAdminRepository(),
-		ipInfoChecker,
-		reverseDnsLookup,
-		ipInfoService,
-		registrationEventsRepository: getRegistrationEventsRepository(),
-		historicalOutcomeRepository: getHistoricalOutcomeRepository(),
-		suspiciousIpRepository: getSuspiciousIpRepository(),
-		cacheService,
-		lookupLocalCity,
-		lookupLocalAsn,
-	});
-	const engine = new DeterministicRiskEngine(toolbox, {
-		logger: Logger,
-	});
-	const evaluator = new RegistrationRiskEvaluator(engine);
-	_registrationRiskEvaluator = evaluator;
-	return _registrationRiskEvaluator;
 }
 
 let _liveKitWebhookService: LiveKitWebhookService | null = null;
@@ -357,6 +209,8 @@ function getLiveKitWebhookService(): LiveKitWebhookService | null {
 }
 
 class RequestServices implements RequestScopedServices {
+	private cachedOperatorPassServices: OperatorPassServices | undefined;
+	private cachedGuildVisitService: GuildVisitService | undefined;
 	private cachedGateway: IGatewayService | undefined;
 	private cachedMedia: IMediaService | undefined;
 	private cachedLiveKit: ILiveKitService | undefined;
@@ -371,9 +225,11 @@ class RequestServices implements RequestScopedServices {
 	private cachedSsoService: SsoService | undefined;
 	private cachedDesktopHandoffService: DesktopHandoffService | undefined;
 	private cachedChannelRequestService: ChannelRequestService | undefined;
+	private cachedThreadService: ThreadService | undefined;
 	private cachedMessageRequestService: MessageRequestService | undefined;
 	private cachedConnectionService: ConnectionService | undefined;
 	private cachedConnectionRequestService: ConnectionRequestService | undefined;
+	private cachedOAuthConnectionService: OAuthConnectionService | undefined;
 	private cachedStreamService: StreamService | undefined;
 	private cachedFavoriteMemeService: FavoriteMemeService | undefined;
 	private cachedFavoriteMemeRequestService: FavoriteMemeRequestService | undefined;
@@ -389,8 +245,9 @@ class RequestServices implements RequestScopedServices {
 	private cachedRpcService: RpcService | undefined;
 	private cachedSearchService: SearchService | undefined;
 	private cachedStripeService: StripeService | undefined;
-	private cachedAgeVerificationService: AgeVerificationService | undefined;
+	private cachedStoreEntitlementService: StoreEntitlementService | undefined;
 	private cachedDonationService: DonationService | undefined;
+	private cachedOperatorPassCheckoutService: OperatorPassCheckoutService | undefined;
 	private cachedUserService: UserService | undefined;
 	private cachedUserAccountRequestService: UserAccountRequestService | undefined;
 	private cachedUserAuthRequestService: UserAuthRequestService | undefined;
@@ -398,11 +255,12 @@ class RequestServices implements RequestScopedServices {
 	private cachedUserContentRequestService: UserContentRequestService | undefined;
 	private cachedUserRelationshipRequestService: UserRelationshipRequestService | undefined;
 	private cachedWebhookService: WebhookService | undefined;
+	private cachedChannelFollowService: ChannelFollowService | undefined;
 	private cachedWebhookRequestService: WebhookRequestService | undefined;
 
 	constructor(
 		private readonly context: ApiContext,
-		private readonly bluesky: IBlueskyOAuthService,
+		private readonly bluesky: IBlueskyOAuthService | null,
 		private readonly entityCache: RequestCache | undefined,
 	) {}
 
@@ -450,6 +308,7 @@ class RequestServices implements RequestScopedServices {
 							getChannelRepository(),
 							voiceRoomStore,
 							voiceAvailabilityService,
+							getInstanceConfigRepository(),
 						)
 					: null;
 		}
@@ -480,7 +339,6 @@ class RequestServices implements RequestScopedServices {
 			voiceRoomStore: this.voiceRooms,
 			liveKitService: this.liveKit,
 			voiceAvailabilityService: getVoiceAvailabilityService(),
-			ipInfoService: getIpInfoService(),
 		});
 		return this.cachedGuildStack;
 	}
@@ -497,7 +355,19 @@ class RequestServices implements RequestScopedServices {
 		return this.guildStack.inviteService;
 	}
 
-	get blueskyOAuthService(): IBlueskyOAuthService {
+	get guildVisitService(): GuildVisitService {
+		this.cachedGuildVisitService ??= new GuildVisitService(
+			this.gatewayService,
+			this.guildService,
+			this.inviteService,
+			this.singleCommunityService,
+			getLimitConfigService(),
+			getUserCacheService(),
+		);
+		return this.cachedGuildVisitService;
+	}
+
+	get blueskyOAuthService(): IBlueskyOAuthService | null {
 		return this.bluesky;
 	}
 
@@ -507,10 +377,6 @@ class RequestServices implements RequestScopedServices {
 
 	get adminArchiveService() {
 		return getAdminArchiveService();
-	}
-
-	get applicationRepository() {
-		return getApplicationRepository();
 	}
 
 	get botAuthService() {
@@ -532,16 +398,8 @@ class RequestServices implements RequestScopedServices {
 		return getContactChangeLogService();
 	}
 
-	get downloadService() {
-		return getDownloadService();
-	}
-
 	get emailService() {
 		return getEmailService();
-	}
-
-	get embedService() {
-		return getEmbedService();
 	}
 
 	get entityAssetService() {
@@ -584,10 +442,6 @@ class RequestServices implements RequestScopedServices {
 		return getLimitConfigService();
 	}
 
-	get ncmecSubmissionService() {
-		return getNcmecSubmissionService();
-	}
-
 	get oauth2TokenRepository() {
 		return getOAuth2TokenRepository();
 	}
@@ -604,24 +458,12 @@ class RequestServices implements RequestScopedServices {
 		return getReadStateRequestService();
 	}
 
-	get reportService() {
-		return getReportServiceInstance();
-	}
-
 	get snowflakeService() {
 		return getSnowflakeService();
 	}
 
 	get storageService() {
 		return getStorageService();
-	}
-
-	get streamPreviewService() {
-		return getStreamPreviewService();
-	}
-
-	get sweegoWebhookService() {
-		return getSweegoWebhookService();
 	}
 
 	get themeService() {
@@ -678,10 +520,9 @@ class RequestServices implements RequestScopedServices {
 			getKVBulkMessageDeletionQueue(),
 			getApplicationRepository(),
 			this.stripeService.getStripe(),
-			getHistoricalOutcomeRepository(),
 			new JobLedgerRepository(),
-			getIpInfoService(),
-			getSuspiciousIpRepository(),
+			this.storeEntitlementService,
+			this.stripeService.operatorPassFulfilment,
 		);
 		return this.cachedAdminService;
 	}
@@ -689,11 +530,11 @@ class RequestServices implements RequestScopedServices {
 	get applicationService(): ApplicationService {
 		this.cachedApplicationService ??= new ApplicationService(this.context, {
 			applicationRepository: getApplicationRepository(),
-			channelRepository: getChannelRepository(),
 			userCacheService: getUserCacheService(),
 			entityAssetService: getEntityAssetService(),
 			discriminatorService: getDiscriminatorService(),
 			botAuthService: getBotAuthService(),
+			guildRepository: getGuildRepository(),
 		});
 		return this.cachedApplicationService;
 	}
@@ -704,6 +545,16 @@ class RequestServices implements RequestScopedServices {
 			getInstanceConfigRepository(),
 			getDiscriminatorService(),
 			getKVActivityTracker(),
+			this.singleCommunityService,
+			this.inviteService,
+			this.guildService.members,
+			{
+				userCacheService: getUserCacheService(),
+				userRepository: getUserRepository(),
+				guildRepository: getGuildRepository(),
+				gatewayService: this.gatewayService,
+			},
+			getGuildRepository(),
 		);
 		return this.cachedSsoService;
 	}
@@ -715,8 +566,6 @@ class RequestServices implements RequestScopedServices {
 
 	get authRequestService(): AuthRequestService {
 		if (!this.cachedAuthRequestService) {
-			const adminRepository = getAdminRepository();
-			const registrationRiskEvaluator = getRegistrationRiskEvaluator();
 			this.cachedAuthRequestService = new AuthRequestService(
 				this.context,
 				this.ssoService,
@@ -725,19 +574,12 @@ class RequestServices implements RequestScopedServices {
 					inviteService: this.inviteService,
 					instanceConfigRepository: getInstanceConfigRepository(),
 					singleCommunityService: this.singleCommunityService,
+					guildVisitService: this.guildVisitService,
 					discriminatorService: getDiscriminatorService(),
 					kvActivityTracker: getKVActivityTracker(),
-					registrationRiskEvaluator: registrationRiskEvaluator ?? noopRegistrationRiskEvaluator,
-					accountPolicyEvaluator: getAccountPolicyEvaluator(),
-					isEmailDomainSuspicious: adminRepository.isEmailDomainSuspicious.bind(adminRepository),
-					isEmailDomainDisposable: adminRepository.isEmailDomainDisposable.bind(adminRepository),
-					registrationEventsRepository: getRegistrationEventsRepository(),
-					riskAssessmentRepository: getRiskAssessmentRepository(),
-					riskHistoryRepository: getHistoricalOutcomeRepository(),
 				},
 				{
 					inviteService: this.inviteService,
-					kvDeletionQueue: getKVAccountDeletionQueue(),
 				},
 			);
 		}
@@ -747,21 +589,58 @@ class RequestServices implements RequestScopedServices {
 	get singleCommunityService(): SingleCommunityService {
 		this.cachedSingleCommunityService ??= new SingleCommunityService(
 			getInstanceConfigRepository(),
-			this.guildService.data,
+			this.guildService.data.operations,
 			this.guildService.members,
 		);
 		return this.cachedSingleCommunityService;
 	}
 
 	get channelRequestService(): ChannelRequestService {
-		this.cachedChannelRequestService ??= new ChannelRequestService(this.channelService, getUserCacheService());
+		this.cachedChannelRequestService ??= new ChannelRequestService(
+			this.channelService,
+			getUserCacheService(),
+			getCacheService(),
+		);
 		return this.cachedChannelRequestService;
+	}
+
+	get threadService(): ThreadService {
+		this.cachedThreadService ??= new ThreadService({
+			channelRepository: this.channelRepository,
+			guildRepository: this.requestGuildRepository,
+			userRepository: getUserRepository(),
+			channelAuth: this.channelService.channelData.auth,
+			gatewayService: this.gatewayService,
+			snowflakeService: getSnowflakeService(),
+			rateLimitService: getRateLimitService(),
+			cacheService: getCacheService(),
+			guildAuditLogService: getGuildAuditLogService(),
+			userCacheService: getUserCacheService(),
+			archiveQueue: getKVThreadAutoArchiveQueue(),
+			messagePersistence: this.channelService.messages.persistence,
+			threadMessageResponses: new ThreadMessageResponses(
+				this.channelRepository,
+				createMessageResponseDataService(),
+				getUserCacheService(),
+			),
+			purgeChannelAttachments: (channel) => this.channelService.attachments.purgeChannelAttachments(channel),
+			readStateService: getReadStateService(),
+			sendForumStarter: (params) => this.messageRequestService.sendForumStarter(params),
+			validateForumStarter: (params) => this.messageRequestService.validateForumStarter(params),
+		});
+		return this.cachedThreadService;
 	}
 
 	get messageRequestService(): MessageRequestService {
 		this.cachedMessageRequestService ??= new MessageRequestService(
 			this.channelService,
 			createMessageResponseDataService(),
+			new CrosspostSourceService(
+				this.requestGuildRepository,
+				getGuildDiscoveryRepository(),
+				this.gatewayService,
+				this.cacheService,
+			),
 		);
 		return this.cachedMessageRequestService;
 	}
@@ -770,7 +649,7 @@ class RequestServices implements RequestScopedServices {
 		this.cachedConnectionService ??= new ConnectionService(
 			getConnectionRepository(),
 			this.gatewayService,
-			this.bluesky,
+			getUnfurlerService(),
 		);
 		return this.cachedConnectionService;
 	}
@@ -781,6 +660,15 @@ class RequestServices implements RequestScopedServices {
 			Config.auth.connectionInitiationSecret,
 		);
 		return this.cachedConnectionRequestService;
+	}
+
+	get oauthConnectionService(): OAuthConnectionService {
+		this.cachedOAuthConnectionService ??= new OAuthConnectionService(
+			this.context,
+			getInstanceConfigRepository(),
+			this.connectionService,
+		);
+		return this.cachedOAuthConnectionService;
 	}
 
 	get streamService(): StreamService {
@@ -841,6 +729,7 @@ class RequestServices implements RequestScopedServices {
 		this.cachedOAuth2Service ??= new OAuth2Service(this.context, {
 			applicationRepository: getApplicationRepository(),
 			oauth2TokenRepository: getOAuth2TokenRepository(),
+			storedSecrets: getStoredSecretVerifier(),
 		});
 		return this.cachedOAuth2Service;
 	}
@@ -869,7 +758,10 @@ class RequestServices implements RequestScopedServices {
 	}
 
 	get reportRequestService(): ReportRequestService {
-		this.cachedReportRequestService ??= new ReportRequestService(getReportServiceInstance());
+		this.cachedReportRequestService ??= new ReportRequestService(getReportServiceInstance(), {
+			kv: getKVClient(),
+			rateLimit: getRateLimitService(),
+		});
 		return this.cachedReportRequestService;
 	}
 
@@ -913,6 +805,22 @@ class RequestServices implements RequestScopedServices {
 		return this.cachedSearchService;
 	}
 
+	private get operatorPassServices(): OperatorPassServices {
+		this.cachedOperatorPassServices ??= createOperatorPassServices({
+			operatorPassRepository: getOperatorPassRepository(),
+			userRepository: getUserRepository(),
+			guildRepository: getGuildRepository(),
+			guildService: this.guildService,
+			channelRepository: getChannelRepository(),
+			channelService: this.channelService,
+			get emailService() {
+				return getEmailService();
+			},
+			gatewayService: this.gatewayService,
+		});
+		return this.cachedOperatorPassServices;
+	}
+
 	get stripeService(): StripeService {
 		this.cachedStripeService ??= new StripeService(
 			getUserRepository(),
@@ -921,21 +829,23 @@ class RequestServices implements RequestScopedServices {
 			this.guildService,
 			getCacheService(),
 			getBillingRepository(),
+			getStoreBillingRepository(),
+			this.storeEntitlementService,
+			this.operatorPassServices,
 		);
 		return this.cachedStripeService;
 	}
 
-	get ageVerificationService(): AgeVerificationService | undefined {
-		if (Config.instance.selfHosted) {
-			return undefined;
-		}
-		this.cachedAgeVerificationService ??= new AgeVerificationService(
-			this.stripeService.getStripe(),
-			getUserRepository(),
-			this.gatewayService,
-			getCacheService(),
-		);
-		return this.cachedAgeVerificationService;
+	get storeEntitlementService(): StoreEntitlementService {
+		this.cachedStoreEntitlementService ??= createStoreEntitlementService({
+			userRepository: getUserRepository(),
+			userCacheService: getUserCacheService(),
+			gatewayService: this.gatewayService,
+			kvClient: getKVClient(),
+			snowflakeService: getSnowflakeService(),
+			premiumStateReconciliationQueueService: getPremiumStateReconciliationQueueService(),
+		});
+		return this.cachedStoreEntitlementService;
 	}
 
 	get donationService(): DonationService | undefined {
@@ -951,6 +861,25 @@ class RequestServices implements RequestScopedServices {
 			),
 		);
 		return this.cachedDonationService;
+	}
+
+	get operatorPassEntitlementService(): OperatorPassEntitlementService | undefined {
+		if (Config.instance.selfHosted) {
+			return undefined;
+		}
+		return getOperatorPassEntitlementService();
+	}
+
+	get operatorPassCheckoutService(): OperatorPassCheckoutService | undefined {
+		if (Config.instance.selfHosted) {
+			return undefined;
+		}
+		this.cachedOperatorPassCheckoutService ??= new OperatorPassCheckoutService(
+			this.stripeService.getStripe(),
+			getOperatorPassRepository(),
+			getOperatorPassEntitlementService(),
+		);
+		return this.cachedOperatorPassCheckoutService;
 	}
 
 	get userService(): UserService {
@@ -969,37 +898,29 @@ class RequestServices implements RequestScopedServices {
 			getContactChangeLogService(),
 			getConnectionRepository(),
 			getLimitConfigService(),
+			Config.instance.selfHosted ? null : this.operatorPassServices,
 		);
 		return this.cachedUserService;
 	}
 
 	get userAccountRequestService(): UserAccountRequestService {
 		if (!this.cachedUserAccountRequestService) {
-			const adminRepository = getAdminRepository();
 			this.cachedUserAccountRequestService = new UserAccountRequestService(
 				this.emailChangeService,
 				this.userService.accountService,
 				this.userService.channelService,
 				getUserRepository(),
 				getUserCacheService(),
-				adminRepository.isEmailDomainSuspicious.bind(adminRepository),
-				adminRepository.isEmailDomainDisposable.bind(adminRepository),
-				getRegistrationRiskEvaluator(),
-				getAccountPolicyEvaluator(),
-				getRegistrationEventsRepository(),
-				getRiskAssessmentRepository(),
-				getHistoricalOutcomeRepository(),
+				getGatewayService(),
+				Config.instance.selfHosted ? null : getOperatorPassEntitlementService(),
+				Config.instance.selfHosted ? null : this.operatorPassServices.roleService,
 			);
 		}
 		return this.cachedUserAccountRequestService;
 	}
 
 	get userAuthRequestService(): UserAuthRequestService {
-		this.cachedUserAuthRequestService ??= new UserAuthRequestService(
-			this.context,
-			getUserRepository(),
-			getGuildRepository(),
-		);
+		this.cachedUserAuthRequestService ??= new UserAuthRequestService(this.context, getUserRepository());
 		return this.cachedUserAuthRequestService;
 	}
 
@@ -1012,10 +933,7 @@ class RequestServices implements RequestScopedServices {
 	}
 
 	get userContentRequestService(): UserContentRequestService {
-		this.cachedUserContentRequestService ??= new UserContentRequestService(
-			this.userService.contentService,
-			getUserCacheService(),
-		);
+		this.cachedUserContentRequestService ??= new UserContentRequestService(this.userService.contentService);
 		return this.cachedUserContentRequestService;
 	}
 
@@ -1041,8 +959,24 @@ class RequestServices implements RequestScopedServices {
 			getSnowflakeService(),
 			getGuildAuditLogService(),
 			getLimitConfigService(),
+			() => this.threadService,
 		);
 		return this.cachedWebhookService;
+	}
+
+	get channelFollowService(): ChannelFollowService {
+		this.cachedChannelFollowService ??= new ChannelFollowService(
+			this.webhookService,
+			getWebhookRepository(),
+			this.channelService,
+			getChannelRepository(),
+			this.guildService,
+			getAvatarService(),
+			getCacheService(),
+			getSnowflakeService(),
+			this.gatewayService,
+		);
+		return this.cachedChannelFollowService;
 	}
 
 	get webhookRequestService(): WebhookRequestService {
@@ -1052,6 +986,7 @@ class RequestServices implements RequestScopedServices {
 			getUserCacheService(),
 			this.liveKitWebhookService ?? null,
 			getSweegoWebhookService(),
+			this.gatewayService,
 		);
 		return this.cachedWebhookRequestService;
 	}
@@ -1062,24 +997,19 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		requestId: ctx.get('requestId') ?? crypto.randomUUID(),
 		clientIp: getRequestClientIp(ctx),
 		userAgent: ctx.req.header('user-agent') ?? null,
+		locale: parseAcceptLanguage(ctx.req.header('accept-language')),
+		blockedNetworkSignIn: ctx.get('blockedNetworkSignIn') ?? null,
 	});
 	ctx.set('apiContext', apiContext);
 	ctx.set('sudoModeValid', false);
-	await ensureVirusScanInitialized();
+	getVirusScanServiceInstance();
 	await ensureVoiceResourcesInitialized();
-	const blueskyOAuthService = await resolveBlueskyOAuthService(getInstanceConfigRepository());
+	const blueskyOAuthService = await resolveBlueskyOAuthService(getUnfurlerService(), getInstanceConfigRepository());
 	installLazyServices(ctx, new RequestServices(apiContext, blueskyOAuthService, ctx.get('requestCache')));
 	await next();
 });
 
 export function resetServiceMiddlewareForTesting(): void {
 	shutdownReportService();
-	_inboundSmsChallengeService = null;
-	_registrationEventsRepository = null;
-	_riskAssessmentRepository = null;
-	_historicalOutcomeRepository = null;
-	_suspiciousIpRepository = null;
-	_ipInfoService = null;
-	_registrationRiskEvaluator = null;
 	_liveKitWebhookService = null;
 }

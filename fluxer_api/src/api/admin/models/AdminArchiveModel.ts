@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminArchiveRow} from '@app/api/database/types/AdminArchiveTypes';
 import type {AdminArchiveResponse, ArchiveSubjectType} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
-import type {AdminArchiveRow} from '../../database/types/AdminArchiveTypes';
 
 export class AdminArchive {
 	subjectType: ArchiveSubjectType;
@@ -9,9 +9,11 @@ export class AdminArchive {
 	archiveId: bigint;
 	requestedBy: bigint;
 	requestedAt: Date;
+	attemptId: string | null;
 	startedAt: Date | null;
 	completedAt: Date | null;
 	failedAt: Date | null;
+	terminalFailedAt: Date | null;
 	storageKey: string | null;
 	fileSize: bigint | null;
 	progressPercent: number;
@@ -26,9 +28,11 @@ export class AdminArchive {
 		this.archiveId = row.archive_id;
 		this.requestedBy = row.requested_by;
 		this.requestedAt = row.requested_at;
+		this.attemptId = row.attempt_id ?? null;
 		this.startedAt = row.started_at ?? null;
 		this.completedAt = row.completed_at ?? null;
 		this.failedAt = row.failed_at ?? null;
+		this.terminalFailedAt = row.terminal_failed_at ?? null;
 		this.storageKey = row.storage_key ?? null;
 		this.fileSize = row.file_size ?? null;
 		this.progressPercent = row.progress_percent;
@@ -45,9 +49,11 @@ export class AdminArchive {
 			archive_id: this.archiveId,
 			requested_by: this.requestedBy,
 			requested_at: this.requestedAt,
+			attempt_id: this.attemptId,
 			started_at: this.startedAt,
 			completed_at: this.completedAt,
 			failed_at: this.failedAt,
+			terminal_failed_at: this.terminalFailedAt,
 			storage_key: this.storageKey,
 			file_size: this.fileSize,
 			progress_percent: this.progressPercent,

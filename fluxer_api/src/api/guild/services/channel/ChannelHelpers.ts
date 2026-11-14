@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {Channel} from '@app/api/models/Channel';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {MAX_CHANNELS_PER_CATEGORY} from '@fluxer/constants/src/LimitConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {MaxCategoryChannelsError} from '@fluxer/errors/src/domains/channel/MaxCategoryChannelsError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import type {ChannelID} from '../../../BrandedTypes';
-import type {Channel} from '../../../models/Channel';
-import {serializeChannelForAudit as serializeChannelForAuditUtil} from '../../../utils/AuditSerializationUtils';
-import {toIdString} from '../../../utils/IdUtils';
 
 export interface ChannelReorderOperation {
 	channelId: ChannelID;
@@ -14,8 +20,57 @@ export interface ChannelReorderOperation {
 	precedingSiblingId: ChannelID | null;
 }
 
+function isTextLikeChannelType(type: number): boolean {
+	return (
+		type === ChannelTypes.GUILD_TEXT ||
+		type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+		type === ChannelTypes.GUILD_LINK ||
+		THREAD_ONLY_CHANNEL_TYPES.has(type)
+	);
+}
+
 // biome-ignore lint/complexity/noStaticOnlyClass: Existing callers use this as a namespaced helper API.
 export class ChannelHelpers {
+	static assertValidParentCategory(
+		parentId: ChannelID | null,
+		channelType: number,
+		channels: Array<Channel>,
+	): Channel | null {
+		if (parentId === null) return null;
+		if (channelType === ChannelTypes.GUILD_CATEGORY)
+			throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.CATEGORIES_CANNOT_HAVE_PARENTS);
+		const parent = channels.find((channel) => channel.id === parentId);
+		if (!parent) throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.INVALID_PARENT_CHANNEL);
+		if (parent.type !== ChannelTypes.GUILD_CATEGORY)
+			throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.PARENT_MUST_BE_CATEGORY);
+		return parent;
+	}
+
+	static async assertCategoryCapacity(params: {
+		gatewayService: IGatewayService;
+		guildRepository: GuildRepository;
+		limitConfigService: LimitConfigService;
+		guildId: GuildID;
+		categoryId: ChannelID;
+	}): Promise<void> {
+		const count = await params.gatewayService.getCategoryChannelCount({
+			guildId: params.guildId,
+			categoryId: params.categoryId,
+		});
+		const guild = await params.guildRepository.findUnique(params.guildId);
+		const context = createLimitMatchContext({user: null, guildFeatures: guild?.features ?? null});
+		const maxChannels = Math.floor(
+			resolveLimitSafe(
+				params.limitConfigService.getConfigSnapshot(),
+				context,
+				'max_channels_per_category',
+				MAX_CHANNELS_PER_CATEGORY,
+				'guild',
+			),
+		);
+		if (count >= maxChannels) throw new MaxCategoryChannelsError(maxChannels);
+	}
+
 	static getNextGlobalChannelPosition(
 		channelType: number,
 		parentId: ChannelID | null | undefined,
@@ -32,9 +87,7 @@ export class ChannelHelpers {
 			return existingChannels.reduce((max, c) => Math.max(max, c.position || 0), 0) + 1;
 		}
 		const channelsInCategory = existingChannels.filter((c) => c.parentId === parentId);
-		const textChannels = channelsInCategory.filter(
-			(c) => c.type === ChannelTypes.GUILD_TEXT || c.type === ChannelTypes.GUILD_LINK,
-		);
+		const textChannels = channelsInCategory.filter((c) => isTextLikeChannelType(c.type));
 		const voiceChannels = channelsInCategory.filter((c) => c.type === ChannelTypes.GUILD_VOICE);
 		if (channelType === ChannelTypes.GUILD_VOICE) {
 			if (voiceChannels.length > 0) {
@@ -82,11 +135,10 @@ export class ChannelHelpers {
 				if (movedIndex < 0) continue;
 				const movedChannel = siblings[movedIndex];
 				const isMovedVoice = movedChannel.type === ChannelTypes.GUILD_VOICE;
-				const isMovedText =
-					movedChannel.type === ChannelTypes.GUILD_TEXT || movedChannel.type === ChannelTypes.GUILD_LINK;
+				const isMovedText = isTextLikeChannelType(movedChannel.type);
 				if (isMovedVoice) {
 					const next = siblings[movedIndex + 1];
-					if (next && (next.type === ChannelTypes.GUILD_TEXT || next.type === ChannelTypes.GUILD_LINK)) {
+					if (next && isTextLikeChannelType(next.type)) {
 						throw InputValidationError.fromCode(
 							'preceding_sibling_id',
 							ValidationErrorCodes.VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS,
@@ -108,7 +160,7 @@ export class ChannelHelpers {
 						encounteredVoice = true;
 						continue;
 					}
-					const isText = sibling.type === ChannelTypes.GUILD_TEXT || sibling.type === ChannelTypes.GUILD_LINK;
+					const isText = isTextLikeChannelType(sibling.type);
 					if (encounteredVoice && isText) {
 						throw InputValidationError.fromCode(
 							'preceding_sibling_id',
@@ -118,28 +170,5 @@ export class ChannelHelpers {
 				}
 			}
 		}
-	}
-
-	static serializeChannelForAudit(channel: Channel): Record<string, unknown> {
-		return serializeChannelForAuditUtil(channel);
-	}
-
-	static serializeChannelOrdering(channels: Array<Channel>): Array<{
-		channel_id: string;
-		parent_id: string | null;
-		position: number;
-	}> {
-		return [...channels]
-			.sort((a, b) => {
-				if (a.position !== b.position) {
-					return a.position - b.position;
-				}
-				return a.id.toString().localeCompare(b.id.toString());
-			})
-			.map((channel) => ({
-				channel_id: channel.id.toString(),
-				parent_id: toIdString(channel.parentId),
-				position: channel.position,
-			}));
 	}
 }

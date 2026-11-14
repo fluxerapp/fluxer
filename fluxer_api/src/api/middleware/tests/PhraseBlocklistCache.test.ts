@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PhraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {beforeEach, describe, expect, it} from 'vitest';
-import {PhraseBlocklistCache} from '../PhraseBlocklistCache';
 
 describe('PhraseBlocklistCache', () => {
 	let cache: PhraseBlocklistCache;

@@ -416,7 +416,7 @@ pub(super) fn encode_animated_apng(
     page_height: c_int,
     limits: AnimLimits,
     media_limits: &MediaLimits,
-    carried_loop_count: Option<u32>,
+    source_loop_count: Option<u32>,
 ) -> Result<Vec<u8>, MediaError> {
     let width = unsafe { native::fluxer_vips_image_get_width(image.as_ptr()) };
     let total_height = unsafe { native::fluxer_vips_image_get_height(image.as_ptr()) };
@@ -451,7 +451,7 @@ pub(super) fn encode_animated_apng(
     if frame_count == 0 {
         return Err(MediaError::MediaEncodeFailed);
     }
-    let num_plays = resolve_animation_loop_count(image, carried_loop_count);
+    let num_plays = resolve_animation_loop_count(image, source_loop_count);
     let expected_width = width as u32;
     let expected_height = page_height as u32;
 

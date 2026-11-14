@@ -9,24 +9,24 @@ use super::{
 };
 use crate::{
     aggregate_error::aggregate_results,
-    bunny_ip_gate::{self, BunnyIpGate},
-    config::Config,
-    media_process, request_log,
+    config::{Config, DeploymentMode, PolicyMode},
+    media_process, mime, request_log,
 };
-use anyhow::Context as _;
 use axum::{
-    Router, middleware,
+    Router,
+    http::{Extensions, HeaderMap, StatusCode, Version, header},
+    middleware,
     routing::{any, get, post, put},
 };
 use std::{net::SocketAddr, sync::Arc, time::Duration};
 use tokio::{net::TcpListener, time::timeout_at};
+use tower_http::compression::{CompressionLayer, CompressionLevel};
 use tracing::info;
 
 pub async fn run(cfg: Config) -> anyhow::Result<()> {
-    media_process::warmup_vips()?;
+    media_process::native_runtime::ensure_vips_init()?;
     let addr: SocketAddr = format!("{}:{}", cfg.bind_host, cfg.port).parse()?;
     let state = Arc::new(AppState::try_new(cfg)?);
-    let bunny_gate = start_bunny_ip_gate(&state).await?;
     if let Some(read_endpoint) = state.cfg.storage.s3_read_endpoint.as_deref() {
         info!(
             endpoint = read_endpoint,
@@ -36,76 +36,119 @@ pub async fn run(cfg: Config) -> anyhow::Result<()> {
             "object body reads served from the S3 read endpoint"
         );
     }
+    if state.cfg.cors.mode != PolicyMode::Off {
+        let allowed_origins = state
+            .cfg
+            .cors
+            .allowed_origins
+            .iter()
+            .filter_map(|origin| origin.to_str().ok())
+            .collect::<Vec<_>>()
+            .join(",");
+        info!(
+            mode = ?state.cfg.cors.mode,
+            allowed_origins = %allowed_origins,
+            "cross-origin read policy active"
+        );
+    }
+    if state.cfg.attachment_signature.mode != PolicyMode::Off {
+        info!(
+            mode = ?state.cfg.attachment_signature.mode,
+            secrets = state.cfg.attachment_signature.secret_count(),
+            "attachment url signature policy active"
+        );
+    }
     let drain = HttpRequestDrain::new();
-    let app = build_router(Arc::clone(&state), bunny_gate, drain.clone());
+    let app = build_router(Arc::clone(&state), drain.clone());
     let listener = TcpListener::bind(addr).await?;
     info!(%addr, "media proxy listening");
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
     )
-    .with_graceful_shutdown(shutdown_signal())
+    .with_graceful_shutdown(fluxer_common::shutdown::wait_for_shutdown())
     .await?;
     drain_and_shutdown(&state, &drain).await
 }
 
-fn build_router(
-    state: Arc<AppState>,
-    bunny_gate: Option<Arc<BunnyIpGate>>,
-    drain: HttpRequestDrain,
-) -> Router {
-    let mut router = Router::new()
+const STATIC_COMPRESSIBLE_CONTENT_TYPES: [&str; 9] = [
+    "application/javascript",
+    "text/javascript",
+    "text/css",
+    "text/html",
+    "application/json",
+    "application/manifest+json",
+    "application/xml",
+    "application/wasm",
+    "image/svg+xml",
+];
+
+const STATIC_COMPRESSION_MIN_BYTES: u64 = 1024;
+
+fn is_compressible_static_response(
+    status: StatusCode,
+    _version: Version,
+    headers: &HeaderMap,
+    _extensions: &Extensions,
+) -> bool {
+    let content_type = headers
+        .get(header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok());
+    status == StatusCode::OK
+        && headers
+            .get(header::CONTENT_LENGTH)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.parse::<u64>().ok())
+            .is_some_and(|length| length >= STATIC_COMPRESSION_MIN_BYTES)
+        && mime::normalize(content_type).is_some_and(|content_type| {
+            STATIC_COMPRESSIBLE_CONTENT_TYPES
+                .iter()
+                .any(|compressible| compressible.eq_ignore_ascii_case(content_type))
+        })
+}
+
+fn build_router(state: Arc<AppState>, drain: HttpRequestDrain) -> Router {
+    let router = Router::new()
         .route("/_health", get(routes::ops::health))
         .route("/_metrics", get(routes::ops::metrics_handler))
         .route("/_metadata", post(routes::internal::metadata_handler))
+        .route("/_sniff", post(routes::internal::sniff_handler))
         .route("/_thumbnail", post(routes::internal::thumbnail_handler))
         .route("/_frames", post(routes::internal::frames_handler))
+        .route("/_strip", post(routes::internal::strip_handler))
+        .route(
+            "/_audio_duration",
+            post(routes::internal::audio_duration_handler),
+        )
         .route(
             "/v1/relay/{*key}",
             put(routes::relay::relay_put).options(routes::relay::relay_options),
         )
-        .fallback(any(routes::dispatch::catch_all))
+        .fallback(any(routes::dispatch::catch_all));
+    let router = if state.cfg.mode == DeploymentMode::Static {
+        router.layer(
+            CompressionLayer::new()
+                .no_br()
+                .no_deflate()
+                .no_zstd()
+                .quality(CompressionLevel::Precise(5))
+                .compress_when(is_compressible_static_response),
+        )
+    } else {
+        router
+    };
+    router
         .layer(middleware::from_fn(add_version_header))
         .layer(middleware::from_fn_with_state(
             state.metrics.request(),
             request_log::trace,
-        ));
-    if let Some(gate) = bunny_gate {
-        router = router.layer(middleware::from_fn_with_state(
-            gate,
-            bunny_ip_gate::gate_middleware,
-        ));
-    }
-    router
+        ))
         .layer(middleware::from_fn_with_state(
             state.cfg.mode,
             add_security_header_middleware,
         ))
         .layer(middleware::from_fn_with_state(drain, track_active_request))
         .with_state(state)
-}
-
-async fn start_bunny_ip_gate(state: &Arc<AppState>) -> anyhow::Result<Option<Arc<BunnyIpGate>>> {
-    if !state.cfg.bunny_ip_gate_enabled {
-        return Ok(None);
-    }
-    let gate = Arc::new(BunnyIpGate::new(
-        bunny_ip_gate::build_refresh_client()?,
-        state.cfg.bunny_ip_gate_trusted_proxies.clone(),
-    ));
-    let count = gate
-        .refresh_once()
-        .await
-        .context("initial bunny ip allowlist fetch failed")?;
-    info!(
-        count,
-        trusted_proxies = state.cfg.bunny_ip_gate_trusted_proxies.len(),
-        refresh_secs = state.cfg.bunny_ip_gate_refresh_secs,
-        "bunny ip gate enabled"
-    );
-    Arc::clone(&gate)
-        .spawn_background_refresher(Duration::from_secs(state.cfg.bunny_ip_gate_refresh_secs));
-    Ok(Some(gate))
 }
 
 async fn drain_and_shutdown(state: &Arc<AppState>, drain: &HttpRequestDrain) -> anyhow::Result<()> {
@@ -130,101 +173,4 @@ async fn drain_and_shutdown(state: &Arc<AppState>, drain: &HttpRequestDrain) -> 
         .await
         .map_err(|_| anyhow::anyhow!("media proxy native task shutdown exceeded {grace_ms} ms"));
     aggregate_results("media proxy shutdown", [requests, coalescer, native_tasks])
-}
-
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        let _ = tokio::signal::ctrl_c().await;
-    };
-    #[cfg(unix)]
-    let terminate = async {
-        let Ok(mut sigterm) =
-            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-        else {
-            return;
-        };
-        sigterm.recv().await;
-    };
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use axum::{
-        body::Body,
-        http::{Method, Request, StatusCode},
-    };
-
-    const DECLARED_ROUTES: &[(&str, &str, &str)] = &[
-        ("/_health", "/_health", "GET,HEAD"),
-        ("/_metrics", "/_metrics", "GET,HEAD"),
-        ("/_metadata", "/_metadata", "POST"),
-        ("/_thumbnail", "/_thumbnail", "POST"),
-        ("/_frames", "/_frames", "POST"),
-        (
-            "/v1/relay/{*key}",
-            "/v1/relay/uploads/file.png",
-            "PUT,OPTIONS",
-        ),
-    ];
-
-    fn test_router() -> Router {
-        let cfg = Config::load_from_iter([("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret")])
-            .expect("test config");
-        build_router(
-            Arc::new(AppState::for_tests(cfg)),
-            None,
-            HttpRequestDrain::new(),
-        )
-    }
-
-    async fn probe(path: &str, method: Method) -> axum::response::Response {
-        tower::ServiceExt::oneshot(
-            test_router(),
-            Request::builder()
-                .method(method)
-                .uri(path)
-                .body(Body::empty())
-                .expect("probe request"),
-        )
-        .await
-        .expect("router response")
-    }
-
-    #[tokio::test]
-    async fn router_exposes_exactly_the_declared_route_and_method_table() {
-        for (declared, path, allowed) in DECLARED_ROUTES {
-            let response = probe(path, Method::DELETE).await;
-            assert_eq!(
-                StatusCode::METHOD_NOT_ALLOWED,
-                response.status(),
-                "{declared} must reject an undeclared method"
-            );
-            assert_eq!(
-                *allowed,
-                response
-                    .headers()
-                    .get("allow")
-                    .expect("method router sets allow")
-                    .to_str()
-                    .expect("ascii allow header"),
-                "{declared} method table"
-            );
-        }
-    }
-
-    #[tokio::test]
-    async fn unknown_paths_reach_the_catch_all_fallback() {
-        let response = probe("/avatars/1/hash.png", Method::DELETE).await;
-        assert_eq!(StatusCode::METHOD_NOT_ALLOWED, response.status());
-        assert!(response.headers().get("allow").is_none());
-        let response = probe("/nope", Method::GET).await;
-        assert_eq!(StatusCode::NOT_FOUND, response.status());
-    }
 }

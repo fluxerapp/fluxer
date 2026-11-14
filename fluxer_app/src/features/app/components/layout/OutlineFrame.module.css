@@ -1,28 +1,93 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+.bounds {
+	height: 100%;
+	width: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: clip;
+}
+
 .frame {
+	--outline-frame-clip-radius: max(0px, var(--outline-radius, 0px) - var(--outline-frame-border-width, 0.0625rem));
+	--outline-frame-start-border-width: var(--outline-frame-border-width, 0.0625rem);
 	position: relative;
 	height: 100%;
 	width: 100%;
 	border: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
 	border-top: none;
-	border-top-left-radius: var(--outline-radius, 0px);
-	background: var(--background-secondary-lighter);
-	overflow: hidden;
+	border-start-start-radius: var(--outline-radius, 0px);
+	--outline-frame-background: var(--background-secondary-lighter);
+	background: var(--outline-frame-background);
 	display: flex;
 	flex-direction: column;
 }
 
+.clip {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: clip;
+	border-radius: var(--outline-frame-clip-radius);
+	margin-inline-end: calc(-1 * var(--outline-frame-clip-radius));
+	margin-block-end: calc(-1 * var(--outline-frame-clip-radius));
+	padding-inline-end: var(--outline-frame-clip-radius);
+	padding-block-end: var(--outline-frame-clip-radius);
+}
+
 .frameShowTop {
+	--outline-frame-top-border-width: 0.0625rem;
 	border-top: 0.0625rem solid var(--user-area-divider-color);
 }
 
 .frameHideTop {
+	--outline-frame-top-border-width: 0px;
 	border-top: none;
 }
 
-.frameHideTop {
-	border-top: none;
+.frameCornerCap {
+	--outline-frame-clip-radius: 0px;
+}
+
+:global(html.user-stylesheets) .frameCornerCap {
+	--outline-frame-clip-radius: max(0px, var(--outline-radius, 0px) - var(--outline-frame-border-width, 0.0625rem));
+}
+
+:global(html.user-stylesheets) .cornerCap {
+	display: none;
+}
+
+.cornerCap {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	z-index: 4;
+	width: var(--outline-radius, 0px);
+	height: var(--outline-radius, 0px);
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.cornerCap::before,
+.cornerCap::after {
+	content: '';
+	position: absolute;
+	top: calc(-1 * var(--outline-frame-top-border-width, 0px));
+	inset-inline-start: calc(-1 * var(--outline-frame-start-border-width));
+	box-sizing: border-box;
+	width: calc(2 * var(--outline-radius, 0px));
+	height: calc(2 * var(--outline-radius, 0px));
+	border: 0 solid var(--user-area-divider-color);
+	border-top-width: var(--outline-frame-top-border-width, 0px);
+	border-inline-start-width: var(--outline-frame-start-border-width);
+	border-start-start-radius: var(--outline-radius, 0px);
+}
+
+.cornerCap::before {
+	border-color: var(--outline-frame-background);
+	box-shadow: 0 0 0 var(--outline-radius, 0px) var(--background-secondary);
 }
 
 .contentWrapper {
@@ -37,7 +102,7 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	left: var(--layout-sidebar-width);
+	inset-inline-start: var(--layout-sidebar-width);
 	width: 0.0625rem;
 	pointer-events: none;
 	background: var(--user-area-divider-color);

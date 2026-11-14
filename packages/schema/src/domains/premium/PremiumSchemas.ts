@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {BillingDocumentResponse} from '@fluxer/schema/src/domains/billing_documents/BillingDocumentSchemas';
+import {
+	DistributionQueryParam,
+	PriceDistributionResponse,
+} from '@fluxer/schema/src/domains/premium/DistributionSchemas';
+import {PremiumStoreSubscriptionState} from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
+import {createStringType, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {UserPremiumTypesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
 import {z} from 'zod';
 
-export const PremiumCurrency = z.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY']);
+export const PremiumCurrency = z.string().regex(/^[A-Z]{3}$/);
 
 export type PremiumCurrency = z.infer<typeof PremiumCurrency>;
 
@@ -36,7 +42,12 @@ export const PriceIdsResponse = z.object({
 		.describe('Gift 1 month price amount in the currency minor unit'),
 	gift_1_year_amount_minor: z.number().int().nullish().describe('Gift 1 year price amount in the currency minor unit'),
 	currency: PremiumCurrency.describe('Currency for the prices'),
-	gift_currency: PremiumCurrency.describe('Currency for gift prices'),
+	gift_currency: PremiumCurrency.nullable().describe(
+		'Currency for gift prices, null when no gift prices are configured',
+	),
+	distribution: PriceDistributionResponse.nullable().describe(
+		'Distribution whose channel price the amounts include, or null for the standard price',
+	),
 });
 
 export type PriceIdsResponse = z.infer<typeof PriceIdsResponse>;
@@ -47,43 +58,10 @@ export const PriceIdsQueryRequest = z.object({
 		.describe(
 			'Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins.',
 		),
+	distribution: DistributionQueryParam,
 });
 
 export type PriceIdsQueryRequest = z.infer<typeof PriceIdsQueryRequest>;
-
-export const LocalizedCardPreapprovalContinueRequest = z.object({
-	token: createStringType(1, 256).describe('Continuation token for the localized card preapproval flow'),
-});
-
-export type LocalizedCardPreapprovalContinueRequest = z.infer<typeof LocalizedCardPreapprovalContinueRequest>;
-
-const LocalizedCardPreapprovalRejectedReason = z.enum([
-	'country_mismatch',
-	'missing_customer',
-	'missing_payment_method',
-	'missing_setup_intent',
-	'payment_method_not_card',
-	'unknown',
-]);
-export const LocalizedCardPreapprovalContinueResponse = z.discriminatedUnion('status', [
-	z.object({
-		status: z.literal('pending').describe('The preapproval result is still being processed'),
-	}),
-	z.object({
-		status: z.literal('ready').describe('The preapproval succeeded and the paid checkout URL is ready'),
-		url: z.string().describe('The URL to redirect to'),
-	}),
-	z.object({
-		status: z.literal('rejected').describe('The preapproval failed and the paid checkout should not continue'),
-		reason: LocalizedCardPreapprovalRejectedReason.describe('The reason the preapproval was rejected'),
-		actual_country: createStringType(2, 2).nullish().describe('The detected card issuing country when available'),
-	}),
-	z.object({
-		status: z.literal('expired').describe('The preapproval token has expired or is unknown'),
-	}),
-]);
-
-export type LocalizedCardPreapprovalContinueResponse = z.infer<typeof LocalizedCardPreapprovalContinueResponse>;
 
 export const CurrentSubscriptionPriceResponse = z
 	.object({
@@ -148,7 +126,12 @@ export type PendingSubscriptionChangeResponse = z.infer<typeof PendingSubscripti
 
 export const ChangeSubscriptionRequest = z.object({
 	billing_cycle: BillingCycleSchema.describe('The recurring billing cycle to switch the active subscription to'),
-	effective_at: z.enum(['now', 'period_end']).optional().describe('When the billing cycle change should take effect'),
+	effective_at: z
+		.enum(['now', 'period_end'])
+		.optional()
+		.describe(
+			'When the billing cycle change should take effect. A switch from yearly to monthly always takes effect at the end of the paid year',
+		),
 });
 
 export type ChangeSubscriptionRequest = z.infer<typeof ChangeSubscriptionRequest>;
@@ -260,6 +243,9 @@ const PremiumEffectiveState = z.object({
 	premium_grace_ends_at: z.string().nullable().describe('Effective grace timestamp exposed to the client'),
 	premium_enabled_override: z.boolean().describe('Whether backend premium override is enabled'),
 	premium_purchase_disabled: z.boolean().describe('Whether premium purchase is disabled for this account'),
+	payment_dispute_open: z
+		.boolean()
+		.describe('Whether a payment dispute this account made is open, which blocks every purchase until it closes'),
 	premium_perks_disabled: z.boolean().describe('Whether the user temporarily disabled premium perks'),
 	self_hosted: z.boolean().describe('Whether the instance treats all users as premium because it is self-hosted'),
 	bot: z.boolean().describe('Whether the account is a bot account with premium-equivalent service access'),
@@ -280,23 +266,6 @@ export const PremiumBillingSubscriptionResponse = z.object({
 });
 
 export type PremiumBillingSubscriptionResponse = z.infer<typeof PremiumBillingSubscriptionResponse>;
-
-export const PremiumBillingInvoiceResponse = z.object({
-	id: z.string(),
-	number: z.string().nullable(),
-	amount_due: z.number().int(),
-	amount_paid: z.number().int(),
-	currency: z.string(),
-	status: z.string().nullable(),
-	created_at: z.string().nullable(),
-	paid_at: z.string().nullable(),
-	billing_reason: z.string().nullable(),
-	subscription_id: z.string().nullable(),
-	hosted_invoice_url: z.string().nullable(),
-	invoice_pdf: z.string().nullable(),
-});
-
-export type PremiumBillingInvoiceResponse = z.infer<typeof PremiumBillingInvoiceResponse>;
 
 export const PremiumBillingPaymentMethodResponse = z.object({
 	id: z.string(),
@@ -319,10 +288,14 @@ export const SelfServeRefundIneligibilityReason = z.enum([
 
 export type SelfServeRefundIneligibilityReason = z.infer<typeof SelfServeRefundIneligibilityReason>;
 
+export const SelfServeRefundProvider = withOpenApiType(z.enum(['stripe', 'google_play']), 'SelfServeRefundProvider');
+
+export type SelfServeRefundProvider = z.infer<typeof SelfServeRefundProvider>;
+
 export const SelfServeRefundEligibilityResponse = z.object({
 	eligible: z
 		.boolean()
-		.describe('Whether the authenticated user can self-serve refund their latest purchase right now'),
+		.describe('Whether the authenticated user can self-serve refund their recent purchases right now'),
 	reason: SelfServeRefundIneligibilityReason.nullable().describe(
 		'Why the user is not eligible, when eligible is false',
 	),
@@ -331,15 +304,74 @@ export const SelfServeRefundEligibilityResponse = z.object({
 		.number()
 		.int()
 		.nullable()
-		.describe('Amount paid on the latest invoice in the currency minor unit'),
+		.describe(
+			'Amount a self-serve refund would return in the currency minor unit: every payment made in the last 3 days when they share a currency, otherwise the latest one',
+		),
 	currency: z.string().nullable().describe('Currency of the latest paid invoice'),
 	paid_at: z.string().nullable().describe('ISO timestamp the latest invoice was paid'),
 	refund_window_expires_at: z.string().nullable().describe('ISO timestamp after which the 3-day refund window closes'),
 	cooldown_expires_at: z.string().nullable().describe('ISO timestamp the 30-day cooldown ends, if currently active'),
 	cancels_subscription: z.boolean().describe('Whether issuing the refund will also cancel the active subscription'),
+	provider: SelfServeRefundProvider.nullable().describe('Who took the payment for the purchase considered for refund'),
 });
 
 export type SelfServeRefundEligibilityResponse = z.infer<typeof SelfServeRefundEligibilityResponse>;
+
+export const PlutoniumWithdrawalResponse = z.object({
+	id: z
+		.string()
+		.describe(
+			'Stripe subscription id of a subscription, or Checkout Session id of a gift, to send to the withdraw route',
+		),
+	kind: z.enum(['subscription', 'gift']).describe('Whether the purchase is a subscription or a gift'),
+	amount_minor: z
+		.number()
+		.int()
+		.describe(
+			'Amount a withdrawal at quoted_at refunds in the currency minor unit. It is the payments the withdrawal covers, less the share for the days of Plutonium used when the purchase was made with the immediate-start consent, and in full otherwise',
+		),
+	paid_minor: z.number().int().describe('Sum of the payments the withdrawal covers, in the currency minor unit'),
+	quoted_at: z
+		.string()
+		.describe('ISO timestamp amount_minor was worked out for. Send it back as quoted_at when withdrawing'),
+	currency: z.string().describe('Currency of the payments'),
+	purchased_at: z
+		.string()
+		.describe(
+			'ISO timestamp of the payment that started the withdrawal period: the first payment, a plan switch, a renewal at a new price, or a renewal of an EU or EEA subscription bought without the immediate-start consent',
+		),
+	withdrawal_ends_at: z.string().describe('ISO timestamp after which the withdrawal period is over'),
+	withdrawal_ends_on: z.string().describe('Last day of the withdrawal period as YYYY-MM-DD'),
+});
+
+export type PlutoniumWithdrawalResponse = z.infer<typeof PlutoniumWithdrawalResponse>;
+
+export const PlutoniumWithdrawalListResponse = z
+	.array(PlutoniumWithdrawalResponse)
+	.describe('Plutonium purchases paid through Stripe that the account can withdraw from right now, newest first');
+
+export type PlutoniumWithdrawalListResponse = z.infer<typeof PlutoniumWithdrawalListResponse>;
+
+export const PlutoniumWithdrawRequest = z.object({
+	name: z.string().trim().min(1).max(200).describe('Name of the buyer who withdraws'),
+	quoted_at: z
+		.string()
+		.datetime()
+		.optional()
+		.describe(
+			'quoted_at of the withdrawal list entry the buyer saw. A refund less the days used uses the amount quoted then, if it is at most one day old',
+		),
+});
+
+export type PlutoniumWithdrawRequest = z.infer<typeof PlutoniumWithdrawRequest>;
+
+export const PlutoniumWithdrawalIdParam = z.object({
+	purchase_id: z
+		.string()
+		.max(255)
+		.regex(/^(sub|cs)_[A-Za-z0-9_]+$/)
+		.describe('The id of a purchase from the withdrawals list of the premium state'),
+});
 
 const PremiumBillingState = z.object({
 	stripe_customer_id: z.string().nullable(),
@@ -347,8 +379,9 @@ const PremiumBillingState = z.object({
 	pending_subscription_change: PendingSubscriptionChangeResponse,
 	list_price_switch: ListPriceSwitchState,
 	subscription: PremiumBillingSubscriptionResponse.nullable(),
-	invoices: z.array(PremiumBillingInvoiceResponse),
-	invoices_has_more: z.boolean(),
+	documents: z
+		.array(BillingDocumentResponse)
+		.describe('Invoices, receipts, credit notes and refund notes Fluxer issued to the account, newest first'),
 	payment_methods: z.array(PremiumBillingPaymentMethodResponse),
 	refund_eligibility: SelfServeRefundEligibilityResponse,
 });
@@ -360,11 +393,24 @@ export const PremiumPricingState = z.object({
 
 export type PremiumPricingState = z.infer<typeof PremiumPricingState>;
 
+export const PremiumSubscriptionProvider = withOpenApiType(
+	z.enum(['stripe', 'app_store', 'google_play']),
+	'PremiumSubscriptionProvider',
+);
+
+export type PremiumSubscriptionProvider = z.infer<typeof PremiumSubscriptionProvider>;
+
 export const PremiumStateResponse = z.object({
 	actual: PremiumActualState,
 	effective: PremiumEffectiveState,
 	billing: PremiumBillingState,
 	pricing: PremiumPricingState,
+	store: PremiumStoreSubscriptionState.nullish().describe(
+		'Active App Store or Google Play subscription, null when no store subscription is active',
+	),
+	subscription_provider: PremiumSubscriptionProvider.nullable().describe(
+		'Billing platform that owns the current recurring subscription, null for gift, lifetime or no subscription. When a Stripe and a store subscription are both active, the one paid through later',
+	),
 });
 
 export type PremiumStateResponse = z.infer<typeof PremiumStateResponse>;
@@ -387,9 +433,12 @@ export const SelfServeRefundResponse = z.object({
 	refunded_amount_cents: z
 		.number()
 		.int()
-		.describe('Amount actually refunded so far, in the currency minor unit; 0 until the provider confirms success'),
-	invoice_amount_paid_cents: z.number().int(),
-	currency: z.string(),
+		.nullable()
+		.describe(
+			'Amount actually refunded so far across every refunded payment, in the currency minor unit; 0 until the provider confirms success, null when the store does not report it',
+		),
+	invoice_amount_paid_cents: z.number().int().nullable(),
+	currency: z.string().nullable(),
 	subscription_id: z
 		.string()
 		.nullable()
@@ -398,6 +447,7 @@ export const SelfServeRefundResponse = z.object({
 		.string()
 		.nullable()
 		.describe('Provider status of the refund (e.g. pending, succeeded, failed); money only moved once succeeded'),
+	provider: SelfServeRefundProvider.describe('Who took the payment that was refunded'),
 });
 
 export type SelfServeRefundResponse = z.infer<typeof SelfServeRefundResponse>;

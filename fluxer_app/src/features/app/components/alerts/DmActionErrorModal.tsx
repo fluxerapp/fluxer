@@ -7,9 +7,14 @@ import {
 	RATE_LIMITED_ERROR_TITLE_DESCRIPTOR,
 } from '@app/features/app/components/alerts/CommonErrorModalDescriptors';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {promptForAccountTier} from '@app/features/auth/utils/AccountTierPrompt';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {
+	ACCOUNT_LIMITED_NOTICE_DESCRIPTOR,
+	ACCOUNT_LIMITED_TITLE_DESCRIPTOR,
+} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {msg} from '@lingui/core/macro';
 
@@ -38,11 +43,11 @@ const CLAIM_ACCOUNT_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Body of the error modal shown when an unclaimed account tries to start a DM.',
 });
 const VERIFY_EMAIL_TITLE_DESCRIPTOR = msg({
-	message: 'Verify your email',
+	message: 'Confirm your email',
 	comment: 'Title of the error modal shown when an unverified account tries to start a DM.',
 });
 const VERIFY_EMAIL_MESSAGE_DESCRIPTOR = msg({
-	message: 'You need to verify your email address before you can start a direct message.',
+	message: 'You need to confirm your email address before you can start a direct message.',
 	comment: 'Body of the error modal shown when an unverified account tries to start a DM.',
 });
 const TOO_MANY_PEOPLE_TITLE_DESCRIPTOR = msg({
@@ -54,7 +59,7 @@ const TOO_MANY_PEOPLE_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Body of the error modal shown when a group DM would exceed the maximum number of recipients.',
 });
 const GROUP_DM_LIMIT_TITLE_DESCRIPTOR = msg({
-	message: "You've reached the group DM limit",
+	message: "You're at the group DM limit",
 	comment: 'Title of the error modal shown when the user or a recipient has too many open group DMs.',
 });
 const GROUP_DM_LIMIT_MESSAGE_DESCRIPTOR = msg({
@@ -66,12 +71,27 @@ const GENERIC_TITLE_DESCRIPTOR = msg({
 	comment: 'Title of the generic fallback error modal shown when opening or creating a DM fails.',
 });
 
-export function resolveDmActionErrorContent(code: string | undefined): {title: string; message: string} {
+function resolveDmActionErrorContent(code: string | undefined, apiMessage?: string): {title: string; message: string} {
 	switch (code) {
+		case APIErrorCodes.NEW_CONVERSATIONS_LIMITED:
+			return {
+				title: i18nGlobal._(GENERIC_TITLE_DESCRIPTOR),
+				message: apiMessage || i18nGlobal._(GENERIC_ERROR_BODY_DESCRIPTOR),
+			};
+		case APIErrorCodes.ACCOUNT_LIMITED:
+			return {
+				title: i18nGlobal._(ACCOUNT_LIMITED_TITLE_DESCRIPTOR),
+				message: apiMessage || i18nGlobal._(ACCOUNT_LIMITED_NOTICE_DESCRIPTOR),
+			};
 		case APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER:
 			return {
 				title: i18nGlobal._(CANNOT_MESSAGE_USER_TITLE_DESCRIPTOR),
 				message: i18nGlobal._(CANNOT_MESSAGE_USER_MESSAGE_DESCRIPTOR),
+			};
+		case APIErrorCodes.COMMUNITY_MEMBER_DMS_DISABLED:
+			return {
+				title: i18nGlobal._(CANNOT_MESSAGE_USER_TITLE_DESCRIPTOR),
+				message: apiMessage || i18nGlobal._(CANNOT_MESSAGE_USER_MESSAGE_DESCRIPTOR),
 			};
 		case APIErrorCodes.UNKNOWN_USER:
 			return {
@@ -112,10 +132,14 @@ export function resolveDmActionErrorContent(code: string | undefined): {title: s
 }
 
 export function showDmActionErrorModal(error: unknown): void {
+	if (promptForAccountTier(error)) {
+		return;
+	}
 	const code = failureCode(error);
+	const apiMessage = failureMessage(error);
 	ModalCommands.push(
 		modal(() => {
-			const {title, message} = resolveDmActionErrorContent(code);
+			const {title, message} = resolveDmActionErrorContent(code, apiMessage);
 			return (
 				<GenericErrorModal title={title} message={message} data-flx="app.dm-action-error-modal.generic-error-modal" />
 			);

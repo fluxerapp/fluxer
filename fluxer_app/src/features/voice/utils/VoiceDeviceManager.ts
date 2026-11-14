@@ -4,7 +4,7 @@ import {ensureNativePermission} from '@app/features/permissions/system/utils/Nat
 import {Platform} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getNativePlatformSync, isDesktop} from '@app/features/ui/utils/NativeUtils';
-import type {VoiceEngineV2AudioDeviceRole} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2AudioDeviceRole} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 const logger = new Logger('VoiceDeviceManager');
 
@@ -34,6 +34,31 @@ const VOICE_MEDIA_PERMISSION_TYPES: ReadonlyArray<VoiceMediaPermissionType> = ['
 const VOICE_MEDIA_PERMISSION_INTENTS: ReadonlyArray<VoiceMediaPermissionIntent> = ['confirm', 'request'];
 const MAX_ENUMERATION_CHAIN_PASSES = 1 + VOICE_MEDIA_PERMISSION_TYPES.length * VOICE_MEDIA_PERMISSION_INTENTS.length;
 
+const ENUMERATE_DEVICES_TIMEOUT_MS = 5000;
+
+class EnumerateDevicesTimeoutError extends Error {
+	constructor() {
+		super(`navigator.mediaDevices.enumerateDevices() did not settle within ${ENUMERATE_DEVICES_TIMEOUT_MS}ms`);
+		this.name = 'EnumerateDevicesTimeoutError';
+	}
+}
+
+function enumerateMediaDevices(): Promise<Array<MediaDeviceInfo>> {
+	return new Promise((resolve, reject) => {
+		const timer = setTimeout(() => reject(new EnumerateDevicesTimeoutError()), ENUMERATE_DEVICES_TIMEOUT_MS);
+		navigator.mediaDevices.enumerateDevices().then(
+			(devices) => {
+				clearTimeout(timer);
+				resolve(devices);
+			},
+			(error: unknown) => {
+				clearTimeout(timer);
+				reject(error);
+			},
+		);
+	});
+}
+
 export interface EnsureVoiceDevicesOptions {
 	requestPermissions?: boolean;
 	requestPermissionTypes?: ReadonlyArray<VoiceMediaPermissionType>;
@@ -57,7 +82,7 @@ const INTERNAL_VIRTUAL_AUDIO_DEVICE_LABELS = [
 	'fluxer direct capture',
 ];
 
-export function isInternalVirtualAudioDevice(device: MediaDeviceInfo): boolean {
+function isInternalVirtualAudioDevice(device: MediaDeviceInfo): boolean {
 	const label = device.label.trim().toLowerCase();
 	return INTERNAL_VIRTUAL_AUDIO_DEVICE_LABELS.some((internalLabel) => label.includes(internalLabel));
 }
@@ -87,7 +112,7 @@ export interface VoiceAudioDeviceMetadata {
 	defaultPlatform?: VoiceAudioDefaultDevicePlatform;
 }
 
-export type VoiceMediaDeviceInfo = MediaDeviceInfo & {
+type VoiceMediaDeviceInfo = MediaDeviceInfo & {
 	isDefault?: boolean;
 	fluxerVoiceAudioDevice?: VoiceAudioDeviceMetadata;
 };
@@ -142,7 +167,7 @@ function cleanAudioDeviceLabel(rawLabel: string): string {
 	return rawLabel.replace(USB_HARDWARE_ID_SUFFIX, '').trim();
 }
 
-function stripDefaultRouteLabelWrapper(label: string): string {
+function extractDefaultRouteEndpointLabel(label: string): string | null {
 	const windowsMatch = label.match(WINDOWS_DEFAULT_DEVICE_PREFIX);
 	if (windowsMatch?.[1]) {
 		return cleanAudioDeviceLabel(windowsMatch[1]);
@@ -154,7 +179,27 @@ function stripDefaultRouteLabelWrapper(label: string): string {
 	if (label.toLowerCase() === 'default') {
 		return '';
 	}
-	return cleanAudioDeviceLabel(label);
+	return null;
+}
+
+function buildEndpointLabelsByGroupId(devices: ReadonlyArray<AudioDeviceShapeInput>): Map<string, string> {
+	const endpointLabelsByGroupId = new Map<string, string>();
+	for (const device of devices) {
+		const deviceId = device.deviceId.trim();
+		if (deviceId.length === 0 || deviceId === 'default' || deviceId === 'communications') {
+			continue;
+		}
+		if (device.role === 'default' || device.role === 'communications' || device.isDefaultRoute === true) {
+			continue;
+		}
+		const groupId = device.groupId.trim();
+		const label = cleanAudioDeviceLabel(device.label);
+		if (groupId.length === 0 || label.length === 0 || endpointLabelsByGroupId.has(groupId)) {
+			continue;
+		}
+		endpointLabelsByGroupId.set(groupId, label);
+	}
+	return endpointLabelsByGroupId;
 }
 
 function cleanVideoDeviceLabel(rawLabel: string, deviceId: string): string {
@@ -178,12 +223,22 @@ function cleanVideoDeviceLabel(rawLabel: string, deviceId: string): string {
 	return label;
 }
 
-function normalizeAudioDeviceLabel(device: AudioDeviceShapeInput): NormalizedAudioDeviceLabel {
+export function normalizeDeviceMatchLabel(kind: MediaDeviceKind, deviceId: string, label: string): string {
+	return kind === 'videoinput' ? cleanVideoDeviceLabel(label, deviceId) : cleanAudioDeviceLabel(label);
+}
+
+function normalizeAudioDeviceLabel(
+	device: AudioDeviceShapeInput,
+	endpointLabelsByGroupId?: ReadonlyMap<string, string>,
+): NormalizedAudioDeviceLabel {
 	const deviceId = device.deviceId.trim();
 	const baseLabel = cleanAudioDeviceLabel(device.label);
 	const metadataEndpointLabel = device.endpointLabel ? cleanAudioDeviceLabel(device.endpointLabel) : '';
+	const siblingEndpointLabel = endpointLabelsByGroupId?.get(device.groupId.trim()) ?? '';
 	if (device.role === 'default' || device.isDefaultRoute === true || deviceId === 'default') {
-		const endpointLabel = stripDefaultRouteLabelWrapper(metadataEndpointLabel || baseLabel);
+		const wrappedLabel = metadataEndpointLabel || baseLabel;
+		const endpointLabel =
+			extractDefaultRouteEndpointLabel(wrappedLabel) ?? (siblingEndpointLabel || cleanAudioDeviceLabel(wrappedLabel));
 		return {
 			role: 'default',
 			endpointLabel,
@@ -193,7 +248,8 @@ function normalizeAudioDeviceLabel(device: AudioDeviceShapeInput): NormalizedAud
 	}
 	if (device.role === 'communications' || deviceId === 'communications') {
 		const communicationsMatch = baseLabel.match(WINDOWS_COMMUNICATIONS_DEVICE_PREFIX);
-		const endpointLabel = metadataEndpointLabel || communicationsMatch?.[1]?.trim() || baseLabel;
+		const endpointLabel =
+			metadataEndpointLabel || communicationsMatch?.[1]?.trim() || siblingEndpointLabel || baseLabel;
 		return {
 			role: 'communications',
 			endpointLabel: cleanAudioDeviceLabel(endpointLabel),
@@ -283,7 +339,7 @@ function createVideoDeviceInfo(deviceId: string, groupId: string, label: string)
 	} as MediaDeviceInfo;
 }
 
-export function shapeVideoDevices(devices: ReadonlyArray<MediaDeviceInfo>): Array<MediaDeviceInfo> {
+function shapeVideoDevices(devices: ReadonlyArray<MediaDeviceInfo>): Array<MediaDeviceInfo> {
 	const endpointDevices = devices
 		.filter((device) => device.kind === 'videoinput' && device.deviceId.trim().length > 0)
 		.map((device) =>
@@ -307,13 +363,14 @@ function shapeAudioDevices(
 	devices: ReadonlyArray<AudioDeviceShapeInput>,
 	options: ShapeAudioDevicesOptions = {},
 ): Array<MediaDeviceInfo> {
+	const endpointLabelsByGroupId = buildEndpointLabelsByGroupId(devices);
 	let normalizedDevices = devices
 		.filter(
 			(device) => device.deviceId.trim().length > 0 || device.isDefaultRoute === true || device.role === 'default',
 		)
 		.map((device) => ({
 			device,
-			label: normalizeAudioDeviceLabel(device),
+			label: normalizeAudioDeviceLabel(device, endpointLabelsByGroupId),
 		}));
 	if (
 		options.synthesizeDefaultRoute === true &&
@@ -336,7 +393,10 @@ function shapeAudioDevices(
 				isDefaultRoute: true,
 			};
 			normalizedDevices = [
-				{device: syntheticDefaultDevice, label: normalizeAudioDeviceLabel(syntheticDefaultDevice)},
+				{
+					device: syntheticDefaultDevice,
+					label: normalizeAudioDeviceLabel(syntheticDefaultDevice, endpointLabelsByGroupId),
+				},
 				...normalizedDevices,
 			];
 		}
@@ -371,7 +431,7 @@ function dedupeAudioDeviceInfos(devices: ReadonlyArray<VoiceMediaDeviceInfo>): A
 	return [...devicesByDeviceId.values()];
 }
 
-export function shapeBrowserAudioDevices(devices: ReadonlyArray<MediaDeviceInfo>): Array<MediaDeviceInfo> {
+function shapeBrowserAudioDevices(devices: ReadonlyArray<MediaDeviceInfo>): Array<MediaDeviceInfo> {
 	return shapeAudioDevices(
 		devices.map((device) => ({
 			deviceId: device.deviceId,
@@ -541,7 +601,7 @@ class VoiceDeviceManager {
 		const permissionStatus = {...this.state.permissionStatus};
 		try {
 			logger.debug('Calling navigator.mediaDevices.enumerateDevices()');
-			let devices = await navigator.mediaDevices.enumerateDevices();
+			let devices = await enumerateMediaDevices();
 			logger.debug('Initial enumeration result', {
 				deviceCount: devices.length,
 				devices: devices.map((d) => ({
@@ -582,7 +642,7 @@ class VoiceDeviceManager {
 				}
 				if (nativeResults.some(({result}) => result === 'granted')) {
 					try {
-						devices = await navigator.mediaDevices.enumerateDevices();
+						devices = await enumerateMediaDevices();
 					} catch (error) {
 						logger.warn('Device re-enumeration after native permission grant failed', {error});
 					}
@@ -605,7 +665,7 @@ class VoiceDeviceManager {
 							logger.debug('iOS PWA: microphone permission already granted via Permissions API, skipping getUserMedia');
 							permissionStatus.audio = 'granted';
 							try {
-								devices = await navigator.mediaDevices.enumerateDevices();
+								devices = await enumerateMediaDevices();
 								skipGetUserMedia = devices.some((device) => device.kind === 'audioinput' && device.label !== '');
 							} catch (error) {
 								logger.warn('iOS PWA device re-enumeration after permission grant failed', {error});
@@ -632,7 +692,7 @@ class VoiceDeviceManager {
 						}
 						logger.debug('Re-enumerating devices after permission grant');
 						try {
-							devices = await navigator.mediaDevices.enumerateDevices();
+							devices = await enumerateMediaDevices();
 							logger.debug('Re-enumeration result', {
 								deviceCount: devices.length,
 								devices: devices.map((d) => ({

@@ -23,7 +23,12 @@ const MEMBER_LISTS_ARE_TEMPORARILY_UNAVAILABLE_IN_THIS_COMMUNITY_DESCRIPTOR = ms
 	comment: 'Label in the channel and chat member list unavailable fallback.',
 });
 
-type MemberListUnavailableVariant = 'unavailable' | 'permission_denied';
+const MEMBERS_VISIBLE_AFTER_JOIN_DESCRIPTOR = msg({
+	message: 'Members are visible after you join.',
+	comment: 'Member list placeholder while someone looks around a community without joining.',
+});
+
+type MemberListUnavailableVariant = 'unavailable' | 'permission_denied' | 'visiting';
 
 interface MemberListUnavailableFallbackProps {
 	className?: string;
@@ -36,14 +41,15 @@ export function MemberListUnavailableFallback({
 }: MemberListUnavailableFallbackProps) {
 	const {i18n} = useLingui();
 	const containerClassName = className ? `${styles.container} ${className}` : styles.container;
-	const title =
-		variant === 'permission_denied'
-			? i18n._(YOU_CAN_T_VIEW_MEMBERS_DESCRIPTOR)
-			: i18n._(MEMBER_LIST_UNAVAILABLE_DESCRIPTOR);
-	const description =
-		variant === 'permission_denied'
-			? i18n._(YOU_DON_T_HAVE_PERMISSION_TO_VIEW_THE_DESCRIPTOR)
-			: i18n._(MEMBER_LISTS_ARE_TEMPORARILY_UNAVAILABLE_IN_THIS_COMMUNITY_DESCRIPTOR);
+	let title = i18n._(MEMBER_LIST_UNAVAILABLE_DESCRIPTOR);
+	let description: string | null = i18n._(MEMBER_LISTS_ARE_TEMPORARILY_UNAVAILABLE_IN_THIS_COMMUNITY_DESCRIPTOR);
+	if (variant === 'permission_denied') {
+		title = i18n._(YOU_CAN_T_VIEW_MEMBERS_DESCRIPTOR);
+		description = i18n._(YOU_DON_T_HAVE_PERMISSION_TO_VIEW_THE_DESCRIPTOR);
+	} else if (variant === 'visiting') {
+		title = i18n._(MEMBERS_VISIBLE_AFTER_JOIN_DESCRIPTOR);
+		description = null;
+	}
 	return (
 		<div className={containerClassName} data-flx="channel.member-list-unavailable-fallback.div">
 			<div className={styles.content} data-flx="channel.member-list-unavailable-fallback.content">
@@ -51,9 +57,11 @@ export function MemberListUnavailableFallback({
 				<h3 className={styles.title} data-flx="channel.member-list-unavailable-fallback.title">
 					{title}
 				</h3>
-				<p className={styles.description} data-flx="channel.member-list-unavailable-fallback.description">
-					{description}
-				</p>
+				{description === null ? null : (
+					<p className={styles.description} data-flx="channel.member-list-unavailable-fallback.description">
+						{description}
+					</p>
+				)}
 			</div>
 		</div>
 	);

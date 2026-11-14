@@ -39,7 +39,7 @@
 .previewActions {
 	position: absolute;
 	top: 0.25rem;
-	right: 0.25rem;
+	inset-inline-end: 0.25rem;
 	display: flex;
 	gap: 0.125rem;
 	opacity: 0;
@@ -307,10 +307,6 @@
 	}
 }
 
-.controlButtonDisabled {
-	opacity: 0.5;
-}
-
 .languagePositioner {
 	z-index: 99999;
 	outline: none;
@@ -393,7 +389,8 @@
 	width: 100%;
 	align-items: center;
 	gap: 0.5rem;
-	padding: 0.375rem 2rem 0.375rem 0.625rem;
+	padding-block: 0.375rem;
+	padding-inline: 0.625rem 2rem;
 	color: var(--text-primary);
 	cursor: pointer;
 	outline: none;
@@ -407,17 +404,21 @@
 
 .languageItemSelected {
 	background-color: var(--brand-primary);
-	color: #fff;
+	color: var(--brand-primary-fill);
 }
 
 .languageItemSelected.languageItemHighlighted {
 	background-color: var(--brand-primary);
 }
 
+.languageItemSelected .languageOptionCanonical {
+	color: inherit;
+}
+
 .languageItemIndicator {
 	position: absolute;
 	top: 50%;
-	right: 0.625rem;
+	inset-inline-end: 0.625rem;
 	display: flex;
 	width: 1rem;
 	height: 1rem;

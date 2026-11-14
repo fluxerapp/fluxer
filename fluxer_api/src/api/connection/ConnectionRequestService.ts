@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac} from 'node:crypto';
+import type {UserID} from '@app/api/BrandedTypes';
+import {signInitiationToken, verifyInitiationToken} from '@app/api/connection/ConnectionInitiationToken';
+import {mapConnectionsToResponse} from '@app/api/connection/ConnectionMappers';
+import type {ConnectionService} from '@app/api/connection/ConnectionService';
+import {ConnectionInitiationTokenInvalidError} from '@app/api/connection/errors/ConnectionInitiationTokenInvalidError';
 import {
 	CONNECTION_INITIATION_TOKEN_EXPIRY_MS,
 	CONNECTION_VERIFICATION_TOKEN_LENGTH,
@@ -14,21 +19,15 @@ import type {
 	UpdateConnectionRequest,
 	VerifyAndCreateConnectionRequest,
 } from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
-import type {UserID} from '../BrandedTypes';
-import {signInitiationToken, verifyInitiationToken} from './ConnectionInitiationToken';
-import {mapConnectionToResponse} from './ConnectionMappers';
-import {ConnectionInitiationTokenInvalidError} from './errors/ConnectionInitiationTokenInvalidError';
-import type {IConnectionService} from './IConnectionService';
 
 export class ConnectionRequestService {
 	constructor(
-		private readonly connectionService: IConnectionService,
+		private readonly connectionService: ConnectionService,
 		private readonly connectionInitiationSecret: string,
 	) {}
 
 	async listConnections(userId: UserID): Promise<Array<ConnectionResponse>> {
-		const rows = await this.connectionService.getConnectionsForUser(userId);
-		return rows.sort((a, b) => a.sort_order - b.sort_order).map((row) => mapConnectionToResponse(row));
+		return mapConnectionsToResponse(await this.connectionService.getConnectionsForUser(userId));
 	}
 
 	async initiateConnection(userId: UserID, body: CreateConnectionRequest): Promise<ConnectionVerificationResponse> {
@@ -66,7 +65,8 @@ export class ConnectionRequestService {
 			payload.verificationCode,
 			body.visibility_flags ?? 1,
 		);
-		return mapConnectionToResponse(row);
+		const [connection] = await mapConnectionsToResponse([row]);
+		return connection!;
 	}
 
 	async updateConnection(
@@ -80,15 +80,6 @@ export class ConnectionRequestService {
 
 	async deleteConnection(userId: UserID, connectionType: ConnectionType, connectionId: string): Promise<void> {
 		await this.connectionService.deleteConnection(userId, connectionType, connectionId);
-	}
-
-	async verifyConnection(
-		userId: UserID,
-		connectionType: ConnectionType,
-		connectionId: string,
-	): Promise<ConnectionResponse> {
-		const row = await this.connectionService.verifyConnection(userId, connectionType, connectionId);
-		return mapConnectionToResponse(row);
 	}
 
 	async reorderConnections(userId: UserID, connectionIds: Array<string>): Promise<void> {

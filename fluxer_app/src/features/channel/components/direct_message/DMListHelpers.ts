@@ -20,8 +20,8 @@ export function getDmRouteChannelId(pathname: string): string | null {
 	return channelId ?? null;
 }
 
-export function canInviteInChannel(channel?: Channel | null): channel is Channel {
-	if (!channel || !channel.guildId) {
+function canInviteInChannel(channel?: Channel | null): channel is Channel {
+	if (!channel?.guildId) {
 		return false;
 	}
 	return InviteUtils.canInviteToChannel(channel.id, channel.guildId);

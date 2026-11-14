@@ -9,7 +9,10 @@ import {
 	ZOOM_OUT_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import styles from '@app/features/messaging/components/modals/MediaModal.module.css';
-import {ControlButton} from '@app/features/messaging/components/modals/media_modal/MediaControls';
+import {
+	ControlButton,
+	type MediaOverlayActionsProps,
+} from '@app/features/messaging/components/modals/media_modal/MediaControls';
 import {
 	CLOSE_MODAL_DESCRIPTOR,
 	COPY_MEDIA_TO_CLIPBOARD_DESCRIPTOR,
@@ -17,12 +20,14 @@ import {
 	FORWARD_MEDIA_DESCRIPTOR,
 	MEDIA_CONTROLS_DESCRIPTOR,
 	OPEN_IN_BROWSER_DESCRIPTOR,
+	OPEN_POST_DESCRIPTOR,
 	REPLY_TO_MEDIA_MESSAGE_DESCRIPTOR,
 	RESET_MEDIA_POSITION_DESCRIPTOR,
 	ROTATE_ANTICLOCKWISE_DESCRIPTOR,
 	ROTATE_CLOCKWISE_DESCRIPTOR,
 } from '@app/features/messaging/components/modals/media_modal/shared';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {ArrowBendUpLeftIcon, ArrowBendUpRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {
 	MenuBottomSheet,
 	type MenuGroupType,
@@ -30,12 +35,11 @@ import {
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {useLingui} from '@lingui/react/macro';
 import {
-	ArrowBendUpLeftIcon,
-	ArrowBendUpRightIcon,
 	ArrowClockwiseIcon,
 	ArrowCounterClockwiseIcon,
 	ArrowSquareOutIcon,
 	ArrowsInSimpleIcon,
+	ChatCircleIcon,
 	CopySimpleIcon,
 	DotsThreeIcon,
 	DownloadSimpleIcon,
@@ -46,31 +50,9 @@ import {
 	XIcon,
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
-import {type FC, type ReactNode, type Ref, useCallback, useMemo, useState} from 'react';
+import {type FC, type ReactNode, useCallback, useMemo, useState} from 'react';
 
-interface MobileMediaActionsProps {
-	isFavorited?: boolean;
-	onFavorite?: () => void;
-	onDownload?: () => void;
-	onOpenInBrowser?: () => void;
-	onCopyLink?: () => void;
-	onCopyMedia?: () => void;
-	onReset?: () => void;
-	onZoomIn?: () => void;
-	onZoomOut?: () => void;
-	onRotateCW?: () => void;
-	onRotateCCW?: () => void;
-	onReply?: () => void;
-	onForward?: () => void;
-	onClose: () => void;
-	canReset?: boolean;
-	canZoomIn?: boolean;
-	canZoomOut?: boolean;
-	enableZoomControls?: boolean;
-	onPointerEnter?: () => void;
-	onPointerLeave?: () => void;
-	rootRef?: Ref<HTMLDivElement>;
-}
+type MobileMediaActionsProps = Omit<MediaOverlayActionsProps, 'onDeleteAttachment'>;
 
 const iconSize = remFromPx(20);
 
@@ -93,6 +75,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 		onRotateCCW,
 		onReply,
 		onForward,
+		onViewPost,
 		onClose,
 		canReset = false,
 		canZoomIn = true,
@@ -101,6 +84,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 		onPointerEnter,
 		onPointerLeave,
 		rootRef,
+		closeButtonRef,
 	}: MobileMediaActionsProps) => {
 		const {i18n} = useLingui();
 		const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -300,6 +284,22 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 					},
 					{
 						items: [
+							...(onViewPost
+								? [
+										createItem({
+											id: 'media-view-post',
+											icon: (
+												<ChatCircleIcon
+													size={iconSize}
+													weight="bold"
+													data-flx="messaging.media-modal.mobile-media-actions.groups.chat-circle-icon"
+												/>
+											),
+											label: i18n._(OPEN_POST_DESCRIPTOR),
+											action: onViewPost,
+										}),
+									]
+								: []),
 							...(onReply
 								? [
 										createItem({
@@ -350,6 +350,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 				onForward,
 				onOpenInBrowser,
 				onReply,
+				onViewPost,
 				onReset,
 				onRotateCCW,
 				onRotateCW,
@@ -370,6 +371,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 					data-flx="messaging.media-modal.mobile-media-actions.action-bar"
 				>
 					<ControlButton
+						ref={closeButtonRef}
 						icon={
 							<XIcon
 								size={remFromPx(22)}

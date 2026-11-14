@@ -103,7 +103,6 @@ export type TimeWindowKey = (typeof ALL_PRESETS)[number]['key'];
 export type TimeWindowPreset = (typeof ALL_PRESETS)[number];
 
 const PRESET_MAP = new Map<TimeWindowKey, TimeWindowPreset>(ALL_PRESETS.map((preset) => [preset.key, preset]));
-export const TIME_WINDOW_PRESETS: ReadonlyArray<TimeWindowPreset> = BASE_PRESETS;
 export const DEFAULT_TIME_WINDOW_KEY: TimeWindowKey = '24h';
 const EXPIRY_MATCH_TOLERANCE_MS = 60 * 1000;
 const TEN_SECONDS = 10;
@@ -139,12 +138,11 @@ export const TIME_WINDOW_FOR_LABEL_MESSAGES: Record<Exclude<TimeWindowKey, 'neve
 	'3d': {...FOR_THREE_DAYS_PRESET_LABEL_DESCRIPTOR, values: {threeDays: THREE_DAYS}},
 };
 export const minutesToMs = (minutes: number | null): number | null => (minutes == null ? null : minutes * 60 * 1000);
-export const getTimeWindowPreset = (key: TimeWindowKey): TimeWindowPreset | undefined => PRESET_MAP.get(key);
 const getTimeWindowKeys = (includeDeveloperOptions: boolean): ReadonlyArray<TimeWindowKey> => {
 	if (!includeDeveloperOptions) return BASE_TIME_WINDOW_KEYS;
 	return [...DEVELOPER_TIME_WINDOW_KEYS, ...BASE_TIME_WINDOW_KEYS];
 };
-export const createTimeWindowOptionList = (keys: ReadonlyArray<TimeWindowKey>): ReadonlyArray<TimeWindowPreset> => {
+const createTimeWindowOptionList = (keys: ReadonlyArray<TimeWindowKey>): ReadonlyArray<TimeWindowPreset> => {
 	const list = keys.map((key) => {
 		const preset = PRESET_MAP.get(key);
 		if (!preset) {

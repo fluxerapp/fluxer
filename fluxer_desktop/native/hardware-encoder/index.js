@@ -39,10 +39,6 @@ try {
 	loadError = error instanceof Error ? error : new Error(String(error));
 }
 
-function isSupported() {
-	return Boolean(binding);
-}
-
 function unavailableHardwareEncoderCapability(reason, detail) {
 	return {
 		available: false,
@@ -57,7 +53,7 @@ function unavailableHardwareEncoderCapability(reason, detail) {
 	};
 }
 
-function getHardwareEncoderCapability() {
+function getHardwareEncoderCapabilities() {
 	if (!binding) {
 		return unavailableHardwareEncoderCapability(
 			'native_binding_unavailable',
@@ -73,12 +69,6 @@ function getHardwareEncoderCapability() {
 	return binding.getHardwareEncoderCapability();
 }
 
-function getHardwareEncoderCapabilities() {
-	return getHardwareEncoderCapability();
-}
-
 module.exports = {
-	isSupported,
-	getHardwareEncoderCapability,
 	getHardwareEncoderCapabilities,
 };

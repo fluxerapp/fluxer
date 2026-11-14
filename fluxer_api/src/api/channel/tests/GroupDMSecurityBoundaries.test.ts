@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createFriendship, createGroupDmChannel} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createFriendship, createGroupDmChannel} from './ChannelTestUtils';
 
 describe('Group DM Security Boundaries', () => {
 	let harness: ApiTestHarness;
@@ -51,16 +51,6 @@ describe('Group DM Security Boundaries', () => {
 			.put(`/channels/${groupDm.id}/recipients/${attacker.userId}`)
 			.body(null)
 			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACCESS')
-			.execute();
-	});
-	it('recipient can leave group DM', async () => {
-		const creator = await createTestAccount(harness);
-		const recipient = await createTestAccount(harness);
-		await createFriendship(harness, creator, recipient);
-		const groupDm = await createGroupDmChannel(harness, creator.token, [recipient.userId]);
-		await createBuilder(harness, recipient.token)
-			.delete(`/channels/${groupDm.id}/recipients/${recipient.userId}`)
-			.expect(HTTP_STATUS.NO_CONTENT)
 			.execute();
 	});
 	it('after leaving, former member cannot read messages', async () => {

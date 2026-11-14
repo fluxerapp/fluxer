@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::pagination::pager_with_missing;
+
+use crate::utils::timestamps::format_admin_timestamp;
 use crate::{
     api::types::AuditLogEntry,
     templates::pages::audit_logs_table::{
@@ -27,7 +30,7 @@ fn log_row(base_path: &str, log: &AuditLogEntry, index: usize) -> Markup {
         (table_row(html! {
             (table_cell(true, html! {
                 span class="text-sm whitespace-nowrap" {
-                    (log.created_at)
+                    (format_admin_timestamp(&log.created_at))
                 }
             }))
             (table_cell(false, badge(&format_action(action), action_badge_variant(action))))
@@ -66,9 +69,15 @@ pub fn audit_logs_for_target(
 ) -> Markup {
     let has_previous = current_page > 0;
     let offset = (current_page as u64) * (PAGE_SIZE as u64);
-    let has_next = offset + (entries.len() as u64) < total;
-    let total_pages = ((total as f64) / (PAGE_SIZE as f64)).ceil().max(1.0) as u64;
-    let all_logs_href = format!("{base_path}/audit-logs?target_id={target_id}");
+    let next_page = current_page
+        .checked_add(1)
+        .filter(|_| offset + (entries.len() as u64) < total);
+    let total_pages = total.div_ceil(u64::from(PAGE_SIZE)).max(1);
+    let page_number = u64::from(current_page) + 1;
+    let all_logs_href = format!(
+        "{base_path}/audit-logs?target_id={}&access=write",
+        urlencoding::encode(target_id)
+    );
 
     html! {
         div class="rounded-lg bg-white transition-all border border-neutral-200 p-6" {
@@ -88,7 +97,7 @@ pub fn audit_logs_for_target(
                     }
                 }
                 @if entries.is_empty() {
-                    (empty_state("No admin actions have been recorded against this entity."))
+                    (empty_state("No admin write actions have been recorded against this entity."))
                 } @else {
                     (table_container(html! {
                         (table(html! {
@@ -108,28 +117,8 @@ pub fn audit_logs_for_target(
                         }))
                     }))
                 }
-                @if has_previous || has_next {
-                    div class="flex items-center justify-center gap-2" {
-                        @if has_previous {
-                            a href={(tab_href_base) "&audit_logs_page=" (current_page - 1)}
-                                class="inline-flex items-center justify-center gap-2 font-medium \
-                                       rounded-lg bg-neutral-50 text-neutral-700 border \
-                                       border-neutral-300 px-3 py-1.5 text-sm" {
-                                "Previous"
-                            }
-                        }
-                        span class="text-sm text-neutral-500" {
-                            "Page " (current_page + 1) " of " (total_pages)
-                        }
-                        @if has_next {
-                            a href={(tab_href_base) "&audit_logs_page=" (current_page + 1)}
-                                class="inline-flex items-center justify-center gap-2 font-medium \
-                                       rounded-lg bg-neutral-50 text-neutral-700 border \
-                                       border-neutral-300 px-3 py-1.5 text-sm" {
-                                "Next"
-                            }
-                        }
-                    }
+                @if has_previous || next_page.is_some() {
+                    (pager_with_missing(has_previous.then(|| format!("{tab_href_base}&audit_logs_page={}", current_page - 1)), Some(format!("Page {page_number} of {total_pages}")), next_page.map(|page| format!("{tab_href_base}&audit_logs_page={page}")), true))
                 }
             }
         }

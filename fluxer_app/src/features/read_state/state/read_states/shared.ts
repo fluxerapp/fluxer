@@ -1,16 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import {compare as compareSnowflakes, extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-
-export const OLD_MESSAGE_AGE_THRESHOLD = 7 * MS_PER_DAY;
-export const RECENT_MESSAGE_THRESHOLD = 3 * MS_PER_DAY;
 export const ACK_BATCH_DELAY_MS = 3000;
-export const ACK_BATCH_SIZE = 100;
-export const ACK_RETRY_BASE_DELAY_MS = 5000;
-export const ACK_RETRY_MAX_DELAY_MS = 60000;
-
-export type Timer = NodeJS.Timeout;
 
 export interface GatewayReadState {
 	id: string;
@@ -25,11 +15,6 @@ export interface ReadStateAckRequestEntry {
 	message_id: string;
 	mention_count?: number;
 	manual?: boolean;
-}
-
-export interface ReadStateAckResponse {
-	read_states: Array<GatewayReadState>;
-	read_state_proto?: string;
 }
 
 export interface ChannelPayload {
@@ -53,13 +38,6 @@ export interface AppliedAck {
 	acked: boolean;
 	messageId: string | null;
 	hadMentions: boolean;
-}
-
-export interface PendingAck {
-	channelId: string;
-	messageId: string;
-	deadline: number;
-	attempt: number;
 }
 
 export interface ArchivedReadState {
@@ -98,9 +76,10 @@ export function normalizeCount(count: number | undefined | null): number {
 export function compareReadStateVersions(a?: string | null, b?: string | null): number {
 	const left = normalizeVersion(a);
 	const right = normalizeVersion(b);
-	if (left == null || right == null) return 0;
-	if (left.length !== right.length) return left.length < right.length ? -1 : 1;
-	return left === right ? 0 : left < right ? -1 : 1;
+	if (left == null || right == null) {
+		return 0;
+	}
+	return compareSnowflakes(left, right);
 }
 
 export function chunkEntries<T>(entries: Array<T>, size: number): Array<Array<T>> {

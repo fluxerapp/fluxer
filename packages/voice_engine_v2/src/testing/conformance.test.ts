@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {VoiceEngineV2HostPortImplementation} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2HostPortImplementation';
+import type {VoiceEngineV2HostPorts} from '@fluxer/voice_engine_v2/src/ports';
+import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
+import {VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
+import type {VoiceEngineV2ConformanceSubject} from '@fluxer/voice_engine_v2/src/testing/conformance';
+import {runVoiceEngineV2ConformanceSuite, waitForRuntime} from '@fluxer/voice_engine_v2/src/testing/conformance';
+import {FakeVoiceEngineV2Driver} from '@fluxer/voice_engine_v2/src/testing/FakeVoiceEngineV2Driver';
 import {describe, expect, it} from 'vitest';
-import {VoiceEngineV2HostPortImplementation} from '../implementations';
-import type {VoiceEngineV2HostPorts} from '../ports';
-import {createVoiceEngineV2MemoryEventLogSpillSink, VoiceEngineV2Runtime} from '../runtime';
-import type {VoiceEngineV2ConformanceSubject} from './conformance';
-import {runVoiceEngineV2ConformanceSuite, waitForRuntime} from './conformance';
-import {FakeVoiceEngineV2Driver} from './FakeVoiceEngineV2Driver';
-import {VoiceEngineV2TestImplementation} from './VoiceEngineV2TestImplementation';
 
 function createConformanceHostPorts(driver: FakeVoiceEngineV2Driver): VoiceEngineV2HostPorts {
 	return {
@@ -44,45 +44,9 @@ function createHostPortSubject(): VoiceEngineV2ConformanceSubject {
 	return {driver, implementation: new VoiceEngineV2HostPortImplementation(createConformanceHostPorts(driver))};
 }
 
-runVoiceEngineV2ConformanceSuite('test JS', () => {
-	const driver = new FakeVoiceEngineV2Driver();
-	return {driver, implementation: new VoiceEngineV2TestImplementation(driver)};
-});
-
 runVoiceEngineV2ConformanceSuite('host-port native', createHostPortSubject);
 
-describe('VoiceEngineV2 implementation equivalence', () => {
-	it('produces equivalent snapshots and driver calls for test and host-port implementations', async () => {
-		const testDriver = new FakeVoiceEngineV2Driver();
-		const hostPortDriver = new FakeVoiceEngineV2Driver();
-		const testRuntime = new VoiceEngineV2Runtime(new VoiceEngineV2TestImplementation(testDriver), {
-			eventLogSpillSink: createVoiceEngineV2MemoryEventLogSpillSink(),
-			verifyEventLogInvariantsOnDispatch: true,
-		});
-		const hostPortRuntime = new VoiceEngineV2Runtime(
-			new VoiceEngineV2HostPortImplementation(createConformanceHostPorts(hostPortDriver)),
-			{
-				eventLogSpillSink: createVoiceEngineV2MemoryEventLogSpillSink(),
-				verifyEventLogInvariantsOnDispatch: true,
-			},
-		);
-
-		for (const runtime of [testRuntime, hostPortRuntime]) {
-			runtime.dispatch({type: 'connection.connectRequested', options: {url: 'wss://voice', token: 'token'}});
-			await waitForRuntime();
-			runtime.dispatch({type: 'microphone.publishRequested', options: {deviceId: 'default'}});
-			runtime.dispatch({type: 'microphone.setEnabledRequested', enabled: false});
-			runtime.dispatch({
-				type: 'screen.publishRequested',
-				options: {captureId: 'capture-1', width: 1920, height: 1080, codec: 'h264'},
-			});
-			await waitForRuntime();
-		}
-
-		expect(hostPortRuntime.snapshot).toEqual(testRuntime.snapshot);
-		expect(hostPortDriver.calls).toEqual(testDriver.calls);
-	});
-
+describe('VoiceEngineV2HostPortImplementation', () => {
 	it('reports an unsupported-capability failure when the host port is absent', async () => {
 		const runtime = new VoiceEngineV2Runtime(new VoiceEngineV2HostPortImplementation({}), {
 			eventLogSpillSink: createVoiceEngineV2MemoryEventLogSpillSink(),

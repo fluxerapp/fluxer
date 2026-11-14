@@ -5,7 +5,7 @@ use crate::{
     api::types::GuildDetailInfo,
     config::AdminConfig,
     templates::components::{
-        form::{checkbox, csrf_input, form_actions, submit_button},
+        form::{Checkbox, csrf_input, form_actions, submit_button},
         page_container::card_with_header,
     },
 };
@@ -28,16 +28,25 @@ const DISABLED_OPERATIONS: &[(&str, i32)] = &[
     ("MEMBER_LIST_UPDATES", 1 << 6),
 ];
 
+fn low_verification_label(username_sign_in: bool) -> &'static str {
+    if username_sign_in {
+        "Low (claimed account)"
+    } else {
+        "Low (verified email)"
+    }
+}
+
 pub fn settings_tab(
     config: &AdminConfig,
     guild: &GuildDetailInfo,
     csrf_token: &str,
     admin_acls: &[String],
+    username_sign_in: bool,
 ) -> Markup {
     let can_edit = acl::has_permission(admin_acls, acl::GUILD_UPDATE_SETTINGS);
 
     if !can_edit {
-        return settings_tab_readonly(guild);
+        return settings_tab_readonly(guild, username_sign_in);
     }
 
     let base = &config.base_path;
@@ -52,13 +61,12 @@ pub fn settings_tab(
                             "guild-verification-level",
                             "verification_level",
                             "Verification Level",
-                            guild.verification_level.unwrap_or(0),
+                            guild.verification_level.unwrap_or(0).min(3),
                             &[
                                 (0, "None"),
-                                (1, "Low (verified email)"),
+                                (1, low_verification_label(username_sign_in)),
                                 (2, "Medium (5+ minutes)"),
                                 (3, "High (10+ minutes)"),
-                                (4, "Very High (verified phone)"),
                             ],
                         ))
                         (select_field(
@@ -92,25 +100,25 @@ pub fn settings_tab(
                             "Content Rating"
                         }
                         p class="text-sm text-neutral-500" {
-                            "Adult content drives the age-verification gate. Content warnings are an advisory shown before entering, with optional custom copy."
+                            "Adult content is hidden from accounts that cannot see mature content. Content warnings are an advisory shown before entering, with optional custom copy."
                         }
                         input type="hidden" name="nsfw_submitted" value="1";
                         input type="hidden" name="content_warning_submitted" value="1";
                         div class="flex flex-wrap gap-6" {
-                            (checkbox(
-                                "nsfw",
-                                "on",
-                                "Adult content (18+)",
-                                guild.nsfw.unwrap_or(false),
-                                true,
-                            ))
-                            (checkbox(
-                                "content_warning_level",
-                                "on",
-                                "Show a content warning",
-                                guild.content_warning_level == Some(1),
-                                true,
-                            ))
+                            (Checkbox {
+                                name: "nsfw",
+                                value: "on",
+                                label: "Adult content (18+)",
+                                checked: guild.nsfw.unwrap_or(false),
+                                enabled: true,
+                            }.render())
+                            (Checkbox {
+                                name: "content_warning_level",
+                                value: "on",
+                                label: "Show a content warning",
+                                checked: guild.content_warning_level == Some(1),
+                                enabled: true,
+                            }.render())
                         }
                         div class="space-y-2" {
                             label for="guild-content-warning-text"
@@ -144,13 +152,13 @@ pub fn settings_tab(
                     (csrf_input(csrf_token))
                     div class="space-y-3" {
                         @for &(name, value) in DISABLED_OPERATIONS {
-                            (checkbox(
-                                "disabled_operations[]",
-                                &value.to_string(),
-                                name,
-                                guild.disabled_operations.unwrap_or(0) & value == value,
-                                true,
-                            ))
+                            (Checkbox {
+                                name: "disabled_operations[]",
+                                value: &value.to_string(),
+                                label: name,
+                                checked: guild.disabled_operations.unwrap_or(0) & value == value,
+                                enabled: true,
+                            }.render())
                         }
                     }
                     div class="mt-6 border-t border-neutral-200 pt-6" {
@@ -167,10 +175,34 @@ pub fn settings_tab(
                     (csrf_input(csrf_token))
                     div class="space-y-4" {
                         div class="space-y-2" {
-                            (checkbox("fields[]", "icon", "Icon", false, true))
-                            (checkbox("fields[]", "banner", "Banner", false, true))
-                            (checkbox("fields[]", "splash", "Splash", false, true))
-                            (checkbox("fields[]", "embed_splash", "Embed Splash", false, true))
+                            (Checkbox {
+                                name: "fields[]",
+                                value: "icon",
+                                label: "Icon",
+                                checked: false,
+                                enabled: true,
+                            }.render())
+                            (Checkbox {
+                                name: "fields[]",
+                                value: "banner",
+                                label: "Banner",
+                                checked: false,
+                                enabled: true,
+                            }.render())
+                            (Checkbox {
+                                name: "fields[]",
+                                value: "splash",
+                                label: "Splash",
+                                checked: false,
+                                enabled: true,
+                            }.render())
+                            (Checkbox {
+                                name: "fields[]",
+                                value: "embed_splash",
+                                label: "Embed Splash",
+                                checked: false,
+                                enabled: true,
+                            }.render())
                         }
                         (form_actions(html! {
                             (submit_button("Clear Selected Fields"))
@@ -224,13 +256,12 @@ fn select_field(
     }
 }
 
-fn settings_tab_readonly(guild: &GuildDetailInfo) -> Markup {
-    let verification_label = match guild.verification_level.unwrap_or(0) {
+fn settings_tab_readonly(guild: &GuildDetailInfo, username_sign_in: bool) -> Markup {
+    let verification_label = match guild.verification_level.unwrap_or(0).min(3) {
         0 => "None",
-        1 => "Low (verified email)",
+        1 => low_verification_label(username_sign_in),
         2 => "Medium (5+ minutes)",
         3 => "High (10+ minutes)",
-        4 => "Very High (verified phone)",
         _ => "Unknown",
     };
     let mfa_label = match guild.mfa_level.unwrap_or(0) {

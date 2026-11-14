@@ -5,18 +5,17 @@ import {
 	getEmojiSpriteSheetLayout,
 	getSpriteSheetBackground,
 } from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
-import type {Channel} from '@app/features/channel/models/Channel';
-import * as EmojiPickerCommands from '@app/features/emoji/commands/EmojiPickerCommands';
+import EmojiPicker, {getEmojiUsageKey} from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import {checkEmojiAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
+import type {AvailabilityCheck} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
 import UnicodeEmojis, {EMOJI_SPRITES} from '@app/features/expressions/utils/UnicodeEmojis';
+import {loadImage} from '@app/features/messaging/utils/ImageCacheUtils';
 import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
 import {EmojiContextMenuItems} from '@app/features/ui/action_menu/items/EmojiContextMenuItems';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {isFirefoxBrowser} from '@app/features/ui/utils/NativeUtils';
-import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import React, {useEffect, useImperativeHandle, useMemo, useRef} from 'react';
 
@@ -25,9 +24,34 @@ type PickerEmojiImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
 	alt: string;
 };
 
+const PICKER_IMAGE_RETRY_LIMIT = 3;
+
 const PickerEmojiImage = ({src, alt, ...props}: PickerEmojiImageProps) => {
 	const imageRef = useRef<HTMLImageElement | null>(null);
 	const hasLoadedRef = useRef(false);
+	const retriesRef = useRef(0);
+	const cancelRetryRef = useRef<(() => void) | null>(null);
+	useEffect(() => {
+		retriesRef.current = 0;
+		return () => {
+			cancelRetryRef.current?.();
+			cancelRetryRef.current = null;
+		};
+	}, [src]);
+	const handleError = () => {
+		if (retriesRef.current >= PICKER_IMAGE_RETRY_LIMIT) {
+			return;
+		}
+		retriesRef.current += 1;
+		cancelRetryRef.current?.();
+		cancelRetryRef.current = loadImage(src, () => {
+			cancelRetryRef.current = null;
+			const image = imageRef.current;
+			if (image != null && image.getAttribute('src') === src) {
+				image.src = src;
+			}
+		});
+	};
 	const handleLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
 		const view = event.currentTarget?.ownerDocument?.defaultView ?? window;
 		view.requestAnimationFrame(() => {
@@ -47,6 +71,7 @@ const PickerEmojiImage = ({src, alt, ...props}: PickerEmojiImageProps) => {
 			alt={alt}
 			className={hasLoadedRef.current ? styles.emojiImage : clsx(styles.emojiImage, styles.emojiImageLoading)}
 			onLoad={hasLoadedRef.current ? undefined : handleLoad}
+			onError={hasLoadedRef.current ? undefined : handleError}
 		/>
 	);
 };
@@ -56,7 +81,7 @@ interface EmojiRendererProps {
 	handleHover: (emoji: FlatEmoji | null) => void;
 	handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 	skinTone: string;
-	channel: Channel | null;
+	getAvailability: (emoji: FlatEmoji) => AvailabilityCheck;
 	shouldAnimate: boolean;
 	isHighlighted?: boolean;
 	shouldScrollIntoView?: boolean;
@@ -69,7 +94,7 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 			handleHover,
 			handleSelect,
 			skinTone,
-			channel,
+			getAvailability,
 			shouldAnimate,
 			isHighlighted = false,
 			shouldScrollIntoView = false,
@@ -78,14 +103,13 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 		forwardedRef,
 	) => {
 		const emojiRef = useRef<HTMLButtonElement | null>(null);
-		const {i18n} = useLingui();
 		useImperativeHandle(forwardedRef, () => emojiRef.current!);
 		useEffect(() => {
 			if (shouldScrollIntoView && emojiRef.current) {
 				emojiRef.current.scrollIntoView({block: 'nearest', inline: 'nearest'});
 			}
 		}, [shouldScrollIntoView]);
-		const availability = checkEmojiAvailability(i18n, emoji, channel);
+		const availability = getAvailability(emoji);
 		const customEmojiUrl = useMemo(
 			() =>
 				emoji.id
@@ -108,7 +132,7 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 			if (e.altKey) {
 				e.preventDefault();
 				e.stopPropagation();
-				EmojiPickerCommands.toggleFavorite(emoji);
+				EmojiPicker.toggleFavorite(getEmojiUsageKey(emoji));
 				return;
 			}
 			handleSelect(emoji, e.shiftKey);
@@ -142,6 +166,7 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 						onClick={handleClick}
 						onContextMenu={handleContextMenu}
 						className={className}
+						aria-label={emoji.name}
 						aria-disabled={isDisabled}
 						aria-selected={isHighlighted}
 						role="option"

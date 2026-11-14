@@ -53,6 +53,10 @@
 	flex-direction: column;
 }
 
+.loginHeader {
+	margin-bottom: 1.25rem;
+}
+
 .entityHeader {
 	display: flex;
 	flex-direction: column;
@@ -82,12 +86,6 @@
 .entityTitle {
 	font-weight: 700;
 	font-size: 1.25rem;
-	color: var(--text-primary);
-}
-
-.verifiedIcon {
-	height: 1.5rem;
-	width: 1.5rem;
 	color: var(--text-primary);
 }
 
@@ -163,7 +161,7 @@ img.entityIcon {
 .themeIcon {
 	height: 2.5rem;
 	width: 2.5rem;
-	color: white;
+	color: var(--brand-primary-fill);
 }
 
 .form {
@@ -185,23 +183,9 @@ img.entityIcon {
 	text-align: center;
 }
 
-.loginForm {
-	margin-top: 2rem;
-	display: flex;
-	flex-direction: column;
-	gap: 1.5rem;
-}
-
 .bottomLink {
 	margin-top: 1rem;
-	text-align: left;
-}
-
-.bottomLinks {
-	margin-top: 1.25rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
+	text-align: start;
 }
 
 .bottomLinkText {
@@ -220,45 +204,6 @@ img.entityIcon {
 
 .bottomLinkAnchor:hover {
 	color: var(--text-link);
-	text-decoration: underline;
-}
-
-.divider {
-	margin-top: 1.5rem;
-	margin-bottom: 1.5rem;
-	display: flex;
-	align-items: center;
-	gap: 1rem;
-}
-
-.dividerLine {
-	flex: 1 1 0%;
-	border-top: 0.0625rem solid var(--background-modifier-accent);
-}
-
-.dividerText {
-	font-size: 0.875rem;
-	color: var(--text-tertiary);
-}
-
-.forgotPasswordLink {
-	text-align: left;
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-}
-
-.forgotPasswordLinkText {
-	font-size: 0.875rem;
-	color: var(--text-tertiary);
-	transition-property: color;
-	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-	transition-duration: 150ms;
-	cursor: pointer;
-}
-
-.forgotPasswordLinkText:hover {
-	color: var(--text-primary);
 	text-decoration: underline;
 }
 
@@ -288,20 +233,20 @@ img.entityIcon {
 	margin-top: 0.25rem;
 	display: block;
 	font-size: 0.75rem;
-	color: var(--status-danger);
+	color: color-mix(in srgb, var(--status-danger) 78%, var(--text-primary) 22%);
 }
 
-.consentRow {
-	display: flex;
-	align-items: flex-start;
-	gap: 0.5rem;
-}
-
-.consentLabel {
-	padding-top: 0.125rem;
+.legalNotice {
+	margin: 0;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
 	color: var(--text-primary);
+	overflow-wrap: anywhere;
+}
+
+.legalNotice .policyLink {
+	text-decoration: underline;
+	text-underline-offset: 0.125rem;
 }
 
 .policyLink {
@@ -314,10 +259,6 @@ img.entityIcon {
 
 .policyLink:hover {
 	text-decoration: underline;
-}
-
-.submitSpacer {
-	height: 0.25rem;
 }
 
 .disabledContainer {
@@ -391,16 +332,10 @@ img.entityIcon {
 	color: var(--text-tertiary);
 }
 
-.secondaryInlineAction {
-	padding: 0;
-	background: none;
-	border: none;
-	text-align: left;
-	font-size: 0.875rem;
-	color: var(--text-link);
-	cursor: pointer;
-}
-
-.secondaryInlineAction:hover {
-	text-decoration: underline;
+.consentLine {
+	margin: 0;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-tertiary);
+	text-align: center;
 }

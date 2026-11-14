@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {HTTPHeader} from './HTTPConstants';
+import {HTTPHeader} from '@/server/HTTPConstants';
 
 const PERMISSIONS_POLICY =
 	'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()';

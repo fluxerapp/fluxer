@@ -9,7 +9,7 @@ services:
     init: true
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
-      npm_config_store_dir: /home/vscode/.local/share/pnpm/store
+      pnpm_config_store_dir: /home/vscode/.local/share/pnpm/store
       FLUXER_PUBLIC_PORT: "${FLUXER_DEV_PROXY_PORT:-8088}"
       FLUXER_PUBLIC_URL: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}"
       FLUXER_API_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/api"
@@ -23,13 +23,11 @@ services:
       FLUXER_S3_PUBLIC_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}"
       FLUXER_LIVEKIT_URL: "ws://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/livekit"
       FLUXER_LIVEKIT_INTERNAL_URL: "http://livekit:7880"
-      FLUXER_LIVEKIT_WEBHOOK_URL: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/api/webhooks/livekit"
       FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/media"
       FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/media"
       FLUXER_GATEWAY_STATIC_CDN_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}"
       FLUXER_ADMIN_OAUTH_REDIRECT_URI: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/admin/oauth2_callback"
       FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: "http://localhost,http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}"
-      PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/api"
     volumes:
       - ..:/workspaces/fluxer:cached
       - type: volume
@@ -88,11 +86,6 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: package-hono-types-node-modules
-        target: /workspaces/fluxer/packages/hono_types/node_modules
-        volume:
-          nocopy: true
-      - type: volume
         source: package-i18n-node-modules
         target: /workspaces/fluxer/packages/i18n/node_modules
         volume:
@@ -115,6 +108,11 @@ services:
       - type: volume
         source: package-logger-node-modules
         target: /workspaces/fluxer/packages/logger/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: package-number-utils-node-modules
+        target: /workspaces/fluxer/packages/number_utils/node_modules
         volume:
           nocopy: true
       - type: volume
@@ -168,18 +166,8 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: fluxer-api-initialization-node-modules
-        target: /workspaces/fluxer/fluxer_api/pkgs/initialization/node_modules
-        volume:
-          nocopy: true
-      - type: volume
         source: fluxer-api-kv-client-node-modules
         target: /workspaces/fluxer/fluxer_api/pkgs/kv_client/node_modules
-        volume:
-          nocopy: true
-      - type: volume
-        source: fluxer-api-locale-node-modules
-        target: /workspaces/fluxer/fluxer_api/pkgs/locale/node_modules
         volume:
           nocopy: true
       - type: volume
@@ -203,11 +191,6 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: fluxer-api-sms-node-modules
-        target: /workspaces/fluxer/fluxer_api/pkgs/sms/node_modules
-        volume:
-          nocopy: true
-      - type: volume
         source: fluxer-api-virus-scan-node-modules
         target: /workspaces/fluxer/fluxer_api/pkgs/virus_scan/node_modules
         volume:
@@ -225,11 +208,6 @@ services:
       - type: volume
         source: fluxer-app-livekit-client-node-modules
         target: /workspaces/fluxer/fluxer_app/pkgs/livekit-client/node_modules
-        volume:
-          nocopy: true
-      - type: volume
-        source: fluxer-app-number-utils-node-modules
-        target: /workspaces/fluxer/fluxer_app/pkgs/number_utils/node_modules
         volume:
           nocopy: true
       - type: volume
@@ -256,7 +234,6 @@ services:
       - "127.0.0.1:${FLUXER_DEV_GATEWAY_PORT:-8771}:8771"
       - "127.0.0.1:${FLUXER_DEV_MEDIA_PROXY_PORT:-8082}:8082"
       - "127.0.0.1:${FLUXER_DEV_APP_PROXY_PORT:-8773}:8773"
-      - "127.0.0.1:${FLUXER_DEV_MARKETING_PORT:-3010}:3010"
       - "127.0.0.1:${FLUXER_DEV_ADMIN_PORT:-3020}:3020"
       - "127.0.0.1:${FLUXER_DEV_SEAWEEDFS_S3_PORT:-3900}:8333"
     depends_on:
@@ -293,13 +270,13 @@ services:
       start_period: 5s
 
   valkey:
-    image: valkey/valkey:8.1.7-alpine
+    image: valkey/valkey:9.1.2-alpine
     command: ["valkey-server", "--save", "", "--appendonly", "no"]
     ports:
       - "127.0.0.1:${FLUXER_DEV_VALKEY_PORT:-6379}:6379"
 
   nats:
-    image: nats:2.14.2-alpine
+    image: nats:2.14.8-alpine
     command: ["-js", "-sd", "/data", "-m", "8222"]
     volumes:
       - nats-data:/data
@@ -322,9 +299,10 @@ services:
       - "127.0.0.1:${FLUXER_DEV_LIVEKIT_UDP_PORT:-7882}:${FLUXER_DEV_LIVEKIT_UDP_PORT:-7882}/udp"
 
   meilisearch:
-    image: getmeili/meilisearch:v1.12
+    image: getmeili/meilisearch:v1.53
     environment:
       MEILI_NO_ANALYTICS: "true"
+      MEILI_UPGRADE_DB: "true"
       MEILI_MASTER_KEY: fluxer-dev-meilisearch
     volumes:
       - meilisearch-data:/meili_data
@@ -338,7 +316,7 @@ services:
       start_period: 5s
 
   mailpit:
-    image: axllent/mailpit:v1.30
+    image: axllent/mailpit:v1.31
     environment:
       MP_DATABASE: /data/mailpit.db
       MP_MAX_MESSAGES: 5000
@@ -361,12 +339,12 @@ volumes:
   package-errors-node-modules:
   package-geo-utils-node-modules:
   package-hono-node-modules:
-  package-hono-types-node-modules:
   package-i18n-node-modules:
   package-instance-bootstrap-node-modules:
   package-ip-utils-node-modules:
   package-limits-node-modules:
   package-logger-node-modules:
+  package-number-utils-node-modules:
   package-openapi-node-modules:
   package-schema-node-modules:
   package-snowflake-node-modules:
@@ -377,19 +355,15 @@ volumes:
   fluxer-api-email-node-modules:
   fluxer-api-geoip-node-modules:
   fluxer-api-http-client-node-modules:
-  fluxer-api-initialization-node-modules:
   fluxer-api-kv-client-node-modules:
-  fluxer-api-locale-node-modules:
   fluxer-api-media-proxy-utils-node-modules:
   fluxer-api-mime-utils-node-modules:
   fluxer-api-nats-node-modules:
   fluxer-api-rate-limit-node-modules:
-  fluxer-api-sms-node-modules:
   fluxer-api-virus-scan-node-modules:
   fluxer-api-worker-node-modules:
   fluxer-app-list-utils-node-modules:
   fluxer-app-livekit-client-node-modules:
-  fluxer-app-number-utils-node-modules:
   package-voice-engine-v2-node-modules:
   fluxer-api-postgres-node-modules:
   cargo-registry:

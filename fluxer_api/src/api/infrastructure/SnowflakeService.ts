@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {Logger} from '@app/api/Logger';
+import {requireIntegerInRange} from '@app/api/utils/IntegerOptions';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {StringCodec} from 'nats';
-import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
-import type {ISnowflakeService} from './ISnowflakeService';
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
 const DEFAULT_REMOTE_SUBJECT = 'svc.snowflakes';
 const DEFAULT_REMOTE_BATCH_SIZE = 128;
@@ -12,6 +17,16 @@ const DEFAULT_REMOTE_LOW_WATERMARK = 32;
 const DEFAULT_REMOTE_TIMEOUT_MS = 6000;
 const DEFAULT_REMOTE_MAX_BUFFER_AGE_MS = 5000;
 const MAX_REMOTE_BATCH_SIZE = 512;
+const MAX_PENDING_GENERATIONS = 1024;
+const MAX_REMOTE_RESPONSE_BYTES = 16 * 1024;
+const MAX_REMOTE_ID = 0xffffffffffffffffn;
+
+class SnowflakeServiceStoppedError extends Error {
+	constructor() {
+		super('SnowflakeService is shut down');
+		this.name = 'SnowflakeServiceStoppedError';
+	}
+}
 
 interface SnowflakeServiceOptions {
 	connectionManager: INatsConnectionManager;
@@ -41,11 +56,15 @@ function isRemoteSnowflakeResponse(value: unknown): value is RemoteSnowflakeResp
 	);
 }
 
-function resolveIntegerOption(value: number | undefined, fallback: number, min: number, max: number): number {
-	if (typeof value !== 'number' || !Number.isInteger(value)) {
-		return fallback;
+function parseRemoteSnowflakeId(value: string): bigint {
+	if (value.length === 0 || value.length > 20 || /\D/.test(value)) {
+		throw new Error('Snowflake ID must be a canonical unsigned 64-bit integer');
 	}
-	return Math.min(max, Math.max(min, value));
+	const id = BigInt(value);
+	if (id > MAX_REMOTE_ID || id.toString() !== value) {
+		throw new Error('Snowflake ID must be a canonical unsigned 64-bit integer');
+	}
+	return id;
 }
 
 export class SnowflakeService implements ISnowflakeService {
@@ -55,111 +74,174 @@ export class SnowflakeService implements ISnowflakeService {
 	private readonly lowWatermark: number;
 	private readonly requestTimeoutMs: number;
 	private readonly maxBufferAgeMs: number;
-	private readonly codec = StringCodec();
-	private initialized = false;
-	private shutdownRequested = false;
+	private phase: 'idle' | 'starting' | 'ready' | 'stopping' | 'stopped' = 'idle';
 	private buffer: Array<bigint> = [];
 	private bufferOffset = 0;
 	private bufferFetchedAtMs: number | null = null;
 	private initializationPromise: Promise<void> | null = null;
 	private refillPromise: Promise<void> | null = null;
+	private shutdownPromise: Promise<void> | null = null;
+	private pendingGenerations = 0;
+	private resolveGenerationsDrained: (() => void) | null = null;
 
-	constructor(options: SnowflakeServiceOptions) {
-		this.connectionManager = options.connectionManager;
-		this.subject = options.subject ?? DEFAULT_REMOTE_SUBJECT;
-		this.batchSize = resolveIntegerOption(options.batchSize, DEFAULT_REMOTE_BATCH_SIZE, 1, MAX_REMOTE_BATCH_SIZE);
-		this.lowWatermark = Math.min(
-			resolveIntegerOption(options.lowWatermark, DEFAULT_REMOTE_LOW_WATERMARK, 0, MAX_REMOTE_BATCH_SIZE),
-			Math.max(0, this.batchSize - 1),
+	constructor({
+		connectionManager,
+		subject = DEFAULT_REMOTE_SUBJECT,
+		batchSize = DEFAULT_REMOTE_BATCH_SIZE,
+		lowWatermark = Math.min(DEFAULT_REMOTE_LOW_WATERMARK, batchSize - 1),
+		requestTimeoutMs = DEFAULT_REMOTE_TIMEOUT_MS,
+		maxBufferAgeMs = DEFAULT_REMOTE_MAX_BUFFER_AGE_MS,
+	}: SnowflakeServiceOptions) {
+		this.connectionManager = connectionManager;
+		this.subject = subject;
+		this.batchSize = requireIntegerInRange('FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE', batchSize, 1, MAX_REMOTE_BATCH_SIZE);
+		this.lowWatermark = requireIntegerInRange(
+			'FLUXER_SNOWFLAKE_SERVICE_LOW_WATERMARK',
+			lowWatermark,
+			0,
+			this.batchSize - 1,
 		);
-		this.requestTimeoutMs = resolveIntegerOption(options.requestTimeoutMs, DEFAULT_REMOTE_TIMEOUT_MS, 1, 60000);
-		this.maxBufferAgeMs = resolveIntegerOption(options.maxBufferAgeMs, DEFAULT_REMOTE_MAX_BUFFER_AGE_MS, 1, 60000);
+		this.requestTimeoutMs = requireIntegerInRange(
+			'FLUXER_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS',
+			requestTimeoutMs,
+			1,
+			60_000,
+		);
+		this.maxBufferAgeMs = requireIntegerInRange(
+			'FLUXER_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS',
+			maxBufferAgeMs,
+			1,
+			60_000,
+		);
 	}
 
 	async initialize(): Promise<void> {
-		if (this.shutdownRequested) {
-			return;
-		}
-		if (this.initialized) {
-			return;
-		}
+		this.assertActive();
+		if (this.phase === 'ready') return;
 		if (!this.initializationPromise) {
-			this.initializationPromise = (async () => {
-				await this.ensureConnected();
-				await this.refillBuffer();
-				this.initialized = true;
-			})().finally(() => {
+			this.phase = 'starting';
+			this.initializationPromise = this.start().finally(() => {
 				this.initializationPromise = null;
 			});
 		}
 		await this.initializationPromise;
 	}
 
-	async reinitialize(): Promise<void> {
-		this.shutdownRequested = false;
-		this.initialized = false;
-		this.buffer = [];
-		this.bufferOffset = 0;
-		this.bufferFetchedAtMs = null;
-		this.initializationPromise = null;
-		await this.initialize();
+	private async start(): Promise<void> {
+		try {
+			await this.refillBuffer();
+			this.assertActive();
+			this.phase = 'ready';
+		} catch (error) {
+			if (this.phase === 'starting') this.phase = 'idle';
+			throw error;
+		}
 	}
 
-	async shutdown(): Promise<void> {
-		this.shutdownRequested = true;
-		this.initialized = false;
-		this.buffer = [];
-		this.bufferOffset = 0;
-		this.bufferFetchedAtMs = null;
-		const refillPromise = this.refillPromise;
-		this.refillPromise = null;
-		if (refillPromise) {
-			await refillPromise.catch(() => undefined);
-		}
-		await this.connectionManager.drain();
+	shutdown(): Promise<void> {
+		if (this.shutdownPromise) return this.shutdownPromise;
+		this.phase = 'stopping';
+		this.clearBuffer();
+		this.shutdownPromise = this.close();
+		return this.shutdownPromise;
 	}
 
-	async generate(): Promise<bigint> {
-		await this.ensureInitialized();
-		this.discardExpiredBuffer();
-		const bufferedId = this.takeBufferedId();
-		if (bufferedId != null) {
-			this.scheduleRefillIfNeeded();
-			return bufferedId;
+	private async close(): Promise<void> {
+		try {
+			await Promise.allSettled([this.initializationPromise, this.refillPromise]);
+			if (this.pendingGenerations > 0) {
+				await new Promise<void>((resolve) => {
+					this.resolveGenerationsDrained = resolve;
+				});
+			}
+			await this.connectionManager.drain();
+		} finally {
+			this.phase = 'stopped';
+			this.clearBuffer();
 		}
-		await this.refillBuffer();
-		const refilledId = this.takeBufferedId();
-		if (refilledId == null) {
-			throw new Error('Snowflake service returned no IDs');
-		}
-		this.scheduleRefillIfNeeded();
-		return refilledId;
 	}
 
-	async generateForChannel(channelId: string | bigint): Promise<bigint> {
-		await this.ensureInitialized();
-		const routingKey = `channel:${channelId.toString()}`;
-		const ids = await this.requestBatch(1, routingKey);
-		const id = ids[0];
-		if (id == null) {
-			throw new Error('Snowflake service returned no IDs');
-		}
-		return id;
+	generate(): Promise<bigint> {
+		return this.withGeneration(async (deadline) => {
+			await this.ensureInitialized(deadline);
+			for (;;) {
+				this.assertActive();
+				this.remainingTime(deadline);
+				this.discardExpiredBuffer();
+				const id = this.takeBufferedId();
+				if (id !== null) {
+					this.scheduleRefillIfNeeded();
+					return id;
+				}
+				await this.waitFor(this.refillBuffer(), deadline);
+			}
+		});
 	}
 
-	private async ensureInitialized(): Promise<void> {
-		if (this.shutdownRequested) {
-			throw new Error('SnowflakeService is shut down');
+	generateForChannel(channelId: string | bigint): Promise<bigint> {
+		return this.withGeneration(async (deadline) => {
+			const routingKey = `channel:${parseRemoteSnowflakeId(channelId.toString())}`;
+			await this.ensureInitialized(deadline);
+			const ids = await this.requestBatch(1, routingKey);
+			return ids[0]!;
+		});
+	}
+
+	private async withGeneration(operation: (deadline: number) => Promise<bigint>): Promise<bigint> {
+		this.assertActive();
+		if (this.pendingGenerations >= MAX_PENDING_GENERATIONS) {
+			Logger.warn(
+				{pendingGenerations: this.pendingGenerations, limit: MAX_PENDING_GENERATIONS},
+				'Snowflake generation capacity exceeded',
+			);
+			throw new ServiceUnavailableError({headers: {'Retry-After': '1'}});
 		}
-		if (!this.initialized) {
-			await this.initialize();
+		this.pendingGenerations++;
+		try {
+			const id = await operation(performance.now() + this.requestTimeoutMs);
+			this.assertActive();
+			return id;
+		} finally {
+			this.pendingGenerations--;
+			if (this.pendingGenerations === 0) {
+				this.resolveGenerationsDrained?.();
+				this.resolveGenerationsDrained = null;
+			}
 		}
-		if (!this.initialized) {
-			throw new Error('SnowflakeService not initialized');
+	}
+
+	private assertActive(): void {
+		if (this.phase === 'stopping' || this.phase === 'stopped') throw new SnowflakeServiceStoppedError();
+	}
+
+	private remainingTime(deadline: number): number {
+		const remaining = deadline - performance.now();
+		if (remaining <= 0) throw new Error('Snowflake generation timed out');
+		return remaining;
+	}
+
+	private async waitFor(task: Promise<void>, deadline: number): Promise<void> {
+		let timer: NodeJS.Timeout | undefined;
+		const timeout = new Promise<never>((_, reject) => {
+			timer = setTimeout(() => reject(new Error('Snowflake generation timed out')), this.remainingTime(deadline));
+			timer.unref();
+		});
+		try {
+			await Promise.race([task, timeout]);
+		} finally {
+			clearTimeout(timer);
 		}
+	}
+
+	private async ensureInitialized(deadline: number): Promise<void> {
+		this.assertActive();
+		if (this.phase !== 'ready') await this.waitFor(this.initialize(), deadline);
+		this.assertActive();
+		assert(this.phase === 'ready', 'Snowflake initialization completed without becoming ready');
 	}
 
 	private async refillBuffer(): Promise<void> {
+		this.assertActive();
 		if (this.refillPromise) {
 			await this.refillPromise;
 			return;
@@ -167,9 +249,7 @@ export class SnowflakeService implements ISnowflakeService {
 		this.refillPromise = (async () => {
 			await this.ensureConnected();
 			const ids = await this.requestBatch(this.batchSize);
-			if (ids.length === 0) {
-				throw new Error('Snowflake service returned an empty batch');
-			}
+			this.assertActive();
 			this.discardExpiredBuffer();
 			this.compactBuffer();
 			if (this.buffer.length === 0) {
@@ -183,6 +263,8 @@ export class SnowflakeService implements ISnowflakeService {
 	}
 
 	private async requestBatch(count: number, routingKey?: string): Promise<Array<bigint>> {
+		this.assertActive();
+		assert(Number.isInteger(count) && count > 0 && count <= MAX_REMOTE_BATCH_SIZE, 'Invalid snowflake batch size');
 		const connection = this.connectionManager.getConnection();
 		const request: RemoteSnowflakeRequest = {
 			op: 'GenerateBatch',
@@ -191,40 +273,53 @@ export class SnowflakeService implements ISnowflakeService {
 		if (routingKey) {
 			request.routing_key = routingKey;
 		}
-		const responseMessage = await connection.request(this.subject, this.codec.encode(JSON.stringify(request)), {
+		const responseMessage = await connection.request(this.subject, textEncoder.encode(JSON.stringify(request)), {
 			timeout: this.requestTimeoutMs,
 		});
-		const response = parseJsonWithGuard(this.codec.decode(responseMessage.data), isRemoteSnowflakeResponse);
+		this.assertActive();
+		if (responseMessage.data.byteLength > MAX_REMOTE_RESPONSE_BYTES) {
+			throw new Error('Snowflake service response exceeds the byte limit');
+		}
+		const response = parseJsonWithGuard(textDecoder.decode(responseMessage.data), isRemoteSnowflakeResponse);
 		if (!response) {
 			throw new Error('Snowflake service returned an invalid response');
 		}
-		if (response.error) {
+		if (response.error !== undefined) {
 			throw new Error(`Snowflake service error: ${response.error}`);
 		}
-		if (!Array.isArray(response.ids)) {
-			throw new Error('Snowflake service returned an invalid response');
+		if (!response.ids || response.ids.length !== count) {
+			throw new Error('Snowflake service returned an incorrect batch size');
 		}
-		return response.ids.map((id) => BigInt(id));
+		let previous = -1n;
+		return response.ids.map((value) => {
+			const id = parseRemoteSnowflakeId(value);
+			if (id <= previous) throw new Error('Snowflake service returned duplicate or unordered IDs');
+			previous = id;
+			return id;
+		});
 	}
 
 	private async ensureConnected(): Promise<void> {
+		this.assertActive();
 		if (this.connectionManager.isClosed()) {
 			await this.connectionManager.connect();
 		}
+		this.assertActive();
+	}
+
+	private clearBuffer(): void {
+		this.buffer = [];
+		this.bufferOffset = 0;
+		this.bufferFetchedAtMs = null;
 	}
 
 	private takeBufferedId(): bigint | null {
 		if (this.bufferOffset >= this.buffer.length) {
-			this.buffer = [];
-			this.bufferOffset = 0;
-			this.bufferFetchedAtMs = null;
+			this.clearBuffer();
 			return null;
 		}
 		const id = this.buffer[this.bufferOffset];
 		this.bufferOffset += 1;
-		if (this.bufferOffset > 1024) {
-			this.compactBuffer();
-		}
 		return id;
 	}
 
@@ -250,16 +345,15 @@ export class SnowflakeService implements ISnowflakeService {
 		if (Date.now() - this.bufferFetchedAtMs <= this.maxBufferAgeMs) {
 			return;
 		}
-		this.buffer = [];
-		this.bufferOffset = 0;
-		this.bufferFetchedAtMs = null;
+		this.clearBuffer();
 	}
 
 	private scheduleRefillIfNeeded(): void {
-		if (this.shutdownRequested || this.availableIds() > this.lowWatermark || this.refillPromise) {
+		if (this.phase !== 'ready' || this.availableIds() > this.lowWatermark || this.refillPromise) {
 			return;
 		}
 		void this.refillBuffer().catch((error) => {
+			if (error instanceof SnowflakeServiceStoppedError) return;
 			Logger.error({error}, 'Failed to refill snowflake buffer');
 		});
 	}

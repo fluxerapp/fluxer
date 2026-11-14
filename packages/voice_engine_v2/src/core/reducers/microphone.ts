@@ -2,27 +2,27 @@
 
 import assert from 'node:assert/strict';
 import {
-	getVoiceEngineV2MicrophoneOperationFailureAction,
-	type VoiceEngineV2MicrophoneOperationFailureAction,
-} from '../../policies/microphoneFailureAction';
-import type {VoiceEngineV2Event} from '../../protocol/events';
-import type {
-	VoiceEngineV2AudioControls,
-	VoiceEngineV2Error,
-	VoiceEngineV2MicrophoneOptions,
-	VoiceEngineV2OperationId,
-	VoiceEngineV2PermissionResult,
-} from '../../protocol/types';
-import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '../state';
-import {
 	allocateOperation,
 	beginUnpublish,
 	failUnpublish,
 	isConnected,
 	markOperation,
 	unsupportedCapability,
-} from './_helpers';
-import {applyMediaFailure, completeUnpublish} from './_media';
+} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import {applyMediaFailure, completeUnpublish} from '@fluxer/voice_engine_v2/src/core/reducers/_media';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
+import {
+	getVoiceEngineV2MicrophoneOperationFailureAction,
+	type VoiceEngineV2MicrophoneOperationFailureAction,
+} from '@fluxer/voice_engine_v2/src/policies/microphoneFailureAction';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {
+	VoiceEngineV2AudioControls,
+	VoiceEngineV2Error,
+	VoiceEngineV2MicrophoneOptions,
+	VoiceEngineV2OperationId,
+	VoiceEngineV2PermissionResult,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 type VoiceEngineV2MicrophoneEvent = Extract<
 	VoiceEngineV2Event,
@@ -42,8 +42,6 @@ function sameMicrophoneOptions(
 		a?.echoCancellation === b?.echoCancellation &&
 		a?.noiseSuppression === b?.noiseSuppression &&
 		a?.autoGainControl === b?.autoGainControl &&
-		a?.deepFilter === b?.deepFilter &&
-		a?.deepFilterNoiseReductionLevel === b?.deepFilterNoiseReductionLevel &&
 		a?.maxBitrateBps === b?.maxBitrateBps
 	);
 }
@@ -141,23 +139,26 @@ function setLocalAudioDeafen(snapshot: VoiceEngineV2Snapshot, deafened: boolean)
 	assert.ok(snapshot != null, 'setLocalAudioDeafen snapshot must not be null');
 	assert.equal(typeof deafened, 'boolean', 'setLocalAudioDeafen deafened must be a boolean');
 	const current = snapshot.audioControls;
-	const controls: VoiceEngineV2AudioControls = deafened
-		? {
-				...current,
-				locallyMuted: true,
-				locallyDeafened: true,
-				hasUserSetDeaf: true,
-				shouldUnmuteOnUndeafen: !current.locallyMuted && !current.mutedByPermission,
-			}
-		: {
-				...current,
-				locallyMuted: current.shouldUnmuteOnUndeafen && !current.mutedByPermission ? false : current.locallyMuted,
-				preferredLocallyMuted:
-					current.shouldUnmuteOnUndeafen && !current.mutedByPermission ? false : current.preferredLocallyMuted,
-				locallyDeafened: false,
-				hasUserSetDeaf: true,
-				shouldUnmuteOnUndeafen: false,
-			};
+	let controls: VoiceEngineV2AudioControls;
+	if (deafened) {
+		controls = {
+			...current,
+			locallyMuted: true,
+			locallyDeafened: true,
+			hasUserSetDeaf: true,
+			shouldUnmuteOnUndeafen: !current.locallyMuted && !current.mutedByPermission,
+		};
+	} else {
+		controls = {
+			...current,
+			locallyMuted: current.shouldUnmuteOnUndeafen && !current.mutedByPermission ? false : current.locallyMuted,
+			preferredLocallyMuted:
+				current.shouldUnmuteOnUndeafen && !current.mutedByPermission ? false : current.preferredLocallyMuted,
+			locallyDeafened: false,
+			hasUserSetDeaf: true,
+			shouldUnmuteOnUndeafen: false,
+		};
+	}
 	return planMicrophoneEnabled({...snapshot, audioControls: controls});
 }
 

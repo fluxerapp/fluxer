@@ -3,6 +3,7 @@
 import type {FavoriteGifEntry} from '@app/features/channel/components/pickers/gif/FavoriteGifTypes';
 import * as FavoriteGifCommands from '@app/features/expressions/commands/FavoriteGifCommands';
 import FavoriteGif from '@app/features/expressions/state/FavoriteGif';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {MAX_FAVORITE_GIFS} from '@fluxer/constants/src/LimitConstants';
 import {makeAutoObservable, runInAction} from 'mobx';
 
@@ -25,13 +26,10 @@ class FavoriteGifImport {
 	processedCount = 0;
 	importedCount = 0;
 	skippedCount = 0;
+	private run = 0;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-	}
-
-	get isIdle(): boolean {
-		return !this.isRunning && !this.isDone;
 	}
 
 	get progress(): number {
@@ -40,6 +38,7 @@ class FavoriteGifImport {
 	}
 
 	reset(): void {
+		this.run += 1;
 		this.isRunning = false;
 		this.isDone = false;
 		this.totalToImport = 0;
@@ -60,6 +59,7 @@ class FavoriteGifImport {
 			.filter((line) => line.length > 0 && isValidUrl(line));
 		const uniqueUrls = [...new Set(lines)];
 		if (uniqueUrls.length === 0) return;
+		const run = this.run;
 		runInAction(() => {
 			this.isRunning = true;
 			this.isDone = false;
@@ -95,6 +95,9 @@ class FavoriteGifImport {
 					resolveFailures = urlsToResolve.length;
 				}
 			}
+			if (run !== this.run) {
+				return;
+			}
 			const currentUrls = new Set(FavoriteGif.favoriteGifs.map((entry) => entry.url));
 			const uniqueResolved: Array<FavoriteGifEntry> = [];
 			let resolvedDuplicates = 0;
@@ -118,6 +121,9 @@ class FavoriteGifImport {
 				await new Promise<void>((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
 			}
 		}
+		if (run !== this.run) {
+			return;
+		}
 		runInAction(() => {
 			this.isRunning = false;
 			this.isDone = true;
@@ -125,4 +131,8 @@ class FavoriteGifImport {
 	}
 }
 
-export default new FavoriteGifImport();
+const favoriteGifImport = new FavoriteGifImport();
+
+AccountScopedWork.registerCancellation(() => favoriteGifImport.reset());
+
+export default favoriteGifImport;

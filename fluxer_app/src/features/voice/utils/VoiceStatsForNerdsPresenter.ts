@@ -1,23 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/features/platform/types/Electron';
 import {
 	isScreenShareAudioPublicationLike,
 	type VoiceTrackPublicationSourceLike,
 	VoiceTrackSource,
 } from '@app/features/voice/engine/VoiceTrackSource';
+import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/types/electron.d';
+import {
+	selectVoiceEngineV2StatsPresentationProjection,
+	type VoiceEngineV2StatsPresentationProjection,
+} from '@fluxer/voice_engine_v2/src/core/selectors';
 import {
 	classifyVoiceEngineV2TrackStats,
-	selectVoiceEngineV2StatsPresentationProjection,
-	type VoiceEngineV2PerTrackStats,
-	type VoiceEngineV2Stats,
-	type VoiceEngineV2StatsPresentationProjection,
-	type VoiceEngineV2StatsSample,
 	type VoiceEngineV2StatsTrackClassificationInput,
 	type VoiceEngineV2StatsTrackRoleSelection,
-	type VoiceEngineV2TransportInfo,
-	type VoiceEngineV2VoiceStats,
-} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/policies/voiceStats';
+import type {
+	VoiceEngineV2PerTrackStats,
+	VoiceEngineV2Stats,
+	VoiceEngineV2StatsSample,
+	VoiceEngineV2TransportInfo,
+	VoiceEngineV2VoiceStats,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {Track} from 'livekit-client';
 
 export interface ScreenShareAudioPublicationDiagnostic {
@@ -68,10 +73,12 @@ export interface StatsForNerdsData {
 	};
 	audio: {
 		echoCancellation: boolean;
-		noiseSuppression: boolean;
 		autoGainControl: boolean;
-		deepFilterNoiseSuppression: boolean;
-		deepFilterNoiseSuppressionLevel: number;
+		noiseSuppressionBackend: VoiceNoiseSuppressionBackend;
+		requestedNoiseSuppressionBackend: VoiceNoiseSuppressionBackend;
+		browserNoiseSuppression: boolean;
+		voiceInputGraphUnavailable: boolean;
+		deepFilterLevels: {inputRms: number; outputRms: number; contextTime: number} | null;
 		processingMode: string;
 	};
 	screenShareSettings: {
@@ -83,9 +90,7 @@ export interface StatsForNerdsData {
 		codecPreferenceOrder: Array<string>;
 		contentHint: string;
 		encoderMode: string;
-		softwareQuality: string;
 		scalabilityMode: string;
-		backupCodecMode: string;
 		maxBitrateMbps: number;
 		audioSourceMode: string;
 		audioIncludeSources: Array<Record<string, string>>;
@@ -93,7 +98,6 @@ export interface StatsForNerdsData {
 		shareDesktopAudio: boolean;
 		shareAppAudio: boolean;
 		muteStreamAudio: boolean;
-		openH264Enabled: boolean;
 	};
 	screenShareAudioCapture: {
 		nativeCapture: Record<string, unknown>;

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac} from 'node:crypto';
+import {Config} from '@app/api/Config';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {Logger} from '@fluxer/logger/src/Logger';
-import {Config} from '../../Config';
-import {lookupGeoip} from '../../utils/IpUtils';
 
 const logger = new Logger('UploadRelay');
 const RELAY_PATH_PREFIX = '/v1/relay';
@@ -93,7 +93,7 @@ function buildRelayUrl({bucket, key, uploadId, partNumber, contentType, maxBytes
 
 export async function resolveUploadRelayDecision(clientIp: string | undefined | null): Promise<UploadRelayDecision> {
 	const relayConfig = Config.mediaProxy.uploadRelay;
-	if (!clientIp) {
+	if (!clientIp || Config.storage.backend === 'filesystem') {
 		return relayConfig;
 	}
 	let countryCode: string | null = null;
@@ -111,8 +111,8 @@ export async function resolveUploadRelayDecision(clientIp: string | undefined | 
 	return relayConfig;
 }
 
-export function applyUploadRelayDecision(params: {
-	presignedUrl: string;
+export async function applyUploadRelayDecision(params: {
+	presign: () => Promise<string>;
 	bucket: string;
 	key: string;
 	relayDecision: UploadRelayDecision;
@@ -120,8 +120,8 @@ export function applyUploadRelayDecision(params: {
 	partNumber?: number;
 	contentType?: string;
 	maxBytes?: number;
-}): string {
-	const {presignedUrl, relayDecision, bucket, key, uploadId, partNumber, contentType, maxBytes} = params;
-	if (!relayDecision) return presignedUrl;
+}): Promise<string> {
+	const {presign, relayDecision, bucket, key, uploadId, partNumber, contentType, maxBytes} = params;
+	if (!relayDecision) return presign();
 	return buildRelayUrl({bucket, key, uploadId, partNumber, contentType, maxBytes, config: relayDecision});
 }

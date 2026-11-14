@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {BUILD_CHANNEL, type BuildChannel} from '@electron/common/BuildChannel';
+import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
 import {app} from 'electron';
 
 interface UserDataPaths {
@@ -12,17 +13,23 @@ interface UserDataPaths {
 	readonly portable: boolean;
 }
 
-interface ChannelStorageDirectoryMap {
-	stable: string;
-	canary: string;
-}
+type ChannelStorageDirectoryMap = Record<BuildChannel, string>;
 
 const channelStorageDirectoryMap: ChannelStorageDirectoryMap = {
 	stable: 'fluxer',
 	canary: 'fluxercanary',
+	development: 'fluxerdevelopment',
 };
 
+class UserDataPathConflictError extends Error {
+	public constructor(configured: string, requested: string) {
+		super(`userData is already configured at ${configured} and cannot be reconfigured to ${requested}`);
+		this.name = 'UserDataPathConflictError';
+	}
+}
+
 let portableMode = false;
+let configuredPaths: UserDataPaths | null = null;
 
 function getPortableBasePath(): string {
 	let appDir: string;
@@ -65,12 +72,12 @@ function resolveUserDataPaths(channel: BuildChannel): {
 	base: string;
 	portable: boolean;
 } {
-	const directoryName = channelStorageDirectoryMap[channel];
+	const directoryName = IS_OFFLINE_BUILD
+		? `${channelStorageDirectoryMap[channel]}-distro`
+		: channelStorageDirectoryMap[channel];
 	const portable = detectPortableMode();
-	portableMode = portable;
 	if (portable) {
 		const base = path.join(getPortableBasePath(), directoryName);
-		fs.mkdirSync(base, {recursive: true});
 		return {directoryName, base, portable};
 	}
 	const appDataPath = app.getPath('appData');
@@ -85,6 +92,16 @@ export function isPortableMode(): boolean {
 export function configureUserDataPath(): UserDataPaths {
 	const channel = BUILD_CHANNEL;
 	const {directoryName, base, portable} = resolveUserDataPaths(channel);
+	if (configuredPaths != null) {
+		if (configuredPaths.base !== base) {
+			throw new UserDataPathConflictError(configuredPaths.base, base);
+		}
+		return configuredPaths;
+	}
+	portableMode = portable;
+	if (portable) {
+		fs.mkdirSync(base, {recursive: true});
+	}
 	app.setPath('userData', base);
 	if (portable) {
 		try {
@@ -102,10 +119,11 @@ export function configureUserDataPath(): UserDataPaths {
 			fs.mkdirSync(crashDumpsPath, {recursive: true});
 		} catch {}
 	}
-	return {
+	configuredPaths = {
 		channel,
 		directoryName,
 		base,
 		portable,
 	};
+	return configuredPaths;
 }

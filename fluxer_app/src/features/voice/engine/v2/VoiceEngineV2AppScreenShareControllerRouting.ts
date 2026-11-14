@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import type {VoiceEngineV2AppScreenShareExecutionAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter';
 import {logger} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {recordScreenShareStopped} from '@app/features/voice/utils/ScreenShareLifecycleLog';
-import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2';
+import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2/src/protocol/types';
 import type {Room, ScreenShareCaptureOptions, TrackPublishOptions, VideoCodec} from 'livekit-client';
 
 const SCREEN_SHARE_CONTROLLER_PUBLISH_WIDTH_DEFAULT = 1920;
@@ -13,10 +14,10 @@ const SCREEN_SHARE_CONTROLLER_PUBLISH_HEIGHT_DEFAULT = 1080;
 const SCREEN_SHARE_CONTROLLER_PUBLISH_REQUESTS_CAP = 8;
 const SCREEN_SHARE_CONTROLLER_STOP_REQUESTS_CAP = 8;
 
-export const SCREEN_SHARE_PUBLISH_INACTIVE_ERROR_NAME = 'VoiceEngineV2AppScreenSharePublishInactiveError';
-export const SCREEN_SHARE_ROUTING_SATURATED_ERROR_NAME = 'VoiceEngineV2AppScreenShareRoutingSaturatedError';
+const SCREEN_SHARE_PUBLISH_INACTIVE_ERROR_NAME = 'VoiceEngineV2AppScreenSharePublishInactiveError';
+const SCREEN_SHARE_ROUTING_SATURATED_ERROR_NAME = 'VoiceEngineV2AppScreenShareRoutingSaturatedError';
 
-export type VoiceEngineV2AppScreenSharePlannedOperationsListener = (operationIds: ReadonlyArray<number>) => void;
+type VoiceEngineV2AppScreenSharePlannedOperationsListener = (operationIds: ReadonlyArray<number>) => void;
 
 export interface VoiceEngineV2AppScreenShareControllerGateway {
 	isScreenCommandRoutable(): boolean;
@@ -87,12 +88,8 @@ interface PendingScreenShareStopRequest {
 }
 
 function createScreenShareCaptureId(): string {
-	const cryptoPort = globalThis.crypto;
-	if (!cryptoPort || typeof cryptoPort.randomUUID !== 'function') {
-		throw new Error('Screen-share capture ID generation requires crypto.randomUUID');
-	}
-	const captureId = cryptoPort.randomUUID();
-	assert.ok(captureId.length > 0, 'crypto.randomUUID must return a non-empty capture ID');
+	const captureId = randomUuid();
+	assert.ok(captureId.length > 0, 'randomUuid must return a non-empty capture ID');
 	return captureId;
 }
 
@@ -118,7 +115,7 @@ function roundPublishDimension(value: number, fallback: number): number {
 	return Math.round(value);
 }
 
-export function buildControllerScreenPublishOptions(args: {
+function buildControllerScreenPublishOptions(args: {
 	captureId: string;
 	options: VoiceEngineV2AppScreenShareSetEnabledOptions | undefined;
 	publishOptions: TrackPublishOptions | undefined;
@@ -175,22 +172,6 @@ export class VoiceEngineV2AppScreenShareControllerRouting {
 			assert.equal(typeof gateway.unpublishScreen, 'function');
 		}
 		this.gateway = gateway;
-	}
-
-	isStopRoutable(): boolean {
-		const gateway = this.gateway;
-		if (gateway === null) return false;
-		if (!gateway.isScreenCommandRoutable()) return false;
-		if (gateway.hasScreenPublication()) return true;
-		return gateway.hasScreenDesired();
-	}
-
-	get pendingPublishRequestCount(): number {
-		return this.pendingPublishRequests.size;
-	}
-
-	get pendingStopRequestCount(): number {
-		return this.pendingStopRequestsByOperationId.size;
 	}
 
 	async setEnabled(

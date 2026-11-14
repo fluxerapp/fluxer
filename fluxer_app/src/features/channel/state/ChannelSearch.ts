@@ -11,10 +11,11 @@ import {
 } from '@app/features/channel/components/SearchStateMachine';
 import type {Channel} from '@app/features/channel/models/Channel';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import type {MessageSearchScope} from '@app/features/search/utils/SearchUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {makeAutoObservable, observable} from 'mobx';
+import {makeAutoObservable, observableRef, observableShallow} from 'mobx';
 
 type ChannelSearchSortMode = 'newest' | 'oldest' | 'relevant';
 
@@ -38,7 +39,7 @@ class ChannelSearchContext {
 
 	constructor() {
 		makeAutoObservable(this, {
-			machineSnapshot: observable.ref,
+			machineSnapshot: observableRef,
 		});
 	}
 
@@ -52,7 +53,7 @@ class ChannelSearch {
 
 	constructor() {
 		makeAutoObservable<this, 'contexts'>(this, {
-			contexts: observable.shallow,
+			contexts: observableShallow,
 		});
 	}
 
@@ -150,6 +151,10 @@ class ChannelSearch {
 		const context = this.getContext(contextId);
 		context.scope = scope;
 	}
+
+	reset(): void {
+		this.contexts.clear();
+	}
 }
 
 function cloneSearchMachineEvent(event: SearchMachineEvent): SearchMachineEvent {
@@ -173,4 +178,8 @@ export function getChannelSearchContextId(channel?: Channel | null, selectedGuil
 	return channel.guildId ?? resolvedGuildId ?? channel.id;
 }
 
-export default new ChannelSearch();
+const channelSearch = new ChannelSearch();
+
+AccountScopedWork.registerCancellation(() => channelSearch.reset());
+
+export default channelSearch;

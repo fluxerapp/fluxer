@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PickerCategoryHeaderRow} from '@app/features/channel/components/pickers/shared/PickerCategoryHeaderRow';
 import type {VirtualRow} from '@app/features/channel/components/sticker_picker/hooks/useVirtualRows';
-import {STICKER_CATEGORY_HEADER_HEIGHT} from '@app/features/channel/components/sticker_picker/StickerPickerConstants';
+
 import styles from '@app/features/channel/components/sticker_picker/VirtualRow.module.css';
 import type {Channel} from '@app/features/channel/models/Channel';
-import * as StickerPickerCommands from '@app/features/emoji/commands/StickerPickerCommands';
+
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
 import StickerPicker from '@app/features/emoji/state/StickerPicker';
 import type {GuildSticker} from '@app/features/expressions/models/GuildSticker';
 import {checkStickerAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
-import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
-import Guilds from '@app/features/guild/state/Guilds';
+
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {StickerContextMenuItems} from '@app/features/ui/action_menu/items/StickerContextMenuItems';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {useLingui} from '@lingui/react/macro';
-import {CaretDownIcon, ClockIcon, StarIcon} from '@phosphor-icons/react';
+
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import React from 'react';
@@ -136,91 +136,16 @@ const VirtualRowRendererBase: React.FC<VirtualRowRendererProps> = React.memo(
 		channel,
 	}) => {
 		const {i18n} = useLingui();
-		if (row.type === 'header') {
-			const isCollapsed = StickerPicker.isCategoryCollapsed(row.category);
-			const handleToggleCategory = () => {
-				StickerPickerCommands.toggleCategory(row.category);
-			};
-			let leadingIcon: React.ReactNode = null;
-			if (row.category === 'favorites') {
-				leadingIcon = (
-					<StarIcon
-						weight="fill"
-						className={styles.headerIcon}
-						data-flx="channel.sticker-picker.virtual-row.virtual-row-renderer-base.header-icon"
-					/>
-				);
-			} else if (row.category === 'frequently-used') {
-				leadingIcon = (
-					<ClockIcon
-						weight="fill"
-						className={styles.headerIcon}
-						data-flx="channel.sticker-picker.virtual-row.virtual-row-renderer-base.header-icon--2"
-					/>
-				);
-			} else if (row.guildId) {
-				leadingIcon = (
-					<GuildIcon
-						id={row.guildId}
-						name={row.name}
-						icon={Guilds.getGuild(row.guildId)?.icon ?? null}
-						className={styles.guildIconSmall}
-						sizePx={16}
-						data-flx="channel.sticker-picker.virtual-row.virtual-row-renderer-base.guild-icon-small"
-					/>
-				);
-			}
+		if (row.type === 'header')
 			return (
-				<button
-					type="button"
-					onClick={handleToggleCategory}
-					style={{
-						height: remFromPx(STICKER_CATEGORY_HEADER_HEIGHT),
-						display: 'flex',
-						alignItems: 'center',
-						paddingLeft: '0.75rem',
-						paddingRight: '0.75rem',
-						marginBottom: '0.5rem',
-						position: 'sticky',
-						top: 0,
-						zIndex: 1,
-						cursor: 'pointer',
-						border: 'none',
-						width: '100%',
-						textAlign: 'left',
-						gap: '0.5rem',
-						minWidth: 0,
-					}}
-					data-flx="channel.sticker-picker.virtual-row.virtual-row-renderer-base.button.toggle-category"
-				>
-					{leadingIcon}
-					<div
-						style={{display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 0}}
-						data-flx="channel.sticker-picker.virtual-row.virtual-row-renderer-base.div"
-					>
-						<span
-							className={styles.categoryTitle}
-							style={{
-								minWidth: 0,
-								overflow: 'hidden',
-								textOverflow: 'ellipsis',
-								whiteSpace: 'nowrap',
-								flex: '0 1 auto',
-							}}
-							data-flx="channel.sticker-picker.virtual-row.virtual-row-renderer-base.category-title"
-						>
-							{row.name}
-						</span>
-						<CaretDownIcon
-							weight="bold"
-							className={styles.caretIcon}
-							style={{transform: `rotate(${isCollapsed ? -90 : 0}deg)`, marginLeft: '0.5rem'}}
-							data-flx="channel.sticker-picker.virtual-row.virtual-row-renderer-base.caret-icon"
-						/>
-					</div>
-				</button>
+				<PickerCategoryHeaderRow
+					row={row}
+					isCollapsed={StickerPicker.isCategoryCollapsed(row.category)}
+					onToggle={() => StickerPicker.toggleCategory(row.category)}
+					guildIconClassName={styles.guildIconSmall}
+					data-flx="channel.sticker-picker.virtual-row.picker-category-header-row"
+				/>
 			);
-		}
 		if (row.type === 'sticker-row') {
 			const hasFixedTrack = cellTrackWidth != null && cellTrackWidth > 0;
 			return (

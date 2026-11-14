@@ -44,15 +44,11 @@
 	gap: 0.375rem;
 }
 
-.footerActions {
-	margin-bottom: 1rem;
-}
-
 .legalLinks {
 	margin-top: 0.75rem;
 	font-size: 0.6875rem;
 	line-height: 1.25;
-	text-align: left;
+	text-align: start;
 }
 
 .footerContent {
@@ -75,11 +71,6 @@
 
 .footerSpacer {
 	height: 0.75rem;
-}
-
-.logoutIcon {
-	height: 1rem;
-	width: 1rem;
 }
 
 .fullWidth {

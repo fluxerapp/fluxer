@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {afterBootReveal} from '@app/features/boot_state/BootReveal';
+import {type RestoredScroll, takeRestoredScroll} from '@app/features/boot_state/BootViewport';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import type {ChannelMessages} from '@app/features/messaging/state/ChannelMessages';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import {findMessageElement} from '@app/features/messaging/utils/MessageNodeSelectors';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {evaluateScrollPinning, type ScrollPinResult} from '@app/features/platform/utils/ScrollPosition';
@@ -37,6 +40,8 @@ import debounce from 'lodash/debounce';
 import {createRef, useLayoutEffect, useState} from 'react';
 
 const ANCHOR_SCROLL_IDLE_MS = 35;
+const DEFERRED_OLDER_SCROLL_SETTLE_MS = 120;
+const DEFERRED_OLDER_SLICE_MESSAGES = 16;
 const LOAD_PAUSE_MIN_GROWTH_PX = 100;
 
 interface ContainerLayout {
@@ -78,6 +83,7 @@ export class ScrollManager {
 	private editIsActive = false;
 	private anchorTimeoutId: number | null = null;
 	private anchorTimeoutDeadline = 0;
+	private deferredOlderTimer: number | null = null;
 	private resizeReentryGuard = false;
 	private resizeContainerHeight = -1;
 	private restorePendingInitialScrollTop: number | null | undefined = null;
@@ -93,6 +99,7 @@ export class ScrollManager {
 	private loadScrollHeightBefore = 0;
 	private loadPausedUntilUserScroll = false;
 	private pinPreUpdateState: ScrollPinResult | null = null;
+	private cachedViewAnchor: AnchorData | null = null;
 	private jumpTicket: number | null = null;
 	private jumpCallbackToken = 0;
 	private anchorAutomaticListeners: Array<(anchor: AnchorData | null, bottom: AnchorData | null) => void> = [];
@@ -178,7 +185,6 @@ export class ScrollManager {
 			tolerance: BOTTOM_LOCK_TOLERANCE,
 			wasPinned: this.pinIsAtBottom,
 			hasMoreAfter: this.props.messages.hasMoreAfter,
-			allowPinWhenHasMoreAfter: false,
 		});
 	}
 
@@ -203,17 +209,11 @@ export class ScrollManager {
 		return this.props.unloadedSpacerHeight * getRemScaleForDocument(scrollerNode.ownerDocument);
 	}
 
-	pinIsAtBottomFor(state: ScrollerState = this.scrollGetState()): boolean {
-		const pinState = this.pinComputeState(state);
-		return pinState.isPinned;
-	}
-
 	layoutGetElementFromMessageId(messageId: string): HTMLElement | null {
 		const doc = this.scrollGetDocument();
-		const {channel} = this.props;
 		if (!doc) return null;
-		const elementId = `chat-messages-${channel.id}-${messageId}`;
-		return doc.getElementById(elementId) as HTMLElement | null;
+		const {channel} = this.props;
+		return findMessageElement(doc, this.ref.current?.getViewportElement(), channel.id, messageId);
 	}
 
 	private layoutGetContainerLayout(container: HTMLElement): ContainerLayout {
@@ -625,8 +625,12 @@ export class ScrollManager {
 		this.anchorFetchFallback = viewportAnchor ? this.anchorFindLoadMore(loadAfter) : null;
 	}
 
-	private loadMore = (loadAfter = false): void => {
+	private loadMore = (loadAfter = false, userRequested = false): void => {
 		const {messages, channel} = this.props;
+		if (!loadAfter && Messages.hasDeferredOlderMessages(channel.id)) {
+			if (!this.pinIsAtBottom || userRequested) this.loadDeferredOlderWhenScrollSettles(userRequested);
+			return;
+		}
 		let beforeId: string | undefined;
 		let afterId: string | undefined;
 		if (loadAfter) {
@@ -647,6 +651,30 @@ export class ScrollManager {
 		this.loadIsActive = true;
 		MessageCommands.fetchMessages(channel.id, beforeId ?? null, afterId ?? null, MAX_MESSAGES_PER_CHANNEL);
 	};
+
+	private loadDeferredOlderWhenScrollSettles(userRequested = false): void {
+		if (this.deferredOlderTimer != null) {
+			clearTimeout(this.deferredOlderTimer);
+		}
+		this.deferredOlderTimer = window.setTimeout(() => {
+			this.deferredOlderTimer = null;
+			const channelId = this.props.channel.id;
+			if (this.lifecycleIsDisposed || !Messages.hasDeferredOlderMessages(channelId)) {
+				return;
+			}
+			if (this.pinIsAtBottom && !userRequested) return;
+			const {scrollTop, scrollHeight} = this.scrollGetState();
+			this.loadUpdateSnapshot(false, scrollTop, scrollHeight);
+			this.anchorUpdateFetchForLoad(false);
+			this.loadScrollHeightBefore = this.cacheScrollHeight;
+			this.cachePreviousScrollTop = null;
+			this.loadIsActive = true;
+			Messages.prependDeferredOlderMessages(channelId, DEFERRED_OLDER_SLICE_MESSAGES);
+			if (Messages.hasDeferredOlderMessages(channelId)) {
+				this.loadDeferredOlderWhenScrollSettles();
+			}
+		}, DEFERRED_OLDER_SCROLL_SETTLE_MS);
+	}
 
 	private anchorScheduleScrollIdleCheck(): void {
 		this.anchorTimeoutDeadline = performance.now() + ANCHOR_SCROLL_IDLE_MS;
@@ -678,7 +706,7 @@ export class ScrollManager {
 	loadMoreForKeyboardNavigation(loadAfter: boolean): void {
 		if (this.loadIsActive || this.props.messages.loadingMore) return;
 		this.anchorCaptureFocused();
-		this.loadMore(loadAfter);
+		this.loadMore(loadAfter, true);
 	}
 
 	scrollHandle = (event?: React.UIEvent<HTMLDivElement> | Event): void => {
@@ -789,18 +817,6 @@ export class ScrollManager {
 		this.scrollFixPosition(state.offsetHeight, state.scrollHeight, shouldStickToBottom);
 	}
 
-	dragHandleMouseDown = (event: React.MouseEvent): void => {
-		if (this.lifecycleIsDisposed) return;
-		if (event.target === event.currentTarget) {
-			this.dragIsActive = true;
-		}
-	};
-	dragHandleMouseUp = (): void => {
-		if (this.lifecycleIsDisposed) return;
-		this.dragIsActive = false;
-		this.scrollHandle();
-	};
-
 	scrollFixPosition(offsetHeight: number, scrollHeight: number, forceAtBottom = false): void {
 		this.cacheOffsetHeight = offsetHeight;
 		this.cacheScrollHeight = scrollHeight;
@@ -907,9 +923,17 @@ export class ScrollManager {
 
 	restoreInitial(): void {
 		if (this.lifecycleIsInitialized()) return;
+		this.restoreApplyInitialPosition();
+		if (Messages.hasDeferredOlderMessages(this.props.channel.id)) {
+			afterBootReveal(() => this.loadDeferredOlderWhenScrollSettles());
+		}
+	}
+
+	private restoreApplyInitialPosition(): void {
 		const rememberedScrollTop = this.restorePendingInitialScrollTop ?? null;
 		this.restorePendingInitialScrollTop = undefined;
 		const targetId = resolveJumpTargetId(this.props.messages);
+		const restoredScroll = takeRestoredScroll(this.props.channel.id);
 		const intent = resolveInitialScrollIntent({
 			channelType: this.props.channel.type,
 			rememberedScrollTop,
@@ -917,6 +941,8 @@ export class ScrollManager {
 		});
 		if (targetId != null) {
 			this.scrollAlignToMessage(targetId, false);
+		} else if (restoredScroll !== null && this.restoreApplyRestoredScroll(restoredScroll)) {
+			return;
 		} else if (intent === InitialScrollIntent.UNREAD_BOUNDARY) {
 			this.scrollToUnreadBoundary('top', undefined, false);
 		} else if (intent === InitialScrollIntent.SAVED_OFFSET && rememberedScrollTop != null) {
@@ -925,6 +951,22 @@ export class ScrollManager {
 		} else {
 			this.scrollSetToBottom();
 		}
+	}
+
+	private restoreApplyRestoredScroll(restored: RestoredScroll): boolean {
+		if (restored.kind === 'bottom') {
+			this.scrollSetToBottom();
+			return true;
+		}
+		const scrollerNode = this.ref.current?.getViewportElement();
+		const element = this.layoutGetElementFromMessageId(restored.messageId);
+		if (scrollerNode == null || element == null) {
+			return false;
+		}
+		const offsetPx = element.getBoundingClientRect().top - scrollerNode.getBoundingClientRect().top;
+		this.pinIsAtBottom = false;
+		this.scrollTo(scrollerNode.scrollTop + offsetPx - restored.offsetPx, false, this.scrollHandle);
+		return true;
 	}
 
 	private restoreApplyPlaceholderPosition(): void {
@@ -1173,7 +1215,22 @@ export class ScrollManager {
 		});
 	}
 
-	lifecycleGetSnapshotBeforeUpdate(focusAnchorId: string | null): void {
+	lifecycleGetSnapshotBeforeUpdate(focusAnchorId: string | null, nextMessages = this.props.messages): void {
+		this.cachedViewAnchor = null;
+		if (
+			this.lifecycleIsInitialized() &&
+			this.pinIsAtBottomNow() &&
+			!this.jumpIsActiveNow() &&
+			this.props.messages.channelId === nextMessages.channelId &&
+			this.props.messages.cached &&
+			!nextMessages.cached &&
+			nextMessages.jumpDestinationId === null &&
+			this.props.messages.last()?.state !== 'SENDING' &&
+			nextMessages.last()?.state !== 'SENDING' &&
+			this.props.messages.last()?.id !== nextMessages.last()?.id
+		) {
+			this.cachedViewAnchor = this.anchorFindTopVisible();
+		}
 		if (!this.anchorHasAny() && focusAnchorId == null) {
 			this.pinPreUpdateState =
 				this.pinIsAtBottomNow() || this.pinIsCurrentlyAtBottom || this.pinIsScrollingProgrammatically
@@ -1206,7 +1263,15 @@ export class ScrollManager {
 		this.props = {...nextProps};
 		const {offsetHeight, scrollHeight} = this.scrollGetState();
 		const heightChanged = this.layoutIsHeightChange(offsetHeight, scrollHeight);
-		const shouldForceBottom = pinPreUpdateState?.isPinned ?? false;
+		const cachedViewAnchor = heightChanged ? this.cachedViewAnchor : null;
+		this.cachedViewAnchor = null;
+		const shouldForceBottom = cachedViewAnchor === null && (pinPreUpdateState?.isPinned ?? false);
+		if (cachedViewAnchor !== null) {
+			this.pinIsAtBottom = false;
+			this.pinIsCurrentlyAtBottom = false;
+			this.anchorSetAutomatic(cachedViewAnchor);
+			nextProps.notifyUnpinnedFromBottom();
+		}
 		this.cacheOffsetHeight = offsetHeight;
 		this.cacheScrollHeight = scrollHeight;
 		this.loadIsActive = nextProps.messages.loadingMore;
@@ -1285,18 +1350,6 @@ export class ScrollManager {
 		}
 	}
 
-	anchorAddAutomaticListener(
-		callback: (anchor: AnchorData | null, bottom: AnchorData | null) => void,
-		immediate = true,
-	): void {
-		if (!this.anchorAutomaticListeners.includes(callback)) {
-			this.anchorAutomaticListeners.push(callback);
-		}
-		if (immediate) {
-			this.anchorSetAutomatic(this.anchorFindTopVisible());
-		}
-	}
-
 	anchorRemoveAutomaticListener(callback: (anchor: AnchorData | null, bottom: AnchorData | null) => void): void {
 		this.anchorAutomaticListeners = this.anchorAutomaticListeners.filter((cb) => cb !== callback);
 	}
@@ -1309,6 +1362,10 @@ export class ScrollManager {
 			this.anchorTimeoutId = null;
 		}
 		this.anchorTimeoutDeadline = 0;
+		if (this.deferredOlderTimer != null) {
+			clearTimeout(this.deferredOlderTimer);
+			this.deferredOlderTimer = null;
+		}
 		this.resizeReentryGuard = false;
 		this.loadPrependSnapshot = null;
 		this.loadLastDirection = null;
@@ -1325,7 +1382,7 @@ export class ScrollManager {
 
 export function useScrollManager(props: ScrollManagerProps): ScrollManager {
 	const [manager] = useState(() => new ScrollManager(props));
-	manager.lifecycleGetSnapshotBeforeUpdate(props.focusAnchorId);
+	manager.lifecycleGetSnapshotBeforeUpdate(props.focusAnchorId, props.messages);
 	useLayoutEffect(() => {
 		manager.lifecycleMergeProps(props);
 	});

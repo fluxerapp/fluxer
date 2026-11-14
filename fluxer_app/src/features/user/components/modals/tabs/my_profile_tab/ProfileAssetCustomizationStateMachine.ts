@@ -39,9 +39,9 @@ export type ProfileAssetCustomizationEvent =
 			remoteState: ProfileAssetRemoteState;
 	  };
 
-export type ProfileAssetCustomizationStateValue = 'unhydrated' | 'clean' | 'dirty' | 'committed';
+type ProfileAssetCustomizationStateValue = 'unhydrated' | 'clean' | 'dirty' | 'committed';
 
-export interface ProfileAssetCustomizationState extends ProfileAssetRemoteState {
+interface ProfileAssetCustomizationState extends ProfileAssetRemoteState {
 	readonly state: ProfileAssetCustomizationStateValue;
 	readonly initialMode: ProfileAssetMode;
 	readonly previewUrl: string | null;
@@ -50,7 +50,7 @@ export interface ProfileAssetCustomizationState extends ProfileAssetRemoteState 
 	readonly isDirty: boolean;
 }
 
-export interface ProfileAssetUploadPatch {
+interface ProfileAssetUploadPatch {
 	readonly value: TransientUploadFieldValue;
 }
 
@@ -96,7 +96,7 @@ function remoteMatchesCurrent(
 	);
 }
 
-export function createProfileAssetRemoteState(params: {
+function createProfileAssetRemoteState(params: {
 	identityKey: string | null;
 	mode: ProfileAssetMode;
 	hasCustomAsset: boolean;
@@ -109,7 +109,14 @@ export function createProfileAssetRemoteStateFromFlags(params: {
 	hasCustomAsset: boolean;
 	isUnset: boolean;
 }): ProfileAssetRemoteState {
-	const mode: ProfileAssetMode = params.isUnset ? 'unset' : params.hasCustomAsset ? 'custom' : 'inherit';
+	let mode: ProfileAssetMode;
+	if (params.isUnset) {
+		mode = 'unset';
+	} else if (params.hasCustomAsset) {
+		mode = 'custom';
+	} else {
+		mode = 'inherit';
+	}
 	return createProfileAssetRemoteState({
 		identityKey: params.identityKey,
 		mode,
@@ -128,7 +135,7 @@ export function createGlobalProfileAssetRemoteState(params: {
 	});
 }
 
-export const profileAssetCustomizationStateMachine = setup({
+const profileAssetCustomizationStateMachine = setup({
 	types: {} as {
 		context: ProfileAssetCustomizationContext;
 		events: ProfileAssetCustomizationEvent;
@@ -189,28 +196,19 @@ export const profileAssetCustomizationStateMachine = setup({
 	id: 'profileAssetCustomization',
 	context: () => createContext(),
 	initial: 'unhydrated',
+	on: {
+		'asset.remoteApplied': {target: '.clean', actions: 'applyRemote'},
+		'asset.committed': {target: '.committed', actions: 'commitRemote'},
+		'asset.modeSelected': {target: '.routing', actions: 'selectMode'},
+		'asset.uploaded': {target: '.routing', actions: 'applyUpload'},
+		'asset.cleared': {target: '.routing', actions: 'clearAsset'},
+	},
 	states: {
-		unhydrated: {
-			on: {
-				'asset.remoteApplied': {target: 'clean', actions: 'applyRemote'},
-				'asset.committed': {target: 'committed', actions: 'commitRemote'},
-				'asset.modeSelected': {target: 'routing', actions: 'selectMode'},
-				'asset.uploaded': {target: 'routing', actions: 'applyUpload'},
-				'asset.cleared': {target: 'routing', actions: 'clearAsset'},
-			},
-		},
+		unhydrated: {},
 		routing: {
 			always: [{guard: 'isDirty', target: 'dirty'}, {target: 'clean'}],
 		},
-		clean: {
-			on: {
-				'asset.remoteApplied': {target: 'clean', actions: 'applyRemote'},
-				'asset.committed': {target: 'committed', actions: 'commitRemote'},
-				'asset.modeSelected': {target: 'routing', actions: 'selectMode'},
-				'asset.uploaded': {target: 'routing', actions: 'applyUpload'},
-				'asset.cleared': {target: 'routing', actions: 'clearAsset'},
-			},
-		},
+		clean: {},
 		dirty: {
 			on: {
 				'asset.remoteApplied': [
@@ -218,10 +216,6 @@ export const profileAssetCustomizationStateMachine = setup({
 					{guard: 'remoteIdentityChanged', target: 'clean', actions: 'applyRemote'},
 					{target: 'dirty'},
 				],
-				'asset.committed': {target: 'committed', actions: 'commitRemote'},
-				'asset.modeSelected': {target: 'routing', actions: 'selectMode'},
-				'asset.uploaded': {target: 'routing', actions: 'applyUpload'},
-				'asset.cleared': {target: 'routing', actions: 'clearAsset'},
 			},
 		},
 		committed: {
@@ -232,10 +226,6 @@ export const profileAssetCustomizationStateMachine = setup({
 					{guard: 'remoteMatchesCurrent', target: 'clean', actions: 'applyRemote'},
 					{target: 'committed'},
 				],
-				'asset.committed': {target: 'committed', actions: 'commitRemote'},
-				'asset.modeSelected': {target: 'routing', actions: 'selectMode'},
-				'asset.uploaded': {target: 'routing', actions: 'applyUpload'},
-				'asset.cleared': {target: 'routing', actions: 'clearAsset'},
 			},
 		},
 	},
@@ -254,7 +244,7 @@ export function transitionProfileAssetCustomizationSnapshot(
 	return transition(profileAssetCustomizationStateMachine, snapshot, event)[0] as ProfileAssetCustomizationSnapshot;
 }
 
-export function getProfileAssetCustomizationStateValue(
+function getProfileAssetCustomizationStateValue(
 	snapshot: ProfileAssetCustomizationSnapshot,
 ): ProfileAssetCustomizationStateValue {
 	return typeof snapshot.value === 'string' ? (snapshot.value as ProfileAssetCustomizationStateValue) : 'unhydrated';
@@ -272,7 +262,7 @@ export function selectProfileAssetCustomizationState(
 	};
 }
 
-export function getProfileAssetUploadPatch(state: ProfileAssetCustomizationState): ProfileAssetUploadPatch {
+function getProfileAssetUploadPatch(state: ProfileAssetCustomizationState): ProfileAssetUploadPatch {
 	if (state.hasCleared) return {value: null};
 	if (state.previewUrl !== null) return {value: state.previewUrl};
 	if ((state.mode === 'inherit' || state.mode === 'unset') && state.mode !== state.initialMode) {

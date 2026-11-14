@@ -16,21 +16,22 @@ import {
 	FORWARD_MEDIA_DESCRIPTOR,
 	MEDIA_CONTROLS_DESCRIPTOR,
 	OPEN_IN_BROWSER_DESCRIPTOR,
+	OPEN_POST_DESCRIPTOR,
 	REPLY_TO_MEDIA_MESSAGE_DESCRIPTOR,
 	RESET_MEDIA_POSITION_DESCRIPTOR,
 	ROTATE_ANTICLOCKWISE_DESCRIPTOR,
 	ROTATE_CLOCKWISE_DESCRIPTOR,
 } from '@app/features/messaging/components/modals/media_modal/shared';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowBendUpLeftIcon, ArrowBendUpRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {useLingui} from '@lingui/react/macro';
 import {
-	ArrowBendUpLeftIcon,
-	ArrowBendUpRightIcon,
 	ArrowClockwiseIcon,
 	ArrowCounterClockwiseIcon,
 	ArrowSquareOutIcon,
 	ArrowsInSimpleIcon,
+	ChatCircleIcon,
 	CopySimpleIcon,
 	DownloadSimpleIcon,
 	LinkIcon,
@@ -96,16 +97,19 @@ ControlButton.displayName = 'ControlButton';
 
 interface OverlayTooltipButtonProps extends ControlButtonProps {
 	tooltipPosition?: 'top' | 'bottom' | 'left' | 'right';
+	buttonRef?: Ref<HTMLButtonElement>;
 }
 
 const OverlayTooltipButton: FC<OverlayTooltipButtonProps> = ({
 	label,
 	tooltipPosition = 'top',
+	buttonRef,
 	...buttonProps
 }: OverlayTooltipButtonProps) => (
 	<Tooltip text={label} position={tooltipPosition} data-flx="messaging.media-modal.overlay-tooltip-button.tooltip">
 		<span className={styles.overlayActionButtonWrap} data-flx="messaging.media-modal.overlay-tooltip-button.wrap">
 			<ControlButton
+				ref={buttonRef}
 				label={label}
 				data-flx="messaging.media-modal.media-controls.overlay-tooltip-button.control-button"
 				{...buttonProps}
@@ -114,7 +118,7 @@ const OverlayTooltipButton: FC<OverlayTooltipButtonProps> = ({
 	</Tooltip>
 );
 
-interface MediaOverlayActionsProps {
+export interface MediaOverlayActionsProps {
 	isFavorited?: boolean;
 	onFavorite?: () => void;
 	onDownload?: () => void;
@@ -129,6 +133,7 @@ interface MediaOverlayActionsProps {
 	onRotateCCW?: () => void;
 	onReply?: () => void;
 	onForward?: () => void;
+	onViewPost?: () => void;
 	onClose: () => void;
 	canReset?: boolean;
 	canZoomIn?: boolean;
@@ -137,6 +142,7 @@ interface MediaOverlayActionsProps {
 	onPointerEnter?: () => void;
 	onPointerLeave?: () => void;
 	rootRef?: Ref<HTMLDivElement>;
+	closeButtonRef?: Ref<HTMLButtonElement>;
 }
 
 export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
@@ -155,6 +161,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 		onRotateCCW,
 		onReply,
 		onForward,
+		onViewPost,
 		onClose,
 		canReset = false,
 		canZoomIn = true,
@@ -163,6 +170,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 		onPointerEnter,
 		onPointerLeave,
 		rootRef,
+		closeButtonRef,
 	}: MediaOverlayActionsProps) => {
 		const {i18n} = useLingui();
 		const favoriteLabel = isFavorited ? i18n._(REMOVE_FROM_FAVORITES_DESCRIPTOR) : i18n._(ADD_TO_FAVORITES_DESCRIPTOR);
@@ -177,6 +185,7 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 				data-flx="messaging.media-modal.media-overlay-actions.action-bar"
 			>
 				<OverlayTooltipButton
+					buttonRef={closeButtonRef}
 					icon={<XIcon size={20} weight="bold" data-flx="messaging.media-modal.media-overlay-actions.close-icon" />}
 					label={i18n._(CLOSE_MODAL_DESCRIPTOR)}
 					onClick={onClose}
@@ -343,11 +352,25 @@ export const MediaOverlayActions: FC<MediaOverlayActionsProps> = observer(
 					disabled={!enableZoomControls || !onZoomOut || !canZoomOut}
 					data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-tooltip-button--5"
 				/>
-				{(onReply || onForward) && (
+				{(onViewPost || onReply || onForward) && (
 					<div
 						className={styles.overlayActionLargeGap}
 						aria-hidden="true"
 						data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-action-large-gap"
+					/>
+				)}
+				{onViewPost && (
+					<OverlayTooltipButton
+						icon={
+							<ChatCircleIcon
+								size={20}
+								weight="bold"
+								data-flx="messaging.media-modal.media-overlay-actions.view-post-icon"
+							/>
+						}
+						label={i18n._(OPEN_POST_DESCRIPTOR)}
+						onClick={onViewPost}
+						data-flx="messaging.media-modal.media-controls.media-overlay-actions.overlay-tooltip-button.view-post"
 					/>
 				)}
 				{onReply && (

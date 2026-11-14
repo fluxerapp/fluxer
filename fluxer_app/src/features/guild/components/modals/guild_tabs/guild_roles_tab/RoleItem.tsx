@@ -16,6 +16,7 @@ import {
 	type RoleReorderTarget,
 	selectRoleReorderResolution,
 } from '@app/features/guild/components/modals/guild_tabs/RoleReorderStateMachine';
+import {RoleIcon} from '@app/features/guild/components/RoleIcon';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -32,7 +33,7 @@ import {useDrag, useDrop} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
 const YOU_CANNOT_EDIT_THIS_ROLE_BECAUSE_IT_IS_DESCRIPTOR = msg({
-	message: 'You cannot edit this role because it is your highest role or above you',
+	message: 'You cannot edit this role because it is at or above your highest role',
 	comment:
 		'Tooltip on a disabled role row in the community roles settings tab. Explains the role hierarchy rule: you cannot edit roles at or above your own highest role.',
 });
@@ -41,6 +42,7 @@ interface RoleItemProps {
 	role: GuildRole;
 	isSelected: boolean;
 	isLocked: boolean;
+	reserveIconSlot: boolean;
 	isGuildOwner: boolean;
 	isTerminal: boolean;
 	canManageRoles: boolean;
@@ -60,6 +62,7 @@ export const RoleItem: React.FC<RoleItemProps> = observer(
 		role,
 		isSelected,
 		isLocked,
+		reserveIconSlot,
 		isGuildOwner,
 		isTerminal,
 		canManageRoles,
@@ -73,6 +76,7 @@ export const RoleItem: React.FC<RoleItemProps> = observer(
 		const elementRef = useRef<HTMLButtonElement | null>(null);
 		const [dropIndicator, setDropIndicator] = useState<{position: 'top' | 'bottom'; isValid: boolean} | null>(null);
 		const contextMenuOpen = useContextMenuHoverState(elementRef, !MobileLayout.enabled);
+		const hasIcon = Boolean(role.icon || role.unicodeEmoji);
 		const canDelete = canManageRoles && !role.isEveryone && !isLocked;
 		const handleContextMenu = useCallback(
 			(event: React.MouseEvent<HTMLButtonElement>) => {
@@ -240,6 +244,18 @@ export const RoleItem: React.FC<RoleItemProps> = observer(
 						style={{backgroundColor: role.color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(role.color)}}
 						data-flx="guild.guild-tabs.guild-roles-tab.role-item.role-dot"
 					/>
+					{(hasIcon || reserveIconSlot) && (
+						<span className={styles.roleIconSlot} data-flx="guild.guild-tabs.guild-roles-tab.role-item.role-icon-slot">
+							{hasIcon && (
+								<RoleIcon
+									role={role}
+									size={16}
+									decorative={true}
+									data-flx="guild.guild-tabs.guild-roles-tab.role-item.role-icon"
+								/>
+							)}
+						</span>
+					)}
 					<span className={styles.overwriteName} data-flx="guild.guild-tabs.guild-roles-tab.role-item.overwrite-name">
 						{role.name || '\u00A0'}
 					</span>

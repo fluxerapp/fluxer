@@ -1,12 +1,13 @@
-/AGENTS.md
-/CLAUDE.md
+# Files that only exist on your machine, such as editor or tool settings, do not belong here.
+# Ignore them in your own clone with .git/info/exclude, or for every repository with a global
+# ignore file set by `git config --global core.excludesFile ~/.gitignore_global`.
+# Neither is committed, so this file only lists what the project itself creates.
 
 **/.env
 **/.env.*.local
 **/.env.local
 /config/env/local.env
 
-/.claude/
 /.direnv/
 /.fluxer/
 /.pnpm-store/
@@ -19,30 +20,31 @@
 **/_build/
 **/coverage/
 **/dist/
+!/tools/dist/
 **/node_modules/
 **/target/
 **/test-results.json
 
 /fluxer_app/.devserver-cache.json
 /fluxer_app/pkgs/libfluxcore/
+/fluxer_app/pkgs/libfluxwebp/
 /fluxer_app/src/features/i18n/locales/*/messages.mjs
-/fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
+/fluxer_app/pkgs/markdown_parser/
 /fluxer_app/src/features/theme/styles/generated/
 /fluxer_app/src/features/ui/components/SVGMasks.tsx
 /fluxer_app/src/features/ui/constants/AvatarStatusGeometry.ts
 /fluxer_gateway/priv/
+/fluxer_static/desktop/spellcheck/dictionaries/*/*
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-et@2.0.0/LICENSE
+!/fluxer_static/desktop/spellcheck/dictionaries/dictionary-eu@4.0.0/LICENSE
 
-/fluxer_desktop/native/rust/fuzz/artifacts/
-/fluxer_desktop/native/rust/fuzz/corpus/
 /packages/markdown_parser/rust/fuzz/artifacts/
 /packages/markdown_parser/rust/fuzz/corpus/
 
-/fluxer_media_proxy/.benchmark-cache/
-/fluxer_media_proxy/bench-results/
-
 /app-dist-output/
 /artifacts/
-/s3_payload/
+/desktop-shared-assets/
+/desktop-modules/
 /upload_staging/
 
 

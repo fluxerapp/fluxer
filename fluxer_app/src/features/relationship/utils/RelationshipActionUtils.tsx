@@ -12,12 +12,12 @@ import {
 	showSendFriendRequestErrorModal,
 	showUnblockUserErrorModal,
 } from '@app/features/relationship/components/alerts/RelationshipErrorModalUtils';
-import Relationships from '@app/features/relationship/state/Relationships';
 import {
 	ACCEPT_FRIEND_REQUEST_ACTION_DESCRIPTOR,
 	ACCEPT_FRIEND_REQUEST_DESCRIPTOR,
 	ADD_FRIEND_DESCRIPTOR,
 	FRIEND_ADDED_DESCRIPTOR,
+	FRIENDS_DISABLED_DESCRIPTOR,
 	OUTGOING_FRIEND_REQUEST_STATUS_DESCRIPTOR,
 	REMOVE_FRIEND_DESCRIPTOR,
 	UNBLOCK_USER_ACTION_DESCRIPTOR,
@@ -29,7 +29,6 @@ import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {User} from '@app/features/user/models/User';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -57,7 +56,7 @@ const YOU_NEED_TO_CLAIM_YOUR_ACCOUNT_TO_SEND_DESCRIPTOR = msg({
 		'Error toast when sending a friend request fails because the current user is on an unclaimed (guest) account. "Claim your account" means complete sign-up.',
 });
 const VERIFY_EMAIL_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR = msg({
-	message: 'Verify your email before sending friend requests.',
+	message: 'Confirm your email before sending friend requests.',
 	comment: 'Error toast when sending a friend request fails because the current account email is unverified.',
 });
 const FAILED_TO_SEND_FRIEND_REQUEST_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
@@ -104,6 +103,7 @@ const ARE_YOU_SURE_YOU_WANT_TO_UNBLOCK_DESCRIPTOR = msg({
 export interface RelationshipConfirmationOptions {
 	bypassConfirm?: boolean;
 	showShiftBypassConfirmationTip?: boolean;
+	userName?: string;
 }
 
 export interface RelationshipConfirmationEvent {
@@ -139,26 +139,11 @@ export function getSendFriendRequestErrorMessage(
 			return i18n._(YOU_NEED_TO_CLAIM_YOUR_ACCOUNT_TO_SEND_DESCRIPTOR);
 		case APIErrorCodes.FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED:
 			return i18n._(VERIFY_EMAIL_TO_SEND_FRIEND_REQUESTS_DESCRIPTOR);
+		case APIErrorCodes.FRIENDS_DISABLED:
+			return i18n._(FRIENDS_DISABLED_DESCRIPTOR);
 		default:
 			return i18n._(FAILED_TO_SEND_FRIEND_REQUEST_PLEASE_TRY_AGAIN_DESCRIPTOR);
 	}
-}
-
-export function canSendFriendRequest(userId: string, isBot: boolean): boolean {
-	if (isBot) {
-		return false;
-	}
-	const relationship = Relationships.getRelationship(userId);
-	if (!relationship) {
-		return true;
-	}
-	const blockedTypes = [
-		RelationshipTypes.FRIEND,
-		RelationshipTypes.BLOCKED,
-		RelationshipTypes.OUTGOING_REQUEST,
-		RelationshipTypes.INCOMING_REQUEST,
-	] as const;
-	return !blockedTypes.some((type) => type === relationship.type);
 }
 
 export async function sendFriendRequest(
@@ -201,7 +186,7 @@ export function showSendFriendRequestConfirmation(i18n: I18n, user: User): void 
 	);
 }
 
-export async function acceptFriendRequest(_i18n: I18n, userId: string): Promise<boolean> {
+async function acceptFriendRequest(_i18n: I18n, userId: string): Promise<boolean> {
 	try {
 		await RelationshipCommands.acceptFriendRequest(userId);
 		return true;
@@ -249,7 +234,7 @@ export async function cancelFriendRequest(_i18n: I18n, userId: string): Promise<
 	}
 }
 
-export async function removeFriend(_i18n: I18n, userId: string): Promise<boolean> {
+async function removeFriend(_i18n: I18n, userId: string): Promise<boolean> {
 	try {
 		await RelationshipCommands.removeRelationship(userId);
 		return true;
@@ -287,7 +272,7 @@ export function showRemoveFriendConfirmation(
 	);
 }
 
-export async function blockUser(_i18n: I18n, userId: string): Promise<boolean> {
+async function blockUser(_i18n: I18n, userId: string): Promise<boolean> {
 	try {
 		await RelationshipCommands.blockUser(userId);
 		return true;
@@ -307,7 +292,7 @@ export function showBlockUserConfirmation(i18n: I18n, user: User, options: Relat
 			<ConfirmModal
 				title={i18n._(BLOCK_USER_DESCRIPTOR)}
 				description={i18n._(ARE_YOU_SURE_YOU_WANT_TO_BLOCK_THEY_DESCRIPTOR, {
-					userName: NicknameUtils.getNickname(user, null),
+					userName: options.userName ?? NicknameUtils.getNickname(user, null),
 				})}
 				primaryText={i18n._(BLOCK_DESCRIPTOR)}
 				primaryVariant="danger"

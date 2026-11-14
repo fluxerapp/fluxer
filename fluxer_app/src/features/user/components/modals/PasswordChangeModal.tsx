@@ -2,14 +2,28 @@
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
-import {VERIFICATION_CODE_DESCRIPTOR, VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {
+	CONFIRM_NEW_PASSWORD_DESCRIPTOR,
+	NEW_PASSWORD_DESCRIPTOR,
+	PASSWORDS_DO_NOT_MATCH_DESCRIPTOR,
+	VERIFICATION_CODE_DESCRIPTOR,
+	VERIFY_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Form} from '@app/features/ui/components/form/Form';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
+import * as RecoveryKitCommands from '@app/features/user/commands/RecoveryKitCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
+import RecoveryKitStatus from '@app/features/user/state/RecoveryKitStatus';
+import Users from '@app/features/user/state/Users';
+import {
+	INVALID_OR_EXPIRED_CODE_DESCRIPTOR,
+	UNABLE_TO_RESEND_CODE_RIGHT_NOW_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
 import {pushApiErrorModal} from '@app/lib/forms';
 import type {I18n} from '@lingui/core';
@@ -23,32 +37,17 @@ const UNABLE_TO_START_PASSWORD_CHANGE_DESCRIPTOR = msg({
 	message: 'Unable to start password change',
 	comment: 'Error message in the password change modal. Keep the tone plain and specific.',
 });
-const INVALID_OR_EXPIRED_CODE_DESCRIPTOR = msg({
-	message: 'Invalid or expired code',
-	comment: 'Error message in the password change modal. Keep the tone plain and specific.',
-});
-const UNABLE_TO_RESEND_CODE_RIGHT_NOW_DESCRIPTOR = msg({
-	message: 'Unable to resend code right now',
-	comment: 'Error message in the password change modal. Keep the tone plain and specific.',
-});
-const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
-	message: 'Passwords do not match',
-	comment: 'Label in the password change modal. Keep the tone plain and specific.',
-});
+
 const UPDATE_YOUR_PASSWORD_DESCRIPTOR = msg({
 	message: 'Update your password',
 	comment: 'Short label in the password change modal. Keep it concise. Keep the tone plain and specific.',
 });
+const SET_A_PASSWORD_DESCRIPTOR = msg({
+	message: 'Set a password',
+	comment: 'Title of the dialog that adds a password to an account that signs in with email codes.',
+});
 const CHANGE_PASSWORD_FORM_DESCRIPTOR = msg({
 	message: 'Change password form',
-	comment: 'Short label in the password change modal. Keep it concise. Keep the tone plain and specific.',
-});
-const NEW_PASSWORD_DESCRIPTOR = msg({
-	message: 'New password',
-	comment: 'Short label in the password change modal. Keep it concise. Keep the tone plain and specific.',
-});
-const CONFIRM_NEW_PASSWORD_DESCRIPTOR = msg({
-	message: 'Confirm new password',
 	comment: 'Short label in the password change modal. Keep it concise. Keep the tone plain and specific.',
 });
 
@@ -68,7 +67,9 @@ interface PasswordForm {
 export const PasswordChangeModal = observer(() => {
 	const {i18n} = useLingui();
 	const passwordForm = useForm<PasswordForm>();
-	const [stage, setStage] = useState<Stage>('intro');
+	const usesSudo = RuntimeConfig.usesUsernameSignIn;
+	const settingPassword = Users.currentUser?.hasPassword === false;
+	const [stage, setStage] = useState<Stage>(usesSudo ? 'changePassword' : 'intro');
 	const [ticket, setTicket] = useState<string | null>(null);
 	const [verificationProof, setVerificationProof] = useState<string | null>(null);
 	const [code, setCode] = useState<string>('');
@@ -128,16 +129,30 @@ export const PasswordChangeModal = observer(() => {
 	}, [ticket, canResend, i18n]);
 	const onPasswordSubmit = useCallback(
 		async (data: PasswordForm) => {
-			if (!ticket || !verificationProof) return;
+			const emailProof = ticket && verificationProof ? {ticket, verificationProof} : null;
+			if (!usesSudo && !emailProof) return;
 			if (data.new_password !== data.confirm_password) {
 				passwordForm.setError('confirm_password', {message: i18n._(PASSWORDS_DO_NOT_MATCH_DESCRIPTOR)});
 				return;
 			}
-			await UserCommands.completePasswordChange(ticket, verificationProof, data.new_password);
-			ModalCommands.pop();
-			ToastCommands.createToast({type: 'success', children: <Trans>Password changed</Trans>});
+			if (emailProof) {
+				await UserCommands.completePasswordChange(emailProof.ticket, emailProof.verificationProof, data.new_password);
+				ModalCommands.pop();
+			} else {
+				const currentUserId = Users.currentUserId;
+				const hadRecoveryKit = currentUserId ? RecoveryKitStatus.get(currentUserId)?.hasRecoveryKit : undefined;
+				await UserCommands.updatePasswordWithSudo(data.new_password);
+				ModalCommands.popByType(PasswordChangeModal);
+				if (hadRecoveryKit !== false) {
+					void RecoveryKitCommands.replaceRecoveryKitAfterPasswordChange(data.new_password);
+				}
+			}
+			ToastCommands.createToast({
+				type: 'success',
+				children: settingPassword ? <Trans>Password set</Trans> : <Trans>Password changed</Trans>,
+			});
 		},
-		[ticket, verificationProof, passwordForm, i18n],
+		[usesSudo, ticket, verificationProof, passwordForm, i18n, settingPassword],
 	);
 	const {handleSubmit: handlePasswordSubmit, isSubmitting: isPasswordSubmitting} = useFormSubmit({
 		form: passwordForm,
@@ -146,7 +161,13 @@ export const PasswordChangeModal = observer(() => {
 	});
 	const renderIntroStage = () => (
 		<Modal.Description data-flx="user.password-change-modal.modal-description">
-			<Trans>We'll send a verification code to your email before you can change your password.</Trans>
+			{settingPassword ? (
+				<Trans comment="Intro text in the dialog for setting a first password on an account that has none.">
+					We'll send a verification code to your email before you set a password.
+				</Trans>
+			) : (
+				<Trans>We'll send a verification code to your email before you can change your password.</Trans>
+			)}
 		</Modal.Description>
 	);
 	const renderVerifyEmailStage = () => (
@@ -163,6 +184,7 @@ export const PasswordChangeModal = observer(() => {
 					placeholder="XXXX-XXXX"
 					required={true}
 					error={codeError ?? undefined}
+					sensitive
 					data-flx="user.password-change-modal.input.set-code"
 				/>
 			</Modal.InputGroup>
@@ -259,7 +281,7 @@ export const PasswordChangeModal = observer(() => {
 							submitting={isPasswordSubmitting}
 							data-flx="user.password-change-modal.button.submit"
 						>
-							<Trans>Change password</Trans>
+							{settingPassword ? <Trans>Set password</Trans> : <Trans>Change password</Trans>}
 						</Button>
 					</>
 				);
@@ -268,7 +290,7 @@ export const PasswordChangeModal = observer(() => {
 	return (
 		<Modal.Root size="small" centered data-flx="user.password-change-modal.modal-root">
 			<Modal.Header
-				title={i18n._(UPDATE_YOUR_PASSWORD_DESCRIPTOR)}
+				title={i18n._(settingPassword ? SET_A_PASSWORD_DESCRIPTOR : UPDATE_YOUR_PASSWORD_DESCRIPTOR)}
 				data-flx="user.password-change-modal.modal-header"
 			/>
 			<Modal.Content data-flx="user.password-change-modal.modal-content">

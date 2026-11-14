@@ -23,7 +23,7 @@ function getAdapter(provider: string): GifProviderUrlAdapter | null {
 	return PROVIDER_URL_ADAPTERS[provider] ?? null;
 }
 
-export function extractSlugFromUrl(provider: string, url: string): string | null {
+function extractSlugFromUrl(provider: string, url: string): string | null {
 	return getAdapter(provider)?.extractSlugFromUrl(url) ?? null;
 }
 

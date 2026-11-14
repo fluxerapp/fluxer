@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import MediaViewer from '@app/features/ui/state/MediaViewer';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Modal from '@app/features/ui/state/Modal';
 import Popout from '@app/features/ui/state/Popout';
@@ -56,7 +57,7 @@ class InputFocusManager {
 		const hasPopoutsOpen = (Popout?.getPopouts?.() ?? []).length > 0;
 		const isMobileLayout = !!MobileLayout?.enabled;
 		const inputFocused = this.isInputFocused(textareaElement);
-		return !(isMobileLayout || hasModalOpen || hasPopoutsOpen || inputFocused);
+		return !(isMobileLayout || hasModalOpen || MediaViewer.isOpen || hasPopoutsOpen || inputFocused);
 	}
 
 	safeFocus(element: FocusableElementType, force: boolean = false): boolean {
@@ -71,11 +72,7 @@ class InputFocusManager {
 	}
 }
 
-export const inputFocusManager = InputFocusManager.getInstance();
-
-export function isInputFocused(excludingElement?: FocusableElementType) {
-	return inputFocusManager.isInputFocused(excludingElement);
-}
+const inputFocusManager = InputFocusManager.getInstance();
 
 export function canFocusTextarea(textareaElement?: FocusableElementType) {
 	return inputFocusManager.canFocusTextarea(textareaElement);

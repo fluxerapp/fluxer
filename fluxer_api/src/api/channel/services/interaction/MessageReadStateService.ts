@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
+import {ensureTextChannel, isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {Channel} from '@app/api/models/Channel';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import type {UserID} from '../../../BrandedTypes';
-import type {Channel} from '../../../models/Channel';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import {MessageInteractionBase} from './MessageInteractionBase';
 
-export class MessageReadStateService extends MessageInteractionBase {
+export class MessageReadStateService {
+	constructor(private gatewayService: IGatewayService) {}
 	async startTyping({authChannel, userId}: {authChannel: AuthenticatedChannel; userId: UserID}): Promise<void> {
 		const {channel, guild} = authChannel;
-		this.ensureTextChannel(channel);
-		if (this.isOperationDisabled(guild, GuildOperations.TYPING_EVENTS)) {
+		ensureTextChannel(channel);
+		if (isOperationDisabled(guild, GuildOperations.TYPING_EVENTS)) {
 			return;
 		}
 		await this.dispatchTypingStart({channel, userId});

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as MfaCommands from '@app/features/auth/commands/MfaCommands';
 import {BackupCodesModal} from '@app/features/auth/components/modals/BackupCodesModal';
 import {VERIFICATION_CODE_DESCRIPTOR, VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -10,6 +11,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import type {User} from '@app/features/user/models/User';
 import * as FormUtils from '@app/lib/forms';
+import {EmailCodeAvailability} from '@fluxer/constants/src/AccountConfigConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -31,6 +33,10 @@ const INVALID_OR_EXPIRED_CODE_DESCRIPTOR = msg({
 const UNABLE_TO_RESEND_CODE_RIGHT_NOW_DESCRIPTOR = msg({
 	message: 'Unable to resend code right now',
 	comment: 'Error message in the authentication backup codes view modal. Keep the tone plain and specific.',
+});
+const UNABLE_TO_LOAD_BACKUP_CODES_DESCRIPTOR = msg({
+	message: 'Unable to load backup codes',
+	comment: 'Error title shown when backup codes could not be loaded after confirming identity.',
 });
 const CHALLENGE_EXPIRED_DESCRIPTOR = msg({
 	message: 'Verification expired',
@@ -79,6 +85,30 @@ export const BackupCodesViewModal = observer(({user}: BackupCodesViewModalProps)
 		setResendAt(null);
 		setStage('intro');
 	}, []);
+	const usesSudo =
+		RuntimeConfig.emailCodeAvailabilityFor({hasEmail: user.email != null, emailVerified: user.verified === true}) !==
+		EmailCodeAvailability.AVAILABLE;
+	const showWithSudo = useCallback(async () => {
+		setSubmitting(true);
+		try {
+			const backupCodes = await MfaCommands.getBackupCodes(false);
+			ModalCommands.popByType(BackupCodesViewModal);
+			ModalCommands.pushWithKey(
+				modal(() => (
+					<BackupCodesModal
+						backupCodes={backupCodes}
+						user={user}
+						data-flx="auth.backup-codes-view-modal.show-with-sudo.backup-codes-modal"
+					/>
+				)),
+				'backup-codes',
+			);
+		} catch (error: unknown) {
+			FormUtils.pushApiErrorModal(i18n, error, i18n._(UNABLE_TO_LOAD_BACKUP_CODES_DESCRIPTOR));
+		} finally {
+			setSubmitting(false);
+		}
+	}, [user, i18n]);
 	const startChallenge = useCallback(async () => {
 		setSubmitting(true);
 		try {
@@ -143,7 +173,11 @@ export const BackupCodesViewModal = observer(({user}: BackupCodesViewModalProps)
 	}, [ticket, canResend, i18n, resetToIntro]);
 	const renderIntroStage = () => (
 		<Modal.Description data-flx="auth.backup-codes-view-modal.modal-description">
-			<Trans>We'll send a verification code to your email before you can view your backup codes.</Trans>
+			{usesSudo ? (
+				<Trans>Confirm it's you before you view your backup codes.</Trans>
+			) : (
+				<Trans>We'll send a verification code to your email before you can view your backup codes.</Trans>
+			)}
 		</Modal.Description>
 	);
 	const renderVerifyStage = () => (
@@ -159,6 +193,7 @@ export const BackupCodesViewModal = observer(({user}: BackupCodesViewModalProps)
 					label={i18n._(VERIFICATION_CODE_DESCRIPTOR)}
 					placeholder="XXXX-XXXX"
 					required={true}
+					sensitive
 					error={codeError ?? undefined}
 					data-flx="auth.backup-codes-view-modal.input.set-code"
 				/>
@@ -174,7 +209,7 @@ export const BackupCodesViewModal = observer(({user}: BackupCodesViewModalProps)
 							<Trans>Cancel</Trans>
 						</Button>
 						<Button
-							onClick={startChallenge}
+							onClick={usesSudo ? showWithSudo : startChallenge}
 							submitting={submitting}
 							data-flx="auth.backup-codes-view-modal.button.start-challenge"
 						>

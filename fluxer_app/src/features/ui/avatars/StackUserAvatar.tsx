@@ -7,7 +7,7 @@ import styles from '@app/features/ui/avatars/StackUserAvatar.module.css';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {resolveVoiceParticipantSpeaking} from '@app/features/voice/components/VoiceParticipantDisplayState';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 
@@ -20,14 +20,14 @@ interface StackUserAvatarProps {
 }
 
 export const StackUserAvatar = observer(({guild, channel, userId, size = 28, className}: StackUserAvatarProps) => {
-	const channelStates = MediaEngine.getAllVoiceStatesInChannel(guild.id, channel.id);
+	const channelStates = VoiceRuntime.getAllVoiceStatesInChannel(guild.id, channel.id);
 	const user = Users.getUser(userId);
 	if (!user) return null;
 	let speaking = false;
 	for (const state of Object.values(channelStates)) {
 		if (state.user_id !== userId) continue;
 		const connectionId = state.connection_id ?? '';
-		const participant = MediaEngine.getParticipantByUserIdAndConnectionId(userId, connectionId);
+		const participant = VoiceRuntime.getParticipantByUserIdAndConnectionId(userId, connectionId);
 		speaking ||= resolveVoiceParticipantSpeaking({
 			participant,
 			voiceState: state,

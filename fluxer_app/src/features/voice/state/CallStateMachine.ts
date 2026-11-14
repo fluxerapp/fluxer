@@ -4,7 +4,7 @@ import type {CallVoiceState} from '@app/features/gateway/types/GatewayVoiceTypes
 import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export enum CallLayout {
+enum CallLayout {
 	MINIMUM = 'MINIMUM',
 	NORMAL = 'NORMAL',
 	FULL_SCREEN = 'FULL_SCREEN',
@@ -27,7 +27,7 @@ export interface Call {
 	participants: Array<string>;
 }
 
-export interface CallStateContext {
+interface CallStateContext {
 	calls: Record<string, Call>;
 	pendingRinging: Record<string, Array<string>>;
 }
@@ -80,7 +80,7 @@ function withoutCall(context: CallStateContext, channelId: string): CallStateCon
 	};
 }
 
-export function normalizeCallUserIds(userIds?: ReadonlyArray<string> | null): Array<string> {
+function normalizeCallUserIds(userIds?: ReadonlyArray<string> | null): Array<string> {
 	if (!userIds || userIds.length === 0) return [];
 	const normalized: Array<string> = [];
 	const seenUserIds = new Set<string>();
@@ -93,7 +93,7 @@ export function normalizeCallUserIds(userIds?: ReadonlyArray<string> | null): Ar
 	return normalized.sort();
 }
 
-export function extractParticipantsFromVoiceStates(voiceStates?: ReadonlyArray<CallVoiceState> | null): Array<string> {
+function extractParticipantsFromVoiceStates(voiceStates?: ReadonlyArray<CallVoiceState> | null): Array<string> {
 	if (!voiceStates || voiceStates.length === 0) return [];
 	return normalizeCallUserIds(voiceStates.map((state) => state.user_id));
 }
@@ -225,7 +225,7 @@ function normalizeInput(input: CallStateInput): CallStateContext {
 	return {calls, pendingRinging};
 }
 
-export const callStateMachine = setup({
+const callStateMachine = setup({
 	types: {} as {
 		context: CallStateContext;
 		events: CallStateEvent;
@@ -301,7 +301,7 @@ export function getCallFromSnapshot(snapshot: CallStateSnapshot, channelId: stri
 	return snapshot.context.calls[channelId];
 }
 
-export function getCallsFromSnapshot(snapshot: CallStateSnapshot): Array<Call> {
+function getCallsFromSnapshot(snapshot: CallStateSnapshot): Array<Call> {
 	return Object.values(snapshot.context.calls);
 }
 

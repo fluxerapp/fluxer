@@ -6,8 +6,10 @@ import {
 } from '@fluxer/schema/src/domains/donation/DonationAmountUtils';
 import {z} from 'zod';
 
+const DonorEmail = z.string().trim().toLowerCase().check(z.email()).max(254);
+
 export const DonationRequestLinkRequest = z.object({
-	email: z.email().max(254).describe('Email address to send the magic link to'),
+	email: DonorEmail.describe('Email address to send the magic link to'),
 });
 
 export type DonationRequestLinkRequest = z.infer<typeof DonationRequestLinkRequest>;
@@ -24,7 +26,7 @@ export type DonationCurrency = z.infer<typeof DonationCurrency>;
 
 export const DonationCheckoutRequest = z
 	.object({
-		email: z.email().max(254).describe('Donor email address'),
+		email: DonorEmail.describe('Donor email address'),
 		amount_cents: z.number().int().describe('Donation amount in minor units for the selected currency'),
 		currency: DonationCurrency.describe('Currency for the donation'),
 		interval: z.enum(['month', 'year']).nullable().describe('Billing interval (null for one-time donation)'),

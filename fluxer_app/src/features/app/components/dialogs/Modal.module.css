@@ -5,11 +5,12 @@
 	inset: 0;
 	pointer-events: none;
 	position: fixed;
+	will-change: opacity;
 }
 
 .layer {
 	position: fixed;
-	inset: 0;
+	inset: 0 var(--quick-css-dock-right, 0px) 0 var(--quick-css-dock-left, 0px);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -55,7 +56,7 @@
 
 .layer.layerFullscreen {
 	position: absolute;
-	inset: 0;
+	inset: 0 var(--quick-css-dock-right, 0px) 0 var(--quick-css-dock-left, 0px);
 	--fullscreen-pad-y: clamp(0.5rem, 1.5vh, 1rem);
 	--fullscreen-pad-x: clamp(0.75rem, 2vw, 1.5rem);
 	--fullscreen-view-height: min(100dvh, 100svh, 100vh);
@@ -150,8 +151,11 @@
 }
 
 .root.small {
-	min-height: 12.5rem;
 	width: 27.5rem;
+}
+
+.root.small:has(.footer, .formFooter) {
+	min-height: 12.5rem;
 }
 
 .root.large {
@@ -193,32 +197,6 @@
 	box-shadow: none !important;
 	max-height: 100%;
 	isolation: isolate;
-}
-
-@keyframes slideInFromRight {
-	from {
-		transform: translate3d(100%, 0, 0);
-	}
-	to {
-		transform: translate3d(0, 0, 0);
-	}
-}
-
-@keyframes slideOutToRight {
-	from {
-		transform: translate3d(0, 0, 0);
-	}
-	to {
-		transform: translate3d(100%, 0, 0);
-	}
-}
-
-.mobileSlideIn {
-	animation: slideInFromRight 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-}
-
-.mobileSlideOut {
-	animation: slideOutToRight 0.2s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
 @media screen and (min-width: 768px) {
@@ -414,7 +392,7 @@
 .insetCloseButtonContainer {
 	position: absolute;
 	top: calc(0.75rem + env(safe-area-inset-top, 0px));
-	right: calc(0.75rem + env(safe-area-inset-right, 0px));
+	inset-inline-end: calc(0.75rem + var(--safe-area-inset-inline-end));
 	z-index: 10;
 	pointer-events: auto;
 }
@@ -454,7 +432,6 @@
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
-	padding-bottom: 1rem;
 }
 
 .description {

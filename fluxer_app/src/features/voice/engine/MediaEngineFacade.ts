@@ -2,10 +2,11 @@
 
 import assert from 'node:assert/strict';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import type {GatewayErrorData} from '@app/features/gateway/transport/GatewaySocket';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
@@ -15,20 +16,29 @@ import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMe
 import Keybind from '@app/features/input/state/InputKeybind';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
-import {SoundType, setSoundOutputDeviceIdResolver} from '@app/features/notification/utils/SoundUtils';
+import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
+import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
+import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import Idle from '@app/features/ui/state/Idle';
-import Sound from '@app/features/ui/state/Sound';
-import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import Users from '@app/features/user/state/Users';
+import {openAccountGateFlow} from '@app/features/user/utils/AccountGatePresentation';
+import {canPerform} from '@app/features/user/utils/AccountGates';
+import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {VoiceP2pPeerFailedModal} from '@app/features/voice/components/alerts/VoiceP2pPeerFailedModal';
 import {getStreamKey, parseStreamKey} from '@app/features/voice/components/StreamKeys';
+import {pushActiveStreamSettings} from '@app/features/voice/components/StreamSettingsMenuContent';
 import {voiceStatsDB} from '@app/features/voice/diagnostics/VoiceStatsDB';
 import {
 	createMediaEngineFacadeSnapshot,
 	type MediaEngineFacadeEvent,
+	type MediaEngineFacadeP2pRefusal,
 	type MediaEngineFacadePendingSessionRestore,
 	type MediaEngineFacadeSnapshot,
 	selectMediaEngineConnectPreflightDecision,
@@ -41,14 +51,13 @@ import {
 } from '@app/features/voice/engine/MediaEngineFacadeStateMachine';
 import {
 	AFK_CHECK_INTERVAL_MS,
-	CLAIM_YOUR_ACCOUNT_TO_JOIN_THIS_VOICE_CHANNEL_DESCRIPTOR,
-	CLAIM_YOUR_ACCOUNT_TO_JOIN_VOICE_CHANNELS_YOU_DESCRIPTOR,
-	CLAIM_YOUR_ACCOUNT_TO_START_OR_JOIN_1_DESCRIPTOR,
 	DEFERRED_DISCONNECT_TIMEOUT_MS,
 	RECONNECT_SUCCEEDED_PICK_A_SCREEN_AGAIN_IF_YOU_DESCRIPTOR,
 	VOICE_CHANNEL_NO_LONGER_AVAILABLE_DESCRIPTOR,
 	VOICE_CONNECTION_FAILED_DESCRIPTOR,
 	VOICE_CONNECTION_LIMIT_REACHED_DESCRIPTOR,
+	VOICE_E2EE_NEEDS_HTTPS_DESCRIPTOR,
+	VOICE_E2EE_REQUIRED_DESCRIPTOR,
 	YOU_CAN_T_JOIN_WHILE_YOU_RE_ON_DESCRIPTOR,
 } from '@app/features/voice/engine/media_engine_facade/shared';
 import {
@@ -56,6 +65,8 @@ import {
 	saveCurrentVoiceSessionRestoreSnapshot,
 	type VoiceSessionRestoreSyncHandle,
 } from '@app/features/voice/engine/media_engine_facade/VoiceSessionRestoreSync';
+import VoiceMeshPeers from '@app/features/voice/engine/mesh/VoiceMeshPeers';
+import {isVoiceMeshRoom} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {Store, useStoreVersion} from '@app/features/voice/engine/Store';
@@ -63,11 +74,14 @@ import {shouldMoveToAfkOnTick} from '@app/features/voice/engine/VoiceAfkTracking
 import {
 	checkChannelLimit,
 	checkMultipleConnections,
+	checkP2pConsent,
+	requestP2pConsent,
 	sendVoiceStateConnect,
 	sendVoiceStateDisconnect,
+	showVoiceChannelFullModal,
 	syncVoiceStateToServer,
 } from '@app/features/voice/engine/VoiceChannelConnector';
-import type {VoiceConnectionFailureReason} from '@app/features/voice/engine/VoiceConnectionStateMachine';
+import type {VoiceConnectionLocalDisconnectReason} from '@app/features/voice/engine/VoiceConnectionStateMachine';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import type {NormalizedVoiceState} from '@app/features/voice/engine/VoiceGatewayStateMachine';
@@ -90,6 +104,7 @@ import {startVoiceMediaGraphTimerScheduler} from '@app/features/voice/engine/Voi
 import {bindOutputDeviceSync} from '@app/features/voice/engine/VoiceOutputDeviceSync';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
 import {bindRoomEvents, type RoomEventDependencies} from '@app/features/voice/engine/VoiceRoomEventBinder';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import type {VoiceStateSyncPartial, VoiceStateSyncPayload} from '@app/features/voice/engine/VoiceStateSyncTypes';
 import {
 	deferStopWatchingStreamKey,
@@ -99,6 +114,7 @@ import {
 } from '@app/features/voice/engine/VoiceStreamWatchState';
 import {type VoiceConnectionQuality, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {bindVoiceEngineV2AppAudioPreferencesSync} from '@app/features/voice/engine/v2/VoiceEngineV2AppAudioPreferencesSyncBinding';
+import {getCameraCaptureDimensions} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
 import voiceEngineV2AppConnectionHostAdapter, {
 	type VoiceServerUpdateData,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppConnectionHostAdapter';
@@ -108,7 +124,6 @@ import {
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppControllerHost';
 import voiceEngineV2AppDebugEventSinkHostAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppDebugEventSinkHostAdapter';
 import {createVoiceEngineV2AppEventLogSpillLoggerSink} from '@app/features/voice/engine/v2/VoiceEngineV2AppEventLogSpillLoggerSink';
-import {createVoiceEngineV2AppIngestionPort} from '@app/features/voice/engine/v2/VoiceEngineV2AppHostPorts';
 import type {VoiceEngineV2AppLifecycleDisposable} from '@app/features/voice/engine/v2/VoiceEngineV2AppLifecycleAdapter';
 import voiceEngineV2AppMediaExecutionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppMediaExecutionAdapter';
 import voiceEngineV2AppMediaStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppMediaStateAdapter';
@@ -117,7 +132,10 @@ import {
 	type VoiceEngineV2AppParticipantAdapter,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppParticipantAdapter';
 import VoiceEngineV2AppPermissionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppPermissionAdapter';
-import {createVoiceEngineV2AppProductionHostPorts} from '@app/features/voice/engine/v2/VoiceEngineV2AppProductionHostPorts';
+import {
+	createVoiceEngineV2AppIngestionPort,
+	createVoiceEngineV2AppProductionHostPorts,
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppProductionHostPorts';
 import {
 	createVoiceEngineV2AppProjectionStore,
 	type VoiceEngineV2AppProjectionStore,
@@ -127,22 +145,31 @@ import type {VoiceEngineV2AppScreenShareControllerGateway} from '@app/features/v
 import voiceEngineV2AppScreenShareExecutionAdapter, {
 	type DeviceScreenShareCaptureOptions,
 	type ScreenShareReconnectSnapshot,
+	shouldRestoreScreenShareAfterReconnect,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter';
-import {selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
+import {selectVoiceEngineV2AppSyncSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
 import {VoiceEngineV2AppStatsHostAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppStatsHostAdapter';
 import VoiceEngineV2AppSubscriptionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppSubscriptionAdapter';
 import voiceEngineV2AppVoiceStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
 import type {DisplayScreenShareCaptureContext} from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import CallMediaPrefs from '@app/features/voice/state/CallMediaPrefs';
 import {type ChannelE2EEStatus, computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
+import VoiceP2pConsent from '@app/features/voice/state/VoiceP2pConsent';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
 import VoiceSessionRestore, {type VoiceSessionRestoreSnapshot} from '@app/features/voice/state/VoiceSessionRestore';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {setNativeAudioCaptureBridgeLifecycleBridge} from '@app/features/voice/utils/NativeAudioCaptureBridge';
+import {resolveDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
+import {executeScreenShareOperation} from '@app/features/voice/utils/ScreenShareUtils';
 import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
+import {
+	VOICE_P2P_CONSENT_REQUIRED_DESCRIPTOR,
+	VOICE_P2P_UNAVAILABLE_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {buildVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import {
 	isVoiceServerMuteActive,
@@ -151,25 +178,27 @@ import {
 } from '@app/features/voice/utils/VoicePermissionUtils';
 import {getActiveVoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
 import type {NativeAudioStartOptions} from '@app/types/electron.d';
+import {AccountTiers, type TierGatedAction, TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
+import {resolveVerificationNeed} from '@fluxer/constants/src/AccountTierRules';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {shouldApplyGatewayVoiceStateEcho} from '@fluxer/voice_engine_v2/src/core/reducers/gateway';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {
 	VoiceEngineV2AudioMode,
 	VoiceEngineV2CameraOptions,
-	VoiceEngineV2Command,
-	VoiceEngineV2Controller,
 	VoiceEngineV2DisconnectReason,
 	VoiceEngineV2GatewayVoiceState,
 	VoiceEngineV2LatencyDataPoint,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2Model,
 	VoiceEngineV2PerTrackStats,
-	VoiceEngineV2Snapshot,
 	VoiceEngineV2StatsSample,
 	VoiceEngineV2TransportInfo,
 	VoiceEngineV2VoiceStats,
-} from '@fluxer/voice_engine_v2';
-import {shouldApplyGatewayVoiceStateEcho} from '@fluxer/voice_engine_v2';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 import {type I18n, i18n as linguiI18n, type MessageDescriptor} from '@lingui/core';
 import type {
 	ConnectionQuality as LiveKitConnectionQuality,
@@ -178,9 +207,17 @@ import type {
 	ScreenShareCaptureOptions,
 	TrackPublishOptions,
 } from 'livekit-client';
-import {makeObservable, observable} from 'mobx';
+import {compareStructural, makeObservable, observableRef, reaction} from 'mobx';
+import React from 'react';
 
 const logger = new Logger('MediaEngineFacade');
+const VOICE_P2P_PEER_FAILED_MODAL_KEY = 'voice-p2p-peer-failed';
+
+function voiceGateAction(channelType: number | undefined): TierGatedAction {
+	if (channelType === ChannelTypes.DM) return TierGatedActions.CALL;
+	if (channelType === ChannelTypes.GROUP_DM) return TierGatedActions.GROUP_CALL;
+	return TierGatedActions.VOICE;
+}
 
 function isCameraPermissionDeniedCommandFailure(error: unknown): boolean {
 	if (!(error instanceof Error)) return false;
@@ -214,7 +251,10 @@ function buildRoomEventDependencies(facade: {
 			isDisconnecting: () => voiceEngineV2AppConnectionHostAdapter.disconnecting,
 			isUserMovePending: () => facade.isUserMovePending(),
 			markConnected: () => voiceEngineV2AppConnectionHostAdapter.markConnected(),
-			markDisconnected: (reason) => voiceEngineV2AppConnectionHostAdapter.markDisconnected(reason),
+			markDisconnected: (reason) => {
+				if (reason === 'server') VoiceSessionRestore.clearSnapshot();
+				voiceEngineV2AppConnectionHostAdapter.markDisconnected(reason);
+			},
 			markReconnecting: () => voiceEngineV2AppConnectionHostAdapter.markReconnecting(),
 			markReconnected: () => voiceEngineV2AppConnectionHostAdapter.markReconnected(),
 		},
@@ -292,9 +332,7 @@ interface ConnectDirectlyOptions {
 
 type TerminalUnloadVoiceDisconnectReason = 'pagehide' | 'beforeunload' | 'unload';
 
-type VoiceMuteReason = 'guild' | 'permission' | 'voice_push_to_talk' | 'self' | null;
-
-export interface VoiceEngineConnectionContext {
+interface VoiceEngineConnectionContext {
 	guildId: string | null;
 	channelId: string | null;
 	connectionId: string | null;
@@ -384,7 +422,6 @@ class MediaEngineFacade extends Store {
 		});
 		this.voiceEngineV2SourceLifecycleBridge = this.createSourceLifecycleBridge();
 		voiceEngineV2AppScreenShareExecutionAdapter.setControllerGateway(this.createScreenShareControllerGateway());
-		voiceEngineV2AppScreenShareExecutionAdapter.setSourceLifecycleBridge(this.voiceEngineV2SourceLifecycleBridge);
 		ScreenShareCodecNegotiation.setSelectionChangeListener((activeRoom, codec, reason) => {
 			void voiceEngineV2AppScreenShareExecutionAdapter
 				.republishActiveScreenShareForNegotiatedCodecInternal(activeRoom, codec)
@@ -400,27 +437,21 @@ class MediaEngineFacade extends Store {
 		setNativeAudioCaptureBridgeLifecycleBridge(this.voiceEngineV2SourceLifecycleBridge);
 		this.syncVoiceEngineV2AudioControlsFromAppState();
 		makeObservable<this, 'facadeSnapshot'>(this, {
-			facadeSnapshot: observable.ref,
+			facadeSnapshot: observableRef,
 		});
 		this.initializeEngineStoreSync();
 		this.initializeVoiceEngineV2ConnectionLifecycleSync();
 		this.initializeLocalAudioStateSync();
 		this.initializeVoiceSessionRestoreSync();
 		this.initializeE2EEStatusSync();
+		this.initializeP2pPeerFailedModalSync();
 		this.initializeTerminalUnloadVoiceDisconnect();
-		Sound.setSelfDeafenedResolver(() => getEffectiveAudioState().effectiveDeaf);
-		setSoundOutputDeviceIdResolver(() => VoiceSettings.getOutputDeviceId());
-		this.prewarmVoiceEngineV2InBackground('startup');
 		(
 			window as typeof window & {
 				_mediaEngine?: MediaEngineFacade;
 			}
 		)._mediaEngine = this;
 		logger.debug('MediaEngineFacade initialized');
-	}
-
-	setI18n(instance: I18n): void {
-		this.i18n = instance;
 	}
 
 	private createSourceLifecycleBridge(): VoiceEngineV2AppSourceLifecycleBridge | null {
@@ -459,7 +490,7 @@ class MediaEngineFacade extends Store {
 		});
 	}
 
-	private prewarmVoiceEngineV2InBackground(reason: string): void {
+	prewarmInBackground(reason: string): void {
 		void this.voiceEngineV2Host
 			.runAndWait(
 				() => {
@@ -468,7 +499,7 @@ class MediaEngineFacade extends Store {
 				{description: `voice engine v2 prewarm (${reason})`},
 			)
 			.then(() => {
-				logger.info('Voice engine v2 prewarm completed', {reason});
+				logger.debug('Voice engine v2 prewarm completed', {reason});
 			})
 			.catch((error) => {
 				logger.warn('Voice engine v2 prewarm failed', {reason, error});
@@ -544,7 +575,7 @@ class MediaEngineFacade extends Store {
 		});
 		if (transition.snapshot.lifecycle.tearingDown) {
 			this.voiceEngineV2EstablishedConnectionKey = null;
-			logger.info('Voice engine v2 external establishment observed during lifecycle teardown', {
+			logger.debug('Voice engine v2 external establishment observed during lifecycle teardown', {
 				connectionStatus: transition.snapshot.connection.status,
 			});
 			return;
@@ -635,8 +666,8 @@ class MediaEngineFacade extends Store {
 		return voiceEngineV2AppConnectionHostAdapter.connectFailed;
 	}
 
-	get connectFailureReason(): VoiceConnectionFailureReason {
-		return voiceEngineV2AppConnectionHostAdapter.connectFailureReason;
+	get localDisconnectReason(): VoiceConnectionLocalDisconnectReason {
+		return voiceEngineV2AppConnectionHostAdapter.localDisconnectReason;
 	}
 
 	get connectFailedTarget(): {guildId: string | null; channelId: string} | null {
@@ -704,25 +735,6 @@ class MediaEngineFacade extends Store {
 
 	get reconnectionCount(): number {
 		return this.statsHostAdapter.reconnectionCount;
-	}
-
-	get estimatedLatency(): number | null {
-		return this.statsHostAdapter.estimatedLatency;
-	}
-
-	get displayLatency(): number | null {
-		const measured = this.currentLatency;
-		return measured !== null ? measured : this.estimatedLatency;
-	}
-
-	refreshMicrophoneFromSettings(): void {
-		void this.refreshMicrophoneFromCurrentEngine().catch((error) => {
-			logger.warn('Failed to refresh microphone from settings', {error});
-		});
-	}
-
-	private async refreshMicrophoneFromCurrentEngine(): Promise<void> {
-		await voiceEngineV2AppMediaExecutionAdapter.refreshMicrophone(this.room, {forceRepublish: true});
 	}
 
 	refreshCameraBackgroundFromSettings(): void {
@@ -797,11 +809,9 @@ class MediaEngineFacade extends Store {
 		room: Room | null;
 		restoreCamera: boolean;
 		restoreStream: boolean;
-		restoreStreamFromSnapshot: (() => Promise<boolean>) | null;
-		streamSnapshotFallback: boolean;
-		streamPlaySound: boolean;
-		settleStreamStateWhenNotRestored: boolean;
+		screenShareSnapshot: ScreenShareReconnectSnapshot | null;
 		toastWhenStreamNotRestored: boolean;
+		sendUpdateWhenStreamNotRestored: boolean;
 	}): Promise<void> {
 		assert.equal(typeof args.restoreCamera, 'boolean', 'restoreLocalMedia requires a camera flag');
 		assert.equal(typeof args.restoreStream, 'boolean', 'restoreLocalMedia requires a stream flag');
@@ -815,36 +825,29 @@ class MediaEngineFacade extends Store {
 				logger.warn('Failed to restore camera during local media restore', {reason: args.reason, error});
 			}
 		}
-		if (!args.restoreStream) return;
+		if (!shouldRestoreScreenShareAfterReconnect(args.restoreStream, args.screenShareSnapshot)) return;
 		let restored = false;
-		if (args.restoreStreamFromSnapshot) {
-			restored = await args.restoreStreamFromSnapshot();
-			if (!restored && !args.streamSnapshotFallback) {
-				voiceEngineV2AppMediaStateAdapter.applyScreenShareState(false, {sendUpdate: false});
-				return;
-			}
-		}
 		let streamRestoreFailed = false;
-		if (!restored) {
-			try {
-				await voiceEngineV2AppScreenShareExecutionAdapter.setScreenShareEnabled(args.room, true, {
-					sendUpdate: false,
-					...(args.streamPlaySound ? {} : {playSound: false}),
-				});
-				restored = LocalVoiceState.getSelfStream();
-			} catch (error) {
-				streamRestoreFailed = true;
-				logger.warn('Failed to restore screen share during local media restore', {reason: args.reason, error});
-			}
+		try {
+			restored = await voiceEngineV2AppScreenShareExecutionAdapter.restoreScreenShareAfterReconnect(
+				args.room,
+				args.screenShareSnapshot,
+			);
+		} catch (error) {
+			streamRestoreFailed = true;
+			logger.warn('Failed to restore screen share during local media restore', {reason: args.reason, error});
 		}
 		if (restored) return;
-		if (streamRestoreFailed || args.settleStreamStateWhenNotRestored) {
-			voiceEngineV2AppMediaStateAdapter.applyScreenShareState(false, {sendUpdate: false});
+		if (streamRestoreFailed || args.screenShareSnapshot !== null) {
+			voiceEngineV2AppMediaStateAdapter.applyScreenShareState(false, {
+				sendUpdate: args.sendUpdateWhenStreamNotRestored,
+			});
 		}
 		if (args.toastWhenStreamNotRestored && this.i18n) {
 			ToastCommands.createToast({
 				type: 'info',
 				children: this.i18n._(RECONNECT_SUCCEEDED_PICK_A_SCREEN_AGAIN_IF_YOU_DESCRIPTOR),
+				timeout: 5000,
 			});
 		}
 	}
@@ -891,7 +894,7 @@ class MediaEngineFacade extends Store {
 			}
 			previousRoom = room;
 			previousStatus = status;
-			if (!room) return;
+			if (!room || isVoiceMeshRoom(room)) return;
 			if (status === 'encrypted') {
 				void room.setE2EEEnabled(true).catch((error) => {
 					logger.warn('Failed to enable E2EE on room', error);
@@ -904,6 +907,51 @@ class MediaEngineFacade extends Store {
 		};
 		voiceEngineV2AppConnectionHostAdapter.subscribe(syncE2EEStatus);
 		voiceEngineV2AppVoiceStateAdapter.subscribe(syncE2EEStatus);
+	}
+
+	private initializeP2pPeerFailedModalSync(): void {
+		reaction(
+			() => VoiceMeshPeers.failedConnectionIds,
+			(failedConnectionIds, previousConnectionIds) => {
+				if (failedConnectionIds.length === 0) {
+					ModalCommands.popWithKey(VOICE_P2P_PEER_FAILED_MODAL_KEY);
+					return;
+				}
+				if (failedConnectionIds.some((connectionId) => !previousConnectionIds.includes(connectionId))) {
+					this.showP2pPeerFailedModal(failedConnectionIds);
+				}
+			},
+			{equals: compareStructural},
+		);
+	}
+
+	private showP2pPeerFailedModal(failedConnectionIds: ReadonlyArray<string>): void {
+		const {guildId, channelId} = voiceEngineV2AppConnectionHostAdapter.connectionState;
+		if (!channelId) return;
+		const names = failedConnectionIds.flatMap((connectionId) => {
+			const userId = voiceEngineV2AppVoiceStateAdapter.getVoiceStateByConnectionId(connectionId)?.user_id;
+			const user = userId ? Users.getUser(userId) : undefined;
+			return user ? [NicknameUtils.getNickname(user, guildId, channelId)] : [];
+		});
+		const allowSwitch = guildId === null || Channels.getChannel(channelId)?.rtcP2p !== true;
+		ModalCommands.pushWithKey(
+			modal(() =>
+				React.createElement(VoiceP2pPeerFailedModal, {
+					names,
+					allowSwitch,
+					onLeave: () => void this.disconnectFromVoiceChannel('user'),
+					onSwitch: () => this.switchToStandardCall(),
+				}),
+			),
+			VOICE_P2P_PEER_FAILED_MODAL_KEY,
+		);
+	}
+
+	switchToStandardCall(): void {
+		const {guildId, channelId, connectionId} = voiceEngineV2AppConnectionHostAdapter.connectionState;
+		if (!channelId || !connectionId) return;
+		logger.debug('Switching P2P call to a standard call', {guildId, channelId});
+		syncVoiceStateToServer(guildId, channelId, connectionId, undefined, false);
 	}
 
 	private initializeVoiceSessionRestoreSync(): void {
@@ -957,7 +1005,7 @@ class MediaEngineFacade extends Store {
 			return true;
 		}
 		if (!shouldCancelMediaEngineReconnectForServerVoiceStateRemoval(removalInput)) return false;
-		logger.info('Server confirmed current voice connection removal, cancelling auto reconnect', {
+		logger.debug('Server confirmed current voice connection removal, cancelling auto reconnect', {
 			guildId,
 			connectionId,
 		});
@@ -979,7 +1027,7 @@ class MediaEngineFacade extends Store {
 		if (!connected && !connecting && !channelId && !connectionId && !room && !hasVoiceTransport) return;
 		this.terminalUnloadVoiceDisconnectSent = true;
 		saveCurrentVoiceSessionRestoreSnapshot();
-		logger.info('Terminal page unload voice disconnect', {
+		logger.debug('Terminal page unload voice disconnect', {
 			reason,
 			guildId,
 			channelId,
@@ -991,7 +1039,7 @@ class MediaEngineFacade extends Store {
 		});
 		voiceEngineV2AppScreenShareExecutionAdapter.stopNativeScreenShareForTerminalUnload();
 		const hasSpecificConnection = connectionId != null;
-		GatewayConnection.sendTerminalVoiceDisconnect(
+		GatewaySessions.foregroundConnection.sendTerminalVoiceDisconnect(
 			{
 				guild_id: hasSpecificConnection ? guildId : null,
 				channel_id: null,
@@ -1031,6 +1079,21 @@ class MediaEngineFacade extends Store {
 		});
 	}
 
+	private promptAccountForVoice(action: TierGatedAction): void {
+		const i18n = this.i18n;
+		if (!i18n) return;
+		const user = Users.getCurrentUser();
+		const need =
+			user?.verificationNeed ??
+			resolveVerificationNeed({
+				tier: AccountTiers.UNCLAIMED,
+				identityMode: RuntimeConfig.accountIdentity,
+				hasEmail: user?.email != null,
+			});
+		if (need === null) return;
+		openAccountGateFlow(i18n, {action, need});
+	}
+
 	private showVoiceChannelUnavailableErrorModal(): void {
 		if (!this.i18n) return;
 		this.showVoiceErrorModal(
@@ -1044,7 +1107,7 @@ class MediaEngineFacade extends Store {
 		reason: 'preflight' | 'gateway-error' | 'channel-delete',
 		options: {showToast?: boolean} = {},
 	): void {
-		logger.info('Clearing unavailable voice target', {channelId, reason});
+		logger.debug('Clearing unavailable voice target', {channelId, reason});
 		this.transitionFacadeState({type: 'unavailableTarget.clear', channelId});
 		VoiceSessionRestore.clearSnapshotForChannel(channelId);
 		voiceEngineV2AppConnectionHostAdapter.forgetReconnectChannel(channelId);
@@ -1091,11 +1154,11 @@ class MediaEngineFacade extends Store {
 			voiceChannel && resolvedGuildId && currentUserId
 				? (GuildMembers.getMember(resolvedGuildId, currentUserId)?.isTimedOut() ?? false)
 				: false;
-		const currentUser = Users.getCurrentUser();
-		const isUnclaimed = !(currentUser?.isClaimed() ?? false);
 		const guild = resolvedGuildId ? Guilds.getGuild(resolvedGuildId) : null;
-		const isOwner = guild?.isOwner(currentUserId) ?? false;
 		const channel = voiceChannel ?? Channels.getChannel(channelId);
+		const voiceGate = canPerform(Users.getCurrentUser(), voiceGateAction(channel?.type), {
+			isGuildOwner: guild?.isOwner(currentUserId) ?? false,
+		});
 		const blockedByMatureGate =
 			Boolean(voiceChannel) &&
 			!options.skipChannelGate &&
@@ -1106,10 +1169,8 @@ class MediaEngineFacade extends Store {
 		const preflightDecision = selectMediaEngineConnectPreflightDecision({
 			targetAvailable: Boolean(voiceChannel),
 			isTimedOut: Boolean(isTimedOut),
-			isUnclaimed,
-			isGuildOwner: resolvedGuildId ? isOwner : true,
-			isDirectMessage: channel?.type === ChannelTypes.DM,
-			hasGatewaySocket: Boolean(GatewayConnection.socket),
+			accountGateDenied: !voiceGate.allowed,
+			hasGatewaySocket: Boolean(GatewaySessions.foregroundConnection.socket),
 			blockedByMatureGate,
 			channelLimitAllowed: true,
 		});
@@ -1121,12 +1182,11 @@ class MediaEngineFacade extends Store {
 			if (!this.i18n) {
 				throw new Error('MediaEngineFacade: i18n not initialized');
 			}
-			const descriptor =
-				preflightDecision.reason === 'timed-out'
-					? YOU_CAN_T_JOIN_WHILE_YOU_RE_ON_DESCRIPTOR
-					: preflightDecision.reason === 'claim-account-direct'
-						? CLAIM_YOUR_ACCOUNT_TO_START_OR_JOIN_1_DESCRIPTOR
-						: CLAIM_YOUR_ACCOUNT_TO_JOIN_VOICE_CHANNELS_YOU_DESCRIPTOR;
+			if (preflightDecision.reason === 'account-gate') {
+				if (!voiceGate.allowed) openAccountGateFlow(this.i18n, {action: voiceGate.action, need: voiceGate.need});
+				return;
+			}
+			const descriptor = YOU_CAN_T_JOIN_WHILE_YOU_RE_ON_DESCRIPTOR;
 			this.showVoiceErrorModal(
 				descriptor,
 				`voice.media-engine-facade.preflight-${preflightDecision.reason}-error-modal`,
@@ -1147,9 +1207,7 @@ class MediaEngineFacade extends Store {
 		const channelLimitDecision = selectMediaEngineConnectPreflightDecision({
 			targetAvailable: true,
 			isTimedOut: false,
-			isUnclaimed: false,
-			isGuildOwner: true,
-			isDirectMessage: false,
+			accountGateDenied: false,
 			hasGatewaySocket: true,
 			blockedByMatureGate: false,
 			channelLimitAllowed,
@@ -1157,6 +1215,13 @@ class MediaEngineFacade extends Store {
 		if (channelLimitDecision.type === 'abort') {
 			return;
 		}
+		const hasP2pConsent = checkP2pConsent(
+			resolvedGuildId,
+			channelId,
+			() => void this.connectToVoiceChannel(guildId, channelId, options),
+			() => voiceEngineV2AppConnectionHostAdapter.clearInFlightConnect(),
+		);
+		if (!hasP2pConsent) return;
 		const shouldProceed = checkMultipleConnections(
 			resolvedGuildId,
 			channelId,
@@ -1336,6 +1401,7 @@ class MediaEngineFacade extends Store {
 		this.statsHostAdapter.reset();
 		if (reason === 'user' || reason === 'server') {
 			VoiceSessionRestore.clearSnapshot();
+			VoiceP2pConsent.clear();
 		}
 		if (reason !== 'server' && connectionId) {
 			sendVoiceStateDisconnect(guildId, connectionId);
@@ -1356,7 +1422,7 @@ class MediaEngineFacade extends Store {
 			VoiceSessionRestore.clearSnapshot();
 		}
 		if (connectionId) CallMediaPrefs.clearForCall(connectionId);
-		logger.info('Voice teardown complete', {channelId, reason});
+		logger.debug('Voice teardown complete', {channelId, reason});
 		this.transitionFacadeState({type: 'cleanup.complete'});
 	}
 
@@ -1404,7 +1470,7 @@ class MediaEngineFacade extends Store {
 					currentVoiceStateChannelId,
 				})
 			) {
-				logger.info('Deferred disconnect executing - no VOICE_SERVER_UPDATE received', {connectionId});
+				logger.debug('Deferred disconnect executing - no VOICE_SERVER_UPDATE received', {connectionId});
 				void this.disconnectFromVoiceChannel('server');
 			} else if (currentVoiceStateChannelId) {
 				logger.debug('Deferred disconnect ignored because voice state is active again', {
@@ -1456,7 +1522,7 @@ class MediaEngineFacade extends Store {
 
 	private getEffectiveSelfMuteForVoiceStatePayload(): boolean {
 		this.syncVoiceEngineV2AudioControlsFromAppState();
-		return selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload(this.voiceEngineV2Snapshot);
+		return selectVoiceEngineV2AppSyncSelfMuteForVoiceStatePayload(this.voiceEngineV2Snapshot);
 	}
 
 	private cancelPendingServerDisconnect(): void {
@@ -1487,7 +1553,10 @@ class MediaEngineFacade extends Store {
 			raw.connection_id,
 		);
 		LocalVoiceState.seedConnectionState(raw.connection_id, {
-			selfMute: currentVoiceState?.self_mute ?? LocalVoiceState.getSelfMute(),
+			selfMute:
+				this.isPushToTalkActive() || this.isPushToMuteActive()
+					? LocalVoiceState.getSelfMute()
+					: (currentVoiceState?.self_mute ?? LocalVoiceState.getSelfMute()),
 			selfDeaf: currentVoiceState?.self_deaf ?? LocalVoiceState.getSelfDeaf(),
 			selfVideo: currentVoiceState?.self_video ?? LocalVoiceState.getSelfVideo(),
 			selfStream: currentVoiceState?.self_stream ?? LocalVoiceState.getSelfStream(),
@@ -1504,6 +1573,7 @@ class MediaEngineFacade extends Store {
 		if (raw.connection_id && raw.connection_id === this.pendingServerDisconnectConnectionId) {
 			this.cancelPendingServerDisconnect();
 		}
+		if (!raw.ice_servers) VoiceP2pConsent.clear();
 		this.handleVoiceServerUpdateViaJs(raw);
 	}
 
@@ -1551,6 +1621,8 @@ class MediaEngineFacade extends Store {
 			Boolean(this.pendingSessionRestore) &&
 			this.pendingSessionRestore?.guildId === resolvedGuildId &&
 			this.pendingSessionRestore?.channelId === resolvedChannelId;
+		const currentRoom = voiceEngineV2AppConnectionHostAdapter.room;
+		const isConversion = !raw.ice_servers && currentRoom !== null && isVoiceMeshRoom(currentRoom);
 		voiceEngineV2AppConnectionHostAdapter.handleVoiceServerUpdate(
 			raw,
 			(room, attemptId, guildId, channelId) => {
@@ -1573,6 +1645,7 @@ class MediaEngineFacade extends Store {
 							if (shouldPreserveLocalMedia) {
 								await this.restoreLocalMediaState(room);
 							}
+							if (isConversion) await this.reapplyVideoQualityLimits(room);
 							if (shouldApplyPendingSessionRestore) {
 								await this.restorePendingSessionMedia();
 							}
@@ -1630,7 +1703,7 @@ class MediaEngineFacade extends Store {
 			},
 			(_room, _attemptId) => {},
 			(newRoom, attemptId, guildId, channelId) => {
-				logger.info('Region hot-swap complete, rebinding tracking', {guildId, channelId, attemptId});
+				logger.debug('Region hot-swap complete, rebinding tracking', {guildId, channelId, attemptId});
 				this.stopTracking();
 				this.startTracking(newRoom);
 				this.voiceEngineV2Participants.hydrateFromRoom(newRoom);
@@ -1643,6 +1716,7 @@ class MediaEngineFacade extends Store {
 				}
 				voiceEngineV2AppMediaExecutionAdapter.resetMicrophoneFailureLatch();
 				this.reconcileLocalAudioStateInBackground('region hot-swap complete');
+				if (isConversion) void this.finishMeshConversion(currentRoom, newRoom);
 			},
 			(_guildId, _channelId, _connectionId, _attemptId, error) => {
 				logger.warn('LiveKit connect failed, clearing gateway voice state', {error});
@@ -1832,7 +1906,7 @@ class MediaEngineFacade extends Store {
 				if (shouldRecoverConnectionExpectation) {
 					const recoveredGuildId = guildId ?? voiceState.guild_id ?? null;
 					voiceEngineV2AppConnectionHostAdapter.recoverConnectionExpectation(recoveredGuildId, voiceState.channel_id);
-					logger.info('Recovered connection expectation from voice state update', {
+					logger.debug('Recovered connection expectation from voice state update', {
 						guildId: recoveredGuildId,
 						channelId: voiceState.channel_id,
 						connectionId: voiceState.connection_id,
@@ -1859,11 +1933,11 @@ class MediaEngineFacade extends Store {
 				const streamDisabled =
 					shouldApplyCurrentServerState && previousLocalMediaState.selfStream && voiceState.self_stream === false;
 				if (videoDisabled) {
-					logger.info('Server disabled camera for local connection, unpublishing video track');
+					logger.debug('Server disabled camera for local connection, unpublishing video track');
 					void this.setCameraEnabled(false, {sendUpdate: false});
 				}
 				if (streamDisabled) {
-					logger.info('Server disabled screen share for local connection, unpublishing stream track');
+					logger.debug('Server disabled screen share for local connection, unpublishing stream track');
 					void this.setScreenShareEnabled(false, {sendUpdate: false});
 				}
 			}
@@ -1876,10 +1950,6 @@ class MediaEngineFacade extends Store {
 				this.scheduleDeferredServerDisconnect(voiceState.connection_id);
 			}
 		}
-	}
-
-	handleGatewayVoiceStateDelete(guildId: string, userId: string): void {
-		voiceEngineV2AppVoiceStateAdapter.handleGatewayVoiceStateDelete(guildId, userId);
 	}
 
 	getCurrentUserVoiceState(guildId?: string | null): NormalizedVoiceState | null {
@@ -1993,7 +2063,10 @@ class MediaEngineFacade extends Store {
 			selfStream: payload.self_stream,
 		});
 		if (partial?.viewer_stream_keys !== undefined) {
-			syncVoiceStateToServer(guildId, channelId, connectionId, {viewer_stream_keys: payload.viewer_stream_keys});
+			syncVoiceStateToServer(guildId, channelId, connectionId, {
+				self_mute: payload.self_mute,
+				viewer_stream_keys: payload.viewer_stream_keys,
+			});
 		}
 	}
 
@@ -2063,7 +2136,7 @@ class MediaEngineFacade extends Store {
 			);
 		} catch (error) {
 			if (isCameraPermissionDeniedCommandFailure(error)) {
-				logger.info('Camera enable denied by permission; denial already surfaced to the user', {enabled});
+				logger.debug('Camera enable denied by permission; denial already surfaced to the user', {enabled});
 				return;
 			}
 			throw error;
@@ -2098,6 +2171,7 @@ class MediaEngineFacade extends Store {
 			playSound?: boolean;
 			restartIfEnabled?: boolean;
 			preserveStreamAudioPreferences?: boolean;
+			keepShareTracking?: boolean;
 		},
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
@@ -2191,13 +2265,8 @@ class MediaEngineFacade extends Store {
 
 	async ensureLinuxScreenShareAudioPublication(
 		linuxRule?: NonNullable<NativeAudioStartOptions['linuxRule']>,
-		options?: {includeSelfWindowAudio?: boolean; replaceExisting?: boolean},
 	): Promise<boolean> {
-		return voiceEngineV2AppScreenShareExecutionAdapter.ensureLinuxScreenShareAudioPublication(
-			this.room,
-			linuxRule,
-			options,
-		);
+		return voiceEngineV2AppScreenShareExecutionAdapter.ensureLinuxScreenShareAudioPublication(this.room, linuxRule);
 	}
 
 	async ensureWindowScreenShareAudioPublication(sourceId: string): Promise<boolean> {
@@ -2206,6 +2275,10 @@ class MediaEngineFacade extends Store {
 
 	getActiveScreenShareVideoDeviceId(): string {
 		return voiceEngineV2AppScreenShareExecutionAdapter.getActiveScreenShareVideoDeviceId(this.room);
+	}
+
+	get isScreenShareCapturePaused(): boolean {
+		return voiceEngineV2AppScreenShareExecutionAdapter.isScreenShareCapturePaused;
 	}
 
 	async ensureDeviceScreenShareMicPublication(audioDeviceId: string): Promise<boolean> {
@@ -2235,10 +2308,6 @@ class MediaEngineFacade extends Store {
 		voiceEngineV2AppMediaExecutionAdapter.applyAllLocalAudioPreferences(this.room);
 	}
 
-	applyLocalInputVolume(): void {
-		voiceEngineV2AppMediaExecutionAdapter.applyLocalInputVolume(this.room);
-	}
-
 	setLocalVideoDisabled(identity: string, disabled: boolean): void {
 		voiceEngineV2AppMediaExecutionAdapter.setLocalVideoDisabled(identity, disabled, this.room, this.connectionId);
 	}
@@ -2258,10 +2327,6 @@ class MediaEngineFacade extends Store {
 		this.syncVoiceEngineV2AudioControlsFromAppState();
 	}
 
-	getMuteReason(voiceState: VoiceState | null): VoiceMuteReason {
-		return voiceEngineV2AppMediaExecutionAdapter.getMuteReason(voiceState, this.guildId, this.channelId);
-	}
-
 	isMicrophoneFailureLatched(): boolean {
 		return voiceEngineV2AppMediaExecutionAdapter.isMicrophoneFailureLatched();
 	}
@@ -2276,10 +2341,6 @@ class MediaEngineFacade extends Store {
 	async toggleCameraFromKeybind(): Promise<void> {
 		const current = LocalVoiceState.getSelfVideo();
 		await this.setCameraEnabled(!current, {deviceId: VoiceSettings.getVideoDeviceId()});
-	}
-
-	async toggleScreenShareFromKeybind(): Promise<void> {
-		await voiceEngineV2AppScreenShareExecutionAdapter.toggleScreenShareFromKeybind(this.room);
 	}
 
 	private startTracking(roomOverride?: Room | null): void {
@@ -2308,7 +2369,7 @@ class MediaEngineFacade extends Store {
 				room,
 			});
 		}
-		logger.info('All tracking started');
+		logger.debug('All tracking started');
 	}
 
 	private stopTracking(): void {
@@ -2323,7 +2384,7 @@ class MediaEngineFacade extends Store {
 		this.audioPreferencesSyncDisposer?.();
 		this.audioPreferencesSyncDisposer = null;
 		this.stopAfkTracking();
-		logger.info('All tracking stopped');
+		logger.debug('All tracking stopped');
 	}
 
 	private abortVoiceConnection(): void {
@@ -2335,11 +2396,13 @@ class MediaEngineFacade extends Store {
 		return bindVoiceEngineV2AppAudioPreferencesSync(
 			room,
 			{
-				refreshMicrophone: async () => this.refreshMicrophoneFromCurrentEngine(),
-				refreshLocalVoiceInputProcessor: async () => {
-					await voiceEngineV2AppMediaExecutionAdapter.refreshLocalVoiceInputProcessor(room);
-				},
-				applyLocalInputVolume: () => voiceEngineV2AppMediaExecutionAdapter.applyLocalInputVolume(room),
+				requestMicrophoneRefresh: (targetRoom, request) =>
+					voiceEngineV2AppMediaExecutionAdapter.requestMicrophoneRefresh(targetRoom, request),
+				configureVoiceInput: (targetRoom) => voiceEngineV2AppMediaExecutionAdapter.configureVoiceInput(targetRoom),
+				handleInputKeybindChange: (targetRoom) =>
+					voiceEngineV2AppMediaExecutionAdapter.handlePushToTalkModeChange(targetRoom, () =>
+						this.getCurrentUserVoiceState(),
+					),
 				applyAllLocalAudioPreferences: () => voiceEngineV2AppMediaExecutionAdapter.applyAllLocalAudioPreferences(room),
 			},
 			logger,
@@ -2491,7 +2554,7 @@ class MediaEngineFacade extends Store {
 		if (!result.changed) return;
 		this.syncLocalVoiceStateWithServer({viewer_stream_keys: result.keys});
 		if (migrated) {
-			logger.info('Migrated watched stream connection id', {
+			logger.debug('Migrated watched stream connection id', {
 				userId: voiceState.user_id,
 				channelId,
 				nextConnectionId,
@@ -2506,27 +2569,6 @@ class MediaEngineFacade extends Store {
 		}
 		this.discardVoiceConnection(connectionId);
 		sendVoiceStateDisconnect(guildId, connectionId);
-	}
-
-	disconnectAllRemoteDevices(
-		devices: ReadonlyArray<{
-			guildId: string;
-			connectionId: string;
-		}>,
-	): void {
-		let shouldDisconnectCurrentDevice = false;
-		const currentConnectionId = voiceEngineV2AppConnectionHostAdapter.connectionId;
-		for (const device of devices) {
-			if (device.connectionId === currentConnectionId) {
-				shouldDisconnectCurrentDevice = true;
-				continue;
-			}
-			this.discardVoiceConnection(device.connectionId);
-			sendVoiceStateDisconnect(device.guildId, device.connectionId);
-		}
-		if (shouldDisconnectCurrentDevice) {
-			void this.disconnectFromVoiceChannel('user');
-		}
 	}
 
 	async moveToAfkChannel(): Promise<void> {
@@ -2572,12 +2614,13 @@ class MediaEngineFacade extends Store {
 			logger.error('Failed to clear voice stats DB during logout', error);
 			throw error;
 		} finally {
-			logger.info('Cleanup complete');
+			logger.debug('Cleanup complete');
 			this.transitionFacadeState({type: 'cleanup.complete'});
 		}
 	}
 
 	handleGatewayError(error: GatewayErrorData): void {
+		const {guildId, channelId} = voiceEngineV2AppConnectionHostAdapter;
 		const decision = selectMediaEngineGatewayErrorDecision(this.facadeSnapshot, {
 			code: error.code,
 			connecting: voiceEngineV2AppConnectionHostAdapter.connecting,
@@ -2598,7 +2641,7 @@ class MediaEngineFacade extends Store {
 			this.clearViewerStreamKeys();
 		}
 		if (decision.abortConnection) {
-			logger.info('Gateway voice error while connecting, aborting', {code: error.code});
+			logger.debug('Gateway voice error while connecting, aborting', {code: error.code});
 			this.abortVoiceConnection();
 		}
 		if (decision.disconnectReason) {
@@ -2608,13 +2651,51 @@ class MediaEngineFacade extends Store {
 			if (!this.i18n) {
 				throw new Error('MediaEngineFacade: i18n not initialized');
 			}
-			const descriptor =
-				decision.toast === 'timed-out'
-					? YOU_CAN_T_JOIN_WHILE_YOU_RE_ON_DESCRIPTOR
-					: decision.toast === 'connection-limit'
-						? VOICE_CONNECTION_LIMIT_REACHED_DESCRIPTOR
-						: CLAIM_YOUR_ACCOUNT_TO_JOIN_THIS_VOICE_CHANNEL_DESCRIPTOR;
+			if (decision.toast === 'unclaimed-account') {
+				this.promptAccountForVoice(TierGatedActions.VOICE);
+				return;
+			}
+			const descriptors = {
+				'timed-out': YOU_CAN_T_JOIN_WHILE_YOU_RE_ON_DESCRIPTOR,
+				'connection-limit': VOICE_CONNECTION_LIMIT_REACHED_DESCRIPTOR,
+				'e2ee-required': isInsecureBrowserContext()
+					? VOICE_E2EE_NEEDS_HTTPS_DESCRIPTOR
+					: VOICE_E2EE_REQUIRED_DESCRIPTOR,
+			};
+			const descriptor = descriptors[decision.toast];
 			this.showVoiceErrorModal(descriptor, `voice.media-engine-facade.gateway-${decision.toast}-error-modal`);
+		}
+		if (decision.p2pRefusal) {
+			this.handleP2pRefusal(decision.p2pRefusal, decision.abortConnection && channelId ? {guildId, channelId} : null);
+		}
+	}
+
+	private handleP2pRefusal(
+		refusal: MediaEngineFacadeP2pRefusal,
+		target: {guildId: string | null; channelId: string} | null,
+	): void {
+		if (refusal === 'consent-required' && target && !VoiceP2pConsent.isAgreed(target.channelId)) {
+			const retry = () => void this.connectToVoiceChannel(target.guildId, target.channelId);
+			if (requestP2pConsent(target.guildId, target.channelId, retry, () => {})) retry();
+			return;
+		}
+		VoiceP2pConsent.clear();
+		switch (refusal) {
+			case 'consent-required':
+				this.showVoiceErrorModal(
+					VOICE_P2P_CONSENT_REQUIRED_DESCRIPTOR,
+					'voice.media-engine-facade.gateway-p2p-consent-required-error-modal',
+				);
+				return;
+			case 'unavailable':
+				this.showVoiceErrorModal(
+					VOICE_P2P_UNAVAILABLE_DESCRIPTOR,
+					'voice.media-engine-facade.gateway-p2p-unavailable-error-modal',
+				);
+				return;
+			case 'channel-full':
+				showVoiceChannelFullModal();
+				return;
 		}
 	}
 
@@ -2635,19 +2716,36 @@ class MediaEngineFacade extends Store {
 		this.transitionFacadeState({type: 'cleanup.complete'});
 	}
 
-	reset(): void {
-		this.terminalUnloadVoiceDisconnectSent = false;
-		this.cancelPendingServerDisconnect();
-		this.clearViewerStreamKeys();
-		this.statsHostAdapter.reset();
-		this.transitionFacadeState({type: 'cleanup.reset'});
-		voiceEngineV2AppConnectionHostAdapter.resetConnectionState();
-		voiceEngineV2AppConnectionHostAdapter.resetReconnectState();
-		VoiceEngineV2AppRemoteSpeakingAdapter.clear();
-		VoiceEngineV2AppPermissionAdapter.reset();
-		this.resetLocalMediaAndScreenShareTracking();
-		this.voiceEngineV2Participants.clear();
-		voiceEngineV2AppMediaStateAdapter.resetLocalMediaState('cleanup');
+	private async reapplyVideoQualityLimits(room: Room): Promise<void> {
+		try {
+			if (room.localParticipant.isCameraEnabled) {
+				await voiceEngineV2AppMediaExecutionAdapter.updateCameraEncoding(
+					getCameraCaptureDimensions(VoiceSettings.getCameraResolution()),
+				);
+			}
+			if (!room.localParticipant.isScreenShareEnabled) return;
+			await executeScreenShareOperation(() =>
+				pushActiveStreamSettings(
+					ActiveScreenShareSource.getShareContext() ?? 'display',
+					resolveDisplayShareEnvironment(isDesktop(), NativePermission.isLinuxWaylandDesktop),
+				),
+			);
+		} catch (error) {
+			logger.warn('Failed to reapply video quality limits after conversion', {error});
+		}
+	}
+
+	private async finishMeshConversion(meshRoom: Room, room: Room): Promise<void> {
+		await this.restoreLocalMedia({
+			reason: 'mesh conversion',
+			room,
+			restoreCamera: false,
+			restoreStream: false,
+			screenShareSnapshot: voiceEngineV2AppScreenShareExecutionAdapter.prepareScreenShareReconnect(meshRoom),
+			toastWhenStreamNotRestored: true,
+			sendUpdateWhenStreamNotRestored: true,
+		});
+		await this.reapplyVideoQualityLimits(room);
 	}
 
 	private async restoreLocalMediaState(roomOverride?: Room | null): Promise<void> {
@@ -2656,21 +2754,14 @@ class MediaEngineFacade extends Store {
 		if (!participant) return;
 		const pendingScreenShareReconnect = this.pendingScreenShareReconnect;
 		this.transitionFacadeState({type: 'screenShareReconnect.consume'});
-		const shouldRestoreScreenShare =
-			(LocalVoiceState.getSelfStream() || pendingScreenShareReconnect !== null) && !participant.isScreenShareEnabled;
 		await this.restoreLocalMedia({
 			reason: 'voice room connected',
 			room,
 			restoreCamera: LocalVoiceState.getSelfVideo() && !participant.isCameraEnabled,
-			restoreStream: shouldRestoreScreenShare,
-			restoreStreamFromSnapshot: pendingScreenShareReconnect
-				? () =>
-						voiceEngineV2AppScreenShareExecutionAdapter.restoreScreenShareReconnect(room, pendingScreenShareReconnect)
-				: null,
-			streamSnapshotFallback: false,
-			streamPlaySound: true,
-			settleStreamStateWhenNotRestored: false,
+			restoreStream: LocalVoiceState.getSelfStream() && !participant.isScreenShareEnabled,
+			screenShareSnapshot: pendingScreenShareReconnect,
 			toastWhenStreamNotRestored: false,
+			sendUpdateWhenStreamNotRestored: false,
 		});
 	}
 
@@ -2685,11 +2776,9 @@ class MediaEngineFacade extends Store {
 			room: this.room,
 			restoreCamera: pendingRestore.restoreVideo,
 			restoreStream: pendingRestore.restoreStream,
-			restoreStreamFromSnapshot: null,
-			streamSnapshotFallback: false,
-			streamPlaySound: true,
-			settleStreamStateWhenNotRestored: false,
+			screenShareSnapshot: null,
 			toastWhenStreamNotRestored: true,
+			sendUpdateWhenStreamNotRestored: false,
 		});
 	}
 
@@ -2707,27 +2796,15 @@ class MediaEngineFacade extends Store {
 }
 
 const instance = new MediaEngineFacade();
+VoiceRuntime.registerEngine(instance);
 
 export function useMediaEngineVersion(): number {
 	return useStoreVersion(instance);
 }
 
-export function getVoiceEngineV2Model(): VoiceEngineV2Model {
-	return instance.voiceEngineV2Model;
-}
-
-export function getVoiceEngineV2Snapshot(): VoiceEngineV2Snapshot {
-	return instance.voiceEngineV2Snapshot;
-}
-
 export function useVoiceEngineV2Model(): VoiceEngineV2Model {
 	useMediaEngineVersion();
 	return instance.voiceEngineV2Model;
-}
-
-export function useVoiceEngineV2Snapshot(): VoiceEngineV2Snapshot {
-	useMediaEngineVersion();
-	return instance.voiceEngineV2Snapshot;
 }
 
 (

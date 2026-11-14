@@ -37,7 +37,7 @@ export interface AssetSourceModalProps {
 	showGifOption?: boolean;
 }
 
-export const AssetSourceModal = observer(function AssetSourceModal({
+const AssetSourceModal = observer(function AssetSourceModal({
 	title,
 	uploadHint,
 	onPickUpload,

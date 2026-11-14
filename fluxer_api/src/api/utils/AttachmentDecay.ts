@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireIntegerInRange} from '@app/api/utils/IntegerOptions';
+import {getValidTimestamp} from '@app/api/utils/TimestampUtils';
 import {ms} from 'itty-time';
 
 export interface AttachmentDecayRules {
@@ -47,6 +49,11 @@ function toMb(sizeBytes: bigint | number): number {
 	return n / 1024 / 1024;
 }
 
+function logRatio(value: number, base: number): number {
+	const ratio = value / base;
+	return Number.isFinite(ratio) ? Math.log(ratio) : Math.log(value) - Math.log(base);
+}
+
 export function computeDecay({sizeBytes, uploadedAt, rules}: AttachmentDecayInput): AttachmentDecayResult | null {
 	const constants = {
 		minMb: rules?.minMb ?? DEFAULT_DECAY_CONSTANTS.MIN_MB,
@@ -66,18 +73,16 @@ export function computeDecay({sizeBytes, uploadedAt, rules}: AttachmentDecayInpu
 		lifetimeDays = constants.minDays;
 	} else {
 		const linearFrac = (sizeMB - constants.minMb) / (constants.maxMb - constants.minMb);
-		const logFrac = Math.log(sizeMB / constants.minMb) / Math.log(constants.maxMb / constants.minMb);
+		const logFrac = logRatio(sizeMB, constants.minMb) / logRatio(constants.maxMb, constants.minMb);
 		const blend = (1 - constants.curve) * linearFrac + constants.curve * logFrac;
 		lifetimeDays = constants.maxDays - blend * (constants.maxDays - constants.minDays);
 	}
-	const expiresAt = new Date(uploadedAt);
+	const expiresAt = new Date(getValidTimestamp(uploadedAt, 'Attachment upload date'));
 	expiresAt.setUTCDate(expiresAt.getUTCDate() + lifetimeDays);
-	const sizeTB = (typeof sizeBytes === 'bigint' ? Number(sizeBytes) : sizeBytes) / 1024 / 1024 / 1024 / 1024;
-	const lifetimeMonths = lifetimeDays / 30;
-	const cost = sizeTB * constants.pricePerTBPerMonth * lifetimeMonths;
+	getValidTimestamp(expiresAt, 'Attachment decay expiry');
 	return {
 		expiresAt,
-		cost,
+		cost: computeCost({sizeBytes, lifetimeDays, pricePerTBPerMonth: constants.pricePerTBPerMonth}),
 		days: Math.round(lifetimeDays),
 	};
 }
@@ -99,14 +104,17 @@ export function computeCost({
 }
 
 export function getExpiryBucket(expiresAt: Date): number {
-	return Number(
+	getValidTimestamp(expiresAt, 'Attachment expiry');
+	const bucket = Number(
 		`${expiresAt.getUTCFullYear()}${String(expiresAt.getUTCMonth() + 1).padStart(2, '0')}${String(expiresAt.getUTCDate()).padStart(2, '0')}`,
 	);
+	return requireIntegerInRange('Attachment expiry bucket', bucket, -2_147_483_648, 2_147_483_647);
 }
 
 export function extendExpiry(currentExpiry: Date | null, newlyComputed: Date): Date {
+	const newTimestamp = getValidTimestamp(newlyComputed, 'Computed attachment expiry');
 	if (!currentExpiry) return newlyComputed;
-	return currentExpiry > newlyComputed ? currentExpiry : newlyComputed;
+	return getValidTimestamp(currentExpiry, 'Current attachment expiry') > newTimestamp ? currentExpiry : newlyComputed;
 }
 
 export function maybeRenewExpiry({
@@ -124,16 +132,19 @@ export function maybeRenewExpiry({
 }): Date | null {
 	if (!currentExpiry) return null;
 	if (windowDays <= 0) return null;
-	const remainingMs = currentExpiry.getTime() - now.getTime();
+	const currentTimestamp = getValidTimestamp(currentExpiry, 'Current attachment expiry');
+	const nowTimestamp = getValidTimestamp(now, 'Attachment renewal time');
+	const remainingMs = currentTimestamp - nowTimestamp;
 	if (remainingMs > thresholdDays * MS_PER_DAY) {
 		return null;
 	}
-	const targetMs = now.getTime() + windowDays * MS_PER_DAY;
-	const cappedTargetMs = maxExpiry ? Math.min(maxExpiry.getTime(), targetMs) : targetMs;
-	if (cappedTargetMs <= currentExpiry.getTime()) {
+	const targetMs = nowTimestamp + windowDays * MS_PER_DAY;
+	const cappedTargetMs = maxExpiry
+		? Math.min(getValidTimestamp(maxExpiry, 'Maximum attachment expiry'), targetMs)
+		: targetMs;
+	if (cappedTargetMs <= currentTimestamp) {
 		return null;
 	}
-	const target = new Date(now);
-	target.setTime(cappedTargetMs);
-	return target;
+	const target = new Date(cappedTargetMs);
+	return getValidTimestamp(target, 'Renewed attachment expiry') > currentTimestamp ? target : null;
 }

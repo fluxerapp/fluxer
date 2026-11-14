@@ -3,7 +3,7 @@
 import type {ReactNode} from 'react';
 
 type ToastType = 'success' | 'error' | 'info';
-export type ToastActivationEvent = React.MouseEvent | React.KeyboardEvent;
+type ToastActivationEvent = React.MouseEvent | React.KeyboardEvent;
 
 export interface ToastProps {
 	type: ToastType;

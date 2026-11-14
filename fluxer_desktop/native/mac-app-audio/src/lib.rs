@@ -1,6 +1,5 @@
 #![deny(clippy::all)]
 // SPDX-License-Identifier: AGPL-3.0-or-later
-#![allow(dead_code)]
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::manual_is_multiple_of)]
@@ -21,8 +20,6 @@ pub mod source_state;
 #[cfg(target_os = "macos")]
 pub mod audio_source;
 #[cfg(target_os = "macos")]
-pub mod coreaudio_tap;
-#[cfg(target_os = "macos")]
 pub mod foundation;
 #[cfg(target_os = "macos")]
 pub mod sck;
@@ -30,7 +27,9 @@ pub mod sck;
 pub mod sck_async;
 
 #[cfg(target_os = "macos")]
+#[cfg_attr(test, allow(dead_code))]
 mod napi_surface_macos;
 
 #[cfg(not(target_os = "macos"))]
+#[cfg_attr(test, allow(dead_code))]
 mod napi_surface_stub;

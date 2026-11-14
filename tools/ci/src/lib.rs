@@ -3,6 +3,7 @@
 mod app_dev_server;
 mod app_proxy;
 mod app_wasm;
+mod appimage;
 mod calver;
 mod ci_workflow;
 mod common;
@@ -13,6 +14,9 @@ mod gateway;
 mod image_set;
 mod release;
 mod schema;
+
+#[cfg(feature = "s3")]
+mod s3;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -30,7 +34,6 @@ enum Command {
     AppDevServer(app_dev_server::AppDevServerArgs),
     BuildAppWasm(app_wasm::BuildAppWasmArgs),
     BuildAppProxy(app_proxy::BuildAppProxyArgs),
-    BuildMarkdownParserWasm(app_wasm::BuildMarkdownParserWasmArgs),
     BuildDesktop(desktop::BuildDesktopArgs),
     BuildDesktopNativeAddon(desktop_native::BuildDesktopNativeAddonArgs),
     BuildGatewayNifs(gateway::BuildGatewayNifsArgs),
@@ -47,7 +50,6 @@ pub async fn run() -> Result<()> {
         Command::AppDevServer(args) => app_dev_server::run(args).await,
         Command::BuildAppWasm(args) => app_wasm::run_build_app_wasm(args),
         Command::BuildAppProxy(args) => app_proxy::run(args).await,
-        Command::BuildMarkdownParserWasm(args) => app_wasm::run_build_markdown_parser_wasm(args),
         Command::BuildDesktop(args) => desktop::run(args).await,
         Command::BuildDesktopNativeAddon(args) => {
             desktop_native::run_build_desktop_native_addon(args)

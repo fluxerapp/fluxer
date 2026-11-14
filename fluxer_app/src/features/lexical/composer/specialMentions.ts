@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Channel} from '@app/features/channel/models/Channel';
+import {hasOpenInlineCode} from '@app/features/lexical/composer/codeBlockIndent';
 import type {ComposerInsertPayload} from '@app/features/lexical/composer/composerOffsets';
 import {isAutocompleteTriggerAllowed, type TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
 import {findUrlSpans, isInsideSpan, type TextSpan} from '@app/features/messaging/utils/markdown/UrlSpanUtils';
@@ -26,7 +27,7 @@ export function createSpecialMentionPayload(kind: SpecialMentionKind): ComposerI
 }
 
 export function areSpecialMentionsAllowed(
-	channel: Pick<Channel, 'guildId' | 'isPersonalNotes'> | null,
+	channel: Pick<Channel, 'guildId' | 'isGroupDM'> | null,
 	allowSpecialMentions: boolean | undefined,
 	allowedTriggers: ReadonlyArray<TriggerType> | undefined,
 	canMentionEveryone: boolean,
@@ -34,24 +35,12 @@ export function areSpecialMentionsAllowed(
 	if (channel == null || allowSpecialMentions === false || !isAutocompleteTriggerAllowed('mention', allowedTriggers)) {
 		return false;
 	}
-	return channel.guildId == null ? !channel.isPersonalNotes() : canMentionEveryone;
+	return channel.guildId == null ? channel.isGroupDM() : canMentionEveryone;
 }
 
 export function hasOpenCodeFence(text: string): boolean {
 	const fences = text.match(/```/g);
 	return fences != null && fences.length % 2 === 1;
-}
-
-function hasOpenInlineCode(text: string, index: number): boolean {
-	let openRun = 0;
-	for (const run of text.slice(text.lastIndexOf('\n', index - 1) + 1, index).matchAll(/`+/g)) {
-		if (openRun === 0) {
-			openRun = run[0].length;
-		} else if (run[0].length === openRun) {
-			openRun = 0;
-		}
-	}
-	return openRun > 0;
 }
 
 export function findTypedSpecialMention(
@@ -74,7 +63,7 @@ export function findTypedSpecialMention(
 			!WORD_CHARACTER.test(previous) &&
 			!WORD_CHARACTER.test(text.charAt(end)) &&
 			!hasOpenCodeFence(text.slice(0, start)) &&
-			!hasOpenInlineCode(text, start)
+			!hasOpenInlineCode(text.slice(text.lastIndexOf('\n', start - 1) + 1, start))
 		) {
 			if (urlSpans === null) {
 				urlSpans = findUrlSpans(text);

@@ -63,7 +63,7 @@ export function getUserMenuAvatarUrl(options: UserImageMenuUrlOptions): string |
 }
 
 export function getUserMenuBannerUrl(options: UserImageMenuUrlOptions): string | null {
-	return ProfileDisplayUtils.getProfileBannerMenuUrl(getUserImageMenuProfileContext(options), options.previewOverrides);
+	return ProfileDisplayUtils.getProfileBannerUrl(getUserImageMenuProfileContext(options), options.previewOverrides);
 }
 
 export const UserImageMenuItems: React.FC<UserImageMenuItemsProps> = observer(
@@ -80,7 +80,6 @@ export const UserImageMenuItems: React.FC<UserImageMenuItemsProps> = observer(
 					<ReverseImageSearchMenuItems
 						imageUrl={avatarUrl}
 						onClose={onClose}
-						wrapInGroup
 						includeCopyAndOpen
 						copyLabel={i18n._(COPY_AVATAR_URL_DESCRIPTOR)}
 						openLabel={i18n._(OPEN_AVATAR_IN_BROWSER_DESCRIPTOR)}
@@ -92,7 +91,6 @@ export const UserImageMenuItems: React.FC<UserImageMenuItemsProps> = observer(
 					<ReverseImageSearchMenuItems
 						imageUrl={bannerUrl}
 						onClose={onClose}
-						wrapInGroup
 						includeCopyAndOpen
 						copyLabel={i18n._(COPY_BANNER_URL_DESCRIPTOR)}
 						openLabel={i18n._(OPEN_BANNER_IN_BROWSER_DESCRIPTOR)}

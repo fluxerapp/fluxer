@@ -52,8 +52,7 @@
 
 .sliderTrack {
 	position: absolute;
-	left: 0.375rem;
-	right: 0.375rem;
+	inset-inline: 0.375rem;
 	height: 0.25rem;
 	background-color: var(--background-modifier-accent);
 	border-radius: var(--radius-full);
@@ -118,5 +117,5 @@
 
 :global(.theme-light) .sliderFill,
 :global(.theme-light) .sliderThumb {
-	background-color: var(--brand-primary);
+	background-color: var(--brand-primary-foreground);
 }

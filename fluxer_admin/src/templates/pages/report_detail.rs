@@ -1,50 +1,67 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::report_category::{
+    message_lookup_href, report_status, report_type, reported_guild_icon,
+};
+
 use crate::{
     acl,
-    api::types::ReportEntry,
+    api::{
+        generated::types::UpdateReportRequestResolution,
+        types::{
+            AdminUser, GuildDetailInfo, ReportEntry, ReportFlowAnswerStepEntry,
+            ReportFlowAnswersEntry, ReportProfileSnapshot, ReportProfileSnapshotAsset,
+        },
+    },
     config::AdminConfig,
     middleware::auth::AuthContext,
     templates::{
         components::{
             badge::{BadgeVariant, badge},
-            data_field::{data_field, data_field_link_mono, data_field_mono, data_field_text},
-            form::csrf_input,
-            media::{guild_icon_url, initials, user_avatar_url},
+            data_field::{
+                data_field, data_field_link_mono, data_field_mono, data_field_muted,
+                data_field_text,
+            },
+            enforcement_fields::{TakeAction, can_take_action, take_action_href},
+            form::{
+                Checkbox, FORM_CONTROL_CLASS, FORM_LABEL_CLASS, csrf_input, danger_button,
+                opt_out_checkbox, select_chevron,
+            },
+            media::user_avatar_url,
             message_data::ordered_messages,
-            message_list::{message_deletion_script, message_list},
+            message_list::message_list,
             nsfw_indicators::{
                 adult_content_badge, channel_nsfw_state_badge, content_warning_badge,
             },
             page_container::page_header_with_back,
+            report_category::report_category,
+            report_webhook::{
+                ReportedWebhook, reported_webhook, webhook_creator_badges, webhook_creator_link,
+                webhook_identity,
+            },
             resource_link::{ResourceType, resource_link},
             section_card::section_card,
+            staff_notes::{StaffNote, StaffNoteForm, staff_notes_section},
+            user_display::user_link,
         },
         layout::admin_layout,
     },
-    utils::timestamps::format_admin_timestamp,
+    utils::{timestamps::format_admin_timestamp, user_tag::user_tag},
 };
 use maud::{Markup, html};
 
+#[derive(Default)]
+pub struct LiveProfile {
+    pub user: Option<AdminUser>,
+    pub guild: Option<GuildDetailInfo>,
+}
+
 fn status_badge(status: i32) -> Markup {
-    let (label, variant) = match status {
-        0 => ("Pending", BadgeVariant::Warning),
-        1 => ("Resolved", BadgeVariant::Success),
-        _ => ("Unknown", BadgeVariant::Default),
-    };
+    let (label, variant) = report_status(status);
     html! {
         span class="inline-flex w-fit self-start" {
             (badge(label, variant))
         }
-    }
-}
-
-fn report_type_label(report_type: i32) -> &'static str {
-    match report_type {
-        0 => "Message",
-        1 => "User",
-        2 => "Guild",
-        _ => "Unknown",
     }
 }
 
@@ -54,7 +71,7 @@ fn reporter_label(report: &ReportEntry) -> String {
     }
     if let Some(username) = &report.reporter_username {
         let discriminator = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        return format!("{username}#{discriminator}");
+        return user_tag(username, discriminator, false);
     }
     if let Some(email) = &report.reporter_email {
         return email.to_owned();
@@ -71,7 +88,7 @@ fn reported_user_label(report: &ReportEntry) -> String {
             .reported_user_discriminator
             .as_deref()
             .unwrap_or("0000");
-        return format!("{username}#{discriminator}");
+        return user_tag(username, discriminator, false);
     }
     format!(
         "User {}",
@@ -80,24 +97,19 @@ fn reported_user_label(report: &ReportEntry) -> String {
 }
 
 fn has_acl(auth: &AuthContext, permission: &str) -> bool {
-    auth.admin_user.as_ref().is_some_and(|admin| {
-        admin
-            .acls
-            .iter()
-            .any(|acl| acl == permission || acl == crate::acl::WILDCARD)
-    })
+    acl::has_permission(auth.acls(), permission)
 }
 
-fn basic_info_section(config: &AdminConfig, auth: &AuthContext, report: &ReportEntry) -> Markup {
+fn basic_info_section(config: &AdminConfig, report: &ReportEntry, show_pii: bool) -> Markup {
     let base = &config.base_path;
-    let show_pii = has_acl(auth, acl::REPORT_VIEW_REPORTER_PII);
     html! {
         (section_card(Some("Basic Information"), None, None, html! {
             div class="grid grid-cols-1 sm:grid-cols-2 gap-4" {
                 (data_field_mono("Report ID", &report.report_id))
                 (data_field_text("Reported At", &format_admin_timestamp(&report.reported_at)))
-                (data_field_text("Type", report_type_label(report.report_type)))
-                (data_field_text("Category", report.category.as_deref().unwrap_or("")))
+                (data_field_text("Type", report_type(report.report_type).0))
+                (category_field(report))
+                (reason_field(report))
                 @if let Some(ref reporter_id) = report.reporter_id {
                     (data_field_link_mono("Reporter", &format!("{base}/users/{reporter_id}"), &reporter_label(report)))
                 } @else {
@@ -120,16 +132,100 @@ fn basic_info_section(config: &AdminConfig, auth: &AuthContext, report: &ReportE
     }
 }
 
-fn message_lookup_href(base: &str, channel_id: &str, message_id: Option<&str>) -> String {
-    let mut href = format!(
-        "{base}/messages?channel_id={}&context_limit=50",
-        urlencoding::encode(channel_id)
-    );
-    if let Some(message_id) = message_id.filter(|id| !id.is_empty()) {
-        href.push_str("&message_id=");
-        href.push_str(&urlencoding::encode(message_id));
+fn category_field(report: &ReportEntry) -> Markup {
+    match report
+        .category
+        .as_deref()
+        .filter(|category| !category.is_empty())
+    {
+        Some(category) => data_field(
+            "Category",
+            html! {
+                p class="text-sm text-gray-900 break-words" { (report_category(category)) }
+            },
+        ),
+        None => data_field_text("Category", ""),
     }
-    href
+}
+
+fn reason_field(report: &ReportEntry) -> Markup {
+    let Some(ref reason) = report.reason else {
+        return html! {};
+    };
+    html! {
+        (data_field("Reason", html! {
+            div class="flex flex-wrap items-center gap-2" data-report-reason=(reason) {
+                span class="text-sm text-gray-900 break-words" {
+                    (report.reason_label.as_deref().unwrap_or(reason))
+                }
+                span class="font-mono text-neutral-500 text-xs break-all" { (reason) }
+                @if report.reason_highest_priority == Some(true) {
+                    (badge("Highest priority", BadgeVariant::Danger))
+                }
+            }
+        }))
+    }
+}
+
+fn answer_step_line(step: &ReportFlowAnswerStepEntry) -> String {
+    let answers = step
+        .option_label
+        .as_deref()
+        .or(step.option_id.as_deref())
+        .into_iter()
+        .chain(step.items.iter().map(|item| item.label.as_str()))
+        .collect::<Vec<_>>();
+    if answers.is_empty() {
+        step.screen_title.clone()
+    } else {
+        format!("{}: {}", step.screen_title, answers.join(", "))
+    }
+}
+
+fn surface_label(surface: &str) -> &str {
+    match surface {
+        "in_app" => "In app",
+        "dsa" => "DSA form",
+        other => other,
+    }
+}
+
+fn report_answers_section(report: &ReportEntry) -> Markup {
+    let Some(ref flow) = report.flow else {
+        return html! {};
+    };
+    html! {
+        (section_card(Some("Report Answers"), None, None, html! {
+            div class="space-y-4" data-report-answers="" {
+                (answer_steps(flow))
+                div class="space-y-1 text-neutral-500 text-sm" {
+                    @if let Some(ref locale) = flow.locale {
+                        p { "Shown to the reporter in " (locale) }
+                    }
+                    p { "Form revision " span class="font-mono" { (flow.revision_hash) } }
+                    p { "Surface: " (surface_label(&flow.surface)) }
+                    @if report.reporter_good_faith_confirmed == Some(true) {
+                        p { "Good-faith statement: Confirmed" }
+                    }
+                }
+            }
+        }))
+    }
+}
+
+fn answer_steps(flow: &ReportFlowAnswersEntry) -> Markup {
+    html! {
+        ol class="space-y-2" {
+            @for (index, step) in flow.steps.iter().enumerate() {
+                li class="flex gap-3 text-sm text-neutral-900" data-report-answer-step=(step.screen_id) {
+                    span class="w-6 flex-shrink-0 text-right font-mono text-neutral-500" {
+                        (index + 1) "."
+                    }
+                    span class="min-w-0 break-words" { (answer_step_line(step)) }
+                }
+            }
+        }
+    }
 }
 
 fn snapshot_note() -> Markup {
@@ -198,7 +294,11 @@ fn reported_entity_section(config: &AdminConfig, report: &ReportEntry) -> Markup
             div class="grid grid-cols-1 gap-4" {
                 @match report.report_type {
                     0 => {
-                        (reported_user_field(config, "User", report))
+                        @if let Some(webhook) = reported_webhook(config, report) {
+                            (reported_webhook_fields(config, report, &webhook))
+                        } @else {
+                            (reported_user_field(config, "User", report))
+                        }
                         (reported_message_fields(config, report))
                         (reported_guild_field(config, report))
                     }
@@ -226,16 +326,76 @@ fn reported_user_field(config: &AdminConfig, label: &str, report: &ReportEntry) 
     html! {
         @if let Some(ref id) = report.reported_user_id {
             (data_field(label, html! {
-                a href={(base) "/users/" (id)} class="inline-flex items-center gap-2 text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
-                    img
-                        src=(user_avatar_url(config, id, report.reported_user_avatar_hash.as_deref(), 80, true))
-                        alt=(format!("{}'s avatar", reported_user_label(report)))
-                        class="h-8 w-8 rounded-full object-cover";
-                    span { (reported_user_label(report)) }
+                span class="inline-flex flex-wrap items-center gap-2" {
+                    a href={(base) "/users/" (id)} class="inline-flex items-center gap-2 text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
+                        img
+                            src=(user_avatar_url(config, id, report.reported_user_avatar_hash.as_deref(), 80, true))
+                            alt=(format!("{}'s avatar", reported_user_label(report)))
+                            class="h-8 w-8 rounded-full object-cover";
+                        span { (reported_user_label(report)) }
+                    }
+                    @if report.reported_user_bot == Some(true) {
+                        span class="inline-flex" data-report-user-bot=(id) {
+                            (badge("Bot", BadgeVariant::Info))
+                        }
+                    }
                 }
             }))
         } @else {
             (data_field_text(label, &reported_user_label(report)))
+        }
+    }
+}
+
+fn reported_webhook_fields(
+    config: &AdminConfig,
+    report: &ReportEntry,
+    webhook: &ReportedWebhook<'_>,
+) -> Markup {
+    let base = &config.base_path;
+    let moved_channel = webhook
+        .channel_id
+        .filter(|id| Some(*id) != report.reported_channel_id.as_deref());
+    let moved_guild = webhook
+        .guild_id
+        .filter(|id| Some(*id) != report.reported_guild_id.as_deref());
+    html! {
+        (data_field("Webhook", webhook_identity(webhook)))
+        (data_field_link_mono("Webhook ID", &webhook.reports_href, webhook.id))
+        @if let Some(configured_name) = webhook.configured_name {
+            (data_field_text("Configured Name", configured_name))
+        }
+        @if let Some(ref avatar_url) = webhook.configured_avatar_url {
+            (data_field("Configured Avatar", html! {
+                img src=(avatar_url) alt="Configured webhook avatar" data-report-webhook-configured-avatar
+                    class="h-8 w-8 rounded-full object-cover";
+            }))
+        }
+        @if let Some(ref kind) = webhook.kind {
+            (data_field_text("Webhook Type", kind))
+        }
+        @if let Some(ref created_at) = webhook.created_at {
+            (data_field_text("Webhook Created", created_at))
+        }
+        @if let Some(channel_id) = moved_channel {
+            (data_field_link_mono("Webhook Channel ID", &message_lookup_href(base, channel_id, None), channel_id))
+        }
+        @if let Some(guild_id) = moved_guild {
+            (data_field_link_mono("Webhook Guild ID", &format!("{base}/guilds/{guild_id}"), guild_id))
+        }
+        @if let Some(ref application) = webhook.application {
+            (data_field_link_mono("Application ID", &application.href, application.id))
+        }
+        @if webhook.record_deleted {
+            (data_field_muted("Webhook Record", "Deleted before the report"))
+        }
+        @if let Some(ref creator) = webhook.creator {
+            (data_field("Webhook Creator", html! {
+                span class="inline-flex flex-wrap items-center gap-2" {
+                    (webhook_creator_link(creator))
+                    (webhook_creator_badges(creator))
+                }
+            }))
         }
     }
 }
@@ -303,30 +463,6 @@ fn reported_guild_field(config: &AdminConfig, report: &ReportEntry) -> Markup {
     }
 }
 
-fn reported_guild_icon(
-    config: &AdminConfig,
-    report: &ReportEntry,
-    guild_id: &str,
-    label: &str,
-) -> Markup {
-    match guild_icon_url(
-        config,
-        guild_id,
-        report.reported_guild_icon_hash.as_deref(),
-        80,
-        true,
-    ) {
-        Some(url) => html! {
-            img src=(url) alt="" class="h-8 w-8 flex-shrink-0 rounded-full object-cover";
-        },
-        None => html! {
-            span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 text-neutral-600 text-xs" {
-                (initials(label))
-            }
-        },
-    }
-}
-
 fn additional_info_section(report: &ReportEntry) -> Markup {
     html! {
         @if let Some(ref info) = report.additional_info {
@@ -370,27 +506,38 @@ fn status_card(config: &AdminConfig, report: &ReportEntry) -> Markup {
     }
 }
 
-fn actions_card(config: &AdminConfig, report: &ReportEntry, csrf_token: &str) -> Markup {
+fn take_action_subject(report: &ReportEntry) -> Option<&str> {
+    match report.report_type {
+        0 | 1 => report.reported_user_id.as_deref(),
+        _ => None,
+    }
+}
+
+fn actions_card(
+    config: &AdminConfig,
+    auth: &AuthContext,
+    report: &ReportEntry,
+    csrf_token: &str,
+) -> Markup {
     let base = &config.base_path;
+    let reported_message = report
+        .reported_channel_id
+        .as_deref()
+        .zip(report.reported_message_id.as_deref());
     html! {
         (section_card(Some("Actions"), None, None, html! {
             div class="flex flex-col gap-3" {
                 @if report.status == 0 {
-                    form method="post"
-                        action={(base) "/reports/" (&report.report_id) "/resolve"} {
-                        (csrf_input(csrf_token))
-                        button type="submit"
-                            class="inline-flex w-full items-center justify-center gap-2 \
-                                   font-medium rounded-lg bg-neutral-900 text-white \
-                                   px-4 py-2 text-sm" {
-                            "Resolve Report"
-                        }
-                    }
+                    (resolve_report_form(base, &report.report_id, csrf_token))
                 }
-                @if report.report_type == 0 || report.report_type == 1 {
-                    @if let Some(ref reported_id) = report.reported_user_id {
-                        (nav_link(&format!("{base}/users/{reported_id}"), "View Reported User"))
+                @if let Some(reported_id) = take_action_subject(report) {
+                    @if can_take_action(auth.acls()) {
+                        (nav_link(
+                            &take_action_href(base, reported_id, Some(&report.report_id), reported_message),
+                            "Take action",
+                        ))
                     }
+                    (nav_link(&format!("{base}/users/{reported_id}"), "View Reported User"))
                 }
                 @if report.report_type == 2 {
                     @if let Some(ref guild_id) = report.reported_guild_id {
@@ -410,6 +557,557 @@ fn actions_card(config: &AdminConfig, report: &ReportEntry, csrf_token: &str) ->
     }
 }
 
+const RESOLUTION_CHOICES: [(UpdateReportRequestResolution, &str); 3] = [
+    (UpdateReportRequestResolution::Actioned, "Action taken"),
+    (UpdateReportRequestResolution::NoViolation, "No violation"),
+    (UpdateReportRequestResolution::Duplicate, "Duplicate"),
+];
+
+pub fn resolution_choice(
+    value: Option<&str>,
+) -> Option<(UpdateReportRequestResolution, &'static str)> {
+    let value = value?.trim();
+    RESOLUTION_CHOICES
+        .into_iter()
+        .find(|(resolution, _)| resolution.to_string() == value)
+}
+
+fn resolve_report_form(base: &str, report_id: &str, csrf_token: &str) -> Markup {
+    html! {
+        form method="post" action={(base) "/reports/" (report_id) "/resolve"} class="flex flex-col gap-3"
+            data-admin-refresh-on-success="#report-detail" {
+            (csrf_input(csrf_token))
+            label for="resolution" class=(FORM_LABEL_CLASS) { "Resolution" }
+            div class="relative" {
+                select id="resolution" name="resolution" required
+                    class={(FORM_CONTROL_CLASS) " h-8 appearance-none px-3 py-1.5 pr-10"} {
+                    option value="" selected disabled { "Choose one" }
+                    @for (resolution, label) in RESOLUTION_CHOICES {
+                        option value=(resolution) { (label) }
+                    }
+                }
+                (select_chevron())
+            }
+            fieldset class="flex flex-col gap-3" data-show-for-resolution="actioned" hidden disabled {
+                label for="outcome" class=(FORM_LABEL_CLASS) { "Outcome" }
+                div class="relative" {
+                    select id="outcome" name="outcome" required
+                        class={(FORM_CONTROL_CLASS) " h-8 appearance-none px-3 py-1.5 pr-10"} {
+                        option value="" selected disabled { "Choose one" }
+                        option value="removed" { "Content removed" }
+                        option value="warned" { "Warning given" }
+                        option value="restricted" { "Account restricted" }
+                        option value="action_taken" { "Other action taken" }
+                    }
+                    (select_chevron())
+                }
+                p class="text-neutral-500 text-xs" {
+                    "What happened to the reported content or account. The reporter is told it. Warning given and other action taken tell them we acted but not how."
+                }
+            }
+            fieldset class="flex flex-col gap-3" data-show-for-resolution="duplicate" hidden disabled {
+                label for="duplicate_of" class=(FORM_LABEL_CLASS) { "Duplicate of" }
+                input type="text" id="duplicate_of" name="duplicate_of" required
+                    placeholder="Report ID or link" class={(FORM_CONTROL_CLASS) " h-8 px-3 py-1.5"};
+                p class="text-neutral-500 text-xs" {
+                    "The report this one repeats, open or resolved. Paste its Report ID or its link. The reporter is told its outcome, or nothing while it is still open."
+                }
+            }
+            label for="public_comment" class=(FORM_LABEL_CLASS) {
+                "Public comment to the reporter (optional)"
+            }
+            textarea id="public_comment" name="public_comment" rows="3" maxlength="512"
+                class={(FORM_CONTROL_CLASS) " px-3 py-2"} {}
+            (opt_out_checkbox("notify_reporter", "Include the public comment in the reporter notice"))
+            p class="text-neutral-500 text-xs" data-resolve-notice-help="" {
+                "The reporter is told the outcome, unless their account is gone or was barred from reporting when they filed it. \
+                 When unticked, the comment is not sent or shown on the report. It is only kept in the audit log."
+            }
+            button type="submit"
+                class="inline-flex w-full items-center justify-center gap-2 \
+                       font-medium rounded-lg bg-neutral-900 text-white \
+                       px-4 py-2 text-sm" {
+                "Resolve report"
+            }
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum SnapshotChange {
+    Same,
+    Changed,
+    Unknown,
+}
+
+fn non_empty(value: Option<&str>) -> Option<&str> {
+    value.filter(|value| !value.trim().is_empty())
+}
+
+fn compare_text(snapshot: Option<&str>, live: Option<Option<&str>>) -> SnapshotChange {
+    match live {
+        None => SnapshotChange::Unknown,
+        Some(live) if non_empty(snapshot) == non_empty(live) => SnapshotChange::Same,
+        Some(_) => SnapshotChange::Changed,
+    }
+}
+
+fn compare_asset(
+    snapshot: Option<&ReportProfileSnapshotAsset>,
+    live: Option<Option<&str>>,
+) -> SnapshotChange {
+    compare_text(snapshot.map(|asset| asset.hash.as_str()), live)
+}
+
+fn padded_discriminator(value: Option<&str>) -> Option<String> {
+    non_empty(value).map(|value| format!("{value:0>4}"))
+}
+
+fn snapshot_tag(
+    username: Option<&str>,
+    discriminator: Option<&str>,
+    is_bot: bool,
+) -> Option<String> {
+    let username = non_empty(username)?;
+    Some(match padded_discriminator(discriminator) {
+        Some(discriminator) => user_tag(username, &discriminator, is_bot),
+        None => username.to_owned(),
+    })
+}
+
+fn snapshot_row(key: &str, label: &str, change: SnapshotChange, value: Markup) -> Markup {
+    let changed = change == SnapshotChange::Changed;
+    html! {
+        div class="flex min-w-0 flex-col gap-1" data-snapshot-field=(key) data-snapshot-changed[changed] {
+            p class="flex flex-wrap items-center gap-2 text-gray-500 text-xs" {
+                (label)
+                @if changed {
+                    (badge("Changed since the report", BadgeVariant::Warning))
+                }
+            }
+            (value)
+        }
+    }
+}
+
+fn snapshot_text(value: Option<&str>) -> Markup {
+    match non_empty(value) {
+        Some(value) => html! {
+            p class="whitespace-pre-wrap break-words text-gray-900 text-sm" { (value) }
+        },
+        None => html! {
+            p class="text-neutral-500 text-sm italic" { "Not set" }
+        },
+    }
+}
+
+fn snapshot_image(asset: Option<&ReportProfileSnapshotAsset>, alt: &str, wide: bool) -> Markup {
+    let Some(asset) = asset else {
+        return snapshot_text(None);
+    };
+    let image_class = if wide {
+        "h-16 w-40 rounded-md border border-neutral-200 object-cover"
+    } else {
+        "h-16 w-16 rounded-full border border-neutral-200 object-cover"
+    };
+    html! {
+        div class="flex flex-col gap-1" {
+            @if let Some(url) = asset.url.as_deref() {
+                a href=(url) target="_blank" rel="noopener noreferrer" class="w-fit" {
+                    img src=(url) alt=(alt) class=(image_class) loading="lazy";
+                }
+            } @else {
+                p class="text-amber-800 text-sm" data-snapshot-image-missing="" {
+                    "Not preserved in the report"
+                }
+            }
+            span class="break-all font-mono text-neutral-500 text-xs" { (asset.hash) }
+        }
+    }
+}
+
+fn snapshot_group(title: &str, note: Option<&str>, rows: Markup) -> Markup {
+    html! {
+        div class="space-y-3" {
+            div class="space-y-1" {
+                h3 class="font-semibold text-neutral-900 text-sm" { (title) }
+                @if let Some(note) = note {
+                    p class="text-neutral-500 text-xs" { (note) }
+                }
+            }
+            div class="grid grid-cols-1 gap-4 sm:grid-cols-2" { (rows) }
+        }
+    }
+}
+
+fn profile_snapshot_section(
+    config: &AdminConfig,
+    report: &ReportEntry,
+    live: &LiveProfile,
+) -> Markup {
+    let Some(snapshot) = report.reported_profile_snapshot.as_ref() else {
+        return html! {};
+    };
+    if snapshot.user.is_none() && snapshot.member.is_none() && snapshot.guild.is_none() {
+        return html! {};
+    }
+    let description = snapshot
+        .captured_at
+        .as_deref()
+        .map(|captured| {
+            format!(
+                "Captured {}. Fields marked as changed differ from the live profile. Image links expire after 5 minutes. Reload the page for new ones.",
+                format_admin_timestamp(captured)
+            )
+        })
+        .unwrap_or_else(|| {
+            "Fields marked as changed differ from the live profile. Image links expire after 5 minutes. Reload the page for new ones.".to_owned()
+        });
+    html! {
+        (section_card(Some("At Report Time"), Some(&description), None, html! {
+            div class="space-y-6" data-report-profile-snapshot="" {
+                (snapshot_user_group(config, snapshot, live))
+                (snapshot_member_group(snapshot))
+                (snapshot_guild_group(config, snapshot, live))
+            }
+        }))
+    }
+}
+
+fn snapshot_user_group(
+    config: &AdminConfig,
+    snapshot: &ReportProfileSnapshot,
+    live: &LiveProfile,
+) -> Markup {
+    let Some(user) = snapshot.user.as_ref() else {
+        return html! {};
+    };
+    let base = &config.base_path;
+    let live_user = live.user.as_ref().filter(|live| live.id == user.id);
+    let closed = non_empty(user.username.as_deref()).is_none();
+    let note = if closed {
+        Some("The account was closed when the report was filed, so only its ID was kept.")
+    } else if live_user.is_none() {
+        Some("The live account could not be loaded, so changes are not marked.")
+    } else {
+        None
+    };
+    let is_bot = live_user.is_some_and(|live| live.bot);
+    let tag = snapshot_tag(
+        user.username.as_deref(),
+        user.discriminator.as_deref(),
+        is_bot,
+    );
+    let tag_change = match live_user {
+        None => SnapshotChange::Unknown,
+        Some(live) => {
+            let live_tag = snapshot_tag(Some(&live.username), Some(&live.discriminator), is_bot);
+            if live_tag == tag {
+                SnapshotChange::Same
+            } else {
+                SnapshotChange::Changed
+            }
+        }
+    };
+    let field = |value: fn(&AdminUser) -> Option<&str>| live_user.map(value);
+    html! {
+        (snapshot_group("Account", note, html! {
+            (data_field_link_mono("Account ID", &format!("{base}/users/{}", user.id), &user.id))
+            @if !closed {
+                (snapshot_row("user.username", "Username", tag_change, snapshot_text(tag.as_deref())))
+                (snapshot_row(
+                    "user.global_name",
+                    "Display Name",
+                    compare_text(user.global_name.as_deref(), field(|live| live.global_name.as_deref())),
+                    snapshot_text(user.global_name.as_deref()),
+                ))
+                (snapshot_row(
+                    "user.pronouns",
+                    "Pronouns",
+                    compare_text(user.pronouns.as_deref(), field(|live| live.pronouns.as_deref())),
+                    snapshot_text(user.pronouns.as_deref()),
+                ))
+                (snapshot_row(
+                    "user.bio",
+                    "Bio",
+                    compare_text(user.bio.as_deref(), field(|live| live.bio.as_deref())),
+                    snapshot_text(user.bio.as_deref()),
+                ))
+                (snapshot_row(
+                    "user.custom_status",
+                    "Custom Status",
+                    SnapshotChange::Unknown,
+                    snapshot_text(user.custom_status.as_deref()),
+                ))
+                (snapshot_row(
+                    "user.avatar",
+                    "Avatar",
+                    compare_asset(user.avatar.as_ref(), field(|live| live.avatar.as_deref())),
+                    snapshot_image(user.avatar.as_ref(), "Avatar at report time", false),
+                ))
+                (snapshot_row(
+                    "user.banner",
+                    "Banner",
+                    compare_asset(user.banner.as_ref(), field(|live| live.banner.as_deref())),
+                    snapshot_image(user.banner.as_ref(), "Banner at report time", true),
+                ))
+            }
+        }))
+    }
+}
+
+fn snapshot_member_group(snapshot: &ReportProfileSnapshot) -> Markup {
+    let Some(member) = snapshot.member.as_ref() else {
+        return html! {};
+    };
+    let unknown = SnapshotChange::Unknown;
+    html! {
+        (snapshot_group(
+            "Community Profile",
+            Some("The community profile is not compared with the live one."),
+            html! {
+                (data_field_mono("Community ID", &member.guild_id))
+                (snapshot_row("member.nick", "Nickname", unknown, snapshot_text(member.nick.as_deref())))
+                (snapshot_row("member.pronouns", "Pronouns", unknown, snapshot_text(member.pronouns.as_deref())))
+                (snapshot_row("member.bio", "Bio", unknown, snapshot_text(member.bio.as_deref())))
+                (snapshot_row(
+                    "member.joined_at",
+                    "Joined",
+                    unknown,
+                    snapshot_text(member.joined_at.as_deref().map(format_admin_timestamp).as_deref()),
+                ))
+                (snapshot_row(
+                    "member.avatar",
+                    "Avatar",
+                    unknown,
+                    snapshot_image(member.avatar.as_ref(), "Community avatar at report time", false),
+                ))
+                (snapshot_row(
+                    "member.banner",
+                    "Banner",
+                    unknown,
+                    snapshot_image(member.banner.as_ref(), "Community banner at report time", true),
+                ))
+            },
+        ))
+    }
+}
+
+fn snapshot_guild_group(
+    config: &AdminConfig,
+    snapshot: &ReportProfileSnapshot,
+    live: &LiveProfile,
+) -> Markup {
+    let Some(guild) = snapshot.guild.as_ref() else {
+        return html! {};
+    };
+    let base = &config.base_path;
+    let live_guild = live.guild.as_ref().filter(|live| live.id == guild.id);
+    let note = live_guild
+        .is_none()
+        .then_some("The live community could not be loaded, so changes are not marked.");
+    let field = |value: fn(&GuildDetailInfo) -> Option<&str>| live_guild.map(value);
+    html! {
+        (snapshot_group("Community", note, html! {
+            (data_field_link_mono("Community ID", &format!("{base}/guilds/{}", guild.id), &guild.id))
+            (snapshot_row(
+                "guild.name",
+                "Name",
+                compare_text(guild.name.as_deref(), field(|live| Some(live.name.as_str()))),
+                snapshot_text(guild.name.as_deref()),
+            ))
+            (snapshot_row(
+                "guild.vanity_url_code",
+                "Vanity URL",
+                compare_text(guild.vanity_url_code.as_deref(), field(|live| live.vanity_url_code.as_deref())),
+                snapshot_text(guild.vanity_url_code.as_deref()),
+            ))
+            (snapshot_row(
+                "guild.icon",
+                "Icon",
+                compare_asset(guild.icon.as_ref(), field(|live| live.icon.as_deref())),
+                snapshot_image(guild.icon.as_ref(), "Icon at report time", false),
+            ))
+            (snapshot_row(
+                "guild.banner",
+                "Banner",
+                compare_asset(guild.banner.as_ref(), field(|live| live.banner.as_deref())),
+                snapshot_image(guild.banner.as_ref(), "Banner at report time", true),
+            ))
+            (snapshot_row(
+                "guild.splash",
+                "Invite Splash",
+                compare_asset(guild.splash.as_ref(), field(|live| live.splash.as_deref())),
+                snapshot_image(guild.splash.as_ref(), "Invite splash at report time", true),
+            ))
+        }))
+    }
+}
+
+fn notes_card(
+    config: &AdminConfig,
+    auth: &AuthContext,
+    report: &ReportEntry,
+    note_authors: &[AdminUser],
+    csrf_token: &str,
+) -> Markup {
+    let base = &config.base_path;
+    let notes: Vec<StaffNote> = report
+        .notes
+        .iter()
+        .map(|note| StaffNote {
+            note_id: &note.note_id,
+            author: user_link(base, note_authors, &note.author_id),
+            body: &note.body,
+            created_at: &note.created_at,
+        })
+        .collect();
+    staff_notes_section(
+        &notes,
+        has_acl(auth, acl::REPORT_RESOLVE).then(|| StaffNoteForm {
+            action: format!("{base}/reports/{}/notes", report.report_id),
+            refresh_target: "#report-detail",
+            field_id: format!("note-{}", report.report_id),
+            help: "Staff only. Never shown to the reporter or the reported account. Notes cannot be changed and are deleted with the report.",
+            csrf_token,
+        }),
+    )
+}
+
+fn legal_hold_card(
+    config: &AdminConfig,
+    auth: &AuthContext,
+    report: &ReportEntry,
+    csrf_token: &str,
+) -> Markup {
+    let base = &config.base_path;
+    let action = format!("{base}/reports/{}/legal-hold", report.report_id);
+    let held = non_empty(report.legal_hold_until.as_deref());
+    let ended = held.is_some_and(legal_hold_has_ended);
+    let state = match (held, ended) {
+        (None, _) => "none",
+        (Some(_), true) => "ended",
+        (Some(_), false) => "active",
+    };
+    let can_edit = has_acl(auth, acl::REPORT_RESOLVE);
+    html! {
+        (section_card(Some("Legal Hold"), None, None, html! {
+            div class="flex flex-col gap-3" data-report-legal-hold=(state) {
+                @if let Some(until) = held {
+                    p class="text-neutral-700 text-sm" {
+                        span class="font-medium" { @if ended { "Hold ended: " } @else { "Held until: " } }
+                        span data-report-legal-hold-until=(until) { (format_admin_timestamp(until)) }
+                    }
+                    @if ended {
+                        p class="text-neutral-500 text-sm" {
+                            "The report is no longer held and is deleted when its retention period ends."
+                        }
+                    }
+                    @if let Some(reason) = non_empty(report.legal_hold_reason.as_deref()) {
+                        p class="whitespace-pre-wrap break-words text-neutral-700 text-sm" data-report-legal-hold-reason="" {
+                            span class="font-medium" { "Reason: " }
+                            (reason)
+                        }
+                    }
+                } @else {
+                    p class="text-neutral-500 text-sm" {
+                        "No hold. The report and its stored evidence are deleted when its retention period ends."
+                    }
+                }
+                @if can_edit {
+                    form method="post" action=(action) class="flex flex-col gap-3" data-legal-hold-form="set"
+                        data-admin-refresh-on-success="#report-detail" {
+                        (csrf_input(csrf_token))
+                        label for="legal_hold_until" class=(FORM_LABEL_CLASS) { "Hold until" }
+                        input type="date" id="legal_hold_until" name="legal_hold_until" required
+                            class={(FORM_CONTROL_CLASS) " h-8 px-3 py-1.5"};
+                        p class="text-neutral-500 text-xs" { "The hold ends at the end of that day, UTC." }
+                        label for="legal_hold_reason" class=(FORM_LABEL_CLASS) { "Hold reason" }
+                        textarea id="legal_hold_reason" name="legal_hold_reason" rows="2" maxlength="512" required
+                            class={(FORM_CONTROL_CLASS) " px-3 py-2"} {}
+                        button type="submit"
+                            class="inline-flex w-full items-center justify-center gap-2 \
+                                   font-medium rounded-lg bg-neutral-900 text-white \
+                                   px-4 py-2 text-sm" {
+                            @if state == "active" { "Update Hold" } @else { "Place Hold" }
+                        }
+                    }
+                    @if held.is_some() {
+                        form method="post" action=(action) data-legal-hold-form="clear"
+                            data-admin-refresh-on-success="#report-detail" {
+                            (csrf_input(csrf_token))
+                            input type="hidden" name="clear" value="1";
+                            button type="submit"
+                                class="inline-flex w-full items-center justify-center gap-2 \
+                                       rounded-lg border border-neutral-300 bg-white \
+                                       px-4 py-2 font-medium text-neutral-700 text-sm \
+                                       hover:bg-neutral-50" {
+                                "Clear Hold"
+                            }
+                        }
+                    }
+                }
+            }
+        }))
+    }
+}
+
+pub const DELETE_REPORT_CONFIRMATION: &str =
+    "I understand this permanently deletes the report and its stored evidence";
+
+fn delete_report_card(
+    config: &AdminConfig,
+    auth: &AuthContext,
+    report: &ReportEntry,
+    csrf_token: &str,
+) -> Markup {
+    if !has_acl(auth, acl::REPORT_DELETE) {
+        return html! {};
+    }
+    let base = &config.base_path;
+    let held = non_empty(report.legal_hold_until.as_deref())
+        .is_some_and(|until| !legal_hold_has_ended(until));
+    html! {
+        (section_card(Some("Delete Report"), None, None, html! {
+            div class="flex flex-col gap-3" data-report-delete=(if held { "held" } else { "available" }) {
+                p class="text-neutral-500 text-sm" {
+                    "Deletes the report now, with its message context, profile snapshot, notes, stored evidence and search entry. \
+                     Evidence that another report uses is kept. This cannot be undone."
+                }
+                @if held {
+                    p class="text-neutral-700 text-sm" {
+                        "The report is under a legal hold. Clear the hold to delete it."
+                    }
+                } @else {
+                    form method="post" action={(base) "/reports/" (report.report_id) "/delete"}
+                        class="flex flex-col gap-3" data-report-delete-form="" {
+                        (csrf_input(csrf_token))
+                        label for="delete_audit_log_reason" class=(FORM_LABEL_CLASS) {
+                            "Audit log reason (optional)"
+                        }
+                        input type="text" id="delete_audit_log_reason" name="audit_log_reason" maxlength="512"
+                            placeholder="Why this report is being deleted"
+                            class={(FORM_CONTROL_CLASS) " h-8 px-3 py-1.5"};
+                        (Checkbox {
+                            name: "confirm",
+                            value: "true",
+                            label: DELETE_REPORT_CONFIRMATION,
+                            checked: false,
+                            enabled: true,
+                        }.render())
+                        (danger_button("Delete Report"))
+                    }
+                }
+            }
+        }))
+    }
+}
+
+fn legal_hold_has_ended(until: &str) -> bool {
+    time::OffsetDateTime::parse(until, &time::format_description::well_known::Rfc3339)
+        .is_ok_and(|until| until <= time::OffsetDateTime::now_utc())
+}
+
 fn nav_link(href: &str, label: &str) -> Markup {
     html! {
         a href=(href)
@@ -424,8 +1122,7 @@ fn nav_link(href: &str, label: &str) -> Markup {
 fn message_context_section(
     config: &AdminConfig,
     report: &ReportEntry,
-    include_delete: bool,
-    csrf_token: Option<&str>,
+    take_action: bool,
 ) -> Markup {
     let Some(values) = &report.message_context else {
         return html! {};
@@ -441,19 +1138,27 @@ fn message_context_section(
         div class="overflow-hidden rounded-lg border border-neutral-200 bg-white" {
             div class="px-4 pt-4 pb-2 sm:px-6 sm:pt-6" {
                 h2 class="font-semibold text-base text-neutral-900" { "Message Context" }
+                p class="mt-1 text-neutral-500 text-sm" {
+                    "Attachment links expire after 5 minutes. Reload the page for new ones."
+                }
             }
             div class="py-2" {
                 (message_list(
                     config,
                     &config.base_path,
                     &messages,
-                    include_delete,
+                    false,
                     report.reported_message_id.as_deref(),
+                    take_action
+                        .then_some(report.reported_user_id.as_deref())
+                        .flatten()
+                        .map(|user_id| TakeAction {
+                            author_id: Some(user_id),
+                            report_id: Some(&report.report_id),
+                        })
+                        .as_ref(),
                 ))
             }
-        }
-        @if let Some(csrf_token) = csrf_token {
-            (message_deletion_script(csrf_token))
         }
     }
 }
@@ -462,12 +1167,14 @@ pub fn report_detail_page(
     config: &AdminConfig,
     auth: &AuthContext,
     report: &ReportEntry,
+    live: &LiveProfile,
+    note_authors: &[AdminUser],
     csrf_token: &str,
     is_htmx: bool,
 ) -> Markup {
     let base = &config.base_path;
     let content = html! {
-        div class="space-y-6" {
+        div id="report-detail" class="space-y-6" {
             (page_header_with_back(
                 "Report Details",
                 None,
@@ -476,14 +1183,19 @@ pub fn report_detail_page(
             ))
             div class="grid grid-cols-1 gap-6 lg:grid-cols-3" {
             div class="space-y-6 lg:col-span-2" {
-                (basic_info_section(config, auth, report))
+                (basic_info_section(config, report, has_acl(auth, acl::REPORT_VIEW_REPORTER_PII)))
+                (report_answers_section(report))
                 (reported_entity_section(config, report))
-                (message_context_section(config, report, true, Some(csrf_token)))
+                (profile_snapshot_section(config, report, live))
+                (message_context_section(config, report, can_take_action(auth.acls())))
                 (additional_info_section(report))
+                (notes_card(config, auth, report, note_authors, csrf_token))
             }
             div class="space-y-6" {
                 (status_card(config, report))
-                (actions_card(config, report, csrf_token))
+                (actions_card(config, auth, report, csrf_token))
+                (legal_hold_card(config, auth, report, csrf_token))
+                (delete_report_card(config, auth, report, csrf_token))
             }
         }
         }
@@ -499,9 +1211,10 @@ pub fn report_detail_fragment(config: &AdminConfig, report: &ReportEntry) -> Mar
     let base = &config.base_path;
     html! {
         div data-report-fragment="" class="space-y-4" {
-            (basic_info_section_fragment(config, report))
+            (basic_info_section(config, report, false))
+            (report_answers_section(report))
             (reported_entity_section(config, report))
-            (message_context_section(config, report, false, None))
+            (message_context_section(config, report, false))
             (additional_info_section(report))
             a href={(base) "/reports/" (&report.report_id)}
                 class="inline-flex min-h-[44px] w-full items-center justify-center \
@@ -510,25 +1223,5 @@ pub fn report_detail_fragment(config: &AdminConfig, report: &ReportEntry) -> Mar
                 "Open full report"
             }
         }
-    }
-}
-
-fn basic_info_section_fragment(config: &AdminConfig, report: &ReportEntry) -> Markup {
-    let base = &config.base_path;
-    html! {
-        (section_card(Some("Basic Information"), None, None, html! {
-            div class="grid grid-cols-1 sm:grid-cols-2 gap-4" {
-                (data_field_mono("Report ID", &report.report_id))
-                (data_field_text("Reported At", &format_admin_timestamp(&report.reported_at)))
-                (data_field_text("Type", report_type_label(report.report_type)))
-                (data_field_text("Category", report.category.as_deref().unwrap_or("")))
-                @if let Some(ref reporter_id) = report.reporter_id {
-                    (data_field_link_mono("Reporter", &format!("{base}/users/{reporter_id}"), &reporter_label(report)))
-                } @else {
-                    (data_field_text("Reporter", &reporter_label(report)))
-                }
-                (data_field("Status", status_badge(report.status)))
-            }
-        }))
     }
 }

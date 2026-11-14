@@ -1,24 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createInitializer, createShutdown} from '@app/api/app/APILifecycle';
+import {registerControllers} from '@app/api/app/ControllerRegistry';
+import {configureMiddleware} from '@app/api/app/MiddlewarePipeline';
+import type {APIConfig} from '@app/api/config/APIConfig';
+import {StorageFullError, StorageReadOnlyError} from '@app/api/infrastructure/IStorageService';
+import {recordRequestStatus} from '@app/api/middleware/RequestErrorTelemetry';
+import type {ServiceSingletonDependencies} from '@app/api/middleware/ServiceSingletons';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {AppErrorHandler, AppNotFoundHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
 import {resolveErrorStatus} from '@fluxer/errors/src/error_handling/ErrorIntrospection';
 import {createMetricsMiddleware} from '@fluxer/hono/src/middleware/Metrics';
 import {LOCKED_DOWN_PERMISSIONS_POLICY, securityHeaders} from '@fluxer/hono/src/middleware/SecurityHeaders';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {setIsDevelopment} from '@fluxer/schema/src/primitives/UrlValidators';
 import type {Context} from 'hono';
 import {Hono} from 'hono';
-import {createInitializer, createShutdown} from './app/APILifecycle';
-import {registerControllers} from './app/ControllerRegistry';
-import {configureMiddleware} from './app/MiddlewarePipeline';
-import type {APIConfig} from './config/APIConfig';
-import type {ILogger} from './ILogger';
-import {recordHttpClientError} from './middleware/AbusiveIpAutoBanner';
-import type {HonoApp, HonoEnv} from './types/HonoEnv';
 
-interface CreateAPIAppOptions {
+interface CreateAPIAppOptions extends ServiceSingletonDependencies {
 	config: APIConfig;
-	logger: ILogger;
+	logger: LoggerInterface;
+	registerRoutes?: (routes: HonoApp) => void;
 }
 
 interface APIAppResult {
@@ -27,11 +31,15 @@ interface APIAppResult {
 	shutdown: () => Promise<void>;
 }
 
-function AbuseAwareAppErrorHandler(err: Error, ctx: Context<HonoEnv>): Response | Promise<Response> {
+function TelemetryAwareAppErrorHandler(error: Error, ctx: Context<HonoEnv>): Response | Promise<Response> {
+	const err =
+		error instanceof StorageReadOnlyError || error instanceof StorageFullError
+			? new ServiceUnavailableError({cause: error})
+			: error;
 	if (!(err instanceof IpBannedError)) {
 		const status = resolveErrorStatus(err);
 		if (status !== null && !ctx.get('user')) {
-			recordHttpClientError(ctx.req.raw, status);
+			recordRequestStatus(ctx.req.raw, status);
 		}
 	}
 	return AppErrorHandler(err, ctx);
@@ -45,14 +53,15 @@ export async function createAPIApp(options: CreateAPIAppOptions): Promise<APIApp
 	configureMiddleware(routes, {
 		logger,
 		nodeEnv: config.nodeEnv,
-		corsOrigins: [config.endpoints.webApp, config.endpoints.marketing],
+		corsOrigins: [...config.endpoints.webAppOrigins, config.endpoints.marketing],
 		trustClientIpHeader: config.proxy.trust_client_ip_header,
 		clientIpHeaderName: config.proxy.client_ip_header,
 		maxInflightRequests: config.maxInflightRequests,
 	});
-	routes.onError(AbuseAwareAppErrorHandler);
+	routes.onError(TelemetryAwareAppErrorHandler);
 	routes.notFound(AppNotFoundHandler);
 	registerControllers(routes, config);
+	options.registerRoutes?.(routes);
 	const app = new Hono<HonoEnv>({strict: true});
 	const {middleware: metricsMiddleware, metricsHandler} = createMetricsMiddleware('api');
 	app.use('*', metricsMiddleware);
@@ -66,11 +75,11 @@ export async function createAPIApp(options: CreateAPIAppOptions): Promise<APIApp
 	);
 	app.route('/v1', routes);
 	app.route('/', routes);
-	app.onError(AbuseAwareAppErrorHandler);
+	app.onError(TelemetryAwareAppErrorHandler);
 	app.notFound(AppNotFoundHandler);
 	return {
 		app,
-		initialize: createInitializer(config, logger),
+		initialize: createInitializer(config, logger, {operatorPassWallPublisher: options.operatorPassWallPublisher}),
 		shutdown: shutdownApiLifecycle,
 	};
 }

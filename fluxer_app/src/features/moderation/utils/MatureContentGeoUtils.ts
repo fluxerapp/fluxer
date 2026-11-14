@@ -17,8 +17,3 @@ export function getEffectiveMatureContentGeoContext(): MatureContentGeoContext {
 		regionCode: GeoIP.regionCode,
 	};
 }
-
-export function isMatureContentCheckAvailableInRegion(): boolean {
-	const {countryCode} = getEffectiveMatureContentGeoContext();
-	return countryCode === 'GB';
-}

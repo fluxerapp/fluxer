@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import Permission from '@app/features/permissions/state/Permission';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -32,15 +33,6 @@ function extractYouTubeVideoId(parsed: URL): string | null {
 	return null;
 }
 
-export function normalizeUrl(url: string): string | null {
-	try {
-		const parsed = new URL(url);
-		return parsed.href.replace(/\/$/, '');
-	} catch {
-		return null;
-	}
-}
-
 export function canonicalizeMediaUrl(url: string | null | undefined): string | null {
 	if (!url) return null;
 	try {
@@ -49,7 +41,7 @@ export function canonicalizeMediaUrl(url: string | null | undefined): string | n
 		if (youtubeId) {
 			return `youtube:${youtubeId}`;
 		}
-		return parsed.href.replace(/\/$/, '');
+		return stripAttachmentSignature(parsed.href).replace(/\/$/, '');
 	} catch {
 		return null;
 	}

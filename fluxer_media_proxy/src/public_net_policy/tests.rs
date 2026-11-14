@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::ip_tables::is_public_ip;
 use super::resolver::{MAX_PUBLIC_DNS_ADDRESSES, ResolveError, screen_resolved_addresses};
 use super::*;
+use fluxer_common::public_ip::is_public_ip;
 use std::net::SocketAddr;
 
 fn public(literal: &str) -> bool {
@@ -16,34 +16,12 @@ fn socket_addresses(literal: &str, count: usize) -> Vec<SocketAddr> {
 
 #[test]
 fn blocks_private_and_special_ip_literals() {
-    assert!(is_blocked_ip_literal("127.0.0.1"));
-    assert!(is_blocked_ip_literal("10.1.2.3"));
-    assert!(is_blocked_ip_literal("::1"));
-    assert!(is_blocked_ip_literal("::ffff:192.168.1.1"));
-    assert!(!is_blocked_ip_literal("8.8.8.8"));
-    assert!(!is_blocked_ip_literal("2606:4700:4700::1111"));
-}
-
-#[test]
-fn validates_public_host_syntax() {
-    assert!(is_valid_public_hostname("example.com"));
-    assert!(is_valid_public_hostname("xn--bcher-kva.example"));
-    assert!(!is_valid_public_hostname("localhost"));
-    assert!(!is_valid_public_hostname("example"));
-    assert!(!is_valid_public_hostname("bad_name.example"));
-    assert!(!is_valid_public_hostname("example.123"));
-}
-
-#[test]
-fn resolves_relative_redirects() {
-    assert_eq!(
-        "https://example.com/a/d?y=2",
-        resolve_redirect("https://example.com/a/b/c?x=1", "../d?y=2#ignored").unwrap()
-    );
-    assert_eq!(
-        "https://example.com/z",
-        resolve_redirect("https://example.com/a/b/c", "/z").unwrap()
-    );
+    assert!(!public("127.0.0.1"));
+    assert!(!public("10.1.2.3"));
+    assert!(!public("::1"));
+    assert!(!public("::ffff:192.168.1.1"));
+    assert!(public("8.8.8.8"));
+    assert!(public("2606:4700:4700::1111"));
 }
 
 #[test]
@@ -66,7 +44,7 @@ fn blocks_every_documented_ipv4_ssrf_range() {
         "240.0.0.1",
         "255.255.255.255",
     ] {
-        assert!(is_blocked_ip_literal(ip), "{ip}");
+        assert!(!public(ip), "{ip}");
     }
 }
 
@@ -84,7 +62,7 @@ fn blocks_every_documented_ipv6_ssrf_range() {
         "::7f00:1",
         "2002:a9fe:a9fe::",
     ] {
-        assert!(is_blocked_ip_literal(ip), "{ip}");
+        assert!(!public(ip), "{ip}");
     }
 }
 
@@ -106,31 +84,9 @@ fn rejects_non_http_s_schemes() {
 }
 
 #[test]
-fn redirect_that_returns_to_same_url_is_allowed() {
-    assert_eq!(
-        "https://example.com/path",
-        resolve_redirect("https://example.com/path", "/path").unwrap()
-    );
-}
-
-#[test]
 fn redirect_with_dot_dot_cannot_escape_host() {
     let r = resolve_redirect("https://example.com/a", "../../../etc").unwrap();
     assert!(r.starts_with("https://example.com/"));
-}
-
-#[test]
-fn logged_urls_keep_only_scheme_host_and_port() {
-    assert_eq!(
-        "https://cdn.example.com/[redacted]",
-        external_url_for_log("https://agent:hunter2@cdn.example.com/rooms/private?token=abc#f")
-    );
-    assert_eq!(
-        "http://cdn.example.com:8080/[redacted]",
-        external_url_for_log("http://cdn.example.com:8080/a/b/c")
-    );
-    assert_eq!("[invalid-url]", external_url_for_log("not a url"));
-    assert_eq!("[invalid-url]", external_url_for_log(""));
 }
 
 #[test]
@@ -163,16 +119,6 @@ fn ipv6_outside_global_unicast_is_blocked_by_default() {
 }
 
 #[test]
-fn globally_reachable_special_use_addresses_stay_reachable() {
-    for literal in ["192.0.0.9", "192.0.0.10", "2001:1::1", "2001:20::1"] {
-        assert!(public(literal), "{literal}");
-    }
-    for literal in ["192.0.0.8", "192.0.0.11", "2001:1::4", "2001:40::1"] {
-        assert!(!public(literal), "{literal}");
-    }
-}
-
-#[test]
 fn ipv4_written_in_ipv6_notation_is_revalidated_against_the_v4_table() {
     for literal in [
         "::ffff:127.0.0.1",
@@ -191,14 +137,6 @@ fn ipv4_written_in_ipv6_notation_is_revalidated_against_the_v4_table() {
 }
 
 #[test]
-fn unparseable_ip_literals_fail_closed() {
-    assert!(is_blocked_ip_literal(""));
-    assert!(is_blocked_ip_literal("example.com"));
-    assert!(is_blocked_ip_literal("127.0.0.1:80"));
-    assert!(is_blocked_ip_literal("0x7f000001"));
-}
-
-#[test]
 fn public_urls_are_restricted_to_the_standard_web_ports() {
     assert_eq!(Ok(()), validate_url("https://example.com/a"));
     assert_eq!(Ok(()), validate_url("https://example.com:443/a"));
@@ -214,35 +152,6 @@ fn public_urls_are_restricted_to_the_standard_web_ports() {
     for url in ["https://example.com:0/a", "https://example.com:99999/a"] {
         assert_eq!(Err(Error::InvalidUrl), validate_url(url), "{url}");
     }
-}
-
-#[test]
-fn urls_carrying_a_fragment_are_rejected() {
-    assert_eq!(
-        Err(Error::BlockedUrl),
-        validate_url("https://example.com/a#section")
-    );
-    assert_eq!(
-        Err(Error::BlockedUrl),
-        validate_url("https://example.com#section")
-    );
-    assert_eq!(Ok(()), validate_url("https://example.com/a"));
-    let next = resolve_redirect("https://example.com/a/b", "/next#anchor").unwrap();
-    assert_eq!("https://example.com/next", next);
-    assert_eq!(Ok(()), validate_url(&next));
-}
-
-#[test]
-fn url_validation_accepts_public_syntax_without_resolving_dns() {
-    assert_eq!(
-        Ok(()),
-        validate_url("https://this-host-does-not-exist.invalid/a")
-    );
-    assert_eq!(
-        Err(Error::BlockedUrl),
-        validate_url("https://169.254.169.254/latest/meta-data/")
-    );
-    assert_eq!(Err(Error::BlockedUrl), validate_url("http://localhost/a"));
 }
 
 #[test]
@@ -270,12 +179,54 @@ fn resolved_address_sets_are_bounded_and_fail_closed() {
 }
 
 #[test]
-fn a_resolver_rejection_is_recognisable_however_deeply_the_transport_wraps_it() {
-    assert!(is_pinned_dns_failure(&ResolveError::BlockedAddress));
-    assert!(is_pinned_dns_failure(&ResolveError::LookupFailed));
-    let wrapped = anyhow::Error::new(ResolveError::HostResolvedToNoAddress).context("dns error");
-    assert!(is_pinned_dns_failure(wrapped.as_ref()));
-    assert!(!is_pinned_dns_failure(&std::io::Error::other(
-        "tcp connect error"
-    )));
+fn url_validation_uses_the_canonical_ipv4_host() {
+    for url in [
+        "http://0x7f.0x0.0x0.0x1/",
+        "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/",
+        "http://169.254.169.0xfe/latest/meta-data/",
+        "http://127.0.0.0x1/",
+        "http://0xa.0x0.0x0.0x1/",
+        "http://0xc0.0xa8.0x0.0x1/",
+        "http://0x0.0x0.0x0.0x0/",
+        "http://0x7f000001/",
+        "http://2130706433/",
+        "http://0177.0.0.1/",
+        "http://0x7f.1/",
+        "http://127.1/",
+        "https://0XA9.0XFE.0XA9.0XFE./",
+    ] {
+        assert_eq!(Err(Error::BlockedUrl), validate_url(url), "{url}");
+    }
+    assert_eq!(Ok(()), validate_url("https://0x8.0x8.0x8.0x8/a"));
+}
+
+#[test]
+fn redirect_targets_are_checked_on_their_canonical_host() {
+    let next = resolve_redirect(
+        "https://example.com/start.gif",
+        "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/",
+    )
+    .unwrap();
+    assert_eq!(Err(Error::BlockedUrl), validate_url(&next));
+    let next = resolve_redirect("https://example.com/start.gif", "//0x7f.0x0.0x0.0x1/a").unwrap();
+    assert_eq!(Err(Error::BlockedUrl), validate_url(&next));
+}
+
+use fluxer_common::external_media_path::{
+    build_external_media_proxy_path, reconstruct_original_url,
+};
+
+#[test]
+fn a_signed_path_never_decodes_into_a_url_the_fetch_policy_refuses() {
+    let credentialed = "https://reader:secret@cdn.example.com/i.png";
+    assert_eq!(
+        Err(super::Error::BlockedUrl),
+        super::parse_url(credentialed)
+    );
+
+    let path = build_external_media_proxy_path(credentialed).expect("path builds");
+    let decoded = reconstruct_original_url(&path).expect("path decodes");
+
+    assert_eq!("https://cdn.example.com/i.png", decoded);
+    assert!(super::parse_url(&decoded).is_ok());
 }

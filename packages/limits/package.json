@@ -7,14 +7,14 @@
 		"./*": "./*"
 	},
 	"scripts": {
-		"typecheck": "tsgo --noEmit",
+		"typecheck": "tsc --noEmit",
 		"test": "vitest run"
 	},
 	"dependencies": {
 		"@fluxer/constants": "workspace:*"
 	},
 	"devDependencies": {
-		"@typescript/native-preview": "catalog:",
+		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	}
 }

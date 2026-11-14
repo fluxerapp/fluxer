@@ -8,7 +8,15 @@
 	color: inherit;
 	font: inherit;
 	line-height: inherit;
-	font-weight: 500;
-	text-decoration: underline;
-	text-decoration-color: rgb(255 255 255 / 0.6);
+	font-weight: 700;
+	text-decoration-line: underline;
+	text-decoration-thickness: 2px;
+	text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
+	text-underline-offset: 4px;
+}
+
+@media (hover: hover) {
+	.link:hover {
+		text-decoration-color: currentColor;
+	}
 }

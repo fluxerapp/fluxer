@@ -25,35 +25,6 @@ export interface NativeAudioFrame {
 	timestampUs: number;
 }
 
-export interface RoutingGraphNode {
-	id: number;
-	props: Record<string, string>;
-}
-
-export interface RoutingGraphPort {
-	id: number;
-	nodeId: number;
-	direction: string;
-	channel: string;
-	props: Record<string, string>;
-}
-
-export interface RoutingGraphLink {
-	outputNodeId: number;
-	outputPortId: number;
-	inputNodeId: number;
-	inputPortId: number;
-	owned: boolean;
-	passive: boolean;
-}
-
-export interface RoutingGraph {
-	backend: 'pipewire' | 'none' | string;
-	nodes: Array<RoutingGraphNode>;
-	ports: Array<RoutingGraphPort>;
-	ownedLinks: Array<RoutingGraphLink>;
-}
-
 export declare function pipeWireAvailable(): boolean;
 
 export declare function audioBackend(): 'pipewire' | 'none';
@@ -62,8 +33,6 @@ export declare class AudioBridge {
 	constructor();
 
 	inventory(fields?: Array<string> | undefined | null): Array<Record<string, string>>;
-
-	routingGraph(): RoutingGraph;
 
 	apply(rule: JsRoutingRule): boolean;
 
@@ -83,23 +52,7 @@ export declare class DirectAudioCapture {
 
 	read(): NativeAudioFrame | null;
 
-	routingGraph(): RoutingGraph;
-
 	stop(): void;
-}
-
-export declare class AudioMixRuntimeHandle {
-	constructor(sourceCount: number);
-
-	static boundToDirectCapture(capture: DirectAudioCapture): AudioMixRuntimeHandle;
-
-	sourceCount(): number;
-
-	tick(tickAtNs?: number | null): number;
-
-	markPushedTotal(): number;
-
-	dispose(): void;
 }
 
 interface ProcessLoopbackEvents {
@@ -121,8 +74,6 @@ export declare class ProcessLoopback extends EventEmitter implements ProcessLoop
 	start(): void;
 
 	setRoutingRule(target: {linuxRule: JsRoutingRule} | number, options?: {includeProcessTree?: boolean}): boolean;
-
-	routingGraph(): RoutingGraph | null;
 
 	stop(): Promise<void>;
 }

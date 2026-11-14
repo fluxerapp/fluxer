@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const GuildRateLimitConfigs = {
 	GUILD_CREATE: {
@@ -60,6 +60,10 @@ export const GuildRateLimitConfigs = {
 		bucket: 'guild:channels:list::guild_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	GUILD_THREADS_ACTIVE: {
+		bucket: 'guild:threads:active::guild_id',
+		config: {limit: 5, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	GUILD_CHANNEL_CREATE: {
 		bucket: 'guild:channel:create::guild_id',
 		config: {limit: 10, windowMs: ms('1 minute')},
@@ -67,10 +71,6 @@ export const GuildRateLimitConfigs = {
 	GUILD_CHANNEL_POSITIONS: {
 		bucket: 'guild:channel:positions::guild_id',
 		config: {limit: 30, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
-	GUILD_SEARCH: {
-		bucket: 'guild:search::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	GUILD_AUDIT_LOGS: {
 		bucket: 'guild:audit_logs::guild_id',
@@ -136,6 +136,10 @@ export const GuildRateLimitConfigs = {
 		bucket: 'guild:emoji:metadata::user_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	GUILD_EMOJI_SOURCE: {
+		bucket: 'guild:emoji:source::user_id',
+		config: {limit: 60, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	GUILD_STICKERS_LIST: {
 		bucket: 'guild:sticker:list::guild_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},
@@ -166,6 +170,10 @@ export const GuildRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	GUILD_STICKER_METADATA: {
 		bucket: 'guild:sticker:metadata::user_id',
+		config: {limit: 60, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	GUILD_STICKER_SOURCE: {
+		bucket: 'guild:sticker:source::user_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 } as const;

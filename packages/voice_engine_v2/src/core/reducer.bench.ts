@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {bench, describe} from 'vitest';
-import basicSessionFixture from '../../fixtures/basic_session.json';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import type {
-	VoiceEngineV2InboundVideoFrame,
-	VoiceEngineV2InboundVideoFrameStats,
-	VoiceEngineV2MicrophoneOptions,
-	VoiceEngineV2Participant,
-	VoiceEngineV2ScreenOptions,
-	VoiceEngineV2Stats,
-} from '../protocol/types';
-import {transitionVoiceEngineV2} from './reducer';
+import basicSessionFixture from '@fluxer/voice_engine_v2/fixtures/basic_session.json';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
-} from './state';
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {
+	VoiceEngineV2InboundVideoFrame,
+	VoiceEngineV2MicrophoneOptions,
+	VoiceEngineV2Participant,
+	VoiceEngineV2ScreenOptions,
+	VoiceEngineV2Stats,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {test} from 'vitest';
 
 interface VoiceEngineV2BenchFixture {
 	events: Array<VoiceEngineV2Event>;
@@ -57,20 +56,6 @@ const frameEvent: VoiceEngineV2Event = {
 	}) satisfies VoiceEngineV2InboundVideoFrame,
 };
 
-const frameStatsEvent: VoiceEngineV2Event = {
-	type: 'inboundVideo.frameStats',
-	stats: Object.freeze({
-		participantSid: 'sid-remote',
-		participantIdentity: 'identity-remote',
-		trackSid: 'track-video-1',
-		width: 1280,
-		height: 720,
-		frameCount: 900,
-		lastFrameTimestampUs: 30_000_000,
-		lastFrameByteLength: 320_000,
-	}) satisfies VoiceEngineV2InboundVideoFrameStats,
-};
-
 const microphoneEvent: VoiceEngineV2Event = {
 	type: 'microphone.publishRequested',
 	options: Object.freeze({deviceId: 'mic-alt', echoCancellation: true}) satisfies VoiceEngineV2MicrophoneOptions,
@@ -100,28 +85,24 @@ const participantEvent: VoiceEngineV2Event = {
 const statsPayload: VoiceEngineV2Stats = Object.freeze({rttMs: 42, outbound: [], inbound: []});
 const statsEvent: VoiceEngineV2Event = {type: 'stats.collected', operationId: 9_999_999, stats: statsPayload};
 
-describe('voice engine v2 reducer hot paths', () => {
-	bench('inboundVideo.frameReceived', () => {
+test('voice engine v2 reducer hot paths', async ({bench}) => {
+	await bench('inboundVideo.frameReceived', () => {
 		transitionVoiceEngineV2(connectedSnapshot, frameEvent);
-	});
+	}).run();
 
-	bench('inboundVideo.frameStats', () => {
-		transitionVoiceEngineV2(connectedSnapshot, frameStatsEvent);
-	});
-
-	bench('microphone.publishRequested', () => {
+	await bench('microphone.publishRequested', () => {
 		transitionVoiceEngineV2(connectedSnapshot, microphoneEvent);
-	});
+	}).run();
 
-	bench('screen.publishRequested', () => {
+	await bench('screen.publishRequested', () => {
 		transitionVoiceEngineV2(connectedSnapshot, screenEvent);
-	});
+	}).run();
 
-	bench('room.participantJoined', () => {
+	await bench('room.participantJoined', () => {
 		transitionVoiceEngineV2(connectedSnapshot, participantEvent);
-	});
+	}).run();
 
-	bench('stats.collected', () => {
+	await bench('stats.collected', () => {
 		transitionVoiceEngineV2(connectedSnapshot, statsEvent);
-	});
+	}).run();
 });

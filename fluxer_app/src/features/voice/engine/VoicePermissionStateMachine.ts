@@ -3,8 +3,7 @@
 import type {VoiceChannelPermissions} from '@app/features/voice/utils/VoicePermissionUtils';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
-export type VoicePermissionChangeTarget = 'speak' | 'stream' | 'video';
-export type VoicePermissionWatchStateValue = 'inactive' | 'watching';
+type VoicePermissionChangeTarget = 'speak' | 'stream' | 'video';
 
 export interface VoiceRemoteMicrophonePublicationInput {
 	publicationId: string;
@@ -21,7 +20,7 @@ export type VoicePermissionCommand =
 	| {type: 'setRemoteVideoSubscribed'; publicationId: string; subscribed: boolean}
 	| {type: 'stopPermissionWatch'};
 
-export interface VoicePermissionMachineContext {
+interface VoicePermissionMachineContext {
 	permissions: VoiceChannelPermissions;
 	deafened: boolean;
 	guildId: string | null;
@@ -56,7 +55,7 @@ export type VoicePermissionEvent =
 	| {type: 'permission.reset'}
 	| {type: 'permission.clearCommands'};
 
-export const DEFAULT_VOICE_PERMISSION_STATE: VoiceChannelPermissions = {
+const DEFAULT_VOICE_PERMISSION_STATE: VoiceChannelPermissions = {
 	canSpeak: true,
 	canStream: true,
 	canUseVideo: true,
@@ -233,7 +232,7 @@ function reset(context: VoicePermissionMachineContext): VoicePermissionMachineCo
 	return initialContext(context.watcherActive ? [{type: 'stopPermissionWatch'}] : EMPTY_COMMANDS);
 }
 
-export const voicePermissionStateMachine = setup({
+const voicePermissionStateMachine = setup({
 	types: {} as {
 		context: VoicePermissionMachineContext;
 		events: VoicePermissionEvent;
@@ -285,38 +284,24 @@ export const voicePermissionStateMachine = setup({
 	id: 'voicePermission',
 	context: () => initialContext(),
 	initial: 'routing',
+	on: {
+		'permission.watch.start': {target: '.routing', actions: 'startWatch'},
+		'permission.watch.stop': {target: '.routing', actions: 'stopWatch'},
+		'permission.room.set': {target: '.routing', actions: 'setRoomPresence'},
+		'permission.update': {target: '.routing', actions: 'updatePermissions'},
+		'permission.change': {target: '.routing', actions: 'changePermission'},
+		'permission.set': {target: '.routing', actions: 'setPermissions'},
+		'subscription.initialize': {target: '.routing', actions: 'initializeSubscriptions'},
+		'deafen.apply': {target: '.routing', actions: 'applyDeafen'},
+		'permission.reset': {target: '.routing', actions: 'reset'},
+		'permission.clearCommands': {actions: 'clearCommands'},
+	},
 	states: {
 		routing: {
 			always: [{guard: 'watcherActive', target: 'watching'}, {target: 'inactive'}],
 		},
-		inactive: {
-			on: {
-				'permission.watch.start': {target: 'routing', actions: 'startWatch'},
-				'permission.watch.stop': {target: 'routing', actions: 'stopWatch'},
-				'permission.room.set': {target: 'routing', actions: 'setRoomPresence'},
-				'permission.update': {target: 'routing', actions: 'updatePermissions'},
-				'permission.change': {target: 'routing', actions: 'changePermission'},
-				'permission.set': {target: 'routing', actions: 'setPermissions'},
-				'subscription.initialize': {target: 'routing', actions: 'initializeSubscriptions'},
-				'deafen.apply': {target: 'routing', actions: 'applyDeafen'},
-				'permission.reset': {target: 'routing', actions: 'reset'},
-				'permission.clearCommands': {actions: 'clearCommands'},
-			},
-		},
-		watching: {
-			on: {
-				'permission.watch.start': {target: 'routing', actions: 'startWatch'},
-				'permission.watch.stop': {target: 'routing', actions: 'stopWatch'},
-				'permission.room.set': {target: 'routing', actions: 'setRoomPresence'},
-				'permission.update': {target: 'routing', actions: 'updatePermissions'},
-				'permission.change': {target: 'routing', actions: 'changePermission'},
-				'permission.set': {target: 'routing', actions: 'setPermissions'},
-				'subscription.initialize': {target: 'routing', actions: 'initializeSubscriptions'},
-				'deafen.apply': {target: 'routing', actions: 'applyDeafen'},
-				'permission.reset': {target: 'routing', actions: 'reset'},
-				'permission.clearCommands': {actions: 'clearCommands'},
-			},
-		},
+		inactive: {},
+		watching: {},
 	},
 });
 
@@ -331,8 +316,4 @@ export function transitionVoicePermissionSnapshot(
 	event: VoicePermissionEvent,
 ): VoicePermissionSnapshot {
 	return transition(voicePermissionStateMachine, snapshot, event)[0] as VoicePermissionSnapshot;
-}
-
-export function getVoicePermissionWatchStateValue(snapshot: VoicePermissionSnapshot): VoicePermissionWatchStateValue {
-	return snapshot.context.watcherActive ? 'watching' : 'inactive';
 }

@@ -12,7 +12,7 @@ export interface LimitContextInput {
 	guildId?: string | null;
 }
 
-export interface LimitMatchContext {
+interface LimitMatchContext {
 	traits: Set<string>;
 	guildFeatures: Set<string>;
 }
@@ -62,8 +62,15 @@ class LimitContextClass {
 		return guild?.features ?? null;
 	}
 
+	private static tierContext(traits: ReadonlyArray<string>): LimitMatchContext {
+		return {
+			traits: new Set(traits),
+			guildFeatures: new Set(),
+		};
+	}
+
 	premium(): LimitMatchContext {
-		return this.build({traits: ['premium']});
+		return LimitContextClass.tierContext(['premium']);
 	}
 
 	stock(): LimitMatchContext {
@@ -71,21 +78,11 @@ class LimitContextClass {
 	}
 
 	free(): LimitMatchContext {
-		const currentUser = Users.getCurrentUser();
-		const traits = currentUser?.traits ? Array.from(currentUser.traits).filter((t) => t !== 'premium') : [];
-		return this.build({traits});
+		return LimitContextClass.tierContext([]);
 	}
 
 	restricted(): LimitMatchContext {
 		return this.free();
-	}
-
-	forGuild(guildId: string): LimitMatchContext {
-		return this.build({guildId});
-	}
-
-	forUser(traits: Iterable<string> = []): LimitMatchContext {
-		return this.build({traits});
 	}
 }
 

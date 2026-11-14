@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {BotAuthService} from '@app/api/oauth/BotAuthService';
 import {InvalidGatewayAuthTokenError} from '@fluxer/errors/src/domains/auth/InvalidGatewayAuthTokenError';
 import {MissingGatewayAuthorizationError} from '@fluxer/errors/src/domains/auth/MissingGatewayAuthorizationError';
 import type {GatewayBotResponse as GatewayBotResponseType} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
-import {Config} from '../Config';
-import type {BotAuthService} from '../oauth/BotAuthService';
 
 type TokenType = 'user' | 'bot' | 'unknown';
 

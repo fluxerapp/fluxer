@@ -113,7 +113,7 @@ export function SelectionFormattingToolbarPlugin({enabled = true}: {enabled?: bo
 					}
 					const activeElement = root.ownerDocument.activeElement;
 					const toolbar = toolbarRef.current;
-					const toolbarHasFocus = activeElement != null && toolbar != null && toolbar.contains(activeElement);
+					const toolbarHasFocus = activeElement && toolbar?.contains(activeElement);
 					if (!$isRangeSelection(selection) || selection.isCollapsed()) {
 						if (!toolbarHasFocus || savedSelectionRef.current == null) {
 							setRect(null);
@@ -271,11 +271,10 @@ function SelectionToolbarSurface({
 		}),
 		[editor],
 	);
-	const {setFloating, state, style, updatePosition} = useAntiShiftFloating(virtualReference, true, {
+	const {setFloating, state, style, updatePosition} = useAntiShiftFloating(virtualReference, {
 		placement: 'top',
 		offsetMainAxis: 8,
 		shouldAutoUpdate: true,
-		enableSmartBoundary: true,
 	});
 	useEffect(() => {
 		updatePosition();

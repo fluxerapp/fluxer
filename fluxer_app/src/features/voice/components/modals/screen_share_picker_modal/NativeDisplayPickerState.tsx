@@ -11,9 +11,6 @@ interface NativeDisplayPickerStateProps {
 	pickerActionLabel: string;
 	onPickerAction: () => void;
 	pickerActionPending: boolean;
-	secondaryActionLabel?: string;
-	onSecondaryAction?: () => void;
-	secondaryActionPending?: boolean;
 	showDesktopDownloadCta: boolean;
 }
 
@@ -22,9 +19,6 @@ export const NativeDisplayPickerState: React.FC<NativeDisplayPickerStateProps> =
 	pickerActionLabel,
 	onPickerAction,
 	pickerActionPending,
-	secondaryActionLabel,
-	onSecondaryAction,
-	secondaryActionPending = false,
 	showDesktopDownloadCta,
 }) => {
 	return (
@@ -49,16 +43,6 @@ export const NativeDisplayPickerState: React.FC<NativeDisplayPickerStateProps> =
 				>
 					{pickerActionLabel}
 				</Button>
-				{secondaryActionLabel && onSecondaryAction && (
-					<Button
-						variant="secondary"
-						onClick={onSecondaryAction}
-						submitting={secondaryActionPending}
-						data-flx="voice.screen-share-picker-modal.button.game-capture"
-					>
-						{secondaryActionLabel}
-					</Button>
-				)}
 			</div>
 			{showDesktopDownloadCta && (
 				<DesktopDownloadCta data-flx="voice.screen-share-picker-modal.native-display-picker-state.desktop-download-cta" />

@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {getGuildMemberSearchService} from '@app/api/SearchFactory';
+import {channelNeedsReindexing} from '@app/api/search/ChannelIndexingUtils';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {isHiddenPartial} from '@app/api/user/ProfileVisibility';
+import {Validator} from '@app/api/Validator';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GUILD_MEMBERS_REINDEX_AFTER_TIMESTAMP} from '@fluxer/constants/src/GuildConstants';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import type {SearchableGuildMember} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
@@ -10,17 +22,7 @@ import {
 	type GuildMemberSearchResponse as GuildMemberSearchResponseBody,
 	type GuildMemberSearchResult,
 } from '@fluxer/schema/src/domains/guild/GuildMemberSearchSchemas';
-import {createGuildID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import {getGuildMemberSearchService} from '../../SearchFactory';
-import {guildMembersNeedReindexing} from '../../search/GuildMemberIndexingUtils';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
-import {GuildRepository} from '../repositories/GuildRepository';
-import {createGuildMfaEnforcer} from '../services/GuildMfaEnforcement';
+import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 const MEMBERS_PAGE_PERMISSIONS =
 	Permissions.MANAGE_GUILD |
@@ -41,15 +43,19 @@ function createEmptySearchResponse(guildId: string, indexing: boolean): GuildMem
 	};
 }
 
-function mapSearchableMember(hit: SearchableGuildMember): GuildMemberSearchResult {
+function mapSearchableMember(
+	hit: SearchableGuildMember,
+	partial: UserPartialResponse | undefined,
+): GuildMemberSearchResult {
+	const hidden = partial != null && isHiddenPartial(partial);
 	return {
 		id: hit.id,
 		guild_id: hit.guildId,
 		user_id: hit.userId,
-		username: hit.username,
-		discriminator: hit.discriminator,
-		global_name: hit.globalName,
-		nickname: hit.nickname,
+		username: partial?.username ?? hit.username,
+		discriminator: partial?.discriminator ?? hit.discriminator,
+		global_name: partial ? partial.global_name : hit.globalName,
+		nickname: hidden ? null : hit.nickname,
 		role_ids: hit.roleIds,
 		joined_at: hit.joinedAt,
 		supplemental: {
@@ -82,16 +88,13 @@ export function GuildMemberSearchController(app: HonoApp) {
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const guildIdString = guildId.toString();
 			const body = ctx.req.valid('json');
-			const {getMyPermissions, guildData} = await ctx.get('guildService').getGuildAuthenticated({userId, guildId});
+			const {getMyPermissions, enforceGuildMfa} = await ctx
+				.get('guildService')
+				.getGuildAuthenticated({userId, guildId});
 			const permissions = await getMyPermissions();
 			if ((permissions & MEMBERS_PAGE_PERMISSIONS) === 0n) {
 				throw new MissingPermissionsError();
 			}
-			const enforceGuildMfa = await createGuildMfaEnforcer({
-				userRepository: ctx.get('userRepository'),
-				guildData,
-				userId,
-			});
 			enforceGuildMfa(permissions & MEMBERS_PAGE_PERMISSIONS);
 			const canViewInvites = (permissions & Permissions.MANAGE_GUILD) !== 0n;
 			const guild = await guildRepository.findUnique(guildId);
@@ -99,10 +102,10 @@ export function GuildMemberSearchController(app: HonoApp) {
 				return ctx.json(createEmptySearchResponse(guildIdString, false));
 			}
 			const searchService = getGuildMemberSearchService();
-			if (!searchService || !searchService.isAvailable()) {
+			if (!searchService?.isAvailable()) {
 				return ctx.json(createEmptySearchResponse(guildIdString, false));
 			}
-			const needsIndexing = guildMembersNeedReindexing(guild.membersIndexedAt);
+			const needsIndexing = channelNeedsReindexing(guild.membersIndexedAt, GUILD_MEMBERS_REINDEX_AFTER_TIMESTAMP);
 			if (needsIndexing) {
 				const workerService = ctx.get('workerService');
 				await workerService.addJob(
@@ -134,8 +137,10 @@ export function GuildMemberSearchController(app: HonoApp) {
 				},
 				{limit, offset},
 			);
-			const members = results.hits.map((hit) => {
-				const member = mapSearchableMember(hit);
+			const userIds = results.hits.map((hit) => createUserID(BigInt(hit.userId)));
+			const partials = await ctx.get('userCacheService').getUserPartialResponses(userIds, ctx.get('requestCache'));
+			const members = results.hits.map((hit, index) => {
+				const member = mapSearchableMember(hit, partials.get(userIds[index]));
 				if (!canViewInvites) {
 					member.supplemental = {
 						join_source_type: null,

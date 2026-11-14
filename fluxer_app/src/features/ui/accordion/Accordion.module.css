@@ -40,7 +40,7 @@
 	border: none;
 	background: transparent;
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 }
 
 .headerContent {
@@ -86,7 +86,7 @@
 	align-self: stretch;
 	max-width: 100%;
 	padding-top: 0.125rem;
-	text-align: left;
+	text-align: start;
 	pointer-events: auto;
 }
 

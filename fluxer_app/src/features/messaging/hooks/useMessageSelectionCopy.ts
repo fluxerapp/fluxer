@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import {freshAttachmentUrlsInText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {buildMessagePlaintextCopyText} from '@app/features/messaging/utils/MessagePlaintextCopyUtils';
 import {buildMessageSelectionCopyText} from '@app/features/messaging/utils/MessageSelectionCopyUtils';
 import {useLingui} from '@lingui/react/macro';
@@ -13,7 +14,7 @@ interface MessageSelectionCopyOptions {
 
 type MessageGetter = (messageId: string) => Message | null | undefined;
 
-export function useMessageSelectionCopy<TElement extends HTMLElement>({
+function useMessageSelectionCopy<TElement extends HTMLElement>({
 	getMessagePlaintext,
 }: MessageSelectionCopyOptions): React.ClipboardEventHandler<TElement> {
 	return useCallback(
@@ -29,10 +30,16 @@ export function useMessageSelectionCopy<TElement extends HTMLElement>({
 				getMessagePlaintext,
 			});
 			if (clipboardText === null) {
+				const selectedText = selection?.toString() ?? '';
+				const freshText = freshAttachmentUrlsInText(selectedText);
+				if (freshText !== selectedText) {
+					event.preventDefault();
+					event.clipboardData.setData('text/plain', freshText);
+				}
 				return;
 			}
 			event.preventDefault();
-			event.clipboardData.setData('text/plain', clipboardText);
+			event.clipboardData.setData('text/plain', freshAttachmentUrlsInText(clipboardText));
 		},
 		[getMessagePlaintext],
 	);

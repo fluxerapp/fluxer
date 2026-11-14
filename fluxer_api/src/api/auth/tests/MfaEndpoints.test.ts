@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	type BackupCodesResponse,
 	createAuthHarness,
@@ -11,7 +7,11 @@ import {
 	createTotpSecret,
 	totpCodeNow,
 	type UserMeResponse,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface ValidationErrorResponse {
 	code: string;

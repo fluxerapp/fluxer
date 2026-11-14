@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApplicationID, UserID} from '../BrandedTypes';
-import type {OAuth2RefreshTokenRow} from '../database/types/OAuth2Types';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import type {OAuth2RefreshTokenRow} from '@app/api/database/types/OAuth2Types';
 
 export class OAuth2RefreshToken {
 	readonly token: string;
@@ -26,9 +26,5 @@ export class OAuth2RefreshToken {
 			scope: this.scope,
 			created_at: this.createdAt,
 		};
-	}
-
-	hasScope(scope: string): boolean {
-		return this.scope.has(scope);
 	}
 }

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import apiAttachmentFileTokens from '@app/features/messaging/state/ApiAttachmentFileTokens';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {useMediaSourceResume} from '@app/features/voice/components/media_player/hooks/useMediaSourceResume';
 import {
 	armPendingSeekTarget,
 	clampMediaTime,
@@ -16,13 +20,13 @@ import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 const PLAYBACK_RATE_STORAGE_KEY = 'fluxer:media:playbackRates';
 const logger = new Logger('useMediaPlayer');
 
-export type PlaybackHoldReason = 'user' | 'hidden-document' | 'seek';
+type PlaybackHoldReason = 'user' | 'hidden-document' | 'seek';
 
-export type MediaPlaybackKind = 'video' | 'audio' | 'voice-message';
+type MediaPlaybackKind = 'video' | 'audio' | 'voice-message';
 
-export type MediaFailureCode = 'error' | 'abort' | 'emptied' | 'stalled';
+type MediaFailureCode = 'error' | 'abort' | 'emptied' | 'stalled';
 
-export interface MediaPlayerState {
+interface MediaPlayerState {
 	isPlaying: boolean;
 	isPaused: boolean;
 	isEnded: boolean;
@@ -39,13 +43,10 @@ export interface UseMediaPlayerOptions {
 	mediaKind?: MediaPlaybackKind;
 	autoPlay?: boolean;
 	loop?: boolean;
-	initialPlaybackRate?: number;
 	persistPlaybackRate?: boolean;
 	onEnded?: () => void;
 	onError?: (error: Error, code: MediaFailureCode) => void;
 	onPlay?: () => void;
-	onPause?: () => void;
-	onTimeUpdate?: (currentTime: number) => void;
 	onLoadedMetadata?: (duration: number, media: HTMLMediaElement) => void;
 }
 
@@ -94,8 +95,7 @@ const isAbortError = (error: unknown): boolean => {
 	return error.message.toLowerCase().includes('interrupted');
 };
 
-export const isAutoplayBlockedError = (error: unknown): boolean =>
-	error instanceof Error && error.name === 'NotAllowedError';
+const isAutoplayBlockedError = (error: unknown): boolean => error instanceof Error && error.name === 'NotAllowedError';
 
 const normalizeError = (error: unknown): Error => {
 	if (error instanceof Error) return error;
@@ -107,19 +107,18 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		mediaKind = 'video',
 		autoPlay = false,
 		loop = false,
-		initialPlaybackRate,
 		persistPlaybackRate = true,
 		onEnded,
 		onError,
 		onPlay,
-		onPause,
-		onTimeUpdate,
 		onLoadedMetadata,
 	} = options;
 	const mediaRef = useRef<HTMLMediaElement | null>(null);
 	useInAppMediaSoundCapture(mediaRef);
-	const callbacksRef = useRef({onEnded, onError, onPlay, onPause, onTimeUpdate, onLoadedMetadata});
-	callbacksRef.current = {onEnded, onError, onPlay, onPause, onTimeUpdate, onLoadedMetadata};
+	const {resumeRef: sourceResumeRef, playOnSwapRef} = useMediaSourceResume(mediaRef);
+	const refreshedSourceRef = useRef<string | null>(null);
+	const callbacksRef = useRef({onEnded, onError, onPlay, onLoadedMetadata});
+	callbacksRef.current = {onEnded, onError, onPlay, onLoadedMetadata};
 	const initialElementSettingsRef = useRef({loop});
 	const [state, setState] = useState<MediaPlayerState>(() => ({
 		isPlaying: false,
@@ -129,7 +128,7 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		isSeeking: false,
 		currentTime: 0,
 		duration: 0,
-		playbackRate: initialPlaybackRate ?? (persistPlaybackRate ? getStoredPlaybackRate(mediaKind) : 1),
+		playbackRate: persistPlaybackRate ? getStoredPlaybackRate(mediaKind) : 1,
 		error: null,
 		failureCode: null,
 	}));
@@ -163,7 +162,6 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 				isPlaying: false,
 				isPaused: true,
 			}));
-			callbacksRef.current.onPause?.();
 		};
 		const handleEnded = () => {
 			clearPendingSeekTarget(media);
@@ -180,7 +178,6 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		const handleTimeUpdate = () => {
 			const currentTime = quantiseMediaTimeToSecond(media.currentTime);
 			setState((prev) => (prev.currentTime === currentTime ? prev : {...prev, currentTime}));
-			callbacksRef.current.onTimeUpdate?.(media.currentTime);
 		};
 		const publishDuration = () => {
 			const duration = Number.isFinite(media.duration) ? media.duration : 0;
@@ -238,7 +235,7 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		};
 		const handleResourceLoadStart = () => {
 			clearPendingSeekTarget(media);
-			holdReasonRef.current = null;
+			if (sourceResumeRef.current === null) holdReasonRef.current = null;
 			recoverPlaybackWhenReadyRef.current = false;
 			setState((prev) => ({
 				...prev,
@@ -260,6 +257,10 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 				: new Error('Unknown media error');
 			recoverPlaybackWhenReadyRef.current = false;
 			setState((prev) => ({...prev, isBuffering: false, error: errorMessage, failureCode: 'error'}));
+			if (refreshedSourceRef.current !== media.currentSrc) {
+				refreshedSourceRef.current = media.currentSrc;
+				void AttachmentUrlRefresher.refresh(media.currentSrc, {force: true});
+			}
 			callbacksRef.current.onError?.(errorMessage, 'error');
 		};
 		media.addEventListener('play', handlePlay);
@@ -323,6 +324,7 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 			});
 		};
 		const attemptAutoplayOnSource = () => {
+			if (sourceResumeRef.current !== null) return;
 			attempted = false;
 			attemptAutoplay();
 		};
@@ -331,7 +333,7 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 		return () => {
 			media.removeEventListener('loadstart', attemptAutoplayOnSource);
 		};
-	}, [autoPlay]);
+	}, [autoPlay, sourceResumeRef]);
 	useLayoutEffect(() => {
 		const media = mediaRef.current;
 		return () => {
@@ -341,6 +343,10 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 	const play = useCallback(async () => {
 		const media = mediaRef.current;
 		if (!media) return;
+		if (media.paused && apiAttachmentFileTokens.renew(unwrapDesktopLocalResourceURL(media.currentSrc))) {
+			playOnSwapRef.current = true;
+			return;
+		}
 		try {
 			await media.play();
 			setState((prev) => (prev.error === null ? prev : {...prev, error: null}));
@@ -357,13 +363,17 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 			logger.error('Play failed:', normalizedError);
 			setState((prev) => ({...prev, error: normalizedError}));
 		}
-	}, []);
-	const pause = useCallback((reason: PlaybackHoldReason = 'user') => {
-		const media = mediaRef.current;
-		if (!media) return;
-		holdReasonRef.current = reason;
-		media.pause();
-	}, []);
+	}, [playOnSwapRef]);
+	const pause = useCallback(
+		(reason: PlaybackHoldReason = 'user') => {
+			const media = mediaRef.current;
+			if (!media) return;
+			playOnSwapRef.current = false;
+			holdReasonRef.current = reason;
+			media.pause();
+		},
+		[playOnSwapRef],
+	);
 	const resumeHold = useCallback(
 		(reason: PlaybackHoldReason) => {
 			if (holdReasonRef.current !== reason) return false;

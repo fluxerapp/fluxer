@@ -7,8 +7,8 @@
 	align-items: center;
 	justify-content: center;
 	gap: 2rem;
-	padding-left: 1rem;
-	padding-right: 1rem;
+	padding-inline-start: 1rem;
+	padding-inline-end: 1rem;
 	text-align: center;
 }
 

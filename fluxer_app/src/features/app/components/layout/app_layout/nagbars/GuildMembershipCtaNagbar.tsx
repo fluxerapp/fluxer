@@ -4,7 +4,6 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {PRODUCT_HQ_COMMUNITY_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -13,6 +12,7 @@ import {InviteAcceptModal} from '@app/features/invite/components/modals/InviteAc
 import Invites from '@app/features/invite/state/Invites';
 import {isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import NagbarState from '@app/features/ui/state/Nagbar';
@@ -34,7 +34,8 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 	const {i18n} = useLingui();
 	const isSelfHosted = RuntimeConfig.isSelfHosted();
 	const currentUserId = Authentication.currentUserId;
-	const inviteState = Invites.invites.get(FLUXER_HQ_INVITE_CODE);
+	const instanceTarget = currentInstanceTarget();
+	const inviteState = Invites.getInvite(FLUXER_HQ_INVITE_CODE, instanceTarget);
 	const invite = inviteState?.data ?? null;
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	useEffect(() => {
@@ -60,13 +61,14 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 		if (isSubmitting) return;
 		setIsSubmitting(true);
 		try {
-			await InviteCommands.fetchWithCoalescing(FLUXER_HQ_INVITE_CODE);
+			await InviteCommands.fetchWithCoalescing(FLUXER_HQ_INVITE_CODE, instanceTarget);
 		} finally {
 			setIsSubmitting(false);
 			ModalCommands.push(
 				modal(() => (
 					<InviteAcceptModal
 						code={FLUXER_HQ_INVITE_CODE}
+						target={instanceTarget}
 						data-flx="app.app-layout.nagbars.guild-membership-cta-nagbar.handle-join-guild.invite-accept-modal"
 					/>
 				)),
@@ -76,6 +78,7 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 	const handleDismiss = () => {
 		NagbarState.guildMembershipCtaDismissed = true;
 	};
+	const communityName = `${RuntimeConfig.productName} HQ`;
 	return (
 		<Nagbar
 			isMobile={isMobile}
@@ -89,7 +92,7 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 				isMobile={isMobile}
 				onDismiss={handleDismiss}
 				message={i18n._(JOIN_PRODUCT_COMMUNITY_MESSAGE_DESCRIPTOR, {
-					communityName: PRODUCT_HQ_COMMUNITY_NAME,
+					communityName,
 				})}
 				actions={
 					<NagbarButton
@@ -99,7 +102,7 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 						disabled={isSubmitting}
 						data-flx="app.app-layout.nagbars.guild-membership-cta-nagbar.nagbar-button.join-guild"
 					>
-						{i18n._(JOIN_PRODUCT_COMMUNITY_BUTTON_DESCRIPTOR, {communityName: PRODUCT_HQ_COMMUNITY_NAME})}
+						{i18n._(JOIN_PRODUCT_COMMUNITY_BUTTON_DESCRIPTOR, {communityName})}
 					</NagbarButton>
 				}
 				data-flx="app.app-layout.nagbars.guild-membership-cta-nagbar.nagbar-content"

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::app_wasm::resolve_app_dir;
+use crate::common::display_command;
+use crate::functions::{remove_dir_if_exists, sha256_file};
 use anyhow::{Context, Result, bail, ensure};
 use clap::Args;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsStr;
 use std::fs;
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -75,7 +75,7 @@ struct StepMetadata {
 type Metadata = BTreeMap<String, StepMetadata>;
 
 pub async fn run(args: AppDevServerArgs) -> Result<()> {
-    let project_root = args.app_dir.unwrap_or(resolve_app_dir()?);
+    let project_root = resolve_app_dir(args.app_dir)?;
     let mut server = AppDevServer::new(project_root);
     server.run().await
 }
@@ -158,7 +158,7 @@ impl AppDevServer {
             return Ok(());
         }
 
-        self.clean_dist()?;
+        remove_dir_if_exists(&self.project_root.join("dist"))?;
         let mut css_type_watcher = self.start_css_type_watcher()?;
         let rspack_result = self.run_rspack(&mut shutdown_rx).await;
         terminate_child(&mut css_type_watcher).await;
@@ -281,17 +281,6 @@ impl AppDevServer {
         Ok(())
     }
 
-    fn clean_dist(&self) -> Result<()> {
-        let dist_path = self.project_root.join("dist");
-        match fs::remove_dir_all(&dist_path) {
-            Ok(()) => Ok(()),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(error) => {
-                Err(error).with_context(|| format!("Failed to remove {}", dist_path.display()))
-            }
-        }
-    }
-
     fn start_css_type_watcher(&self) -> Result<Child> {
         let tcm = self.project_root.join("node_modules/.bin/tcm");
         println!(
@@ -391,25 +380,8 @@ where
     Ok(result)
 }
 
-fn hash_file(path: &Path) -> Result<String> {
-    let mut file = fs::File::open(path)
-        .with_context(|| format!("Failed to open {} for hashing", path.display()))?;
-    let mut hasher = Sha256::new();
-    let mut buffer = [0_u8; 64 * 1024];
-    loop {
-        let bytes_read = file
-            .read(&mut buffer)
-            .with_context(|| format!("Failed to read {} for hashing", path.display()))?;
-        if bytes_read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..bytes_read]);
-    }
-    Ok(hex::encode(hasher.finalize()))
-}
-
 fn fingerprint_file(path: &Path) -> Result<InputFingerprint> {
-    let sha256 = hash_file(path)?;
+    let sha256 = sha256_file(path)?;
     let metadata = fs::metadata(path)
         .with_context(|| format!("Failed to stat {} after hashing", path.display()))?;
     Ok(InputFingerprint::Sha256 {
@@ -429,19 +401,24 @@ fn gather_wasm_inputs(project_root: &Path) -> Result<StepInputs> {
     let mut inputs = collect_file_digests(
         project_root,
         &[
+            PathBuf::from("../Cargo.toml"),
+            PathBuf::from("../Cargo.lock"),
             PathBuf::from("../tools/ci/Cargo.toml"),
             PathBuf::from("../tools/ci/src/app_dev_server.rs"),
             PathBuf::from("../tools/ci/src/app_wasm.rs"),
             PathBuf::from("../tools/ci/src/common.rs"),
             PathBuf::from("../tools/ci/src/lib.rs"),
-            PathBuf::from("../tools/ci/templates/libfluxcore_wrapper.js"),
-            PathBuf::from("../tools/ci/templates/libfluxcore_wrapper.d.ts"),
             markdown_parser_rust_dir.join("Cargo.toml"),
         ],
     )?;
     inputs.extend(collect_directory_digests(
         project_root,
         Path::new("rust/libfluxcore"),
+        |path| !path.contains("/target/"),
+    )?);
+    inputs.extend(collect_directory_digests(
+        project_root,
+        Path::new("rust/libfluxwebp"),
         |path| !path.contains("/target/"),
     )?);
     inputs.extend(collect_directory_digests(
@@ -569,43 +546,4 @@ fn timestamp_ms(timestamp: SystemTime) -> Result<f64> {
         .context("File timestamp predates UNIX epoch")?
         .as_secs_f64()
         * 1000.0)
-}
-
-fn display_command(command: &str, args: &[&str]) -> String {
-    std::iter::once(command.to_string())
-        .chain(args.iter().map(|arg| quote_arg(arg)))
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-fn quote_arg(arg: &str) -> String {
-    if arg
-        .chars()
-        .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.' | '/' | ':' | '='))
-    {
-        arg.to_string()
-    } else {
-        format!("{arg:?}")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn rel_path_keys_are_posix_like() {
-        assert_eq!(
-            rel_path_key(Path::new("scripts/GenerateColorSystem.ts")),
-            "scripts/GenerateColorSystem.ts"
-        );
-    }
-
-    #[test]
-    fn display_command_quotes_globs() {
-        assert_eq!(
-            display_command("tcm", &["src", "--pattern", "**/*.module.css"]),
-            "tcm src --pattern \"**/*.module.css\""
-        );
-    }
 }

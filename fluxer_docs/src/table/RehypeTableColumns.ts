@@ -8,8 +8,8 @@ import {
 	maxContentPx,
 	minContentPx,
 	type Piece,
+	TABLE_BUDGET_PX,
 	TABLE_MIDDLE_TIER_PX,
-	TABLE_NARROW_TIER_PX,
 	TABLE_WIDE_TIER_PX,
 } from './DocsTableMetrics.ts';
 
@@ -280,7 +280,7 @@ function sizeTables(tree: Root): void {
 	const allocations = new Map<string, TierPercents>();
 	for (const [key, demands] of merged) {
 		allocations.set(key, {
-			narrow: columnWidthPercents(demands, TABLE_NARROW_TIER_PX),
+			narrow: columnWidthPercents(demands, TABLE_BUDGET_PX),
 			mid: columnWidthPercents(demands, TABLE_MIDDLE_TIER_PX),
 			wide: columnWidthPercents(demands, TABLE_WIDE_TIER_PX),
 		});

@@ -3,15 +3,7 @@
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
 import type {Icon, IconWeight} from '@phosphor-icons/react';
 import type React from 'react';
-import {useEffect, useMemo, useRef, useState} from 'react';
-
-export interface SettingsModalLayoutProps {
-	fullscreen: boolean;
-}
-
-export interface SidebarCategoryContextValue {
-	setTitleId: (id: string | null) => void;
-}
+import {useEffect, useRef} from 'react';
 
 export interface SettingsTreeApi {
 	isExpanded: (tabId: string) => boolean;
@@ -65,25 +57,12 @@ export interface SettingsModalSidebarItemProps {
 	expandableId?: string;
 	sectionsGroupId?: string;
 	toggleOnSelectedClick?: boolean;
+	attentionLabel?: string;
 }
 
 export interface SettingsModalSidebarItemLogicState {
 	tabIndex: number;
 	buttonRef: React.RefObject<HTMLButtonElement | null>;
-}
-
-export function useWidescreenMode(): boolean {
-	const [isWidescreenMode, setIsWidescreenMode] = useState(() => window.matchMedia('(min-width: 2000px)').matches);
-	useEffect(() => {
-		const mediaQuery = window.matchMedia('(min-width: 2000px)');
-		const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
-			setIsWidescreenMode(e.matches);
-		};
-		handleChange(mediaQuery);
-		mediaQuery.addEventListener('change', handleChange);
-		return () => mediaQuery.removeEventListener('change', handleChange);
-	}, []);
-	return isWidescreenMode;
 }
 
 const SIDEBAR_LIST_SELECTOR = '[data-settings-sidebar-list]';
@@ -208,18 +187,6 @@ export function useSettingsModalSidebarItemLogic({
 	};
 }
 
-export function focusSelectedSidebarTab(navElement: HTMLElement | null): boolean {
-	if (!navElement) return false;
-	const list = getSidebarList(navElement) ?? navElement.querySelector<HTMLElement>(SIDEBAR_LIST_SELECTOR);
-	if (!list) return false;
-	const selected = getSelectedSidebarTab(list);
-	const fallback = list.querySelector<HTMLElement>(SIDEBAR_TAB_SELECTOR) ?? getRovingFallbackItem(list);
-	const target = syncSidebarTabStops(list, selected ?? fallback);
-	if (!target) return false;
-	focusSidebarItem(target);
-	return true;
-}
-
 export function handleSettingsTreeKeyDown(event: SidebarKeyboardEvent, treeApi?: SettingsTreeApi): boolean {
 	if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return false;
 	const key = normalizeSidebarNavigationKey(event.key);
@@ -281,10 +248,4 @@ export function handleSettingsTreeKeyDown(event: SidebarKeyboardEvent, treeApi?:
 	event.stopPropagation();
 	moveFocusToTabAndSelect(list, target);
 	return true;
-}
-
-export function useTrafficLightsVisibility(fullscreen: boolean, isWidescreenMode: boolean): boolean {
-	return useMemo(() => {
-		return fullscreen && !isWidescreenMode;
-	}, [fullscreen, isWidescreenMode]);
 }

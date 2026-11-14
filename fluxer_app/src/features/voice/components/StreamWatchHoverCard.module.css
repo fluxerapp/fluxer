@@ -74,11 +74,6 @@
 	padding: 0.5rem 1rem;
 }
 
-.icon {
-	height: 1rem;
-	width: 1rem;
-}
-
 .actionRow {
 	display: flex;
 	flex-wrap: wrap;

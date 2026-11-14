@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
 import {beforeEach, describe, expect, it} from 'vitest';
-import {ipBanCache} from '../IpBanMiddleware';
 
 beforeEach(() => {
 	ipBanCache.resetCaches();

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import AccountManager from '@app/features/auth/state/AccountManager';
+import Accounts from '@app/features/auth/state/Accounts';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
@@ -18,7 +18,7 @@ class StatusExpiry {
 		makeAutoObservable(this);
 		deferUntilModulesLoaded(() => {
 			reaction(
-				() => AccountManager.currentUserId,
+				() => Accounts.currentUserId,
 				(userId) => {
 					this.handleActiveUserChange(userId);
 				},

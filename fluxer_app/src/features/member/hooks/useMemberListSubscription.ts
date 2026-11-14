@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import {
 	areNormalizedMemberListRangesEqual,
@@ -50,10 +50,11 @@ function resolveDesiredRanges(ranges: MemberListRanges): NormalizedMemberListRan
 
 export function useMemberListSubscription({
 	guildId,
-	channelId,
+	channelId: displayedChannelId,
 	enabled,
 }: UseMemberListSubscriptionOptions): UseMemberListSubscriptionResult {
 	const [ownerId] = useState(createMemberListSubscriptionOwnerId);
+	const channelId = useSharedListChannelId(guildId, displayedChannelId);
 	const desiredRangesRef = useRef<NormalizedMemberListRanges>(INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGES);
 	const pendingDesiredRangesRef = useRef<NormalizedMemberListRanges | null>(null);
 	const settleTimerRef = useRef<number | null>(null);
@@ -151,7 +152,11 @@ export function useMemberListSubscription({
 		}
 
 		function gatewayAvailable(): boolean {
-			return GatewayConnection.isReady && GatewayConnection.isConnected && GatewayConnection.sessionId != null;
+			return (
+				GatewaySessions.foregroundConnection.isReady &&
+				GatewaySessions.foregroundConnection.isConnected &&
+				GatewaySessions.foregroundConnection.sessionId != null
+			);
 		}
 
 		function ownsSubscription(): boolean {
@@ -304,7 +309,7 @@ export function useMemberListSubscription({
 			() => scheduleReconciliation(),
 		);
 		const disposeGatewayAvailabilityReaction = reaction(
-			() => GatewayConnection.isReady && GatewayConnection.isConnected,
+			() => GatewaySessions.foregroundConnection.isReady && GatewaySessions.foregroundConnection.isConnected,
 			(isAvailable) => {
 				if (!isAvailable) {
 					clearRetryTimer();
@@ -346,4 +351,12 @@ export function useMemberListSubscription({
 	}, [guildId, channelId, enabled, ownerId]);
 
 	return {subscribe};
+}
+
+function useSharedListChannelId(guildId: string, channelId: string): string {
+	const listKey = MemberSidebar.getListIdentityKey(guildId, channelId);
+	const [subscribed, setSubscribed] = useState({guildId, listKey, channelId});
+	if (subscribed.guildId === guildId && subscribed.listKey === listKey) return subscribed.channelId;
+	setSubscribed({guildId, listKey, channelId});
+	return channelId;
 }

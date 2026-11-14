@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer, SettingsTabContent} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {getOAuth2ScopeDescription} from '@app/features/app/constants/AppConstants';
@@ -25,10 +24,10 @@ import {
 	useSelectableSettingsList,
 } from '@app/features/user/components/modals/tabs/components/SelectableSettingsList';
 import {getUserAvatarURL} from '@app/features/user/utils/AvatarUtils';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattedShortDate} from '@app/features/user/utils/DateFormatting';
+import {CLEAR_SELECTION_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
 import type {OAuth2Scope} from '@fluxer/constants/src/OAuth2Constants';
-import {getFormattedShortDate} from '@fluxer/date_utils/src/DateFormatting';
 import {msg, plural} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {AppWindowIcon, InfoIcon, NetworkSlashIcon, XIcon} from '@phosphor-icons/react';
@@ -43,10 +42,7 @@ const FAILED_TO_LOAD_AUTHORIZED_APPLICATIONS_DESCRIPTOR = msg({
 	message: 'Failed to load authorized applications',
 	comment: 'Error message in the authorized apps tab. Keep the tone plain and specific.',
 });
-const CLEAR_SELECTION_DESCRIPTOR = msg({
-	message: 'Clear selection',
-	comment: 'Button or menu action label in the authorized apps tab. Keep it concise.',
-});
+
 const VIEW_PERMISSIONS_DESCRIPTOR = msg({
 	message: 'View permissions',
 	comment: 'Tooltip and accessibility label for opening an authorized app permissions modal.',
@@ -64,7 +60,8 @@ const REVOKE_ALL_APPS_DESCRIPTOR = msg({
 	comment: 'Danger button in the authorized apps management modal. Revokes every authorized application.',
 });
 const SELECTED_APPS_FOR_REVOKE_DESCRIPTOR = msg({
-	message: '{appCount, plural, one {# app selected for revoke} other {# apps selected for revoke}}',
+	message:
+		'{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}',
 	comment: 'Unsaved-changes banner text in the authorized apps tab. Counts selected apps that will be revoked.',
 });
 const APPLICATION_ACCESS_REVOKED_DESCRIPTOR = msg({
@@ -72,7 +69,7 @@ const APPLICATION_ACCESS_REVOKED_DESCRIPTOR = msg({
 	comment: 'Toast shown after OAuth application access was revoked.',
 });
 const formatDate = (dateString: string): string => {
-	return getFormattedShortDate(dateString, getCurrentLocale());
+	return getFormattedShortDate(dateString);
 };
 
 function getAuthorizationSelectionId(authorization: OAuth2Authorization): string {
@@ -408,49 +405,56 @@ export const AuthorizedAppsContent = observer(function AuthorizedAppsContent({
 		if (!isModalPresentation) return loadingState;
 		return <Modal.Content data-flx="user.authorized-apps-tab.modal-content.loading">{loadingState}</Modal.Content>;
 	}
-	const authorizedAppsContent = error ? (
-		<StatusSlate
-			Icon={NetworkSlashIcon}
-			title={i18n._(FAILED_TO_LOAD_AUTHORIZED_APPLICATIONS_DESCRIPTOR)}
-			description={error}
-			actions={[
-				{
-					text: i18n._(TRY_AGAIN_DESCRIPTOR),
-					onClick: loadAuthorizations,
-					variant: 'primary',
-				},
-			]}
-			data-flx="user.authorized-apps-tab.status-slate"
-		/>
-	) : authorizations.length === 0 ? (
-		<StatusSlate
-			Icon={AppWindowIcon}
-			title={<Trans>No authorized applications</Trans>}
-			description={<Trans>You haven't authorized any applications to access your account.</Trans>}
-			data-flx="user.authorized-apps-tab.status-slate.empty"
-		/>
-	) : (
-		<>
-			<p className={styles.selectionHint} data-flx="user.authorized-apps-tab.selection-hint">
-				<Trans>Hold Shift and press X to select apps. Press {selectAllShortcutLabel} to select all.</Trans>
-			</p>
-			<div className={styles.appList} data-flx="user.authorized-apps-tab.app-list">
-				{authorizations.map((authorization, index) => (
-					<AuthorizedAppItem
-						key={authorization.application.id}
-						authorization={authorization}
-						isSelected={selectedApplicationIds.has(authorization.application.id)}
-						index={index}
-						selectionMode={selectionMode}
-						onSelect={toggleApplication}
-						onOpenScopes={openScopesModal}
-						onRevoke={openRevokeModal}
-						data-flx="user.authorized-apps-tab.app-item"
-					/>
-				))}
-			</div>
-		</>
-	);
+	let authorizedAppsContent: React.ReactNode;
+	if (error) {
+		authorizedAppsContent = (
+			<StatusSlate
+				Icon={NetworkSlashIcon}
+				title={i18n._(FAILED_TO_LOAD_AUTHORIZED_APPLICATIONS_DESCRIPTOR)}
+				description={error}
+				actions={[
+					{
+						text: i18n._(TRY_AGAIN_DESCRIPTOR),
+						onClick: loadAuthorizations,
+						variant: 'primary',
+					},
+				]}
+				data-flx="user.authorized-apps-tab.status-slate"
+			/>
+		);
+	} else if (authorizations.length === 0) {
+		authorizedAppsContent = (
+			<StatusSlate
+				Icon={AppWindowIcon}
+				title={<Trans>No authorized applications</Trans>}
+				description={<Trans>You haven't authorized any applications to access your account.</Trans>}
+				data-flx="user.authorized-apps-tab.status-slate.empty"
+			/>
+		);
+	} else {
+		authorizedAppsContent = (
+			<>
+				<p className={styles.selectionHint} data-flx="user.authorized-apps-tab.selection-hint">
+					<Trans>Hold Shift and press X to select apps. Press {selectAllShortcutLabel} to select all.</Trans>
+				</p>
+				<div className={styles.appList} data-flx="user.authorized-apps-tab.app-list">
+					{authorizations.map((authorization, index) => (
+						<AuthorizedAppItem
+							key={authorization.application.id}
+							authorization={authorization}
+							isSelected={selectedApplicationIds.has(authorization.application.id)}
+							index={index}
+							selectionMode={selectionMode}
+							onSelect={toggleApplication}
+							onOpenScopes={openScopesModal}
+							onRevoke={openRevokeModal}
+							data-flx="user.authorized-apps-tab.app-item"
+						/>
+					))}
+				</div>
+			</>
+		);
+	}
 	if (isModalPresentation) {
 		return (
 			<>
@@ -496,21 +500,3 @@ export const AuthorizedAppsContent = observer(function AuthorizedAppsContent({
 	}
 	return authorizedAppsContent;
 });
-
-const AuthorizedAppsTab = observer(function AuthorizedAppsTab() {
-	return (
-		<SettingsTabContainer data-flx="user.authorized-apps-tab.settings-tab-container">
-			<SettingsTabContent data-flx="user.authorized-apps-tab.settings-tab-content">
-				<SettingsSection
-					id={AUTHORIZED_APPS_TAB_ID}
-					title={<Trans>Authorized apps</Trans>}
-					data-flx="user.authorized-apps-tab.settings-section"
-				>
-					<AuthorizedAppsContent data-flx="user.authorized-apps-tab.authorized-apps-content" />
-				</SettingsSection>
-			</SettingsTabContent>
-		</SettingsTabContainer>
-	);
-});
-
-export default AuthorizedAppsTab;

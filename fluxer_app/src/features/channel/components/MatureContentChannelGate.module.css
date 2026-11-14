@@ -30,15 +30,3 @@
 	text-align: center;
 	color: var(--text-primary-muted);
 }
-
-.matureBadge {
-	display: inline-block;
-	margin-left: 0.5rem;
-	padding: 0.125rem 0.5rem;
-	border-radius: 0.5rem;
-	background-color: var(--status-danger);
-	color: var(--white);
-	font-size: 0.75rem;
-	font-weight: 600;
-	vertical-align: middle;
-}

@@ -9,26 +9,20 @@ import {pipeline} from 'node:stream/promises';
 import {GetObjectCommand, S3Client} from '@aws-sdk/client-s3';
 
 const GEOIP_DOWNLOAD_PATH_QUERY_PARAM = 'download_path';
-const GEOIP_ASN_DOWNLOAD_PATH_QUERY_PARAM = 'asn_download_path';
-const GEOIP_ASN_KEY_QUERY_PARAM = 'asn_key';
 const DEFAULT_GEOIP_TEMPORARY_DIRECTORY = '/tmp/fluxer/geoip';
-const DEFAULT_GEOIP_ASN_DB_BASENAME = 'GeoLite2-ASN.mmdb';
 
 type GeoipSourceMode = 'filesystem' | 's3';
 
 interface GeoipFilesystemSourceConfig {
 	mode: 'filesystem';
 	maxmindDbPath?: string;
-	maxmindAsnDbPath?: string;
 }
 
 interface GeoipS3SourceConfig {
 	mode: 's3';
 	maxmindDbPath: string;
-	maxmindAsnDbPath?: string;
 	s3Bucket: string;
 	s3Key: string;
-	s3AsnKey?: string;
 }
 
 type GeoipSourceConfig = GeoipFilesystemSourceConfig | GeoipS3SourceConfig;
@@ -50,7 +44,6 @@ interface GeoipStartupResult {
 	mode: GeoipSourceMode;
 	downloaded: boolean;
 	city?: GeoipDownloadedDatabase;
-	asn?: GeoipDownloadedDatabase;
 	maxmindDbPath?: string;
 	bucket?: string;
 	key?: string;
@@ -59,6 +52,7 @@ interface GeoipStartupResult {
 interface EnsureGeoipStartupOptions {
 	geoip: GeoipSourceConfig;
 	s3Config?: GeoipS3ConnectionConfig;
+	resolveStoredObjectPath?: (bucket: string, key: string) => string | null;
 }
 
 interface GeoipRuntimePathOptions {
@@ -67,7 +61,7 @@ interface GeoipRuntimePathOptions {
 }
 
 export function parseGeoipSourceConfig(rawValue: string | undefined): GeoipSourceConfig {
-	if (!rawValue || !rawValue.startsWith('s3://')) {
+	if (!rawValue?.startsWith('s3://')) {
 		return createGeoipFilesystemSourceConfig(rawValue);
 	}
 	return parseGeoipS3SourceConfig(rawValue);
@@ -83,14 +77,9 @@ export function resolveGeoipRuntimeSourceConfig(
 	const temporaryDirectory = options.temporaryDirectory ?? DEFAULT_GEOIP_TEMPORARY_DIRECTORY;
 	requireGeoipRuntimePathOptions(options.serviceName, temporaryDirectory);
 	const serviceDir = path.join(temporaryDirectory, options.serviceName);
-	const resolvedCityPath = path.join(serviceDir, path.basename(sourceConfig.maxmindDbPath));
-	const resolvedAsnPath = sourceConfig.s3AsnKey
-		? path.join(serviceDir, path.basename(sourceConfig.maxmindAsnDbPath ?? sourceConfig.s3AsnKey))
-		: sourceConfig.maxmindAsnDbPath;
 	return {
 		...sourceConfig,
-		maxmindDbPath: resolvedCityPath,
-		maxmindAsnDbPath: resolvedAsnPath,
+		maxmindDbPath: path.join(serviceDir, path.basename(sourceConfig.maxmindDbPath)),
 	};
 }
 
@@ -103,7 +92,38 @@ export async function ensureGeoipDatabaseOnStartup(options: EnsureGeoipStartupOp
 			maxmindDbPath: geoip.maxmindDbPath,
 		};
 	}
+	if (options.resolveStoredObjectPath) {
+		return copyStoredObject(geoip, options.resolveStoredObjectPath);
+	}
 	return ensureS3Startup(geoip, options.s3Config);
+}
+
+async function copyStoredObject(
+	geoip: GeoipS3SourceConfig,
+	resolveStoredObjectPath: (bucket: string, key: string) => string | null,
+): Promise<GeoipStartupResult> {
+	const source = resolveStoredObjectPath(geoip.s3Bucket, geoip.s3Key);
+	if (!source) {
+		throw new Error(`GeoIP object s3://${geoip.s3Bucket}/${geoip.s3Key} is not a storable key`);
+	}
+	await fs.mkdir(path.dirname(geoip.maxmindDbPath), {recursive: true});
+	const tempPath = `${geoip.maxmindDbPath}.tmp-${process.pid}-${Date.now()}`;
+	try {
+		await fs.copyFile(source, tempPath);
+		await fs.rename(tempPath, geoip.maxmindDbPath);
+	} catch (error) {
+		await fs.rm(tempPath, {force: true}).catch(() => undefined);
+		throw new Error(`Failed to copy GeoIP database from ${source}`, {cause: error});
+	}
+	const stat = await fs.stat(geoip.maxmindDbPath);
+	return {
+		mode: 's3',
+		downloaded: false,
+		city: {path: geoip.maxmindDbPath, sizeBytes: stat.size, upstream: source},
+		maxmindDbPath: geoip.maxmindDbPath,
+		bucket: geoip.s3Bucket,
+		key: geoip.s3Key,
+	};
 }
 
 async function ensureS3Startup(
@@ -112,9 +132,6 @@ async function ensureS3Startup(
 ): Promise<GeoipStartupResult> {
 	const resolvedS3Config = requireGeoipS3ConnectionConfig(s3Config);
 	await fs.mkdir(path.dirname(geoip.maxmindDbPath), {recursive: true});
-	if (geoip.maxmindAsnDbPath) {
-		await fs.mkdir(path.dirname(geoip.maxmindAsnDbPath), {recursive: true});
-	}
 	const client = new S3Client({
 		endpoint: resolvedS3Config.endpoint,
 		region: resolvedS3Config.region,
@@ -128,15 +145,10 @@ async function ensureS3Startup(
 	});
 	try {
 		const city = await downloadS3Object(client, geoip.s3Bucket, geoip.s3Key, geoip.maxmindDbPath);
-		let asn: GeoipDownloadedDatabase | undefined;
-		if (geoip.s3AsnKey && geoip.maxmindAsnDbPath) {
-			asn = await downloadS3Object(client, geoip.s3Bucket, geoip.s3AsnKey, geoip.maxmindAsnDbPath);
-		}
 		return {
 			mode: 's3',
 			downloaded: true,
 			city,
-			asn,
 			maxmindDbPath: geoip.maxmindDbPath,
 			bucket: geoip.s3Bucket,
 			key: geoip.s3Key,
@@ -168,11 +180,9 @@ async function downloadS3Object(
 }
 
 function createGeoipFilesystemSourceConfig(rawValue: string | undefined): GeoipFilesystemSourceConfig {
-	const maxmindDbPath = rawValue === '' ? undefined : rawValue;
 	return {
 		mode: 'filesystem',
-		maxmindDbPath,
-		maxmindAsnDbPath: maxmindDbPath ? path.join(path.dirname(maxmindDbPath), DEFAULT_GEOIP_ASN_DB_BASENAME) : undefined,
+		maxmindDbPath: rawValue === '' ? undefined : rawValue,
 	};
 }
 
@@ -186,15 +196,11 @@ function parseGeoipS3SourceConfig(rawValue: string): GeoipS3SourceConfig {
 	if (!s3Key) {
 		throw new Error(`Invalid GeoIP S3 URL (missing object key): ${rawValue}`);
 	}
-	const maxmindDbPath = resolveGeoipDownloadPath(sourceUrl, rawValue);
-	const {s3AsnKey, maxmindAsnDbPath} = resolveGeoipAsnPaths(sourceUrl, maxmindDbPath, rawValue);
 	return {
 		mode: 's3',
-		maxmindDbPath,
-		maxmindAsnDbPath,
+		maxmindDbPath: resolveGeoipDownloadPath(sourceUrl, rawValue),
 		s3Bucket,
 		s3Key,
-		s3AsnKey,
 	};
 }
 
@@ -209,26 +215,6 @@ function resolveGeoipDownloadPath(sourceUrl: URL, rawValue: string): string {
 		);
 	}
 	return configuredDownloadPath;
-}
-
-function resolveGeoipAsnPaths(
-	sourceUrl: URL,
-	cityDownloadPath: string,
-	rawValue: string,
-): {
-	s3AsnKey?: string;
-	maxmindAsnDbPath?: string;
-} {
-	const asnKey = sourceUrl.searchParams.get(GEOIP_ASN_KEY_QUERY_PARAM) ?? undefined;
-	if (!asnKey) return {};
-	const explicitAsnDownloadPath = sourceUrl.searchParams.get(GEOIP_ASN_DOWNLOAD_PATH_QUERY_PARAM);
-	if (explicitAsnDownloadPath && !path.isAbsolute(explicitAsnDownloadPath)) {
-		throw new Error(
-			`GeoIP S3 URL query parameter "${GEOIP_ASN_DOWNLOAD_PATH_QUERY_PARAM}" must be an absolute path: ${rawValue}`,
-		);
-	}
-	const maxmindAsnDbPath = explicitAsnDownloadPath ?? path.join(path.dirname(cityDownloadPath), path.basename(asnKey));
-	return {s3AsnKey: asnKey, maxmindAsnDbPath};
 }
 
 function requireGeoipS3ConnectionConfig(s3Config: GeoipS3ConnectionConfig | undefined): GeoipS3ConnectionConfig {

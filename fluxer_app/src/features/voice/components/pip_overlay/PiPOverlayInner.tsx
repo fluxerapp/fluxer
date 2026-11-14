@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
 import '@app/features/voice/components/VoiceCallView.module.css';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import Channels from '@app/features/channel/state/Channels';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {FloatingPaneResizeHandles} from '@app/features/ui/floating_pane';
+import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import PiP, {PIP_DEFAULT_WIDTH} from '@app/features/ui/state/PiP';
 import {appZoomClientPoint, getAppZoomViewportSize} from '@app/features/ui/utils/AppZoomUtils';
 import {canUseWindowFocusedHoverControls} from '@app/features/ui/utils/WindowFocusInteractionGuard';
@@ -17,7 +19,6 @@ import {PiPHeader} from '@app/features/voice/components/pip_overlay/PiPHeader';
 import {PiPOverlayContextMenu} from '@app/features/voice/components/pip_overlay/PiPOverlayContextMenu';
 import {
 	type Corner,
-	clamp,
 	clampPiPWidth,
 	computePiPResize,
 	getCornerPositions,
@@ -56,6 +57,14 @@ const RESIZE_PICTURE_IN_PICTURE_DESCRIPTOR = msg({
 	comment: 'Aria label on the PiP resize handle.',
 });
 const PIP_DRAG_THRESHOLD_SQ = 9;
+const PIP_KEYBOARD_STEP = 16;
+const PIP_KEYBOARD_LARGE_STEP = 64;
+const OPPOSITE_CORNER: Record<Corner, Corner> = {
+	'top-left': 'bottom-right',
+	'top-right': 'bottom-left',
+	'bottom-right': 'top-left',
+	'bottom-left': 'top-right',
+};
 
 interface DragListeners {
 	move: (event: PointerEvent) => void;
@@ -154,9 +163,9 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 	const [viewportSize, setViewportSize] = useState(getAppZoomViewportSize);
 	const [pipWidth, setPipWidth] = useState(() => {
 		const viewport = getAppZoomViewportSize();
-		return clampPiPWidth(PiP.getWidth() || PIP_DEFAULT_WIDTH, viewport.width, viewport.height);
+		return clampPiPWidth(PiP.getWidth(), viewport.width, viewport.height);
 	});
-	const [isResizing, setIsResizing] = useState(false);
+	const [resizeEdge, setResizeEdge] = useState<ResizeEdge | null>(null);
 	const [isDragging, setIsDragging] = useState(false);
 	const pipWidthRef = useRef(pipWidth);
 	const viewportSizeRef = useRef(viewportSize);
@@ -176,6 +185,7 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 	const x = useMotionValue(initialPosition.x);
 	const y = useMotionValue(initialPosition.y);
 	const widthMV = useMotionValue(pipWidth);
+	const containerRef = useRef<HTMLDivElement | null>(null);
 	const isDraggingRef = useRef(false);
 	const isResizingRef = useRef(false);
 	const animRef = useRef<{x?: AnimationPlaybackControls; y?: AnimationPlaybackControls}>({});
@@ -245,8 +255,8 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 		(options: {snapToCornerImmediate?: boolean} = {}) => {
 			const {width: viewportWidth, height: viewportHeight} = getAppZoomViewportSize();
 			const nextTitlebarHeight = getTitlebarHeight();
-			const previousWidth = pipWidthRef.current;
-			const clampedWidth = clampPiPWidth(previousWidth, viewportWidth, viewportHeight);
+			const preferredWidth = isResizingRef.current ? pipWidthRef.current : PiP.getWidth();
+			const clampedWidth = clampPiPWidth(preferredWidth, viewportWidth, viewportHeight);
 			const clampedHeight = getPiPHeight(clampedWidth);
 			const nextBounds = getDragBounds(viewportWidth, viewportHeight, clampedWidth, clampedHeight, nextTitlebarHeight);
 			pipWidthRef.current = clampedWidth;
@@ -278,11 +288,7 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 				}
 				return {width: viewportWidth, height: viewportHeight};
 			});
-			setPipWidth((previousPipWidth) => {
-				if (previousPipWidth === clampedWidth) return previousPipWidth;
-				PiP.setWidth(clampedWidth);
-				return clampedWidth;
-			});
+			setPipWidth(clampedWidth);
 		},
 		[widthMV, x, y],
 	);
@@ -390,7 +396,7 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 			cleanupResizeListeners();
 			resizeStateRef.current = null;
 			isResizingRef.current = false;
-			setIsResizing(false);
+			setResizeEdge(null);
 			setPipWidth(pipWidthRef.current);
 			PiP.setWidth(pipWidthRef.current);
 			snapToCornerForGeometry(cornerRef.current, pipWidthRef.current, viewportSizeRef.current);
@@ -398,14 +404,14 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 		[cancelPendingResizeFrame, cleanupResizeListeners, flushResizePointerMove, snapToCornerForGeometry],
 	);
 	const createResizePointerDownHandler = useCallback(
-		(edge: ResizeEdge) => (event: React.PointerEvent<HTMLButtonElement>) => {
+		(edge: ResizeEdge) => (event: React.PointerEvent<HTMLElement>) => {
 			if (event.button !== 0) return;
 			if (!canUseWindowFocusedHoverControls()) return;
 			event.preventDefault();
 			event.stopPropagation();
 			stopSnapAnimations();
 			isResizingRef.current = true;
-			setIsResizing(true);
+			setResizeEdge(edge);
 			const pointer = appZoomClientPoint(event.clientX, event.clientY);
 			resizeStateRef.current = {
 				pointerId: event.pointerId,
@@ -428,6 +434,55 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 		[handleResizePointerMove, handleResizePointerUp, stopSnapAnimations, x, y],
 	);
 	useEffect(() => cleanupResizeListeners, [cleanupResizeListeners]);
+	const applyWidth = useCallback(
+		(width: number) => {
+			if (isDraggingRef.current || isResizingRef.current) return;
+			const viewport = viewportSizeRef.current;
+			const nextWidth = clampPiPWidth(width, viewport.width, viewport.height);
+			pipWidthRef.current = nextWidth;
+			widthMV.set(nextWidth);
+			setPipWidth(nextWidth);
+			PiP.setWidth(nextWidth);
+			snapToCornerForGeometry(cornerRef.current, nextWidth, viewport, {immediate: true});
+		},
+		[snapToCornerForGeometry, widthMV],
+	);
+	const gripCorner = OPPOSITE_CORNER[corner];
+	const handleGripKeyDown = useCallback(
+		(event: React.KeyboardEvent<HTMLButtonElement>) => {
+			const step = event.shiftKey ? PIP_KEYBOARD_LARGE_STEP : PIP_KEYBOARD_STEP;
+			const growsRight = gripCorner.endsWith('right');
+			const growsDown = gripCorner.startsWith('bottom');
+			let delta: number;
+			switch (event.key) {
+				case 'ArrowRight':
+					delta = growsRight ? step : -step;
+					break;
+				case 'ArrowLeft':
+					delta = growsRight ? -step : step;
+					break;
+				case 'ArrowDown':
+					delta = growsDown ? step : -step;
+					break;
+				case 'ArrowUp':
+					delta = growsDown ? -step : step;
+					break;
+				default:
+					return;
+			}
+			event.preventDefault();
+			event.stopPropagation();
+			applyWidth(pipWidthRef.current + delta);
+		},
+		[applyWidth, gripCorner],
+	);
+	const handleGripDoubleClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement>) => {
+			event.stopPropagation();
+			applyWidth(PIP_DEFAULT_WIDTH);
+		},
+		[applyWidth],
+	);
 	const cancelPendingDragFrame = useCallback(() => {
 		if (dragFrameRef.current !== null) {
 			cancelAnimationFrame(dragFrameRef.current);
@@ -603,49 +658,52 @@ const PiPOverlayInnerBase = observer(function PiPOverlayInnerBase({content, room
 	}, [content, room, trackRef, trackRefSummary]);
 	return (
 		<motion.div
-			className={clsx(
-				styles.container,
-				isResizing && styles.containerResizing,
-				(isDragging || isResizing) && styles.containerInteractionActive,
-			)}
+			ref={containerRef}
+			className={clsx(styles.container, (isDragging || resizeEdge !== null) && styles.containerInteractionActive)}
 			style={{x, y, width: widthMV, scale: isDragging && !Accessibility.useReducedMotion ? 1.02 : 1}}
 			onPointerDown={handleContainerPointerDown}
 			onContextMenu={handleContextMenu}
 			onDoubleClick={handleOverlayDoubleClick}
+			data-resize-edge={resizeEdge ?? undefined}
 			transition={Accessibility.useReducedMotion ? {duration: 0} : INTERACTION_SPRING}
 			data-flx="voice.pi-p-overlay.pi-p-overlay-inner.container"
 		>
-			{effectiveTrackRef && (
-				<VoiceParticipantTile
-					trackRef={effectiveTrackRef}
-					guildId={content.guildId ?? undefined}
-					channelId={content.channelId}
-					showFocusIndicator={false}
-					showParticipantMetadata={false}
-					presentation="focus-main"
-					data-flx="voice.pi-p-overlay.pi-p-overlay-inner.voice-participant-tile"
+			<FocusRingScope containerRef={containerRef} data-flx="voice.pi-p-overlay.pi-p-overlay-inner.focus-ring-scope">
+				{effectiveTrackRef && (
+					<VoiceParticipantTile
+						trackRef={effectiveTrackRef}
+						guildId={content.guildId ?? undefined}
+						channelId={content.channelId}
+						showFocusIndicator={false}
+						showParticipantMetadata={false}
+						presentation="focus-main"
+						data-flx="voice.pi-p-overlay.pi-p-overlay-inner.voice-participant-tile"
+					/>
+				)}
+				<div className={styles.hoverOverlay} data-flx="voice.pi-p-overlay.pi-p-overlay-inner.hover-overlay">
+					<PiPHeader
+						channelName={channelName}
+						onReturnToCall={handleReturnToCall}
+						data-flx="voice.pip-overlay.pi-p-overlay-inner.pi-p-overlay-inner-base.pi-p-header"
+					/>
+					<PiPFooter
+						displayName={displayName}
+						isScreenShare={isScreenShare}
+						viewerUsers={viewerUsers}
+						disconnectLabel={disconnectLabel}
+						onDisconnect={handleDisconnect}
+						data-flx="voice.pip-overlay.pi-p-overlay-inner.pi-p-overlay-inner-base.pi-p-footer"
+					/>
+				</div>
+				<FloatingPaneResizeHandles
+					label={i18n._(RESIZE_PICTURE_IN_PICTURE_DESCRIPTOR)}
+					createResizeHandler={createResizePointerDownHandler}
+					gripCorner={gripCorner}
+					onGripKeyDown={handleGripKeyDown}
+					onGripDoubleClick={handleGripDoubleClick}
+					data-flx="voice.pip-overlay.pi-p-overlay-inner.pi-p-overlay-inner-base.floating-pane-resize-handles"
 				/>
-			)}
-			<div className={styles.hoverOverlay} data-flx="voice.pi-p-overlay.pi-p-overlay-inner.hover-overlay">
-				<PiPHeader
-					channelName={channelName}
-					onReturnToCall={handleReturnToCall}
-					data-flx="voice.pip-overlay.pi-p-overlay-inner.pi-p-overlay-inner-base.pi-p-header"
-				/>
-				<PiPFooter
-					displayName={displayName}
-					isScreenShare={isScreenShare}
-					viewerUsers={viewerUsers}
-					disconnectLabel={disconnectLabel}
-					onDisconnect={handleDisconnect}
-					data-flx="voice.pip-overlay.pi-p-overlay-inner.pi-p-overlay-inner-base.pi-p-footer"
-				/>
-			</div>
-			<FloatingPaneResizeHandles
-				label={i18n._(RESIZE_PICTURE_IN_PICTURE_DESCRIPTOR)}
-				createResizeHandler={createResizePointerDownHandler}
-				data-flx="voice.pip-overlay.pi-p-overlay-inner.pi-p-overlay-inner-base.floating-pane-resize-handles"
-			/>
+			</FocusRingScope>
 		</motion.div>
 	);
 });

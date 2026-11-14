@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Authentication from '@app/features/auth/state/Authentication';
 import ChannelPins from '@app/features/channel/state/ChannelPins';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
@@ -38,17 +40,23 @@ export function handleMessageReactionAddMany(
 			if (data.guild_id && reaction.member) {
 				GuildMembers.hydrateIfMissing(data.guild_id, reaction.member);
 			}
-			SavedMessages.handleMessageReactionAdd(data.message_id);
+			SavedMessages.handleMessageReactionChange(data.message_id);
 			MessageReactions.handleReactionAdd(data.message_id, reaction.user_id, emoji);
 			ChannelPins.handleMessageReactionAdd(data.channel_id, data.message_id);
-			MentionFeed.handleMessageReactionAdd(data.message_id);
+			ForumPosts.handleReaction(
+				data.channel_id,
+				data.message_id,
+				emoji,
+				true,
+				reaction.user_id === Authentication.currentUserId,
+			);
+			MentionFeed.handleMessageReactionChange(data.message_id);
 			Messages.handleReaction({
 				type: 'MESSAGE_REACTION_ADD',
 				channelId: data.channel_id,
 				messageId: data.message_id,
 				userId: reaction.user_id,
 				emoji,
-				skipReactionStore: true,
 			});
 		}
 	});

@@ -73,7 +73,7 @@ function watchBackdropActivation(ownerDocument: Document): () => void {
 	};
 }
 
-function isBackdropActivationCarriedOver(ownerDocument: Document): boolean {
+function isBackdropActivationLeftOver(ownerDocument: Document): boolean {
 	const watcher = backdropActivationWatchers.get(ownerDocument);
 	if (!watcher) {
 		return false;
@@ -81,10 +81,12 @@ function isBackdropActivationCarriedOver(ownerDocument: Document): boolean {
 	return watcher.isRepeatActivation || watcher.isPressTargetDetached;
 }
 
-export type ModalSize = 'medium' | 'small' | 'large' | 'xlarge' | 'fullscreen';
-export type LabelSource = 'header' | 'screen-reader';
+type ModalSize = 'medium' | 'small' | 'large' | 'xlarge' | 'fullscreen';
+type LabelSource = 'header' | 'screen-reader';
 
 export type ModalTransitionPreset = 'default' | 'instant' | 'quick' | 'profile-slide';
+
+export type ModalBackdropTone = 'default' | 'strong';
 
 export interface ModalProps {
 	children: ReactNode;
@@ -95,6 +97,7 @@ export interface ModalProps {
 	onClose?: () => void;
 	onAnimationComplete?: () => void;
 	backdropSlot?: ReactNode;
+	backdropTone?: ModalBackdropTone;
 	transitionPreset?: ModalTransitionPreset;
 	disableHistoryManagement?: boolean;
 }
@@ -121,6 +124,46 @@ export interface ModalLogicState {
 	getDefaultLabelId: (source: LabelSource) => string;
 }
 
+export function getModalFocusInsideElements(ownerDocument: Document): Array<Element> {
+	const inside: Array<Element> = [];
+	const popoutsRoot = ownerDocument.querySelector('[data-popouts-root]');
+	if (popoutsRoot) inside.push(popoutsRoot);
+	const mediaViewerPortalRoot = ownerDocument.querySelector('[data-media-viewer-portal-root]');
+	if (mediaViewerPortalRoot) inside.push(mediaViewerPortalRoot);
+	ownerDocument.querySelectorAll('[data-floating-ui-portal]').forEach((el) => inside.push(el));
+	ownerDocument
+		.querySelectorAll('[data-rsbs-root], [data-rsbs-backdrop], [data-rsbs-overlay]')
+		.forEach((el) => inside.push(el));
+	ownerDocument.querySelectorAll('[data-quick-css-panel]').forEach((el) => inside.push(el));
+	const nativeTitlebar = ownerDocument.querySelector('[data-native-titlebar]');
+	if (nativeTitlebar) inside.push(nativeTitlebar);
+	return inside;
+}
+
+export function usePopOwningModal(): () => void {
+	const stackPlacement = useContext(ModalStackContext);
+	const portalHost = usePortalHost();
+	const ownerDocument = portalHost?.ownerDocument ?? document;
+	const stackEntryKeyRef = useRef<string | null>(null);
+	useLayoutEffect(() => {
+		if (stackPlacement === UNSTACKED_MODAL_CONTEXT) {
+			return;
+		}
+		const resolvedKey = ModalState.getKeyAtStackIndex(stackPlacement.stackIndex, ownerDocument);
+		if (resolvedKey != null) {
+			stackEntryKeyRef.current = resolvedKey;
+		}
+	}, [ownerDocument, stackPlacement]);
+	return useCallback(() => {
+		const stackEntryKey = stackEntryKeyRef.current;
+		if (stackEntryKey != null) {
+			ModalCommands.popWithKey(stackEntryKey);
+			return;
+		}
+		ModalCommands.pop();
+	}, []);
+}
+
 export function useModalLogic({
 	size = 'medium',
 	centered = false,
@@ -135,10 +178,9 @@ export function useModalLogic({
 	const prefersReducedMotion = Accessibility.useReducedMotion;
 	const baseLabelId = useId() || 'modal';
 	const modalKey = useRef(Math.random().toString(36).substring(7)).current;
-	const stackPlacement = useContext(ModalStackContext);
 	const portalHost = usePortalHost();
 	const ownerDocument = portalHost?.ownerDocument ?? document;
-	const stackEntryKeyRef = useRef<string | null>(null);
+	const popOwningModal = usePopOwningModal();
 	const [labelRegistry, setLabelRegistry] = useState<Partial<Record<LabelSource, string>>>({});
 	const [hasMounted, setHasMounted] = useState(false);
 	const registerLabel = useCallback((source: LabelSource, id: string) => {
@@ -159,24 +201,7 @@ export function useModalLogic({
 		const ids = Object.values(labelRegistry).filter(Boolean);
 		return ids.length > 0 ? ids.join(' ') : undefined;
 	}, [labelRegistry]);
-	useLayoutEffect(() => {
-		if (stackPlacement === UNSTACKED_MODAL_CONTEXT) {
-			return;
-		}
-		const resolvedKey = ModalState.getKeyAtStackIndex(stackPlacement.stackIndex, ownerDocument);
-		if (resolvedKey != null) {
-			stackEntryKeyRef.current = resolvedKey;
-		}
-	}, [ownerDocument, stackPlacement]);
 	useEffect(() => watchBackdropActivation(ownerDocument), [ownerDocument]);
-	const popOwningModal = useCallback(() => {
-		const stackEntryKey = stackEntryKeyRef.current;
-		if (stackEntryKey != null) {
-			ModalCommands.popWithKey(stackEntryKey);
-			return;
-		}
-		ModalCommands.pop();
-	}, []);
 	const modalContextValue = useMemo(
 		() => ({getDefaultLabelId, registerLabel, popOwningModal}),
 		[getDefaultLabelId, popOwningModal, registerLabel],
@@ -209,14 +234,14 @@ export function useModalLogic({
 		[onClose, popOwningModal],
 	);
 	useEffect(() => {
-		LayerManager.addLayer('modal', modalKey, handleClose);
+		LayerManager.addLayer('modal', modalKey, handleClose, ownerDocument);
 		return () => {
 			LayerManager.removeLayer('modal', modalKey);
 		};
-	}, [handleClose, modalKey]);
+	}, [handleClose, modalKey, ownerDocument]);
 	const handleBackdropClick = useCallback(
 		(customOnClose?: () => void) => {
-			if (isBackdropActivationCarriedOver(ownerDocument)) {
+			if (isBackdropActivationLeftOver(ownerDocument)) {
 				return;
 			}
 			handleClose(customOnClose);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {useAnimatedMediaPlaybackAllowed} from '@app/features/app/hooks/useAnimatedMediaPlayback';
 import {useSaveData} from '@app/features/app/hooks/useSaveData';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {StickerAnimationOptions} from '@fluxer/constants/src/UserConstants';
@@ -19,7 +20,6 @@ export interface UseShouldAnimateOptions {
 	isAnimated?: boolean;
 	isHovering?: boolean;
 	isFocused?: boolean;
-	entitlementOk?: boolean;
 }
 
 function isKeptUnderReducedMotion(kind: ShouldAnimateKind): boolean {
@@ -29,7 +29,7 @@ function isKeptUnderReducedMotion(kind: ShouldAnimateKind): boolean {
 	return false;
 }
 
-export type AnimationAllowanceMode = 'ALWAYS' | 'ON_INTERACTION' | 'NEVER';
+type AnimationAllowanceMode = 'ALWAYS' | 'ON_INTERACTION' | 'NEVER';
 
 function getKindAllowance(kind: ShouldAnimateKind): AnimationAllowanceMode {
 	switch (kind) {
@@ -51,27 +51,27 @@ function getKindAllowance(kind: ShouldAnimateKind): AnimationAllowanceMode {
 	}
 }
 
-export interface ShouldAnimateDecisionInput {
+interface ShouldAnimateDecisionInput {
 	isAnimated?: boolean;
 	allowance: AnimationAllowanceMode;
 	reducedMotion: boolean;
 	keptUnderReducedMotion: boolean;
 	isInteracting: boolean;
-	entitlementOk?: boolean;
 	saveData: boolean;
+	windowActive: boolean;
 }
 
-export function resolveShouldAnimateDecision({
+function resolveShouldAnimateDecision({
 	isAnimated = true,
 	allowance,
 	reducedMotion,
 	keptUnderReducedMotion,
 	isInteracting,
-	entitlementOk,
 	saveData,
+	windowActive,
 }: ShouldAnimateDecisionInput): boolean {
 	if (!isAnimated) return false;
-	if (entitlementOk === false) return false;
+	if (!windowActive) return false;
 	if (saveData) return false;
 	if (allowance === 'NEVER') return false;
 	if (reducedMotion && !keptUnderReducedMotion) return isInteracting;
@@ -84,9 +84,9 @@ export function useShouldAnimate({
 	isAnimated = true,
 	isHovering = false,
 	isFocused = false,
-	entitlementOk,
 }: UseShouldAnimateOptions): boolean {
 	const saveData = useSaveData();
+	const windowActive = useAnimatedMediaPlaybackAllowed({isAnimated});
 	const allowance = getKindAllowance(kind);
 	return resolveShouldAnimateDecision({
 		isAnimated,
@@ -94,7 +94,7 @@ export function useShouldAnimate({
 		reducedMotion: Accessibility.useReducedMotion,
 		keptUnderReducedMotion: isKeptUnderReducedMotion(kind),
 		isInteracting: isHovering || isFocused,
-		entitlementOk,
 		saveData,
+		windowActive,
 	});
 }

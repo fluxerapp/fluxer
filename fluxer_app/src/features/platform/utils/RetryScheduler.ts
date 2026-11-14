@@ -3,17 +3,11 @@
 interface ExponentialBackoffOptions {
 	minDelay: number;
 	maxDelay: number;
-	factor?: number;
-	maxNumOfAttempts?: number;
-	jitter?: boolean;
 	jitterFactor?: number;
 }
 
 export class ExponentialBackoff {
 	private attempts = 0;
-	private readonly factor: number;
-	private readonly maxAttempts: number;
-	private readonly useJitter: boolean;
 	private readonly jitterFactor: number;
 
 	constructor(private readonly options: ExponentialBackoffOptions) {
@@ -23,16 +17,7 @@ export class ExponentialBackoff {
 		if (options.maxDelay < options.minDelay) {
 			throw new Error('maxDelay must be greater than or equal to minDelay');
 		}
-		this.factor = options.factor ?? 2;
-		this.maxAttempts = options.maxNumOfAttempts ?? Number.POSITIVE_INFINITY;
-		this.useJitter = options.jitter ?? true;
 		this.jitterFactor = options.jitterFactor ?? 0.25;
-		if (this.factor <= 1) {
-			throw new Error('factor must be greater than 1');
-		}
-		if (this.maxAttempts <= 0) {
-			throw new Error('maxNumOfAttempts must be greater than 0');
-		}
 		if (this.jitterFactor < 0 || this.jitterFactor > 1) {
 			throw new Error('jitterFactor must be between 0 and 1');
 		}
@@ -40,44 +25,13 @@ export class ExponentialBackoff {
 
 	next(): number {
 		this.attempts++;
-		const baseDelay = Math.min(this.options.minDelay * this.factor ** (this.attempts - 1), this.options.maxDelay);
-		if (this.useJitter) {
-			const maxJitter = baseDelay * this.jitterFactor;
-			const jitter = (Math.random() * 2 - 1) * maxJitter;
-			return Math.max(this.options.minDelay, Math.min(baseDelay + jitter, this.options.maxDelay));
-		}
-		return baseDelay;
-	}
-
-	getCurrentAttempts(): number {
-		return this.attempts;
-	}
-
-	getMaxAttempts(): number {
-		return this.maxAttempts;
-	}
-
-	isExhausted(): boolean {
-		return this.attempts >= this.maxAttempts;
-	}
-
-	getMinDelay(): number {
-		return this.options.minDelay;
-	}
-
-	getMaxDelay(): number {
-		return this.options.maxDelay;
+		const baseDelay = Math.min(this.options.minDelay * 2 ** (this.attempts - 1), this.options.maxDelay);
+		const maxJitter = baseDelay * this.jitterFactor;
+		const jitter = (Math.random() * 2 - 1) * maxJitter;
+		return Math.max(this.options.minDelay, Math.min(baseDelay + jitter, this.options.maxDelay));
 	}
 
 	reset(): void {
 		this.attempts = 0;
-	}
-
-	static create(minDelay: number, maxDelay: number, maxAttempts?: number): ExponentialBackoff {
-		return new ExponentialBackoff({
-			minDelay,
-			maxDelay,
-			maxNumOfAttempts: maxAttempts,
-		});
 	}
 }

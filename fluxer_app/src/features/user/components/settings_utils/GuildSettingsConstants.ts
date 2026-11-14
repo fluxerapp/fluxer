@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GuildAuditLogTab from '@app/features/guild/components/modals/guild_tabs/GuildAuditLogTab';
-import GuildBansTab from '@app/features/guild/components/modals/guild_tabs/GuildBansTab';
-import GuildDiscoveryTab from '@app/features/guild/components/modals/guild_tabs/GuildDiscoveryTab';
-import GuildEmojiTab from '@app/features/guild/components/modals/guild_tabs/GuildEmojiTab';
-import GuildInvitesTab from '@app/features/guild/components/modals/guild_tabs/GuildInvitesTab';
-import GuildModerationTab from '@app/features/guild/components/modals/guild_tabs/GuildModerationTab';
-import GuildRolesTab from '@app/features/guild/components/modals/guild_tabs/GuildRolesTab';
-import GuildStickersTab from '@app/features/guild/components/modals/guild_tabs/GuildStickersTab';
-import GuildVanityURLTab from '@app/features/guild/components/modals/guild_tabs/GuildVanityURLTab';
-import GuildWebhooksTab from '@app/features/guild/components/modals/guild_tabs/GuildWebhooksTab';
-import GuildOverviewTab from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab';
+import {
+	EXPRESSIONS_DESCRIPTOR as EXPRESSIONS_CATEGORY_DESCRIPTOR,
+	INTEGRATIONS_DESCRIPTOR as INTEGRATIONS_CATEGORY_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {I18n, MessageDescriptor} from '@lingui/core';
@@ -31,7 +24,6 @@ import {
 	UserIcon,
 	WebhooksLogoIcon,
 } from '@phosphor-icons/react';
-import type React from 'react';
 
 const EMOJI_DESCRIPTOR = msg({
 	message: 'Emoji',
@@ -74,9 +66,10 @@ const VANITY_URL_DESCRIPTOR = msg({
 	comment: 'Community settings tab for the community vanity/custom invite link.',
 });
 const DISCOVERY_DESCRIPTOR = msg({
-	message: 'Discovery',
+	message: 'Explore',
 	context: 'community-settings-tab',
-	comment: 'Community settings tab for public community discovery/listing.',
+	comment:
+		'Community settings tab for listing a community in Explore. Explore is the name of the feature, so use the same word as the Explore page heading.',
 });
 const MEMBERS_DESCRIPTOR = msg({
 	message: 'Members',
@@ -120,11 +113,9 @@ export interface GuildSettingsTab {
 	label: string;
 	icon: Icon;
 	iconWeight?: IconWeight;
-	component: React.ComponentType<{
-		guildId: string;
-	}>;
 	permission?: bigint | ReadonlyArray<bigint>;
 	requireFeature?: string;
+	requireDiscovery?: boolean;
 }
 
 interface GuildSettingsTabDescriptor {
@@ -133,11 +124,9 @@ interface GuildSettingsTabDescriptor {
 	label: MessageDescriptor;
 	icon: Icon;
 	iconWeight?: IconWeight;
-	component: React.ComponentType<{
-		guildId: string;
-	}>;
 	permission?: bigint | ReadonlyArray<bigint>;
 	requireFeature?: string;
+	requireDiscovery?: boolean;
 }
 
 const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
@@ -146,7 +135,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'guild_settings',
 		label: OVERVIEW_DESCRIPTOR,
 		icon: GearIcon,
-		component: GuildOverviewTab,
 		permission: Permissions.MANAGE_GUILD,
 	},
 	{
@@ -154,7 +142,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'guild_settings',
 		label: ROLES_DESCRIPTOR,
 		icon: ShieldIcon,
-		component: GuildRolesTab,
 		permission: Permissions.MANAGE_ROLES,
 	},
 	{
@@ -162,7 +149,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'guild_settings',
 		label: MODERATION_DESCRIPTOR,
 		icon: HammerIcon,
-		component: GuildModerationTab,
 		permission: Permissions.MANAGE_GUILD,
 	},
 	{
@@ -170,7 +156,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'guild_settings',
 		label: ACTIVITY_LOG_DESCRIPTOR,
 		icon: BookOpenIcon,
-		component: GuildAuditLogTab,
 		permission: Permissions.VIEW_AUDIT_LOG,
 	},
 	{
@@ -178,7 +163,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'expressions',
 		label: EMOJI_DESCRIPTOR,
 		icon: SmileyIcon,
-		component: GuildEmojiTab,
 		permission: [Permissions.CREATE_EXPRESSIONS, Permissions.MANAGE_EXPRESSIONS],
 	},
 	{
@@ -186,7 +170,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'expressions',
 		label: STICKERS_DESCRIPTOR,
 		icon: StickerIcon,
-		component: GuildStickersTab,
 		permission: [Permissions.CREATE_EXPRESSIONS, Permissions.MANAGE_EXPRESSIONS],
 	},
 	{
@@ -195,8 +178,8 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		label: DISCOVERY_DESCRIPTOR,
 		icon: CompassIcon,
 		iconWeight: 'fill',
-		component: GuildDiscoveryTab,
 		permission: Permissions.MANAGE_GUILD,
+		requireDiscovery: true,
 	},
 	{
 		type: 'vanity_url',
@@ -204,7 +187,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		label: VANITY_URL_DESCRIPTOR,
 		icon: LinkIcon,
 		iconWeight: 'bold',
-		component: GuildVanityURLTab,
 		permission: Permissions.MANAGE_GUILD,
 		requireFeature: GuildFeatures.VANITY_URL,
 	},
@@ -213,7 +195,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'integrations',
 		label: WEBHOOKS_DESCRIPTOR,
 		icon: WebhooksLogoIcon,
-		component: GuildWebhooksTab,
 		permission: Permissions.MANAGE_WEBHOOKS,
 	},
 	{
@@ -221,7 +202,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'user_management',
 		label: MEMBERS_DESCRIPTOR,
 		icon: UserIcon,
-		component: () => null,
 		permission: Permissions.MANAGE_GUILD,
 	},
 	{
@@ -229,7 +209,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'user_management',
 		label: INVITES_DESCRIPTOR,
 		icon: TicketIcon,
-		component: GuildInvitesTab,
 		permission: Permissions.MANAGE_GUILD,
 	},
 	{
@@ -237,7 +216,6 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		category: 'user_management',
 		label: BANS_DESCRIPTOR,
 		icon: ProhibitIcon,
-		component: GuildBansTab,
 		permission: Permissions.BAN_MEMBERS,
 	},
 ];
@@ -245,18 +223,9 @@ export const GUILD_SETTINGS_LABEL_DESCRIPTOR = msg({
 	message: 'Community settings',
 	comment: 'Root label for community settings modal and settings search paths.',
 });
-
-const EXPRESSIONS_CATEGORY_DESCRIPTOR = msg({
-	message: 'Expressions',
-	comment: 'Community settings sidebar category grouping the emoji and stickers tabs.',
-});
 const COMMUNITY_CATEGORY_DESCRIPTOR = msg({
 	message: 'Community',
-	comment: 'Community settings sidebar category grouping discovery and the vanity URL.',
-});
-const INTEGRATIONS_CATEGORY_DESCRIPTOR = msg({
-	message: 'Integrations',
-	comment: 'Community settings sidebar category grouping webhooks.',
+	comment: 'Community settings sidebar category grouping Explore and the vanity URL.',
 });
 const PEOPLE_CATEGORY_DESCRIPTOR = msg({
 	message: 'People',
@@ -278,7 +247,7 @@ export function getGuildSettingsCategoryLabel(i18n: I18n, category: GuildSetting
 	}
 }
 
-export function getGuildSettingsTabLabel(i18n: I18n, tabType: GuildSettingsTabType): string {
+function getGuildSettingsTabLabel(i18n: I18n, tabType: GuildSettingsTabType): string {
 	const tab = GUILD_SETTINGS_TABS_DESCRIPTORS.find((candidate) => candidate.type === tabType);
 	return tab ? i18n._(tab.label) : '';
 }

@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ScreenShareLimitClass, ScreenShareTarget} from '@app/features/voice/utils/ScreenShareOptions';
 import type {
 	StreamSettingsShareContext,
 	WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import type {TrackPublishOptions} from 'livekit-client';
 import {makeAutoObservable} from 'mobx';
 
-export interface ActiveScreenShareSourceOptions {
+interface ActiveScreenShareSourceOptions {
 	readonly isOwnWindow?: boolean;
+	readonly portalSurface?: 'window' | 'monitor';
 }
 
 export type PublishedScreenShareSource = 'web' | 'wayland' | 'device' | 'app' | 'display';
@@ -15,9 +18,16 @@ export type PublishedScreenShareSource = 'web' | 'wayland' | 'device' | 'app' | 
 class ActiveScreenShareSource {
 	sourceId: string | null = null;
 	ownWindow = false;
+	portalWindowShare = false;
 	publishedSource: PublishedScreenShareSource | null = null;
 	windowAudioScope: WindowShareAudioScope = 'window';
 	pendingWindowAudioScope: WindowShareAudioScope | null = null;
+	sourceDimensions: {width: number; height: number} | null = null;
+	target: ScreenShareTarget | null = null;
+	frozenDegradationPreference: NonNullable<TrackPublishOptions['degradationPreference']> | null = null;
+	softwareEncoderClamped = false;
+	limit: ScreenShareLimitClass | null = null;
+	encoding = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -31,6 +41,7 @@ class ActiveScreenShareSource {
 		this.publishedSource = publishedSource;
 		this.sourceId = sourceId;
 		this.ownWindow = sourceId !== null && options.isOwnWindow === true;
+		this.portalWindowShare = publishedSource === 'wayland' && options.portalSurface === 'window';
 	}
 
 	getSourceId(): string | null {
@@ -43,6 +54,50 @@ class ActiveScreenShareSource {
 
 	getPublishedSource(): PublishedScreenShareSource | null {
 		return this.publishedSource;
+	}
+
+	setSourceDimensions(dimensions: {width: number; height: number} | null): void {
+		this.sourceDimensions = dimensions;
+	}
+
+	getSourceDimensions(): {width: number; height: number} | null {
+		return this.sourceDimensions;
+	}
+
+	setTarget(target: ScreenShareTarget | null): void {
+		if (target === null) {
+			this.target = null;
+			this.frozenDegradationPreference = null;
+			this.softwareEncoderClamped = false;
+			this.limit = null;
+			this.encoding = false;
+			return;
+		}
+		const degradationPreference = this.frozenDegradationPreference ?? target.degradationPreference;
+		this.frozenDegradationPreference = degradationPreference;
+		this.softwareEncoderClamped = this.softwareEncoderClamped || target.softwareEncoderClamped;
+		this.target = {...target, degradationPreference};
+		this.encoding = false;
+	}
+
+	setEncoding(encoding: boolean): void {
+		this.encoding = encoding;
+	}
+
+	setLimit(limit: ScreenShareLimitClass | null): void {
+		this.limit = limit;
+	}
+
+	getLimit(): ScreenShareLimitClass | null {
+		return this.limit;
+	}
+
+	isSoftwareEncoderClamped(): boolean {
+		return this.softwareEncoderClamped;
+	}
+
+	getTarget(): ScreenShareTarget | null {
+		return this.target;
 	}
 
 	getWindowAudioScope(): WindowShareAudioScope {
@@ -66,7 +121,7 @@ class ActiveScreenShareSource {
 	}
 
 	getShareContext(): StreamSettingsShareContext | null {
-		if (this.publishedSource === 'app') return 'app';
+		if (this.publishedSource === 'app' || this.portalWindowShare) return 'app';
 		if (this.publishedSource === 'device') return 'device';
 		if (this.publishedSource === null) return null;
 		return 'display';
@@ -75,9 +130,16 @@ class ActiveScreenShareSource {
 	clear(): void {
 		this.sourceId = null;
 		this.ownWindow = false;
+		this.portalWindowShare = false;
 		this.publishedSource = null;
 		this.windowAudioScope = 'window';
 		this.pendingWindowAudioScope = null;
+		this.sourceDimensions = null;
+		this.target = null;
+		this.frozenDegradationPreference = null;
+		this.softwareEncoderClamped = false;
+		this.limit = null;
+		this.encoding = false;
 	}
 }
 

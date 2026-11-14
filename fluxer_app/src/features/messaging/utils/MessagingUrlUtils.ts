@@ -2,6 +2,7 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {buildMediaProxyURL, type MediaProxyOptions} from '@app/features/messaging/utils/MediaProxyUtils';
+import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 
 type QueryParamPrimitive = string | number | boolean;
 type QueryParamValue = QueryParamPrimitive | null | undefined;
@@ -19,7 +20,7 @@ function applyQueryParams(url: URL, query: Record<string, QueryParamValue>) {
 
 export function setUrlQueryParams(urlOrPath: string, query: Record<string, QueryParamValue>): string {
 	const isAbsoluteUrl = ABSOLUTE_URL_PATTERN.test(urlOrPath) || urlOrPath.startsWith('//');
-	const url = new URL(urlOrPath, window.location.origin);
+	const url = resolveDocumentURLFromRoot(urlOrPath);
 	applyQueryParams(url, query);
 	if (isAbsoluteUrl) {
 		return url.toString();
@@ -28,7 +29,7 @@ export function setUrlQueryParams(urlOrPath: string, query: Record<string, Query
 }
 
 export function setPathQueryParams(path: string, query: Record<string, QueryParamValue>): string {
-	const url = new URL(path, window.location.origin);
+	const url = resolveDocumentURLFromRoot(path);
 	applyQueryParams(url, query);
 	const hasLeadingSlash = path.startsWith('/');
 	const normalizedPath = hasLeadingSlash ? url.pathname : url.pathname.replace(/^\//, '');
@@ -37,10 +38,6 @@ export function setPathQueryParams(path: string, query: Record<string, QueryPara
 
 export function mediaUrl(path: string, options?: MediaProxyOptions): string {
 	return buildMediaProxyURL(`${RuntimeConfig.mediaEndpoint}/${path}`, options);
-}
-
-export function cdnUrl(path: string): string {
-	return buildMediaProxyURL(`${RuntimeConfig.staticCdnEndpoint}/${path}`);
 }
 
 export function webhookUrl(webhookId: string, token: string): string {

@@ -2,14 +2,23 @@
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	CANCEL_DESCRIPTOR,
+	MEDIA_NEEDS_HTTPS_DESCRIPTOR,
+	PAUSE_DESCRIPTOR,
+	SOMETHING_WENT_WRONG_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureContext';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {AudioWaveform, computePeaks} from '@app/features/voice/components/AudioWaveform';
 import {LiveRecordingWaveform} from '@app/features/voice/components/LiveRecordingWaveform';
 import styles from '@app/features/voice/components/VoiceMessageComposerModal.module.css';
+import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {encodeAudioBufferSliceToWav} from '@app/features/voice/utils/AudioWavEncode';
 import {computeVoiceWaveformFromAudioBuffer} from '@app/features/voice/utils/VoiceMessageRecordingUtils';
 import {sendVoiceMessage} from '@app/features/voice/utils/VoiceMessageSendUtils';
@@ -34,7 +43,7 @@ const COMPOSER_TITLE_DESCRIPTOR = msg({
 	comment: 'Title of the desktop voice message composer modal.',
 });
 const RECORDING_HINT_DESCRIPTOR = msg({
-	message: 'Speak now. Press Stop when you are done — you can trim afterwards.',
+	message: 'Speak now. Press Stop when you are done, and you can trim the recording afterwards.',
 	comment: 'Help text shown while recording a voice message on desktop.',
 });
 const REVIEW_HINT_DESCRIPTOR = msg({
@@ -77,17 +86,10 @@ const SEND_BUTTON_DESCRIPTOR = msg({
 	message: 'Send',
 	comment: 'Send-message button label in the voice message composer modal.',
 });
-const CANCEL_DESCRIPTOR = msg({
-	message: 'Cancel',
-	comment: 'Cancel button label in the voice message composer modal.',
-});
+
 const PLAY_DESCRIPTOR = msg({
 	message: 'Play',
 	comment: 'Play-preview button label in the voice message composer modal.',
-});
-const PAUSE_DESCRIPTOR = msg({
-	message: 'Pause',
-	comment: 'Pause-preview button label in the voice message composer modal.',
 });
 
 const logger = new Logger('VoiceMessageComposerModal');
@@ -112,11 +114,6 @@ function pickRecorderMime(): string | undefined {
 	return undefined;
 }
 
-function formatSeconds(value: number): string {
-	const safe = Math.max(0, value);
-	return `${safe.toFixed(2)}s`;
-}
-
 function formatElapsedMs(value: number): string {
 	const total = Math.max(0, Math.floor(value / 1000));
 	const minutes = Math.floor(total / 60);
@@ -125,7 +122,7 @@ function formatElapsedMs(value: number): string {
 	return `${minutes.toString().padStart(1, '0')}:${seconds.toString().padStart(2, '0')}.${tenths}`;
 }
 
-export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = observer(({channelId}) => {
+const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = observer(({channelId}) => {
 	const {i18n} = useLingui();
 	const [stage, setStage] = useState<ModalStage>('idle');
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -278,15 +275,15 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 		const mimeType = pickRecorderMime();
 		if (!mimeType || typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
 			setStage('permission_error');
-			setErrorMessage(i18n._(RECORDING_NOT_SUPPORTED_DESCRIPTOR));
+			setErrorMessage(
+				i18n._(isInsecureBrowserContext() ? MEDIA_NEEDS_HTTPS_DESCRIPTOR : RECORDING_NOT_SUPPORTED_DESCRIPTOR),
+			);
 			return;
 		}
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({audio: true});
 			mediaStreamRef.current = stream;
-			const Ctor =
-				window.AudioContext ||
-				(window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+			const Ctor = resolveAudioContextConstructor();
 			if (Ctor) {
 				const audioContext = new Ctor();
 				analyserAudioCtxRef.current = audioContext;
@@ -338,8 +335,7 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 	}, []);
 
 	const decodeBlob = useCallback(async (blob: Blob): Promise<AudioBuffer | null> => {
-		const Ctor =
-			window.AudioContext || (window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext;
+		const Ctor = resolveAudioContextConstructor();
 		if (!Ctor) return null;
 		const ctx = playbackCtxRef.current ?? new Ctor();
 		playbackCtxRef.current = ctx;
@@ -426,6 +422,18 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 	const selectionDuration = Math.max(0, endSeconds - startSeconds);
 	const totalDuration = audioBuffer?.duration ?? 0;
 
+	const formatSeconds = useCallback(
+		(value: number) =>
+			getCachedNumberFormat(getFormattingLocale(), {
+				style: 'unit',
+				unit: 'second',
+				unitDisplay: 'narrow',
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2,
+			}).format(Math.max(0, value)),
+		[i18n.locale],
+	);
+
 	const handleSelectionChange = useCallback(
 		(next: {startSeconds: number; endSeconds: number}) => {
 			stopPlayback();
@@ -481,7 +489,13 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 	const send = useCallback(() => {
 		if (!audioBuffer || !recordedBlob || sentRef.current) return;
 		if (selectionDuration < MIN_DURATION_SECONDS) {
-			setErrorMessage(i18n._(TOO_SHORT_DESCRIPTOR, {seconds: MIN_DURATION_SECONDS.toFixed(1)}));
+			setErrorMessage(
+				i18n._(TOO_SHORT_DESCRIPTOR, {
+					seconds: getCachedNumberFormat(getFormattingLocale(), {maximumFractionDigits: 1}).format(
+						MIN_DURATION_SECONDS,
+					),
+				}),
+			);
 			return;
 		}
 		sentRef.current = true;
@@ -514,6 +528,56 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 		void startRecording();
 	}, [startRecording]);
 
+	let footerAction: React.ReactNode = null;
+	if (stage === 'recording') {
+		footerAction = (
+			<Button
+				variant="primary"
+				onClick={() => void stopRecording()}
+				data-flx="voice.voice-message-composer-modal.stop-button"
+			>
+				<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--3">
+					<StopIcon size={remFromPx(14)} weight="fill" data-flx="voice.voice-message-composer-modal.stop-icon" />
+					{i18n._(STOP_BUTTON_DESCRIPTOR)}
+				</span>
+			</Button>
+		);
+	} else if (stage === 'reviewing') {
+		footerAction = (
+			<Button
+				variant="primary"
+				onClick={() => void send()}
+				disabled={selectionDuration < MIN_DURATION_SECONDS}
+				data-flx="voice.voice-message-composer-modal.send-button"
+			>
+				<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--4">
+					<PaperPlaneRightIcon
+						size={remFromPx(14)}
+						weight="fill"
+						data-flx="voice.voice-message-composer-modal.paper-plane-right-icon"
+					/>
+					{i18n._(SEND_BUTTON_DESCRIPTOR)}
+				</span>
+			</Button>
+		);
+	} else if (stage === 'permission_error') {
+		footerAction = (
+			<Button
+				variant="primary"
+				onClick={() => void startRecording()}
+				data-flx="voice.voice-message-composer-modal.retry-button"
+			>
+				<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--5">
+					<MicrophoneIcon
+						size={remFromPx(14)}
+						weight="fill"
+						data-flx="voice.voice-message-composer-modal.microphone-icon"
+					/>
+					{i18n._(RECORD_BUTTON_DESCRIPTOR)}
+				</span>
+			</Button>
+		);
+	}
 	return (
 		<Modal.Root size="small" centered data-flx="voice.voice-message-composer-modal.modal-root">
 			<Modal.Header
@@ -626,49 +690,7 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 				<Button variant="secondary" onClick={close} data-flx="voice.voice-message-composer-modal.cancel-button">
 					{i18n._(CANCEL_DESCRIPTOR)}
 				</Button>
-				{stage === 'recording' ? (
-					<Button
-						variant="primary"
-						onClick={() => void stopRecording()}
-						data-flx="voice.voice-message-composer-modal.stop-button"
-					>
-						<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--3">
-							<StopIcon size={remFromPx(14)} weight="fill" data-flx="voice.voice-message-composer-modal.stop-icon" />
-							{i18n._(STOP_BUTTON_DESCRIPTOR)}
-						</span>
-					</Button>
-				) : stage === 'reviewing' ? (
-					<Button
-						variant="primary"
-						onClick={() => void send()}
-						disabled={selectionDuration < MIN_DURATION_SECONDS}
-						data-flx="voice.voice-message-composer-modal.send-button"
-					>
-						<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--4">
-							<PaperPlaneRightIcon
-								size={remFromPx(14)}
-								weight="fill"
-								data-flx="voice.voice-message-composer-modal.paper-plane-right-icon"
-							/>
-							{i18n._(SEND_BUTTON_DESCRIPTOR)}
-						</span>
-					</Button>
-				) : stage === 'permission_error' ? (
-					<Button
-						variant="primary"
-						onClick={() => void startRecording()}
-						data-flx="voice.voice-message-composer-modal.retry-button"
-					>
-						<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--5">
-							<MicrophoneIcon
-								size={remFromPx(14)}
-								weight="fill"
-								data-flx="voice.voice-message-composer-modal.microphone-icon"
-							/>
-							{i18n._(RECORD_BUTTON_DESCRIPTOR)}
-						</span>
-					</Button>
-				) : null}
+				{footerAction}
 			</Modal.Footer>
 		</Modal.Root>
 	);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '../BrandedTypes';
-import type {SavedMessageRow} from '../database/types/UserTypes';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {SavedMessageRow} from '@app/api/database/types/UserTypes';
 
 export class SavedMessage {
 	readonly userId: UserID;

@@ -89,9 +89,9 @@ gc_if_large_and_idle(Pid) ->
 
 -spec gc_if_known_type(pid(), non_neg_integer()) -> ok.
 gc_if_known_type(Pid, Memory) ->
-    try erlang:process_info(Pid, dictionary) of
-        {dictionary, Dict} ->
-            force_gc_by_type(Pid, Memory, proplists:get_value('$initial_call', Dict));
+    try erlang:process_info(Pid, {dictionary, '$initial_call'}) of
+        {{dictionary, '$initial_call'}, InitialCall} ->
+            force_gc_by_type(Pid, Memory, InitialCall);
         _ ->
             ok
     catch
@@ -201,12 +201,13 @@ reap_stuck_spawns(Progress) ->
 -spec process_scan_pids() -> [pid()].
 process_scan_pids() ->
     Pids = erlang:processes(),
-    case length(Pids) =< ?MAX_PROCESS_SCAN of
+    Count = length(Pids),
+    case Count =< ?MAX_PROCESS_SCAN of
         true ->
             Pids;
         false ->
-            Shuffled = [P || {_, P} <- lists:sort([{rand:uniform(), P} || P <- Pids])],
-            lists:sublist(Shuffled, ?MAX_PROCESS_SCAN)
+            {Front, Back} = lists:split(rand:uniform(Count) - 1, Pids),
+            lists:sublist(Back ++ Front, ?MAX_PROCESS_SCAN)
     end.
 
 -spec reap_if_stuck(pid(), stuck_progress(), stuck_progress()) -> stuck_progress().
@@ -294,9 +295,7 @@ is_known_stuck_function(_) -> false.
 reset_drifted_counters() ->
     try persistent_term:get(gateway_concurrency_counters) of
         Ref ->
-            SessionMax = gateway_rollout_config:max_concurrent_session_starts(),
             GuildMax = gateway_rollout_config:max_concurrent_guild_starts(),
-            check_counter(Ref, 1, SessionMax, "session"),
             check_counter(Ref, 2, GuildMax, "guild")
     catch
         error:badarg -> ok

@@ -91,6 +91,14 @@ export enum RoomEvent {
 	LocalTrackSubscribed = 'localTrackSubscribed',
 
 	MetricsReceived = 'metricsReceived',
+
+	DataTrackPublished = 'dataTrackPublished',
+
+	DataTrackUnpublished = 'dataTrackUnpublished',
+
+	LocalDataTrackPublished = 'localDataTrackPublished',
+
+	LocalDataTrackUnpublished = 'localDataTrackUnpublished',
 }
 
 export enum ParticipantEvent {
@@ -186,6 +194,13 @@ export enum EngineEvent {
 	SignalRequestResponse = 'signalRequestResponse',
 	SignalConnected = 'signalConnected',
 	RoomMoved = 'roomMoved',
+	PublishDataTrackResponse = 'publishDataTrackResponse',
+	UnPublishDataTrackResponse = 'unPublishDataTrackResponse',
+	DataTrackSubscriberHandles = 'dataTrackSubscriberHandles',
+	DataTrackPacketReceived = 'dataTrackPacketReceived',
+	Joined = 'joined',
+	TokenRefreshed = 'tokenRefreshed',
+	ServerRegionsReported = 'serverRegionsReported',
 }
 
 export enum TrackEvent {

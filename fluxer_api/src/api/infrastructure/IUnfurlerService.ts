@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
 import type {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
-import type {MediaProxyNsfwMode} from './IMediaService';
 
 export interface UnfurlResult {
 	embeds: Array<MessageEmbedResponse>;
@@ -12,6 +12,19 @@ export interface UnfurlOptions {
 	signal?: AbortSignal;
 	bypassCache?: boolean;
 	cacheOnly?: boolean;
+}
+
+export interface ExternalFetchRequest {
+	method: string;
+	url: string;
+	headers: Array<[string, string]>;
+	body: string | null;
+}
+
+export interface ExternalFetchResponse {
+	status: number;
+	headers: Array<[string, string]>;
+	body: string;
 }
 
 export abstract class IUnfurlerService {
@@ -28,4 +41,12 @@ export abstract class IUnfurlerService {
 		nsfwMode?: MediaProxyNsfwMode,
 		options?: UnfurlOptions,
 	): Promise<UnfurlResult>;
+
+	abstract verifyDomain(domain: string, token: string): Promise<boolean>;
+
+	abstract fetchExternal(request: ExternalFetchRequest): Promise<ExternalFetchResponse>;
+
+	abstract resolveTxt(name: string): Promise<Array<string>>;
+
+	abstract activityPubPublicKey(): Promise<string | null>;
 }

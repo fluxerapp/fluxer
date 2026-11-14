@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MemeID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import {mapFavoriteMemeToResponse} from '@app/api/favorite_meme/FavoriteMemeModel';
+import type {FavoriteMemeService} from '@app/api/favorite_meme/FavoriteMemeService';
+import type {User} from '@app/api/models/User';
 import {UnknownFavoriteMemeError} from '@fluxer/errors/src/domains/core/UnknownFavoriteMemeError';
 import type {
 	CreateFavoriteMemeBodySchema,
@@ -8,10 +13,6 @@ import type {
 	FavoriteMemeResponse,
 	UpdateFavoriteMemeBodySchema,
 } from '@fluxer/schema/src/domains/meme/MemeSchemas';
-import type {ChannelID, MemeID, MessageID, UserID} from '../BrandedTypes';
-import type {User} from '../models/User';
-import {mapFavoriteMemeToResponse} from './FavoriteMemeModel';
-import type {FavoriteMemeService} from './FavoriteMemeService';
 
 interface FavoriteMemeListParams {
 	userId: UserID;
@@ -23,6 +24,7 @@ interface FavoriteMemeCreateFromUrlParams {
 }
 
 interface FavoriteMemeCreateFromMessageParams {
+	viewer: ThreadViewer;
 	user: User;
 	channelId: ChannelID;
 	messageId: MessageID;
@@ -69,9 +71,10 @@ export class FavoriteMemeRequestService {
 	}
 
 	async createFromMessage(params: FavoriteMemeCreateFromMessageParams): Promise<FavoriteMemeResponse> {
-		const {user, channelId, messageId, data} = params;
+		const {user, viewer, channelId, messageId, data} = params;
 		const meme = await this.favoriteMemeService.createFromMessage({
 			user,
+			viewer,
 			channelId,
 			messageId,
 			attachmentId: data.attachment_id?.toString(),

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {STRIPE_API_VERSION} from '@app/api/stripe/StripeApiVersion';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {PremiumStateResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import Stripe from 'stripe';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {Config} from '../../Config';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createStripeApiHandlers, type StripeApiHandlers} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {STRIPE_API_VERSION} from '../StripeApiVersion';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_state_pricing_monthly_usd',

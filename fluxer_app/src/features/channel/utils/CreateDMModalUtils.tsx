@@ -2,29 +2,27 @@
 
 import i18n from '@app/app/I18n';
 import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
-import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import type {UnaddableRecipient} from '@app/features/channel/components/modals/UnaddableRecipientsConfirmModal';
 import {UnaddableRecipientsConfirmModal} from '@app/features/channel/components/modals/UnaddableRecipientsConfirmModal';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {getDuplicateGroupDMChannels, getMaxGroupDmOtherRecipients} from '@app/features/channel/utils/GroupDmUtils';
-import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {AccountGateSlate} from '@app/features/user/utils/AccountGatePresentation';
+import {canPerform} from '@app/features/user/utils/AccountGates';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
+import type {TierGateDenial} from '@fluxer/constants/src/AccountTierRules';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {useLingui} from '@lingui/react/macro';
-import {EnvelopeSimpleIcon, WarningCircleIcon} from '@phosphor-icons/react';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
@@ -39,22 +37,6 @@ const CREATE_DM_DESCRIPTOR = msg({
 const CHOOSE_FRIENDS_TO_MESSAGE_DESCRIPTOR = msg({
 	message: 'Choose friends to message.',
 	comment: 'Subtitle in the create-DM modal. Keep it short and calm.',
-});
-const CLAIM_YOUR_ACCOUNT_DESCRIPTOR = msg({
-	message: 'Claim your account',
-	comment: 'Title shown when an unclaimed account cannot start a DM or group DM.',
-});
-const CLAIM_ACCOUNT_TO_START_DMS_DESCRIPTOR = msg({
-	message: 'Claim your account to start DMs.',
-	comment: 'Blocked-state text shown when an unclaimed account cannot start a DM or group DM.',
-});
-const VERIFY_YOUR_EMAIL_DESCRIPTOR = msg({
-	message: 'Verify your email',
-	comment: 'Title shown when an unverified account cannot start a DM or group DM.',
-});
-const VERIFY_EMAIL_TO_START_DMS_DESCRIPTOR = msg({
-	message: 'Verify your email to start DMs.',
-	comment: 'Blocked-state text shown when an unverified account cannot start a DM or group DM.',
 });
 export const DUPLICATE_GROUP_MODAL_KEY = 'create-dm-duplicate-group';
 const UNADDABLE_RECIPIENTS_MODAL_KEY = 'create-dm-unaddable-recipients';
@@ -105,9 +87,9 @@ export interface CreateDMModalProps {
 	resetKey?: unknown;
 }
 
-export type CreateDmRestriction = 'unclaimed' | 'unverified';
+type CreateDmRestriction = TierGateDenial;
 
-export interface CreateDMModalLogicState {
+interface CreateDMModalLogicState {
 	selectedUserIds: Array<string>;
 	isCreating: boolean;
 	searchQuery: string;
@@ -117,7 +99,7 @@ export interface CreateDMModalLogicState {
 	restriction: CreateDmRestriction | null;
 }
 
-export interface CreateDMModalLogicActions {
+interface CreateDMModalLogicActions {
 	handleToggle: (userId: string) => void;
 	handleCreate: () => Promise<{
 		duplicates: Array<Channel>;
@@ -128,59 +110,21 @@ export interface CreateDMModalLogicActions {
 }
 
 export function getCreateDmRestriction(user: User | null | undefined): CreateDmRestriction | null {
-	if (user && !user.isClaimed()) {
-		return 'unclaimed';
-	}
-	if (user?.verified === false) {
-		return 'unverified';
-	}
-	return null;
-}
-
-export function getCreateDMRestrictionMessage(i18nApi: I18n, restriction: CreateDmRestriction): string {
-	if (restriction === 'unclaimed') {
-		return i18nApi._(CLAIM_ACCOUNT_TO_START_DMS_DESCRIPTOR);
-	}
-	return i18nApi._(VERIFY_EMAIL_TO_START_DMS_DESCRIPTOR);
+	const gate = canPerform(user, TierGatedActions.DIRECT_MESSAGE_OPEN);
+	return gate.allowed ? null : gate;
 }
 
 export const CreateDMRestrictionSlate: React.FC<
 	{restriction: CreateDmRestriction; fullHeight?: boolean} & React.HTMLAttributes<HTMLDivElement>
-> = ({restriction, fullHeight = true, ...props}) => {
-	const {i18n: lingui} = useLingui();
-	const isUnclaimed = restriction === 'unclaimed';
-	return (
-		<div data-flx="channel.create-dm-modal-utils.create-dm-restriction-slate.div" {...props}>
-			<StatusSlate
-				Icon={isUnclaimed ? WarningCircleIcon : EnvelopeSimpleIcon}
-				title={lingui._(isUnclaimed ? CLAIM_YOUR_ACCOUNT_DESCRIPTOR : VERIFY_YOUR_EMAIL_DESCRIPTOR)}
-				description={getCreateDMRestrictionMessage(lingui, restriction)}
-				actions={[
-					{
-						text: lingui._(isUnclaimed ? CLAIM_ACCOUNT_DESCRIPTOR : VERIFY_EMAIL_DESCRIPTOR),
-						onClick: () => {
-							if (isUnclaimed) {
-								openClaimAccountModal({force: true});
-								return;
-							}
-							ModalCommands.push(
-								modal(() => (
-									<UserSettingsModal
-										initialTab="account_security"
-										data-flx="channel.create-dm-modal-utils.restriction-slate.user-settings-modal"
-									/>
-								)),
-							);
-						},
-						variant: 'primary',
-					},
-				]}
-				fullHeight={fullHeight}
-				data-flx="channel.create-dm-modal-utils.create-dm-restriction-slate.status-slate"
-			/>
-		</div>
-	);
-};
+> = ({restriction, fullHeight = true, ...props}) => (
+	<div data-flx="channel.create-dm-modal-utils.create-dm-restriction-slate.div" {...props}>
+		<AccountGateSlate
+			gate={restriction}
+			fullHeight={fullHeight}
+			data-flx="channel.create-dm-modal-utils.create-dm-restriction-slate.account-gate-slate"
+		/>
+	</div>
+);
 
 export function useCreateDMModalLogic(
 	_props: CreateDMModalProps = {},
@@ -220,14 +164,17 @@ export function useCreateDMModalLogic(
 	const createChannel = useCallback(
 		async (userIds: Array<string>) => {
 			if (restriction) return;
+			if (userIds.length !== 1 && blockIfAccountLimited()) return;
 			setIsCreating(true);
 			try {
-				const channel =
-					userIds.length === 0
-						? await PrivateChannelCommands.createGroupDM([])
-						: userIds.length === 1
-							? await PrivateChannelCommands.create(userIds[0])
-							: await PrivateChannelCommands.createGroupDM(userIds);
+				let channel: Awaited<ReturnType<typeof PrivateChannelCommands.create>>;
+				if (userIds.length === 0) {
+					channel = await PrivateChannelCommands.createGroupDM([]);
+				} else if (userIds.length === 1) {
+					channel = await PrivateChannelCommands.create(userIds[0]);
+				} else {
+					channel = await PrivateChannelCommands.createGroupDM(userIds);
+				}
 				ModalCommands.popWithKey(UNADDABLE_RECIPIENTS_MODAL_KEY);
 				ModalCommands.popWithKey(DUPLICATE_GROUP_MODAL_KEY);
 				if (autoCloseOnCreate) {

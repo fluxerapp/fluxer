@@ -1,0 +1,134 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-top: 1rem;
+}
+
+.label {
+	margin: 0;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.description {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.body {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.preview,
+.emptyPreview {
+	display: flex;
+	box-sizing: border-box;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 4rem;
+	height: 4rem;
+	padding: 0.75rem;
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary);
+	color: var(--text-primary-muted);
+}
+
+.preview {
+	border: 0.0625rem solid var(--background-header-secondary);
+	cursor: pointer;
+}
+
+.preview:hover:not(:disabled) {
+	background-color: var(--background-modifier-hover);
+}
+
+.preview:disabled {
+	cursor: default;
+}
+
+.emptyPreview {
+	border: 0.0625rem dashed var(--background-modifier-accent);
+	cursor: pointer;
+}
+
+.emptyPreview > svg {
+	pointer-events: none;
+}
+
+.emptyPreview:hover:not(:disabled),
+.previewDragging {
+	border-color: var(--brand-primary);
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.emptyPreview:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.controls {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.buttons {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.hint {
+	margin: 0;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+}
+
+.usagePreview {
+	display: grid;
+	margin-top: 0.5rem;
+	overflow: hidden;
+	border-radius: 0.5rem;
+	border: 0.0625rem solid var(--background-header-secondary);
+}
+
+.usagePreviewSurface {
+	--message-timestamp-color: var(--text-primary-muted);
+	padding: 1rem;
+	background-color: var(--background-primary);
+	color: var(--text-primary);
+}
+
+.error {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: color-mix(in srgb, var(--status-danger) 78%, var(--text-primary) 22%);
+}
+
+.liveRegion {
+	position: absolute;
+	width: 0.0625rem;
+	height: 0.0625rem;
+	margin: -0.0625rem;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

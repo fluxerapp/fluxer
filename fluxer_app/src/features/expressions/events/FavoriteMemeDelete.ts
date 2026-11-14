@@ -3,7 +3,7 @@
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 
-interface FavoriteMemeDeletePayload {
+export interface FavoriteMemeDeletePayload {
 	id: string;
 }
 

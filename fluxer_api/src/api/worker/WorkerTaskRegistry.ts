@@ -1,90 +1,195 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import applicationProcessDeletion from '@app/api/worker/tasks/ApplicationProcessDeletion';
+import bulkAddGuildMembers from '@app/api/worker/tasks/admin_bulk/BulkAddGuildMembers';
+import bulkBanFileShas from '@app/api/worker/tasks/admin_bulk/BulkBanFileShas';
+import bulkDeleteMessagesForUsers from '@app/api/worker/tasks/admin_bulk/BulkDeleteMessagesForUsers';
+import bulkScheduleUserDeletion from '@app/api/worker/tasks/admin_bulk/BulkScheduleUserDeletion';
+import bulkUpdateGuildFeatures from '@app/api/worker/tasks/admin_bulk/BulkUpdateGuildFeatures';
+import bulkUpdateUserFlags from '@app/api/worker/tasks/admin_bulk/BulkUpdateUserFlags';
+import backfillDeletedUsers from '@app/api/worker/tasks/BackfillDeletedUsers';
+import backfillFavoriteMemeNsfw from '@app/api/worker/tasks/BackfillFavoriteMemeNsfw';
+import backfillHiddenProfileBadges from '@app/api/worker/tasks/BackfillHiddenProfileBadges';
+import backfillPasskeyTrait from '@app/api/worker/tasks/BackfillPasskeyTrait';
+import backfillUserAclIndex from '@app/api/worker/tasks/BackfillUserAclIndex';
+import batchGuildAuditLogMessageDeletes from '@app/api/worker/tasks/BatchGuildAuditLogMessageDeletes';
+import bulkDeleteSelfMessagesImmediate from '@app/api/worker/tasks/BulkDeleteSelfMessagesImmediate';
+import bulkDeleteUserMessages from '@app/api/worker/tasks/BulkDeleteUserMessages';
+import clearAuthenticatedReporterEmails from '@app/api/worker/tasks/ClearAuthenticatedReporterEmails';
+import closePaymentDisputeAccounts from '@app/api/worker/tasks/ClosePaymentDisputeAccounts';
+import countBulkMessageDeletionTargets from '@app/api/worker/tasks/CountBulkMessageDeletionTargets';
+import crosspostMessage from '@app/api/worker/tasks/CrosspostMessage';
+import crosspostMessageChunk from '@app/api/worker/tasks/CrosspostMessageChunk';
+import deleteUserMessagesInGuildByTime from '@app/api/worker/tasks/DeleteUserMessagesInGuildByTime';
+import drainActivitySpool from '@app/api/worker/tasks/DrainActivitySpool';
+import endExpiredPlannedJoinWaves from '@app/api/worker/tasks/EndExpiredPlannedJoinWaves';
+import expireAttachments from '@app/api/worker/tasks/ExpireAttachments';
+import expireReportSnapshots from '@app/api/worker/tasks/ExpireReportSnapshots';
+import expireStaleJobs from '@app/api/worker/tasks/ExpireStaleJobs';
+import extractEmbeds from '@app/api/worker/tasks/ExtractEmbeds';
+import flushUserActivityBuffer from '@app/api/worker/tasks/FlushUserActivityBuffer';
+import guildProcessDeletion from '@app/api/worker/tasks/GuildProcessDeletion';
+import {
+	endGuildVisitsForCodeTask,
+	endUnassignedGuildVisitsTask,
+	pruneGuildVisitsTask,
+} from '@app/api/worker/tasks/GuildVisitTasks';
+import handleMentionChunk from '@app/api/worker/tasks/HandleMentionChunk';
+import handleMentions from '@app/api/worker/tasks/HandleMentions';
+import harvestGuildData from '@app/api/worker/tasks/HarvestGuildData';
+import harvestUserData from '@app/api/worker/tasks/HarvestUserData';
+import importLegacyBillingDocuments from '@app/api/worker/tasks/ImportLegacyBillingDocuments';
+import indexChannelMessages from '@app/api/worker/tasks/IndexChannelMessages';
+import indexGuildMembers from '@app/api/worker/tasks/IndexGuildMembers';
+import joinSingleCommunityMembers from '@app/api/worker/tasks/JoinSingleCommunityMembers';
+import liftExpiredGuildInvitePauses from '@app/api/worker/tasks/LiftExpiredGuildInvitePauses';
+import messageShred from '@app/api/worker/tasks/MessageShred';
+import notifyRegistrationApprovers from '@app/api/worker/tasks/NotifyRegistrationApprovers';
+import operatorPassConsentRetention from '@app/api/worker/tasks/OperatorPassConsentRetention';
+import operatorPassFulfilmentSweep from '@app/api/worker/tasks/OperatorPassFulfilmentSweep';
+import operatorPassLabsDelivery from '@app/api/worker/tasks/OperatorPassLabsDelivery';
+import operatorPassLabsGreeting from '@app/api/worker/tasks/OperatorPassLabsGreeting';
+import operatorPassLabsVisionaryRoleSync from '@app/api/worker/tasks/OperatorPassLabsVisionaryRoleSync';
+import operatorPassOfferCompletion from '@app/api/worker/tasks/OperatorPassOfferCompletion';
+import operatorPassRemovalExpiry from '@app/api/worker/tasks/OperatorPassRemovalExpiry';
+import operatorPassWaitlistCleanup from '@app/api/worker/tasks/OperatorPassWaitlistCleanup';
+import operatorPassWallRetention from '@app/api/worker/tasks/OperatorPassWallRetention';
+import pollAppStoreNotificationHistory from '@app/api/worker/tasks/PollAppStoreNotificationHistory';
+import pollGooglePlayVoidedPurchases from '@app/api/worker/tasks/PollGooglePlayVoidedPurchases';
+import processAppStoreNotification from '@app/api/worker/tasks/ProcessAppStoreNotification';
+import processAssetDeletionQueue from '@app/api/worker/tasks/ProcessAssetDeletionQueue';
+import processCachePurgeQueue from '@app/api/worker/tasks/ProcessCachePurgeQueue';
+import processExpiredPremiumSweep from '@app/api/worker/tasks/ProcessExpiredPremiumSweep';
+import processGooglePlayNotification from '@app/api/worker/tasks/ProcessGooglePlayNotification';
+import processInactivityDeletions from '@app/api/worker/tasks/ProcessInactivityDeletions';
+import processPendingBulkMessageDeletions from '@app/api/worker/tasks/ProcessPendingBulkMessageDeletions';
+import processPremiumStateReconciliationQueue from '@app/api/worker/tasks/ProcessPremiumStateReconciliationQueue';
+import processStorePurchaseRefreshQueue from '@app/api/worker/tasks/ProcessStorePurchaseRefreshQueue';
+import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
+import prunePostgresKvTtl from '@app/api/worker/tasks/PrunePostgresKvTtl';
+import reconcileAttachmentDecay from '@app/api/worker/tasks/ReconcileAttachmentDecay';
+import reconcileUserPayments from '@app/api/worker/tasks/ReconcileUserPayments';
+import recordOperatorPassDelivery from '@app/api/worker/tasks/RecordOperatorPassDelivery';
+import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
+import refreshStorePurchase from '@app/api/worker/tasks/RefreshStorePurchase';
+import removeChannelFollowers from '@app/api/worker/tasks/RemoveChannelFollowers';
+import restatePlannedJoinWaves from '@app/api/worker/tasks/RestatePlannedJoinWaves';
+import scanBillingNotices from '@app/api/worker/tasks/ScanBillingNotices';
+import seedThreadPermissions from '@app/api/worker/tasks/SeedThreadPermissions';
+import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
+import sendOperatorPassWithdrawalReceipt from '@app/api/worker/tasks/SendOperatorPassWithdrawalReceipt';
+import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
+import sweepFilesystemStorage from '@app/api/worker/tasks/SweepFilesystemStorage';
+import sweepVoiceParticipants from '@app/api/worker/tasks/SweepVoiceParticipants';
+import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
+import syncCrosspostedMessage from '@app/api/worker/tasks/SyncCrosspostedMessage';
+import syncDiscoveryIndex from '@app/api/worker/tasks/SyncDiscoveryIndex';
+import syncFileShaBlocklists from '@app/api/worker/tasks/SyncFileShaBlocklists';
+import syncStripeCustomerEmail from '@app/api/worker/tasks/SyncStripeCustomerEmail';
+import syncUrlBlocklists from '@app/api/worker/tasks/SyncUrlBlocklists';
+import {
+	archiveInactiveThreads,
+	deleteChannelThreads,
+	removeThreadMembershipsForGuildMember,
+	repairThreadIndexes,
+} from '@app/api/worker/tasks/ThreadMaintenanceTasks';
+import {backfillThreadSearch, syncThreadSearchDocument} from '@app/api/worker/tasks/ThreadSearchTasks';
+import userProcessPendingDeletion from '@app/api/worker/tasks/UserProcessPendingDeletion';
+import userProcessPendingDeletions from '@app/api/worker/tasks/UserProcessPendingDeletions';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import applicationProcessDeletion from './tasks/ApplicationProcessDeletion';
-import bulkAddGuildMembers from './tasks/admin_bulk/BulkAddGuildMembers';
-import bulkBanFileShas from './tasks/admin_bulk/BulkBanFileShas';
-import bulkDeleteMessagesForUsers from './tasks/admin_bulk/BulkDeleteMessagesForUsers';
-import bulkScheduleUserDeletion from './tasks/admin_bulk/BulkScheduleUserDeletion';
-import bulkUpdateGuildFeatures from './tasks/admin_bulk/BulkUpdateGuildFeatures';
-import bulkUpdateSuspiciousActivityFlags from './tasks/admin_bulk/BulkUpdateSuspiciousActivityFlags';
-import bulkUpdateUserFlags from './tasks/admin_bulk/BulkUpdateUserFlags';
-import batchGuildAuditLogMessageDeletes from './tasks/BatchGuildAuditLogMessageDeletes';
-import bulkDeleteSelfMessagesImmediate from './tasks/BulkDeleteSelfMessagesImmediate';
-import bulkDeleteUserMessages from './tasks/BulkDeleteUserMessages';
-import bulkDeleteUserMessagesScoped from './tasks/BulkDeleteUserMessagesScoped';
-import deleteUserMessagesInGuildByTime from './tasks/DeleteUserMessagesInGuildByTime';
-import expireAttachments from './tasks/ExpireAttachments';
-import extractEmbeds from './tasks/ExtractEmbeds';
-import finalizeNcmecAttachmentReport from './tasks/FinalizeNcmecAttachmentReport';
-import flushUserActivityBuffer from './tasks/FlushUserActivityBuffer';
-import handleMentionChunk from './tasks/HandleMentionChunk';
-import handleMentions from './tasks/HandleMentions';
-import harvestGuildData from './tasks/HarvestGuildData';
-import harvestUserData from './tasks/HarvestUserData';
-import indexChannelMessages from './tasks/IndexChannelMessages';
-import indexGuildMembers from './tasks/IndexGuildMembers';
-import messageShred from './tasks/MessageShred';
-import processAssetDeletionQueue from './tasks/ProcessAssetDeletionQueue';
-import processBunnyPurgeQueue from './tasks/ProcessBunnyPurgeQueue';
-import processExpiredPremiumSweep from './tasks/ProcessExpiredPremiumSweep';
-import processInactivityDeletions from './tasks/ProcessInactivityDeletions';
-import processPendingBulkMessageDeletions from './tasks/ProcessPendingBulkMessageDeletions';
-import processPremiumStateReconciliationQueue from './tasks/ProcessPremiumStateReconciliationQueue';
-import processStripeWebhook from './tasks/ProcessStripeWebhook';
-import prunePostgresKvTtl from './tasks/PrunePostgresKvTtl';
-import reconcileUserPayments from './tasks/ReconcileUserPayments';
-import refreshSearchIndex from './tasks/RefreshSearchIndex';
-import revalidateUserConnections from './tasks/RevalidateUserConnections';
-import {sendSystemDm} from './tasks/SendSystemDm';
-import syncDiscoveryIndex from './tasks/SyncDiscoveryIndex';
-import syncDisposableEmailDomains from './tasks/SyncDisposableEmailDomains';
-import syncFileShaBlocklists from './tasks/SyncFileShaBlocklists';
-import syncUrlBlocklists from './tasks/SyncUrlBlocklists';
-import userProcessPendingDeletion from './tasks/UserProcessPendingDeletion';
-import userProcessPendingDeletions from './tasks/UserProcessPendingDeletions';
-import type {WorkerTaskName} from './WorkerLaneConfig';
 
 export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	applicationProcessDeletion,
+	archiveInactiveThreads,
+	deleteChannelThreads,
+	removeThreadMembershipsForGuildMember,
+	repairThreadIndexes,
+	syncThreadSearchDocument,
+	backfillThreadSearch,
+	backfillDeletedUsers,
+	backfillFavoriteMemeNsfw,
+	backfillHiddenProfileBadges,
+	backfillPasskeyTrait,
+	backfillUserAclIndex,
 	batchGuildAuditLogMessageDeletes,
 	bulkAddGuildMembers: bulkAddGuildMembers,
 	bulkBanFileShas: bulkBanFileShas,
 	bulkDeleteMessagesForUsers: bulkDeleteMessagesForUsers,
 	bulkDeleteSelfMessagesImmediate,
 	bulkDeleteUserMessages,
-	bulkDeleteUserMessagesScoped,
 	bulkScheduleUserDeletion: bulkScheduleUserDeletion,
 	bulkUpdateGuildFeatures: bulkUpdateGuildFeatures,
-	bulkUpdateSuspiciousActivityFlags: bulkUpdateSuspiciousActivityFlags,
 	bulkUpdateUserFlags: bulkUpdateUserFlags,
+	clearAuthenticatedReporterEmails,
+	closePaymentDisputeAccounts,
+	countBulkMessageDeletionTargets,
+	crosspostMessage,
+	crosspostMessageChunk,
 	deleteUserMessagesInGuildByTime,
+	drainActivitySpool,
+	endGuildVisitsForCode: endGuildVisitsForCodeTask,
+	endUnassignedGuildVisits: endUnassignedGuildVisitsTask,
 	expireAttachments,
+	expireReportSnapshots,
+	expireStaleJobs,
 	extractEmbeds,
-	finalizeNcmecAttachmentReport,
+	guildProcessDeletion,
 	handleMentions,
 	handleMentionChunk,
 	harvestGuildData,
 	harvestUserData,
 	indexChannelMessages,
 	indexGuildMembers,
+	joinSingleCommunityMembers,
+	liftExpiredGuildInvitePauses,
+	endExpiredPlannedJoinWaves,
+	restatePlannedJoinWaves,
 	messageShred,
+	notifyRegistrationApprovers,
+	operatorPassOfferCompletion,
+	operatorPassRemovalExpiry,
+	operatorPassWallRetention,
+	operatorPassConsentRetention,
+	operatorPassFulfilmentSweep,
+	operatorPassLabsDelivery,
+	operatorPassLabsGreeting,
+	operatorPassLabsVisionaryRoleSync,
+	operatorPassWaitlistCleanup,
 	processAssetDeletionQueue,
-	processBunnyPurgeQueue,
+	processCachePurgeQueue,
 	processStripeWebhook,
 	processExpiredPremiumSweep,
 	processInactivityDeletions,
 	processPendingBulkMessageDeletions,
 	processPremiumStateReconciliationQueue,
+	reconcileAttachmentDecay,
 	reconcileUserPayments,
+	processAppStoreNotification,
+	processGooglePlayNotification,
+	refreshStorePurchase,
+	processStorePurchaseRefreshQueue,
+	pollGooglePlayVoidedPurchases,
+	pollAppStoreNotificationHistory,
 	prunePostgresKvTtl,
+	sweepFilesystemStorage,
+	sweepVoiceParticipants,
+	pruneGuildVisits: pruneGuildVisitsTask,
 	refreshSearchIndex,
-	revalidateUserConnections,
+	seedThreadPermissions,
+	scanBillingNotices,
+	importLegacyBillingDocuments,
+	sendBillingEmail,
+	removeChannelFollowers,
 	sendSystemDm,
+	sendOperatorPassWithdrawalReceipt,
+	recordOperatorPassDelivery,
+	syncStripeCustomerEmail,
 	syncFileShaBlocklists,
 	syncUrlBlocklists,
 	syncDiscoveryIndex,
-	syncDisposableEmailDomains,
+	syncCrosspostCopies,
+	syncCrosspostedMessage,
 	flushUserActivityBuffer,
 	userProcessPendingDeletion,
 	userProcessPendingDeletions,

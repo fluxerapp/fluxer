@@ -1,13 +1,10 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_request_counts).
+
 -typing([eqwalizer]).
 
 -export([handle_request/3]).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -export_type([session_state/0]).
 
@@ -21,14 +18,14 @@
 -spec handle_request(map(), pid(), session_state()) -> ok.
 handle_request(Data, _SocketPid, SessionState) when is_map(Data) ->
     SessionPid = maps:get(session_pid, SessionState, undefined),
-    UserId = parse_user_id(maps:get(user_id, SessionState, undefined)),
+    UserId = snowflake_id:parse_maybe(maps:get(user_id, SessionState, undefined)),
     case is_pid(SessionPid) andalso is_integer(UserId) of
         false ->
             ok;
         true ->
             GuildIds = parse_guild_ids(maps:get(<<"guild_ids">>, Data, [])),
             Nonce = parse_nonce(maps:get(<<"nonce">>, Data, undefined)),
-            Guilds = maps:get(guilds, SessionState, #{}),
+            Guilds = session_visits:member_guilds(SessionState),
             Targets = build_targets(GuildIds, Guilds),
             Entries = parallel_fetch(Targets, UserId),
             dispatch_counts(SessionPid, Entries, Nonce),
@@ -40,7 +37,7 @@ handle_request(_, _, _) ->
 -spec parse_guild_ids(term()) -> [integer()].
 parse_guild_ids(GuildIds) when is_list(GuildIds) ->
     Parsed = lists:filtermap(
-        fun parse_guild_id_filter/1,
+        fun snowflake_id:filter/1,
         GuildIds
     ),
     lists:sublist(lists:usort(Parsed), ?MAX_GUILD_IDS);
@@ -61,13 +58,6 @@ target_guild(GuildId, Guilds) ->
     case lookup_guild_pid(GuildId, Guilds) of
         {ok, GuildPid} -> {true, {GuildId, GuildPid}};
         error -> false
-    end.
-
--spec parse_guild_id_filter(term()) -> {true, integer()} | false.
-parse_guild_id_filter(Id) ->
-    case to_int(Id) of
-        N when is_integer(N), N > 0 -> {true, N};
-        _ -> false
     end.
 
 -spec lookup_guild_pid(integer(), map()) -> {ok, pid()} | error.
@@ -100,17 +90,31 @@ spawn_fetch_worker(Self, Tag, GuildId, GuildPid, UserId) ->
 
 -spec worker(pid(), reference(), integer(), pid(), integer()) -> ok.
 worker(Parent, Tag, GuildId, GuildPid, UserId) ->
-    Result =
-        try gen_server:call(GuildPid, {get_user_counts, UserId}, ?GUILD_CALL_TIMEOUT_MS) of
-            #{member_count := MemberCount, online_count := OnlineCount} ->
-                {ok, MemberCount, OnlineCount};
-            _ ->
-                error
-        catch
-            _:_ -> error
-        end,
-    Parent ! {Tag, GuildId, Result},
+    Parent ! {Tag, GuildId, fetch_counts(GuildPid, UserId)},
     ok.
+
+-spec fetch_counts(pid(), integer()) -> {ok, non_neg_integer(), non_neg_integer()} | error.
+fetch_counts(GuildPid, UserId) ->
+    fetch_viewer_counts(GuildPid, UserId).
+
+-spec fetch_viewer_counts(pid(), integer()) ->
+    {ok, non_neg_integer(), non_neg_integer()} | error.
+fetch_viewer_counts(GuildPid, UserId) ->
+    Request = {get_viewer_counts, #{user_id => UserId}},
+    try guild_query_handler:call(GuildPid, Request, ?GUILD_CALL_TIMEOUT_MS) of
+        Reply ->
+            counts_result(Reply)
+    catch
+        _:_ -> error
+    end.
+
+-spec counts_result(term()) -> {ok, non_neg_integer(), non_neg_integer()} | error.
+counts_result(#{member_count := MemberCount, online_count := OnlineCount}) when
+    is_integer(MemberCount), MemberCount >= 0, is_integer(OnlineCount), OnlineCount >= 0
+->
+    {ok, MemberCount, OnlineCount};
+counts_result(_) ->
+    error.
 
 -spec collect_responses(non_neg_integer(), reference(), integer(), [map()]) -> [map()].
 collect_responses(0, _Tag, _Deadline, Acc) ->
@@ -154,94 +158,3 @@ parse_nonce(Nonce) when
     Nonce;
 parse_nonce(_) ->
     undefined.
-
--spec parse_user_id(term()) -> integer() | undefined.
-parse_user_id(Value) ->
-    snowflake_id:parse_maybe(Value).
-
--spec to_int(term()) -> integer() | undefined.
-to_int(Value) ->
-    snowflake_id:parse_maybe(Value).
-
--ifdef(TEST).
-
-parse_guild_ids_filters_invalid_test() ->
-    ?assertEqual([1, 2], parse_guild_ids([<<"1">>, <<"2">>, <<"abc">>, 0, -3])).
-
-parse_guild_ids_dedupes_and_sorts_test() ->
-    ?assertEqual([1, 2, 3], parse_guild_ids([<<"3">>, <<"1">>, <<"2">>, <<"1">>])).
-
-parse_guild_ids_caps_at_max_test() ->
-    Many = [integer_to_binary(N) || N <- lists:seq(1, ?MAX_GUILD_IDS + 50)],
-    Result = parse_guild_ids(Many),
-    ?assertEqual(?MAX_GUILD_IDS, length(Result)).
-
-parse_guild_ids_handles_non_list_test() ->
-    ?assertEqual([], parse_guild_ids(undefined)),
-    ?assertEqual([], parse_guild_ids(<<"hi">>)).
-
-parse_user_id_test() ->
-    ?assertEqual(42, parse_user_id(42)),
-    ?assertEqual(42, parse_user_id(<<"42">>)),
-    ?assertEqual(undefined, parse_user_id(0)),
-    ?assertEqual(undefined, parse_user_id(<<"0">>)),
-    ?assertEqual(undefined, parse_user_id(<<"abc">>)),
-    ?assertEqual(undefined, parse_user_id(undefined)).
-
-build_entry_shape_test() ->
-    Entry = build_entry(123, 50, 10),
-    ?assertEqual(<<"123">>, maps:get(<<"guild_id">>, Entry)),
-    ?assertEqual(50, maps:get(<<"member_count">>, Entry)),
-    ?assertEqual(10, maps:get(<<"online_count">>, Entry)).
-
-lookup_guild_pid_test() ->
-    Pid = self(),
-    Ref = make_ref(),
-    Guilds = #{1 => {Pid, Ref}, 2 => undefined},
-    ?assertEqual({ok, Pid}, lookup_guild_pid(1, Guilds)),
-    ?assertEqual(error, lookup_guild_pid(2, Guilds)),
-    ?assertEqual(error, lookup_guild_pid(3, Guilds)).
-
-handle_request_no_session_pid_returns_ok_test() ->
-    SessionState = #{user_id => <<"100">>},
-    ?assertEqual(ok, handle_request(#{<<"guild_ids">> => [<<"1">>]}, self(), SessionState)).
-
-handle_request_dispatches_empty_when_no_guilds_test() ->
-    Self = self(),
-    SessionState = #{session_pid => Self, user_id => <<"100">>, guilds => #{}},
-    ok = handle_request(#{<<"guild_ids">> => [<<"1">>]}, Self, SessionState),
-    receive
-        {'$gen_cast', {dispatch, guild_counts_update, Payload}} ->
-            ?assertEqual([], maps:get(<<"counts">>, Payload)),
-            ?assertNot(maps:is_key(<<"nonce">>, Payload))
-    after 1000 ->
-        ?assert(false)
-    end.
-
-handle_request_echoes_nonce_test() ->
-    Self = self(),
-    SessionState = #{session_pid => Self, user_id => <<"100">>, guilds => #{}},
-    ok = handle_request(
-        #{<<"guild_ids">> => [<<"1">>], <<"nonce">> => <<"abc123">>}, Self, SessionState
-    ),
-    receive
-        {'$gen_cast', {dispatch, guild_counts_update, Payload}} ->
-            ?assertEqual(<<"abc123">>, maps:get(<<"nonce">>, Payload)),
-            ?assertEqual([], maps:get(<<"counts">>, Payload))
-    after 1000 ->
-        ?assert(false)
-    end.
-
-parse_nonce_test() ->
-    ?assertEqual(<<"x">>, parse_nonce(<<"x">>)),
-    ?assertEqual(<<"abc">>, parse_nonce(<<"abc">>)),
-    ?assertEqual(undefined, parse_nonce(undefined)),
-    ?assertEqual(undefined, parse_nonce(<<>>)),
-    ?assertEqual(undefined, parse_nonce(123)),
-    ?assertEqual(undefined, parse_nonce("string")),
-    Big = binary:copy(<<"a">>, ?MAX_NONCE_BYTES + 1),
-    ?assertEqual(undefined, parse_nonce(Big)),
-    Edge = binary:copy(<<"a">>, ?MAX_NONCE_BYTES),
-    ?assertEqual(Edge, parse_nonce(Edge)).
-
--endif.

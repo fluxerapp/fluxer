@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-module.exports = {
+import {formatter} from '@lingui/format-po';
+
+export default {
 	locales: [
 		'ar',
+		'be',
 		'bg',
+		'bn',
+		'ca',
 		'cs',
 		'da',
 		'de',
@@ -13,6 +18,7 @@ module.exports = {
 		'es-ES',
 		'es-419',
 		'fi',
+		'fil',
 		'fr',
 		'he',
 		'hi',
@@ -23,14 +29,20 @@ module.exports = {
 		'ja',
 		'ko',
 		'lt',
+		'lv',
 		'nl',
 		'no',
 		'pl',
 		'pt-BR',
+		'pt-PT',
 		'ro',
 		'ru',
+		'sk',
+		'sl',
+		'sq',
 		'sv-SE',
 		'th',
+		'tok',
 		'tr',
 		'uk',
 		'vi',
@@ -38,6 +50,7 @@ module.exports = {
 		'zh-TW',
 	],
 	sourceLocale: 'en-US',
+	fallbackLocales: {default: 'en-US'},
 	catalogs: [
 		{
 			path: 'src/features/i18n/locales/{locale}/messages',
@@ -45,6 +58,6 @@ module.exports = {
 			exclude: ['**/node_modules/**', '**/*.d.ts'],
 		},
 	],
-	format: 'po',
+	format: formatter({lineNumbers: false}),
 	compileNamespace: 'es',
 };

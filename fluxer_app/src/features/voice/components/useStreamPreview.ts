@@ -17,7 +17,7 @@ const PREVIEW_CACHE_MAX = 24;
 
 type StreamPreviewTimerHandle = number | NodeJS.Timeout;
 
-export type StreamPreviewStatus = 'inactive' | 'idle' | 'loading' | 'ready' | 'missing' | 'error';
+type StreamPreviewStatus = 'inactive' | 'idle' | 'loading' | 'ready' | 'missing' | 'error';
 
 export interface StreamPreviewState {
 	previewUrl: string | null;

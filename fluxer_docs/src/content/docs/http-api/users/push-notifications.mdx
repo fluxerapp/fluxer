@@ -1,0 +1,153 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Push notifications
+description: How to register a device for push notifications and decrypt the notifications it gets.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A Web Push registration gets each notification as an [RFC 8291](https://datatracker.ietf.org/doc/html/rfc8291) encrypted record. Your client generates a P-256 key pair and an auth secret, registers the public key and decrypts each record with the private key. These routes need a user session token.
+
+## Registration formats
+
+A registration is Web Push when `token` is an endpoint URL sent with both keys, and raw when `token` is a vendor device token sent with no keys.
+
+| Form | `token` | Keys |
+| --- | --- | --- |
+| Web Push | A publicly routable endpoint URL | `encryption_key` and `auth_secret` |
+| Raw | A vendor device token | Neither |
+
+`platform` is one of these values.
+
+| Platform | Transport |
+| --- | --- |
+| `android_fcm` | Firebase Cloud Messaging |
+| `ios_apns` | Apple Push Notification service |
+| `ios_apns_voip` | Apple PushKit, for incoming calls on iOS |
+| `android_unified_push` | UnifiedPush |
+
+`android_unified_push` and `ios_apns_voip` only accept Web Push. An iOS device that receives calls registers both `ios_apns` and `ios_apns_voip`, each with its own key pair.
+
+## Device registration object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| device_id | string | The registration ID, 32 lowercase hexadecimal characters |
+
+Registering again with the same `platform`, `app_id`, `provider_environment` and `token` replaces the registration and returns the same `device_id`.
+
+## Register mobile push device
+
+<RouteHeader method="POST" path="/v1/users/@me/mobile-devices" />
+
+Stores a push registration and returns its [device registration](#device-registration-object) object. Web Push endpoints must be `https` URLs on public hosts.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| platform | string | The [platform](#registration-formats) of the device |
+| token | string | The endpoint URL, or the vendor token on a raw registration (1-4096 characters) |
+| encryption_key? | string | The base64url P-256 public key, Web Push only (1-1024 characters) |
+| auth_secret? | string | The base64url auth secret, Web Push only (1-1024 characters) |
+| app_id? | string | The client build, such as `stable`, `beta` or `canary` (default `stable`) |
+| provider_environment? | string | `production` or `development`, used by APNs only |
+| user_agent? | string | A user agent string describing the device (1-1024 characters) |
+
+When `provider_environment` is omitted, it defaults to `production` on `ios_apns` and `ios_apns_voip` and stays empty on other platforms. To get thread and forum [new post](/http-api/forums/#new-post-notifications) notifications on this device, send the [`channel_threads` client capability](/http-api/threads/#client-capability) with the request.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [device registration](#device-registration-object) object | The registration was stored |
+| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` when the body matches neither form |
+| 400 | [error response](/http-api/#error-response) | `URL_NOT_PUBLICLY_ROUTABLE` on `token` when the endpoint is a private or reserved address |
+
+The rate limit is 20 requests per minute, on the `user:push:subscribe` bucket.
+
+## Unregister mobile push device
+
+<RouteHeader method="POST" path="/v1/users/@me/mobile-devices/unregister" />
+
+Removes the registration that matches `platform`, `token`, `app_id` and `provider_environment`, and returns 200 even when none matches.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| platform | string | The [platform](#registration-formats) sent at registration |
+| token | string | The token sent at registration (1-4096 characters) |
+| app_id? | string | The client build sent at registration (default `stable`) |
+| provider_environment? | string | The environment sent at registration |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Always `true` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The registration was removed, or there was none |
+
+The rate limit is 40 requests per minute, on the `user:push:unsubscribe` bucket.
+
+## Handling an incoming push
+
+Fluxer posts one `aes128gcm` record to a Web Push endpoint for each notification. A raw registration gets an unencrypted APNs or FCM message instead. A record has at most 2713 bytes of JSON. When a notification is too large, Fluxer leaves out media and icons and shortens the body text, and your client has to handle those fields being missing.
+
+Fluxer sets these Web Push headers on each record.
+
+| Header | Value |
+| --- | --- |
+| TTL | `86400` on a notification and a clear, and `0` on a call ring |
+| Urgency | `high` on a notification and a call ring, and `low` on a clear |
+
+Each payload is one of these kinds.
+
+| Kind | How to recognize it | What to do |
+| --- | --- | --- |
+| Notification | Any other payload | Show it, using `title`, `body`, `icon` and `image_url`, and open `data.url` when tapped |
+| Clear | Top-level `type` is `notification_clear` and `action` is `clear_channel` | Dismiss what you showed for `data.channel_id` |
+| Call ring | Top-level `type` is `call_ring` | See [Call ring](#call-ring) |
+
+When an endpoint returns 404 or 410, Fluxer removes the registration. It retries a 429 or 5xx response and keeps the registration.
+
+### Call ring
+
+Only `ios_apns_voip` registrations and Web Push `android_fcm` registrations get call rings, and an `ios_apns_voip` registration gets nothing else. A call ring payload has these fields under `data`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | Always `call_ring` |
+| channel_id | string | The private channel the call is in |
+| message_id | string | The call message, which identifies the call |
+| target_user_id | string | The account being rung |
+| started_at_ms | integer | When the ring started, in milliseconds since the Unix epoch |
+| expires_at_ms | integer | When the ring ends, in milliseconds since the Unix epoch |
+| caller_id? | string | The account placing the call |
+| caller_name? | string | The name to show for the caller |
+| caller_avatar_url? | string | An image URL for the caller |
+
+`caller_id` and `caller_name` are sent together or not at all, and `caller_avatar_url` can be missing even when they are present. Ring until `expires_at_ms` even when they are missing. Fluxer sends no push when a call ends, and your client learns that from the Gateway connection.
+
+### Call rings on iOS
+
+iOS ends an app that gets a PushKit push without reporting a call to CallKit. Report a call for every PushKit push before you decrypt it, and end the call right away in any of these cases.
+
+| Case | Cause |
+| --- | --- |
+| The record does not decrypt | The registered keys no longer match your key pair |
+| `type` is not `call_ring` | The push is not a call ring |
+| The Gateway reports no live call for `channel_id` | The call ended before the ring arrived |
+
+Use `message_id` to build the CallKit call UUID, so every push for the same call maps to one CallKit call.
+
+### When decryption fails
+
+Discard the record and show nothing. Fluxer can't tell that decryption failed, and your client has to unregister and register again with its current keys.

@@ -1,29 +1,37 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {
-	type AssetKind,
-	formatAssetUploadExtensions,
-	getPolicy,
-	isExtensionAllowed,
-} from '@fluxer/constants/src/AssetFormatPolicy';
+import {setTimeout as delay} from 'node:timers/promises';
+import {Config} from '@app/api/Config';
+import {stripAnimationPrefix} from '@app/api/infrastructure/AssetEntitlementUtils';
+import {contentModerationService, type ModerationContext} from '@app/api/infrastructure/ContentModerationService';
+import type {IAssetDeletionQueue, QueuedAssetReference} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {IMediaService, MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
+import {decodeValidatedImage, resolveAssetSizeLimit} from '@app/api/infrastructure/ImageUploadValidation';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {bannedAvatarHashCache} from '@app/api/middleware/BannedAvatarHashCache';
+import type {User} from '@app/api/models/User';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {type AssetKind, getPolicy} from '@fluxer/constants/src/AssetFormatPolicy';
 import {AVATAR_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import {ms} from 'itty-time';
-import sharp from 'sharp';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import type {IAssetDeletionQueue, QueuedAssetReference} from './IAssetDeletionQueue';
-import type {IMediaService, MediaProxyMetadataResponse} from './IMediaService';
-import type {IStorageService} from './IStorageService';
-import {stripNonJpegImageMetadata} from './StorageObjectHelpers';
 
-type AssetType = 'avatar' | 'banner' | 'icon' | 'splash' | 'embed_splash' | 'branding';
-type EntityType = 'user' | 'guild' | 'guild_member' | 'instance';
+type AssetType =
+	| 'avatar'
+	| 'banner'
+	| 'icon'
+	| 'splash'
+	| 'embed_splash'
+	| 'branding'
+	| 'branding_backdrop'
+	| 'custom_badge'
+	| 'role_icon';
+type EntityType = 'user' | 'guild' | 'guild_member' | 'instance' | 'role';
 
 const ASSET_TYPE_TO_PREFIX: Record<AssetType, string> = {
 	avatar: 'avatars',
@@ -32,6 +40,21 @@ const ASSET_TYPE_TO_PREFIX: Record<AssetType, string> = {
 	splash: 'splashes',
 	embed_splash: 'embed-splashes',
 	branding: 'branding',
+	branding_backdrop: 'branding-backdrops',
+	custom_badge: 'custom-badges',
+	role_icon: 'role-icons',
+};
+
+const ASSET_TYPE_TO_MODERATION_SURFACE: Record<AssetType, ModerationContext['surface']> = {
+	avatar: 'avatar',
+	banner: 'banner',
+	icon: 'guild_icon',
+	splash: 'guild_splash',
+	embed_splash: 'guild_splash',
+	branding: 'app_asset',
+	branding_backdrop: 'app_asset',
+	custom_badge: 'app_asset',
+	role_icon: 'app_asset',
 };
 
 function normalizeContentType(contentType: string | null | undefined): string {
@@ -42,6 +65,19 @@ function isSvgMetadata(metadata: MediaProxyMetadataResponse): boolean {
 	const format = metadata.format.toLowerCase();
 	const contentType = normalizeContentType(metadata.content_type);
 	return format === 'svg' || contentType === 'image/svg+xml' || contentType === 'image/svg';
+}
+
+function requireDimensionsWithinPolicy(metadata: MediaProxyMetadataResponse, kind: AssetKind, errorPath: string): void {
+	const dims = getPolicy(kind).dims;
+	if (!dims) return;
+	const {width, height} = metadata;
+	const inRange = (value: number | null | undefined) => value != null && value >= dims.min && value <= dims.max;
+	if (!inRange(width) || !inRange(height)) {
+		throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_DIMENSIONS_OUT_OF_RANGE, {
+			min: dims.min,
+			max: dims.max,
+		});
+	}
 }
 
 export interface PreparedAssetUpload {
@@ -58,6 +94,7 @@ export interface PreparedAssetUpload {
 	format?: string | null;
 	contentType?: string | null;
 	previousReference: QueuedAssetReference | null;
+	newReference: QueuedAssetReference | null;
 	_uploaded: boolean;
 }
 
@@ -69,18 +106,13 @@ interface PrepareAssetUploadOptions {
 	previousHash: string | null;
 	base64Image: string | null;
 	errorPath: string;
-}
-
-interface CommitAssetChangeOptions {
-	prepared: PreparedAssetUpload;
-	deferDeletion?: boolean;
+	uploader?: User | null;
+	enforceDimensions?: boolean;
 }
 
 type LimitConfigSnapshotProvider = Pick<LimitConfigService, 'getConfigSnapshot'>;
 
 export class EntityAssetService {
-	private activeTimeouts: Set<NodeJS.Timeout> = new Set();
-
 	constructor(
 		private readonly storageService: IStorageService,
 		private readonly mediaService: IMediaService,
@@ -93,6 +125,8 @@ export class EntityAssetService {
 			case 'avatar':
 				return 'avatar';
 			case 'icon':
+			case 'branding':
+			case 'custom_badge':
 				return 'guild_icon';
 			case 'banner':
 				return 'banner';
@@ -100,16 +134,28 @@ export class EntityAssetService {
 				return 'splash';
 			case 'embed_splash':
 				return 'embed_splash';
-			case 'branding':
-				return 'guild_icon';
+			case 'branding_backdrop':
+				return 'sign_in_backdrop';
+			case 'role_icon':
+				return 'role_icon';
 		}
 	}
 
 	async prepareAssetUpload(options: PrepareAssetUploadOptions): Promise<PreparedAssetUpload> {
-		const {assetType, entityType, entityId, guildId, previousHash, base64Image, errorPath} = options;
+		const {
+			assetType,
+			entityType,
+			entityId,
+			guildId,
+			previousHash,
+			base64Image,
+			errorPath,
+			uploader,
+			enforceDimensions,
+		} = options;
 		const s3KeyBase = this.buildS3KeyBase(assetType, entityType, entityId, guildId);
-		const cdnUrlBase = this.buildCdnUrlBase(assetType, entityType, entityId, guildId);
-		const previousS3Key = previousHash ? `${s3KeyBase}/${this.stripAnimationPrefix(previousHash)}` : null;
+		const cdnUrlBase = `${Config.endpoints.media}/${s3KeyBase}`;
+		const previousS3Key = previousHash ? `${s3KeyBase}/${stripAnimationPrefix(previousHash)}` : null;
 		const previousCdnUrl = previousHash ? `${cdnUrlBase}/${previousHash}` : null;
 		const previousReference = previousHash
 			? this.buildQueuedAssetReference(assetType, entityType, entityId, previousHash, guildId)
@@ -124,48 +170,73 @@ export class EntityAssetService {
 				newCdnUrl: null,
 				previousCdnUrl,
 				previousReference,
+				newReference: null,
 				_uploaded: false,
 				format: null,
 				contentType: null,
 			};
 		}
-		const {imageBuffer, format, height, width, contentType, animated} = await this.validateAndProcessImage(
+		const {
+			imageBuffer,
+			format,
+			height,
+			width,
+			contentType,
+			animated: isAnimated,
+		} = await this.validateAndProcessImage(
 			base64Image,
 			errorPath,
 			assetType,
+			uploader ?? null,
+			enforceDimensions ?? false,
 		);
 		const imageHash = crypto.createHash('md5').update(Buffer.from(imageBuffer)).digest('hex');
 		const imageHashShort = imageHash.slice(0, 8);
-		const newHash = animated ? `a_${imageHashShort}` : imageHashShort;
-		const isAnimated = animated;
+		if (bannedAvatarHashCache.isBanned(imageHashShort)) {
+			throw new ContentBlockedError();
+		}
+		const moderationContext: ModerationContext = {
+			userId: uploader?.id ?? null,
+			guildId: guildId ?? null,
+			channelId: null,
+			messageId: null,
+			surface: ASSET_TYPE_TO_MODERATION_SURFACE[assetType],
+		};
+		contentModerationService.scanFileBuffer(imageBuffer, moderationContext);
+		const newHash = isAnimated ? `a_${imageHashShort}` : imageHashShort;
 		const newS3Key = `${s3KeyBase}/${imageHashShort}`;
 		const newCdnUrl = `${cdnUrlBase}/${newHash}.${format}`;
-		if (newHash === previousHash) {
-			return {
-				newHash,
-				previousHash,
-				isAnimated,
-				newS3Key,
-				previousS3Key,
-				newCdnUrl,
-				previousCdnUrl,
-				previousReference,
-				height,
-				width,
-				_uploaded: false,
-				imageBuffer,
-				format,
-				contentType,
-			};
-		}
-		let uploadBuffer = imageBuffer;
+		const prepared: PreparedAssetUpload = {
+			newHash,
+			previousHash,
+			isAnimated,
+			newS3Key,
+			previousS3Key,
+			newCdnUrl,
+			previousCdnUrl,
+			previousReference,
+			newReference: this.buildQueuedAssetReference(assetType, entityType, entityId, newHash, guildId),
+			height,
+			width,
+			_uploaded: false,
+			imageBuffer,
+			format,
+			contentType,
+		};
+		if (newHash === previousHash) return prepared;
+		let uploadBuffer: Uint8Array = imageBuffer;
 		try {
-			const isJpeg = format === 'jpg' || format === 'jpeg';
-			uploadBuffer = isJpeg
-				? await sharp(imageBuffer).jpeg({quality: 100}).toBuffer()
-				: await stripNonJpegImageMetadata(imageBuffer);
+			const stripped = await this.mediaService.stripImageMetadata(imageBuffer);
+			if (stripped) {
+				uploadBuffer = stripped;
+			} else {
+				Logger.error({assetType, entityType}, 'Failed to strip metadata from entity asset, uploading original');
+			}
 		} catch (error) {
 			Logger.error({error, assetType, entityType}, 'Failed to strip metadata from entity asset, uploading original');
+		}
+		if (uploadBuffer !== imageBuffer) {
+			contentModerationService.scanFileBuffer(uploadBuffer, moderationContext);
 		}
 		await this.uploadToS3(assetType, entityType, newS3Key, uploadBuffer);
 		const exists = await this.verifyAssetExistsWithRetry(assetType, entityType, newS3Key);
@@ -176,47 +247,90 @@ export class EntityAssetService {
 			);
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.FAILED_TO_UPLOAD_IMAGE);
 		}
-		const prepared: PreparedAssetUpload = {
-			newHash,
-			previousHash,
-			isAnimated,
-			newS3Key,
-			previousS3Key,
-			newCdnUrl,
-			previousCdnUrl,
-			previousReference,
-			height,
-			width,
-			_uploaded: true,
-			imageBuffer,
-			format,
-			contentType,
-		};
+		prepared._uploaded = true;
 		return prepared;
 	}
 
-	async commitAssetChange(options: CommitAssetChangeOptions): Promise<void> {
-		const {prepared, deferDeletion = true} = options;
-		if (!prepared.previousHash || !prepared.previousS3Key) {
+	async prepareAssetCopy(options: {
+		assetType: AssetType;
+		entityType: EntityType;
+		sourceEntityId: bigint;
+		entityId: bigint;
+		guildId?: bigint;
+		hash: string;
+		errorPath: string;
+	}): Promise<PreparedAssetUpload | null> {
+		const {assetType, entityType, sourceEntityId, entityId, guildId, hash, errorPath} = options;
+		const objectName = stripAnimationPrefix(hash);
+		if (bannedAvatarHashCache.isBanned(objectName)) {
+			Logger.warn({assetType, entityType}, 'Asset to copy is on the hash blocklist, leaving the copy without it');
+			return null;
+		}
+		const sourceS3Key = `${this.buildS3KeyBase(assetType, entityType, sourceEntityId, guildId)}/${objectName}`;
+		if ((await this.storageService.getObjectMetadata(Config.s3.buckets.cdn, sourceS3Key)) === null) {
+			Logger.warn({sourceS3Key, assetType, entityType}, 'Asset to copy does not exist, leaving the copy without it');
+			return null;
+		}
+		const s3KeyBase = this.buildS3KeyBase(assetType, entityType, entityId, guildId);
+		const newS3Key = `${s3KeyBase}/${objectName}`;
+		const prepared: PreparedAssetUpload = {
+			newHash: hash,
+			previousHash: null,
+			isAnimated: hash.startsWith('a_'),
+			newS3Key,
+			previousS3Key: null,
+			newCdnUrl: `${Config.endpoints.media}/${s3KeyBase}/${hash}`,
+			previousCdnUrl: null,
+			previousReference: null,
+			newReference: this.buildQueuedAssetReference(assetType, entityType, entityId, hash, guildId),
+			_uploaded: false,
+		};
+		await this.storageService.copyObject({
+			sourceBucket: Config.s3.buckets.cdn,
+			sourceKey: sourceS3Key,
+			destinationBucket: Config.s3.buckets.cdn,
+			destinationKey: newS3Key,
+		});
+		if (!(await this.verifyAssetExistsWithRetry(assetType, entityType, newS3Key))) {
+			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.FAILED_TO_UPLOAD_IMAGE);
+		}
+		prepared._uploaded = true;
+		return prepared;
+	}
+
+	async commitAssetChange(prepared: PreparedAssetUpload): Promise<void> {
+		if (!prepared.previousHash || !prepared.previousS3Key || prepared.newHash === prepared.previousHash) {
 			return;
 		}
-		if (prepared.newHash === prepared.previousHash) {
+		await this.assetDeletionQueue.queueDeletion({
+			s3Key: prepared.previousS3Key,
+			cdnUrl: prepared.previousCdnUrl,
+			reason: 'asset_replaced',
+			staleReference: prepared.previousReference ?? undefined,
+		});
+		Logger.debug(
+			{previousS3Key: prepared.previousS3Key, previousCdnUrl: prepared.previousCdnUrl},
+			'Queued old asset for deferred deletion',
+		);
+	}
+
+	async queueUploadForStaleCheck(prepared: PreparedAssetUpload): Promise<void> {
+		if (!prepared._uploaded || !prepared.newS3Key || !prepared.newReference) {
 			return;
 		}
-		if (deferDeletion) {
-			await this.assetDeletionQueue.queueDeletion({
-				s3Key: prepared.previousS3Key,
-				cdnUrl: prepared.previousCdnUrl,
-				reason: 'asset_replaced',
-				staleReference: prepared.previousReference ?? undefined,
-			});
-			Logger.debug(
-				{previousS3Key: prepared.previousS3Key, previousCdnUrl: prepared.previousCdnUrl},
-				'Queued old asset for deferred deletion',
-			);
-		} else {
-			await this.deleteAssetImmediately(prepared.previousS3Key, prepared.previousCdnUrl);
-		}
+		await this.assetDeletionQueue.queueDeletion({
+			s3Key: prepared.newS3Key,
+			cdnUrl: null,
+			reason: 'asset_upload_stale_check',
+			staleReference: prepared.newReference,
+		});
+	}
+
+	async commitAssetChanges(preparedAssets: ReadonlyArray<PreparedAssetUpload | null>): Promise<void> {
+		await awaitAll(
+			preparedAssets.filter((prepared) => prepared !== null).map(async (prepared) => this.commitAssetChange(prepared)),
+			'Failed to commit asset changes',
+		);
 	}
 
 	async rollbackAssetUpload(prepared: PreparedAssetUpload): Promise<void> {
@@ -231,26 +345,7 @@ export class EntityAssetService {
 		}
 	}
 
-	async verifyAssetExists(assetType: AssetType, entityType: EntityType, s3Key: string): Promise<boolean> {
-		try {
-			const metadata = await this.storageService.getObjectMetadata(Config.s3.buckets.cdn, s3Key);
-			return metadata !== null;
-		} catch (error) {
-			Logger.error({error, s3Key, assetType, entityType}, 'Error checking asset existence');
-			return false;
-		}
-	}
-
-	private resolveAvatarSizeLimit(): number {
-		const ctx = createLimitMatchContext({user: null});
-		const resolved = resolveLimit(this.limitConfigService.getConfigSnapshot(), ctx, 'avatar_max_size');
-		if (!Number.isFinite(resolved) || resolved < 0) {
-			return AVATAR_MAX_SIZE;
-		}
-		return Math.floor(resolved);
-	}
-
-	async verifyAssetExistsWithRetry(
+	private async verifyAssetExistsWithRetry(
 		assetType: AssetType,
 		entityType: EntityType,
 		s3Key: string,
@@ -270,69 +365,11 @@ export class EntityAssetService {
 				Logger.warn({error, s3Key, assetType, entityType, attempt}, 'Asset verification attempt failed');
 			}
 			if (attempt < maxRetries) {
-				await new Promise<void>((resolve) => {
-					const timeout = setTimeout(() => {
-						this.activeTimeouts.delete(timeout);
-						resolve();
-					}, delayMs * attempt);
-					this.activeTimeouts.add(timeout);
-					timeout.unref?.();
-				});
+				await delay(delayMs * attempt, undefined, {ref: false});
 			}
 		}
 		Logger.error({s3Key, assetType, entityType, maxRetries}, 'Asset verification failed after all retries');
 		return false;
-	}
-
-	public cleanup(): void {
-		for (const timeout of this.activeTimeouts) {
-			clearTimeout(timeout);
-		}
-		this.activeTimeouts.clear();
-	}
-
-	public getActiveTimeoutCount(): number {
-		return this.activeTimeouts.size;
-	}
-
-	getS3KeyForHash(
-		assetType: AssetType,
-		entityType: EntityType,
-		entityId: bigint,
-		hash: string,
-		guildId?: bigint,
-	): string {
-		const s3KeyBase = this.buildS3KeyBase(assetType, entityType, entityId, guildId);
-		return `${s3KeyBase}/${this.stripAnimationPrefix(hash)}`;
-	}
-
-	getCdnUrlForHash(
-		assetType: AssetType,
-		entityType: EntityType,
-		entityId: bigint,
-		hash: string,
-		guildId?: bigint,
-	): string {
-		const cdnUrlBase = this.buildCdnUrlBase(assetType, entityType, entityId, guildId);
-		return `${cdnUrlBase}/${hash}`;
-	}
-
-	async queueAssetDeletion(
-		assetType: AssetType,
-		entityType: EntityType,
-		entityId: bigint,
-		hash: string,
-		guildId?: bigint,
-		reason: string = 'manual_clear',
-	): Promise<void> {
-		const s3Key = this.getS3KeyForHash(assetType, entityType, entityId, hash, guildId);
-		const cdnUrl = this.getCdnUrlForHash(assetType, entityType, entityId, hash, guildId);
-		await this.assetDeletionQueue.queueDeletion({
-			s3Key,
-			cdnUrl,
-			reason,
-			staleReference: this.buildQueuedAssetReference(assetType, entityType, entityId, hash, guildId),
-		});
 	}
 
 	private buildQueuedAssetReference(
@@ -351,10 +388,6 @@ export class EntityAssetService {
 		};
 	}
 
-	private stripAnimationPrefix(hash: string): string {
-		return hash.startsWith('a_') ? hash.substring(2) : hash;
-	}
-
 	private buildS3KeyBase(assetType: AssetType, entityType: EntityType, entityId: bigint, guildId?: bigint): string {
 		const prefix = ASSET_TYPE_TO_PREFIX[assetType];
 		if (entityType === 'guild_member') {
@@ -366,21 +399,12 @@ export class EntityAssetService {
 		return `${prefix}/${entityId}`;
 	}
 
-	private buildCdnUrlBase(assetType: AssetType, entityType: EntityType, entityId: bigint, guildId?: bigint): string {
-		const prefix = ASSET_TYPE_TO_PREFIX[assetType];
-		if (entityType === 'guild_member') {
-			if (!guildId) {
-				throw new Error('guildId is required for guild_member assets');
-			}
-			return `${Config.endpoints.media}/guilds/${guildId}/users/${entityId}/${prefix}`;
-		}
-		return `${Config.endpoints.media}/${prefix}/${entityId}`;
-	}
-
 	private async validateAndProcessImage(
 		base64Image: string,
 		errorPath: string,
 		assetType: AssetType,
+		uploader: User | null,
+		enforceDimensions: boolean,
 	): Promise<{
 		imageBuffer: Uint8Array;
 		format: string;
@@ -389,25 +413,19 @@ export class EntityAssetService {
 		contentType: string | null;
 		animated: boolean;
 	}> {
-		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		const maxAvatarSize = this.resolveAvatarSizeLimit();
-		if (imageBuffer.length > maxAvatarSize) {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
-				maxSize: maxAvatarSize,
-			});
-		}
 		const kind = this.mapAssetTypeToAssetKind(assetType);
-		const metadata = this.requireAllowedMetadata({
-			metadata: await this.mediaService.getMetadata({
-				type: 'base64',
-				base64: base64Data,
-				version: 2,
-				nsfw: 'allow',
-			}),
-			kind,
+		const {imageBuffer, metadata} = await decodeValidatedImage(this.mediaService, {
+			base64Image,
 			errorPath,
+			kind,
+			maxSize:
+				kind === 'sign_in_backdrop' || kind === 'role_icon'
+					? getPolicy(kind).maxBytes
+					: resolveAssetSizeLimit(this.limitConfigService, 'avatar_max_size', AVATAR_MAX_SIZE, null, uploader),
 		});
+		if (kind === 'role_icon' || enforceDimensions) {
+			requireDimensionsWithinPolicy(metadata, kind, errorPath);
+		}
 		const isAnimatedImage = metadata.animated ?? false;
 		const keepDimensions = !isSvgMetadata(metadata);
 		return {
@@ -418,39 +436,6 @@ export class EntityAssetService {
 			contentType: metadata.content_type ?? null,
 			animated: isAnimatedImage,
 		};
-	}
-
-	private requireAllowedMetadata(params: {
-		metadata: MediaProxyMetadataResponse | null;
-		kind: AssetKind;
-		errorPath: string;
-	}): MediaProxyMetadataResponse {
-		const {metadata, kind, errorPath} = params;
-		if (metadata == null || !isExtensionAllowed(kind, metadata.format)) {
-			this.throwInvalidImageFormat(errorPath, kind);
-		}
-		const animated = metadata.animated ?? false;
-		if (!animated) return metadata;
-		if (getPolicy(kind).animated === 'never' || this.isAnimatedAvif(metadata)) {
-			this.throwInvalidImageFormat(errorPath, kind);
-		}
-		return metadata;
-	}
-
-	private isAnimatedAvif(metadata: MediaProxyMetadataResponse): boolean {
-		const format = metadata.format.toLowerCase();
-		const contentType = metadata.content_type.toLowerCase();
-		return format === 'avif' || contentType === 'image/avif' || contentType === 'image/avif-sequence';
-	}
-
-	private throwInvalidImageFormat(errorPath: string, kind: AssetKind): never {
-		throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_FORMAT, {
-			supportedExtensions: this.formatSupportedExtensions(kind),
-		});
-	}
-
-	private formatSupportedExtensions(kind: AssetKind): string {
-		return formatAssetUploadExtensions(kind, {labelStyle: 'extension'});
 	}
 
 	private async uploadToS3(
@@ -470,18 +455,6 @@ export class EntityAssetService {
 		} catch (error) {
 			Logger.error({error, s3Key, assetType, entityType}, 'Asset upload to S3 failed');
 			throw new Error(`Failed to upload asset to S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
-		}
-	}
-
-	private async deleteAssetImmediately(s3Key: string, cdnUrl: string | null): Promise<void> {
-		try {
-			await this.storageService.deleteObject(Config.s3.buckets.cdn, s3Key);
-			Logger.debug({s3Key}, 'Deleted asset from S3');
-		} catch (error) {
-			Logger.error({error, s3Key}, 'Failed to delete asset from S3');
-		}
-		if (cdnUrl) {
-			await this.assetDeletionQueue.queueCdnPurge(cdnUrl);
 		}
 	}
 }

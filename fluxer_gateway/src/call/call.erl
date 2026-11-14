@@ -12,7 +12,10 @@
     message_id := integer(),
     region := binary() | undefined,
     ringing := [integer()],
-    recipients := [integer()]
+    recipients := [integer()],
+    caller_id => integer() | undefined,
+    caller_name => binary() | undefined,
+    caller_avatar => binary() | undefined
 }.
 -type call_request() ::
     {get_state}
@@ -22,19 +25,23 @@
     | {stop_ringing, [integer()]}
     | {join, integer(), map(), binary(), pid()}
     | {join, integer(), map(), binary(), pid(), binary() | undefined}
+    | {join, integer(), map(), binary(), pid(), binary(), pos_integer()}
     | {confirm_connection, binary()}
     | {disconnect_user_if_in_channel, integer(), integer(), binary() | undefined}
     | {leave, binary()}
     | {update_voice_state, integer(), map()}
-    | {get_sessions}
-    | {get_pending_connections}.
--type cast_request() :: {join_async, integer(), map(), binary(), pid()}.
+    | {get_sessions}.
+-type cast_request() ::
+    {set_caller, map()}
+    | {voice_signal, binary(), binary(), map()}.
 -type info_message() ::
     {'DOWN', reference(), process, pid(), term()}
     | {ring_timeout, integer()}
     | {pending_connection_timeout, binary()}
     | idle_timeout.
 -type start_result() :: {ok, pid()} | {error, term()}.
+
+-define(ROUTING_FIELDS, [<<"region_id">>, <<"server_id">>]).
 
 -spec start_link(call_data()) -> start_result().
 start_link(CallData) ->
@@ -58,20 +65,25 @@ init(CallData) ->
     {ok, FinalState}.
 
 -spec build_initial_state(call_data()) -> map().
-build_initial_state(#{
-    channel_id := ChannelId,
-    message_id := MessageId,
-    region := Region,
-    ringing := Ringing,
-    recipients := Recipients
-}) ->
+build_initial_state(
     #{
+        channel_id := ChannelId,
+        message_id := MessageId,
+        region := Region,
+        ringing := Ringing,
+        recipients := Recipients
+    } = CallData
+) ->
+    State = #{
         channel_id => ChannelId,
         message_id => MessageId,
         region => Region,
         ringing => [],
         pending_ringing => Ringing,
         recipients => Recipients,
+        caller_id => undefined,
+        caller_name => undefined,
+        caller_avatar => undefined,
         voice_states => #{},
         sessions => #{},
         pending_connections => #{},
@@ -81,7 +93,8 @@ build_initial_state(#{
         created_at => erlang:system_time(millisecond),
         participants_history => sets:new(),
         last_call_event => undefined
-    }.
+    },
+    call_state:put_caller(CallData, State).
 
 -spec run_init_pipeline(map()) -> map().
 run_init_pipeline(State) ->
@@ -123,9 +136,11 @@ handle_call_request({ring_recipients, Recipients}, State) ->
 handle_call_request({stop_ringing, Recipients}, State) ->
     handle_stop_ringing(Recipients, State);
 handle_call_request({join, UserId, VS, SId, SPid}, State) ->
-    handle_join_request(UserId, VS, SId, SPid, undefined, State);
+    handle_join_request(UserId, VS, SId, SPid, undefined, undefined, State);
 handle_call_request({join, UserId, VS, SId, SPid, CId}, State) ->
-    handle_join_request(UserId, VS, SId, SPid, CId, State);
+    handle_join_request(UserId, VS, SId, SPid, CId, undefined, State);
+handle_call_request({join, UserId, VS, SId, SPid, CId, MaxParticipants}, State) ->
+    handle_join_request(UserId, VS, SId, SPid, CId, MaxParticipants, State);
 handle_call_request({confirm_connection, ConnectionId}, State) ->
     handle_confirm_connection(ConnectionId, State);
 handle_call_request({disconnect_user_if_in_channel, UserId, ExpChId, CId}, State) ->
@@ -135,26 +150,36 @@ handle_call_request({leave, SessionId}, State) ->
 handle_call_request({update_voice_state, UserId, VoiceState}, State) ->
     handle_update_voice_state(UserId, VoiceState, State);
 handle_call_request({get_sessions}, State) ->
-    handle_get_sessions(State);
-handle_call_request({get_pending_connections}, State) ->
-    handle_get_pending_connections(State).
+    handle_get_sessions(State).
 
 -spec handle_join_request(
-    integer(), map(), binary(), pid(), binary() | undefined, map()
-) -> {reply, ok, map()}.
-handle_join_request(UserId, VS, SId, SPid, CId, #{sessions := Sessions} = State) ->
+    integer(), map(), binary(), pid(), binary() | undefined, pos_integer() | undefined, map()
+) -> {reply, ok | {error, atom()}, map()}.
+handle_join_request(
+    UserId,
+    VS,
+    SId,
+    SPid,
+    CId,
+    MaxParticipants,
+    #{sessions := Sessions, voice_states := VoiceStates} = State
+) ->
+    Existing = maps:get(call_state:voice_state_connection_id(VS), VoiceStates, undefined),
     case maps:get(SId, Sessions, undefined) of
-        {UserId, SPid, _Ref} ->
+        {UserId, SPid, _Ref} when Existing =:= VS ->
             {reply, ok, State};
         _ ->
-            call_voice:handle_join_internal(UserId, VS, SId, SPid, CId, State)
+            call_voice:handle_join_internal(UserId, VS, SId, SPid, CId, MaxParticipants, State)
     end.
 
 -spec handle_cast(term(), map()) -> {noreply, map()}.
 handle_cast(Request, State) ->
     case decode_cast_request(Request) of
-        {ok, {join_async, UserId, VoiceState, SessionId, SessionPid}} ->
-            call_voice:handle_join_async(UserId, VoiceState, SessionId, SessionPid, State);
+        {ok, {set_caller, Caller}} ->
+            {noreply, call_state:put_caller(Caller, State)};
+        {ok, {voice_signal, SessionId, To, Data}} ->
+            ok = call_voice:relay_voice_signal(SessionId, To, Data, State),
+            {noreply, State};
         error ->
             {noreply, State}
     end.
@@ -256,6 +281,18 @@ decode_session_call_request(
     is_binary(ConnectionId)
 ->
     {ok, {join, UserId, VoiceState, SessionId, SessionPid, ConnectionId}};
+decode_session_call_request(
+    {join, UserId, VoiceState, SessionId, SessionPid, ConnectionId, MaxParticipants}
+) when
+    is_integer(UserId),
+    is_map(VoiceState),
+    is_binary(SessionId),
+    is_pid(SessionPid),
+    is_binary(ConnectionId),
+    is_integer(MaxParticipants),
+    MaxParticipants >= 1
+->
+    {ok, {join, UserId, VoiceState, SessionId, SessionPid, ConnectionId, MaxParticipants}};
 decode_session_call_request({confirm_connection, ConnectionId}) when is_binary(ConnectionId) ->
     {ok, {confirm_connection, ConnectionId}};
 decode_session_call_request(
@@ -270,8 +307,6 @@ decode_session_call_request({update_voice_state, UserId, VoiceState}) when
     {ok, {update_voice_state, UserId, VoiceState}};
 decode_session_call_request({get_sessions}) ->
     {ok, {get_sessions}};
-decode_session_call_request({get_pending_connections}) ->
-    {ok, {get_pending_connections}};
 decode_session_call_request(_) ->
     error.
 
@@ -304,10 +339,12 @@ decode_integer_list([_Value | _Rest], _Acc) ->
     error.
 
 -spec decode_cast_request(term()) -> {ok, cast_request()} | error.
-decode_cast_request({join_async, UserId, VoiceState, SessionId, SessionPid}) when
-    is_integer(UserId), is_map(VoiceState), is_binary(SessionId), is_pid(SessionPid)
+decode_cast_request({set_caller, Caller}) when is_map(Caller) ->
+    {ok, {set_caller, Caller}};
+decode_cast_request({voice_signal, SessionId, To, Data}) when
+    is_binary(SessionId), is_binary(To), is_map(Data)
 ->
-    {ok, {join_async, UserId, VoiceState, SessionId, SessionPid}};
+    {ok, {voice_signal, SessionId, To, Data}};
 decode_cast_request(_) ->
     error.
 
@@ -339,13 +376,19 @@ build_get_state_reply(State) ->
 handle_update_region(NewRegion, State) ->
     OldRegion = maps:get(region, State, undefined),
     NewState = State#{region => NewRegion},
-    UpdatedState = call_ringing:dispatch_call_update(NewState),
-    call_voice:maybe_spawn_region_switch(OldRegion, NewRegion, UpdatedState),
-    {reply, ok, UpdatedState}.
+    case voice_p2p:channel_mode(maps:values(maps:get(voice_states, NewState))) of
+        p2p ->
+            ConvertedState = call_voice:convert_to_sfu([], NewState),
+            {reply, ok, call_ringing:dispatch_call_update(ConvertedState)};
+        _ ->
+            UpdatedState = call_ringing:dispatch_call_update(NewState),
+            call_voice:maybe_spawn_region_switch(OldRegion, NewRegion, UpdatedState),
+            {reply, ok, UpdatedState}
+    end.
 
 -spec handle_ring_recipients([integer()], map()) -> {reply, ok, map()}.
 handle_ring_recipients(Recipients, State) ->
-    CurrentVoiceUsers = maps:keys(maps:get(voice_states, State)),
+    CurrentVoiceUsers = call_state:voice_user_ids(maps:get(voice_states, State)),
     PendingAdditions = [U || U <- Recipients, not lists:member(U, CurrentVoiceUsers)],
     NewPending = lists:usort(maps:get(pending_ringing, State) ++ PendingAdditions),
     StateWithPending = State#{pending_ringing => NewPending},
@@ -381,10 +424,12 @@ handle_confirm_connection(ConnectionId, State) ->
 
 -spec handle_update_voice_state(integer(), map(), map()) -> {reply, term(), map()}.
 handle_update_voice_state(UserId, VoiceState, State) ->
-    case maps:is_key(UserId, maps:get(voice_states, State)) of
+    ConnectionId = call_state:voice_state_connection_id(VoiceState),
+    Existing = maps:get(ConnectionId, maps:get(voice_states, State), #{}),
+    case voice_state_utils:voice_state_user_id(Existing) =:= UserId of
         true ->
-            NewVS = (maps:get(voice_states, State))#{UserId => VoiceState},
-            NewState = State#{voice_states => NewVS},
+            Routed = maps:merge(maps:with(?ROUTING_FIELDS, Existing), VoiceState),
+            NewState = call_voice:update_voice_state(ConnectionId, Routed, State),
             CountedState = call_state:sync_voice_state_count_diff(State, NewState),
             UpdatedState = call_ringing:dispatch_call_update(CountedState),
             {reply, ok, UpdatedState};
@@ -399,13 +444,6 @@ handle_get_sessions(State) ->
         voice_states => maps:get(voice_states, State)
     },
     {reply, StateMap, State}.
-
--spec handle_get_pending_connections(map()) -> {reply, map(), map()}.
-handle_get_pending_connections(State) ->
-    PendingJoins = call_state:format_pending_connections(
-        maps:get(pending_connections, State)
-    ),
-    {reply, #{pending_joins => PendingJoins}, State}.
 
 -spec handle_pending_timeout(binary(), map()) -> {noreply, map()}.
 handle_pending_timeout(ConnectionId, State) ->

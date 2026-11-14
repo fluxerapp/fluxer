@@ -1,27 +1,51 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {logBatch, logQuery} from '@app/api/database/CassandraDevLogger';
+import {getIsDev} from '@app/api/database/CassandraMetaRegistry';
+import type {
+	CassandraParam,
+	CassandraParams,
+	KvAdvance,
+	KvQueryMeta,
+	PreparedQuery,
+	QueryTemplate,
+} from '@app/api/database/CassandraTypes';
+import {
+	assertNoUndefinedParams,
+	getStatementMeta,
+	isConditionalQuery,
+	normalizeExecuteArgs,
+	normalizeInParams,
+} from '@app/api/database/CassandraTypes';
+import {LocalDate} from '@app/api/database/LocalDate';
+import {Logger} from '@app/api/Logger';
+import {chunkArray} from '@app/api/utils/ArrayUtils';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {getClient} from '@pkgs/cassandra/src/Client';
-import cassandra from 'cassandra-driver';
-import {Logger} from '../Logger';
-import {chunkArray} from '../utils/ArrayUtils';
-import {logBatch, logQuery} from './CassandraDevLogger';
-import {getIsDev} from './CassandraMetaRegistry';
-import type {CassandraParams, KvQueryMeta, PreparedQuery, QueryTemplate} from './CassandraTypes';
-import {assertNoUndefinedParams, getStatementMeta, normalizeExecuteArgs, normalizeInParams} from './CassandraTypes';
+import {getClient, getLoadedCassandraDriver} from '@pkgs/cassandra/src/Client';
+import type cassandra from 'cassandra-driver';
 
 const DEFAULT_MAX_PARTITION_KEYS_PER_QUERY = 100;
 
+function isBusyConnectionError(err: unknown): boolean {
+	return err instanceof Error && err.name === 'BusyConnectionError';
+}
+
 function isDriverOverloadError(err: unknown): boolean {
-	if (err instanceof cassandra.errors.BusyConnectionError) {
+	if (isBusyConnectionError(err)) {
 		return true;
 	}
-	if (err instanceof cassandra.errors.NoHostAvailableError && err.innerErrors) {
-		return Object.values(err.innerErrors as Record<string, unknown>).some(
-			(innerError) => innerError instanceof cassandra.errors.BusyConnectionError,
-		);
+	if (err instanceof Error && err.name === 'NoHostAvailableError' && 'innerErrors' in err && err.innerErrors) {
+		return Object.values(err.innerErrors as Record<string, unknown>).some(isBusyConnectionError);
 	}
 	return false;
+}
+
+function driverParams(params: object): Record<string, CassandraParam> {
+	const out: Record<string, CassandraParam> = {};
+	for (const [key, value] of Object.entries(params)) {
+		out[key] = value instanceof LocalDate ? value.toString() : value;
+	}
+	return out;
 }
 
 export function mapCassandraDriverError(err: unknown): unknown {
@@ -40,6 +64,7 @@ export interface CassandraQueryExecutorForTesting {
 		},
 	): Promise<PagedQueryResult<T>>;
 	executeBatch(queries: Array<{query: string; params: object; meta?: KvQueryMeta}>, atomic?: boolean): Promise<void>;
+	advanceRows?(writes: ReadonlyArray<KvAdvance>): Promise<Array<boolean>>;
 	reset?(): void;
 	shutdown?(): Promise<void>;
 }
@@ -77,6 +102,10 @@ export interface PagedQueryResult<T> {
 	pageState: string | null;
 }
 
+interface CassandraReadOptions {
+	consistency: 'all' | 'serial' | 'localQuorum';
+}
+
 async function collectSelectRows<T>(queryType: string, result: cassandra.types.ResultSet): Promise<Array<T>> {
 	if (queryType !== 'SELECT' || !result.pageState) {
 		return (result.rows ?? []) as Array<T>;
@@ -91,12 +120,16 @@ async function collectSelectRows<T>(queryType: string, result: cassandra.types.R
 export async function executeQuery<T = Record<string, unknown>, P extends CassandraParams = CassandraParams>(
 	queryOrPrepared: string | PreparedQuery<P>,
 	params?: P,
+	readOptions?: CassandraReadOptions,
 ): Promise<Array<T>> {
 	const {cql, params: boundRaw} = normalizeExecuteArgs(queryOrPrepared, params);
 	const meta = getStatementMeta(cql);
 	const bound = normalizeInParams(meta, boundRaw);
 	if (meta.unsafe) {
 		throw new Error('Cannot prepare a statement that looks like `SELECT *`');
+	}
+	if (readOptions && meta.type !== 'SELECT') {
+		throw new Error('Read consistency options require a SELECT query');
 	}
 	assertNoUndefinedParams(bound as Record<string, unknown>);
 	const executor = activeExecutor();
@@ -110,7 +143,10 @@ export async function executeQuery<T = Record<string, unknown>, P extends Cassan
 	const isDev = getIsDev();
 	const startTime = isDev ? performance.now() : 0;
 	try {
-		const result = await getClient().execute(cql, bound, {prepare: true});
+		const result = await getClient().execute(cql, driverParams(bound), {
+			prepare: true,
+			...(readOptions ? {consistency: getLoadedCassandraDriver()?.types.consistencies[readOptions.consistency]} : {}),
+		});
 		const rows = await collectSelectRows<T>(meta.type, result);
 		if (isDev) {
 			const durationMs = performance.now() - startTime;
@@ -138,6 +174,23 @@ export async function executeQuery<T = Record<string, unknown>, P extends Cassan
 	}
 }
 
+export async function executeConditional(query: PreparedQuery): Promise<boolean> {
+	if (!isConditionalQuery(query)) {
+		throw new Error('executeConditional requires a conditional query');
+	}
+	const rows = await executeQuery(query);
+	const applied = rows[0]?.['[applied]'];
+	const isBatch = query.kvMeta?.action === 'batch';
+	if (
+		typeof applied !== 'boolean' ||
+		(!isBatch && rows.length !== 1) ||
+		rows.some((row) => row['[applied]'] !== applied)
+	) {
+		throw new Error('Conditional write returned an invalid database result');
+	}
+	return applied;
+}
+
 export async function fetchOne<T = Record<string, unknown>, P extends CassandraParams = CassandraParams>(
 	queryOrPrepared: PreparedQuery<P> | string,
 	params?: P,
@@ -149,8 +202,9 @@ export async function fetchOne<T = Record<string, unknown>, P extends CassandraP
 export async function fetchMany<T = Record<string, unknown>, P extends CassandraParams = CassandraParams>(
 	queryOrPrepared: PreparedQuery<P> | string,
 	params?: P,
+	readOptions?: CassandraReadOptions,
 ): Promise<Array<T>> {
-	return executeQuery<T, P>(queryOrPrepared, params);
+	return executeQuery<T, P>(queryOrPrepared, params, readOptions);
 }
 
 export async function fetchPage<T = Record<string, unknown>, P extends CassandraParams = CassandraParams>(
@@ -185,7 +239,7 @@ export async function fetchPage<T = Record<string, unknown>, P extends Cassandra
 			pageState: null,
 		};
 	}
-	const result = await getClient().execute(cql, bound, {
+	const result = await getClient().execute(cql, driverParams(bound), {
 		prepare: true,
 		fetchSize: options.pageSize,
 		pageState: options.pageState ?? undefined,
@@ -224,10 +278,25 @@ export async function fetchManyInChunks<
 	return results.flat();
 }
 
+export async function advanceRows(
+	writes: ReadonlyArray<KvAdvance>,
+	readThenWrite: () => Promise<Array<boolean>>,
+): Promise<Array<boolean>> {
+	if (writes.length === 0) return [];
+	const executor = activeExecutor();
+	return executor?.advanceRows ? executor.advanceRows(writes) : readThenWrite();
+}
+
+export async function advanceRow(write: KvAdvance, readThenWrite: () => Promise<boolean>): Promise<boolean> {
+	const [written] = await advanceRows([write], async () => [await readThenWrite()]);
+	return written === true;
+}
+
 export async function upsertOne<P extends CassandraParams = CassandraParams>(
 	queryOrPrepared: PreparedQuery<P> | string,
 	params?: P,
 ): Promise<void> {
+	assertUnconditional(normalizeExecuteArgs(queryOrPrepared, params));
 	await executeQuery(queryOrPrepared, params);
 }
 
@@ -235,7 +304,14 @@ export async function deleteOneOrMany<P extends CassandraParams = CassandraParam
 	queryOrPrepared: PreparedQuery<P> | string,
 	params?: P,
 ): Promise<void> {
+	assertUnconditional(normalizeExecuteArgs(queryOrPrepared, params));
 	await executeQuery(queryOrPrepared, params);
+}
+
+function assertUnconditional(query: PreparedQuery): void {
+	if (isConditionalQuery(query)) {
+		throw new Error('Conditional writes must use executeConditional to preserve their result');
+	}
 }
 
 interface BatchQuery {
@@ -244,9 +320,14 @@ interface BatchQuery {
 	meta?: KvQueryMeta;
 }
 
-async function executeBatch(queries: Array<BatchQuery>, atomic = true): Promise<void> {
+async function executeBatch(
+	queries: Array<BatchQuery>,
+	atomic = true,
+	consistency?: CassandraReadOptions['consistency'],
+): Promise<void> {
 	if (queries.length === 0) return;
-	for (const {query} of queries) {
+	for (const {query, params, meta} of queries) {
+		assertUnconditional({cql: query, params: params as CassandraParams, kvMeta: meta});
 		if (getStatementMeta(query).unsafe) {
 			throw new Error('Cannot prepare a statement that looks like `SELECT *`');
 		}
@@ -263,6 +344,7 @@ async function executeBatch(queries: Array<BatchQuery>, atomic = true): Promise<
 		prepare: true,
 		logged: atomic,
 		counter: false,
+		...(consistency ? {consistency: getLoadedCassandraDriver()?.types.consistencies[consistency]} : {}),
 	};
 	const isDev = getIsDev();
 	const startTime = isDev ? performance.now() : 0;
@@ -270,7 +352,7 @@ async function executeBatch(queries: Array<BatchQuery>, atomic = true): Promise<
 		await getClient().batch(
 			queries.map(({query, params}) => ({
 				query,
-				params: normalizeInParams(getStatementMeta(query), params as CassandraParams),
+				params: driverParams(normalizeInParams(getStatementMeta(query), params as CassandraParams)),
 			})),
 			options,
 		);
@@ -296,19 +378,9 @@ export class BatchBuilder {
 		return this;
 	}
 
-	addIf(condition: boolean, query: string, params: object, meta?: KvQueryMeta): this {
-		if (condition) this.queries.push({query, params, meta});
-		return this;
-	}
-
-	addPreparedIf(condition: boolean, q: PreparedQuery): this {
-		if (condition) this.queries.push({query: q.cql, params: q.params, meta: q.kvMeta});
-		return this;
-	}
-
-	async execute(atomic = true): Promise<void> {
+	async execute(atomic = true, consistency?: CassandraReadOptions['consistency']): Promise<void> {
 		if (this.queries.length === 0) return;
-		await executeBatch(this.queries, atomic);
+		await executeBatch(this.queries, atomic, consistency);
 	}
 
 	async executeChunked(chunkSize: number, atomic = false): Promise<void> {
@@ -317,8 +389,24 @@ export class BatchBuilder {
 			await executeBatch(this.queries.slice(i, i + chunkSize), atomic);
 		}
 	}
+}
 
-	getQueries(): Array<BatchQuery> {
-		return this.queries;
+const MAX_BATCH_STATEMENTS = 60;
+
+export async function executeGroupedBatches(
+	groups: ReadonlyArray<ReadonlyArray<PreparedQuery>>,
+	maxStatements = MAX_BATCH_STATEMENTS,
+): Promise<void> {
+	let batch = new BatchBuilder();
+	let size = 0;
+	for (const group of groups) {
+		if (size > 0 && size + group.length > maxStatements) {
+			await batch.execute();
+			batch = new BatchBuilder();
+			size = 0;
+		}
+		for (const query of group) batch.addPrepared(query);
+		size += group.length;
 	}
+	await batch.execute();
 }

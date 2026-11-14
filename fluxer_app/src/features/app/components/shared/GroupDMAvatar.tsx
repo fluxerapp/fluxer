@@ -23,11 +23,15 @@ import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSiz
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {isOfflineStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {I18n} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {UsersIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useId, useMemo} from 'react';
+
+const STATUS_DESCRIPTOR = msg({message: '{effectiveStatusLabel} status'});
+const TYPING_STATUS_DESCRIPTOR = msg({message: 'Typing indicator, status: {effectiveStatusLabel}'});
 
 const GROUP_STATUS_PRIORITY: ReadonlyArray<StatusType> = [StatusTypes.ONLINE, StatusTypes.IDLE, StatusTypes.DND];
 
@@ -86,7 +90,9 @@ function renderGroupStatusDot(status: StatusType, size: number, isTyping?: boole
 					justifyContent: 'center',
 				}}
 				role="img"
-				aria-label={typingMode ? `${statusLabel} typing indicator` : `${statusLabel} status`}
+				aria-label={i18nInstance._(typingMode ? TYPING_STATUS_DESCRIPTOR : STATUS_DESCRIPTOR, {
+					effectiveStatusLabel: statusLabel,
+				})}
 				data-flx="app.group-dm-avatar.render-group-status-dot.status-dot"
 			>
 				{typingMode ? (

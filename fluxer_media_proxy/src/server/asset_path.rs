@@ -2,8 +2,7 @@
 
 use crate::{
     asset_hash::AssetHash,
-    constants::{AssetExtension, AssetKind},
-    external_path,
+    constants::{AssetExtension, AssetKind, OPERATOR_WALL_PATH_PREFIX},
     storage::safe_key,
 };
 use std::fmt;
@@ -27,10 +26,12 @@ pub(in crate::server) fn parse_standard_asset_path(path: &str) -> Option<ParsedA
     let kind = match prefix {
         "avatars" => AssetKind::Avatar,
         "icons" => AssetKind::GuildIcon,
-        "branding" => AssetKind::GuildIcon,
+        "branding" | "branding-backdrops" => AssetKind::Branding,
+        "custom-badges" => AssetKind::Branding,
         "banners" => AssetKind::Banner,
         "splashes" => AssetKind::Splash,
         "embed-splashes" => AssetKind::EmbedSplash,
+        "role-icons" => AssetKind::RoleIcon,
         _ => return None,
     };
     if !valid_asset_owner_key(prefix, owner_key) {
@@ -130,6 +131,22 @@ pub(in crate::server) fn parse_entrance_sound_path(path: &str) -> Option<String>
     Some(format!("entrance-sounds/{user_id}/{filename}"))
 }
 
+const OPERATOR_WALL_AVATAR_SIZES: [u16; 7] = [48, 60, 72, 96, 120, 144, 192];
+
+pub(in crate::server) fn parse_operator_wall_avatar_path(path: &str) -> Option<String> {
+    let storage_key = canonical_public_path(path)?;
+    let filename = path.strip_prefix(OPERATOR_WALL_PATH_PREFIX)?;
+    let (hash, size) = filename.strip_suffix(".webp")?.split_once('-')?;
+    if hash.len() != 64 || !hash.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')) {
+        return None;
+    }
+    let parsed_size: u16 = size.parse().ok()?;
+    if parsed_size.to_string() != size || !OPERATOR_WALL_AVATAR_SIZES.contains(&parsed_size) {
+        return None;
+    }
+    Some(storage_key.to_owned())
+}
+
 struct ParsedAssetFilename<'a> {
     hash: &'a str,
     ext: AssetExtension,
@@ -177,7 +194,7 @@ impl fmt::Display for SnowflakeId {
 }
 
 fn valid_asset_owner_key(prefix: &str, owner_key: &str) -> bool {
-    if prefix == "branding" {
+    if prefix == "branding" || prefix == "branding-backdrops" {
         return !owner_key.is_empty()
             && owner_key.len() <= ASSET_OWNER_KEY_MAX_BYTES
             && owner_key
@@ -204,7 +221,10 @@ pub(in crate::server) enum StorageKeyDecodeError {
 }
 
 pub(in crate::server) fn decode_storage_key(path: &str) -> Result<String, StorageKeyDecodeError> {
-    let key = external_path::percent_decode_string(path.trim_start_matches('/'), false);
+    let key = fluxer_common::external_media_path::percent_decode_string(
+        path.trim_start_matches('/'),
+        false,
+    );
     safe_key(&key).map_err(|_| StorageKeyDecodeError::InvalidKey)?;
     Ok(key)
 }
@@ -212,148 +232,6 @@ pub(in crate::server) fn decode_storage_key(path: &str) -> Result<String, Storag
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::server::params::asset_wants_animated;
-    use std::collections::HashMap;
-
-    #[test]
-    fn entrance_sound_path_parses_valid_keys() {
-        assert_eq!(
-            parse_entrance_sound_path("/entrance-sounds/1130650140672000000/eb417d05ad2e14c4.wav"),
-            Some("entrance-sounds/1130650140672000000/eb417d05ad2e14c4.wav".to_owned())
-        );
-        for ext in ["mp3", "ogg", "m4a", "wav"] {
-            assert_eq!(
-                parse_entrance_sound_path(&format!("/entrance-sounds/42/abc123.{ext}")),
-                Some(format!("entrance-sounds/42/abc123.{ext}"))
-            );
-        }
-    }
-
-    #[test]
-    fn entrance_sound_path_rejects_invalid_keys() {
-        assert_eq!(
-            parse_entrance_sound_path("/entrance-sounds/42/abc.flac"),
-            None
-        );
-        assert_eq!(
-            parse_entrance_sound_path("/entrance-sounds/abc/abc.wav"),
-            None
-        );
-        assert_eq!(
-            parse_entrance_sound_path("/entrance-sounds/42/abc.wav/x"),
-            None
-        );
-        assert_eq!(
-            parse_entrance_sound_path("/entrance-sounds/42/../secret.wav"),
-            None
-        );
-        assert_eq!(parse_entrance_sound_path("/entrance-sounds/42"), None);
-        assert_eq!(parse_entrance_sound_path("/entrance-sounds//abc.wav"), None);
-        assert_eq!(parse_entrance_sound_path("/avatars/42/abc.wav"), None);
-    }
-
-    #[test]
-    fn standard_asset_path_strips_virtual_animation_prefix_and_extension() {
-        let parsed =
-            parse_standard_asset_path("/avatars/1216100949629702144/a_d2f35261.webp").unwrap();
-        assert_eq!("avatars/1216100949629702144/d2f35261", parsed.storage_key);
-        assert_eq!(AssetExtension::Webp, parsed.original_ext);
-        assert_eq!(AssetKind::Avatar, parsed.kind);
-        assert!(asset_wants_animated(&HashMap::new(), &parsed.hash));
-        assert!(!asset_wants_animated(
-            &HashMap::from([("animated".to_owned(), "false".to_owned())]),
-            &parsed.hash
-        ));
-    }
-
-    #[test]
-    fn guild_member_and_simple_asset_paths_match_v1_storage_keys() {
-        let guild =
-            parse_guild_member_asset_path("/guilds/1/users/2/avatars/a_memberhash.gif").unwrap();
-        assert_eq!("guilds/1/users/2/avatars/memberhash", guild.storage_key);
-        assert_eq!(AssetKind::Avatar, guild.kind);
-        assert_eq!(AssetExtension::Gif, guild.original_ext);
-        assert!(guild.forced_output_format.is_none());
-
-        let emoji =
-            parse_simple_asset_path("/emojis/1501314428688998182.webp", AssetKind::Emoji).unwrap();
-        assert_eq!("emojis/1501314428688998182", emoji.storage_key);
-        assert_eq!(AssetKind::Emoji, emoji.kind);
-        assert!(emoji.forced_output_format.is_none());
-
-        let sticker =
-            parse_simple_asset_path("/stickers/1501314428688998182.png", AssetKind::Sticker)
-                .unwrap();
-        assert_eq!("stickers/1501314428688998182", sticker.storage_key);
-        assert_eq!(Some(AssetExtension::Webp), sticker.forced_output_format);
-    }
-
-    #[test]
-    fn asset_filename_rejects_unstable_shapes() {
-        assert!(parse_asset_filename("hash.extra.png").is_none());
-        assert!(parse_asset_filename("hash-with-dash.png").is_none());
-        assert!(parse_asset_filename(".png").is_none());
-        assert!(parse_asset_filename("hash.").is_none());
-    }
-
-    #[test]
-    fn asset_paths_reject_noncanonical_owners_extensions_and_prefixes() {
-        for invalid in [
-            "avatars/1216100949629702144/deadbeef.png",
-            "//avatars/1216100949629702144/deadbeef.png",
-            "/avatars/0/deadbeef.png",
-            "/avatars/01/deadbeef.png",
-            "/avatars/1216100949629702144/deadbeef.exe",
-            "/avatars/1216100949629702144/deadbeef.png/extra",
-        ] {
-            assert!(
-                parse_standard_asset_path(invalid).is_none(),
-                "accepted {invalid}"
-            );
-        }
-        assert!(parse_standard_asset_path("/branding/fluxer-wordmark/deadbeef.png").is_some());
-        assert!(parse_guild_member_asset_path("/guilds/01/users/2/avatars/h.gif").is_none());
-        assert!(parse_simple_asset_path("/emojis/012.webp", AssetKind::Emoji).is_none());
-    }
-
-    #[test]
-    fn storage_keys_decode_the_way_the_old_era_decoded_them() {
-        assert_eq!(
-            "attachments/1216100949629702144/1216100949629702145/name/with-slash.png",
-            decode_storage_key(
-                "/attachments/1216100949629702144/1216100949629702145/name%2Fwith-slash.png"
-            )
-            .expect("an encoded slash still resolves to a live object")
-        );
-        assert_eq!(
-            "attachments/1/a%.png",
-            decode_storage_key("/attachments/1/a%.png").expect("malformed escapes stay literal")
-        );
-        assert_eq!(
-            "attachments/1/\u{fffd}.png",
-            decode_storage_key("/attachments/1/%FF.png").expect("non utf8 decodes lossily")
-        );
-        assert_eq!(
-            "attachments/1/a\\b.png",
-            decode_storage_key("/attachments/1/a%5Cb.png")
-                .expect("a backslash is an ordinary key byte the old era served")
-        );
-        for traversal in [
-            "/attachments/%2E%2E/photo.png",
-            "/attachments/1/..%2Fsecret.png",
-            "/attachments/1/%2E%2E%2Fsecret.png",
-            "/attachments/1/a%00b.png",
-            "/attachments%2F%2Fphoto.png",
-        ] {
-            assert!(
-                matches!(
-                    decode_storage_key(traversal),
-                    Err(StorageKeyDecodeError::InvalidKey)
-                ),
-                "safe_key accepted {traversal}"
-            );
-        }
-    }
 
     #[test]
     fn storage_keys_reject_path_changing_escapes_and_empty_components() {

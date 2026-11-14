@@ -2,12 +2,24 @@
 
 use serde::{Deserialize, Deserializer, Serialize};
 
+use crate::api::generated::types::AccountTierSchema;
+
+fn default_true() -> bool {
+    true
+}
+
 pub fn deserialize_discriminator<'de, D: Deserializer<'de>>(d: D) -> Result<String, D::Error> {
     let v: serde_json::Value = Deserialize::deserialize(d)?;
     match v {
         serde_json::Value::String(s) => Ok(format!("{:0>4}", s)),
-        serde_json::Value::Number(n) => Ok(format!("{:04}", n.as_u64().unwrap_or(0))),
-        _ => Ok("0000".to_owned()),
+        serde_json::Value::Number(n) => n
+            .as_u64()
+            .map(|value| format!("{value:04}"))
+            .ok_or_else(|| serde::de::Error::custom("expected an unsigned integer discriminator")),
+        serde_json::Value::Null => Ok("0000".to_owned()),
+        _ => Err(serde::de::Error::custom(
+            "expected string or unsigned integer discriminator",
+        )),
     }
 }
 
@@ -15,7 +27,9 @@ pub fn deserialize_string_or_u64<'de, D: Deserializer<'de>>(d: D) -> Result<u64,
     let v: serde_json::Value = Deserialize::deserialize(d)?;
     match v {
         serde_json::Value::String(s) => s.parse::<u64>().map_err(serde::de::Error::custom),
-        serde_json::Value::Number(n) => Ok(n.as_u64().unwrap_or(0)),
+        serde_json::Value::Number(n) => n
+            .as_u64()
+            .ok_or_else(|| serde::de::Error::custom("expected an unsigned 64-bit integer")),
         serde_json::Value::Null => Ok(0),
         _ => Err(serde::de::Error::custom("expected string or number")),
     }
@@ -24,6 +38,7 @@ pub fn deserialize_string_or_u64<'de, D: Deserializer<'de>>(d: D) -> Result<u64,
 #[derive(Clone, Debug, Deserialize)]
 pub struct AdminUserMeResponse {
     pub user: AdminUser,
+    pub pending_registration_count: Option<u32>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -54,11 +69,6 @@ pub struct LookupGuildResponse {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct GuildUpdateResponse {
-    pub guild: GuildInfo,
-}
-
-#[derive(Clone, Debug, Deserialize)]
 pub struct ListUserGuildsResponse {
     pub guilds: Vec<GuildInfo>,
 }
@@ -86,6 +96,8 @@ pub struct AdminUser {
     pub acls: Vec<String>,
     #[serde(default)]
     pub traits: Vec<String>,
+    #[serde(default)]
+    pub badge_ids: Vec<String>,
     #[serde(default, deserialize_with = "deserialize_string_or_u64")]
     pub flags: u64,
     #[serde(default)]
@@ -100,24 +112,60 @@ pub struct AdminUser {
     pub premium_grace_ends_at: Option<String>,
     pub premium_lifetime_sequence: Option<i32>,
     #[serde(default)]
-    pub suspicious_activity_flags: i32,
-    #[serde(default)]
-    pub phone_verification_deferred: bool,
+    pub profile_badges: Vec<AdminProfileBadge>,
     #[serde(default)]
     pub has_totp: bool,
+    #[serde(default = "default_true")]
+    pub has_password: bool,
+    #[serde(default = "default_true")]
+    pub claimed: bool,
+    #[serde(default)]
+    pub account_tier: Option<AccountTierSchema>,
+    #[serde(default)]
+    pub date_of_birth_required: bool,
     #[serde(default)]
     pub authenticator_types: Vec<i32>,
-    #[serde(default)]
-    pub has_verified_phone: bool,
     pub temp_banned_until: Option<String>,
     pub pending_deletion_at: Option<String>,
     pub pending_bulk_message_deletion_at: Option<String>,
     pub deletion_reason_code: Option<i32>,
     pub deletion_public_reason: Option<String>,
+    #[serde(default)]
+    pub deletion_audit_log_reason: Option<String>,
+    #[serde(default)]
+    pub deletion_scheduled_by: Option<String>,
+    #[serde(default)]
+    pub deletion_scheduled_at: Option<String>,
+    #[serde(default)]
+    pub enforcement_decision_id: Option<String>,
     pub last_active_at: Option<String>,
     pub last_active_ip: Option<String>,
     pub last_active_ip_reverse: Option<String>,
     pub last_active_location: Option<String>,
+}
+
+pub fn account_tier_label(tier: AccountTierSchema) -> &'static str {
+    match tier {
+        AccountTierSchema::Unclaimed => "Unclaimed",
+        AccountTierSchema::Unverified => "Unverified",
+        AccountTierSchema::Verified => "Verified",
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AdminProfileBadge {
+    pub kind: String,
+    pub label: String,
+    pub asset: Option<String>,
+    #[serde(default)]
+    pub asset_url: Option<String>,
+    #[serde(default)]
+    pub small_asset: Option<String>,
+    #[serde(default)]
+    pub aspect_ratio: Option<f64>,
+    pub caption: Option<String>,
+    pub href: Option<String>,
+    pub suppressed: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -157,6 +205,8 @@ pub struct GuildDetailInfo {
     pub embed_splash: Option<String>,
     #[serde(default)]
     pub features: Vec<String>,
+    #[serde(default)]
+    pub badge_ids: Vec<String>,
     pub verification_level: Option<i32>,
     pub mfa_level: Option<i32>,
     pub nsfw_level: Option<i32>,
@@ -173,6 +223,7 @@ pub struct GuildDetailInfo {
     pub disabled_operations: Option<i32>,
     #[serde(default)]
     pub member_count: u64,
+    pub planned_join_waves_until: Option<String>,
     #[serde(default)]
     pub channels: Vec<GuildChannelSummary>,
     #[serde(default)]
@@ -227,6 +278,10 @@ pub struct GuildRoleSummary {
     pub permissions: String,
     pub hoist: bool,
     pub mentionable: bool,
+    #[serde(default)]
+    pub icon: Option<String>,
+    #[serde(default)]
+    pub unicode_emoji: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -247,17 +302,35 @@ pub enum FlashLevel {
 pub struct BanCheckResult {
     pub banned: bool,
     #[serde(default)]
+    pub expires_at: Option<String>,
+    #[serde(default)]
+    pub decision_id: Option<String>,
+    #[serde(default)]
     pub entries: Vec<serde_json::Value>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BlocklistEntry {
+    pub value: String,
+    #[serde(default)]
+    pub match_subdomains: Option<bool>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub created_at: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BlocklistEntryPage {
+    pub items: Vec<BlocklistEntry>,
+    pub has_more: bool,
+    #[serde(default)]
+    pub next_after: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BulkBanResult {
     pub job_id: String,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct BanAvatarResult {
-    pub hash_short: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

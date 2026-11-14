@@ -5,17 +5,11 @@
 
 -export([get_guild_data/2]).
 -export([get_auth_context/2]).
--export([get_guild_member/2]).
--export([get_guild_members_batch/2]).
--export([has_member/2]).
--export([list_guild_members/2]).
--export([search_guild_members/2]).
--export([get_vanity_url_channel/1]).
+
 -export([get_first_viewable_text_channel/1]).
--export([get_guild_state/2]).
+-export([get_guild_state/2, get_guild_state/3]).
 -export([build_connect_snapshot/2]).
 -export([fetch_latest_voice_states/1]).
--export([find_everyone_viewable_text_channel/2]).
 
 -type guild_state() :: map().
 -type guild_reply(T) :: {reply, T, guild_state()}.
@@ -23,14 +17,17 @@
 -type guild_id() :: integer().
 
 -define(CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, [
-    <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
+    <<"members">>,
+    members_normalized,
+    <<"member_role_index">>,
+    members_sorted_ids,
+    member_list_revision
 ]).
 -define(CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS, [active_guilds, user_roles, viewable_channels]).
--define(DEFAULT_CONNECT_SNAPSHOT_TRIM_MEMBERS, 5000).
 
--export_type([guild_state/0, guild_reply/1, user_id/0]).
+-export_type([guild_state/0]).
 
--spec get_guild_data(map(), guild_state()) -> guild_reply(map()).
+-spec get_guild_data(map(), guild_state()) -> {reply, map(), guild_state()}.
 get_guild_data(#{user_id := UserId}, State) ->
     Data = guild_data_index:ensure_data_map(State),
     case UserId of
@@ -41,7 +38,7 @@ get_guild_data(#{user_id := UserId}, State) ->
             get_guild_data_for_user(UserId, Data, State)
     end.
 
--spec get_auth_context(map(), guild_state()) -> guild_reply(map()).
+-spec get_auth_context(map(), guild_state()) -> {reply, map(), guild_state()}.
 get_auth_context(#{user_id := UserId, channel_id := ChannelId}, State) ->
     Data = guild_data_index:ensure_data_map(State),
     case UserId of
@@ -54,7 +51,7 @@ get_auth_context(#{user_id := UserId, channel_id := ChannelId}, State) ->
 -spec get_auth_context_for_member(user_id(), integer() | null, map(), guild_state()) ->
     guild_reply(map()).
 get_auth_context_for_member(UserId, ChannelId, Data, State) ->
-    case guild_data_index:get_member(UserId, Data) of
+    case guild_data_index_members:get_member(UserId, Data) of
         undefined ->
             {reply, #{auth_context => null, error_reason => <<"forbidden">>}, State};
         _Member ->
@@ -74,42 +71,33 @@ build_auth_guild(Data, State) ->
     GuildProperties#{
         <<"roles">> => map_utils:ensure_list(maps:get(<<"roles">>, Data, [])),
         <<"member_count">> => maps:get(
-            member_count, State, guild_data_index:member_count(Data)
+            member_count, State, guild_data_index_members:member_count(Data)
         ),
-        <<"online_count">> => guild_member_list:get_online_count(State)
+        <<"online_count">> => guild_member_list_read:get_online_count(State)
     }.
 
 -spec find_channel(integer() | null, map()) -> map() | null.
 find_channel(null, _Data) ->
     null;
 find_channel(ChannelId, Data) ->
-    maps:get(ChannelId, guild_data_index:channel_index(Data), null).
+    Index = guild_data_index_channels:channel_index(Data),
+    case maps:get(ChannelId, Index, null) of
+        null -> find_thread_parent_channel(ChannelId, Index, Data);
+        Channel -> Channel
+    end.
 
--spec get_guild_member(map(), guild_state()) -> guild_reply(map()).
-get_guild_member(Request, State) ->
-    guild_data_members:get_guild_member(Request, State).
+-spec find_thread_parent_channel(term(), map(), map()) -> map() | null.
+find_thread_parent_channel(ChannelId, Index, Data) when is_integer(ChannelId) ->
+    case guild_thread_gate:thread(ChannelId, Data) of
+        undefined ->
+            null;
+        Thread ->
+            maps:get(guild_thread_permissions:parent_id(Thread), Index, null)
+    end;
+find_thread_parent_channel(_ChannelId, _Index, _Data) ->
+    null.
 
--spec get_guild_members_batch(map(), guild_state()) -> guild_reply(map()).
-get_guild_members_batch(Request, State) ->
-    guild_data_members:get_guild_members_batch(Request, State).
-
--spec has_member(map(), guild_state()) -> guild_reply(map()).
-has_member(Request, State) ->
-    guild_data_members:has_member(Request, State).
-
--spec list_guild_members(map(), guild_state()) -> guild_reply(map()).
-list_guild_members(Request, State) ->
-    guild_data_members:list_guild_members(Request, State).
-
--spec search_guild_members(map(), guild_state()) -> guild_reply(map()).
-search_guild_members(Request, State) ->
-    guild_data_members:search_guild_members(Request, State).
-
--spec get_vanity_url_channel(guild_state()) -> guild_reply(map()).
-get_vanity_url_channel(State) ->
-    get_everyone_viewable_text_channel(State).
-
--spec get_first_viewable_text_channel(guild_state()) -> guild_reply(map()).
+-spec get_first_viewable_text_channel(guild_state()) -> {reply, map(), guild_state()}.
 get_first_viewable_text_channel(State) ->
     get_everyone_viewable_text_channel(State).
 
@@ -121,28 +109,51 @@ get_everyone_viewable_text_channel(State) ->
     ),
     {reply, #{channel_id => EveryoneChannelId}, State}.
 
--spec find_everyone_viewable_text_channel([map()], guild_state()) -> integer() | null.
-find_everyone_viewable_text_channel(Channels, State) ->
-    guild_data_channels:find_everyone_viewable_text_channel(Channels, State).
-
--spec get_guild_state(user_id(), guild_state()) -> map().
+-spec get_guild_state(integer(), guild_state()) -> map().
 get_guild_state(UserId, State) ->
+    get_guild_state(UserId, State, #{}).
+
+-spec get_guild_state(integer(), guild_state(), map()) -> map().
+get_guild_state(UserId, State, Opts) ->
+    GuildState = base_guild_state(UserId, State),
+    case guild_thread_gate:needs_variant(State) of
+        false -> GuildState;
+        true -> apply_thread_view(UserId, Opts, State, GuildState)
+    end.
+
+-spec apply_thread_view(user_id(), map(), guild_state(), map()) -> map().
+apply_thread_view(UserId, #{thread_viewer := true} = Opts, State, GuildState) ->
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
+    GuildState#{<<"threads">> => guild_thread_view:guild_threads(UserId, Opts, Member, State)};
+apply_thread_view(UserId, _Opts, State, GuildState) ->
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
+    Channels = guild_thread_view:hide_for_non_viewer(
+        UserId, Member, State, maps:get(<<"channels">>, GuildState, [])
+    ),
+    Roles = [
+        guild_thread_payload:mask_role(R)
+     || R <- maps:get(<<"roles">>, GuildState, []), is_map(R)
+    ],
+    GuildState#{<<"channels">> => Channels, <<"roles">> => Roles}.
+
+-spec base_guild_state(user_id(), guild_state()) -> map().
+base_guild_state(UserId, State) ->
     Data = guild_data_index:ensure_data_map(State),
     GuildId = guild_id(State),
     AllChannels = guild_data_channels:channels_from_data(Data),
-    Member = guild_data_members:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     {ViewableChannels, JoinedAt} = guild_data_channels:derive_member_view(
         UserId, Member, State, AllChannels
     ),
-    OnlineCount = guild_member_list:get_online_count(State),
+    OnlineCount = guild_member_list_read:get_online_count(State),
     OwnMemberList = own_member_list(Member),
     StateWithVoice = fetch_latest_voice_states(State),
-    AllVoiceStates = guild_voice:get_voice_states_list(StateWithVoice),
+    AllVoiceStates = guild_voice_state:get_voice_states_list(StateWithVoice),
     ViewableChannelIds = channel_id_set(ViewableChannels),
     VoiceStates = filter_voice_states(AllVoiceStates, ViewableChannelIds),
     VoiceMembers = resolve_voice_members(VoiceStates, Data),
     Members = guild_data_channels:merge_members(OwnMemberList, VoiceMembers),
-    MemberCount = maps:get(member_count, State, guild_data_index:member_count(Data)),
+    MemberCount = maps:get(member_count, State, guild_data_index_members:member_count(Data)),
     build_guild_state_map(
         GuildId,
         Data,
@@ -154,8 +165,10 @@ get_guild_state(UserId, State) ->
         JoinedAt
     ).
 
--spec build_connect_snapshot(map(), guild_state()) -> map().
-build_connect_snapshot(Item, State) ->
+-spec build_connect_snapshot(map() | [map()], guild_state()) -> map().
+build_connect_snapshot(Item, State) when is_map(Item) ->
+    build_connect_snapshot([Item], State);
+build_connect_snapshot(Items, State) ->
     Base = maps:with(
         [
             id,
@@ -169,17 +182,27 @@ build_connect_snapshot(Item, State) ->
         ],
         State
     ),
-    project_snapshot_sessions(maybe_trim_connect_snapshot(Item, Base, State)).
+    project_snapshot_sessions(maybe_trim_connect_snapshot(Items, Base, State)).
 
 -spec project_snapshot_sessions(map()) -> map().
 project_snapshot_sessions(#{sessions := Sessions} = Snapshot) when is_map(Sessions) ->
+    Retained =
+        case snapshot_reads_sessions(Snapshot) of
+            true -> Sessions;
+            false -> #{}
+        end,
     Projected = maps:map(
         fun(_SessionId, SessionData) -> project_snapshot_session(SessionData) end,
-        Sessions
+        Retained
     ),
     Snapshot#{sessions => Projected};
 project_snapshot_sessions(Snapshot) ->
     Snapshot.
+
+-spec snapshot_reads_sessions(map()) -> boolean().
+snapshot_reads_sessions(Snapshot) ->
+    guild_availability_check:get_unavailability_mode_from_state(Snapshot) =:=
+        unavailable_for_everyone_but_staff.
 
 -spec project_snapshot_session(term()) -> term().
 project_snapshot_session(SessionData) when is_map(SessionData) ->
@@ -187,49 +210,24 @@ project_snapshot_session(SessionData) when is_map(SessionData) ->
 project_snapshot_session(SessionData) ->
     SessionData.
 
--spec maybe_trim_connect_snapshot(map(), map(), guild_state()) -> map().
-maybe_trim_connect_snapshot(Item, Base, State) ->
+-spec maybe_trim_connect_snapshot([map()], map(), guild_state()) -> map().
+maybe_trim_connect_snapshot(Items, Base, State) ->
     case should_trim_connect_snapshot(State) of
-        true -> trim_connect_snapshot(Item, Base);
+        true -> trim_connect_snapshot(Items, Base);
         false -> Base
     end.
 
 -spec should_trim_connect_snapshot(guild_state()) -> boolean().
 should_trim_connect_snapshot(State) ->
-    case connect_snapshot_trim_member_threshold() of
-        undefined ->
-            false;
-        Threshold ->
-            member_count_at_least(Threshold, State) andalso has_members_ets(State)
-    end.
-
--spec member_count_at_least(pos_integer(), guild_state()) -> boolean().
-member_count_at_least(Threshold, State) ->
-    case maps:get(member_count, State, undefined) of
-        Count when is_integer(Count) -> Count >= Threshold;
-        _ -> false
-    end.
-
--spec connect_snapshot_trim_member_threshold() -> pos_integer() | undefined.
-connect_snapshot_trim_member_threshold() ->
-    case
-        application:get_env(
-            fluxer_gateway,
-            connect_snapshot_trim_member_threshold,
-            ?DEFAULT_CONNECT_SNAPSHOT_TRIM_MEMBERS
-        )
-    of
-        N when is_integer(N), N > 0 -> N;
-        _ -> undefined
-    end.
+    has_members_ets(State).
 
 -spec has_members_ets(guild_state()) -> boolean().
 has_members_ets(#{data := #{members_ets := Tab}}) -> is_reference(Tab);
 has_members_ets(_) -> false.
 
--spec trim_connect_snapshot(map(), map()) -> map().
-trim_connect_snapshot(Item, #{data := Data} = Base) when is_map(Data) ->
-    Retained = retained_member_map(Item, Base, Data),
+-spec trim_connect_snapshot([map()], map()) -> map().
+trim_connect_snapshot(Items, #{data := Data} = Base) when is_map(Data) ->
+    Retained = retained_member_map(Items, Base, Data),
     Trimmed = maps:without(?CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, Data),
     Base#{
         data => Trimmed#{
@@ -239,12 +237,12 @@ trim_connect_snapshot(Item, #{data := Data} = Base) when is_map(Data) ->
                 guild_data_index_members:build_member_role_index(Retained)
         }
     };
-trim_connect_snapshot(_Item, Base) ->
+trim_connect_snapshot(_Items, Base) ->
     Base.
 
--spec retained_member_map(map(), map(), map()) -> #{integer() => map()}.
-retained_member_map(Item, Base, Data) ->
-    UserIds = [connect_user_id(Item) | voice_state_user_ids(Base)],
+-spec retained_member_map([map()], map(), map()) -> #{integer() => map()}.
+retained_member_map(Items, Base, Data) ->
+    UserIds = [connect_user_id(Item) || Item <- Items] ++ voice_state_user_ids(Base),
     lists:foldl(
         fun(UserId, Acc) -> retain_member(UserId, Data, Acc) end,
         #{},
@@ -325,12 +323,12 @@ fetch_latest_voice_states(State) ->
 
 -spec get_guild_data_for_user(user_id(), map(), guild_state()) -> guild_reply(map()).
 get_guild_data_for_user(UserId, Data, State) ->
-    case guild_data_index:get_member(UserId, Data) of
+    case guild_data_index_members:get_member(UserId, Data) of
         undefined ->
             {reply, #{guild_data => null, error_reason => <<"forbidden">>}, State};
         Member ->
-            GuildData = build_member_guild_data(UserId, Member, Data, State),
-            {reply, #{guild_data => GuildData}, State}
+            {GuildData, NewState} = build_member_guild_data(UserId, Member, Data, State),
+            {reply, #{guild_data => GuildData}, NewState}
     end.
 
 -spec build_complete_guild_data(map(), guild_state()) -> map().
@@ -339,14 +337,17 @@ build_complete_guild_data(Data, State) ->
     Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
     maps:merge(GuildProperties, build_guild_collection_data(Data, Channels, State)).
 
--spec build_member_guild_data(user_id(), map(), map(), guild_state()) -> map().
+-spec build_member_guild_data(user_id(), map(), map(), guild_state()) -> {map(), guild_state()}.
 build_member_guild_data(UserId, Member, Data, State) ->
     GuildProperties = maps:get(<<"guild">>, Data, #{}),
     AllChannels = guild_data_channels:channels_from_data(Data),
-    {ViewableChannels, _JoinedAt} = guild_data_channels:derive_member_view(
+    {ViewableChannels, NewState} = guild_data_channels:member_view(
         UserId, Member, State, AllChannels
     ),
-    maps:merge(GuildProperties, build_guild_collection_data(Data, ViewableChannels, State)).
+    GuildData = maps:merge(
+        GuildProperties, build_guild_collection_data(Data, ViewableChannels, State)
+    ),
+    {GuildData, NewState}.
 
 -spec build_guild_collection_data(map(), [map()], guild_state()) -> map().
 build_guild_collection_data(Data, Channels, State) ->
@@ -356,9 +357,9 @@ build_guild_collection_data(Data, Channels, State) ->
         <<"emojis">> => map_utils:ensure_list(maps:get(<<"emojis">>, Data, [])),
         <<"stickers">> => map_utils:ensure_list(maps:get(<<"stickers">>, Data, [])),
         <<"member_count">> => maps:get(
-            member_count, State, guild_data_index:member_count(Data)
+            member_count, State, guild_data_index_members:member_count(Data)
         ),
-        <<"online_count">> => guild_member_list:get_online_count(State)
+        <<"online_count">> => guild_member_list_read:get_online_count(State)
     }.
 
 -spec own_member_list(map() | undefined) -> [map()].
@@ -368,7 +369,7 @@ own_member_list(M) -> [M].
 -spec filter_voice_states([map()], sets:set(integer())) -> [map()].
 filter_voice_states(AllVoiceStates, ViewableChannelIds) ->
     [
-        guild_data_channels:sanitize_voice_state(VS)
+        voice_state_utils:sanitize_voice_state_for_broadcast(VS)
      || VS <- AllVoiceStates,
         voice_state_in_viewable_channel(VS, ViewableChannelIds)
     ].
@@ -495,110 +496,3 @@ guild_id_wire_value(undefined) ->
     null;
 guild_id_wire_value(GuildId) ->
     integer_to_binary(GuildId).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-projection_snapshot() ->
-    #{
-        sessions => #{
-            <<"s1">> => #{
-                session_id => <<"s1">>,
-                user_id => 7,
-                pid => self(),
-                bot => false,
-                is_staff => true,
-                pending_connect => false,
-                active_guilds => sets:new(),
-                user_roles => [1, 2],
-                viewable_channels => #{10 => true}
-            }
-        }
-    }.
-
-projection_entry(Snapshot) ->
-    maps:get(<<"s1">>, maps:get(sessions, Snapshot)).
-
-project_snapshot_sessions_drops_only_heavy_keys_test() ->
-    Entry = projection_entry(project_snapshot_sessions(projection_snapshot())),
-    ?assertEqual(7, maps:get(user_id, Entry)),
-    ?assertEqual(true, maps:get(is_staff, Entry)),
-    ?assertEqual(false, maps:get(pending_connect, Entry)),
-    ?assertEqual(<<"s1">>, maps:get(session_id, Entry)),
-    ?assertNot(maps:is_key(active_guilds, Entry)),
-    ?assertNot(maps:is_key(user_roles, Entry)),
-    ?assertNot(maps:is_key(viewable_channels, Entry)).
-
-projection_keeps_session_staff_lookup_test() ->
-    Projected = project_snapshot_sessions(projection_snapshot()),
-    ?assertEqual(true, guild_availability_check:is_user_staff(7, Projected)).
-
-projection_leaves_snapshot_data_untouched_test() ->
-    Data = #{<<"members">> => #{7 => #{}}, members_ets => make_ref()},
-    Snapshot = maps:put(data, Data, projection_snapshot()),
-    ?assertEqual(Data, maps:get(data, project_snapshot_sessions(Snapshot))).
-
-projection_keeps_non_map_session_entries_test() ->
-    Snapshot = #{sessions => #{<<"broken">> => not_a_map}},
-    ?assertEqual(Snapshot, project_snapshot_sessions(Snapshot)).
-
-projection_keeps_snapshot_without_sessions_test() ->
-    Snapshot = #{id => 42, member_count => 3},
-    ?assertEqual(Snapshot, project_snapshot_sessions(Snapshot)).
-
-trim_state(MemberCount) ->
-    #{id => 42, member_count => MemberCount, data => #{members_ets => make_ref()}}.
-
-with_trim_threshold(Threshold, Fun) ->
-    application:set_env(fluxer_gateway, connect_snapshot_trim_member_threshold, Threshold),
-    try
-        Fun()
-    after
-        application:unset_env(fluxer_gateway, connect_snapshot_trim_member_threshold)
-    end.
-
-trim_defaults_to_large_guilds_test() ->
-    application:unset_env(fluxer_gateway, connect_snapshot_trim_member_threshold),
-    Default = ?DEFAULT_CONNECT_SNAPSHOT_TRIM_MEMBERS,
-    ?assertEqual(true, should_trim_connect_snapshot(trim_state(49435))),
-    ?assertEqual(true, should_trim_connect_snapshot(trim_state(Default))),
-    ?assertEqual(false, should_trim_connect_snapshot(trim_state(Default - 1))).
-
-trim_needs_member_count_at_threshold_test() ->
-    with_trim_threshold(20000, fun() ->
-        ?assertEqual(true, should_trim_connect_snapshot(trim_state(49435))),
-        ?assertEqual(true, should_trim_connect_snapshot(trim_state(20000))),
-        ?assertEqual(false, should_trim_connect_snapshot(trim_state(19999))),
-        NoCount = maps:remove(member_count, trim_state(1)),
-        ?assertEqual(false, should_trim_connect_snapshot(NoCount))
-    end).
-
-trim_needs_members_ets_test() ->
-    with_trim_threshold(1, fun() ->
-        ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10, data => #{}})),
-        ?assertEqual(
-            false,
-            should_trim_connect_snapshot(#{member_count => 10, data => #{members_ets => 7}})
-        ),
-        ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10}))
-    end).
-
-trim_ignores_invalid_threshold_test() ->
-    with_trim_threshold(0, fun() ->
-        ?assertEqual(false, should_trim_connect_snapshot(trim_state(49435)))
-    end),
-    with_trim_threshold(not_an_integer, fun() ->
-        ?assertEqual(false, should_trim_connect_snapshot(trim_state(49435)))
-    end).
-
-trim_and_projection_target_disjoint_keys_test() ->
-    ?assertEqual(
-        [],
-        [
-            Key
-         || Key <- ?CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS,
-            lists:member(Key, ?CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS)
-        ]
-    ).
-
--endif.

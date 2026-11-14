@@ -9,13 +9,9 @@
 
 -spec version() -> binary().
 version() ->
-    case os:getenv("BUILD_VERSION") of
-        false ->
-            <<"dev">>;
-        "" ->
-            <<"dev">>;
-        Value ->
-            ensure_binary(Value)
+    case fluxer_gateway_config:env_value("BUILD_VERSION") of
+        undefined -> <<"dev">>;
+        Value -> ensure_binary(Value)
     end.
 
 -spec version_headers(#{binary() => binary()}) -> #{binary() => binary()}.

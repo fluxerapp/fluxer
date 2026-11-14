@@ -1,0 +1,134 @@
+{
+	admin off
+	persist_config off
+	skip_install_trust
+	storage file_system {{.Storage}}
+	{{- if .Bind}}
+	default_bind {{.Bind}}
+	{{- end}}
+	http_port {{.HTTPPort}}
+	https_port {{.HTTPSPort}}
+	servers {
+		trusted_proxies static {{.TrustedProxies}}
+		trusted_proxies_strict
+		protocols {{.Protocols}}
+	}
+	{{.GlobalOptions}}
+}
+
+(upstream) {
+	reverse_proxy {args[0]} {
+		header_up X-Forwarded-For {client_ip}
+		header_up X-Real-IP {client_ip}
+		header_up -Forwarded
+	}
+}
+
+(stream) {
+	reverse_proxy {args[0]} {
+		header_up X-Forwarded-For {client_ip}
+		header_up X-Real-IP {client_ip}
+		header_up -Forwarded
+		stream_close_delay 5m
+	}
+}
+
+{{.Site}} {
+	{{.TLS}}
+{{- if .Ready}}
+	import {{.CaddyDir}}/*.caddy
+	encode {{.Encode}}
+
+	@internal path /api/_* /media/_* /gateway/_*
+	handle @internal {
+		respond 404
+	}
+
+	@dotfiles {
+		path */.*
+		not path /.well-known/* /api/* /media/*
+	}
+	handle @dotfiles {
+		respond 404
+	}
+
+	handle /_health {
+		header Cache-Control no-store
+		respond "OK" 200
+	}
+
+	@licenses path /LICENSE /THIRD_PARTY_LICENSES.md
+	handle @licenses {
+		root * {{.Static}}
+		header Content-Type "text/plain; charset=utf-8"
+		file_server
+	}
+
+	handle /_edge {
+		header Cache-Control no-store
+		respond "{system.hostname}" 200
+	}
+
+	handle_path /api/* {
+		import stream {{.API}}
+	}
+
+	handle /gateway {
+		rewrite * /
+		import stream {{.Gateway}}
+	}
+
+	handle_path /gateway/* {
+		import stream {{.Gateway}}
+	}
+
+	handle_path /media/* {
+		import upstream {{.Media}}
+	}
+	{{- if .LiveKit}}
+
+	handle_path /livekit/* {
+		import stream {{.LiveKitAddr}}
+	}
+	{{- end}}
+
+	handle {{.AdminBasePath}} {
+		rewrite * /
+		import upstream {{.Admin}}
+	}
+
+	handle_path {{.AdminBasePath}}/* {
+		import upstream {{.Admin}}
+	}
+
+	@staticAssets path /web/* /emoji/* /libs/* /avatars/* /badges/* /desktop/*
+	handle @staticAssets {
+		header {
+			defer
+			Access-Control-Allow-Origin *
+		}
+		import upstream {{.AppProxy}}
+	}
+
+	handle /.well-known/fluxer {
+		import upstream {{.API}}
+	}
+
+	handle /.well-known/webfinger {
+		import upstream {{.API}}
+	}
+
+	handle {
+		import upstream {{.AppProxy}}
+	}
+{{- else}}
+
+	header Cache-Control no-store
+	header Retry-After 5
+	respond "Fluxer is starting" 503
+{{- end}}
+}
+{{- if .Ready}}
+
+import {{.CaddyDir}}/sites/*.caddy
+{{- end}}

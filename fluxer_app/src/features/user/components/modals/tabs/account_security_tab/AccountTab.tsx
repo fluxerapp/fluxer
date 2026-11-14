@@ -9,21 +9,36 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {EmailChangeModal} from '@app/features/user/components/modals/EmailChangeModal';
 import {PasswordChangeModal} from '@app/features/user/components/modals/PasswordChangeModal';
+import {
+	AccountSecurityCard,
+	AccountSecurityRow,
+} from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecurityCard';
 import styles from '@app/features/user/components/modals/tabs/account_security_tab/AccountTab.module.css';
+import {
+	RecoveryKitReminderAlert,
+	RecoveryKitRow,
+} from '@app/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings';
+import {
+	canConnectSso,
+	SsoConnectRow,
+} from '@app/features/user/components/modals/tabs/account_security_tab/SsoConnectRow';
 import type {User} from '@app/features/user/models/User';
+import {needsEmailConfirmation} from '@app/features/user/utils/AccountGates';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
+import {
+	HIDE_EMAIL_TOGGLE_DESCRIPTOR,
+	REVEAL_DESCRIPTOR as REVEAL_EMAIL_TOGGLE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
+import {AccountTiers, AccountVerificationNeeds} from '@fluxer/constants/src/AccountTierConstants';
+import {hasUserTrait, UserTraits} from '@fluxer/constants/src/UserTraitConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
-const HIDE_EMAIL_TOGGLE_DESCRIPTOR = msg({
-	message: 'Hide',
-	comment: 'Account settings: button that hides the user email address (currently revealed). Verb, sentence case.',
-});
-const REVEAL_EMAIL_TOGGLE_DESCRIPTOR = msg({
-	message: 'Reveal',
-	comment: 'Account settings: button that reveals the masked user email address. Verb, sentence case.',
+const SIGN_IN_METHODS_DESCRIPTOR = msg({
+	message: 'Sign-in methods',
+	comment: 'Accessible name for the group of email, password and recovery kit rows in account settings.',
 });
 const maskEmail = (email: string): string => {
 	const [username, domain] = email.split('@');
@@ -31,188 +46,225 @@ const maskEmail = (email: string): string => {
 	return `${maskedUsername}@${domain}`;
 };
 
+function isSsoRequired(): boolean {
+	return RuntimeConfig.getSnapshot().sso?.enforced === true;
+}
+
+function credentialsManagedBySso(user: User): boolean {
+	return isSsoRequired() && hasUserTrait(user.traits, UserTraits.SSO);
+}
+
 interface AccountTabProps {
 	user: User;
-	isClaimed: boolean;
 	showMaskedEmail: boolean;
 	setShowMaskedEmail: (show: boolean) => void;
 }
 
-export const AccountTabContent: React.FC<AccountTabProps> = observer(
-	({user, isClaimed, showMaskedEmail, setShowMaskedEmail}) => {
-		const {i18n} = useLingui();
-		const emailRow = isClaimed ? (
-			<>
-				<div className={styles.row} data-flx="user.account-security-tab.account-tab.account-tab-content.email-row">
-					<div
-						className={styles.rowContent}
-						data-flx="user.account-security-tab.account-tab.account-tab-content.email-row-content"
+export const AccountTabContent: React.FC<AccountTabProps> = observer(({user, showMaskedEmail, setShowMaskedEmail}) => {
+	const {i18n} = useLingui();
+	const usesUsernameSignIn = RuntimeConfig.usesUsernameSignIn;
+	const need = user.verificationNeed;
+	const needsPassword = need === AccountVerificationNeeds.SET_PASSWORD;
+	const isClaimed = user.accountTier !== AccountTiers.UNCLAIMED;
+	const credentialsManaged = credentialsManagedBySso(user);
+	const showsRecoveryKit = usesUsernameSignIn && isClaimed && !isSsoRequired();
+	const email = user.email;
+	let emailRow: React.ReactNode;
+	if (usesUsernameSignIn) {
+		emailRow = null;
+	} else if (email != null) {
+		emailRow = (
+			<AccountSecurityRow
+				label={<Trans>Email address</Trans>}
+				description={
+					<span
+						className={styles.emailRow}
+						data-flx="user.account-security-tab.account-tab.account-tab-content.email-value"
 					>
-						<div
-							className={styles.label}
-							data-flx="user.account-security-tab.account-tab.account-tab-content.email-label"
+						<span
+							className={`${styles.emailText} ${showMaskedEmail ? styles.emailTextSelectable : ''}`}
+							data-flx="user.account-security-tab.account-tab.account-tab-content.email-text"
 						>
-							<Trans>Email address</Trans>
-						</div>
-						<div
-							className={styles.emailRow}
-							data-flx="user.account-security-tab.account-tab.account-tab-content.email-value-row"
+							{showMaskedEmail ? email : maskEmail(email)}
+						</span>
+						<button
+							type="button"
+							className={styles.toggleButton}
+							onClick={() => setShowMaskedEmail(!showMaskedEmail)}
+							data-flx="user.account-security-tab.account-tab.account-tab-content.toggle-button"
 						>
-							<span
-								className={`${styles.emailText} ${showMaskedEmail ? styles.emailTextSelectable : ''}`}
-								data-flx="user.account-security-tab.account-tab.account-tab-content.email-text"
-							>
-								{showMaskedEmail ? user.email : maskEmail(user.email!)}
-							</span>
-							<button
-								type="button"
-								className={styles.toggleButton}
-								onClick={() => setShowMaskedEmail(!showMaskedEmail)}
-								data-flx="user.account-security-tab.account-tab.account-tab-content.toggle-email-visibility"
-							>
-								{showMaskedEmail ? i18n._(HIDE_EMAIL_TOGGLE_DESCRIPTOR) : i18n._(REVEAL_EMAIL_TOGGLE_DESCRIPTOR)}
-							</button>
-						</div>
-					</div>
-					{RuntimeConfig.emailsEnabled && (
-						<Button
-							small={true}
-							onClick={() =>
-								ModalCommands.push(
-									modal(() => (
-										<EmailChangeModal
-											user={user}
-											data-flx="user.account-security-tab.account-tab.account-tab-content.email-change-modal"
-										/>
-									)),
-								)
-							}
-							data-flx="user.account-security-tab.account-tab.account-tab-content.change-email-button"
-						>
-							<Trans>Change email</Trans>
-						</Button>
-					)}
-				</div>
-				{RuntimeConfig.emailsEnabled && user.email && !user.verified && (
-					<EmailVerificationAlert data-flx="user.account-security-tab.account-tab.account-tab-content.email-verification-alert" />
+							{showMaskedEmail ? i18n._(HIDE_EMAIL_TOGGLE_DESCRIPTOR) : i18n._(REVEAL_EMAIL_TOGGLE_DESCRIPTOR)}
+						</button>
+					</span>
+				}
+				data-flx="user.account-security-tab.account-tab.account-tab-content.email-row"
+			>
+				{RuntimeConfig.emailsEnabled && isClaimed && !credentialsManaged && (
+					<Button
+						variant="secondary"
+						small={true}
+						onClick={() =>
+							ModalCommands.push(
+								modal(() => (
+									<EmailChangeModal
+										user={user}
+										data-flx="user.account-security-tab.account-tab.account-tab-content.email-change-modal"
+									/>
+								)),
+							)
+						}
+						data-flx="user.account-security-tab.account-tab.account-tab-content.button.change-email"
+					>
+						<Trans>Change email</Trans>
+					</Button>
 				)}
-			</>
-		) : (
-			<div className={styles.row} data-flx="user.account-security-tab.account-tab.account-tab-content.email-row">
-				<div
-					className={styles.rowContent}
-					data-flx="user.account-security-tab.account-tab.account-tab-content.email-row-content"
-				>
-					<div
-						className={styles.label}
-						data-flx="user.account-security-tab.account-tab.account-tab-content.email-label"
+			</AccountSecurityRow>
+		);
+	} else {
+		emailRow = (
+			<AccountSecurityRow
+				label={<Trans>Email address</Trans>}
+				warning={<Trans>No email address set</Trans>}
+				data-flx="user.account-security-tab.account-tab.account-tab-content.email-row--unclaimed"
+			>
+				{!isClaimed && !credentialsManaged && (
+					<Button
+						small={true}
+						onClick={() => openClaimAccountModal()}
+						data-flx="user.account-security-tab.account-tab.account-tab-content.button.add-email"
 					>
-						<Trans>Email address</Trans>
-					</div>
-					<div
-						className={styles.warningText}
-						data-flx="user.account-security-tab.account-tab.account-tab-content.email-warning"
-					>
-						<Trans>No email address set</Trans>
-					</div>
-				</div>
+						<Trans>Add email</Trans>
+					</Button>
+				)}
+			</AccountSecurityRow>
+		);
+	}
+	let passwordRow: React.ReactNode;
+	if (need === AccountVerificationNeeds.ADD_EMAIL) {
+		passwordRow = null;
+	} else if (credentialsManaged) {
+		passwordRow = (
+			<AccountSecurityRow
+				label={<Trans>Password</Trans>}
+				description={
+					<Trans comment="Description of the password row in account settings when the instance requires single sign-on and the sign-in provider manages the account's email and password.">
+						Your sign-in provider manages your email and password.
+					</Trans>
+				}
+				data-flx="user.account-security-tab.account-tab.account-tab-content.password-row--sso"
+			/>
+		);
+	} else if (needsPassword) {
+		passwordRow = (
+			<AccountSecurityRow
+				label={<Trans>Password</Trans>}
+				warning={<Trans>No password set</Trans>}
+				data-flx="user.account-security-tab.account-tab.account-tab-content.password-row--unclaimed"
+			>
 				<Button
 					small={true}
-					className={styles.claimButton}
-					fitContent
 					onClick={() => openClaimAccountModal()}
-					data-flx="user.account-security-tab.account-tab.account-tab-content.add-email-button"
+					data-flx="user.account-security-tab.account-tab.account-tab-content.button.set-password"
 				>
-					<Trans>Add email</Trans>
+					<Trans>Set password</Trans>
 				</Button>
-			</div>
+			</AccountSecurityRow>
 		);
-		const passwordRow = (
-			<div
-				className={styles.divider}
-				data-flx="user.account-security-tab.account-tab.account-tab-content.password-block"
-			>
-				<div className={styles.row} data-flx="user.account-security-tab.account-tab.account-tab-content.password-row">
-					{isClaimed ? (
-						<>
-							<div
-								className={styles.rowContent}
-								data-flx="user.account-security-tab.account-tab.account-tab-content.password-row-content"
-							>
-								<div
-									className={styles.label}
-									data-flx="user.account-security-tab.account-tab.account-tab-content.password-label"
-								>
-									<Trans>Password</Trans>
-								</div>
-								<div
-									className={styles.description}
-									data-flx="user.account-security-tab.account-tab.account-tab-content.password-description"
-								>
-									{user.passwordLastChangedAt ? (
-										<Trans>Last changed: {DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)}</Trans>
-									) : (
-										<Trans>Last changed: never</Trans>
-									)}
-								</div>
-							</div>
-							<Button
-								small={true}
-								onClick={() =>
-									ModalCommands.push(
-										modal(() => (
-											<PasswordChangeModal data-flx="user.account-security-tab.account-tab.account-tab-content.password-change-modal" />
-										)),
-									)
-								}
-								data-flx="user.account-security-tab.account-tab.account-tab-content.change-password-button"
-							>
-								<Trans>Change password</Trans>
-							</Button>
-						</>
+	} else if (!user.hasPassword && RuntimeConfig.emailsEnabled) {
+		passwordRow = (
+			<AccountSecurityRow
+				label={<Trans>Password</Trans>}
+				description={
+					user.accountTier === AccountTiers.VERIFIED ? (
+						<Trans comment="Description of the password row in account settings when the account has a confirmed email but no password.">
+							You sign in with a code sent to your email. A password is optional.
+						</Trans>
 					) : (
-						<>
-							<div
-								className={styles.rowContent}
-								data-flx="user.account-security-tab.account-tab.account-tab-content.password-row-content"
-							>
-								<div
-									className={styles.label}
-									data-flx="user.account-security-tab.account-tab.account-tab-content.password-label"
-								>
-									<Trans>Password</Trans>
-								</div>
-								<div
-									className={styles.warningText}
-									data-flx="user.account-security-tab.account-tab.account-tab-content.password-warning"
-								>
-									<Trans>No password set</Trans>
-								</div>
-							</div>
-							<Button
-								small={true}
-								className={styles.claimButton}
-								fitContent
-								onClick={() => openClaimAccountModal()}
-								data-flx="user.account-security-tab.account-tab.account-tab-content.set-password-button"
-							>
-								<Trans>Set password</Trans>
-							</Button>
-						</>
-					)}
-				</div>
-			</div>
-		);
-		return (
-			<>
-				{!isClaimed && (
-					<UnclaimedAccountAlert data-flx="user.account-security-tab.account-tab.account-tab-content.unclaimed-account-alert" />
+						<Trans comment="Description of the password row in account settings when the account email is not confirmed yet.">
+							Confirm your email first. Then you can set a password.
+						</Trans>
+					)
+				}
+				data-flx="user.account-security-tab.account-tab.account-tab-content.password-row--set"
+			>
+				{user.accountTier === AccountTiers.VERIFIED && (
+					<Button
+						variant="secondary"
+						small={true}
+						onClick={() =>
+							ModalCommands.push(
+								modal(() => (
+									<PasswordChangeModal data-flx="user.account-security-tab.account-tab.account-tab-content.password-set-modal" />
+								)),
+							)
+						}
+						data-flx="user.account-security-tab.account-tab.account-tab-content.button.set-password--claimed"
+					>
+						<Trans>Set password</Trans>
+					</Button>
 				)}
-				<div className={styles.accountRows} data-flx="user.account-security-tab.account-tab.account-tab-content.rows">
-					{emailRow}
-					{passwordRow}
-				</div>
-			</>
+			</AccountSecurityRow>
 		);
-	},
-);
+	} else {
+		passwordRow = (
+			<AccountSecurityRow
+				label={<Trans>Password</Trans>}
+				description={
+					user.passwordLastChangedAt ? (
+						<Trans>Last changed: {DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)}</Trans>
+					) : (
+						<Trans>Last changed: never</Trans>
+					)
+				}
+				data-flx="user.account-security-tab.account-tab.account-tab-content.password-row"
+			>
+				<Button
+					variant="secondary"
+					small={true}
+					onClick={() =>
+						ModalCommands.push(
+							modal(() => (
+								<PasswordChangeModal data-flx="user.account-security-tab.account-tab.account-tab-content.password-change-modal" />
+							)),
+						)
+					}
+					data-flx="user.account-security-tab.account-tab.account-tab-content.button.change-password"
+				>
+					<Trans>Change password</Trans>
+				</Button>
+			</AccountSecurityRow>
+		);
+	}
+	return (
+		<>
+			{needsPassword && !credentialsManaged && (
+				<UnclaimedAccountAlert data-flx="user.account-security-tab.account-tab.account-tab-content.unclaimed-account-alert" />
+			)}
+			{showsRecoveryKit && (
+				<RecoveryKitReminderAlert
+					user={user}
+					data-flx="user.account-security-tab.account-tab.account-tab-content.recovery-kit-reminder-alert"
+				/>
+			)}
+			<AccountSecurityCard
+				aria-label={i18n._(SIGN_IN_METHODS_DESCRIPTOR)}
+				data-flx="user.account-security-tab.account-tab.account-tab-content.rows"
+			>
+				{emailRow}
+				{passwordRow}
+				{showsRecoveryKit && (
+					<RecoveryKitRow
+						user={user}
+						data-flx="user.account-security-tab.account-tab.account-tab-content.recovery-kit-row"
+					/>
+				)}
+				{canConnectSso(user) && (
+					<SsoConnectRow data-flx="user.account-security-tab.account-tab.account-tab-content.sso-connect-row" />
+				)}
+			</AccountSecurityCard>
+			{needsEmailConfirmation(user) && (
+				<EmailVerificationAlert data-flx="user.account-security-tab.account-tab.account-tab-content.email-verification-alert" />
+			)}
+		</>
+	);
+});

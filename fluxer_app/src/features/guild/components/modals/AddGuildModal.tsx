@@ -77,7 +77,12 @@ export const AddGuildModal = observer(({initialView = 'landing'}: {initialView?:
 			<Modal.Root size="small" centered data-flx="guild.add-guild-modal.modal-root">
 				<Modal.Header title={getTitle()} data-flx="guild.add-guild-modal.modal-header" />
 				<Modal.Content contentClassName={styles.content} data-flx="guild.add-guild-modal.modal-content">
-					<SteppedCarousel step={view} steps={ADD_GUILD_VIEW_ORDER} data-flx="guild.add-guild-modal.stepped-carousel">
+					<SteppedCarousel
+						step={view}
+						steps={ADD_GUILD_VIEW_ORDER}
+						focusOnStepChange
+						data-flx="guild.add-guild-modal.stepped-carousel"
+					>
 						{renderView()}
 					</SteppedCarousel>
 				</Modal.Content>

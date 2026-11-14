@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UserActivityBuffer} from '@app/api/user/services/UserActivityBuffer';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {UserActivityBuffer} from '../../user/services/UserActivityBuffer';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const flushUserActivityBuffer: WorkerTaskHandler = async (_payload, helpers) => {
 	const {kvClient} = getWorkerDependencies();

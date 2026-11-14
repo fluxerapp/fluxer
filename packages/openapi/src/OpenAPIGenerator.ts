@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import {convertPathToOpenAPI} from '@fluxer/openapi/src/extractors/PathParameters';
 import {discoverControllerFiles, extractRoutesFromControllers} from '@fluxer/openapi/src/extractors/RouteExtractor';
 import {isExcludedRoutePath, OpenAPIGeneratorCatalog} from '@fluxer/openapi/src/generator/OpenAPIGeneratorCatalog';
@@ -66,7 +67,7 @@ export class OpenAPIGenerator {
 		return result.document;
 	}
 	public async generateWithStats(): Promise<OpenAPIGenerationResult> {
-		const schemaRegistry = new SchemaRegistry(this.settings.schemaTarget);
+		const schemaRegistry = new SchemaRegistry(this.settings.schemaTarget, this.settings.routeScope !== 'admin');
 		const controllerFiles = discoverControllerFiles(`${this.settings.basePath}/fluxer_api`);
 		const routes = this.filterRoutesForScope(extractRoutesFromControllers(controllerFiles));
 		await loadSchemasIntoRegistry(this.settings.basePath, schemaRegistry);
@@ -89,7 +90,7 @@ export class OpenAPIGenerator {
 				description: this.settings.description,
 				contact: {
 					name: 'Fluxer Platform AB',
-					email: 'support@fluxer.app',
+					email: 'support@fluxer.com',
 				},
 				license: {
 					name: 'AGPL-3.0',
@@ -140,7 +141,7 @@ export class OpenAPIGenerator {
 				continue;
 			}
 			if (!route.responseSchemaName && !route.hasNoContent) {
-				skippedRoutes.push(describeRoute(route, 'no responseSchema and no NoContent()'));
+				skippedRoutes.push(describeRoute(route, 'no responseSchema'));
 				continue;
 			}
 			if (!hasOpenAPIPathTemplate(route.path)) {
@@ -170,13 +171,12 @@ export class OpenAPIGenerator {
 		allSchemas: Record<string, OpenAPISchema>,
 		referencedSchemas: Set<string>,
 	): Record<string, OpenAPISchema> {
-		const publishedSchemas: Record<string, OpenAPISchema> = {};
-		for (const name of referencedSchemas) {
-			if (allSchemas[name]) {
-				publishedSchemas[name] = allSchemas[name];
-			}
+		const publishedSchemas = new Map<string, OpenAPISchema>();
+		for (const name of [...referencedSchemas, ...OpenAPIGeneratorCatalog.alwaysPublishedSchemas]) {
+			assert(Object.hasOwn(allSchemas, name), `Referenced OpenAPI schema is missing: ${name}`);
+			publishedSchemas.set(name, allSchemas[name]);
 		}
-		return publishedSchemas;
+		return Object.fromEntries(publishedSchemas);
 	}
 	private buildTags(routes: Array<ExtractedRoute>): Array<{
 		name: string;

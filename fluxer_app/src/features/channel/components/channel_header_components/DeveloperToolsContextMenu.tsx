@@ -37,10 +37,7 @@ export const DeveloperToolsContextMenu: React.FC<{onClose: () => void}> = observ
 			<MenuGroup data-flx="channel.channel-header-components.developer-tools-context-menu.menu-group--3">
 				<GeneralDeveloperOptionsMenu data-flx="channel.channel-header-components.developer-tools-context-menu.general-developer-options-menu" />
 				<AccountPremiumMenu data-flx="channel.channel-header-components.developer-tools-context-menu.account-premium-menu" />
-				<MockingMenu
-					onClose={onClose}
-					data-flx="channel.channel-header-components.developer-tools-context-menu.mocking-menu"
-				/>
+				<MockingMenu data-flx="channel.channel-header-components.developer-tools-context-menu.mocking-menu" />
 			</MenuGroup>
 			<MenuGroup data-flx="channel.channel-header-components.developer-tools-context-menu.menu-group--4">
 				<NagbarsMenu data-flx="channel.channel-header-components.developer-tools-context-menu.nagbars-menu" />

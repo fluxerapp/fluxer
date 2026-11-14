@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {isDeepStrictEqual} from 'node:util';
+import {createOpenAPIComponentRef, validateOpenAPIComponentName} from '@fluxer/openapi/src/OpenAPIComponentRef';
 import type {OpenAPISchemaTarget} from '@fluxer/openapi/src/OpenAPIGenerationTypes';
 import {visitOpenAPISchemaObjects} from '@fluxer/openapi/src/OpenAPISchemaVisitor';
 import type {OpenAPIDocument, OpenAPIRef, OpenAPISchema} from '@fluxer/openapi/src/OpenAPITypes';
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
-import {type core, z} from 'zod';
+import {core, z} from 'zod';
 
 export type SchemaIO = 'input' | 'output';
 
@@ -15,14 +16,8 @@ interface PendingSchema {
 }
 
 function componentName(name: string, io: SchemaIO): string {
-	if (!/^[A-Za-z0-9._-]+$/.test(name)) {
-		throw new Error(`Invalid OpenAPI schema name: ${name}`);
-	}
+	validateOpenAPIComponentName(name);
 	return io === 'input' ? `${name}Input` : name;
-}
-
-function componentRef(name: string): OpenAPIRef {
-	return {$ref: `#/components/schemas/${name}`};
 }
 
 function replaceSchema(target: OpenAPISchema, replacement: OpenAPISchema): void {
@@ -41,32 +36,32 @@ function applyMetadata(schema: core.$ZodType, json: OpenAPISchema): void {
 	if (!metadata) return;
 	if (metadata.format) json.format = metadata.format;
 	if (metadata.bitflagValues) json['x-bitflagValues'] = metadata.bitflagValues;
-	if (metadata.enumEntries) {
-		const entries = metadata.enumEntries;
-		json['x-enumNames'] = entries.map((entry) => entry.name);
-		const descriptions = entries.map((entry) => entry.description ?? null);
-		if (descriptions.some((description) => description !== null)) {
-			json['x-enumDescriptions'] = descriptions;
-		}
-		delete json.anyOf;
-		delete json.oneOf;
-		if (metadata.openEnum) {
-			json.type = 'string';
-			const knownValues = entries.map((entry) => String(entry.value)).join(', ');
-			json.description = `${json.description ? `${json.description} ` : ''}Known values: ${knownValues} (other values allowed)`;
-		} else {
-			delete json.const;
-			json.enum = entries.map((entry) => entry.value);
-			json.type = entries.every((entry) => typeof entry.value === 'string') ? 'string' : 'integer';
-		}
+	if (metadata.experiment) json['x-fluxer-experiment'] = metadata.experiment;
+	const entries = metadata.enumEntries;
+	if (!entries) return;
+	json['x-enumNames'] = entries.map((entry) => entry.name);
+	const descriptions = entries.map((entry) => entry.description ?? null);
+	if (descriptions.some((description) => description !== null)) {
+		json['x-enumDescriptions'] = descriptions;
+	}
+	delete json.anyOf;
+	delete json.oneOf;
+	if (metadata.openEnum) {
+		json.type = 'string';
+		const knownValues = entries.map((entry) => String(entry.value)).join(', ');
+		json.description = `${json.description ? `${json.description} ` : ''}Known values: ${knownValues} (other values allowed)`;
+	} else {
+		delete json.const;
+		json.enum = entries.map((entry) => entry.value);
+		json.type = entries.every((entry) => typeof entry.value === 'string') ? 'string' : 'integer';
 	}
 }
 
 function relocateLocalRefs(value: unknown, name: string): void {
 	visitOpenAPISchemaObjects(value, (schema) => {
-		if (schema.$ref === '#') schema.$ref = componentRef(name).$ref;
+		if (schema.$ref === '#') schema.$ref = createOpenAPIComponentRef(name).$ref;
 		else if (schema.$ref?.startsWith('#/$defs/') || schema.$ref?.startsWith('#/definitions/')) {
-			schema.$ref = `${componentRef(name).$ref}${schema.$ref.slice(1)}`;
+			schema.$ref = `${createOpenAPIComponentRef(name).$ref}${schema.$ref.slice(1)}`;
 		}
 	});
 }
@@ -82,15 +77,39 @@ function renameComponentRefs(value: unknown, renames: Map<string, string>): void
 	});
 }
 
+function toPascalCase(value: string): string {
+	return value
+		.split(/[^A-Za-z0-9]+/)
+		.filter((word) => word.length > 0)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+		.join('');
+}
+
+function branchNamePrefix(discriminator: core.JSONSchema._JSONSchema | undefined): string | undefined {
+	if (typeof discriminator !== 'object') return undefined;
+	const enumNames = discriminator['x-enumNames'];
+	let value: unknown;
+	if (Array.isArray(enumNames)) {
+		value = enumNames[0];
+	} else if (discriminator.enum?.length === 1) {
+		value = discriminator.enum[0];
+	} else {
+		value = discriminator.const;
+	}
+	return typeof value === 'string' ? toPascalCase(value) : undefined;
+}
+
 function removeRedundantReferenceProperties(value: unknown, schemas: Record<string, OpenAPISchema>): void {
 	visitOpenAPISchemaObjects(value, (schema) => {
 		const refs = [schema.$ref, ...(schema.allOf ?? []).map((branch) => branch.$ref)];
 		for (const ref of refs) {
 			if (typeof ref !== 'string' || !ref.startsWith('#/components/schemas/')) continue;
-			const referenced = schemas[ref.slice('#/components/schemas/'.length)];
-			if (!referenced) continue;
-			for (const [key, property] of Object.entries(schema)) {
-				if (key !== '$ref' && key !== 'allOf' && isDeepStrictEqual(property, referenced[key])) delete schema[key];
+			const name = ref.slice('#/components/schemas/'.length);
+			if (!Object.hasOwn(schemas, name)) continue;
+			const referenced = schemas[name];
+			if (referenced === schema) continue;
+			for (const key of Object.keys(schema)) {
+				if (key !== '$ref' && key !== 'allOf' && isDeepStrictEqual(schema[key], referenced[key])) delete schema[key];
 			}
 		}
 	});
@@ -103,9 +122,13 @@ export class ZodOpenAPIConverter {
 	private readonly worklist: Array<PendingSchema> = [];
 	private nextPendingIndex = 0;
 
-	constructor(private readonly target: OpenAPISchemaTarget) {}
+	constructor(
+		private readonly target: OpenAPISchemaTarget,
+		private readonly nameUnionBranches = false,
+	) {}
 
 	register(name: string, schema: core.$ZodType): void {
+		validateOpenAPIComponentName(name);
 		if (!this.names.has(schema)) this.names.set(schema, name);
 	}
 
@@ -121,7 +144,7 @@ export class ZodOpenAPIConverter {
 			else this.pending.set(key, [pending]);
 			this.worklist.push(pending);
 		}
-		return componentRef(key);
+		return createOpenAPIComponentRef(key);
 	}
 
 	getSchema(name: string, schema: core.$ZodType, io: SchemaIO): OpenAPISchema {
@@ -147,22 +170,42 @@ export class ZodOpenAPIConverter {
 		while (remaining.size > 0) {
 			const renames = new Map<string, string>();
 			for (const [inputName, outputName] of remaining) {
-				const output = document.components.schemas[outputName];
+				const output = Object.hasOwn(document.components.schemas, outputName)
+					? document.components.schemas[outputName]
+					: undefined;
 				if (!output || schemasHaveSameContract(document.components.schemas[inputName], output)) {
 					renames.set(inputName, outputName);
 				}
 			}
 			if (renames.size === 0) break;
 			renameComponentRefs(document, renames);
-			const schemas: Record<string, OpenAPISchema> = {};
+			const schemas = new Map<string, OpenAPISchema>();
 			for (const [name, schema] of Object.entries(document.components.schemas)) {
 				const renamed = renames.get(name) ?? name;
-				if (!Object.hasOwn(schemas, renamed) || name === renamed) schemas[renamed] = schema;
+				if (!schemas.has(renamed) || name === renamed) schemas.set(renamed, schema);
 			}
-			document.components.schemas = schemas;
+			document.components.schemas = Object.fromEntries(schemas);
 			for (const name of renames.keys()) remaining.delete(name);
 		}
 		removeRedundantReferenceProperties(document, document.components.schemas);
+	}
+
+	private nameDiscriminatedUnionBranches(
+		unionName: string,
+		schema: core.$ZodType,
+		json: OpenAPISchema,
+		io: SchemaIO,
+	): void {
+		if (!(schema instanceof core.$ZodDiscriminatedUnion) || !json.oneOf) return;
+		const {discriminator, options} = schema._zod.def;
+		const usedPrefixes = new Set<string>();
+		json.oneOf = json.oneOf.map((branch, index) => {
+			if (branch.$ref) return branch;
+			const base = branchNamePrefix(branch.properties?.[discriminator]) ?? `Variant${index}`;
+			const prefix = usedPrefixes.has(base) ? `${base}${index}` : base;
+			usedPrefixes.add(prefix);
+			return this.getRef(`${prefix}${unionName}`, options[index], io);
+		});
 	}
 
 	private convertPending(): void {
@@ -189,11 +232,13 @@ export class ZodOpenAPIConverter {
 							const name =
 								this.names.get(zodSchema) ??
 								(schemaMetadata.has(zodSchema) ? schemaMetadata.get(zodSchema)?.name : undefined);
-							if (name) {
+							if (name !== undefined) {
 								const description = jsonSchema.description;
 								const ref = this.getRef(name, zodSchema, io);
 								replaceSchema(jsonSchema, description ? {...ref, description} : ref);
 							}
+						} else if (this.nameUnionBranches) {
+							this.nameDiscriminatedUnionBranches(pending.name, zodSchema, jsonSchema, io);
 						}
 						if (this.target === 'openapi-3.0' && jsonSchema.$ref && Object.keys(jsonSchema).length > 1) {
 							const ref = {$ref: jsonSchema.$ref};

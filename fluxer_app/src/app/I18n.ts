@@ -1,58 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {messages as messagesEnUS} from '@app/features/i18n/locales/en-US/messages.mjs';
+import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {getNativeLocaleIdentifier} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {noteLocale} from '@app/features/theme/fonts/ScriptFontLoader';
+import {AllLocales, type LocaleCode, resolveFormattingLocale} from '@fluxer/constants/src/Locales';
 import {type I18n, i18n, type Messages} from '@lingui/core';
 import {createAtom, runInAction} from 'mobx';
 
-const supportedLocales = [
-	'ar',
-	'bg',
-	'cs',
-	'da',
-	'de',
-	'el',
-	'en-GB',
-	'en-US',
-	'es-ES',
-	'es-419',
-	'fi',
-	'fr',
-	'he',
-	'hi',
-	'hr',
-	'hu',
-	'id',
-	'it',
-	'ja',
-	'ko',
-	'lt',
-	'nl',
-	'no',
-	'pl',
-	'pt-BR',
-	'ro',
-	'ru',
-	'sv-SE',
-	'th',
-	'tr',
-	'uk',
-	'vi',
-	'zh-CN',
-	'zh-TW',
-] as const;
-
-type LocaleCode = (typeof supportedLocales)[number];
-
 const DEFAULT_LOCALE: LocaleCode = 'en-US';
-const supportedLocaleSet = new Set<LocaleCode>(supportedLocales);
+const supportedLocaleSet = new Set<LocaleCode>(AllLocales);
 const logger = new Logger('i18n');
 const LANGUAGE_OVERRIDES: Record<string, LocaleCode> = {
 	en: 'en-US',
+	es: 'es-ES',
+	nb: 'no',
+	nn: 'no',
+	pt: 'pt-BR',
+	sv: 'sv-SE',
+	tl: 'fil',
+	zh: 'zh-CN',
 };
 
 type LocaleLoader = () => Promise<{
@@ -61,16 +31,20 @@ type LocaleLoader = () => Promise<{
 
 const loaders: Record<LocaleCode, LocaleLoader> = {
 	ar: () => import('@app/features/i18n/locales/ar/messages.mjs'),
+	be: () => import('@app/features/i18n/locales/be/messages.mjs'),
 	bg: () => import('@app/features/i18n/locales/bg/messages.mjs'),
+	bn: () => import('@app/features/i18n/locales/bn/messages.mjs'),
+	ca: () => import('@app/features/i18n/locales/ca/messages.mjs'),
 	cs: () => import('@app/features/i18n/locales/cs/messages.mjs'),
 	da: () => import('@app/features/i18n/locales/da/messages.mjs'),
 	de: () => import('@app/features/i18n/locales/de/messages.mjs'),
 	el: () => import('@app/features/i18n/locales/el/messages.mjs'),
 	'en-GB': () => import('@app/features/i18n/locales/en-GB/messages.mjs'),
-	'en-US': () => Promise.resolve({messages: messagesEnUS}),
+	'en-US': () => import('@app/features/i18n/locales/en-US/messages.mjs'),
 	'es-ES': () => import('@app/features/i18n/locales/es-ES/messages.mjs'),
 	'es-419': () => import('@app/features/i18n/locales/es-419/messages.mjs'),
 	fi: () => import('@app/features/i18n/locales/fi/messages.mjs'),
+	fil: () => import('@app/features/i18n/locales/fil/messages.mjs'),
 	fr: () => import('@app/features/i18n/locales/fr/messages.mjs'),
 	he: () => import('@app/features/i18n/locales/he/messages.mjs'),
 	hi: () => import('@app/features/i18n/locales/hi/messages.mjs'),
@@ -81,14 +55,20 @@ const loaders: Record<LocaleCode, LocaleLoader> = {
 	ja: () => import('@app/features/i18n/locales/ja/messages.mjs'),
 	ko: () => import('@app/features/i18n/locales/ko/messages.mjs'),
 	lt: () => import('@app/features/i18n/locales/lt/messages.mjs'),
+	lv: () => import('@app/features/i18n/locales/lv/messages.mjs'),
 	nl: () => import('@app/features/i18n/locales/nl/messages.mjs'),
 	no: () => import('@app/features/i18n/locales/no/messages.mjs'),
 	pl: () => import('@app/features/i18n/locales/pl/messages.mjs'),
 	'pt-BR': () => import('@app/features/i18n/locales/pt-BR/messages.mjs'),
+	'pt-PT': () => import('@app/features/i18n/locales/pt-PT/messages.mjs'),
 	ro: () => import('@app/features/i18n/locales/ro/messages.mjs'),
 	ru: () => import('@app/features/i18n/locales/ru/messages.mjs'),
+	sk: () => import('@app/features/i18n/locales/sk/messages.mjs'),
+	sl: () => import('@app/features/i18n/locales/sl/messages.mjs'),
+	sq: () => import('@app/features/i18n/locales/sq/messages.mjs'),
 	'sv-SE': () => import('@app/features/i18n/locales/sv-SE/messages.mjs'),
 	th: () => import('@app/features/i18n/locales/th/messages.mjs'),
+	tok: () => import('@app/features/i18n/locales/tok/messages.mjs'),
 	tr: () => import('@app/features/i18n/locales/tr/messages.mjs'),
 	uk: () => import('@app/features/i18n/locales/uk/messages.mjs'),
 	vi: () => import('@app/features/i18n/locales/vi/messages.mjs'),
@@ -116,44 +96,71 @@ function formatLocaleValue(value: string): string {
 	return `${language}-${region}`;
 }
 
-export function normalizeLocale(value?: string | null): LocaleCode {
-	if (!value) {
-		return DEFAULT_LOCALE;
-	}
+function resolveLocale(value: string): LocaleCode | null {
 	const formatted = formatLocaleValue(value);
 	if (!formatted) {
-		return DEFAULT_LOCALE;
+		return null;
 	}
 	if (supportedLocaleSet.has(formatted as LocaleCode)) {
 		return formatted as LocaleCode;
 	}
-	const [language] = formatted.split('-');
+	const segments = formatted.split('-');
+	const [language, scriptOrRegion, region] = segments;
 	if (!language) {
-		return DEFAULT_LOCALE;
+		return null;
+	}
+	if (language === 'zh') {
+		if (scriptOrRegion === 'HANT') {
+			return 'zh-TW';
+		}
+		if (scriptOrRegion === 'HANS') {
+			return 'zh-CN';
+		}
+		if (scriptOrRegion === 'HK' || scriptOrRegion === 'MO') {
+			return 'zh-TW';
+		}
+	}
+	const regionCode = scriptOrRegion?.length === 4 ? region : scriptOrRegion;
+	if (regionCode) {
+		const regionalLocale = `${language}-${regionCode}`;
+		if (supportedLocaleSet.has(regionalLocale as LocaleCode)) {
+			return regionalLocale as LocaleCode;
+		}
+		if (language === 'pt' && regionCode !== 'BR') {
+			return 'pt-PT';
+		}
 	}
 	const override = LANGUAGE_OVERRIDES[language];
 	if (override) {
 		return override;
 	}
-	const fallback = supportedLocales.find((code) => code.split('-')[0].toLowerCase() === language);
+	const fallback = AllLocales.find((code) => code.split('-')[0].toLowerCase() === language);
 	if (fallback) {
 		return fallback;
 	}
-	return DEFAULT_LOCALE;
+	return null;
 }
 
-function detectBrowserLocale(): string | null {
-	if (Array.isArray(navigator.languages) && navigator.languages.length > 0) {
-		return navigator.languages[0];
+export function normalizeLocale(value?: string | null): LocaleCode {
+	return value ? (resolveLocale(value) ?? DEFAULT_LOCALE) : DEFAULT_LOCALE;
+}
+
+function detectBrowserLocale(): LocaleCode | null {
+	const preferredLanguages = navigator.languages?.length ? navigator.languages : [navigator.language];
+	for (const language of preferredLanguages) {
+		const locale = resolveLocale(language);
+		if (locale) {
+			return locale;
+		}
 	}
-	return navigator.language ?? null;
+	return null;
 }
 
 function detectPreferredLocale(forceLocale?: string): LocaleCode {
 	if (forceLocale) {
 		return normalizeLocale(forceLocale);
 	}
-	const storedLocale = AppStorage.getItem('locale');
+	const storedLocale = AppStorage.getItem(AppStorageKey.I18N_CHOSEN_LOCALE);
 	if (storedLocale) {
 		return normalizeLocale(storedLocale);
 	}
@@ -168,43 +175,64 @@ function detectPreferredLocale(forceLocale?: string): LocaleCode {
 	return DEFAULT_LOCALE;
 }
 
-function activateLocale(localeCode: LocaleCode, messages: Messages): void {
-	i18n.loadAndActivate({locale: localeCode, messages});
-	if (typeof document !== 'undefined') {
-		document.documentElement.lang = localeCode;
+function applyDocumentLocale(localeCode: LocaleCode): void {
+	if (typeof document === 'undefined') {
+		return;
 	}
-	noteLocale(localeCode);
-	AppStorage.setItem('locale', localeCode);
+	document.documentElement.lang = localeCode;
+	document.documentElement.dir = getLocaleDirection(localeCode);
 }
 
-const inFlightLoads = new Map<LocaleCode, Promise<LocaleCode>>();
+let loadedLocale: LocaleCode | null = null;
+
+function activateLocale(localeCode: LocaleCode, messages: Messages): void {
+	i18n.loadAndActivate({locale: localeCode, locales: resolveFormattingLocale(localeCode), messages});
+	loadedLocale = localeCode;
+	applyDocumentLocale(localeCode);
+	noteLocale(localeCode);
+}
+
+export function ensureActiveLocale(): void {
+	if (i18n.locale) {
+		return;
+	}
+	i18n.loadAndActivate({locale: DEFAULT_LOCALE, messages: {}});
+	applyDocumentLocale(DEFAULT_LOCALE);
+}
+
+const inFlightLoads = new Map<LocaleCode, Promise<Messages>>();
+let requestedLocale: LocaleCode | null = null;
 
 export async function loadLocaleCatalog(localeCode: string): Promise<LocaleCode> {
 	const normalized = normalizeLocale(localeCode);
-	const inFlight = inFlightLoads.get(normalized);
-	if (inFlight) {
-		return inFlight;
+	requestedLocale = normalized;
+	if (normalized === loadedLocale) {
+		return normalized;
 	}
-	const loadPromise = (async () => {
-		try {
-			const {messages} = await loadLazyModule(loaders[normalized]);
-			activateLocale(normalized, messages);
-			return normalized;
-		} finally {
-			inFlightLoads.delete(normalized);
-		}
-	})();
-	inFlightLoads.set(normalized, loadPromise);
-	return loadPromise;
+	let loadPromise = inFlightLoads.get(normalized);
+	if (!loadPromise) {
+		loadPromise = loadLazyModule(loaders[normalized])
+			.then(({messages}) => messages)
+			.finally(() => {
+				inFlightLoads.delete(normalized);
+			});
+		inFlightLoads.set(normalized, loadPromise);
+	}
+	const messages = await loadPromise;
+	if (requestedLocale === normalized && loadedLocale !== normalized) {
+		activateLocale(normalized, messages);
+	}
+	return normalized;
 }
 
 export function applyLocaleChange(localeCode: string): LocaleCode {
 	const normalized = normalizeLocale(localeCode);
-	if (normalized === i18n.locale) {
-		AppStorage.setItem('locale', normalized);
+	requestedLocale = normalized;
+	if (normalized === loadedLocale) {
+		AppStorage.setItem(AppStorageKey.I18N_CHOSEN_LOCALE, normalized);
 		return normalized;
 	}
-	AppStorage.setItem('locale', normalized);
+	AppStorage.setItem(AppStorageKey.I18N_CHOSEN_LOCALE, normalized);
 	void loadLocaleCatalog(normalized).catch((error) => {
 		logger.error(`Failed to apply locale ${normalized}`, error);
 	});
@@ -212,6 +240,11 @@ export function applyLocaleChange(localeCode: string): LocaleCode {
 }
 
 let initPromise: Promise<typeof i18n> | null = null;
+let initialized = false;
+
+export function isI18nInitialized(): boolean {
+	return initialized;
+}
 
 export async function initI18n(forceLocale?: string) {
 	if (!initPromise) {
@@ -221,8 +254,12 @@ export async function initI18n(forceLocale?: string) {
 				await loadLocaleCatalog(localeToLoad);
 			} catch (error) {
 				logger.error('Failed to initialize i18n, falling back to default locale', error);
-				activateLocale(DEFAULT_LOCALE, messagesEnUS);
+				await loadLocaleCatalog(DEFAULT_LOCALE).catch((fallbackError: unknown) => {
+					logger.error('Failed to load the default locale catalog', fallbackError);
+					ensureActiveLocale();
+				});
 			}
+			initialized = true;
 			return i18n;
 		})();
 	}

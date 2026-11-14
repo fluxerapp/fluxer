@@ -13,7 +13,7 @@ function pxFromRemLength(value: `${number}rem`): number {
 	return Math.round(Number.parseFloat(value) * REM_BASE_PX);
 }
 
-export interface PlaceholderAttachmentSize {
+interface PlaceholderAttachmentSize {
 	readonly width: number;
 	readonly height: number;
 }
@@ -39,9 +39,9 @@ export interface PlaceholderSpecs {
 	readonly groupSpacing: number;
 }
 
-export const FILLER_WRAPPER_PADDING_TOP = '1rem' as const;
-export const FILLER_WRAPPER_PADDING_BOTTOM = '0.75rem' as const;
-export const FILLER_WRAPPER_VERTICAL_PADDING =
+const FILLER_WRAPPER_PADDING_TOP = '1rem' as const;
+const FILLER_WRAPPER_PADDING_BOTTOM = '0.75rem' as const;
+const FILLER_WRAPPER_VERTICAL_PADDING =
 	pxFromRemLength(FILLER_WRAPPER_PADDING_TOP) + pxFromRemLength(FILLER_WRAPPER_PADDING_BOTTOM);
 const MESSAGE_LINE_HEIGHT = pxFromRemLength(MESSAGE_LAYOUT_SPEC.lineHeight);
 const MESSAGE_ROW_VERTICAL_PADDING = pxFromRemLength(MESSAGE_LAYOUT_SPEC.spacingY) * 2;
@@ -82,21 +82,21 @@ function randomInRange(random: () => number, min: number, max: number): number {
 	return Math.floor(random() * (max - min + 1)) + min;
 }
 
-export function resolveAverageGroupHeight(compact: boolean): number {
+function resolveAverageGroupHeight(compact: boolean): number {
 	if (compact) {
 		return MESSAGE_HEIGHT_COMPACT * MEAN_GROUP_LINE_COUNT;
 	}
 	return COZY_LEAD_MESSAGE_HEIGHT + COZY_GROUPED_MESSAGE_HEIGHT * (MEAN_GROUP_LINE_COUNT - 1);
 }
 
-export function resolvePlaceholderMessageGroups(compact: boolean, viewportHeightPx: number): number {
+function resolvePlaceholderMessageGroups(compact: boolean, viewportHeightPx: number): number {
 	const usableHeight = Math.max(viewportHeightPx, MIN_ESTIMATED_VIEWPORT_HEIGHT);
 	const rows = Math.ceil(usableHeight / resolveAverageGroupHeight(compact));
 	const clamped = Math.min(MAX_MESSAGE_GROUPS, Math.max(MIN_MESSAGE_GROUPS, Math.ceil(GROUP_COUNT_OVERSHOOT * rows)));
 	return compact ? clamped : Math.round(COZY_GROUP_COUNT_FACTOR * clamped);
 }
 
-export function resolvePlaceholderAttachmentCount(messageGroups: number): number {
+function resolvePlaceholderAttachmentCount(messageGroups: number): number {
 	return Math.max(1, Math.round((messageGroups / MAX_MESSAGE_GROUPS) * ATTACHMENT_GROUPS));
 }
 

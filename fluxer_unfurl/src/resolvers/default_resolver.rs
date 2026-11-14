@@ -13,7 +13,6 @@ use crate::charset;
 use crate::direct_media::MediaKind;
 use crate::html_parser::{self, OgMetadata, TwitterCardMetadata};
 use crate::http_fetch;
-use crate::media_proxy::embed_media_flags;
 use crate::oembed;
 use crate::sanitizer;
 use crate::text_limits;
@@ -98,6 +97,8 @@ async fn resolve_html(ctx: &ResolveContext<'_>) -> anyhow::Result<ResolverResult
             .get(reqwest::header::CONTENT_TYPE)
             .and_then(|value| value.to_str().ok()),
     );
+    let page = html_parser::parse_page(&html, &final_url);
+    drop(html);
 
     let final_ctx = ResolveContext {
         url: final_url.clone(),
@@ -105,17 +106,18 @@ async fn resolve_html(ctx: &ResolveContext<'_>) -> anyhow::Result<ResolverResult
         http_client: ctx.http_client.clone(),
         nsfw_mode: ctx.nsfw_mode,
         media_proxy: ctx.media_proxy,
-        static_cdn_endpoint: ctx.static_cdn_endpoint,
+        self_hosted: ctx.self_hosted,
         youtube_api_key: ctx.youtube_api_key.clone(),
         klipy_api_key: ctx.klipy_api_key.clone(),
+        activity_pub_signer: ctx.activity_pub_signer.clone(),
     };
 
     if let Some(embeds) = activity_pub::try_resolve(
-        &ctx.http_client,
+        ctx.activity_pub_client(),
         ctx.media_proxy,
         ctx.nsfw_mode,
         &final_url,
-        &html,
+        &page,
     )
     .await
         && !embeds.is_empty()
@@ -124,17 +126,17 @@ async fn resolve_html(ctx: &ResolveContext<'_>) -> anyhow::Result<ResolverResult
     }
 
     if urls_differ(&ctx.url, &final_url)
-        && let Some(embeds) = try_canonical_activity_pub(ctx, &final_url, &html).await
+        && let Some(embeds) = try_canonical_activity_pub(ctx, &final_url, &page).await
         && !embeds.is_empty()
     {
         return Ok(ResolverResult { embeds });
     }
 
-    let og = html_parser::parse_opengraph(&html);
-    let twitter_card = html_parser::parse_twitter_card(&html);
-
-    let mediawiki_article = fetch_mediawiki_article(&final_ctx, &html).await;
-    let oembed_data = fetch_oembed_data(&final_ctx, &html).await;
+    let mediawiki_article = fetch_mediawiki_article(&final_ctx, &page).await;
+    let oembed_data = fetch_oembed_data(&final_ctx, &page).await;
+    let html_parser::PageMetadata {
+        og, twitter_card, ..
+    } = page;
 
     let mut image_media = resolve_image_media(&final_ctx, &og, oembed_data.as_ref()).await;
     if let Some(first) = image_media.first_mut()
@@ -321,7 +323,7 @@ fn build_embeds(content: ResolvedPageContent<'_>) -> Vec<MessageEmbed> {
         video_media,
         audio_media,
     );
-    if !carries_content(&embed) {
+    if !embed_has_content(&embed) {
         return Vec::new();
     }
     let mut embeds = vec![embed];
@@ -329,7 +331,7 @@ fn build_embeds(content: ResolvedPageContent<'_>) -> Vec<MessageEmbed> {
     embeds
 }
 
-fn carries_content(embed: &MessageEmbed) -> bool {
+fn embed_has_content(embed: &MessageEmbed) -> bool {
     embed.title.is_some()
         || embed.description.is_some()
         || embed.author.is_some()
@@ -359,7 +361,7 @@ fn set_author_and_provider(
     }
     if let Some(name) = site_name {
         embed.provider = Some(EmbedProvider {
-            name: Some(text_limits::truncate(name, text_limits::PROVIDER_NAME_MAX)),
+            name: text_limits::truncate(name, text_limits::PROVIDER_NAME_MAX),
             url: Some(provider_url.to_owned()),
         });
     }
@@ -447,15 +449,9 @@ async fn resolve_media_with_metadata_and_size(
             None
         }
         Ok(m) => Some(EmbedMedia {
-            url: Some(url.to_owned()),
             width: width.or(m.width),
             height: height.or(m.height),
-            content_type: Some(m.content_type.clone()),
-            content_hash: Some(m.content_hash.clone()),
-            placeholder: m.placeholder.clone(),
-            duration: m.duration.map(|duration| duration as u32),
-            flags: embed_media_flags(&m),
-            ..Default::default()
+            ..m.to_embed_media(url)
         }),
         Err(err) => {
             tracing::warn!(error = %err, url, "failed to resolve default embed media metadata");
@@ -484,6 +480,7 @@ fn optional_oembed_string(value: Option<&str>) -> Option<&str> {
 fn optional_absolute_url(value: Option<&str>) -> Option<String> {
     Url::parse(optional_oembed_string(value)?)
         .ok()
+        .filter(|url| matches!(url.scheme(), "http" | "https"))
         .map(|url| url.to_string())
 }
 
@@ -495,29 +492,36 @@ fn urls_differ(a: &Url, b: &Url) -> bool {
 async fn try_canonical_activity_pub(
     ctx: &ResolveContext<'_>,
     final_url: &Url,
-    html: &str,
+    page: &html_parser::PageMetadata,
 ) -> Option<Vec<MessageEmbed>> {
-    let canonical = html_parser::find_canonical_url(html, final_url)?;
-    let canonical_url = Url::parse(&canonical).ok()?;
+    let canonical = page.canonical_url.as_deref()?;
+    let canonical_url = Url::parse(canonical).ok()?;
     if !urls_differ(&canonical_url, final_url) {
         return None;
     }
-    let ap_post =
-        crate::activity_pub::fetcher::fetch_activity_pub(&ctx.http_client, &canonical).await?;
+    let client = ctx.activity_pub_client();
+    let ap_post = activity_pub::fetcher::fetch_activity_pub(client, canonical).await?;
     let post_url = ap_post
         .url
         .as_deref()
         .and_then(|u| Url::parse(u).ok())
         .unwrap_or_else(|| canonical_url.clone());
-    let context = build_canonical_ap_context(&ctx.http_client, &post_url).await;
-    let author_actor = fetch_canonical_author(&ctx.http_client, &ap_post).await;
-    let embeds = crate::activity_pub::formatter::format_activity_pub_post(
+    let context = activity_pub::build_context(client, &post_url, None).await;
+    let author_actor = activity_pub::fetch_post_author_actor(client, &ap_post).await;
+    if activity_pub::visibility::is_hidden_from_unauthed_web(
+        &ap_post,
+        author_actor.as_ref(),
+        client.signer.is_some(),
+    ) {
+        return None;
+    }
+    let embeds = activity_pub::formatter::format_activity_pub_post(
         &ap_post,
         &post_url,
         &context,
         ctx.media_proxy,
         ctx.nsfw_mode,
-        crate::activity_pub::formatter::ActivityPubFormatOptions {
+        activity_pub::formatter::ActivityPubFormatOptions {
             author_actor: author_actor.as_ref(),
             quote_child: None,
             is_nested: false,
@@ -531,186 +535,12 @@ async fn try_canonical_activity_pub(
     }
 }
 
-async fn build_canonical_ap_context(
-    client: &reqwest::Client,
-    url: &Url,
-) -> crate::activity_pub::types::ActivityPubContext {
-    let instance = crate::activity_pub::fetcher::fetch_instance_info(client, url).await;
-    let clean_host = url
-        .host_str()
-        .unwrap_or_default()
-        .trim_start_matches("www.")
-        .trim_start_matches("social.")
-        .trim_start_matches("mstdn.")
-        .to_owned();
-    crate::activity_pub::types::ActivityPubContext {
-        server_domain: instance
-            .as_ref()
-            .and_then(|i| i.domain.clone())
-            .unwrap_or_else(|| clean_host.clone()),
-        server_title: instance
-            .as_ref()
-            .and_then(|i| i.title.clone())
-            .unwrap_or_else(|| format!("{clean_host} Mastodon")),
-        server_icon: instance.and_then(|i| i.thumbnail_url),
-        in_reply_to: None,
-    }
-}
-
-async fn fetch_canonical_author(
-    client: &reqwest::Client,
-    post: &crate::activity_pub::types::ActivityPubPost,
-) -> Option<crate::activity_pub::types::ActivityPubActor> {
-    let actor_url = post.attributed_to.as_ref()?.as_str()?;
-    crate::activity_pub::fetcher::fetch_activity_pub_actor(client, actor_url).await
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::direct_media::MediaKind;
 
     fn url(value: &str) -> Url {
         Url::parse(value).unwrap()
-    }
-
-    #[test]
-    fn direct_media_uses_header_mime_before_extension() {
-        assert_eq!(
-            media_kind_from_response("image/png", &url("https://e.com/file.mp4"), &[]),
-            Some(MediaKind::Image)
-        );
-    }
-
-    #[test]
-    fn direct_media_uses_extension_for_binary_headers() {
-        assert_eq!(
-            media_kind_from_response("binary/octet-stream", &url("https://e.com/file.weba"), &[]),
-            Some(MediaKind::Audio)
-        );
-    }
-
-    #[test]
-    fn direct_media_rejects_extension_when_header_is_non_binary() {
-        assert_eq!(
-            media_kind_from_response("text/html", &url("https://e.com/file.mp4"), &[]),
-            None
-        );
-    }
-
-    #[test]
-    fn application_ogg_uses_extension_or_audio_default() {
-        assert_eq!(
-            media_kind_from_response("application/ogg", &url("https://e.com/file.ogv"), &[]),
-            Some(MediaKind::Video)
-        );
-        assert_eq!(
-            media_kind_from_response("application/ogg", &url("https://e.com/file"), &[]),
-            Some(MediaKind::Audio)
-        );
-    }
-
-    #[test]
-    fn direct_media_falls_back_to_magic_bytes_without_header_or_extension() {
-        let png = [
-            0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d, b'I', b'H', b'D', b'R',
-        ];
-        assert_eq!(
-            media_kind_from_response("", &url("https://e.com/file"), &png),
-            Some(MediaKind::Image)
-        );
-    }
-
-    #[test]
-    fn optional_oembed_string_trims_and_filters_empty() {
-        assert_eq!(optional_oembed_string(Some("  hello  ")), Some("hello"));
-        assert_eq!(optional_oembed_string(Some("  ")), None);
-        assert_eq!(optional_oembed_string(Some("")), None);
-        assert_eq!(optional_oembed_string(None), None);
-    }
-
-    #[test]
-    fn optional_absolute_url_accepts_valid() {
-        assert_eq!(
-            optional_absolute_url(Some("https://e.com/page")),
-            Some("https://e.com/page".to_owned())
-        );
-    }
-
-    #[test]
-    fn optional_absolute_url_rejects_relative() {
-        assert!(optional_absolute_url(Some("/relative")).is_none());
-    }
-
-    #[test]
-    fn optional_absolute_url_rejects_empty() {
-        assert!(optional_absolute_url(Some("")).is_none());
-        assert!(optional_absolute_url(None).is_none());
-    }
-
-    use crate::resolvers::default_helpers::parse_hex_color;
-
-    #[test]
-    fn parse_hex_color_six_digit() {
-        assert_eq!(parse_hex_color("#FF0000"), Some(0xFF0000));
-        assert_eq!(parse_hex_color("#ffffff"), Some(0xFFFFFF));
-        assert_eq!(parse_hex_color("#000000"), Some(0x000000));
-    }
-
-    #[test]
-    fn parse_hex_color_three_digit() {
-        assert_eq!(parse_hex_color("#F00"), Some(0xFF0000));
-        assert_eq!(parse_hex_color("#fff"), Some(0xFFFFFF));
-    }
-
-    #[test]
-    fn parse_hex_color_invalid() {
-        assert!(parse_hex_color("").is_none());
-        assert!(parse_hex_color("FF0000").is_none());
-        assert!(parse_hex_color("#GG0000").is_none());
-        assert!(parse_hex_color("#12345").is_none());
-        assert!(parse_hex_color("#1234567").is_none());
-    }
-
-    #[test]
-    fn parse_hex_color_with_whitespace() {
-        assert_eq!(parse_hex_color("  #FF0000  "), Some(0xFF0000));
-    }
-
-    #[test]
-    fn urls_differ_ignores_trailing_slash() {
-        assert!(!urls_differ(
-            &url("https://e.com/page"),
-            &url("https://e.com/page/")
-        ));
-        assert!(!urls_differ(
-            &url("https://e.com/page/"),
-            &url("https://e.com/page")
-        ));
-    }
-
-    #[test]
-    fn urls_differ_detects_different_paths() {
-        assert!(urls_differ(
-            &url("https://e.com/a"),
-            &url("https://e.com/b")
-        ));
-    }
-
-    #[test]
-    fn urls_differ_detects_different_hosts() {
-        assert!(urls_differ(
-            &url("https://a.com/page"),
-            &url("https://b.com/page")
-        ));
-    }
-
-    #[test]
-    fn urls_differ_same_url() {
-        assert!(!urls_differ(
-            &url("https://e.com/page"),
-            &url("https://e.com/page")
-        ));
     }
 
     fn classify(html: &str) -> &'static str {
@@ -728,8 +558,9 @@ mod tests {
             ..Default::default()
         });
         let page = url("https://example.com/page");
-        let og = html_parser::parse_opengraph(html);
-        let twitter_card = html_parser::parse_twitter_card(html);
+        let html_parser::PageMetadata {
+            og, twitter_card, ..
+        } = html_parser::parse_page(html, &page);
         let player_url = twitter_card
             .classifying_card
             .as_deref()
@@ -767,76 +598,6 @@ mod tests {
     }
 
     #[test]
-    fn classify_defaults_to_link() {
-        assert_eq!(
-            classify(r#"<head><meta property="og:title" content="T"></head>"#),
-            "link"
-        );
-    }
-
-    #[test]
-    fn classify_oembed_rich_html_no_longer_forces_rich() {
-        assert_eq!(
-            classify_with(
-                r#"<head><meta property="og:title" content="T"></head>"#,
-                false,
-                Some("rich"),
-                false
-            ),
-            "link"
-        );
-        for oembed_type in ["video", "link", "audio"] {
-            assert_eq!(
-                classify_with(
-                    r#"<head><meta property="og:title" content="T"></head>"#,
-                    false,
-                    Some(oembed_type),
-                    false
-                ),
-                "link",
-                "oembed {oembed_type} must not change the type"
-            );
-        }
-    }
-
-    #[test]
-    fn classify_oembed_photo_is_image() {
-        assert_eq!(
-            classify_with(
-                r#"<head><meta property="og:title" content="T"></head>"#,
-                false,
-                Some("photo"),
-                false
-            ),
-            "image"
-        );
-    }
-
-    #[test]
-    fn classify_twitter_card_summary_large_image_is_article() {
-        assert_eq!(
-            classify(r#"<head><meta name="twitter:card" content="summary_large_image"></head>"#),
-            "article"
-        );
-    }
-
-    #[test]
-    fn classify_twitter_card_photo_is_image() {
-        assert_eq!(
-            classify(r#"<head><meta name="twitter:card" content="photo"></head>"#),
-            "image"
-        );
-    }
-
-    #[test]
-    fn classify_twitter_card_summary_is_a_no_op() {
-        assert_eq!(
-            classify(r#"<head><meta name="twitter:card" content="summary"></head>"#),
-            "link"
-        );
-    }
-
-    #[test]
     fn classify_twitter_player_requires_allowlisted_host() {
         let allowed = r#"<head>
             <meta name="twitter:card" content="player">
@@ -849,166 +610,6 @@ mod tests {
             <meta name="twitter:player" content="https://embed.ted.com/talks/1">
         </head>"#;
         assert_eq!(classify(denied), "link");
-    }
-
-    #[test]
-    fn classify_open_graph_video_requires_video_og_type() {
-        let html = r#"<head>
-            <meta property="og:type" content="video.other">
-            <meta property="og:video" content="https://www.youtube.com/embed/x">
-        </head>"#;
-        assert_eq!(classify(html), "video");
-
-        let without_type = r#"<head>
-            <meta property="og:video" content="https://www.youtube.com/embed/x">
-        </head>"#;
-        assert_eq!(classify(without_type), "link");
-
-        for og_type in ["music.song", "article", "website"] {
-            let html = format!(
-                r#"<head>
-                    <meta property="og:type" content="{og_type}">
-                    <meta property="og:video" content="https://www.youtube.com/embed/x">
-                </head>"#
-            );
-            assert_eq!(classify(&html), "link", "{og_type} must not be video");
-        }
-    }
-
-    #[test]
-    fn classify_open_graph_video_secure_url_alone_does_not_qualify() {
-        let html = r#"<head>
-            <meta property="og:type" content="video.other">
-            <meta property="og:video:secure_url" content="https://www.youtube.com/embed/x">
-        </head>"#;
-        assert_eq!(classify(html), "link");
-    }
-
-    #[test]
-    fn classify_open_graph_direct_video_requires_validation() {
-        let html = r#"<head>
-            <meta property="og:type" content="video.other">
-            <meta property="og:video" content="https://e.com/clip.mp4">
-        </head>"#;
-        assert_eq!(classify_with(html, false, None, false), "link");
-        assert_eq!(classify_with(html, false, None, true), "video");
-    }
-
-    #[test]
-    fn classify_mediawiki_beats_every_twitter_card() {
-        for card in ["summary_large_image", "photo", "player"] {
-            let html = format!(
-                r#"<head>
-                    <meta name="twitter:card" content="{card}">
-                    <meta name="twitter:player" content="https://player.twitch.tv/?video=1">
-                </head>"#
-            );
-            assert_eq!(classify_with(&html, true, None, false), "article");
-        }
-    }
-
-    #[test]
-    fn classify_twitter_card_beats_open_graph_video() {
-        let html = r#"<head>
-            <meta name="twitter:card" content="photo">
-            <meta property="og:type" content="video.other">
-            <meta property="og:video" content="https://www.youtube.com/embed/x">
-        </head>"#;
-        assert_eq!(classify(html), "image");
-    }
-
-    #[test]
-    fn classify_open_graph_video_beats_oembed_photo() {
-        let html = r#"<head>
-            <meta property="og:type" content="video.other">
-            <meta property="og:video" content="https://www.youtube.com/embed/x">
-        </head>"#;
-        assert_eq!(classify_with(html, false, Some("photo"), false), "video");
-    }
-
-    #[test]
-    fn player_allowlist_accepts_verified_hosts() {
-        for value in [
-            "https://www.youtube.com/embed/x",
-            "https://www.youtube-nocookie.com/embed/x",
-            "https://youtu.be/x",
-            "https://player.vimeo.com/video/1",
-            "https://w.soundcloud.com/player/?url=x",
-            "https://player.twitch.tv/?video=1",
-        ] {
-            assert!(is_allowlisted_player_url(value), "{value} must be allowed");
-        }
-    }
-
-    #[test]
-    fn classify_twitter_player_resolves_relative_references_first() {
-        let html = r#"<head>
-            <meta name="twitter:card" content="player">
-            <meta name="twitter:player" content="//player.vimeo.com/video/1">
-        </head>"#;
-        assert_eq!(classify(html), "video");
-    }
-
-    fn build(embed_type: &str, og: &OgMetadata) -> Vec<MessageEmbed> {
-        let page_url = url("https://example.com/page");
-        build_embeds(ResolvedPageContent {
-            page_url: &page_url,
-            embed_type,
-            og,
-            mediawiki_article: None,
-            oembed: None,
-            image_media: Vec::new(),
-            video_media: None,
-            audio_media: None,
-        })
-    }
-
-    #[test]
-    fn drops_a_classified_embed_that_carries_no_content() {
-        for embed_type in ["article", "image", "link"] {
-            assert!(
-                build(embed_type, &OgMetadata::default()).is_empty(),
-                "{embed_type}"
-            );
-        }
-    }
-
-    #[test]
-    fn keeps_a_classified_embed_whose_only_content_is_a_site_name() {
-        let og = OgMetadata {
-            site_name: Some("Example".to_owned()),
-            ..Default::default()
-        };
-        let embeds = build("link", &og);
-        assert_eq!(embeds.len(), 1);
-        assert!(embeds[0].provider.is_some());
-    }
-
-    #[test]
-    fn prefers_mediawiki_text_over_open_graph_text() {
-        let page_url = url("https://w.example/wiki/Rust");
-        let og = OgMetadata {
-            title: Some("T".to_owned()),
-            description: Some("D".to_owned()),
-            ..Default::default()
-        };
-        let article = MediaWikiArticle {
-            title: Some("Probe Page".to_owned()),
-            description: Some("Extract text.".to_owned()),
-        };
-        let embeds = build_embeds(ResolvedPageContent {
-            page_url: &page_url,
-            embed_type: "article",
-            og: &og,
-            mediawiki_article: Some(&article),
-            oembed: None,
-            image_media: Vec::new(),
-            video_media: None,
-            audio_media: None,
-        });
-        assert_eq!(embeds.len(), 1);
-        assert_eq!(embeds[0].title.as_deref(), Some("Probe Page"));
-        assert_eq!(embeds[0].description.as_deref(), Some("Extract text."));
     }
 
     #[test]

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 pub mod bluesky;
-mod default_helpers;
+pub(crate) mod default_helpers;
 pub mod default_resolver;
 pub mod fxtwitter;
 pub mod hacker_news;
@@ -12,31 +12,32 @@ pub mod wikipedia;
 pub mod xkcd;
 pub mod youtube;
 
+use crate::activity_pub::fetcher::ActivityPubClient;
+use crate::activity_pub::signature::RequestSigner;
 use crate::media_proxy::MediaProxyClient;
 use crate::types::{MessageEmbed, NsfwMode};
 use std::future::Future;
 use std::pin::Pin;
 use url::Url;
 
-#[allow(dead_code)]
 pub struct ResolveContext<'mp> {
     pub url: Url,
     pub original_url: Url,
     pub http_client: reqwest::Client,
     pub nsfw_mode: NsfwMode,
     pub media_proxy: &'mp MediaProxyClient,
-    pub static_cdn_endpoint: &'mp str,
+    pub self_hosted: bool,
     pub youtube_api_key: Option<String>,
     pub klipy_api_key: Option<String>,
+    pub activity_pub_signer: Option<RequestSigner>,
 }
 
 impl ResolveContext<'_> {
-    pub fn static_asset_url(&self, path: &str) -> Option<String> {
-        let endpoint = self.static_cdn_endpoint.trim().trim_end_matches('/');
-        if endpoint.is_empty() {
-            return None;
+    pub fn activity_pub_client(&self) -> ActivityPubClient<'_> {
+        ActivityPubClient {
+            http: &self.http_client,
+            signer: self.activity_pub_signer.as_ref(),
         }
-        Some(format!("{}/{}", endpoint, path.trim_start_matches('/')))
     }
 }
 

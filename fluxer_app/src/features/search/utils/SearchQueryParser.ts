@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
+import {fuzzySearch} from '@app/features/search/utils/SearchTextMatching';
 import type {MessageSearchParams} from '@app/features/search/utils/SearchUtils';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import Users from '@app/features/user/state/Users';
+import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE, MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
 import {fromTimestamp, isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {DateTime} from 'luxon';
-
-export interface ParserContext {
-	usersByTag?: Record<string, string>;
-	channelsByName?: Record<string, string>;
-}
 
 export interface SearchHints {
 	usersByTag?: Record<string, string>;
 	channelsByName?: Record<string, string>;
 }
 
-export interface ParsedToken {
+interface ParsedToken {
 	key: string;
 	value: string;
 	start: number;
@@ -35,7 +36,7 @@ export const SearchChipRole = Object.freeze({
 
 export type SearchChipRole = (typeof SearchChipRole)[keyof typeof SearchChipRole];
 
-export interface SearchChip {
+interface SearchChip {
 	role: SearchChipRole;
 	key: string;
 	exclude: boolean;
@@ -45,7 +46,7 @@ export interface SearchChip {
 }
 
 const QUOTE_CHARS = new Set(['"', '\u201c', '\u201d', '\u201f', '\u2033', '\u00ab', '\u00bb']);
-const isQuoteChar = (ch: string | undefined): boolean => ch !== undefined && QUOTE_CHARS.has(ch);
+export const isQuoteChar = (ch: string | undefined): boolean => ch !== undefined && QUOTE_CHARS.has(ch);
 const KNOWN_KEYS = new Set([
 	'from',
 	'-from',
@@ -81,6 +82,7 @@ const KNOWN_KEYS = new Set([
 	'scope',
 ]);
 const USER_TAG_RE = /^([A-Za-z0-9_]+)#(\d{4})$/;
+const BARE_USERNAME_RE = /^[A-Za-z0-9_]+$/;
 const normalizeSpaces = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 type HasFilter = NonNullable<MessageSearchParams['has']>[number];
@@ -293,7 +295,7 @@ export function tokenize(query: string): {
 	return {tokens, content: normalizeSpaces(content), exactPhrases, chips};
 }
 
-const splitCSV = (input: string): Array<string> => {
+export const splitCSV = (input: string): Array<string> => {
 	const items: Array<string> = [];
 	let i = 0;
 	const n = input['length'];
@@ -339,7 +341,7 @@ const normalizeToken = (value: string): string => value.trim().toLowerCase();
 const CURRENT_USER_TOKENS = new Set(['@me']);
 const isCurrentUserToken = (value: string): boolean => CURRENT_USER_TOKENS.has(normalizeToken(value));
 const getCurrentUserId = (): string | null => Users.getCurrentUser()?.id ?? null;
-const tryResolveUser = (tag: string, hints?: SearchHints): string | null => {
+export const tryResolveUser = (tag: string, hints?: SearchHints): string | null => {
 	const trimmedTag = tag.trim();
 	if (!trimmedTag) {
 		return null;
@@ -351,7 +353,8 @@ const tryResolveUser = (tag: string, hints?: SearchHints): string | null => {
 		return getCurrentUserId();
 	}
 	if (hints?.usersByTag?.[trimmedTag]) return hints.usersByTag[trimmedTag];
-	if (!USER_TAG_RE.test(trimmedTag)) return null;
+	const isBareUsername = RuntimeConfig.usesUniqueUsernames && BARE_USERNAME_RE.test(trimmedTag);
+	if (!USER_TAG_RE.test(trimmedTag) && !isBareUsername) return null;
 	const user = Users.getUserByTag(trimmedTag);
 	return user?.id ?? null;
 };
@@ -368,6 +371,13 @@ export function resolveSearchChannelDisplayName(channel: {
 	return channel.name?.trim() ?? '';
 }
 
+export function getSearchableGuildChannels(guildId: string): Array<Channel> {
+	const channels = Channels.getGuildChannels(guildId).filter(
+		(channel) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) || THREAD_ONLY_CHANNEL_TYPES.has(channel.type),
+	);
+	return [...channels, ...ChannelThreads.getGuildThreads(guildId)];
+}
+
 const tryResolveChannel = (name: string, guildId?: string | null, hints?: SearchHints): string | null => {
 	if (hints?.channelsByName?.[name]) return hints.channelsByName[name];
 	const target = name.toLowerCase();
@@ -378,20 +388,20 @@ const tryResolveChannel = (name: string, guildId?: string | null, hints?: Search
 		const partial = privateChannels.find((c) => resolveSearchChannelDisplayName(c).toLowerCase().includes(target));
 		return partial?.id ?? null;
 	}
-	const channels = Channels.getGuildChannels(guildId);
+	const channels = getSearchableGuildChannels(guildId);
 	const matches = channels.filter((c) => (c.name || '').toLowerCase() === target);
 	if (matches.length > 0) return matches[0].id;
 	const partial = channels.find((c) => (c.name || '').toLowerCase().includes(target));
 	return partial?.id ?? null;
 };
 
-export interface ParseContext {
+interface ParseContext {
 	guildId?: string | null;
 }
 
 const toSnowflakeAt = (dt: DateTime) => fromTimestamp(dt.toMillis()).toString();
 
-export function parseCompactDateTime(input: string, now: DateTime = DateTime.local()): DateTime | null {
+function parseCompactDateTime(input: string, now: DateTime = DateTime.local()): DateTime | null {
 	const trimmed = input['trim']();
 	if (trimmed.length === 0) return null;
 	if (trimmed.toLowerCase() === 'now') return now;
@@ -421,7 +431,7 @@ export function parseCompactDateTime(input: string, now: DateTime = DateTime.loc
 	return null;
 }
 
-export interface SearchDatePeriod {
+interface SearchDatePeriod {
 	readonly start: DateTime;
 	readonly end: DateTime;
 }
@@ -459,28 +469,12 @@ const MONTH_NAMES: ReadonlyArray<string> = [
 
 const RELATIVE_DATE_WORDS: ReadonlyArray<string> = ['today', 'yesterday', ...Object.keys(RELATIVE_PERIOD_UNITS)];
 
-export function getSearchDateWords(now: DateTime = DateTime.local()): Array<string> {
+function getSearchDateWords(now: DateTime = DateTime.local()): Array<string> {
 	const years: Array<string> = [];
 	for (let year = now.year; year >= SEARCH_DATE_YEAR_FLOOR; year -= 1) {
 		years.push(String(year));
 	}
 	return [...RELATIVE_DATE_WORDS, ...years, ...MONTH_NAMES, ...WEEKDAY_NAMES];
-}
-
-function isSubsequence(needle: string, haystack: string): boolean {
-	const haystackLength = haystack.length;
-	const needleLength = needle.length;
-	if (needleLength > haystackLength) return false;
-	if (needleLength === haystackLength) return needle === haystack;
-	let haystackIndex = 0;
-	outer: for (let needleIndex = 0; needleIndex < needleLength; needleIndex += 1) {
-		const code = needle.charCodeAt(needleIndex);
-		while (haystackIndex < haystackLength) {
-			if (haystack.charCodeAt(haystackIndex++) === code) continue outer;
-		}
-		return false;
-	}
-	return true;
 }
 
 export function matchSearchDateWords(term: string, limit: number, now: DateTime = DateTime.local()): Array<string> {
@@ -494,7 +488,7 @@ export function matchSearchDateWords(term: string, limit: number, now: DateTime 
 			exact.push(word);
 		} else if (candidate.startsWith(needle)) {
 			prefixed.push(word);
-		} else if (isSubsequence(needle, candidate)) {
+		} else if (fuzzySearch(needle, candidate)) {
 			scattered.push(word);
 		}
 	}
@@ -539,7 +533,7 @@ function resolveSearchDateWord(word: string, now: DateTime): SearchDatePeriod | 
 	return {start: floor, end: floor.plus({years: 1})};
 }
 
-export function resolveSearchDatePeriod(input: string, now: DateTime = DateTime.local()): SearchDatePeriod | null {
+function resolveSearchDatePeriod(input: string, now: DateTime = DateTime.local()): SearchDatePeriod | null {
 	const word = input.trim().toLowerCase();
 	if (word.length === 0) return null;
 	const wordPeriod = resolveSearchDateWord(word, now);
@@ -580,7 +574,7 @@ const normalizeSearchFilterKey = (key: string): string => {
 
 const NON_MUTABLE_VALUE_KEYS: ReadonlySet<string> = new Set(['has', 'pinned', 'author-type']);
 
-export function isSearchFilterValueMutable(key: string): boolean {
+function isSearchFilterValueMutable(key: string): boolean {
 	return !NON_MUTABLE_VALUE_KEYS.has(normalizeSearchFilterKey(key));
 }
 
@@ -612,7 +606,7 @@ const SEARCH_FILTER_VALUE_VALIDATORS: Record<string, (value: string) => boolean>
 	during: isSearchDateValue,
 };
 
-export function isSearchFilterValueChippable(key: string, value: string): boolean {
+function isSearchFilterValueChippable(key: string, value: string): boolean {
 	const trimmed = value.trim();
 	if (trimmed.length === 0) return false;
 	const validator = SEARCH_FILTER_VALUE_VALIDATORS[normalizeSearchFilterKey(key)];
@@ -660,13 +654,11 @@ export function parseQuery(query: string, hints?: SearchHints, ctx?: ParseContex
 				const values = splitCSV(tok.value);
 				for (const tag of values) {
 					const id = tryResolveUser(tag, hints);
-					if (id) {
-						if (isExcludeKey) {
-							params.excludeAuthorId = add(params.excludeAuthorId, id);
-						} else {
-							params.authorId = add(params.authorId, id);
-						}
+					if (!id) {
+						continue;
 					}
+					const destination = isExcludeKey ? 'excludeAuthorId' : 'authorId';
+					params[destination] = add(params[destination], id);
 				}
 				break;
 			}
@@ -676,16 +668,14 @@ export function parseQuery(query: string, hints?: SearchHints, ctx?: ParseContex
 					const lower = v.toLowerCase();
 					if (lower === 'everyone' || lower === 'here') {
 						params.mentionEveryone = true;
-					} else {
-						const id = tryResolveUser(v, hints);
-						if (id) {
-							if (isExcludeKey) {
-								params.excludeMentions = add(params.excludeMentions, id);
-							} else {
-								params.mentions = add(params.mentions, id);
-							}
-						}
+						continue;
 					}
+					const id = tryResolveUser(v, hints);
+					if (!id) {
+						continue;
+					}
+					const destination = isExcludeKey ? 'excludeMentions' : 'mentions';
+					params[destination] = add(params[destination], id);
 				}
 				break;
 			}
@@ -693,13 +683,11 @@ export function parseQuery(query: string, hints?: SearchHints, ctx?: ParseContex
 				const values = splitCSV(tok.value);
 				for (const v of values) {
 					const id = tryResolveChannel(v, ctx?.guildId ?? null, hints);
-					if (id) {
-						if (isExcludeKey) {
-							params.excludeChannelId = add(params.excludeChannelId, id);
-						} else {
-							params.channelId = add(params.channelId, id);
-						}
+					if (!id) {
+						continue;
 					}
+					const destination = isExcludeKey ? 'excludeChannelId' : 'channelId';
+					params[destination] = add(params[destination], id);
 				}
 				break;
 			}
@@ -712,12 +700,11 @@ export function parseQuery(query: string, hints?: SearchHints, ctx?: ParseContex
 					.filter(Boolean);
 				for (const value of values) {
 					const normalized = normalizeHasValue(value);
-					if (!normalized) continue;
-					if (isExcludeKey) {
-						params.excludeHas = add(params.excludeHas, normalized);
-					} else {
-						params.has = add(params.has, normalized);
+					if (!normalized) {
+						continue;
 					}
+					const destination = isExcludeKey ? 'excludeHas' : 'has';
+					params[destination] = add(params[destination], normalized);
 				}
 				break;
 			}
@@ -761,13 +748,11 @@ export function parseQuery(query: string, hints?: SearchHints, ctx?: ParseContex
 			case 'embed-type': {
 				const values = splitCSV(tok.value).map((v) => v.toLowerCase());
 				for (const v of values) {
-					if (isExcludeKey) {
-						if (isEmbedTypeFilter(v)) {
-							params.excludeEmbedType = add(params.excludeEmbedType, v);
-						}
-					} else if (isEmbedTypeFilter(v)) {
-						params.embedType = add(params.embedType, v);
+					if (!isEmbedTypeFilter(v)) {
+						continue;
 					}
+					const destination = isExcludeKey ? 'excludeEmbedType' : 'embedType';
+					params[destination] = add(params[destination], v);
 				}
 				break;
 			}

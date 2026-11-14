@@ -27,22 +27,30 @@ import {
 	getLiveKitSupportedCodecs,
 	selectOptimalScreenShareCodec,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
-import {loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
+import {
+	describeHardwareVideoEncodeProfiles,
+	isSoftwareVideoEncodeExpectedSync,
+	loadGpuEncoderReport,
+	loadHardwareVideoEncodeProfiles,
+} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {
 	getNativeAudioBridgeStats,
 	getNativeAudioCaptureDiagnosticState,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
+import {readVoiceInputDiagnostics} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import {getDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
 import {getRecentScreenShares} from '@app/features/voice/utils/ScreenShareLifecycleLog';
 import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
 import {getScreenShareDecodeFailures} from '@app/features/voice/utils/VideoDecoderCapabilities';
-import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
+import {getVideoQualityCaps} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	buildVoiceStatsForNerdsPresentation,
 	collectScreenShareAudioPublicationDiagnostics,
 	type StatsForNerdsData,
 } from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
 import type {NativeAudioApplication, VirtmicNode} from '@app/types/electron.d';
+import {sha256} from '@noble/hashes/sha2.js';
+import {bytesToHex, utf8ToBytes} from '@noble/hashes/utils.js';
 
 const SNAPSHOT_TIMEOUT_MS = 3000;
 const MAX_INCLUDED_TARGETS = 200;
@@ -86,22 +94,8 @@ async function withTimeout<T>(
 	}
 }
 
-async function hashString(value: string | null | undefined): Promise<string | null> {
-	if (!value) return null;
-	try {
-		const data = new TextEncoder().encode(value);
-		const digest = await crypto.subtle.digest('SHA-256', data);
-		return Array.from(new Uint8Array(digest))
-			.map((byte) => byte.toString(16).padStart(2, '0'))
-			.join('');
-	} catch {
-		let hash = 0;
-		for (let index = 0; index < value.length; index += 1) {
-			hash = (hash << 5) - hash + value.charCodeAt(index);
-			hash |= 0;
-		}
-		return `fallback-${Math.abs(hash).toString(16)}`;
-	}
+function hashString(value: string | null | undefined): string | null {
+	return value ? bytesToHex(sha256(utf8ToBytes(value))) : null;
 }
 
 async function queryPermission(name: string): Promise<string> {
@@ -125,18 +119,16 @@ async function collectMediaDevices(): Promise<Record<string, unknown>> {
 		return {
 			supported: true,
 			count: devices.length,
-			devices: await Promise.all(
-				devices.map(async (device) => ({
-					kind: device.kind,
-					label: device.label || '',
-					hasLabel: Boolean(device.label),
-					deviceIdHash: await hashString(device.deviceId),
-					deviceIdLength: device.deviceId?.length ?? 0,
-					groupIdHash: await hashString(device.groupId),
-					groupIdLength: device.groupId?.length ?? 0,
-					isDefaultDeviceId: device.deviceId === 'default',
-				})),
-			),
+			devices: devices.map((device) => ({
+				kind: device.kind,
+				label: device.label || '',
+				hasLabel: Boolean(device.label),
+				deviceIdHash: hashString(device.deviceId),
+				deviceIdLength: device.deviceId?.length ?? 0,
+				groupIdHash: hashString(device.groupId),
+				groupIdLength: device.groupId?.length ?? 0,
+				isDefaultDeviceId: device.deviceId === 'default',
+			})),
 		};
 	} catch (error) {
 		return {supported: true, error: safeError(error)};
@@ -231,6 +223,10 @@ async function collectCodecMetadata(): Promise<Record<string, unknown>> {
 	} catch (error) {
 		gpuReport = {error: safeError(error)};
 	}
+	const hardwareVideoEncodeProfiles = await withTimeout(
+		'hardware video encode profiles',
+		loadHardwareVideoEncodeProfiles(),
+	);
 	try {
 		report = getCodecCapabilityReport();
 	} catch {
@@ -258,6 +254,11 @@ async function collectCodecMetadata(): Promise<Record<string, unknown>> {
 		},
 		support: report,
 		gpuHardwareEncode: gpuReport,
+		hardwareVideoEncodeProfiles:
+			hardwareVideoEncodeProfiles !== null && 'error' in hardwareVideoEncodeProfiles
+				? hardwareVideoEncodeProfiles
+				: describeHardwareVideoEncodeProfiles(hardwareVideoEncodeProfiles),
+		softwareVideoEncodeExpected: isSoftwareVideoEncodeExpectedSync(),
 	};
 }
 
@@ -266,25 +267,20 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		VoiceSettings.getStreamingMode(),
 		VoiceSettings.getScreenshareResolution(),
 		VoiceSettings.getVideoFrameRate(),
-		hasHigherVideoQuality(),
+		getVideoQualityCaps(),
 	);
 	return {
-		inputDeviceIdHash: await hashString(VoiceSettings.getInputDeviceId()),
-		outputDeviceIdHash: await hashString(VoiceSettings.getOutputDeviceId()),
-		videoDeviceIdHash: await hashString(VoiceSettings.getVideoDeviceId()),
-		screenShareAudioDeviceIdHash: await hashString(VoiceSettings.getScreenShareAudioDeviceId()),
-		effectiveScreenShareAudioDeviceIdHash: await hashString(VoiceSettings.getEffectiveScreenShareAudioDeviceId()),
+		inputDeviceIdHash: hashString(VoiceSettings.getInputDeviceId()),
+		outputDeviceIdHash: hashString(VoiceSettings.getOutputDeviceId()),
+		videoDeviceIdHash: hashString(VoiceSettings.getVideoDeviceId()),
+		screenShareAudioDeviceIdHash: hashString(VoiceSettings.getScreenShareAudioDeviceId()),
+		effectiveScreenShareAudioDeviceIdHash: hashString(VoiceSettings.getEffectiveScreenShareAudioDeviceId()),
 		inputVolume: VoiceSettings.getInputVolume(),
 		outputVolume: VoiceSettings.getOutputVolume(),
-		echoCancellation: VoiceSettings.getEchoCancellation(),
-		noiseSuppression: VoiceSettings.getNoiseSuppression(),
-		autoGainControl: VoiceSettings.getAutoGainControl(),
-		deepFilterNoiseSuppression: VoiceSettings.getDeepFilterNoiseSuppression(),
-		deepFilterNoiseSuppressionLevel: VoiceSettings.getDeepFilterNoiseSuppressionLevel(),
+		...readVoiceInputDiagnostics(),
 		voiceProcessingMode: VoiceSettings.getVoiceProcessingMode(),
 		vadThreshold: VoiceSettings.getVadThreshold(),
 		vadAutoSensitivity: VoiceSettings.getVadAutoSensitivity(),
-		vadEnhanced: VoiceSettings.getVadEnhanced(),
 		cameraResolution: VoiceSettings.getCameraResolution(),
 		screenshareResolution: VoiceSettings.getScreenshareResolution(),
 		videoFrameRate: VoiceSettings.getVideoFrameRate(),
@@ -301,14 +297,14 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		preferredScreenShareCodec: VoiceSettings.getPreferredScreenShareCodec(),
 		screenShareContentHint: VoiceSettings.getScreenShareContentHint(),
 		screenShareEncoderMode: VoiceSettings.getScreenShareEncoderMode(),
-		screenShareSoftwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 		screenShareScalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
-		screenShareBackupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
 		screenShareMaxBitrateMbps:
-			getScreenShareBitrateBps(configuredScreenShare.resolution, configuredScreenShare.frameRate) / 1000000,
-		openH264Enabled: VoiceSettings.getOpenH264Enabled(),
+			getScreenShareBitrateBps(
+				configuredScreenShare.resolution,
+				configuredScreenShare.frameRate,
+				VoiceSettings.getScreenShareBitrateBudget(),
+			) / 1000000,
 		linuxAudioCapture: {
-			workaround: VoiceSettings.getLinuxAudioCaptureWorkaround(),
 			onlySpeakers: VoiceSettings.getLinuxAudioCaptureOnlySpeakers(),
 			onlyDefaultSpeakers: VoiceSettings.getLinuxAudioCaptureOnlyDefaultSpeakers(),
 			ignoreInputMedia: VoiceSettings.getLinuxAudioCaptureIgnoreInputMedia(),
@@ -470,12 +466,28 @@ async function collectDesktopMetadata(): Promise<Record<string, unknown>> {
 	};
 }
 
+export function getSystemInfo(): StatsForNerdsData['system'] {
+	const nav = navigator as Navigator & {deviceMemory?: number};
+	const mem = (
+		performance as Performance & {memory?: {usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number}}
+	).memory;
+	return {
+		platform: navigator.platform,
+		userAgent: navigator.userAgent.replace(/^Mozilla\/5\.0\s*/, ''),
+		hardwareConcurrency: navigator.hardwareConcurrency,
+		deviceMemoryGB: nav.deviceMemory ?? null,
+		jsHeapUsedMB: mem ? Math.round((mem.usedJSHeapSize / 1048576) * 10) / 10 : null,
+		jsHeapTotalMB: mem ? Math.round((mem.totalJSHeapSize / 1048576) * 10) / 10 : null,
+		jsHeapLimitMB: mem ? Math.round((mem.jsHeapSizeLimit / 1048576) * 10) / 10 : null,
+	};
+}
+
 export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 	const effectiveScreenShareSettings = resolveStreamingModeSettings(
 		VoiceSettings.getStreamingMode(),
 		VoiceSettings.getScreenshareResolution(),
 		VoiceSettings.getVideoFrameRate(),
-		hasHigherVideoQuality(),
+		getVideoQualityCaps(),
 	);
 	const localParticipant = MediaEngine.room?.localParticipant ?? null;
 	const voicePresentation = buildVoiceStatsForNerdsPresentation({
@@ -498,14 +510,7 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			voiceServerEndpoint: MediaEngine.voiceServerEndpoint ?? 'n/a',
 			reconnectionCount: MediaEngine.reconnectionCount,
 		},
-		audio: {
-			echoCancellation: VoiceSettings.echoCancellation,
-			noiseSuppression: VoiceSettings.noiseSuppression,
-			autoGainControl: VoiceSettings.autoGainControl,
-			deepFilterNoiseSuppression: VoiceSettings.deepFilterNoiseSuppression,
-			deepFilterNoiseSuppressionLevel: VoiceSettings.deepFilterNoiseSuppressionLevel,
-			processingMode: VoiceSettings.voiceProcessingMode,
-		},
+		audio: readVoiceInputDiagnostics(),
 		screenShareSettings: {
 			resolution: effectiveScreenShareSettings.resolution,
 			frameRate: effectiveScreenShareSettings.frameRate,
@@ -515,27 +520,27 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			codecPreferenceOrder: [...getScreenShareCodecPreferenceOrder()],
 			contentHint: VoiceSettings.getScreenShareContentHint(),
 			encoderMode: VoiceSettings.getScreenShareEncoderMode(),
-			softwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 			scalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
-			backupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
 			maxBitrateMbps:
 				(getPublishedScreenShareMaxBitrateBps(localParticipant) ??
-					getScreenShareBitrateBps(effectiveScreenShareSettings.resolution, effectiveScreenShareSettings.frameRate)) /
-				1000000,
+					getScreenShareBitrateBps(
+						effectiveScreenShareSettings.resolution,
+						effectiveScreenShareSettings.frameRate,
+						VoiceSettings.getScreenShareBitrateBudget(),
+					)) / 1000000,
 			audioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
 			audioIncludeSources: VoiceSettings.getScreenShareAudioIncludeSources(),
 			audioExcludeSources: VoiceSettings.getScreenShareAudioExcludeSources(),
 			shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
 			shareAppAudio: VoiceSettings.getShareAppAudio(),
 			muteStreamAudio: VoiceSettings.getMuteStreamAudio(),
-			openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		},
 		screenShareAudioCapture: {
 			nativeCapture: getNativeAudioCaptureDiagnosticState(),
 			publications: collectScreenShareAudioPublicationDiagnostics(localParticipant),
 		},
 		appInfo: {
-			appVersion: Config.PUBLIC_BUILD_VERSION ?? 'dev',
+			appVersion: Config.BUILD_VERSION ?? 'dev',
 			electronVersion: null,
 			chromiumVersion: null,
 			hardwareAccelerationEnabled: null,
@@ -543,15 +548,7 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 		},
 		gpu: null,
 		appMetrics: null,
-		system: {
-			platform: navigator.platform,
-			userAgent: navigator.userAgent.replace(/^Mozilla\/5\.0\s*/, ''),
-			hardwareConcurrency: navigator.hardwareConcurrency,
-			deviceMemoryGB: (navigator as Navigator & {deviceMemory?: number}).deviceMemory ?? null,
-			jsHeapUsedMB: null,
-			jsHeapTotalMB: null,
-			jsHeapLimitMB: null,
-		},
+		system: getSystemInfo(),
 		heapHistory: [],
 		cpuHistory: [],
 	};
@@ -561,15 +558,15 @@ export async function buildStatsForNerdsCopyPayload(data: StatsForNerdsData): Pr
 	const [nativePlatform, displayShareEnvironment, permissions, mediaDevices, voiceSettings, desktop, codecs] =
 		await Promise.all([
 			getNativePlatform(),
-			getDisplayShareEnvironment().catch((error) => `error:${safeError(error).message ?? 'unknown'}`),
+			withTimeout('display share environment', getDisplayShareEnvironment()),
 			Promise.all([
-				queryPermission('microphone'),
-				queryPermission('camera'),
-				queryPermission('display-capture'),
-				queryPermission('speaker-selection'),
+				withTimeout('microphone permission', queryPermission('microphone')),
+				withTimeout('camera permission', queryPermission('camera')),
+				withTimeout('display capture permission', queryPermission('display-capture')),
+				withTimeout('speaker selection permission', queryPermission('speaker-selection')),
 			]),
-			collectMediaDevices(),
-			collectVoiceSettingsMetadata(),
+			withTimeout('media devices', collectMediaDevices()),
+			withTimeout('voice settings', collectVoiceSettingsMetadata()),
 			collectDesktopMetadata(),
 			collectCodecMetadata(),
 		]);

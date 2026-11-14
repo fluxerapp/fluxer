@@ -7,9 +7,7 @@
 
 -type channel_list() :: [map()].
 
--export_type([channel_list/0]).
-
--spec sort_channels_for_ordering(channel_list()) -> channel_list().
+-spec sort_channels_for_ordering([map()]) -> [map()].
 sort_channels_for_ordering(Channels) ->
     ChannelList = map_utils:ensure_list(Channels),
     ChannelIds = sets:from_list(channel_ids(ChannelList)),
@@ -79,7 +77,7 @@ split_channels(Channels, ChannelIds) ->
 ) ->
     {channel_list(), channel_list(), #{integer() => channel_list()}}.
 classify_channel(Channel, ChannelIds, Roots, Cats, ByParent) ->
-    case channel_is_category(Channel) of
+    case channel_types:is_category(channel_type(Channel)) of
         true -> {Roots, [Channel | Cats], ByParent};
         false -> classify_non_category(Channel, ChannelIds, Roots, Cats, ByParent)
     end.
@@ -168,14 +166,11 @@ safe_snowflake_id(Value) ->
         error:{invalid_snowflake, _} -> undefined
     end.
 
--spec channel_is_category(map()) -> boolean().
-channel_is_category(Channel) ->
-    channel_type(Channel) =:= 4.
-
 -spec channel_is_layout_text(map()) -> boolean().
 channel_is_layout_text(Channel) ->
     ChannelType = channel_type(Channel),
-    ChannelType =:= 0 orelse ChannelType =:= 998.
+    ChannelType =:= 0 orelse ChannelType =:= 5 orelse ChannelType =:= 998 orelse
+        ChannelType =:= 15 orelse ChannelType =:= 16.
 
 -spec channel_is_layout_voice(map()) -> boolean().
 channel_is_layout_voice(Channel) ->

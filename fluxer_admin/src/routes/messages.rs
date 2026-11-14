@@ -5,7 +5,7 @@ use crate::{
     api::client::{AdminApiClient, ApiResultExt},
     middleware::{auth::AuthContext, csrf::CsrfToken},
     state::AppState,
-    templates,
+    templates::{self, components::enforcement_fields::can_take_action},
 };
 use axum::{
     Router,
@@ -16,7 +16,6 @@ use axum::{
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct MessagesQuery {
     channel_id: Option<String>,
     message_id: Option<String>,
@@ -66,12 +65,7 @@ async fn messages_page(
     Query(query): Query<MessagesQuery>,
 ) -> Response {
     let config = state.config();
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.0.acls();
     let can_lookup = acl::has_permission(admin_acls, acl::MESSAGE_LOOKUP);
     let can_delete = acl::has_permission(admin_acls, acl::MESSAGE_DELETE);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
@@ -82,13 +76,7 @@ async fn messages_page(
     let before = query.before.as_deref().filter(|s| !s.is_empty());
     let after = query.after.as_deref().filter(|s| !s.is_empty());
     let search = query.search.as_deref().filter(|s| !s.is_empty());
-    let context_limit = query
-        .context_limit
-        .as_deref()
-        .and_then(|s| s.parse::<u32>().ok())
-        .filter(|n| *n > 0)
-        .unwrap_or(50)
-        .min(100);
+    let context_limit = super::message_actions::parse_context_limit(query.context_limit.as_deref());
     let mut lookup_result = None;
     let mut browse_result = None;
     let mut search_result = None;
@@ -144,6 +132,7 @@ async fn messages_page(
             prefill_channel_id: channel_id,
             can_lookup,
             can_delete,
+            can_take_action: can_take_action(admin_acls),
             lookup_result: lookup_result.as_ref(),
             browse_result: browse_result.as_ref(),
             search_result: search_result.as_ref(),

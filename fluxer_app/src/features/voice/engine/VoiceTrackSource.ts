@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const VoiceTrackSource = Object.freeze({
-	Microphone: 'microphone',
-	Camera: 'camera',
-	ScreenShare: 'screen_share',
-	ScreenShareAudio: 'screen_share_audio',
-	Unknown: 'unknown',
-});
+import {VoiceEngineV2StatsTrackSource} from '@fluxer/voice_engine_v2/src/policies/voiceStats';
+
+export const VoiceTrackSource = VoiceEngineV2StatsTrackSource;
 
 export type VoiceTrackSource = (typeof VoiceTrackSource)[keyof typeof VoiceTrackSource];
 export type PinnableVoiceTrackSource = typeof VoiceTrackSource.Camera | typeof VoiceTrackSource.ScreenShare;
@@ -73,10 +69,6 @@ export function asVoiceTrackSource(source: unknown): VoiceTrackSource {
 		default:
 			return VoiceTrackSource.Unknown;
 	}
-}
-
-export function isVoiceScreenShareSource(source: unknown): boolean {
-	return asVoiceTrackSource(source) === VoiceTrackSource.ScreenShare;
 }
 
 function normalizeTrackLabel(value: unknown): string | null {

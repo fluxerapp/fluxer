@@ -6,14 +6,10 @@
 -export([
     init/0,
     build_process_key/2,
-    build_process_name/2,
     registry_whereis/1,
-    registry_unregister/1,
     register_and_monitor/3,
     lookup_or_monitor/3,
-    safe_unregister/1,
-    safe_unregister/2,
-    cleanup_on_down/2,
+    safe_unregister/1, safe_unregister/2,
     cleanup_on_down/3,
     get_count/1,
     force_stop_process/1
@@ -72,10 +68,6 @@ prefix_to_atom("presence") -> presence;
 prefix_to_atom("session") -> session;
 prefix_to_atom("session_group") -> session_group;
 prefix_to_atom("voice") -> voice.
-
--spec build_process_name(process_prefix(), process_id()) -> process_key().
-build_process_name(Prefix, Id) ->
-    build_process_key(Prefix, Id).
 
 -spec registry_whereis(process_key()) -> pid() | undefined.
 registry_whereis(Key) ->
@@ -186,18 +178,6 @@ safe_unregister(Key, Pid) when is_pid(Pid) ->
     registry_unregister_if_pid(Key, Pid);
 safe_unregister(Key, _Pid) ->
     registry_unregister(Key).
-
--spec cleanup_on_down(pid(), process_map()) -> process_map().
-cleanup_on_down(DeadPid, ProcessMap) ->
-    maps:filter(
-        fun
-            (_Key, loading) ->
-                true;
-            (_Key, {Pid, _Ref}) ->
-                Pid =/= DeadPid
-        end,
-        ProcessMap
-    ).
 
 -spec cleanup_on_down(process_prefix(), pid(), process_map()) -> process_map().
 cleanup_on_down(Prefix, DeadPid, ProcessMap) ->

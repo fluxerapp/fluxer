@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {RoleCreateFailedModal} from '@app/features/app/components/alerts/RoleCreateFailedModal';
-import {RoleDeleteFailedModal} from '@app/features/app/components/alerts/RoleDeleteFailedModal';
-import {RoleNameBlankModal} from '@app/features/app/components/alerts/RoleNameBlankModal';
+import modalI18n from '@app/app/I18n';
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {sortRolesByPosition} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
-import {showGuildErrorModal} from '@app/features/guild/components/alerts/GuildErrorModalUtils';
 import {MobileRoleList} from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList';
 import {RoleEditor} from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor';
 import {RoleSidebar} from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar';
@@ -24,11 +22,11 @@ import Guilds from '@app/features/guild/state/Guilds';
 import {createSubmittableRoleOrderIds} from '@app/features/guild/utils/GuildRoleOrderUtils';
 import {CANCEL_DESCRIPTOR, TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import {RoleUpdateFailedModal} from '@app/features/moderation/components/alerts/RoleUpdateFailedModal';
 import Permission from '@app/features/permissions/state/Permission';
 import PermissionLayout from '@app/features/permissions/state/PermissionLayout';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -37,12 +35,38 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import SettingsSidebar from '@app/features/ui/state/SettingsSidebar';
 import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {THREAD_PERMISSIONS, withImplicitThreadBits} from '@fluxer/constants/src/ThreadPermissionUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {matchSorter} from 'match-sorter';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+
+const RoleDeleteFailedModal_FAILED_TO_DELETE_ROLE_DESCRIPTOR = msg({
+	message: "Couldn't delete role",
+	comment: 'Error modal title shown when role deletion fails.',
+});
+
+const RoleCreateFailedModal_FAILED_TO_CREATE_ROLE_DESCRIPTOR = msg({
+	message: "Couldn't create role",
+	comment: 'Error modal title shown when role creation fails.',
+});
+
+const RoleUpdateFailedModal_FAILED_TO_UPDATE_ROLES_DESCRIPTOR = msg({
+	message: "Couldn't update roles",
+	comment: 'Error modal title shown when saving role changes fails.',
+});
+
+const RoleNameBlankModal_ROLE_NAME_CANNOT_BE_BLANK_DESCRIPTOR = msg({
+	message: 'Role name is required',
+	comment: 'Validation modal title when the role-edit form is submitted with an empty role name.',
+});
+
+const RoleNameBlankModal_YOU_CANNOT_SAVE_A_ROLE_WITH_A_BLANK_DESCRIPTOR = msg({
+	message: 'Give the role a name before saving.',
+	comment: 'Modal body shown when the role-edit form is submitted with an empty role name.',
+});
 
 const logger = new Logger('GuildRolesTab');
 const NEW_ROLE_DESCRIPTOR = msg({
@@ -78,7 +102,7 @@ const YOU_CANNOT_GRANT_A_PERMISSION_YOU_DON_T_DESCRIPTOR = msg({
 		'Tooltip on a permission toggle in the role editor that the current user cannot grant because they do not hold that permission themselves.',
 });
 const YOU_CANNOT_REMOVE_THIS_PERMISSION_BECAUSE_IT_WOULD_DESCRIPTOR = msg({
-	message: 'You cannot remove this permission because it would remove it from yourself',
+	message: 'You cannot remove this permission because it would remove it from you',
 	comment:
 		'Tooltip on a permission toggle in the role editor when revoking that permission would leave the current user without it.',
 });
@@ -166,7 +190,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	}, [guild, currentUserMember]);
 	const currentUserPermissions = useMemo(() => {
 		if (!guild || !currentUser) return 0n;
-		return PermissionUtils.computePermissions(currentUser.id, guild.toJSON());
+		return withImplicitThreadBits(PermissionUtils.computePermissions(currentUser.id, guild.toJSON()));
 	}, [guild, currentUser]);
 	const wouldRemoveOwnPermission = useCallback(
 		(permission: bigint, roleId: string): boolean => {
@@ -218,7 +242,11 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		if (!selectedRole) return null;
 		return applyRoleUpdate(selectedRole, roleUpdates.get(selectedRole.id));
 	}, [selectedRole, roleUpdates]);
-	const permissionSpecs = useMemo(() => PermissionUtils.generatePermissionSpec(i18n), [i18n.locale]);
+	const threadsActive = ThreadGuilds.isActive(guildId);
+	const permissionSpecs = useMemo(
+		() => PermissionUtils.generatePermissionSpec(i18n, {threads: threadsActive}),
+		[i18n.locale, threadsActive],
+	);
 	const filteredPermissionSpecs = useMemo(() => {
 		if (!permissionSearchQuery) return permissionSpecs;
 		return permissionSpecs
@@ -244,11 +272,11 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		if (!guild || !canManageRoles) return;
 		for (const [_roleId, updates] of roleUpdates.entries()) {
 			if (updates.name !== undefined && updates.name.trim() === '') {
-				ModalCommands.push(
-					modal(() => (
-						<RoleNameBlankModal data-flx="guild.guild-tabs.guild-roles-tab.handle-save.role-name-blank-modal" />
-					)),
-				);
+				showGenericErrorModal({
+					title: () => modalI18n._(RoleNameBlankModal_ROLE_NAME_CANNOT_BE_BLANK_DESCRIPTOR),
+					message: () => modalI18n._(RoleNameBlankModal_YOU_CANNOT_SAVE_A_ROLE_WITH_A_BLANK_DESCRIPTOR),
+					dataFlx: 'app.role-name-blank-modal.confirm-modal',
+				});
 				return;
 			}
 		}
@@ -281,13 +309,23 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					await GuildCommands.setRoleHoistOrder(guild.id, submittableHoistOrder);
 				}
 			}
+			const retiredPermissions = ThreadGuilds.isActive(guild.id) ? 0n : THREAD_PERMISSIONS;
 			for (const [roleId, updates] of roleUpdates.entries()) {
 				const updateData: Record<string, unknown> = {};
 				if (updates.name !== undefined) updateData.name = updates.name;
 				if (updates.color !== undefined) updateData.color = updates.color;
 				if (updates.hoist !== undefined) updateData.hoist = updates.hoist;
 				if (updates.mentionable !== undefined) updateData.mentionable = updates.mentionable;
-				if (updates.permissions !== undefined) updateData.permissions = updates.permissions.toString();
+				if (updates.permissions !== undefined) {
+					updateData.permissions = (updates.permissions & ~retiredPermissions).toString();
+				}
+				const originalRole = guild.roles[roleId];
+				if (updates.icon !== undefined && updates.icon !== originalRole?.icon) {
+					updateData.icon = updates.icon;
+				}
+				if (updates.unicodeEmoji !== undefined && updates.unicodeEmoji !== originalRole?.unicodeEmoji) {
+					updateData.unicode_emoji = updates.unicodeEmoji;
+				}
 				await GuildCommands.updateRole(guild.id, roleId, updateData);
 			}
 			setRoleUpdates(new Map());
@@ -295,11 +333,11 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			setPendingHoistOrder(null);
 			ToastCommands.createToast({type: 'success', children: <Trans>Roles updated successfully</Trans>});
 		} catch (_error) {
-			ModalCommands.push(
-				modal(() => (
-					<RoleUpdateFailedModal data-flx="guild.guild-tabs.guild-roles-tab.handle-save.role-update-failed-modal" />
-				)),
-			);
+			showGenericErrorModal({
+				title: () => modalI18n._(RoleUpdateFailedModal_FAILED_TO_UPDATE_ROLES_DESCRIPTOR),
+				message: () => modalI18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+				dataFlx: 'moderation.role-update-failed-modal.generic-error-modal',
+			});
 		}
 	}, [guild, canManageRoles, roleUpdates, pendingRoleOrder, pendingHoistOrder, isRoleLocked]);
 	const handleReset = useCallback(() => {
@@ -336,7 +374,9 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					(merged.color !== undefined && merged.color !== originalRole.color) ||
 					(merged.hoist !== undefined && merged.hoist !== originalRole.hoist) ||
 					(merged.mentionable !== undefined && merged.mentionable !== originalRole.mentionable) ||
-					(merged.permissions !== undefined && merged.permissions !== originalRole.permissions);
+					(merged.permissions !== undefined && merged.permissions !== originalRole.permissions) ||
+					(merged.icon !== undefined && merged.icon !== originalRole.icon) ||
+					(merged.unicodeEmoji !== undefined && merged.unicodeEmoji !== originalRole.unicodeEmoji);
 				if (hasChanges) newMap.set(roleId, merged);
 				else newMap.delete(roleId);
 				return newMap;
@@ -352,11 +392,11 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			ToastCommands.createToast({type: 'success', children: <Trans>Role created successfully</Trans>});
 		} catch (_error) {
 			pendingRoleCreationRef.current = false;
-			ModalCommands.push(
-				modal(() => (
-					<RoleCreateFailedModal data-flx="guild.guild-tabs.guild-roles-tab.handle-create-role.role-create-failed-modal" />
-				)),
-			);
+			showGenericErrorModal({
+				title: () => modalI18n._(RoleCreateFailedModal_FAILED_TO_CREATE_ROLE_DESCRIPTOR),
+				message: () => modalI18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+				dataFlx: 'app.role-create-failed-modal.generic-error-modal',
+			});
 		}
 	}, [guild]);
 	const handleDuplicateRole = useCallback(
@@ -371,6 +411,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				const createdRole = await GuildCommands.createRole(guild.id, copyName, {
 					color: sourceRole.color,
 					permissions: grantablePermissions,
+					iconSourceRoleId: sourceRole.icon || sourceRole.unicodeEmoji ? sourceRole.id : undefined,
 				});
 				const orderedRoleIds = roles.map((role: GuildRole) => role.id).filter((id) => id !== createdRole.id);
 				const sourceIndex = orderedRoleIds.indexOf(sourceRoleId);
@@ -403,11 +444,11 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			} catch (_error) {
 				pendingRoleCreationRef.current = false;
 				setOptimisticRoleOrder(null);
-				ModalCommands.push(
-					modal(() => (
-						<RoleCreateFailedModal data-flx="guild.guild-tabs.guild-roles-tab.handle-duplicate-role.role-create-failed-modal" />
-					)),
-				);
+				showGenericErrorModal({
+					title: () => modalI18n._(RoleCreateFailedModal_FAILED_TO_CREATE_ROLE_DESCRIPTOR),
+					message: () => modalI18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+					dataFlx: 'app.role-create-failed-modal.generic-error-modal',
+				});
 			}
 		},
 		[guild, canManageRoles, roles, isRoleLocked, currentUserPermissions, i18n],
@@ -441,14 +482,16 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 							setSelectedRoleId(nextRole?.id ?? null);
 						} catch (_error) {
 							window.setTimeout(() => {
-								ModalCommands.push(
-									modal(() => (
-										<RoleDeleteFailedModal
-											roleName={selectedRole.name}
-											data-flx="guild.guild-tabs.guild-roles-tab.handle-delete-role.role-delete-failed-modal"
-										/>
-									)),
-								);
+								showGenericErrorModal({
+									title: () => modalI18n._(RoleDeleteFailedModal_FAILED_TO_DELETE_ROLE_DESCRIPTOR),
+									message: () => (
+										<Trans>
+											We couldn't delete{' '}
+											<strong data-flx="app.role-delete-failed-modal.strong">"{selectedRole.name}"</strong>. Try again.
+										</Trans>
+									),
+									dataFlx: 'app.role-delete-failed-modal.generic-error-modal',
+								});
 							}, 0);
 						}
 					}}
@@ -469,14 +512,16 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				ToastCommands.createToast({type: 'success', children: <Trans>Role deleted successfully</Trans>});
 				setSelectedRoleId((current) => (current === roleId ? (nextRole?.id ?? null) : current));
 			} catch (_error) {
-				ModalCommands.push(
-					modal(() => (
-						<RoleDeleteFailedModal
-							roleName={role.name}
-							data-flx="guild.guild-tabs.guild-roles-tab.handle-context-menu-delete-role.role-delete-failed-modal"
-						/>
-					)),
-				);
+				showGenericErrorModal({
+					title: () => modalI18n._(RoleDeleteFailedModal_FAILED_TO_DELETE_ROLE_DESCRIPTOR),
+					message: () => (
+						<Trans>
+							We couldn't delete <strong data-flx="app.role-delete-failed-modal.strong">"{role.name}"</strong>. Try
+							again.
+						</Trans>
+					),
+					dataFlx: 'app.role-delete-failed-modal.generic-error-modal',
+				});
 			}
 		},
 		[guild, roles, isRoleLocked],
@@ -521,7 +566,8 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			await GuildCommands.resetRoleHoistOrder(guild.id);
 			ToastCommands.createToast({type: 'success', children: <Trans>Hoist order reset to default</Trans>});
 		} catch (_error) {
-			showGuildErrorModal({
+			showGenericErrorModal({
+				defer: true,
 				title: i18n._(COULDN_T_RESET_HOIST_ORDER_DESCRIPTOR),
 				message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
 				dataFlx: 'guild.guild-tabs.guild-roles-tab.reset-hoist-order-error-modal',
@@ -580,6 +626,15 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	}, [selectedRole, handleRoleUpdate]);
 	const handleEnterHoistOrderMode = useCallback(() => setHoistOrderMode(true), []);
 	const handleExitHoistOrderMode = useCallback(() => setHoistOrderMode(false), []);
+	const reserveIconSlot = useMemo(
+		() =>
+			roles.some((role) => {
+				if (role.isEveryone) return false;
+				const roleWithUpdates = applyRoleUpdate(role, roleUpdates.get(role.id));
+				return Boolean(roleWithUpdates.icon || roleWithUpdates.unicodeEmoji);
+			}),
+		[roles, roleUpdates],
+	);
 	const sidebarContent = useMemo(() => {
 		if (!guild || !currentUser) return null;
 		return (
@@ -592,6 +647,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				hoistOrderMode={hoistOrderMode}
 				hasCustomHoistOrder={hasCustomHoistOrder}
 				roleUpdates={roleUpdates}
+				reserveIconSlot={reserveIconSlot}
 				isRoleLocked={isRoleLocked}
 				onSelectRole={setSelectedRoleId}
 				onCreateRole={handleCreateRole}
@@ -624,6 +680,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		handleHoistDrop,
 		handleResetHoistOrder,
 		roleUpdates,
+		reserveIconSlot,
 		isRoleLocked,
 		hoistOrderMode,
 		hasCustomHoistOrder,

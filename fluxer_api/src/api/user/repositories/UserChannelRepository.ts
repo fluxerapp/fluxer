@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import {channelRowFromPrivateChannelSnapshot, privateChannelHydrationPatch} from '../../channel/PrivateChannelSnapshot';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {
+	channelRowFromPrivateChannelSnapshot,
+	privateChannelHydrationPatch,
+} from '@app/api/channel/PrivateChannelSnapshot';
 import {
 	BatchBuilder,
 	deleteOneOrMany,
@@ -10,18 +12,34 @@ import {
 	fetchManyInChunks,
 	fetchOne,
 	upsertOne,
-} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import type {ChannelRow, DmStateRow, PrivateChannelRow} from '../../database/types/ChannelTypes';
-import {Logger} from '../../Logger';
-import {Channel} from '../../models/Channel';
-import {Channels, DmStates, PinnedDms, PrivateChannels, ReadStates, UserDmHistory} from '../../Tables';
-import type {
-	HistoricalDmChannelSummary,
-	IUserChannelRepository,
-	ListHistoricalDmChannelOptions,
-	PrivateChannelSummary,
-} from './IUserChannelRepository';
+} from '@app/api/database/CassandraQueryExecution';
+import type {ChannelRow, DmStateRow, PrivateChannelRow} from '@app/api/database/types/ChannelTypes';
+import {Logger} from '@app/api/Logger';
+import {Channel} from '@app/api/models/Channel';
+import {Channels, DmStates, PinnedDms, PrivateChannels, ReadStates, UserDmHistory} from '@app/api/Tables';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+
+export interface PrivateChannelSummary {
+	channelId: ChannelID;
+	isGroupDm: boolean;
+	channelType: number | null;
+	lastMessageId: MessageID | null;
+	open: boolean;
+}
+
+export interface ListHistoricalDmChannelOptions {
+	limit: number;
+	beforeChannelId?: ChannelID;
+	afterChannelId?: ChannelID;
+}
+
+export interface HistoricalDmChannelSummary {
+	channelId: ChannelID;
+	channelType: number | null;
+	recipientIds: Array<UserID>;
+	lastMessageId: MessageID | null;
+	open: boolean;
+}
 
 interface PinnedDmRow {
 	user_id: UserID;
@@ -153,6 +171,7 @@ function buildDmChannelRow({
 		user_limit: null,
 		voice_connection_limit: null,
 		rtc_region: null,
+		rtc_p2p: null,
 		last_message_id: null,
 		last_pin_timestamp: null,
 		permission_overwrites: null,
@@ -167,7 +186,7 @@ async function fetchPinnedDms(userId: UserID): Promise<Array<PinnedDmRow>> {
 	return fetchMany<PinnedDmRow>(FETCH_PINNED_DMS_CQL, {user_id: userId});
 }
 
-export class UserChannelRepository implements IUserChannelRepository {
+export class UserChannelRepository {
 	async addPinnedDm(userId: UserID, channelId: ChannelID): Promise<Array<ChannelID>> {
 		const pinnedDms = [...(await fetchPinnedDms(userId))];
 		const existingDm = pinnedDms.find((dm) => dm.channel_id === channelId);
@@ -198,12 +217,10 @@ export class UserChannelRepository implements IUserChannelRepository {
 	}
 
 	async closeDmForUser(userId: UserID, channelId: ChannelID): Promise<void> {
-		await deleteOneOrMany(
-			PrivateChannels.deleteByPk({
-				user_id: userId,
-				channel_id: channelId,
-			}),
-		);
+		const batch = new BatchBuilder();
+		batch.addPrepared(PrivateChannels.deleteByPk({user_id: userId, channel_id: channelId}));
+		batch.addPrepared(PinnedDms.deleteByPk({user_id: userId, channel_id: channelId}));
+		await batch.execute();
 	}
 
 	async createDmChannelAndState(user1Id: UserID, user2Id: UserID, channelId: ChannelID): Promise<Channel> {
@@ -233,15 +250,6 @@ export class UserChannelRepository implements IUserChannelRepository {
 		const channelRow = buildDmChannelRow({channelId, user1Id: ownerId, user2Id: recipientId, ownerId});
 		await upsertOne(Channels.upsertAll(channelRow));
 		return new Channel(channelRow);
-	}
-
-	async deleteAllPrivateChannels(userId: UserID): Promise<void> {
-		await deleteOneOrMany(
-			PrivateChannels.deleteCql({
-				where: PrivateChannels.where.eq('user_id'),
-			}),
-			{user_id: userId},
-		);
 	}
 
 	async deleteAllReadStates(userId: UserID): Promise<void> {
@@ -371,7 +379,7 @@ export class UserChannelRepository implements IUserChannelRepository {
 	private async cleanupOrphanedPrivateChannels(userId: UserID, channelIds: Array<ChannelID>): Promise<void> {
 		try {
 			for (const channelId of channelIds) {
-				await deleteOneOrMany(PrivateChannels.deleteByPk({user_id: userId, channel_id: channelId}));
+				await this.closeDmForUser(userId, channelId);
 				await deleteOneOrMany(UserDmHistory.deleteByPk({user_id: userId, channel_id: channelId}));
 			}
 			Logger.warn(
@@ -650,22 +658,6 @@ export class UserChannelRepository implements IUserChannelRepository {
 		});
 	}
 
-	async openDmForUser(userId: UserID, channelId: ChannelID, isGroupDm?: boolean): Promise<void> {
-		const channelRow = await fetchOne<ChannelRow>(FETCH_CHANNEL_CQL, {
-			channel_id: channelId,
-			soft_deleted: false,
-		});
-		if (channelRow) {
-			await this.openPrivateChannelForUser(userId, new Channel(channelRow));
-			return;
-		}
-		const resolvedIsGroupDm = isGroupDm ?? false;
-		await this.recordHistoricalDmChannel(userId, channelId, resolvedIsGroupDm);
-		await upsertOne(
-			PrivateChannels.patchByPk({user_id: userId, channel_id: channelId}, {is_gdm: Db.set(resolvedIsGroupDm)}),
-		);
-	}
-
 	async openPrivateChannelForUser(userId: UserID, channel: Channel): Promise<void> {
 		const isGroupDm = channel.type === ChannelTypes.GROUP_DM;
 		await this.recordHistoricalDmChannel(userId, channel.id, isGroupDm);
@@ -677,7 +669,7 @@ export class UserChannelRepository implements IUserChannelRepository {
 		);
 	}
 
-	async recordHistoricalDmChannel(userId: UserID, channelId: ChannelID, isGroupDm: boolean): Promise<void> {
+	private async recordHistoricalDmChannel(userId: UserID, channelId: ChannelID, isGroupDm: boolean): Promise<void> {
 		if (isGroupDm) {
 			return;
 		}

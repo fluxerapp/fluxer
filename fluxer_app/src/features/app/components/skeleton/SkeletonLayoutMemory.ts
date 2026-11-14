@@ -12,6 +12,7 @@ import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {MESSAGE_LAYOUT_SPEC} from '@app/features/theme/layout/MessageLayoutSpec';
 import {getRemScaleForDocument, REM_BASE_PX} from '@app/features/theme/layout/RemFromPx';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 
 const STORAGE_KEY = 'SkeletonLayoutMemory';
 const STORAGE_VERSION = 9;
@@ -64,16 +65,16 @@ function pxFromSpecRem(value: `${number}rem`): number {
 
 export const SKELETON_UNMEASURED_WIDTH_PX = 0;
 export const SKELETON_NO_SELECTED_RAIL_ITEM_INDEX = -1;
-export const SKELETON_DEFAULT_MESSAGE_GUTTER_PX = DEFAULT_MESSAGE_GUTTER_PX;
-export const SKELETON_DEFAULT_MESSAGE_FONT_SIZE_PX = REM_BASE_PX;
-export const SKELETON_DEFAULT_COMPACT_TIMESTAMP_WIDTH_PX = pxFromSpecRem(MESSAGE_LAYOUT_SPEC.dense.timestampWidth);
-export const SKELETON_DEFAULT_MESSAGE_DISPLAY_COMPACT = false;
-export const SKELETON_DEFAULT_COMPACT_AVATARS_VISIBLE = false;
-export const SKELETON_DEFAULT_SEND_DIVIDER_VISIBLE = false;
-export const SKELETON_COMPOSER_EXPRESSION_ACTION_COUNT_WITHOUT_GIF = 3;
-export const SKELETON_COMPOSER_DEFAULT_MOBILE_ACTION_COUNT = 2;
-export const SKELETON_DEFAULT_FAVORITES_VISIBLE = true;
-export const SKELETON_DEFAULT_GUILD_BANNER_ASPECT_RATIO = 16 / 9;
+const SKELETON_DEFAULT_MESSAGE_GUTTER_PX = DEFAULT_MESSAGE_GUTTER_PX;
+const SKELETON_DEFAULT_MESSAGE_FONT_SIZE_PX = REM_BASE_PX;
+const SKELETON_DEFAULT_COMPACT_TIMESTAMP_WIDTH_PX = pxFromSpecRem(MESSAGE_LAYOUT_SPEC.dense.timestampWidth);
+const SKELETON_DEFAULT_MESSAGE_DISPLAY_COMPACT = false;
+const SKELETON_DEFAULT_COMPACT_AVATARS_VISIBLE = false;
+const SKELETON_DEFAULT_SEND_DIVIDER_VISIBLE = false;
+const SKELETON_COMPOSER_EXPRESSION_ACTION_COUNT_WITHOUT_GIF = 3;
+const SKELETON_COMPOSER_DEFAULT_MOBILE_ACTION_COUNT = 2;
+const SKELETON_DEFAULT_FAVORITES_VISIBLE = true;
+const SKELETON_DEFAULT_GUILD_BANNER_ASPECT_RATIO = 16 / 9;
 export const SKELETON_DISCOVERY_MAX_COLUMNS = MAX_DISCOVERY_COLUMNS;
 export const SKELETON_DISCOVERY_MIN_CARD_WIDTH_PX = 320;
 export const SKELETON_DISCOVERY_MAX_CARD_WIDTH_PX = 400;
@@ -188,7 +189,7 @@ export const SkeletonSimplePageBody = Object.freeze({
 
 export type SkeletonSimplePageBody = (typeof SkeletonSimplePageBody)[keyof typeof SkeletonSimplePageBody];
 
-export const SKELETON_DEFAULT_SIMPLE_PAGE_BODY: Readonly<Record<SkeletonSimplePageRoute, SkeletonSimplePageBody>> =
+const SKELETON_DEFAULT_SIMPLE_PAGE_BODY: Readonly<Record<SkeletonSimplePageRoute, SkeletonSimplePageBody>> =
 	Object.freeze({
 		[SkeletonSimplePageRoute.GUILD_MEMBERS]: SkeletonSimplePageBody.MEMBER_TABLE,
 		[SkeletonSimplePageRoute.BOOKMARKS]: SkeletonSimplePageBody.MESSAGE_LIST,
@@ -211,6 +212,14 @@ export type RememberedSkeletonGuildRailItem =
 			readonly childIndicators: ReadonlyArray<SkeletonGuildRailItemIndicator>;
 			readonly selectedChildIndex: number;
 	  };
+
+const SKELETON_GUILD_RAIL_FALLBACK_GUILD_COUNT = 6;
+
+export const SKELETON_GUILD_RAIL_FALLBACK_ITEMS: ReadonlyArray<RememberedSkeletonGuildRailItem> = Object.freeze(
+	Array.from({length: SKELETON_GUILD_RAIL_FALLBACK_GUILD_COUNT}, () =>
+		Object.freeze({kind: SkeletonGuildRailItemKind.GUILD, indicator: SkeletonGuildRailItemIndicator.NONE} as const),
+	),
+);
 
 export interface RememberedSkeletonGuildRailLayout {
 	readonly inlineDmRowCount: number;
@@ -703,10 +712,6 @@ const SIMPLE_PAGE_BODIES = new Set<string>(Object.values(SkeletonSimplePageBody)
 const SKELETON_FRIENDS_TAB_COUNT = FRIENDS_TABS.size;
 const MAX_SIMPLE_PAGE_LAYOUTS = SIMPLE_PAGE_ROUTES.size;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value != null && !Array.isArray(value);
-}
-
 function hasOnlyKeys(record: Record<string, unknown>, allowedKeys: ReadonlySet<string>): boolean {
 	return Object.keys(record).every((key) => allowedKeys.has(key));
 }
@@ -987,7 +992,6 @@ function parseGuildRailLayout(value: unknown, now: number): OptionalParseResult<
 		typeof value.addGuildVisible !== 'boolean' ||
 		typeof value.downloadVisible !== 'boolean' ||
 		typeof value.helpVisible !== 'boolean' ||
-		value.discoveryVisible !== value.addGuildVisible ||
 		(!value.fluxerVisible && inlineDmRowCount > 0) ||
 		!Array.isArray(value.organizedItems) ||
 		value.organizedItems.length > SKELETON_GUILD_RAIL_ORGANIZED_VISUAL_ROW_LIMIT
@@ -2837,7 +2841,6 @@ export function reportSkeletonGuildRailLayout(layout: Omit<RememberedSkeletonGui
 		typeof layout.addGuildVisible !== 'boolean' ||
 		typeof layout.downloadVisible !== 'boolean' ||
 		typeof layout.helpVisible !== 'boolean' ||
-		layout.discoveryVisible !== layout.addGuildVisible ||
 		(!layout.fluxerVisible && inlineDmRowCount > 0) ||
 		!Array.isArray(layout.organizedItems) ||
 		!Array.isArray(layout.inlineDmUnreadFlags)

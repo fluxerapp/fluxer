@@ -1,14 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {DELETE_MY_MESSAGES_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
+import {useConfirmDeleteMyMessages} from '@app/features/guild/hooks/useConfirmDeleteMyMessages';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {Logger} from '@app/features/platform/utils/AppLogger';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback} from 'react';
@@ -30,45 +24,22 @@ const COULDN_T_DELETE_YOUR_MESSAGES_DESCRIPTOR = msg({
 	message: "Couldn't delete your messages",
 	comment: 'Error modal title shown when the "delete my messages in community" request failed.',
 });
-const logger = new Logger('useDeleteMyMessagesInGuild');
+
 export const useDeleteMyMessagesInGuild = () => {
 	const {i18n} = useLingui();
+	const confirmDelete = useConfirmDeleteMyMessages();
 	return useCallback(
 		(guildId: string) => {
-			ModalCommands.push(
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(DELETE_YOUR_MESSAGES_IN_THIS_COMMUNITY_DESCRIPTOR)}
-						description={i18n._(THIS_WILL_PERMANENTLY_DELETE_EVERY_MESSAGE_YOU_HAVE_DESCRIPTOR)}
-						primaryText={i18n._(DELETE_MY_MESSAGES_DESCRIPTOR)}
-						primaryVariant="danger"
-						onPrimary={async () => {
-							try {
-								await GuildCommands.bulkDeleteMyMessages(guildId);
-								ToastCommands.createToast({
-									type: 'success',
-									children: i18n._(DELETED_YOUR_MESSAGES_DESCRIPTOR),
-								});
-							} catch (error) {
-								logger.error('Failed to delete user messages in guild', error);
-								window.setTimeout(() => {
-									ModalCommands.push(
-										modal(() => (
-											<GenericErrorModal
-												title={i18n._(COULDN_T_DELETE_YOUR_MESSAGES_DESCRIPTOR)}
-												message={i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR)}
-												data-flx="guild.use-delete-my-messages-in-guild.generic-error-modal"
-											/>
-										)),
-									);
-								}, 0);
-							}
-						}}
-						data-flx="guild.use-delete-my-messages-in-guild.confirm-modal"
-					/>
-				)),
-			);
+			confirmDelete({
+				title: i18n._(DELETE_YOUR_MESSAGES_IN_THIS_COMMUNITY_DESCRIPTOR),
+				description: i18n._(THIS_WILL_PERMANENTLY_DELETE_EVERY_MESSAGE_YOU_HAVE_DESCRIPTOR),
+				run: () => GuildCommands.bulkDeleteMyMessages(guildId),
+				toastText: i18n._(DELETED_YOUR_MESSAGES_DESCRIPTOR),
+				errorTitle: i18n._(COULDN_T_DELETE_YOUR_MESSAGES_DESCRIPTOR),
+				errorMessage: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),
+				dataFlx: 'guild.use-delete-my-messages-in-guild.confirm-modal',
+			});
 		},
-		[i18n],
+		[i18n, confirmDelete],
 	);
 };

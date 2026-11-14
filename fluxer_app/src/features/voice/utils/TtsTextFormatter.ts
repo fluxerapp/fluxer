@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Channels from '@app/features/channel/state/Channels';
+import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import Guilds from '@app/features/guild/state/Guilds';
+import {formatTimestamp} from '@app/features/messaging/utils/markdown/DateFormatter';
 import {TimestampStyle} from '@app/features/messaging/utils/markdown/parser/Enums';
 import Users from '@app/features/user/state/Users';
-import {shouldUse12HourFormat} from '@app/features/user/utils/DateFormatting';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import {formatTimestampWithStyle} from '@fluxer/date_utils/src/DateTimestampStyle';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -61,6 +60,7 @@ const TTS_STYLE_MAP: Record<string, TimestampStyle> = {
 	D: TimestampStyle.LongDate,
 	f: TimestampStyle.ShortDateTime,
 	F: TimestampStyle.LongDateTime,
+	R: TimestampStyle.RelativeTime,
 };
 const USER_MENTION_PATTERN = /<@!?(\d+)>/g;
 const ROLE_MENTION_PATTERN = /<@&(\d+)>/g;
@@ -105,20 +105,26 @@ function formatChannelMention(channelId: string, i18n: I18n): string {
 	return channel?.name ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR);
 }
 
-function formatTimestampForTts(timestamp: number, style: string | undefined): string {
-	const locale = getCurrentLocale();
-	const hour12 = shouldUse12HourFormat(locale);
+function formatTimestampForTts(timestamp: number, style: string | undefined, i18n: I18n): string {
 	const resolvedStyle = (style ? TTS_STYLE_MAP[style] : undefined) ?? TimestampStyle.ShortDateTime;
-	return formatTimestampWithStyle(timestamp, resolvedStyle, locale, hour12);
+	return formatTimestamp(timestamp, resolvedStyle, i18n);
 }
 
-export function formatMessageForTts(
-	content: string,
-	authorName: string,
-	guildId: string | null,
-	i18n: I18n,
-	replyAuthorName?: string | null,
-): string {
+function replaceUnicodeEmojiWithNames(text: string): string {
+	let result = '';
+	let cursor = 0;
+	for (const match of UnicodeEmojis.matchEmojiSurrogates(text)) {
+		if (match.name == null) {
+			continue;
+		}
+		const [baseName] = match.name.split('::');
+		result += `${text.slice(cursor, match.start)} ${baseName.replace(/_/g, ' ')} `;
+		cursor = match.end;
+	}
+	return result + text.slice(cursor);
+}
+
+export function formatContentForTts(content: string, guildId: string | null, i18n: I18n): string {
 	let formatted = content;
 	formatted = formatted.replace(CODE_BLOCK_PATTERN, ` ${i18n._(CODE_BLOCK_DESCRIPTOR)} `);
 	formatted = formatted.replace(SPOILER_PATTERN, i18n._(SPOILER_DESCRIPTOR));
@@ -126,11 +132,12 @@ export function formatMessageForTts(
 	formatted = formatted.replace(ROLE_MENTION_PATTERN, (_match, roleId) => formatRoleMention(roleId, guildId, i18n));
 	formatted = formatted.replace(CHANNEL_MENTION_PATTERN, (_match, channelId) => formatChannelMention(channelId, i18n));
 	formatted = formatted.replace(CUSTOM_EMOJI_PATTERN, (_match, emojiName) => i18n._(EMOJI_DESCRIPTOR, {emojiName}));
+	formatted = replaceUnicodeEmojiWithNames(formatted);
 	formatted = formatted.replace(SLASH_COMMAND_PATTERN, (_match, commandName) =>
 		i18n._(SLASH_DESCRIPTOR, {commandName}),
 	);
 	formatted = formatted.replace(TIMESTAMP_PATTERN, (_match, timestamp, style) =>
-		formatTimestampForTts(Number.parseInt(timestamp, 10), style),
+		formatTimestampForTts(Number.parseInt(timestamp, 10), style, i18n),
 	);
 	formatted = formatted.replace(INLINE_CODE_PATTERN, '$1');
 	formatted = formatted.replace(MASKED_LINK_PATTERN, '$1');
@@ -141,7 +148,17 @@ export function formatMessageForTts(
 	formatted = formatted.replace(ITALIC_PATTERN, '$1');
 	formatted = formatted.replace(BLOCKQUOTE_PATTERN, '');
 	formatted = formatted.replace(HEADER_PATTERN, '');
-	formatted = formatted.replace(/\s+/g, ' ').trim();
+	return formatted.replace(/\s+/g, ' ').trim();
+}
+
+export function formatMessageForTts(
+	content: string,
+	authorName: string,
+	guildId: string | null,
+	i18n: I18n,
+	replyAuthorName?: string | null,
+): string {
+	const formatted = formatContentForTts(content, guildId, i18n);
 	if (replyAuthorName) {
 		return i18n._(REPLYING_TO_SAID_DESCRIPTOR, {replyAuthorName, authorName, formatted});
 	}

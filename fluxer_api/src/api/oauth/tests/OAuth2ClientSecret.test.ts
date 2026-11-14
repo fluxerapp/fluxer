@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {authorizeOAuth2, createOAuth2Application, createOAuth2TestSetup} from '@app/api/oauth/tests/OAuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {authorizeOAuth2, createOAuth2Application, createOAuth2TestSetup} from './OAuthTestUtils';
 
 describe('OAuth2 Client Secret', () => {
 	let harness: ApiTestHarness;
@@ -52,34 +52,6 @@ describe('OAuth2 Client Secret', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 	});
-	test('should accept correct client secret via basic auth', async () => {
-		const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
-		const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
-			client_id: application.id,
-			redirect_uri: redirectURI,
-			scope: 'identify',
-		});
-		const formData = new URLSearchParams({
-			grant_type: 'authorization_code',
-			code: authCodeResponse.code,
-			redirect_uri: redirectURI,
-			client_id: application.id,
-		});
-		const json = await createBuilder<{
-			access_token: string;
-		}>(harness, '')
-			.post('/oauth2/token')
-			.header('Content-Type', 'application/x-www-form-urlencoded')
-			.header(
-				'Authorization',
-				`Basic ${Buffer.from(`${application.id}:${application.client_secret}`).toString('base64')}`,
-			)
-			.body(formData.toString())
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		expect(json.access_token).toBeTruthy();
-		expect(json.access_token).toHaveLength(43);
-	});
 	test('should not leak client secret in application response', async () => {
 		const {appOwner} = await createOAuth2TestSetup(harness);
 		const application = await createOAuth2Application(harness, appOwner, {
@@ -92,5 +64,25 @@ describe('OAuth2 Client Secret', () => {
 			.execute();
 		expect(json.client_secret).toBeUndefined();
 		expect(json.id).toBe(application.id);
+	});
+	test('keeps the new bot token when the client secret is reset at the same time', async () => {
+		const {appOwner, application} = await createOAuth2TestSetup(harness);
+		const [botReset] = await Promise.all([
+			createBuilder<{token: string}>(harness, appOwner.token)
+				.post(`/oauth2/applications/${application.id}/bot/reset-token`)
+				.body({password: appOwner.password})
+				.expect(HTTP_STATUS.OK)
+				.execute(),
+			createBuilder(harness, appOwner.token)
+				.post(`/oauth2/applications/${application.id}/client-secret/reset`)
+				.body({password: appOwner.password})
+				.expect(HTTP_STATUS.OK)
+				.execute(),
+		]);
+		await createBuilder(harness, `Bot ${botReset.token}`).get('/users/@me').expect(HTTP_STATUS.OK).execute();
+		await createBuilder(harness, `Bot ${application.bot.token}`)
+			.get('/users/@me')
+			.expect(HTTP_STATUS.UNAUTHORIZED)
+			.execute();
 	});
 });

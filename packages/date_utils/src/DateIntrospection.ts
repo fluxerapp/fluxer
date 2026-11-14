@@ -12,20 +12,17 @@ export function getDateFieldOrder(locale: string): Array<DateFieldType> {
 	const parts = formatter.formatToParts(new Date(2000, 0, 1));
 	const order: Array<DateFieldType> = [];
 	for (const part of parts) {
-		if (part.type === 'month' && !order.includes('month')) {
-			order.push('month');
-		} else if (part.type === 'day' && !order.includes('day')) {
-			order.push('day');
-		} else if (part.type === 'year' && !order.includes('year')) {
-			order.push('year');
+		if ((part.type === 'month' || part.type === 'day' || part.type === 'year') && !order.includes(part.type)) {
+			order.push(part.type);
 		}
 	}
 	return order;
 }
 
 export function getMonthNames(locale: string, format: 'long' | 'short' = 'long'): Array<string> {
+	const formatter = getDateFormatter(locale, {month: format});
 	return Array.from({length: 12}, (_, index) => {
 		const monthDate = new Date(2000, index, 1);
-		return getDateFormatter(locale, {month: format}).format(monthDate);
+		return formatter.format(monthDate);
 	});
 }

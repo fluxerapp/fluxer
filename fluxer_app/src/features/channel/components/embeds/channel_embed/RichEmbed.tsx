@@ -10,6 +10,7 @@ import {
 	getBorderColor,
 	getUrlHostname,
 	isValidMedia,
+	useFreshGalleryImages,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {
 	EmbedMediaRenderer,
@@ -25,6 +26,7 @@ import {
 } from '@app/features/channel/components/embeds/channel_embed/EmbedParts';
 import {
 	EMBED_TEXT_OUTER_WIDTH,
+	embedAllowsMarkdown,
 	formatResponsiveEmbedWidth,
 } from '@app/features/channel/components/embeds/EmbedRenderUtils';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
@@ -42,9 +44,10 @@ export const RichEmbed: FC<EmbedProps> = observer(
 		const hasImage = isValidMedia(embed.image);
 		const hasThumbnail = isValidMedia(embed.thumbnail);
 		const hasAnyMedia = hasVideo || hasImage || hasThumbnail;
-		const galleryImages = useMemo<Array<Required<EmbedMedia>>>(() => {
+		const rawGalleryImages = useMemo<Array<Required<EmbedMedia>>>(() => {
 			return collectGalleryImages({embed, embedIndex, embedList});
 		}, [embed, embedIndex, embedList]);
+		const galleryImages = useFreshGalleryImages(rawGalleryImages);
 		const showGallery = galleryImages.length > 1 || (!hasAnyMedia && galleryImages.length > 0);
 		const galleryAttachments = useMemo(
 			() => (showGallery ? buildGalleryAttachments(galleryImages, embed, embedIndex) : undefined),
@@ -61,7 +64,7 @@ export const RichEmbed: FC<EmbedProps> = observer(
 				className={clsx(styles.embed, styles.embedFull, markupStyles.markup)}
 				data-search-highlight-scope="message"
 				style={{
-					borderLeft: `4px solid ${getBorderColor(embed.color)}`,
+					borderInlineStart: `4px solid ${getBorderColor(embed.color)}`,
 					maxWidth: formatResponsiveEmbedWidth(useNarrowWidth ? EMBED_MEDIA_MAX_WIDTH : EMBED_TEXT_OUTER_WIDTH),
 				}}
 				data-flx="channel.embeds.embed.rich-embed.embed"
@@ -74,15 +77,20 @@ export const RichEmbed: FC<EmbedProps> = observer(
 						<div className={styles.embedContent} data-flx="channel.embeds.embed.rich-embed.embed-content">
 							<EmbedProvider
 								provider={embed.provider}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.rich-embed.embed-provider"
 							/>
 							<EmbedAuthorComponent
 								author={embed.author}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.rich-embed.embed-author-component"
 							/>
 							<EmbedTitle
 								title={embed.title}
 								url={embed.url}
+								markdown={embedAllowsMarkdown(embed)}
 								messageId={message.id}
 								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.rich-embed.embed-title"
@@ -90,6 +98,7 @@ export const RichEmbed: FC<EmbedProps> = observer(
 							{!isYouTubeEmbed && (
 								<EmbedDescription
 									description={embed.description}
+									markdown={embedAllowsMarkdown(embed)}
 									messageId={message.id}
 									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.rich-embed.embed-description"
@@ -127,8 +136,6 @@ export const RichEmbed: FC<EmbedProps> = observer(
 								<EmbedFooterComponent
 									footer={embed.footer}
 									timestamp={embed.timestamp ? new Date(embed.timestamp) : undefined}
-									messageId={message.id}
-									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.rich-embed.embed-footer-component"
 								/>
 							)}

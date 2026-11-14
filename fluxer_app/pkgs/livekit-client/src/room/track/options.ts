@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
+import type {FrameMetadataPublishOptions} from '../../frameMetadata/types.ts';
 import type {AudioProcessorOptions, TrackProcessor, VideoProcessorOptions} from './processor/types.ts';
 import type {Track} from './Track.ts';
 
@@ -36,6 +37,10 @@ export interface TrackPublishDefaults {
 	stopMicTrackOnMute?: boolean;
 
 	preConnectBuffer?: boolean;
+
+	frameMetadata?: FrameMetadataPublishOptions;
+
+	packetTrailer?: FrameMetadataPublishOptions;
 }
 
 export interface TrackPublishOptions extends TrackPublishDefaults {
@@ -106,6 +111,8 @@ export interface AudioCaptureOptions {
 	noiseSuppression?: ConstrainBoolean;
 
 	voiceIsolation?: ConstrainBoolean;
+
+	restrictOwnAudio?: ConstrainBoolean;
 
 	sampleRate?: ConstrainULong;
 

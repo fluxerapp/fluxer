@@ -67,35 +67,16 @@ impl Store {
         &self,
         bucket: &str,
         status: StatusCode,
-        versioned: bool,
     ) -> Option<StorageError> {
         if status == StatusCode::NOT_FOUND
             || (status == StatusCode::FORBIDDEN && self.read_is_unsigned(bucket))
         {
-            return Some(if versioned {
-                StorageError::ObjectChanged
-            } else {
-                StorageError::NotFound
-            });
+            return Some(StorageError::NotFound);
         }
         if status == StatusCode::PRECONDITION_FAILED {
             return Some(StorageError::ObjectChanged);
         }
         None
-    }
-
-    pub(super) fn s3_bucket_url(&self, bucket: &str) -> Result<String, StorageError> {
-        super::keys::safe_bucket(bucket)?;
-        let endpoint = &self.cfg.storage.s3_endpoint;
-        if endpoint.is_empty() {
-            return Err(StorageError::InvalidS3Endpoint);
-        }
-        let endpoint = endpoint.trim_end_matches('/');
-        if self.cfg.storage.s3_force_path_style {
-            return Ok(format!("{endpoint}/{bucket}"));
-        }
-        let (scheme, host, port, base_path) = virtual_hosted_endpoint(endpoint, bucket)?;
-        Ok(format!("{scheme}://{bucket}.{host}{port}{base_path}"))
     }
 }
 

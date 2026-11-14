@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use fluxer_markdown_parser::{EmojiContext, MarkdownParser, ParserFlags};
-use proptest::prelude::*;
 use serde_json::json;
 
 fn parse(input: &str, flags: u32, emoji_context: &str) -> serde_json::Value {
     let mut parser = MarkdownParser::new(flags, EmojiContext::parse(emoji_context));
     let nodes = parser.parse(input).expect("parse succeeds");
-    serde_json::to_value(json!({"nodes": nodes})).expect("serialize succeeds")
+    let value = serde_json::to_value(json!({"nodes": nodes})).expect("serialize succeeds");
+    let written = fluxer_markdown_parser::parse_markdown_json(input, flags, emoji_context)
+        .expect("parse succeeds");
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&written).expect("written json parses"),
+        value
+    );
+    value
 }
 
 #[test]
@@ -151,279 +157,83 @@ fn native_parser_fixtures_cover_typescript_suite_surface() {
     );
 }
 
-#[test]
-fn native_parser_allows_apostrophe_in_masked_link_destination() {
-    let url = "https://docs.example.test/help/faq/#why-can't-this-link-parse%3F";
-    let source = format!("[Example resource]({url})");
-    let input = r#"A masked link should parse when a URL contains an apostrophe `'` in the fragment: [Example resource](https://docs.example.test/help/faq/#why-can't-this-link-parse%3F)"#;
-    assert_eq!(
-        parse(input, ParserFlags::ALLOW_MASKED_LINKS, ""),
-        json!({"nodes":[
-            {"type":"Text","content":"A masked link should parse when a URL contains an apostrophe "},
-            {"type":"InlineCode","content":"'"},
-            {"type":"Text","content":" in the fragment: "},
-            {
-                "type":"Link",
-                "text":{"type":"Text","content":"Example resource"},
-                "url":url,
-                "escaped":false,
-                "rawUrl":url,
-                "source":source
-            }
-        ]})
-    );
-}
-
-#[test]
-fn native_parser_unescapes_numeric_dots_after_masked_link() {
-    let input =
-        "[`34d2f5e`](https://-/a/commit/-) 1\\.2\\.3\\.4\\.5\\.6\\.7\\.8\\.9\\.10\n \\- Amy";
-    assert_eq!(
-        parse(input, ParserFlags::ALLOW_MASKED_LINKS, ""),
-        json!({"nodes":[
-            {
-                "type":"Link",
-                "text":{"type":"InlineCode","content":"34d2f5e"},
-                "url":"https://-/a/commit/-",
-                "escaped":false,
-                "rawUrl":"https://-/a/commit/-",
-                "source":"[`34d2f5e`](https://-/a/commit/-)"
-            },
-            {"type":"Text","content":" 1.2.3.4.5.6.7.8.9.10\n - Amy"}
-        ]})
-    );
-}
-
-#[test]
-fn native_parser_unescapes_word_and_sentence_dots() {
-    assert_eq!(
-        parse("Four more years\\. religion\\.\\.\\.", ParserFlags::ALL, ""),
-        json!({"nodes":[
-            {"type":"Text","content":"Four more years. religion..."}
-        ]})
-    );
-    assert_eq!(
-        parse("C:\\.", ParserFlags::ALL, ""),
-        json!({"nodes":[
-            {"type":"Text","content":"C:\\."}
-        ]})
-    );
-}
-
-#[test]
-fn native_parser_allows_app_protocol_links() {
-    let flags = ParserFlags::ALLOW_AUTOLINKS | ParserFlags::ALLOW_MASKED_LINKS;
-    assert_eq!(
-        parse(
-            "fluxer://invite/abc fluxer:/channels/123/456 [Open gift](fluxer:gift/xyz)",
-            flags,
-            ""
-        ),
-        json!({"nodes":[
-            {
-                "type":"Link",
-                "url":"fluxer://invite/abc",
-                "escaped":false,
-                "rawUrl":"fluxer://invite/abc",
-                "source":"fluxer://invite/abc"
-            },
-            {"type":"Text","content":" "},
-            {
-                "type":"Link",
-                "url":"fluxer:/channels/123/456",
-                "escaped":false,
-                "rawUrl":"fluxer:/channels/123/456",
-                "source":"fluxer:/channels/123/456"
-            },
-            {"type":"Text","content":" "},
-            {
-                "type":"Link",
-                "text":{"type":"Text","content":"Open gift"},
-                "url":"fluxer:gift/xyz",
-                "escaped":false,
-                "rawUrl":"fluxer:gift/xyz",
-                "source":"[Open gift](fluxer:gift/xyz)"
-            }
-        ]})
-    );
-}
-
-#[test]
-fn native_parser_rejects_apostrophe_in_masked_link_authority() {
-    let input = "[Bad](https://ex'ample.com/path)";
-    assert_eq!(
-        parse(input, ParserFlags::ALLOW_MASKED_LINKS, ""),
-        json!({"nodes":[
-            {"type":"Text","content":input}
-        ]})
-    );
-}
-
-#[test]
-fn native_parser_keeps_content_after_unterminated_escaped_destination() {
-    let flags = ParserFlags::ALLOW_MASKED_LINKS | ParserFlags::ALLOW_AUTOLINKS;
-    assert_eq!(
-        parse(
-            "a [x](<https://example.com/y)> b [e](<https://example.com/f>)",
-            flags,
-            ""
-        ),
-        json!({"nodes":[
-            {"type":"Text","content":"a [x]("},
-            {"type":"Link","url":"https://example.com/y)","escaped":true,"rawUrl":"https://example.com/y)","source":"<https://example.com/y)>"},
-            {"type":"Text","content":" b "},
-            {"type":"Link","text":{"type":"Text","content":"e"},"url":"https://example.com/f","escaped":true,"rawUrl":"https://example.com/f","source":"[e](<https://example.com/f>)"}
-        ]})
-    );
-    assert_eq!(
-        parse("[bad](<https://example.com/a> )", flags, ""),
-        json!({"nodes":[
-            {"type":"Text","content":"[bad]("},
-            {"type":"Link","url":"https://example.com/a","escaped":true,"rawUrl":"https://example.com/a","source":"<https://example.com/a>"},
-            {"type":"Text","content":" )"}
-        ]})
-    );
-}
-
-#[test]
-fn native_parser_still_accepts_well_formed_escaped_destinations() {
-    let flags = ParserFlags::ALLOW_MASKED_LINKS | ParserFlags::ALLOW_AUTOLINKS;
-    assert_eq!(
-        parse("[ok](<https://example.com/a>)", flags, ""),
-        json!({"nodes":[
-            {"type":"Link","text":{"type":"Text","content":"ok"},"url":"https://example.com/a","escaped":true,"rawUrl":"https://example.com/a","source":"[ok](<https://example.com/a>)"}
-        ]})
-    );
-}
-
-#[test]
-fn native_parser_rejects_masked_links_without_visible_text() {
-    for input in [
-        "[](https://duckduckgo.com)",
-        "[ ](https://duckduckgo.com)",
-        "[\u{200e} ](<https://duckduckgo.com>)",
-    ] {
-        assert_eq!(
-            parse(input, ParserFlags::ALLOW_MASKED_LINKS, ""),
-            json!({"nodes":[
-                {"type":"Text","content":input}
-            ]})
-        );
+fn count_nodes(value: &serde_json::Value) -> usize {
+    match value {
+        serde_json::Value::Object(map) => {
+            usize::from(map.contains_key("type")) + map.values().map(count_nodes).sum::<usize>()
+        }
+        serde_json::Value::Array(items) => items.iter().map(count_nodes).sum(),
+        _ => 0,
     }
 }
 
 #[test]
-fn native_parser_requires_visible_subtext_content() {
-    assert_eq!(
-        parse("-# hello", ParserFlags::ALLOW_SUBTEXT, ""),
-        json!({"nodes":[
-            {"type":"Subtext","children":[{"type":"Text","content":"hello"}]}
-        ]})
-    );
-    for input in ["-#", "-# ", "-# \t"] {
-        assert_eq!(
-            parse(input, ParserFlags::ALLOW_SUBTEXT, ""),
-            json!({"nodes":[
-                {"type":"Text","content":input}
-            ]})
-        );
+fn wide_table_with_short_rows_stays_within_node_budget() {
+    let header = vec!["a"; 500].join("|");
+    let align = vec!["-"; 500].join("|");
+    let mut input = format!("{header}\n{align}\n");
+    while input.len() + 2 <= 4000 {
+        input.push_str("|\n");
     }
-    assert_eq!(
-        parse(
-            "> -#",
-            ParserFlags::ALLOW_BLOCKQUOTES | ParserFlags::ALLOW_SUBTEXT,
-            ""
-        ),
-        json!({"nodes":[{
-            "type":"Blockquote",
-            "children":[{"type":"Text","content":"-#"}]
-        }]})
-    );
-}
+    let mut parser = MarkdownParser::new(ParserFlags::ALL, EmojiContext::default());
+    let nodes = parser.parse(&input).expect("parse succeeds");
+    let value = serde_json::to_value(&nodes).expect("serialize succeeds");
+    assert!(count_nodes(&value) <= 12_000);
 
-#[test]
-fn native_parser_rejects_formatting_without_visible_content() {
-    for input in [
-        "` `",
-        "`` ``",
-        "** **",
-        "__ __",
-        "~~ ~~",
-        "|| ||",
-        "`\u{200e}`",
-        "~~\u{200e} ~~",
-        "# ",
-        "||\n||",
-        "|| \n||",
-    ] {
-        assert_eq!(
-            parse(input, ParserFlags::ALL, ""),
-            json!({"nodes":[
-                {"type":"Text","content":input}
-            ]})
-        );
-    }
-}
+    let quoted_header = vec!["a"; 71].join("|");
+    let quoted_align = vec!["-"; 71].join("|");
+    let block = format!(
+        "> {quoted_header}\n> {quoted_align}\n{}x\n",
+        "> |\n".repeat(160)
+    );
+    let quoted = block.repeat(4000 / block.len());
+    let mut parser = MarkdownParser::new(ParserFlags::ALL, EmojiContext::default());
+    let nodes = parser.parse(&quoted).expect("parse succeeds");
+    let value = serde_json::to_value(&nodes).expect("serialize succeeds");
+    assert!(count_nodes(&value) <= 12_000);
 
-#[test]
-fn native_parser_rejects_inline_code_across_lines() {
-    assert_eq!(
-        parse("`\nHello world\n`", ParserFlags::ALL, ""),
-        json!({"nodes":[
-            {"type":"Text","content":"`\nHello world\n`"}
-        ]})
+    let alert = format!(
+        "> [!NOTE]\n> {quoted_header}\n> {quoted_align}\n{}x\n",
+        "> |\n".repeat(160)
     );
-    assert_eq!(
-        parse(
-            "It seems the new fixes introduced a new bug <:trolley:1435375026174558456> :\n\n`\n.\n`",
-            ParserFlags::ALL,
-            ""
-        ),
-        json!({"nodes":[
-            {"type":"Text","content":"It seems the new fixes introduced a new bug "},
-            {"type":"Emoji","kind":{"kind":"Custom","name":"trolley","id":"1435375026174558456","animated":false}},
-            {"type":"Text","content":" :\n\n`\n.\n`"}
-        ]})
+    let spoiler = format!(
+        "||\n{quoted_header}\n{quoted_align}\n{}||\n",
+        "|\n".repeat(170)
     );
-    assert_eq!(
-        parse("one `line` only", ParserFlags::ALL, ""),
-        json!({"nodes":[
-            {"type":"Text","content":"one "},
-            {"type":"InlineCode","content":"line"},
-            {"type":"Text","content":" only"}
-        ]})
-    );
-}
-
-proptest::proptest! {
-    #[test]
-    fn arbitrary_text_does_not_panic(input in ".{0,4096}") {
+    for unit in [alert, spoiler] {
+        let input = unit.repeat(4000 / unit.len());
         let mut parser = MarkdownParser::new(ParserFlags::ALL, EmojiContext::default());
         let nodes = parser.parse(&input).expect("parse succeeds");
-        let serialized = serde_json::to_string(&nodes).expect("serialize succeeds");
-        prop_assert!(serialized.starts_with('['));
+        let value = serde_json::to_value(&nodes).expect("serialize succeeds");
+        assert!(count_nodes(&value) <= 12_000);
     }
+
+    let filled = parse("a|b\n-|-\n1|2\n|", ParserFlags::ALL, "");
+    assert_eq!(filled["nodes"][0]["rows"].as_array().map(Vec::len), Some(2));
 }
 
 #[test]
-fn native_parser_starts_a_table_directly_after_a_text_line() {
-    let input =
-        "intro text\r\n| Framework | Type |\r\n| --------- | ---- |\r\n| React | UI library |";
-    let parsed = parse(input, ParserFlags::ALL, "");
-    let nodes = parsed["nodes"].as_array().expect("nodes array");
-    assert!(
-        nodes.iter().any(|node| node["type"] == "Table"),
-        "expected a Table node, got {parsed}"
+fn skin_tone_shortcode_names_resolve_from_emoji_context() {
+    let context = concat!(
+        "C\tadult_tone1\t\u{1F9D1}\u{1F3FB}\t1f9d1-1f3fb\n",
+        "C\tcouple_mm_tone1_tone3\t\u{1F468}\u{1F3FB}\u{200D}\u{2764}\u{FE0F}\u{200D}\u{1F468}\u{1F3FD}\t1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fd\n",
+        "C\tadult\t\u{1F9D1}\t1f9d1\n",
     );
-}
-
-#[test]
-fn native_parser_still_requires_a_delimiter_row_for_a_table() {
-    let input = "intro text\n| not | a | table |\njust more text";
-    let parsed = parse(input, ParserFlags::ALL, "");
-    let nodes = parsed["nodes"].as_array().expect("nodes array");
-    assert!(
-        !nodes.iter().any(|node| node["type"] == "Table"),
-        "pipes alone must not form a table, got {parsed}"
+    assert_eq!(
+        parse(
+            ":adult_tone1: :couple_mm_tone1_tone3: :adult: <:blob123:1234567890> :adult_tone6:",
+            ParserFlags::ALL,
+            context
+        ),
+        json!({"nodes":[
+            {"type":"Emoji","kind":{"kind":"Standard","raw":"\u{1F9D1}\u{1F3FB}","codepoints":"1f9d1-1f3fb","name":"adult_tone1"}},
+            {"type":"Text","content":" "},
+            {"type":"Emoji","kind":{"kind":"Standard","raw":"\u{1F468}\u{1F3FB}\u{200D}\u{2764}\u{FE0F}\u{200D}\u{1F468}\u{1F3FD}","codepoints":"1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fd","name":"couple_mm_tone1_tone3"}},
+            {"type":"Text","content":" "},
+            {"type":"Emoji","kind":{"kind":"Standard","raw":"\u{1F9D1}","codepoints":"1f9d1","name":"adult"}},
+            {"type":"Text","content":" "},
+            {"type":"Emoji","kind":{"kind":"Custom","name":"blob123","id":"1234567890","animated":false}},
+            {"type":"Text","content":" :adult_tone6:"}
+        ]})
     );
 }

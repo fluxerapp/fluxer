@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, randomUUID} from 'node:crypto';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {UserByEmailRow, UserEmailOwnerRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {UserByEmail, UserEmailOwners} from '@app/api/Tables';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {createUserID, type UserID} from '../../../../BrandedTypes';
-import {fetchMany, fetchOne, upsertOne} from '../../../../database/CassandraQueryExecution';
-import {Db} from '../../../../database/CassandraTypes';
-import type {UserByEmailRow, UserEmailOwnerRow} from '../../../../database/types/UserTypes';
-import {Logger} from '../../../../Logger';
-import type {User} from '../../../../models/User';
-import {UserByEmail, UserEmailOwners} from '../../../../Tables';
-import {isJsonRecord, parseJsonWithGuard} from '../../../../utils/JsonBoundaryUtils';
 
 type EmailOwnerLookupRow = Pick<UserEmailOwnerRow, 'user_id' | 'claimed' | 'claimed_at'>;
 type ValkeyEmailOwnerStatus = 'pending' | 'claimed';
@@ -297,14 +297,30 @@ export class UserEmailOwnershipRepository {
 		};
 	}
 
-	async finalizeEmailClaim(reservation: EmailClaimReservation | null): Promise<void> {
+	async finalizeEmailClaim(reservation: EmailClaimReservation | null): Promise<boolean> {
 		if (!reservation?.newlyClaimed) {
-			return;
+			return true;
 		}
-		const result = await this.finalizeValkeyOwner(reservation.emailLower, reservation.userId, reservation.token);
-		if (result.status !== 'finalized') {
-			throw new Error(`Failed to finalize email claim for ${reservation.emailLower}: ${result.status}`);
+		const {emailLower, userId} = reservation;
+		const result = await this.finalizeValkeyOwner(emailLower, userId, reservation.token);
+		if (result.status === 'finalized') {
+			return true;
 		}
+		if (await this.findConflictingOwnerId(emailLower, userId)) {
+			return false;
+		}
+		const claimResult = await this.claimValkeyOwner(emailLower, userId);
+		if (claimResult.status === 'conflict') {
+			return false;
+		}
+		if (claimResult.status === 'pending') {
+			const reclaimed = await this.finalizeValkeyOwner(emailLower, userId, claimResult.token ?? '');
+			if (reclaimed.status !== 'finalized') {
+				throw new Error(`Failed to finalize email claim for ${emailLower}: ${reclaimed.status}`);
+			}
+		}
+		await this.acquireOwnership(emailLower, userId);
+		return true;
 	}
 
 	async abortEmailClaim(reservation: EmailClaimReservation | null): Promise<void> {
@@ -449,7 +465,7 @@ export class UserEmailOwnershipRepository {
 	private async releaseClaimRow(emailLower: string, expectedOwnerId?: UserID): Promise<void> {
 		const ownerRow = await this.fetchOwnerRow(emailLower);
 		const currentOwnerId = parseOptionalUserId(ownerRow?.user_id);
-		if (!ownerRow || ownerRow.claimed !== true || currentOwnerId === null) {
+		if (ownerRow?.claimed !== true || currentOwnerId === null) {
 			return;
 		}
 		if (expectedOwnerId !== undefined && currentOwnerId !== expectedOwnerId) {
@@ -484,7 +500,7 @@ export class UserEmailOwnershipRepository {
 
 	private async findValidClaimedOwnerId(emailLower: string): Promise<UserID | null> {
 		const ownerRow = await this.fetchOwnerRow(emailLower);
-		if (!ownerRow || ownerRow.claimed !== true) {
+		if (ownerRow?.claimed !== true) {
 			return null;
 		}
 		const ownerId = parseOptionalUserId(ownerRow.user_id);

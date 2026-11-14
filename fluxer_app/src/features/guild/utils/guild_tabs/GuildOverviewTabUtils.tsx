@@ -87,11 +87,6 @@ export const afkTimeoutOptionsRaw: Array<AfkTimeoutOptionRaw> = [
 	{value: 3600, label: ONE_HOUR_DURATION_DESCRIPTOR},
 ];
 
-export interface SelectOption {
-	value: string | null;
-	label: string;
-}
-
 export function useGuildOverviewData(guildId: string) {
 	const {i18n} = useLingui();
 	const guild = Guilds.getGuild(guildId);
@@ -135,7 +130,9 @@ export function useGuildOverviewData(guildId: string) {
 		return channels.filter((channel) => channel.type === ChannelTypes.GUILD_VOICE);
 	}, [channels]);
 	const textChannels = useMemo(() => {
-		return channels.filter((channel) => channel.type === ChannelTypes.GUILD_TEXT);
+		return channels.filter(
+			(channel) => channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_ANNOUNCEMENT,
+		);
 	}, [channels]);
 	const defaultValues: FormInputs = guild
 		? {

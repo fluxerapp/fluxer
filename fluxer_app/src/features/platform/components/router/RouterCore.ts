@@ -18,7 +18,12 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 
 const logger = new Logger('Router');
 
-export class RouterImpl implements Router {
+function sameParams(a: Match['params'], b: Match['params']): boolean {
+	const keys = Object.keys(a);
+	return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
+}
+
+class RouterImpl implements Router {
 	private readonly routes: Array<Route>;
 	private readonly routeById: Map<string, Route>;
 	private readonly history;
@@ -64,10 +69,6 @@ export class RouterImpl implements Router {
 
 	getState(): RouterState {
 		return this.state;
-	}
-
-	getRoutes(): Array<Route> {
-		return this.routes;
 	}
 
 	subscribe(listener: () => void): () => void {
@@ -305,7 +306,8 @@ export class RouterImpl implements Router {
 						while (
 							i < prevMatches.length &&
 							i < nextMatches.length &&
-							prevMatches[i].route.id === nextMatches[i].route.id
+							prevMatches[i].route.id === nextMatches[i].route.id &&
+							sameParams(prevMatches[i].params, nextMatches[i].params)
 						) {
 							i++;
 						}
@@ -413,20 +415,7 @@ export class RouterImpl implements Router {
 
 	private async handleNotFound(url: URL, historyState: unknown): Promise<void> {
 		const notFoundRouteId = this.options.notFoundRouteId;
-		if (!notFoundRouteId) {
-			this.state = {
-				...this.state,
-				location: url,
-				matches: [],
-				navigating: false,
-				pending: null,
-				error: new NotFound(),
-				historyState,
-			};
-			this.notify();
-			return;
-		}
-		const nf = this.routeById.get(notFoundRouteId);
+		const nf = notFoundRouteId ? this.routeById.get(notFoundRouteId) : undefined;
 		if (!nf) {
 			this.state = {
 				...this.state,

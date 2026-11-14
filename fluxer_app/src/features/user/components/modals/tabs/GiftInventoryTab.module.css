@@ -1,28 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.container {
-	display: flex;
-	flex-direction: column;
-	gap: 2rem;
-}
-
-.sectionHeader {
-	margin-bottom: 0.5rem;
-	font-size: 1.25rem;
-	font-weight: 600;
-}
-
-.sectionDescription {
-	margin-bottom: 1rem;
-	font-size: 0.875rem;
-	color: var(--text-primary-muted);
-}
-
-.sectionDescriptionNoMargin {
-	font-size: 0.875rem;
-	color: var(--text-primary-muted);
-}
-
 .redeemForm {
 	display: flex;
 	gap: 0.5rem;
@@ -44,45 +21,6 @@
 	padding-bottom: 2rem;
 }
 
-.errorContainer {
-	padding: 1.5rem;
-	border-radius: 0.375rem;
-	border: 0.0625rem solid var(--background-header-secondary);
-	background-color: var(--background-tertiary);
-	text-align: center;
-	color: var(--text-primary-muted);
-}
-
-.emptyState {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding: var(--spacing-3) 0;
-	border: none;
-	border-radius: 0;
-	background: transparent;
-	text-align: center;
-	color: var(--text-primary-muted);
-}
-
-.emptyIcon {
-	margin-bottom: 0.75rem;
-	height: 3rem;
-	width: 3rem;
-	color: var(--text-tertiary);
-}
-
-.emptyTitle {
-	margin-bottom: 0.5rem;
-	font-weight: 600;
-	color: var(--text-primary);
-}
-
-.emptyDescription {
-	margin-bottom: 1rem;
-	font-size: 0.875rem;
-}
-
 .giftsList {
 	display: flex;
 	flex-direction: column;
@@ -102,7 +40,7 @@
 	align-items: center;
 	gap: 0.75rem;
 	padding: 1rem;
-	text-align: left;
+	text-align: start;
 	transition: background-color 0.15s;
 	cursor: pointer;
 }
@@ -213,9 +151,4 @@
 	.giftCardFooter > * {
 		width: 100%;
 	}
-}
-
-.iconMedium {
-	height: 1.25rem;
-	width: 1.25rem;
 }

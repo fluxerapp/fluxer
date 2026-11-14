@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {clamp} from '@app/features/ui/components/slider/SliderMath';
+
 import {msg} from '@lingui/core/macro';
 import type {MouseEventHandler, ReactNode} from 'react';
 
@@ -26,8 +28,7 @@ export interface MediaModalProps {
 	onDeleteAttachment?: MouseEventHandler<HTMLButtonElement>;
 	onReply?: () => void;
 	onForward?: () => void;
-	onInfo?: () => void;
-	additionalActions?: ReactNode;
+	onViewPost?: () => void;
 	children: ReactNode;
 	enablePanZoom?: boolean;
 	currentIndex?: number;
@@ -43,29 +44,10 @@ export interface MediaModalProps {
 	onMenuOpen?: () => void;
 }
 
-export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 export const getViewportPadding = () => {
 	const minSide = Math.min(window.innerWidth, window.innerHeight);
 	return Math.round(clamp(minSide * 0.05, 16, 64));
 };
-export const getNativeTitlebarHeight = () => {
-	if (typeof document === 'undefined') return 0;
-	const raw = getComputedStyle(document.documentElement).getPropertyValue('--native-titlebar-height').trim();
-	const parsed = Number.parseFloat(raw);
-	return Number.isFinite(parsed) ? parsed : 0;
-};
-export const PREVIOUS_ATTACHMENT_DESCRIPTOR = msg({
-	message: 'Previous attachment',
-	comment: 'Media viewer navigation button label for the previous attachment.',
-});
-export const MESSAGE_DESCRIPTOR = msg({
-	message: '{currentAttachmentNumber}/{totalAttachments}',
-	comment: 'Compact media viewer attachment position, such as 2/5.',
-});
-export const NEXT_ATTACHMENT_DESCRIPTOR = msg({
-	message: 'Next attachment',
-	comment: 'Media viewer navigation button label for the next attachment.',
-});
 export const MEDIA_CONTROLS_DESCRIPTOR = msg({
 	message: 'Media controls',
 	comment: 'Accessible label for the floating media controls toolbar in the media viewer modal.',
@@ -77,10 +59,6 @@ export const DOWNLOAD_MEDIA_DESCRIPTOR = msg({
 export const OPEN_IN_BROWSER_DESCRIPTOR = msg({
 	message: 'Open in browser',
 	comment: 'Media viewer action that opens the current media in the system default browser.',
-});
-export const SHOW_MEDIA_INFORMATION_DESCRIPTOR = msg({
-	message: 'Show media information',
-	comment: 'Tooltip on the info button in the media viewer modal. Toggles a metadata sidebar.',
 });
 export const COPY_MEDIA_TO_CLIPBOARD_DESCRIPTOR = msg({
 	message: 'Copy media to clipboard',
@@ -95,7 +73,7 @@ export const ROTATE_CLOCKWISE_DESCRIPTOR = msg({
 	comment: 'Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.',
 });
 export const ROTATE_ANTICLOCKWISE_DESCRIPTOR = msg({
-	message: 'Rotate anticlockwise',
+	message: 'Rotate counterclockwise',
 	comment: 'Tooltip on the media viewer button that rotates the current media item 90 degrees anticlockwise.',
 });
 export const FORWARD_MEDIA_DESCRIPTOR = msg({
@@ -105,6 +83,11 @@ export const FORWARD_MEDIA_DESCRIPTOR = msg({
 export const REPLY_TO_MEDIA_MESSAGE_DESCRIPTOR = msg({
 	message: 'Reply to message',
 	comment: 'Tooltip on the media viewer button that closes the viewer and replies to the message containing the media.',
+});
+export const OPEN_POST_DESCRIPTOR = msg({
+	message: 'Open post',
+	comment:
+		'Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.',
 });
 export const CLOSE_MODAL_DESCRIPTOR = msg({
 	message: 'Close modal',
@@ -133,16 +116,4 @@ export const ATTACHMENT_DESCRIPTOR = msg({
 export const VIDEO_PREVIEW_DESCRIPTOR = msg({
 	message: 'Video preview',
 	comment: 'Accessible label for a video thumbnail in the media viewer thumbnail strip.',
-});
-export const PREVIOUS_ATTACHMENT_3_DESCRIPTOR = msg({
-	message: 'Previous attachment',
-	comment: 'Media viewer navigation tooltip for the previous attachment.',
-});
-export const OF_DESCRIPTOR = msg({
-	message: '{currentAttachmentNumber} of {totalAttachments}',
-	comment: 'Media viewer attachment position text, such as 2 of 5.',
-});
-export const NEXT_ATTACHMENT_3_DESCRIPTOR = msg({
-	message: 'Next attachment',
-	comment: 'Media viewer navigation tooltip for the next attachment.',
 });

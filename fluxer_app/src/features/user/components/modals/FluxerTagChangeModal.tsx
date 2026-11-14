@@ -2,8 +2,9 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {EXAMPLE_FLUXER_TAG, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {EXAMPLE_FLUXER_TAG} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {
@@ -13,7 +14,7 @@ import {
 	USERNAME_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
-import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {getPremiumProductName, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -30,11 +31,12 @@ import styles from '@app/features/user/components/modals/FluxerTagChangeModal.mo
 import type {User} from '@app/features/user/models/User';
 import {getFormattedDateTime} from '@app/features/user/utils/DateFormatting';
 import {isVisionaryDiscriminator0000Blocked} from '@app/features/user/utils/FluxerTagDiscriminatorUtils';
+import {CHANGE_YOUR_USERNAME_DESCRIPTOR, TAG_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useEffect, useRef} from 'react';
+import {type ReactNode, useCallback, useEffect, useRef} from 'react';
 import {Controller, useForm} from 'react-hook-form';
 
 const USERNAME_ALREADY_TAKEN_DESCRIPTOR = msg({
@@ -49,19 +51,13 @@ const CHANGE_USERNAME_FORM_DESCRIPTOR = msg({
 	message: 'Change username form',
 	comment: 'Short label in the FluxerTag change modal. Keep it concise.',
 });
-const CHANGE_YOUR_USERNAME_DESCRIPTOR = msg({
-	message: 'Change your username',
-	comment: 'Short label in the FluxerTag change modal. Keep it concise.',
-});
+
 const GET_TO_CUSTOMIZE_YOUR_TAG_OR_KEEP_IT_DESCRIPTOR = msg({
 	message: 'Get {premiumProductName} to customize your tag or keep it when changing your username',
 	comment:
 		'Description text in the FluxerTag change modal. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.',
 });
-const TAG_DESCRIPTOR = msg({
-	message: 'Tag',
-	comment: 'Short label in the FluxerTag change modal. Keep it concise.',
-});
+
 const CUSTOM_DISCRIMINATORS_ARE_NOT_AVAILABLE_ON_THIS_INSTANCE_DESCRIPTOR = msg({
 	message: 'Custom discriminators are not available on this instance',
 	comment: 'Error message in the FluxerTag change modal.',
@@ -81,12 +77,14 @@ interface FluxerTagChangeModalProps {
 }
 
 export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps) => {
+	const PREMIUM_PRODUCT_NAME = getPremiumProductName();
 	const {i18n} = useLingui();
 	const usernameRef = useRef<HTMLInputElement>(null);
 	const hasCustomDiscriminator = isLimitToggleEnabled(
 		{feature_custom_discriminator: LimitResolver.resolve({key: 'feature_custom_discriminator', fallback: 0})},
 		'feature_custom_discriminator',
 	);
+	const usernameOnly = RuntimeConfig.usesUniqueUsernames;
 	const isVisionary = user.premiumType === UserPremiumTypes.LIFETIME;
 	const showPremium = shouldShowPremiumFeatures();
 	const skipAvailabilityCheckRef = useRef(false);
@@ -111,6 +109,12 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {
 			const usernameValue = data.username.trim();
+			if (usernameOnly) {
+				await UserCommands.update({username: usernameValue});
+				ModalCommands.pop();
+				ToastCommands.createToast({type: 'success', children: i18n._(USERNAME_UPDATED_DESCRIPTOR)});
+				return;
+			}
 			const normalizedDiscriminator = data.discriminator;
 			const currentUsername = user.username.trim();
 			const currentDiscriminator = user.discriminator;
@@ -175,7 +179,7 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 			ModalCommands.pop();
 			ToastCommands.createToast({type: 'success', children: i18n._(USERNAME_UPDATED_DESCRIPTOR)});
 		},
-		[hasCustomDiscriminator],
+		[hasCustomDiscriminator, usernameOnly],
 	);
 	const {handleSubmit, isSubmitting} = useFormSubmit({
 		form,
@@ -184,27 +188,191 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 	});
 	resubmitHandlerRef.current = handleSubmit;
 	const selectedDiscriminator = form.watch('discriminator');
-	const hasNonLifetimePremium = showPremium && user.isPremium() && !isVisionary;
+	const hasNonLifetimePremium = !usernameOnly && showPremium && user.isPremium() && !isVisionary;
 	const hasPendingDiscriminatorChange = hasNonLifetimePremium && selectedDiscriminator !== user.discriminator;
 	const shouldShowPremiumDiscriminatorWarning =
 		hasNonLifetimePremium && (user.premiumDiscriminator || hasPendingDiscriminatorChange);
-	const premiumExpiresAtLabel = hasNonLifetimePremium
-		? user.premiumUntil
-			? getFormattedDateTime(user.premiumUntil)
-			: null
-		: null;
+	const premiumExpiresAtLabel =
+		hasNonLifetimePremium && user.premiumUntil ? getFormattedDateTime(user.premiumUntil) : null;
+	const formLabel = i18n._(CHANGE_USERNAME_FORM_DESCRIPTOR);
+	const header = (
+		<Modal.Header
+			title={i18n._(CHANGE_YOUR_USERNAME_DESCRIPTOR)}
+			data-flx="user.fluxer-tag-change-modal.modal-header"
+		/>
+	);
+	const usernameError = (form.formState.errors.username || form.formState.errors.discriminator) && (
+		<div className={styles.errorBox} role="alert" data-flx="user.fluxer-tag-change-modal.error-box">
+			{form.formState.errors.username?.message || form.formState.errors.discriminator?.message}
+		</div>
+	);
+	const usernameInput = (
+		<div className={styles.usernameInput} data-flx="user.fluxer-tag-change-modal.username-input">
+			<Controller
+				name="username"
+				control={form.control}
+				render={({field}) => (
+					<Input
+						data-flx="user.fluxer-tag-change-modal.input.text"
+						{...field}
+						ref={usernameRef}
+						autoComplete="username"
+						aria-label={i18n._(USERNAME_DESCRIPTOR)}
+						placeholder={EXAMPLE_FLUXER_TAG}
+						required={true}
+						type="text"
+					/>
+				)}
+				data-flx="user.fluxer-tag-change-modal.controller"
+			/>
+		</div>
+	);
+	let discriminatorInput: ReactNode = null;
+	if (!usernameOnly) {
+		if (!hasCustomDiscriminator && showPremium) {
+			discriminatorInput = (
+				<Tooltip
+					text={i18n._(GET_TO_CUSTOMIZE_YOUR_TAG_OR_KEEP_IT_DESCRIPTOR, {
+						premiumProductName: PREMIUM_PRODUCT_NAME,
+					})}
+					data-flx="user.fluxer-tag-change-modal.tooltip"
+				>
+					<div
+						className={styles.discriminatorInputDisabled}
+						data-flx="user.fluxer-tag-change-modal.discriminator-input-disabled"
+					>
+						<Input
+							data-flx="user.fluxer-tag-change-modal.input.set-value.text"
+							{...form.register('discriminator')}
+							aria-label={i18n._(TAG_DESCRIPTOR)}
+							maxLength={4}
+							placeholder="0000"
+							required={true}
+							type="text"
+							disabled={true}
+							onChange={(e) => {
+								const value = e.target.value.replace(/\D/g, '');
+								form.setValue('discriminator', value);
+							}}
+						/>
+						<FocusRing offset={-2} data-flx="user.fluxer-tag-change-modal.focus-ring">
+							<button
+								type="button"
+								onClick={() => {
+									PremiumModalCommands.open();
+								}}
+								className={styles.discriminatorOverlay}
+								aria-label={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+								data-flx="user.fluxer-tag-change-modal.discriminator-overlay.open.button"
+							/>
+						</FocusRing>
+					</div>
+				</Tooltip>
+			);
+		} else if (!hasCustomDiscriminator) {
+			discriminatorInput = (
+				<Tooltip
+					text={i18n._(CUSTOM_DISCRIMINATORS_ARE_NOT_AVAILABLE_ON_THIS_INSTANCE_DESCRIPTOR)}
+					data-flx="user.fluxer-tag-change-modal.tooltip--2"
+				>
+					<div
+						className={styles.discriminatorInputDisabled}
+						data-flx="user.fluxer-tag-change-modal.discriminator-input-disabled--2"
+					>
+						<Input
+							data-flx="user.fluxer-tag-change-modal.input.set-value.text--2"
+							{...form.register('discriminator')}
+							aria-label={i18n._(TAG_DESCRIPTOR)}
+							maxLength={4}
+							placeholder="0000"
+							required={true}
+							type="text"
+							disabled={true}
+							onChange={(e) => {
+								const value = e.target.value.replace(/\D/g, '');
+								form.setValue('discriminator', value);
+							}}
+						/>
+					</div>
+				</Tooltip>
+			);
+		} else {
+			discriminatorInput = (
+				<Input
+					data-flx="user.fluxer-tag-change-modal.input.set-value.text--3"
+					{...form.register('discriminator', {
+						validate: (value) =>
+							isVisionaryDiscriminator0000Blocked({
+								showPremium,
+								isVisionary,
+								discriminator: value,
+							})
+								? i18n._(THE_0000_TAG_IS_RESERVED_FOR_VISIONARY_SUBSCRIBERS_DESCRIPTOR)
+								: true,
+					})}
+					aria-label={i18n._(TAG_DESCRIPTOR)}
+					maxLength={4}
+					placeholder="0000"
+					required={true}
+					type="text"
+					disabled={false}
+					onChange={(e) => {
+						const value = e.target.value.replace(/\D/g, '');
+						form.setValue('discriminator', value, {shouldValidate: true});
+					}}
+				/>
+			);
+		}
+	}
+	const usernameRules = (
+		<UsernameValidationRules
+			username={form.watch('username')}
+			data-flx="user.fluxer-tag-change-modal.username-validation-rules"
+		/>
+	);
+	let premiumWarningContent: ReactNode = null;
+	if (shouldShowPremiumDiscriminatorWarning) {
+		if (hasPendingDiscriminatorChange && premiumExpiresAtLabel) {
+			premiumWarningContent = (
+				<Trans>
+					If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires on{' '}
+					<strong data-flx="user.fluxer-tag-change-modal.strong">{premiumExpiresAtLabel}</strong>, unless it renews.
+				</Trans>
+			);
+		} else if (hasPendingDiscriminatorChange) {
+			premiumWarningContent = (
+				<Trans>
+					If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires, unless it
+					renews.
+				</Trans>
+			);
+		} else if (premiumExpiresAtLabel) {
+			premiumWarningContent = (
+				<Trans>
+					You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your {PREMIUM_PRODUCT_NAME}{' '}
+					expires on <strong data-flx="user.fluxer-tag-change-modal.strong--2">{premiumExpiresAtLabel}</strong>, unless
+					it renews.
+				</Trans>
+			);
+		} else {
+			premiumWarningContent = (
+				<Trans>
+					You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your {PREMIUM_PRODUCT_NAME}{' '}
+					expires, unless it renews.
+				</Trans>
+			);
+		}
+	}
+
 	return (
 		<Modal.Root size="small" centered initialFocusRef={usernameRef} data-flx="user.fluxer-tag-change-modal.modal-root">
 			<Form
 				form={form}
 				onSubmit={handleSubmit}
-				aria-label={i18n._(CHANGE_USERNAME_FORM_DESCRIPTOR)}
+				aria-label={formLabel}
 				data-flx="user.fluxer-tag-change-modal.form.submit"
 			>
-				<Modal.Header
-					title={i18n._(CHANGE_YOUR_USERNAME_DESCRIPTOR)}
-					data-flx="user.fluxer-tag-change-modal.modal-header"
-				/>
+				{header}
 				<Modal.Content data-flx="user.fluxer-tag-change-modal.modal-content">
 					<Modal.ContentLayout data-flx="user.fluxer-tag-change-modal.modal-content-layout">
 						<Modal.Description data-flx="user.fluxer-tag-change-modal.modal-description">
@@ -217,168 +385,35 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 							<span className={styles.fluxerTagLabel} data-flx="user.fluxer-tag-change-modal.fluxer-tag-label">
 								<Trans>Username</Trans>
 							</span>
-							{(form.formState.errors.username || form.formState.errors.discriminator) && (
-								<div className={styles.errorBox} role="alert" data-flx="user.fluxer-tag-change-modal.error-box">
-									{form.formState.errors.username?.message || form.formState.errors.discriminator?.message}
-								</div>
-							)}
+							{usernameError}
 							<div className={styles.fluxerTagInputRow} data-flx="user.fluxer-tag-change-modal.fluxer-tag-input-row">
-								<div className={styles.usernameInput} data-flx="user.fluxer-tag-change-modal.username-input">
-									<Controller
-										name="username"
-										control={form.control}
-										render={({field}) => (
-											<Input
-												data-flx="user.fluxer-tag-change-modal.input.text"
-												{...field}
-												ref={usernameRef}
-												autoComplete="username"
-												aria-label={i18n._(USERNAME_DESCRIPTOR)}
-												placeholder={EXAMPLE_FLUXER_TAG}
-												required={true}
-												type="text"
-											/>
-										)}
-										data-flx="user.fluxer-tag-change-modal.controller"
-									/>
-								</div>
-								<span className={styles.separator} data-flx="user.fluxer-tag-change-modal.separator">
-									#
-								</span>
-								<div className={styles.discriminatorInput} data-flx="user.fluxer-tag-change-modal.discriminator-input">
-									{!hasCustomDiscriminator ? (
-										showPremium ? (
-											<Tooltip
-												text={i18n._(GET_TO_CUSTOMIZE_YOUR_TAG_OR_KEEP_IT_DESCRIPTOR, {
-													premiumProductName: PREMIUM_PRODUCT_NAME,
-												})}
-												data-flx="user.fluxer-tag-change-modal.tooltip"
-											>
-												<div
-													className={styles.discriminatorInputDisabled}
-													data-flx="user.fluxer-tag-change-modal.discriminator-input-disabled"
-												>
-													<Input
-														data-flx="user.fluxer-tag-change-modal.input.set-value.text"
-														{...form.register('discriminator')}
-														aria-label={i18n._(TAG_DESCRIPTOR)}
-														maxLength={4}
-														placeholder="0000"
-														required={true}
-														type="text"
-														disabled={true}
-														onChange={(e) => {
-															const value = e.target.value.replace(/\D/g, '');
-															form.setValue('discriminator', value);
-														}}
-													/>
-													<FocusRing offset={-2} data-flx="user.fluxer-tag-change-modal.focus-ring">
-														<button
-															type="button"
-															onClick={() => {
-																PremiumModalCommands.open();
-															}}
-															className={styles.discriminatorOverlay}
-															aria-label={i18n._(GET_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
-															data-flx="user.fluxer-tag-change-modal.discriminator-overlay.open.button"
-														/>
-													</FocusRing>
-												</div>
-											</Tooltip>
-										) : (
-											<Tooltip
-												text={i18n._(CUSTOM_DISCRIMINATORS_ARE_NOT_AVAILABLE_ON_THIS_INSTANCE_DESCRIPTOR)}
-												data-flx="user.fluxer-tag-change-modal.tooltip--2"
-											>
-												<div
-													className={styles.discriminatorInputDisabled}
-													data-flx="user.fluxer-tag-change-modal.discriminator-input-disabled--2"
-												>
-													<Input
-														data-flx="user.fluxer-tag-change-modal.input.set-value.text--2"
-														{...form.register('discriminator')}
-														aria-label={i18n._(TAG_DESCRIPTOR)}
-														maxLength={4}
-														placeholder="0000"
-														required={true}
-														type="text"
-														disabled={true}
-														onChange={(e) => {
-															const value = e.target.value.replace(/\D/g, '');
-															form.setValue('discriminator', value);
-														}}
-													/>
-												</div>
-											</Tooltip>
-										)
-									) : (
-										<Input
-											data-flx="user.fluxer-tag-change-modal.input.set-value.text--3"
-											{...form.register('discriminator', {
-												validate: (value) =>
-													isVisionaryDiscriminator0000Blocked({
-														showPremium,
-														isVisionary,
-														discriminator: value,
-													})
-														? i18n._(THE_0000_TAG_IS_RESERVED_FOR_VISIONARY_SUBSCRIBERS_DESCRIPTOR)
-														: true,
-											})}
-											aria-label={i18n._(TAG_DESCRIPTOR)}
-											maxLength={4}
-											placeholder="0000"
-											required={true}
-											type="text"
-											disabled={false}
-											onChange={(e) => {
-												const value = e.target.value.replace(/\D/g, '');
-												form.setValue('discriminator', value, {shouldValidate: true});
-											}}
-										/>
-									)}
-								</div>
+								{usernameInput}
+								{!usernameOnly && (
+									<span className={styles.separator} data-flx="user.fluxer-tag-change-modal.separator">
+										#
+									</span>
+								)}
+								{!usernameOnly && (
+									<div
+										className={styles.discriminatorInput}
+										data-flx="user.fluxer-tag-change-modal.discriminator-input"
+									>
+										{discriminatorInput}
+									</div>
+								)}
 							</div>
 							<div className={styles.validationBox} data-flx="user.fluxer-tag-change-modal.validation-box">
-								<UsernameValidationRules
-									username={form.watch('username')}
-									data-flx="user.fluxer-tag-change-modal.username-validation-rules"
-								/>
+								{usernameRules}
 							</div>
 							{shouldShowPremiumDiscriminatorWarning && (
 								<WarningAlert
 									className={styles.premiumDiscriminatorWarning}
 									data-flx="user.fluxer-tag-change-modal.premium-discriminator-warning"
 								>
-									{hasPendingDiscriminatorChange ? (
-										premiumExpiresAtLabel ? (
-											<Trans>
-												If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME}{' '}
-												expires on{' '}
-												<strong data-flx="user.fluxer-tag-change-modal.strong">{premiumExpiresAtLabel}</strong>, unless
-												it renews.
-											</Trans>
-										) : (
-											<Trans>
-												If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME}{' '}
-												expires, unless it renews.
-											</Trans>
-										)
-									) : premiumExpiresAtLabel ? (
-										<Trans>
-											You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your{' '}
-											{PREMIUM_PRODUCT_NAME} expires on{' '}
-											<strong data-flx="user.fluxer-tag-change-modal.strong--2">{premiumExpiresAtLabel}</strong>, unless
-											it renews.
-										</Trans>
-									) : (
-										<Trans>
-											You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your{' '}
-											{PREMIUM_PRODUCT_NAME} expires, unless it renews.
-										</Trans>
-									)}
+									{premiumWarningContent}
 								</WarningAlert>
 							)}
-							{!hasCustomDiscriminator && (
+							{!usernameOnly && !hasCustomDiscriminator && (
 								<PlutoniumUpsell
 									className={styles.premiumUpsell}
 									data-flx="user.fluxer-tag-change-modal.premium-upsell"

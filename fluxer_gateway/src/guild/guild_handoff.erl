@@ -5,6 +5,7 @@
 
 -export([
     export_handoff_state/1,
+    derived_data_keys/0,
     validate_handoff_state/1,
     remonitor_transferred_sessions/1,
     restore_transferred_session_state/1
@@ -16,9 +17,13 @@
 
 -spec export_handoff_state(guild_state()) -> map().
 export_handoff_state(State) ->
-    #{
+    Threads = maps:merge(
+        guild_thread_flip:export_handoff(State),
+        guild_thread_subscriptions:export_handoff(State)
+    ),
+    Threads#{
         id => maps:get(id, State),
-        data => maps:get(data, State, #{}),
+        data => maps:without(derived_data_keys(), guild_thread_load:export_handoff(State)),
         sessions => export_handoff_sessions(maps:get(sessions, State, #{})),
         voice_states => maps:get(voice_states, State, #{}),
         virtual_channel_access => maps:get(virtual_channel_access, State, #{}),
@@ -27,8 +32,23 @@ export_handoff_state(State) ->
             virtual_channel_access_preserve, State, #{}
         ),
         virtual_channel_access_move_pending =>
-            maps:get(virtual_channel_access_move_pending, State, #{})
+            maps:get(virtual_channel_access_move_pending, State, #{}),
+        virtual_channel_access_view_only =>
+            maps:get(virtual_channel_access_view_only, State, #{})
     }.
+
+-spec derived_data_keys() -> [atom() | binary()].
+derived_data_keys() ->
+    [
+        members_normalized,
+        members_sorted_ids,
+        member_list_revision,
+        members_ets,
+        role_perms_cache,
+        overwrite_perms_cache,
+        <<"role_index">>,
+        <<"member_role_index">>
+    ].
 
 -spec validate_handoff_state(term()) -> ok | {error, [atom()]}.
 validate_handoff_state(Exported) when is_map(Exported) ->
@@ -140,11 +160,15 @@ restore_transferred_session(_SessionId, _SessionData, State) ->
     State.
 
 -spec active_session_user_id(map()) -> integer() | undefined.
-active_session_user_id(#{pending_connect := true}) ->
-    undefined;
 active_session_user_id(SessionData) ->
-    case {maps:get(user_id, SessionData, undefined), maps:get(pid, SessionData, undefined)} of
-        {UserId, Pid} when is_integer(UserId), UserId > 0, is_pid(Pid) ->
+    case
+        {
+            guild_sessions_connect:counts_as_connected(SessionData),
+            maps:get(user_id, SessionData, undefined),
+            maps:get(pid, SessionData, undefined)
+        }
+    of
+        {true, UserId, Pid} when is_integer(UserId), UserId > 0, is_pid(Pid) ->
             UserId;
         _ ->
             undefined

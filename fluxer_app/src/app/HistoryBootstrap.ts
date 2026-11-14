@@ -3,12 +3,12 @@
 const SYNTHETIC_STATE_FLAG = '__fluxer_synth';
 const MAX_SYNTHETIC_DEPTH = 6;
 
-export interface SyntheticHistoryState {
+interface SyntheticHistoryState {
 	[SYNTHETIC_STATE_FLAG]: true;
 	depth: number;
 }
 
-export function isSyntheticHistoryState(state: unknown): state is SyntheticHistoryState {
+function isSyntheticHistoryState(state: unknown): state is SyntheticHistoryState {
 	return (
 		typeof state === 'object' && state !== null && (state as Record<string, unknown>)[SYNTHETIC_STATE_FLAG] === true
 	);
@@ -22,13 +22,14 @@ export function derivePathStack(path: string): Array<string> {
 		.filter((s) => s.length > 0);
 	if (segments[0] !== 'channels' || segments.length < 2) return [];
 	const root = segments[1];
-	if (root === '@me' || root === '@favorites' || root === '@discover') {
+	if (root === '@me' || root === '@favorites' || root === '@explore' || root === '@discover') {
 		const stack: Array<string> = [];
 		if (root !== '@me') stack.push('/channels/@me');
 		stack.push(`/channels/${root}`);
 		if (segments.length >= 3) stack.push(`/channels/${root}/${segments[2]}`);
 		return stack.slice(0, -1);
 	}
+	if (root.startsWith('@')) return [];
 	const stack: Array<string> = [`/channels/${root}`];
 	if (segments.length >= 3) stack.push(`/channels/${root}/${segments[2]}`);
 	return stack.slice(0, -1);

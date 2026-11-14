@@ -1,60 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const DONATION_CURRENCIES = ['usd', 'eur', 'brl', 'inr', 'pln', 'try'] as const;
+export const DONATION_CURRENCIES = ['usd', 'eur', 'brl', 'inr', 'pln', 'try', 'sek', 'dkk', 'nok'] as const;
 
 export type DonationCurrency = (typeof DONATION_CURRENCIES)[number];
 
 interface DonationAmountConstraints {
-	displayCurrency: 'USD' | 'EUR' | 'BRL' | 'INR' | 'PLN' | 'TRY';
 	minimumAmountMinor: number;
 	maximumAmountMinor: number;
-	presetAmountsMajor: readonly [number, number, number, number, number];
-	defaultPresetIndex: 0 | 1 | 2 | 3 | 4;
 }
 
+const STRIPE_MAXIMUM_AMOUNT_MINOR = 99_999_999;
+
 const DONATION_AMOUNT_CONSTRAINTS: Readonly<Record<DonationCurrency, DonationAmountConstraints>> = {
-	usd: {
-		displayCurrency: 'USD',
-		minimumAmountMinor: 500,
-		maximumAmountMinor: 100000,
-		presetAmountsMajor: [5, 25, 50, 100, 500],
-		defaultPresetIndex: 1,
-	},
-	eur: {
-		displayCurrency: 'EUR',
-		minimumAmountMinor: 500,
-		maximumAmountMinor: 100000,
-		presetAmountsMajor: [5, 25, 50, 100, 500],
-		defaultPresetIndex: 1,
-	},
-	brl: {
-		displayCurrency: 'BRL',
-		minimumAmountMinor: 2500,
-		maximumAmountMinor: 500000,
-		presetAmountsMajor: [25, 50, 100, 250, 500],
-		defaultPresetIndex: 1,
-	},
-	inr: {
-		displayCurrency: 'INR',
-		minimumAmountMinor: 50000,
-		maximumAmountMinor: 10000000,
-		presetAmountsMajor: [500, 1000, 2500, 5000, 10000],
-		defaultPresetIndex: 1,
-	},
-	pln: {
-		displayCurrency: 'PLN',
-		minimumAmountMinor: 2000,
-		maximumAmountMinor: 400000,
-		presetAmountsMajor: [20, 50, 100, 250, 500],
-		defaultPresetIndex: 1,
-	},
-	try: {
-		displayCurrency: 'TRY',
-		minimumAmountMinor: 25000,
-		maximumAmountMinor: 5000000,
-		presetAmountsMajor: [250, 500, 1000, 2500, 5000],
-		defaultPresetIndex: 1,
-	},
+	usd: {minimumAmountMinor: 300, maximumAmountMinor: STRIPE_MAXIMUM_AMOUNT_MINOR},
+	eur: {minimumAmountMinor: 300, maximumAmountMinor: STRIPE_MAXIMUM_AMOUNT_MINOR},
+	brl: {minimumAmountMinor: 1000, maximumAmountMinor: STRIPE_MAXIMUM_AMOUNT_MINOR},
+	inr: {minimumAmountMinor: 20000, maximumAmountMinor: STRIPE_MAXIMUM_AMOUNT_MINOR},
+	pln: {minimumAmountMinor: 800, maximumAmountMinor: STRIPE_MAXIMUM_AMOUNT_MINOR},
+	try: {minimumAmountMinor: 10000, maximumAmountMinor: STRIPE_MAXIMUM_AMOUNT_MINOR},
+	sek: {minimumAmountMinor: 3000, maximumAmountMinor: STRIPE_MAXIMUM_AMOUNT_MINOR},
+	dkk: {minimumAmountMinor: 2000, maximumAmountMinor: STRIPE_MAXIMUM_AMOUNT_MINOR},
+	nok: {minimumAmountMinor: 3000, maximumAmountMinor: STRIPE_MAXIMUM_AMOUNT_MINOR},
 };
 
 export function getDonationAmountConstraints(currency: DonationCurrency): DonationAmountConstraints {

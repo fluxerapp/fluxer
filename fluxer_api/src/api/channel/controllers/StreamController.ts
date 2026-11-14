@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
+import {createChannelID} from '@app/api/BrandedTypes';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {requireRequestClientIp} from '@app/api/utils/RequestClientIp';
+import {Validator} from '@app/api/Validator';
+import {STREAM_PREVIEW_CONTENT_TYPE_JPEG} from '@fluxer/constants/src/StreamConstants';
 import {
 	StreamPreviewResponse,
 	StreamPreviewUploadBodySchema,
@@ -9,14 +18,6 @@ import {
 	StreamUpdateBodySchema,
 } from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import {StreamKeyParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {createChannelID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function StreamController(app: HonoApp) {
 	app.patch(
@@ -40,7 +41,9 @@ export function StreamController(app: HonoApp) {
 			const user = ctx.get('user');
 			const {region} = ctx.req.valid('json');
 			const streamKey = ctx.req.valid('param').stream_key;
-			await ctx.get('streamService').updateStreamRegion({streamKey, region, userId: user.id});
+			await ctx
+				.get('streamService')
+				.updateStreamRegion({viewer: viewerFromCtx(ctx), streamKey, region, userId: user.id});
 			return ctx.body(null, 204);
 		},
 	);
@@ -64,13 +67,15 @@ export function StreamController(app: HonoApp) {
 		async (ctx) => {
 			const user = ctx.get('user');
 			const streamKey = ctx.req.valid('param').stream_key;
-			const preview = await ctx.get('streamService').getPreview({streamKey, userId: user.id});
+			const preview = await ctx
+				.get('streamService')
+				.getPreview({viewer: viewerFromCtx(ctx), streamKey, userId: user.id});
 			if (!preview) {
 				return ctx.body(null, 404);
 			}
-			const payload: ArrayBuffer = preview.buffer.slice().buffer;
+			const payload: ArrayBuffer = preview.slice().buffer;
 			const headers = {
-				'Content-Type': preview.contentType || 'image/jpeg',
+				'Content-Type': STREAM_PREVIEW_CONTENT_TYPE_JPEG,
 				'Cache-Control': 'no-store, private',
 				Pragma: 'no-cache',
 			};
@@ -97,11 +102,9 @@ export function StreamController(app: HonoApp) {
 			const user = ctx.get('user');
 			const {channel_id, content_type} = ctx.req.valid('json');
 			const streamKey = ctx.req.valid('param').stream_key;
-			const clientIp = requireClientIp(ctx.req.raw, {
-				trustClientIpHeader: Config.proxy.trust_client_ip_header,
-				clientIpHeaderName: Config.proxy.client_ip_header,
-			});
+			const clientIp = requireRequestClientIp(ctx);
 			const response = await ctx.get('streamService').createPreviewUploadUrl({
+				viewer: viewerFromCtx(ctx),
 				streamKey,
 				channelId: createChannelID(channel_id),
 				userId: user.id,
@@ -133,6 +136,7 @@ export function StreamController(app: HonoApp) {
 			const {thumbnail, channel_id, content_type} = ctx.req.valid('json');
 			const streamKey = ctx.req.valid('param').stream_key;
 			await ctx.get('streamService').uploadPreview({
+				viewer: viewerFromCtx(ctx),
 				streamKey,
 				channelId: createChannelID(channel_id),
 				userId: user.id,
@@ -161,7 +165,7 @@ export function StreamController(app: HonoApp) {
 		async (ctx) => {
 			const user = ctx.get('user');
 			const streamKey = ctx.req.valid('param').stream_key;
-			await ctx.get('streamService').deletePreview({streamKey, userId: user.id});
+			await ctx.get('streamService').deletePreview({viewer: viewerFromCtx(ctx), streamKey, userId: user.id});
 			return ctx.body(null, 204);
 		},
 	);

@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import type {VoiceEngineV2GatewayDesiredVoiceState, VoiceEngineV2GatewayVoiceState} from '../../protocol/types';
-import {transitionVoiceEngineV2} from '../reducer';
-import type {VoiceEngineV2GatewayState, VoiceEngineV2Snapshot} from '../state';
-import {availableVoiceEngineV2Capabilities, createVoiceEngineV2InitialSnapshot} from '../state';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	deriveVoiceEngineV2DesiredGatewayVoiceState,
 	gatewayVoiceStateWriteMatchesReported,
 	reconcileGatewayVoiceState,
 	shouldApplyGatewayVoiceStateEcho,
-} from './gateway';
+} from '@fluxer/voice_engine_v2/src/core/reducers/gateway';
+import type {VoiceEngineV2GatewayState, VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import {
+	availableVoiceEngineV2Capabilities,
+	createVoiceEngineV2InitialSnapshot,
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {
+	VoiceEngineV2GatewayDesiredVoiceState,
+	VoiceEngineV2GatewayVoiceState,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {describe, expect, it} from 'vitest';
 
 function reported(overrides: Partial<VoiceEngineV2GatewayVoiceState> = {}): VoiceEngineV2GatewayVoiceState {
 	return {
@@ -259,6 +265,7 @@ describe('shouldApplyGatewayVoiceStateEcho', () => {
 
 	it('applies the echo when it matches the pending local write', () => {
 		const snapshot = connectedSnapshot({
+			desiredVoiceState: desired({selfMute: false}),
 			desiredVoiceStateWrite: {
 				guildId: 'guild-1',
 				channelId: 'channel-1',
@@ -273,6 +280,7 @@ describe('shouldApplyGatewayVoiceStateEcho', () => {
 
 	it('rejects a stale echo that differs from the pending local write', () => {
 		const snapshot = connectedSnapshot({
+			desiredVoiceState: desired({selfMute: false}),
 			desiredVoiceStateWrite: {
 				guildId: 'guild-1',
 				channelId: 'channel-1',
@@ -283,5 +291,56 @@ describe('shouldApplyGatewayVoiceStateEcho', () => {
 			},
 		});
 		expect(shouldApplyGatewayVoiceStateEcho(snapshot, reported({selfMute: true}))).toBe(false);
+	});
+
+	it('rejects the echo of a pending write the user has already reverted', () => {
+		const snapshot = connectedSnapshot({
+			selfVoiceState: reported({selfMute: false}),
+			desiredVoiceState: desired({selfMute: false}),
+			desiredVoiceStateWrite: {
+				guildId: 'guild-1',
+				channelId: 'channel-1',
+				selfMute: true,
+				selfDeaf: false,
+				selfVideo: false,
+				selfStream: false,
+			},
+		});
+		expect(shouldApplyGatewayVoiceStateEcho(snapshot, reported({selfMute: true}))).toBe(false);
+	});
+
+	it('settles on the last intent after a mute and unmute faster than the echo', () => {
+		let snapshot = connectedSnapshot({selfVoiceState: reported({selfMute: false})});
+		const muted = transitionVoiceEngineV2(snapshot, {
+			type: 'gateway.desiredVoiceStateChanged',
+			desired: desired({selfMute: true}),
+		});
+		expect(muted.commands).toMatchObject([{type: 'gateway.voiceState.write', options: {selfMute: true}}]);
+		snapshot = transitionVoiceEngineV2(muted.snapshot, {
+			type: 'gateway.voiceStateWriteSucceeded',
+			operationId: muted.snapshot.gateway.operationId as number,
+		}).snapshot;
+		const unmuted = transitionVoiceEngineV2(snapshot, {
+			type: 'gateway.desiredVoiceStateChanged',
+			desired: desired({selfMute: false}),
+		});
+		expect(unmuted.commands).toEqual([]);
+		snapshot = unmuted.snapshot;
+
+		const staleEcho = reported({selfMute: true});
+		expect(shouldApplyGatewayVoiceStateEcho(snapshot, staleEcho)).toBe(false);
+		snapshot = transitionVoiceEngineV2(snapshot, {type: 'gateway.voiceStateUpdated', voiceState: staleEcho}).snapshot;
+		const corrective = transitionVoiceEngineV2(snapshot, {type: 'gateway.voiceStateReconcileRequested'});
+		expect(corrective.commands).toMatchObject([{type: 'gateway.voiceState.write', options: {selfMute: false}}]);
+		snapshot = transitionVoiceEngineV2(corrective.snapshot, {
+			type: 'gateway.voiceStateWriteSucceeded',
+			operationId: corrective.snapshot.gateway.operationId as number,
+		}).snapshot;
+
+		const finalEcho = reported({selfMute: false});
+		expect(shouldApplyGatewayVoiceStateEcho(snapshot, finalEcho)).toBe(true);
+		snapshot = transitionVoiceEngineV2(snapshot, {type: 'gateway.voiceStateUpdated', voiceState: finalEcho}).snapshot;
+		expect(snapshot.gateway.desiredVoiceStateWrite).toBeNull();
+		expect(transitionVoiceEngineV2(snapshot, {type: 'gateway.voiceStateReconcileRequested'}).commands).toEqual([]);
 	});
 });

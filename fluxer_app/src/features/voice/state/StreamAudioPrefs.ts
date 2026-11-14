@@ -2,6 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {clampVoiceVolumePercent, recalibrateStoredVoiceVolumePercent} from '@app/features/voice/utils/VoiceVolumeUtils';
 import {
 	STREAM_AUDIO_PREFS_PRUNE_INTERVAL_MS,
@@ -39,7 +40,7 @@ class StreamAudioPrefs {
 			},
 			{autoBind: true},
 		);
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -78,7 +79,8 @@ class StreamAudioPrefs {
 	setVolume(streamKey: string, volume: number): void {
 		const clamped = clampVoiceVolumePercent(volume);
 		const existing = this.entries[streamKey];
-		if (existing && existing.volume === clamped) {
+		const muted = (existing?.muted ?? false) && clamped === 0;
+		if (existing && existing.volume === clamped && existing.muted === muted) {
 			this.touchStream(streamKey);
 			return;
 		}
@@ -86,14 +88,14 @@ class StreamAudioPrefs {
 			...this.entries,
 			[streamKey]: {
 				volume: clamped,
-				muted: existing?.muted ?? false,
+				muted,
 				lastAccessed: Date.now(),
 			},
 		};
 		this.audioPrefsRevision += 1;
 		this.startPruneInterval();
 		this.notifyListeners();
-		logger.debug('Set stream volume', {streamKey, volume: clamped});
+		logger.debug('Set stream volume', {streamKey, volume: clamped, muted});
 	}
 
 	setMuted(streamKey: string, muted: boolean): void {

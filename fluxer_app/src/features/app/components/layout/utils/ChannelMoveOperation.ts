@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {DragItem, DropResult} from '@app/features/app/components/layout/types/DndTypes';
+import {
+	isCategory as isCategoryChannel,
+	isTextChannel,
+} from '@app/features/app/components/layout/utils/ChannelOrganization';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
@@ -8,9 +12,6 @@ import {
 	sortChannelsForOrdering,
 } from '@fluxer/schema/src/domains/channel/GuildChannelOrdering';
 
-const isTextChannel = (channel: Channel) =>
-	channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_LINK;
-const isCategoryChannel = (channel: Channel) => channel.type === ChannelTypes.GUILD_CATEGORY;
 const gatherCategoryBlock = (channels: ReadonlyArray<Channel>, categoryId: string) => {
 	return channels.filter((ch) => ch.id === categoryId || ch.parentId === categoryId);
 };
@@ -66,14 +67,16 @@ export const createChannelMoveOperation = ({
 	const block = isCategory ? gatherCategoryBlock(orderedChannels, draggedChannel.id) : [draggedChannel];
 	if (block.length === 0) return null;
 	const targetId = dropResult.targetId;
-	const requestedParentId =
-		targetId === 'null-space'
-			? null
-			: dropResult.targetParentId !== undefined
-				? dropResult.targetParentId
-				: isCategory
-					? null
-					: (draggedChannel.parentId ?? null);
+	let requestedParentId: string | null;
+	if (targetId === 'null-space') {
+		requestedParentId = null;
+	} else if (dropResult.targetParentId !== undefined) {
+		requestedParentId = dropResult.targetParentId;
+	} else if (isCategory) {
+		requestedParentId = null;
+	} else {
+		requestedParentId = draggedChannel.parentId ?? null;
+	}
 	let newParentId = isCategory ? null : requestedParentId;
 	if (!isCategory && newParentId === undefined) {
 		newParentId = draggedChannel.parentId ?? null;

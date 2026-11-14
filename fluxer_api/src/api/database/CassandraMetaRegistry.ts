@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import type {KvQueryMeta, KvTableSpec} from './CassandraTypes';
+import {Config} from '@app/api/Config';
+import type {KvQueryMeta, KvTableSpec} from '@app/api/database/CassandraTypes';
 
 export function getIsDev(): boolean {
 	return Config.nodeEnv === 'development';
@@ -12,6 +12,7 @@ interface TableMetadata {
 	columns: ReadonlyArray<string>;
 	primaryKey: ReadonlyArray<string>;
 	partitionKey: ReadonlyArray<string>;
+	defaultTtlSeconds?: number;
 }
 
 const kvMetaRegistry = new Map<string, KvQueryMeta<Record<string, unknown>>>();
@@ -24,6 +25,7 @@ export function registerTableSpec<Row extends object>(tableSpec: KvTableSpec<Row
 		columns: tableSpec.columns as ReadonlyArray<string>,
 		primaryKey: tableSpec.primaryKey as ReadonlyArray<string>,
 		partitionKey: tableSpec.partitionKey as ReadonlyArray<string>,
+		defaultTtlSeconds: tableSpec.defaultTtlSeconds,
 	};
 	tableRegistry.set(tableSpec.name, metadata);
 }

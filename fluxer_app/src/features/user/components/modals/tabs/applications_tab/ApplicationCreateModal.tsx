@@ -10,25 +10,16 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
 import {Input} from '@app/features/ui/components/form/FormInput';
-import {msg} from '@lingui/core/macro';
+import {
+	APPLICATION_NAME_DESCRIPTOR,
+	CREATE_APPLICATION_DESCRIPTOR,
+	MY_APPLICATION_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useRef} from 'react';
 import {useForm} from 'react-hook-form';
-
-const CREATE_APPLICATION_DESCRIPTOR = msg({
-	message: 'Create application',
-	comment: 'Button or menu action label in the application create modal. Keep it concise.',
-});
-const APPLICATION_NAME_DESCRIPTOR = msg({
-	message: 'Application name',
-	comment: 'Short label in the application create modal. Keep it concise.',
-});
-const MY_APPLICATION_DESCRIPTOR = msg({
-	message: 'My application',
-	comment: 'Short label in the application create modal. Keep it concise.',
-});
 
 interface ApplicationCreateModalProps {
 	onCreated: (application: DeveloperApplication) => void;

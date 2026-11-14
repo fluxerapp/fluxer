@@ -35,7 +35,7 @@ const ENABLE_MESSAGE_HISTORY_THRESHOLD_DESCRIPTOR = msg({
 });
 const ALLOW_MEMBERS_WITHOUT_THE_PERMISSION_TO_SEE_MESSAGES_DESCRIPTOR = msg({
 	message:
-		'Allow members without the {readMessageHistoryPermissionLabel} permission to see messages after a specific date.',
+		'Allow members without the {readMessageHistoryPermissionLabel} permission to see messages sent after a specific date.',
 	comment: 'Label in the message history threshold content. Keep the tone plain and specific.',
 });
 const THRESHOLD_DATE_DESCRIPTOR = msg({
@@ -52,7 +52,7 @@ export interface MessageHistoryThresholdFormValues {
 	message_history_cutoff: string | null;
 }
 
-export const MessageHistoryThresholdDescription: React.FC = () => {
+const MessageHistoryThresholdDescription: React.FC = () => {
 	const {i18n} = useLingui();
 	const rolesSettingsPath = formatGuildSettingsPath(i18n, 'roles');
 	const administratorPermissionLabel = formatPermissionLabel(i18n, Permissions.ADMINISTRATOR);
@@ -74,7 +74,7 @@ export const MessageHistoryThresholdDescription: React.FC = () => {
 			</p>
 			<p data-flx="guild.guild-tabs.guild-overview-tab.message-history-threshold-content.message-history-threshold-description.p--2">
 				<Trans>
-					If you'd like these members to access historical messages after a specific date, enable this feature and
+					If you'd like these members to access historical messages sent after a specific date, enable this feature and
 					choose a threshold below.
 				</Trans>
 			</p>
@@ -176,7 +176,7 @@ export const MessageHistoryThresholdAccordion: React.FC = () => {
 	);
 };
 
-export function buildMessageHistoryThresholdValidator(
+function buildMessageHistoryThresholdValidator(
 	i18n: I18n,
 	guildCreatedAt: Date,
 ): (value: string | null) => true | string {

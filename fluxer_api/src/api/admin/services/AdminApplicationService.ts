@@ -1,26 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {type ApplicationID, createApplicationID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {Application} from '@app/api/models/Application';
+import type {User} from '@app/api/models/User';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownApplicationError} from '@fluxer/errors/src/domains/oauth/UnknownApplicationError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
 	ApplicationAdminResponse,
 	ListApplicationsResponse,
 	LookupApplicationResponse,
 	TransferApplicationOwnershipRequest,
 } from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
-import type {ApiContext} from '../../ApiContext';
-import {type ApplicationID, createApplicationID, createUserID, type GuildID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {Application} from '../../models/Application';
-import type {IApplicationRepository} from '../../oauth/repositories/IApplicationRepository';
-import type {AdminAuditService} from './AdminAuditService';
+import {compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeComparison';
+
+const BATCH_SIZE = 100;
 
 interface AdminApplicationServiceDeps {
 	apiContext: ApiContext;
-	applicationRepository: IApplicationRepository;
+	applicationRepository: ApplicationRepository;
 	auditService: AdminAuditService;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 }
 
 interface UserDisplay {
@@ -47,10 +50,7 @@ export class AdminApplicationService {
 	async listUserApplications(ownerUserId: UserID): Promise<ListApplicationsResponse> {
 		const {applicationRepository} = this.deps;
 		const {users: userRepository} = this.deps.apiContext.services;
-		const owner = await userRepository.findUnique(ownerUserId);
-		if (!owner) {
-			throw new UnknownUserError();
-		}
+		const owner = await userRepository.findUniqueAssert(ownerUserId);
 		const applications = await applicationRepository.listApplicationsByOwner(ownerUserId);
 		const ownerDisplay: UserDisplay = {
 			username: owner.username,
@@ -75,14 +75,20 @@ export class AdminApplicationService {
 		if (!guild) {
 			throw new UnknownGuildError();
 		}
-		const members = await guildRepository.listMembers(guildId);
 		const applications: Array<Application> = [];
-		for (const member of members) {
-			const application = await applicationRepository.getApplication(
-				createApplicationID(BigInt(member.userId.toString())),
+		let afterUserId: UserID | undefined;
+		while (true) {
+			const members = await guildRepository.listMembersPaginated(guildId, BATCH_SIZE, afterUserId);
+			const pageApplications = await applicationRepository.listApplicationsByIds(
+				members.map((member) => createApplicationID(BigInt(member.userId.toString()))),
 			);
-			if (!application?.botUserId || application.botUserId !== member.userId) continue;
-			applications.push(application);
+			const pageMatches = pageApplications
+				.filter((application) => application.botUserId?.toString() === application.applicationId.toString())
+				.sort((a, b) => compareSnowflakes(a.applicationId, b.applicationId));
+			applications.push(...pageMatches);
+			const lastMember = members.at(-1);
+			if (!lastMember || members.length < BATCH_SIZE) break;
+			afterUserId = lastMember.userId;
 		}
 		const userDisplays = await this.loadUserDisplays(
 			applications.flatMap((application) => [application.ownerUserId, application.botUserId]),
@@ -105,10 +111,7 @@ export class AdminApplicationService {
 			throw new UnknownApplicationError();
 		}
 		const newOwnerId = createUserID(data.new_owner_id);
-		const newOwner = await userRepository.findUnique(newOwnerId);
-		if (!newOwner) {
-			throw new UnknownUserError();
-		}
+		await userRepository.findUniqueAssert(newOwnerId);
 		const oldOwnerId = application.ownerUserId;
 		const oldRow = application.toRow();
 		const updatedApplication = await applicationRepository.upsertApplication(
@@ -143,7 +146,11 @@ export class AdminApplicationService {
 			uniqueIds.add(key);
 			nonNullIds.push(userId);
 		}
-		const users = await Promise.all(nonNullIds.map((id) => userRepository.findUnique(id)));
+		const users: Array<User | null> = [];
+		for (let i = 0; i < nonNullIds.length; i += BATCH_SIZE) {
+			const chunk = nonNullIds.slice(i, i + BATCH_SIZE);
+			users.push(...(await Promise.all(chunk.map((id) => userRepository.findUnique(id)))));
+		}
 		const map = new Map<string, UserDisplay>();
 		for (let i = 0; i < nonNullIds.length; i += 1) {
 			const id = nonNullIds[i];

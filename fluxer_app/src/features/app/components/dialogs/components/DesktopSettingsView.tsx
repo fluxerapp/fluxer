@@ -23,13 +23,16 @@ import {
 	SettingsModalSidebarSubItem,
 	SettingsModalSidebarSubItems,
 	SettingsTreeProvider,
+	settingsModalStyles,
 } from '@app/features/app/components/dialogs/shared/SettingsModalLayout';
-import {hasWhatsNewEntries} from '@app/features/app/components/whats_new/WhatsNewEntries';
-import {openWhatsNewModal} from '@app/features/app/components/whats_new/WhatsNewModal';
 import {
 	BACK_TO_SETTINGS_DESCRIPTOR,
+	DONATE_DESCRIPTOR,
+	OPENS_IN_BROWSER_DESCRIPTOR,
 	SEARCH_SETTINGS_PLACEHOLDER_DESCRIPTOR,
 	SIGN_OUT_DESCRIPTOR,
+	SUBMIT_FEEDBACK_DESCRIPTOR,
+	WHATS_NEW_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -38,7 +41,9 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {MentionBadgeAnimated} from '@app/features/ui/components/MentionBadge';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
+import {ArrowLeftIcon, ArrowRightIcon, CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import SettingsSidebar from '@app/features/ui/state/SettingsSidebar';
+import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {
 	ADVANCED_SETTINGS_TAG_LABELS,
 	ADVANCED_SETTINGS_TAG_ORDER,
@@ -54,6 +59,7 @@ import {
 	getSectionIdsForTab,
 	getSectionsForTab,
 	getUserSettingsTabLabel,
+	PRIVACY_REVIEW_NEEDED_DESCRIPTOR,
 	tabHasMultipleLinkableSections,
 	USER_SETTINGS_LABEL_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/SettingsConstants';
@@ -79,6 +85,7 @@ import {buildUserSettingsDeepLink} from '@app/features/user/components/settings_
 import {useSettingsContentKey} from '@app/features/user/hooks/useSettingsContentKey';
 import {useUnsavedChangesFlash} from '@app/features/user/hooks/useUnsavedChangesFlash';
 import {ScrollSpyProvider, useScrollSpyContext} from '@app/features/user/state/ScrollSpyContext';
+import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import {
 	collapseSettingsTreeTab,
@@ -89,7 +96,14 @@ import {
 } from '@app/features/user/utils/SettingsModalLayoutUtils';
 import type {I18n} from '@lingui/core';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowLeftIcon, ArrowRightIcon, CaretRightIcon, MegaphoneIcon, SignOutIcon} from '@phosphor-icons/react';
+import {
+	ArrowSquareOutIcon,
+	ChatCircleDotsIcon,
+	HandHeartIcon,
+	PencilIcon,
+	SignOutIcon,
+	SparkleIcon,
+} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
@@ -98,10 +112,6 @@ import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useStat
 const BACK_TO_OVERRIDES_DESCRIPTOR = msg({
 	message: 'Back to overrides',
 	comment: 'Back-navigation label that returns from permission overrides to the main settings pane.',
-});
-const WHAT_S_NEW_DESCRIPTOR = msg({
-	message: "What's new",
-	comment: 'Sidebar item in settings that opens the app update notes modal.',
 });
 const SEARCH_RESULTS_DESCRIPTOR = msg({
 	message: 'Search results',
@@ -281,6 +291,28 @@ const BreadcrumbTitle: React.FC<BreadcrumbTitleProps> = ({parentLabel, currentLa
 		</span>
 	</span>
 );
+const ExternalSidebarItemLabel: React.FC<{label: React.ReactNode; hint: React.ReactNode; 'data-flx': string}> = ({
+	label,
+	hint,
+	'data-flx': dataFlx,
+}) => (
+	<span className={settingsModalStyles.externalTabLabel} data-flx={dataFlx}>
+		<span className={settingsModalStyles.externalTabLabelText} data-flx={`${dataFlx}-text`}>
+			{label}
+		</span>
+		<span className={settingsModalStyles.srOnly} data-flx={`${dataFlx}-screen-reader-hint`}>
+			{hint}
+		</span>
+		<ArrowSquareOutIcon
+			size={remFromPx(16)}
+			weight="bold"
+			className={settingsModalStyles.externalTabIcon}
+			aria-hidden="true"
+			data-flx={`${dataFlx}-external-icon`}
+		/>
+	</span>
+);
+
 export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 	({
 		groupedSettingsTabs,
@@ -345,6 +377,9 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 			if (checkUnsavedChanges()) return;
 			ModalCommands.push(modal(() => <LogoutModal data-flx="app.desktop-settings-view.handle-logout.logout-modal" />));
 		};
+		const patchNotesUrl = Routes.patchNotes();
+		const feedbackUrl = Routes.feedback();
+		const donateUrl = Routes.donate();
 		const handleTabSelect = (tabType: UserSettingsTabType) => {
 			if (checkUnsavedChanges()) return;
 			onTabSelect(tabType);
@@ -379,7 +414,7 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 		const useOverride = SettingsSidebar.useOverride;
 		const activeTabPanelId = selectedTab ? `settings-tabpanel-${selectedTab}` : undefined;
 		const activeTabId = selectedTab ? `settings-tab-${selectedTab}` : undefined;
-		const shouldShowWhatsNew = hasWhatsNewEntries();
+		const privacySetupPending = UserSettings.isPrivacySetupPending();
 		const scrollKey = useMemo(() => {
 			const subtabKey = contentKey ?? initialSubtab ?? 'root';
 			if (isSearchActive) {
@@ -398,19 +433,24 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 		const applicationsTabLabel = getUserSettingsTabLabel(i18n, 'applications');
 		const applicationDetailTitle =
 			ApplicationsTabState.selectedApplication?.name ?? i18n._(APPLICATION_DETAILS_DESCRIPTOR);
-		const desktopTitle = isSearchActive ? (
-			i18n._(SEARCH_RESULTS_DESCRIPTOR)
-		) : isApplicationsDetailTitle ? (
-			<BreadcrumbTitle
-				parentLabel={applicationsTabLabel}
-				currentLabel={applicationDetailTitle}
-				onParentClick={handleApplicationsBreadcrumbClick}
-				parentDataFlx="app.desktop-settings-view.breadcrumb-button.applications"
-				data-flx="app.desktop-settings-view.breadcrumb-title"
-			/>
-		) : (
-			currentTab?.label || i18n._(USER_SETTINGS_LABEL_DESCRIPTOR)
-		);
+		let desktopTitle: React.ReactNode;
+		if (isSearchActive) {
+			desktopTitle = i18n._(SEARCH_RESULTS_DESCRIPTOR);
+		} else if (isApplicationsDetailTitle) {
+			desktopTitle = (
+				<BreadcrumbTitle
+					parentLabel={applicationsTabLabel}
+					currentLabel={applicationDetailTitle}
+					onParentClick={handleApplicationsBreadcrumbClick}
+					parentDataFlx="app.desktop-settings-view.breadcrumb-button.applications"
+					data-flx="app.desktop-settings-view.breadcrumb-title"
+				/>
+			);
+		} else {
+			desktopTitle = currentTab?.label || i18n._(USER_SETTINGS_LABEL_DESCRIPTOR);
+		}
+		const termsUrl = Routes.terms();
+		const privacyUrl = Routes.privacy();
 		const sidebarFooter = (
 			<AnimatePresence data-flx="app.desktop-settings-view.animate-presence">
 				{!useOverride && (
@@ -424,26 +464,32 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 						<SettingsModalSidebarFooter data-flx="app.desktop-settings-view.settings-modal-sidebar-footer">
 							<div className={styles.footerContent} data-flx="app.desktop-settings-view.footer-content">
 								<ClientInfo data-flx="app.desktop-settings-view.client-info" />
-								<div className={styles.legalLinks} data-flx="app.desktop-settings-view.legal-links">
-									<a
-										href={Routes.terms()}
-										target="_blank"
-										rel="noopener noreferrer"
-										className={styles.legalLink}
-										data-flx="app.desktop-settings-view.legal-link"
-									>
-										<Trans>Terms of service</Trans>
-									</a>
-									<a
-										href={Routes.privacy()}
-										target="_blank"
-										rel="noopener noreferrer"
-										className={styles.legalLink}
-										data-flx="app.desktop-settings-view.legal-link--2"
-									>
-										<Trans>Privacy policy</Trans>
-									</a>
-								</div>
+								{termsUrl || privacyUrl ? (
+									<div className={styles.legalLinks} data-flx="app.desktop-settings-view.legal-links">
+										{termsUrl ? (
+											<a
+												href={termsUrl}
+												target="_blank"
+												rel="noopener noreferrer"
+												className={styles.legalLink}
+												data-flx="app.desktop-settings-view.legal-link"
+											>
+												<Trans>Terms of service</Trans>
+											</a>
+										) : null}
+										{privacyUrl ? (
+											<a
+												href={privacyUrl}
+												target="_blank"
+												rel="noopener noreferrer"
+												className={styles.legalLink}
+												data-flx="app.desktop-settings-view.legal-link--2"
+											>
+												<Trans>Privacy policy</Trans>
+											</a>
+										) : null}
+									</div>
+								) : null}
 								<div className={styles.footerSpacer} data-flx="app.desktop-settings-view.footer-spacer" />
 							</div>
 						</SettingsModalSidebarFooter>
@@ -472,9 +518,28 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 					data-flx="app.desktop-settings-view.user-profile.profile-tab-select"
 				>
 					<div className={userSettingsStyles.userProfileInfo} data-flx="app.desktop-settings-view.div--3">
-						<StatusAwareAvatar size={32} user={currentUser!} data-flx="app.desktop-settings-view.status-aware-avatar" />
-						<div className={userSettingsStyles.userProfileName} data-flx="app.desktop-settings-view.div--4">
-							{currentUser?.displayName}
+						<StatusAwareAvatar size={40} user={currentUser!} data-flx="app.desktop-settings-view.status-aware-avatar" />
+						<div className={userSettingsStyles.userProfileText} data-flx="app.desktop-settings-view.user-profile-text">
+							<div className={userSettingsStyles.userProfileName} data-flx="app.desktop-settings-view.div--4">
+								{currentUser?.displayName}
+							</div>
+							<div
+								className={userSettingsStyles.userProfileHint}
+								data-flx="app.desktop-settings-view.user-profile-hint"
+							>
+								<PencilIcon
+									size={remFromPx(12)}
+									weight="bold"
+									className={userSettingsStyles.userProfileHintIcon}
+									data-flx="app.desktop-settings-view.user-profile-hint-icon"
+								/>
+								<span
+									className={userSettingsStyles.userProfileHintText}
+									data-flx="app.desktop-settings-view.user-profile-hint-text"
+								>
+									<Trans>Edit your profile</Trans>
+								</span>
+							</div>
 						</div>
 					</div>
 				</button>
@@ -585,6 +650,11 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 																		</div>
 																	}
 																	selected={isSelected}
+																	attentionLabel={
+																		tab.type === 'privacy_safety' && privacySetupPending
+																			? i18n._(PRIVACY_REVIEW_NEEDED_DESCRIPTOR)
+																			: undefined
+																	}
 																	onClick={() => handleTabSelect(tab.type)}
 																	onRequestContentFocus={focusContentPanel}
 																	id={tabId}
@@ -608,12 +678,46 @@ export const DesktopSettingsView: React.FC<DesktopSettingsViewProps> = observer(
 													})}
 												</SettingsModalSidebarCategory>
 											))}
-											{shouldShowWhatsNew && (
+											{patchNotesUrl && (
 												<SettingsModalSidebarItem
-													icon={MegaphoneIcon}
-													label={i18n._(WHAT_S_NEW_DESCRIPTOR)}
-													onClick={openWhatsNewModal}
-													data-flx="app.desktop-settings-view.settings-modal-sidebar-item.open-whats-new-modal"
+													icon={SparkleIcon}
+													label={
+														<ExternalSidebarItemLabel
+															label={i18n._(WHATS_NEW_DESCRIPTOR)}
+															hint={i18n._(OPENS_IN_BROWSER_DESCRIPTOR)}
+															data-flx="app.desktop-settings-view.whats-new-label"
+														/>
+													}
+													onClick={() => void openExternalUrl(patchNotesUrl)}
+													data-flx="app.desktop-settings-view.settings-modal-sidebar-item.whats-new"
+												/>
+											)}
+											{feedbackUrl && (
+												<SettingsModalSidebarItem
+													icon={ChatCircleDotsIcon}
+													label={
+														<ExternalSidebarItemLabel
+															label={i18n._(SUBMIT_FEEDBACK_DESCRIPTOR)}
+															hint={i18n._(OPENS_IN_BROWSER_DESCRIPTOR)}
+															data-flx="app.desktop-settings-view.submit-feedback-label"
+														/>
+													}
+													onClick={() => void openExternalUrl(feedbackUrl)}
+													data-flx="app.desktop-settings-view.settings-modal-sidebar-item.submit-feedback"
+												/>
+											)}
+											{donateUrl && (
+												<SettingsModalSidebarItem
+													icon={HandHeartIcon}
+													label={
+														<ExternalSidebarItemLabel
+															label={i18n._(DONATE_DESCRIPTOR)}
+															hint={i18n._(OPENS_IN_BROWSER_DESCRIPTOR)}
+															data-flx="app.desktop-settings-view.donate-label"
+														/>
+													}
+													onClick={() => void openExternalUrl(donateUrl)}
+													data-flx="app.desktop-settings-view.settings-modal-sidebar-item.donate"
 												/>
 											)}
 											<SettingsModalSidebarItem

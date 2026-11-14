@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
-import {entityTagMatches} from '../utils/EntityTag';
+import {entityTagMatches} from '@app/api/utils/EntityTag';
 
 export interface DiscoveryValidators {
 	etag: string;

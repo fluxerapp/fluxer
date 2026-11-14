@@ -24,10 +24,6 @@ export const OPEN_DIRECT_MESSAGE_PROFILE_DESCRIPTOR = msg({
 	comment:
 		'Fallback accessible label for the avatar button in the channel header of a DM when the recipient name is not available.',
 });
-export const BACK_DESCRIPTOR = msg({
-	message: 'Back',
-	comment: 'Accessible label on the mobile back button in the channel header. Returns to the previous screen.',
-});
 export const SHOW_CHANNEL_LIST_DESCRIPTOR = msg({
 	message: 'Show channel list',
 	comment: 'Accessible label on the mobile channel header button that opens the channel list drawer.',
@@ -58,7 +54,7 @@ export const ADD_FRIENDS_TO_GROUP_DESCRIPTOR = msg({
 	comment: 'Tooltip on the channel header plus button in a group DM. Opens the add friends to group modal.',
 });
 export const MEMBERS_LIST_UNAVAILABLE_AT_THIS_SCREEN_WIDTH_DESCRIPTOR = msg({
-	message: 'Members list unavailable at this screen width',
+	message: 'Member list unavailable at this screen width',
 	comment:
 		'Tooltip on the disabled members toggle in the channel header when the viewport is too narrow to show the panel.',
 });

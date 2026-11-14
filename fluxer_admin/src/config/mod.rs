@@ -1,30 +1,43 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use fluxer_common::config::normalize_public_endpoint_from_env;
-use std::env;
+use fluxer_common::config::{EnvMap, normalize_base_path, trim_trailing_slash};
 
 const DEFAULT_ADMIN_OAUTH_CLIENT_ID: &str = "1234567890123456789";
+const DEFAULT_REPORTS_BUCKET_ORIGIN: &str = "https://fluxer-reports.ewr1.vultrobjects.com";
+const STORAGE_BACKEND_ENV: &str = "FLUXER_STORAGE_BACKEND";
+const STORAGE_BACKEND_S3: &str = "s3";
+const STORAGE_BACKEND_FILESYSTEM: &str = "filesystem";
 
 #[derive(Clone, Debug)]
 pub struct AdminConfig {
-    pub env: RuntimeEnv,
     pub host: String,
     pub port: u16,
     pub secret_key_base: String,
     pub base_path: String,
     pub api_endpoint: String,
+    pub api_public_endpoint: String,
     pub media_endpoint: String,
     pub static_cdn_endpoint: String,
+    pub reports_bucket_origin: Option<String>,
     pub admin_endpoint: String,
     pub web_app_endpoint: String,
-    pub kv_url: String,
     pub oauth_client_id: String,
     pub oauth_client_secret: String,
     pub oauth_redirect_uri: String,
     pub build_version: String,
-    pub release_channel: String,
     pub self_hosted: bool,
     pub proxy: ProxyConfig,
+    pub sso: Option<SsoConfig>,
+}
+
+#[derive(Clone, Debug)]
+pub struct SsoConfig {
+    pub issuer: String,
+    pub client_id: String,
+    pub client_secret: String,
+    pub redirect_uri: String,
+    pub display_name: Option<String>,
+    pub only: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -33,97 +46,69 @@ pub struct ProxyConfig {
     pub client_ip_header_name: String,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum RuntimeEnv {
-    Development,
-    Production,
-    Test,
-}
-
 impl AdminConfig {
-    pub fn from_env() -> anyhow::Result<Self> {
-        let base_path = normalize_base_path(&read_env("FLUXER_ADMIN_BASE_PATH", ""));
-        let admin_endpoint = normalize_public_endpoint_from_env(&trim_trailing_slash(&read_env(
-            "FLUXER_ADMIN_ENDPOINT",
-            "https://admin.fluxer.app",
-        )));
-        let oauth_redirect_uri = normalize_public_endpoint_from_env(&read_env_preferred(
-            &["FLUXER_ADMIN_OAUTH_REDIRECT_URI"],
+    pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
+        let base_path = normalize_base_path(&env.read("FLUXER_ADMIN_BASE_PATH", ""));
+        let admin_endpoint = env.normalize_public_endpoint(&trim_trailing_slash(
+            &env.read("FLUXER_ADMIN_ENDPOINT", "https://admin.fluxer.app"),
+        ))?;
+        let oauth_redirect_uri = env.normalize_public_endpoint(&env.read(
+            "FLUXER_ADMIN_OAUTH_REDIRECT_URI",
             &format!("{admin_endpoint}/oauth2_callback"),
-        ));
-        let secret_key_base = read_env("FLUXER_ADMIN_SECRET_KEY_BASE", "");
+        ))?;
+        let sso = sso_config_from_env(env, &admin_endpoint)?;
+        let secret_key_base = env.read("FLUXER_ADMIN_SECRET_KEY_BASE", "");
         anyhow::ensure!(
             !secret_key_base.trim().is_empty(),
             "FLUXER_ADMIN_SECRET_KEY_BASE is required"
         );
 
         Ok(Self {
-            env: RuntimeEnv::from_env_value(&read_env("FLUXER_ENV", "development")),
-            host: read_env("FLUXER_ADMIN_HOST", "0.0.0.0"),
-            port: read_env("FLUXER_ADMIN_PORT", "3020")
+            host: env.read("FLUXER_ADMIN_HOST", "0.0.0.0"),
+            port: env
+                .read("FLUXER_ADMIN_PORT", "3020")
                 .parse()
                 .unwrap_or(3020),
             secret_key_base,
             base_path,
-            api_endpoint: trim_trailing_slash(&read_env(
-                "FLUXER_API_ENDPOINT",
-                "https://api.fluxer.app",
-            )),
-            media_endpoint: normalize_public_endpoint_from_env(&trim_trailing_slash(&read_env(
-                "FLUXER_MEDIA_ENDPOINT",
-                "https://media.fluxer.app",
-            ))),
-            static_cdn_endpoint: normalize_public_endpoint_from_env(&trim_trailing_slash(
-                &read_env("FLUXER_STATIC_CDN_ENDPOINT", ""),
-            )),
+            api_endpoint: trim_trailing_slash(
+                &env.read("FLUXER_API_ENDPOINT", "https://api.fluxer.app"),
+            ),
+            api_public_endpoint: env.normalize_public_endpoint(&trim_trailing_slash(
+                &env.read("FLUXER_API_PUBLIC_ENDPOINT", ""),
+            ))?,
+            media_endpoint: env.normalize_public_endpoint(&trim_trailing_slash(
+                &env.read("FLUXER_MEDIA_ENDPOINT", "https://media.fluxer.app"),
+            ))?,
+            static_cdn_endpoint: env.normalize_public_endpoint(&trim_trailing_slash(
+                &env.read("FLUXER_STATIC_CDN_ENDPOINT", ""),
+            ))?,
+            reports_bucket_origin: reports_bucket_origin_from_env(env)?,
 
             admin_endpoint,
-            web_app_endpoint: normalize_public_endpoint_from_env(&trim_trailing_slash(&read_env(
-                "FLUXER_APP_ENDPOINT",
-                "https://app.fluxer.app",
-            ))),
-            kv_url: read_env("FLUXER_KV_URL", ""),
-            oauth_client_id: read_env(
+            web_app_endpoint: env.normalize_public_endpoint(&trim_trailing_slash(
+                &env.read("FLUXER_APP_ENDPOINT", "https://app.fluxer.app"),
+            ))?,
+            oauth_client_id: env.read(
                 "FLUXER_ADMIN_OAUTH_CLIENT_ID",
                 DEFAULT_ADMIN_OAUTH_CLIENT_ID,
             ),
-            oauth_client_secret: read_env("FLUXER_ADMIN_OAUTH_CLIENT_SECRET", ""),
+            oauth_client_secret: env.read("FLUXER_ADMIN_OAUTH_CLIENT_SECRET", ""),
             oauth_redirect_uri,
-            build_version: read_env_preferred(
+            build_version: env.read_first(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],
                 env!("CARGO_PKG_VERSION"),
             ),
-            release_channel: read_env_preferred(
-                &["RELEASE_CHANNEL", "FLUXER_RELEASE_CHANNEL"],
-                "stable",
-            ),
-            self_hosted: read_bool_env(&["FLUXER_SELF_HOSTED"], false),
+            self_hosted: env.read_bool("FLUXER_SELF_HOSTED", false),
             proxy: ProxyConfig {
-                trust_client_ip_header: read_bool_env(
-                    &["FLUXER_TRUST_CLIENT_IP_HEADER", "TRUST_CLIENT_IP_HEADER"],
-                    false,
-                ),
-                client_ip_header_name: read_env_preferred(
-                    &[
-                        "FLUXER_CLIENT_IP_HEADER_NAME",
-                        "FLUXER_CLIENT_IP_HEADER",
-                        "CLIENT_IP_HEADER_NAME",
-                        "CLIENT_IP_HEADER",
-                    ],
-                    "x-forwarded-for",
-                )
-                .trim()
-                .to_ascii_lowercase(),
+                trust_client_ip_header: env.read_bool("FLUXER_TRUST_CLIENT_IP_HEADER", false),
+                client_ip_header_name: env
+                    .read("FLUXER_CLIENT_IP_HEADER_NAME", "x-forwarded-for")
+                    .trim()
+                    .to_ascii_lowercase(),
             },
+            sso,
         })
-    }
-
-    pub fn is_dev(&self) -> bool {
-        self.env == RuntimeEnv::Development
-    }
-
-    pub fn is_production(&self) -> bool {
-        self.env == RuntimeEnv::Production
     }
 
     pub fn secure_cookies(&self) -> bool {
@@ -131,295 +116,191 @@ impl AdminConfig {
     }
 
     pub fn admin_origin(&self) -> Option<String> {
-        let origin = url::Url::parse(&self.admin_endpoint).ok()?.origin();
-        origin.is_tuple().then(|| origin.ascii_serialization())
+        endpoint_origin(&self.admin_endpoint)
     }
-}
 
-impl RuntimeEnv {
-    pub(crate) fn from_env_value(value: &str) -> Self {
-        match value {
-            "production" => Self::Production,
-            "test" => Self::Test,
-            _ => Self::Development,
+    pub fn image_origins(&self) -> Vec<String> {
+        let api = if self.api_public_endpoint.is_empty() {
+            &self.api_endpoint
+        } else {
+            &self.api_public_endpoint
+        };
+        let mut origins = Vec::new();
+        for origin in [
+            Some(&self.static_cdn_endpoint),
+            Some(&self.media_endpoint),
+            Some(&self.web_app_endpoint),
+            self.reports_bucket_origin.as_ref(),
+            Some(api),
+        ]
+        .into_iter()
+        .flatten()
+        .filter_map(|endpoint| endpoint_origin(endpoint))
+        {
+            if !origins.contains(&origin) {
+                origins.push(origin);
+            }
         }
+        origins
+    }
+
+    pub fn shows_image(&self, image_url: &str) -> bool {
+        let Ok(url) = url::Url::parse(image_url) else {
+            return image_url.starts_with('/') && !image_url.starts_with("//");
+        };
+        if matches!(url.scheme(), "data" | "blob") {
+            return true;
+        }
+        let origin = url.origin();
+        if !origin.is_tuple() {
+            return false;
+        }
+        let origin = origin.ascii_serialization();
+        self.admin_origin().as_ref() == Some(&origin) || self.image_origins().contains(&origin)
     }
 }
 
-pub fn normalize_base_path(value: &str) -> String {
-    let trimmed = value.trim().trim_matches('/');
-    if trimmed.is_empty() {
-        String::new()
-    } else {
-        format!("/{trimmed}")
-    }
-}
-
-pub fn trim_trailing_slash(value: &str) -> String {
-    value.trim_end_matches('/').to_owned()
-}
-
-pub(crate) fn read_env(name: &str, fallback: &str) -> String {
-    env::var(name).unwrap_or_else(|_| fallback.to_owned())
-}
-
-pub(crate) fn read_env_preferred(names: &[&str], fallback: &str) -> String {
-    names
-        .iter()
-        .find_map(|name| env::var(name).ok().filter(|value| !value.trim().is_empty()))
-        .unwrap_or_else(|| fallback.to_owned())
-}
-
-pub(crate) fn read_bool_env(names: &[&str], fallback: bool) -> bool {
-    let Some(value) = names.iter().find_map(|name| env::var(name).ok()) else {
-        return fallback;
+fn sso_config_from_env(env: &EnvMap, admin_endpoint: &str) -> anyhow::Result<Option<SsoConfig>> {
+    let issuer = env
+        .value("FLUXER_ADMIN_SSO_ISSUER")
+        .map(|value| trim_trailing_slash(value.trim()));
+    let client_id = env.value("FLUXER_ADMIN_SSO_CLIENT_ID");
+    let client_secret = env.value("FLUXER_ADMIN_SSO_CLIENT_SECRET");
+    let only = env.read_bool("FLUXER_ADMIN_SSO_ONLY", false);
+    let (issuer, client_id, client_secret) = match (issuer, client_id, client_secret) {
+        (Some(issuer), Some(client_id), Some(client_secret)) => (issuer, client_id, client_secret),
+        (None, None, None) if only => anyhow::bail!(
+            "FLUXER_ADMIN_SSO_ONLY needs FLUXER_ADMIN_SSO_ISSUER, FLUXER_ADMIN_SSO_CLIENT_ID and FLUXER_ADMIN_SSO_CLIENT_SECRET"
+        ),
+        (None, None, None) => return Ok(None),
+        _ => anyhow::bail!(
+            "set FLUXER_ADMIN_SSO_ISSUER, FLUXER_ADMIN_SSO_CLIENT_ID and FLUXER_ADMIN_SSO_CLIENT_SECRET together, or none of them"
+        ),
     };
-    matches!(
-        value.trim().to_ascii_lowercase().as_str(),
-        "1" | "true" | "yes" | "on"
+    crate::sso::validate_issuer_url(&issuer)?;
+    let redirect_uri = env.normalize_public_endpoint(&env.read(
+        "FLUXER_ADMIN_SSO_REDIRECT_URI",
+        &format!("{admin_endpoint}/sso/callback"),
+    ))?;
+    Ok(Some(SsoConfig {
+        issuer,
+        client_id: client_id.trim().to_owned(),
+        client_secret,
+        redirect_uri,
+        display_name: env
+            .value("FLUXER_ADMIN_SSO_DISPLAY_NAME")
+            .map(|value| value.trim().to_owned()),
+        only,
+    }))
+}
+
+fn endpoint_origin(endpoint: &str) -> Option<String> {
+    let origin = url::Url::parse(endpoint).ok()?.origin();
+    origin.is_tuple().then(|| origin.ascii_serialization())
+}
+
+fn reports_bucket_origin_from_env(env: &EnvMap) -> anyhow::Result<Option<String>> {
+    match env.read(STORAGE_BACKEND_ENV, STORAGE_BACKEND_S3).trim() {
+        STORAGE_BACKEND_S3 => {}
+        STORAGE_BACKEND_FILESYSTEM => return Ok(None),
+        other => anyhow::bail!(
+            "{STORAGE_BACKEND_ENV} is {other:?}, use {STORAGE_BACKEND_S3} or {STORAGE_BACKEND_FILESYSTEM}"
+        ),
+    }
+    let public_endpoint = env
+        .value("FLUXER_S3_PUBLIC_ENDPOINT")
+        .map(|value| env.normalize_public_endpoint(value.trim()))
+        .transpose()?;
+    let endpoint = env.value("FLUXER_S3_ENDPOINT");
+    let origin = presign_endpoint(
+        public_endpoint.as_deref(),
+        endpoint.as_deref(),
+        &env.read("FLUXER_S3_BUCKET_UPLOADS", "fluxer-uploads"),
     )
+    .and_then(|endpoint| {
+        bucket_origin(
+            &endpoint,
+            env.read_bool("FLUXER_S3_FORCE_PATH_STYLE", false),
+            &env.read("FLUXER_S3_BUCKET_REPORTS", "fluxer-reports"),
+        )
+    })
+    .unwrap_or_else(|| DEFAULT_REPORTS_BUCKET_ORIGIN.to_owned());
+    Ok(Some(origin))
+}
+
+fn presign_endpoint(
+    public_endpoint: Option<&str>,
+    endpoint: Option<&str>,
+    uploads_bucket: &str,
+) -> Option<url::Url> {
+    let Some(public_endpoint) = public_endpoint else {
+        return url::Url::parse(endpoint?.trim()).ok();
+    };
+    let mut parsed = url::Url::parse(public_endpoint).ok()?;
+    let host = parsed.host_str()?.to_owned();
+    if let Some(shared_host) = host.strip_prefix(&format!("{uploads_bucket}.")) {
+        parsed.set_host(Some(shared_host)).ok()?;
+    }
+    Some(parsed)
+}
+
+fn bucket_origin(endpoint: &url::Url, force_path_style: bool, bucket: &str) -> Option<String> {
+    if !matches!(endpoint.scheme(), "http" | "https") {
+        return None;
+    }
+    let path_style = force_path_style
+        || !matches!(endpoint.host(), Some(url::Host::Domain(_)))
+        || !is_virtual_hostable_bucket(bucket, endpoint.scheme() == "http");
+    if path_style {
+        return Some(endpoint.origin().ascii_serialization());
+    }
+    let mut virtual_host = endpoint.clone();
+    virtual_host
+        .set_host(Some(&format!("{bucket}.{}", endpoint.host_str()?)))
+        .ok()?;
+    Some(virtual_host.origin().ascii_serialization())
+}
+
+fn is_virtual_hostable_bucket(bucket: &str, allow_dots: bool) -> bool {
+    if allow_dots && bucket.contains('.') {
+        return bucket
+            .split('.')
+            .all(|label| is_virtual_hostable_bucket(label, false));
+    }
+    (3..=63).contains(&bucket.len())
+        && bucket
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+        && !bucket.starts_with('-')
+        && !bucket.ends_with('-')
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
 
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
-
-    const MANAGED_ENV: [&str; 11] = [
-        "FLUXER_ENV",
-        "FLUXER_ADMIN_HOST",
-        "FLUXER_ADMIN_PORT",
-        "FLUXER_ADMIN_ENDPOINT",
-        "FLUXER_ADMIN_OAUTH_CLIENT_ID",
-        "FLUXER_ADMIN_OAUTH_REDIRECT_URI",
-        "FLUXER_MASTER_CONFIG",
-        "FLUXER_APP_ENDPOINT",
-        "FLUXER_MEDIA_ENDPOINT",
-        "FLUXER_STATIC_CDN_ENDPOINT",
-        "FLUXER_BASE_DOMAIN",
-    ];
-
-    fn config_from_env(vars: &[(&str, &str)]) -> AdminConfig {
-        let _guard = ENV_LOCK.lock().unwrap();
-        for name in MANAGED_ENV {
-            unsafe { env::remove_var(name) };
-        }
-        unsafe { env::remove_var("FLUXER_PUBLIC_PORT") };
-        unsafe { env::remove_var("FLUXER_PUBLIC_ORIGIN") };
-        unsafe { env::set_var("FLUXER_ADMIN_SECRET_KEY_BASE", "test-secret") };
-        for (name, value) in vars {
-            unsafe { env::set_var(name, value) };
-        }
-        let config = AdminConfig::from_env().expect("config loads with a secret");
-        for (name, _) in vars {
-            unsafe { env::remove_var(name) };
-        }
-        config
+    fn config(storage_backend: &str) -> anyhow::Result<AdminConfig> {
+        AdminConfig::from_env(&EnvMap::from_pairs([
+            ("FLUXER_ADMIN_SECRET_KEY_BASE", "secret"),
+            ("FLUXER_STORAGE_BACKEND", storage_backend),
+        ]))
     }
 
     #[test]
-    fn normalize_base_path_strips_trailing_slashes() {
-        assert_eq!(normalize_base_path("admin/"), "/admin");
-        assert_eq!(normalize_base_path("admin///"), "/admin");
-    }
-
-    #[test]
-    fn normalize_base_path_adds_leading_slash() {
-        assert_eq!(normalize_base_path("admin"), "/admin");
-    }
-
-    #[test]
-    fn normalize_base_path_empty_stays_empty() {
-        assert_eq!(normalize_base_path(""), "");
-        assert_eq!(normalize_base_path("   "), "");
-        assert_eq!(normalize_base_path("/"), "");
-    }
-
-    #[test]
-    fn normalize_base_path_preserves_inner() {
-        assert_eq!(normalize_base_path("/foo/bar/"), "/foo/bar");
-    }
-
-    #[test]
-    fn trim_trailing_slash_removes_trailing() {
-        assert_eq!(
-            trim_trailing_slash("https://example.com/"),
-            "https://example.com"
+    fn filesystem_storage_leaves_the_reports_bucket_out_of_the_image_sources() {
+        let s3 = config("").unwrap();
+        assert!(
+            s3.image_origins()
+                .contains(&DEFAULT_REPORTS_BUCKET_ORIGIN.to_owned())
         );
-        assert_eq!(
-            trim_trailing_slash("https://example.com"),
-            "https://example.com"
+        let filesystem = config("filesystem").unwrap();
+        assert_eq!(filesystem.reports_bucket_origin, None);
+        assert!(
+            !filesystem
+                .image_origins()
+                .iter()
+                .any(|origin| origin.contains("fluxer-reports"))
         );
-    }
-
-    #[test]
-    fn trim_trailing_slash_empty_string() {
-        assert_eq!(trim_trailing_slash(""), "");
-        assert_eq!(trim_trailing_slash("/"), "");
-    }
-
-    #[test]
-    fn runtime_env_from_env_value() {
-        assert_eq!(
-            RuntimeEnv::from_env_value("production"),
-            RuntimeEnv::Production
-        );
-        assert_eq!(RuntimeEnv::from_env_value("test"), RuntimeEnv::Test);
-        assert_eq!(
-            RuntimeEnv::from_env_value("development"),
-            RuntimeEnv::Development
-        );
-        assert_eq!(
-            RuntimeEnv::from_env_value("anything"),
-            RuntimeEnv::Development
-        );
-    }
-
-    #[test]
-    fn is_production_returns_true_for_production() {
-        let config = AdminConfig {
-            env: RuntimeEnv::Production,
-            host: String::new(),
-            port: 3020,
-            secret_key_base: String::new(),
-            base_path: String::new(),
-            api_endpoint: String::new(),
-            media_endpoint: String::new(),
-            static_cdn_endpoint: String::new(),
-
-            admin_endpoint: String::new(),
-            web_app_endpoint: String::new(),
-            kv_url: String::new(),
-            oauth_client_id: String::new(),
-            oauth_client_secret: String::new(),
-            oauth_redirect_uri: String::new(),
-            build_version: String::new(),
-            release_channel: String::new(),
-            self_hosted: false,
-            proxy: ProxyConfig {
-                trust_client_ip_header: false,
-                client_ip_header_name: String::new(),
-            },
-        };
-        assert!(config.is_production());
-        assert!(!config.is_dev());
-    }
-
-    #[test]
-    fn is_dev_returns_true_for_development() {
-        let config = AdminConfig {
-            env: RuntimeEnv::Development,
-            host: String::new(),
-            port: 3020,
-            secret_key_base: String::new(),
-            base_path: String::new(),
-            api_endpoint: String::new(),
-            media_endpoint: String::new(),
-            static_cdn_endpoint: String::new(),
-
-            admin_endpoint: String::new(),
-            web_app_endpoint: String::new(),
-            kv_url: String::new(),
-            oauth_client_id: String::new(),
-            oauth_client_secret: String::new(),
-            oauth_redirect_uri: String::new(),
-            build_version: String::new(),
-            release_channel: String::new(),
-            self_hosted: false,
-            proxy: ProxyConfig {
-                trust_client_ip_header: false,
-                client_ip_header_name: String::new(),
-            },
-        };
-        assert!(config.is_dev());
-        assert!(!config.is_production());
-    }
-
-    #[test]
-    fn from_env_uses_defaults() {
-        let config = config_from_env(&[]);
-        assert_eq!(config.env, RuntimeEnv::Development);
-        assert_eq!(config.host, "0.0.0.0");
-        assert_eq!(config.port, 3020);
-        assert_eq!(config.oauth_client_id, DEFAULT_ADMIN_OAUTH_CLIENT_ID);
-        assert_eq!(
-            config.oauth_redirect_uri,
-            "https://admin.fluxer.app/oauth2_callback"
-        );
-    }
-
-    #[test]
-    fn a_non_default_public_port_reaches_the_public_endpoints() {
-        let config = config_from_env(&[
-            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-            ("FLUXER_PUBLIC_PORT", "19080"),
-            ("FLUXER_ADMIN_ENDPOINT", "http://fluxer.example/admin"),
-            ("FLUXER_APP_ENDPOINT", "http://fluxer.example"),
-            ("FLUXER_MEDIA_ENDPOINT", "http://fluxer.example/media"),
-            ("FLUXER_STATIC_CDN_ENDPOINT", "https://cdn.example.net"),
-            (
-                "FLUXER_ADMIN_OAUTH_REDIRECT_URI",
-                "http://fluxer.example/admin/oauth2_callback",
-            ),
-        ]);
-
-        assert_eq!(config.admin_endpoint, "http://fluxer.example:19080/admin");
-        assert_eq!(config.media_endpoint, "http://fluxer.example:19080/media");
-        assert_eq!(config.web_app_endpoint, "http://fluxer.example:19080");
-        assert_eq!(config.static_cdn_endpoint, "https://cdn.example.net");
-        assert_eq!(
-            config.oauth_redirect_uri,
-            format!("{}/oauth2_callback", config.admin_endpoint)
-        );
-    }
-
-    #[test]
-    fn a_default_public_port_leaves_the_public_endpoints_alone() {
-        let config = config_from_env(&[
-            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-            ("FLUXER_PUBLIC_PORT", "443"),
-            ("FLUXER_ADMIN_ENDPOINT", "https://fluxer.example/admin"),
-            ("FLUXER_APP_ENDPOINT", "https://fluxer.example"),
-            ("FLUXER_MEDIA_ENDPOINT", "https://fluxer.example/media"),
-            ("FLUXER_STATIC_CDN_ENDPOINT", "https://fluxer.example"),
-            (
-                "FLUXER_ADMIN_OAUTH_REDIRECT_URI",
-                "https://fluxer.example/admin/oauth2_callback",
-            ),
-        ]);
-
-        assert_eq!(config.admin_endpoint, "https://fluxer.example/admin");
-        assert_eq!(config.media_endpoint, "https://fluxer.example/media");
-        assert_eq!(config.web_app_endpoint, "https://fluxer.example");
-        assert_eq!(config.static_cdn_endpoint, "https://fluxer.example");
-        assert_eq!(
-            config.oauth_redirect_uri,
-            "https://fluxer.example/admin/oauth2_callback"
-        );
-    }
-
-    #[test]
-    fn the_oauth_redirect_uri_matches_the_api_derived_admin_endpoint() {
-        let config = config_from_env(&[
-            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
-            ("FLUXER_PUBLIC_PORT", "19080"),
-            ("FLUXER_ADMIN_ENDPOINT", "http://fluxer.example/admin"),
-            (
-                "FLUXER_ADMIN_OAUTH_REDIRECT_URI",
-                "http://fluxer.example/admin/oauth2_callback",
-            ),
-        ]);
-
-        let api_admin_endpoint = fluxer_common::config::normalize_public_endpoint(
-            "http://fluxer.example/admin",
-            "fluxer.example",
-            Some(19080),
-        );
-        assert_eq!(
-            config.oauth_redirect_uri,
-            format!("{api_admin_endpoint}/oauth2_callback")
-        );
+        assert!(config("seaweed").is_err());
     }
 }

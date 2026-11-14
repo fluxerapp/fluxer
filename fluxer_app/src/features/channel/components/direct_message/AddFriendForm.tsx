@@ -1,25 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {EXAMPLE_FLUXER_TAG_FULL} from '@app/features/app/config/I18nDisplayConstants';
-import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/direct_message/AddFriendForm.module.css';
-import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as RelationshipCommands from '@app/features/relationship/commands/RelationshipCommands';
 import {getSendFriendRequestErrorMessage} from '@app/features/relationship/utils/RelationshipActionUtils';
 import {OUTGOING_FRIEND_REQUEST_STATUS_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
+import {AccountGateSlate} from '@app/features/user/utils/AccountGatePresentation';
+import {canPerform} from '@app/features/user/utils/AccountGates';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {msg} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
-import {EnvelopeSimpleIcon, WarningCircleIcon} from '@phosphor-icons/react';
+import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -33,6 +28,10 @@ const PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR = msg({
 	message: 'Enter a valid username ({exampleFluxerTagFull}).',
 	comment:
 		'Description text in the channel and chat add friend form. Preserve {exampleFluxerTagFull}; it is inserted by code.',
+});
+const ENTER_A_VALID_USERNAME_DESCRIPTOR = msg({
+	message: 'Enter a valid username.',
+	comment: 'Error text in the add friend form on instances where people sign in with a username and have no tag.',
 });
 const SEND_REQUEST_DESCRIPTOR = msg({
 	message: 'Send request',
@@ -53,54 +52,20 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 	const [isLoading, setIsLoading] = useState(false);
 	const [resultStatus, setResultStatus] = useState<'success' | 'error' | null>(null);
 	const [errorCode, setErrorCode] = useState<string | null>(null);
-	const currentUser = Users.currentUser;
-	const isClaimed = currentUser?.isClaimed() ?? true;
-	if (!isClaimed) {
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const usernameOnly = RuntimeConfig.usesUniqueUsernames;
+	const productName = RuntimeConfig.productName;
+	const friendRequestGate = canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST);
+	if (!friendRequestGate.allowed) {
 		return (
-			<StatusSlate
-				Icon={WarningCircleIcon}
-				title={<Trans>Claim your account</Trans>}
-				description={<Trans>Claim your account to send friend requests.</Trans>}
-				actions={[
-					{
-						text: i18n._(CLAIM_ACCOUNT_DESCRIPTOR),
-						onClick: () => openClaimAccountModal({force: true}),
-						variant: 'primary',
-					},
-				]}
-				data-flx="channel.direct-message.add-friend-form.status-slate"
-			/>
-		);
-	}
-	if (currentUser?.verified === false) {
-		return (
-			<StatusSlate
-				Icon={EnvelopeSimpleIcon}
-				title={<Trans>Verify your email</Trans>}
-				description={<Trans>You need to verify your email address before you can send friend requests.</Trans>}
-				actions={[
-					{
-						text: i18n._(VERIFY_EMAIL_DESCRIPTOR),
-						onClick: () =>
-							ModalCommands.push(
-								modal(() => (
-									<UserSettingsModal
-										initialTab="account_security"
-										data-flx="channel.direct-message.add-friend-form.on-click.user-settings-modal"
-									/>
-								)),
-							),
-						variant: 'primary',
-					},
-				]}
-				data-flx="channel.direct-message.add-friend-form.status-slate--2"
-			/>
+			<AccountGateSlate gate={friendRequestGate} data-flx="channel.direct-message.add-friend-form.account-gate-slate" />
 		);
 	}
 	const parseInput = (input: string): [string, string] => {
 		const parts = input['split']('#');
 		if (parts.length > 1) {
-			return [parts[0], parts.slice(1).join('#')];
+			const discriminator = parts.slice(1).join('#');
+			return [parts[0], usernameOnly && /^0{1,4}$/.test(discriminator) ? '0000' : discriminator];
 		}
 		return [input, '0000'];
 	};
@@ -109,6 +74,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 		if (resultStatus) {
 			setResultStatus(null);
 			setErrorCode(null);
+			setErrorMessage(null);
 		}
 	};
 	const getErrorMessage = () => {
@@ -119,7 +85,11 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 			return i18n._(NO_USER_FOUND_WITH_THAT_USERNAME_DESCRIPTOR);
 		}
 		if (errorCode === APIErrorCodes.DISCRIMINATOR_REQUIRED) {
-			return i18n._(PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR, {exampleFluxerTagFull: EXAMPLE_FLUXER_TAG_FULL});
+			if (usernameOnly) return i18n._(ENTER_A_VALID_USERNAME_DESCRIPTOR);
+			return i18n._(PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR, {exampleFluxerTagFull: `${productName}#0000`});
+		}
+		if (errorCode === APIErrorCodes.NEW_CONVERSATIONS_LIMITED) {
+			return getSendFriendRequestErrorMessage(i18n, errorCode, errorMessage);
 		}
 		return getSendFriendRequestErrorMessage(i18n, errorCode, null);
 	};
@@ -129,6 +99,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 		if (!username || !discriminator || !/^\d{4}$/.test(discriminator)) {
 			setResultStatus('error');
 			setErrorCode(APIErrorCodes.NO_USERS_WITH_FLUXERTAG_EXIST);
+			setErrorMessage(null);
 			return;
 		}
 		setIsLoading(true);
@@ -143,6 +114,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 				setIsLoading(false);
 				setResultStatus('error');
 				setErrorCode(failureCode(error) ?? null);
+				setErrorMessage(failureMessage(error) ?? null);
 			});
 	};
 	const isDisabled = isLoading || !input['trim']();
@@ -169,7 +141,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 					type="text"
 					value={input}
 					onChange={handleInputChange}
-					placeholder={EXAMPLE_FLUXER_TAG_FULL}
+					placeholder={usernameOnly ? productName : `${productName}#0000`}
 					className={clsx(
 						styles.input,
 						!isMobile && styles.inputDesktop,

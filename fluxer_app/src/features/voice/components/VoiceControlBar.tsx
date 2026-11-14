@@ -3,7 +3,7 @@
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {MORE_OPTIONS_DESCRIPTOR, TURN_OFF_CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Keybind from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import {getPushToTalkHoldLabel} from '@app/features/input/utils/PushToTalkHint';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
@@ -56,6 +56,7 @@ import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveA
 import {selectVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {stopWatchingStreamKey} from '@app/features/voice/engine/VoiceStreamWatchState';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {useCameraUserCapBlocked} from '@app/features/voice/hooks/useCameraUserCapBlocked';
@@ -80,6 +81,12 @@ import {
 	VOICE_UNDEAFEN_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import {
+	MUTE_DESCRIPTOR,
+	YOU_DON_T_HAVE_PERMISSION_TO_TURN_ON_DESCRIPTOR as NO_CAMERA_PERMISSION_DESCRIPTOR,
+	NO_SCREEN_SHARE_PERMISSION_DESCRIPTOR,
+	UNMUTE_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
@@ -114,31 +121,13 @@ const PUSH_TO_TALK_HOLD_HINT_DESCRIPTOR = msg({
 	comment:
 		'Tooltip on the mic button in the voice control bar when push-to-talk is enabled. {pushToTalkHint} is the formatted shortcut key combo.',
 });
-const UNMUTE_DESCRIPTOR = msg({
-	message: 'Unmute',
-	comment: "Voice control button label to turn the user's microphone back on.",
-	context: 'voice-control-action',
-});
-const MUTE_DESCRIPTOR = msg({
-	message: 'Mute',
-	comment: "Voice control button label to turn the user's microphone off.",
-	context: 'voice-control-action',
-});
-const NO_CAMERA_PERMISSION_DESCRIPTOR = msg({
-	message: "You can't turn on your camera in this channel",
-	comment:
-		'Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.',
-});
+
 const CAMERAS_DISABLED_LIMIT_DESCRIPTOR = msg({
 	message: 'Cameras are off above {voiceChannelCameraUserLimit} participants',
 	comment:
 		'Tooltip in the voice control bar when cameras are disabled because the participant count exceeds the limit. {voiceChannelCameraUserLimit} is the configured threshold.',
 });
-const NO_SCREEN_SHARE_PERMISSION_DESCRIPTOR = msg({
-	message: "You can't share your screen in this channel",
-	comment:
-		'Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.',
-});
+
 const AUDIO_SETTINGS_DESCRIPTOR = msg({
 	message: 'Audio settings',
 	comment: 'Voice control button label for microphone and speaker settings.',
@@ -243,7 +232,7 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 	const isGuildDeafened = voiceState?.deaf ?? false;
 	const canStream = !guildId || !channelId || Permission.can(Permissions.STREAM, {channelId});
 	const screenShareDisabled = !canStream && !isScreenShareEnabled;
-	const muteReason = MediaEngine.getMuteReason(voiceState);
+	const muteReason = VoiceRuntime.getMuteReason(voiceState);
 	const isPermissionMuted = muteReason === 'permission';
 	const isPushToTalkEffective = Keybind.isPushToTalkEffective();
 	const effectiveAudioState = getEffectiveAudioState({
@@ -253,8 +242,7 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 		serverDeaf: voiceState?.deaf,
 	});
 	const effectiveMuted = effectiveAudioState.effectiveMute || muteReason !== null || isMuted || isPermissionMuted;
-	const pushToTalkCombo = Keybind.getByAction('voice_push_to_talk').combo;
-	const pushToTalkHint = formatKeyCombo(pushToTalkCombo);
+	const pushToTalkHoldLabel = getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_HOLD_HINT_DESCRIPTOR);
 	const displayShareEnvironment = resolveDisplayShareEnvironment(isDesktop(), NativePermission.isLinuxWaylandDesktop);
 	const disconnectLabel = i18n._(VOICE_DISCONNECT_DESCRIPTOR);
 	const renderInputSettingsMenu = useCallback(
@@ -564,6 +552,7 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 		isGuildDeafened,
 		isPermissionMuted,
 		isPushToTalkEffective,
+		isSelfMuted: effectiveAudioState.effectiveMute || muteReason === 'self',
 		effectiveMuted,
 		canStream,
 		isCameraEnabled,
@@ -582,14 +571,14 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 				case 'permissionMuted':
 					return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
 				case 'pushToTalkHoldHint':
-					return i18n._(PUSH_TO_TALK_HOLD_HINT_DESCRIPTOR, {pushToTalkHint});
+					return pushToTalkHoldLabel;
 				case 'unmute':
 					return i18n._(UNMUTE_DESCRIPTOR);
 				default:
 					return i18n._(MUTE_DESCRIPTOR);
 			}
 		},
-		[i18n, pushToTalkHint],
+		[i18n, pushToTalkHoldLabel],
 	);
 	const getDeafenTooltipLabel = useCallback(
 		(label: VoiceControlBarDeafenLabel) => {
@@ -653,7 +642,11 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 	const cameraSettingsLabel = i18n._(VOICE_CAMERA_SETTINGS_DESCRIPTOR);
 	const screenShareSettingsLabel = i18n._(VOICE_SCREEN_SHARE_SETTINGS_DESCRIPTOR);
 	return (
-		<div className={styles.container} data-flx="voice.voice-control-bar.voice-control-bar-inner.container">
+		<div
+			className={styles.container}
+			data-voice-call-control-bar
+			data-flx="voice.voice-control-bar.voice-control-bar-inner.container"
+		>
 			<div
 				className={styles.buttonContainer}
 				data-flx="voice.voice-control-bar.voice-control-bar-inner.button-container"

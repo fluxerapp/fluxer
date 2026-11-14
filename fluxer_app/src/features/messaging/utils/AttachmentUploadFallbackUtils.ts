@@ -8,7 +8,7 @@ interface FileSizeLike {
 
 export const MULTIPART_ATTACHMENT_FALLBACK_MAX_REQUEST_SIZE = ATTACHMENT_MAX_SIZE_NON_PREMIUM;
 
-export function getMultipartFallbackRequestSize(files: ReadonlyArray<FileSizeLike>): number {
+function getMultipartFallbackRequestSize(files: ReadonlyArray<FileSizeLike>): number {
 	return files.reduce((total, file) => total + file.size, 0);
 }
 

@@ -2,37 +2,27 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import {
-	getConfiguredChromiumSwitches,
-	getDesktopTroubleshootingSettings,
-	getDesktopWindowBehaviorSettings,
-	loadDesktopConfig,
-	setRuntimeAppUrlOverride,
-} from '@electron/common/DesktopConfig';
-import {
-	DESKTOP_APP_NAME,
-	LINUX_DESKTOP_ENTRY_ID,
-	WINDOWS_APP_USER_MODEL_ID,
-	WINDOWS_TOAST_ACTIVATOR_CLSID,
-} from '@electron/common/DesktopIdentity';
+import {getDesktopWindowBehaviorSettings} from '@electron/common/DesktopConfig';
+import {DESKTOP_APP_NAME} from '@electron/common/DesktopIdentity';
+import {errorMessage} from '@electron/common/ErrorMessage';
 import {configureUserDataPath} from '@electron/common/UserDataPath';
+import {isAccountEngineAvailable} from '@electron/main/AccountEngineHost';
+import {startAccountEngine, stopAccountEngine} from '@electron/main/AccountEngineIpc';
+import {registerApiAttachmentAuthorizationIpc} from '@electron/main/ApiAttachmentAuthorizationIpc';
+import {
+	APP_STORE_ADDON_PACKAGE,
+	createAppStoreBoundary,
+	getAppStoreLoadFailure,
+	loadAppStoreBinding,
+} from '@electron/main/AppStoreNativeBoundary';
 import {registerAutostartHandlers} from '@electron/main/Autostart';
 import {
-	addLinuxHardwareVideoEncodeFeatures,
-	addLinuxScreenCapturePipeWireFeature,
-	addMacosPreSequoiaScreenCaptureDisabledFeatures,
-	addWindowsHardwareVideoEncodeFeatures,
-	appendConfiguredChromiumSwitches,
-	appendDisabledChromiumFeatures,
-	appendEnabledBlinkFeature,
-	appendEnabledChromiumFeatures,
-	appendLinuxChromiumFlagsConfig,
-	appendLinuxOzonePlatformHint,
-	appendWindowsGpuDriverWorkaroundSwitches,
-	BASE_DISABLED_CHROMIUM_FEATURES,
-	MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE,
-	purgeChromiumRuntimeCachesIfNeeded,
-} from '@electron/main/ChromiumRuntime';
+	admitBootStateFormat,
+	registerBootStateIpc,
+	requestBootStateFlush,
+	takeBootFrame,
+} from '@electron/main/BootState';
+import {purgeChromiumRuntimeCachesIfNeeded} from '@electron/main/ChromiumRuntime';
 import {
 	consumeInitialJumpListTask,
 	handleOpenUrl,
@@ -40,33 +30,76 @@ import {
 	initializeDeepLinks,
 } from '@electron/main/DeepLinks';
 import {
+	DesktopAccountStoreEvent,
+	DesktopStorePermissionState,
+	probeDesktopStorePermissions,
+	recordDesktopAccountStoreEvent,
+} from '@electron/main/DesktopAccountStoreTelemetry';
+import {
+	closeDesktopAppStorage,
+	getDesktopAppStorage,
+	openDesktopAppStorage,
+	recoverDesktopAppStorage,
+} from '@electron/main/DesktopAppStorage';
+import {retainBootStateForStoredAccounts} from '@electron/main/DesktopAppStorageIpc';
+import {
+	DesktopAppStoreHealth,
+	desktopAppStoreStateFile,
+	evaluateDesktopAppStoreHealth,
+	readDesktopAppStoreState,
+	recordDesktopAppStoreSuccess,
+} from '@electron/main/DesktopAppStoreHealth';
+import {
 	formatDesktopDebugInfo,
 	getDesktopDebugInfo,
-	getLaunchAppUrlOverride,
 	getLaunchNetLogPath,
 	hasDesktopDebugInfoArg,
 	logDesktopDebugInfo,
-	shouldDisableHardwareAccelerationForLaunch,
 	shouldResetWindowStateOnLaunch,
 } from '@electron/main/DesktopDebugInfo';
+import {recordDesktopLastRoute} from '@electron/main/DesktopLastRoute';
+import {cleanupDesktopOutboundHTTP} from '@electron/main/DesktopOutboundHTTP';
+import {registerDesktopRuntimeConfigHandlers} from '@electron/main/DesktopRuntimeConfigIpc';
+import {installDesktopSystemTrustVerifier} from '@electron/main/DesktopSystemTrustVerifier';
 import {destroyDesktopTray, hasActiveDesktopTray, initializeDesktopTray} from '@electron/main/DesktopTray';
+import {cleanupDesktopTrustedCertificates} from '@electron/main/DesktopTrustedCertificates';
 import {registerDisplayMediaHandlers} from '@electron/main/DisplayMedia';
 import {initializeDockMenu} from '@electron/main/DockMenu';
-import {cleanupGlobalKeyHook, registerGlobalKeyHookHandlers} from '@electron/main/GlobalKeyHook';
-import {cleanupIpcHandlers, registerIpcHandlers} from '@electron/main/IpcHandlers';
+import {GATEWAY_SOCKET_ADDON_PACKAGE, loadGatewaySocketBinding} from '@electron/main/GatewaySocketNativeBoundary';
+import {cleanupGlobalShortcuts, initializeGlobalShortcuts} from '@electron/main/GlobalShortcutsIpc';
+import {
+	cleanupGatewayTransportHandlers,
+	cleanupIpcHandlers,
+	registerDesktopAppStorageHandlers,
+	registerGatewayTransportHandlers,
+	registerIpcHandlers,
+	warmGatewayTransport,
+} from '@electron/main/IpcHandlers';
 import {initializeJumpList} from '@electron/main/JumpList';
-import {describeLaunchDiagnosticOptions, shouldStartHiddenAtLogin} from '@electron/main/LaunchOptions';
+import {describeLaunchDiagnosticOptions, shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
+import {cleanupLegacyHarvestHandlers, registerLegacyHarvestHandlers} from '@electron/main/LegacyHarvestIpc';
+import {initializeLegacyOriginHarvest} from '@electron/main/LegacyOriginHarvest';
 import {cleanupVirtmic, registerVirtmicHandlers} from '@electron/main/LinuxAudioCapture';
-import {initializeMainI18n} from '@electron/main/MainI18n';
+import {ensureLinuxDesktopEntry} from '@electron/main/LinuxDesktopEntry';
+import {cleanupDesktopLocalAppProtocol} from '@electron/main/LocalAppProtocol';
+import {initializeMainI18n, t} from '@electron/main/MainI18n';
 import {createApplicationMenu} from '@electron/main/Menu';
+import {
+	hasQuitStarted,
+	isStartupWindowPending,
+	onMainWindowReady,
+	setMainWindowFactory,
+	setOpenUrlSink,
+	setSecondInstanceSink,
+} from '@electron/main/ModuleBootHandoff';
 import {cleanupNativeAudio, registerNativeAudioHandlers} from '@electron/main/NativeAudio';
 import {
 	cleanupNativeHardwareEncoderHandlers,
 	registerNativeHardwareEncoderHandlers,
 } from '@electron/main/NativeHardwareEncoder';
-import {runNativeModulePreflight} from '@electron/main/NativeModulePreflight';
-import {cleanupNativeScreenCapture, registerNativeScreenCaptureHandlers} from '@electron/main/NativeScreenCapture';
-import {appendOpenH264Switches} from '@electron/main/OpenH264Manager';
+import {type NativeModulePreflightResult, runNativeModulePreflight} from '@electron/main/NativeModulePreflight';
+import {isPrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
+import {settleShutdownCleanups} from '@electron/main/ShutdownCleanup';
 import {cleanupLinuxChromiumSpellcheckDictionaries} from '@electron/main/Spellcheck';
 import {registerUpdater} from '@electron/main/Updater';
 import {
@@ -74,14 +107,35 @@ import {
 	createWindow,
 	getMainWindow,
 	hideWindow,
+	isAppDocumentWindowContents,
+	prepareMainWindowBootFrame,
 	setQuitting,
 	showWindow,
+	takeMainWindowBootFrame,
 } from '@electron/main/Window';
+import {removeLegacySquirrelUninstallEntry} from '@electron/main/WindowsLegacyUninstallEntry';
 import {removeFluxerVulkanLayerRegistrations} from '@electron/main/WindowsVulkanLayerCleanup';
-import {app, dialog, netLog} from 'electron';
+import {ACCOUNT_ENGINE_CHANNELS} from '@fluxer/desktop_ipc/src/AccountEngineContract';
+import {
+	DESKTOP_CAPABILITY_MANIFEST_CHANNEL,
+	type DesktopCapabilityManifest,
+} from '@fluxer/desktop_ipc/src/CapabilityManifest';
+import {DESKTOP_LAST_ROUTE_CHANNEL} from '@fluxer/desktop_ipc/src/LastRouteContract';
+import {
+	ACTIVE_ACCOUNT_STORAGE_KEY,
+	DESKTOP_LEGACY_IMPORT_FAILURE_MARKER_KEY,
+	DESKTOP_LEGACY_IMPORT_MARKER_KEY,
+	DESKTOP_LEGACY_SESSION_MARKER_KEY,
+	DesktopLegacyImportPhase,
+	GLOBAL_STORAGE_SCOPE,
+	readDesktopLegacyImportPhase,
+} from '@fluxer/desktop_ipc/src/StorageContract';
+import {app, autoUpdater, dialog, ipcMain, netLog, session, shell} from 'electron';
 import log from 'electron-log';
 
 log.transports.file.level = 'info';
+
+log.transports.file.sync = false;
 
 log.transports.console.level = 'debug';
 
@@ -117,13 +171,104 @@ log.info('Configured user data storage', {
 
 cleanupLinuxChromiumSpellcheckDictionaries(userDataConfig.base);
 
-loadDesktopConfig(userDataConfig.base);
-
 function exitCli(code: number): void {
 	process.exitCode = code;
 	setImmediate(() => {
 		process.exit(code);
 	});
+}
+
+function reportUnreadableDesktopAppStore(storeFile: string, reason: string | null): void {
+	log.error('[AppStore] The desktop app store worked here before and cannot be opened now', {storeFile, reason});
+	let choice = 0;
+	try {
+		choice = dialog.showMessageBoxSync({
+			type: 'error',
+			title: t('desktop.appStore.unreadableTitle'),
+			message: t('desktop.appStore.unreadableMessage'),
+			detail: [
+				t('desktop.appStore.unreadableUnchanged'),
+				t('desktop.appStore.unreadableAdvice'),
+				reason == null ? '' : t('desktop.appStore.unreadableDetails', {reason}),
+			]
+				.filter(Boolean)
+				.join('\n\n'),
+			buttons: [t('desktop.appMenu.quit'), t('desktop.appStore.showStoreFolder')],
+			defaultId: 0,
+			cancelId: 0,
+			noLink: true,
+		});
+	} catch (error) {
+		log.error('[AppStore] Failed to present the unreadable store notice:', error);
+	}
+	if (choice === 1) {
+		try {
+			shell.showItemInFolder(storeFile);
+		} catch (error) {
+			log.error('[AppStore] Failed to reveal the store folder:', error);
+		}
+	}
+	app.exit(1);
+}
+
+async function readActiveAccountKey(): Promise<string | null> {
+	const storage = getDesktopAppStorage();
+	if (storage == null) {
+		return null;
+	}
+	try {
+		return (await storage.getEntry(GLOBAL_STORAGE_SCOPE, ACTIVE_ACCOUNT_STORAGE_KEY))?.value ?? null;
+	} catch (error) {
+		log.warn('[BootState] Failed to read the active account pointer:', error);
+		return null;
+	}
+}
+
+async function readBootSession(): Promise<boolean | null> {
+	const storage = getDesktopAppStorage();
+	if (storage == null) {
+		return null;
+	}
+	try {
+		if (!(await storage.getStoreStatus()).available) {
+			return null;
+		}
+		const phase = readDesktopLegacyImportPhase(await storage.getMarker(DESKTOP_LEGACY_IMPORT_MARKER_KEY));
+		if (phase !== DesktopLegacyImportPhase.DONE) {
+			return null;
+		}
+		const [accounts, activeAccountKey] = await Promise.all([storage.getAllAccounts(), readActiveAccountKey()]);
+		if (accounts.length === 0) {
+			return false;
+		}
+		return accounts.some((account) => account.storageKey === activeAccountKey) ? true : null;
+	} catch (error) {
+		log.warn('[LocalApp] Failed to read whether an account is signed in for the boot shell:', error);
+		return null;
+	}
+}
+
+async function recordDesktopAppStoreImportState(schemaVersion: number): Promise<void> {
+	const storage = getDesktopAppStorage();
+	if (storage == null) {
+		return;
+	}
+	try {
+		const marker = await storage.getMarker(DESKTOP_LEGACY_IMPORT_MARKER_KEY);
+		const phase = readDesktopLegacyImportPhase(marker);
+		log.info('[AppStore] Legacy import state', {
+			phase,
+			failures: await storage.getMarker(DESKTOP_LEGACY_IMPORT_FAILURE_MARKER_KEY),
+			reconciledAt: await storage.getMarker(DESKTOP_LEGACY_SESSION_MARKER_KEY),
+			stateFile: desktopAppStoreStateFile(userDataConfig.base),
+		});
+		if (phase === DesktopLegacyImportPhase.DONE) {
+			recordDesktopAppStoreSuccess({userDataPath: userDataConfig.base, now: Date.now(), schemaVersion});
+			recordDesktopAccountStoreEvent(userDataConfig.base, DesktopAccountStoreEvent.MIGRATED);
+		}
+	} catch (error) {
+		log.warn('[AppStore] Failed to read the legacy import state:', error);
+	}
 }
 
 function writeCliAndExit(stream: NodeJS.WriteStream, message: string, code: number): void {
@@ -138,353 +283,590 @@ function writeCliAndExit(stream: NodeJS.WriteStream, message: string, code: numb
 	stream.write(`${message}\n`, finish);
 }
 
-let launchConfigurationError: Error | null = null;
-let launchDiagnosticOptions: Record<string, unknown> = {};
-
-try {
-	launchDiagnosticOptions = describeLaunchDiagnosticOptions(process.argv);
-	const appUrlOverride = getLaunchAppUrlOverride(process.argv);
-	if (appUrlOverride) {
-		setRuntimeAppUrlOverride(appUrlOverride);
-		log.info('Using one-shot app URL override from command line', {appUrl: appUrlOverride});
-	}
-} catch (error) {
-	launchConfigurationError = error instanceof Error ? error : new Error(String(error));
+function recordStartupPhase(phase: string, phaseStartedAt: number): void {
+	log.info('[Startup] Phase completed', {
+		phase,
+		durationMs: Date.now() - phaseStartedAt,
+		sinceConfiguredMs: Date.now() - processConfiguredAt,
+	});
 }
-
-if (launchConfigurationError) {
-	console.error(`Fluxer desktop launch configuration error: ${launchConfigurationError.message}`);
-	log.error('Launch configuration error:', launchConfigurationError);
-	app.exit(1);
-} else if (hasDesktopDebugInfoArg(process.argv)) {
-	void getDesktopDebugInfo(userDataConfig.base, {nativeProbes: false})
-		.then((info) => {
-			try {
-				logDesktopDebugInfo(info);
-			} catch {}
-			writeCliAndExit(process.stdout, formatDesktopDebugInfo(info), 0);
-		})
-		.catch((error: unknown) => {
-			const message = error instanceof Error ? error.message : String(error);
-			log.error('Failed to collect desktop debug info:', error);
-			writeCliAndExit(process.stderr, `Failed to collect Fluxer desktop debug info: ${message}`, 1);
-		});
-} else {
-	if (shouldResetWindowStateOnLaunch(process.argv)) {
-		clearSavedWindowBounds();
+function runStartupPhase<T>(phase: string, fn: () => T): T {
+	const phaseStartedAt = Date.now();
+	try {
+		return fn();
+	} finally {
+		recordStartupPhase(phase, phaseStartedAt);
 	}
-	const disableHardwareAccelerationRequested =
-		shouldDisableHardwareAccelerationForLaunch(process.argv) ||
-		getDesktopTroubleshootingSettings().disableHardwareAcceleration;
-	if (process.platform !== 'darwin' && disableHardwareAccelerationRequested) {
-		app.disableHardwareAcceleration();
-		log.info('Hardware acceleration disabled for this launch', {
-			commandLine: shouldDisableHardwareAccelerationForLaunch(process.argv),
-			persistentSetting: getDesktopTroubleshootingSettings().disableHardwareAcceleration,
-		});
-	} else if (process.platform === 'darwin' && disableHardwareAccelerationRequested) {
-		log.info('Hardware acceleration disable request ignored on macOS');
+}
+async function runStartupPhaseAsync<T>(phase: string, fn: () => Promise<T>): Promise<T> {
+	const phaseStartedAt = Date.now();
+	try {
+		return await fn();
+	} finally {
+		recordStartupPhase(phase, phaseStartedAt);
 	}
-	log.info('Launch diagnostic modes', launchDiagnosticOptions);
-	const CHANNEL_APP_NAME = DESKTOP_APP_NAME;
-	app.setName(CHANNEL_APP_NAME);
-	if (process.platform === 'linux') {
-		process.env.FLUXER_LINUX_DESKTOP_ENTRY_ID = LINUX_DESKTOP_ENTRY_ID;
-	}
-	function recordStartupPhase(phase: string, phaseStartedAt: number): void {
-		log.info('[Startup] Phase completed', {
-			phase,
-			durationMs: Date.now() - phaseStartedAt,
-			sinceConfiguredMs: Date.now() - processConfiguredAt,
-		});
-	}
-	function runStartupPhase<T>(phase: string, fn: () => T): T {
-		const phaseStartedAt = Date.now();
-		try {
-			return fn();
-		} finally {
-			recordStartupPhase(phase, phaseStartedAt);
-		}
-	}
-	async function runStartupPhaseAsync<T>(phase: string, fn: () => Promise<T>): Promise<T> {
-		const phaseStartedAt = Date.now();
-		try {
-			return await fn();
-		} finally {
-			recordStartupPhase(phase, phaseStartedAt);
-		}
-	}
-	async function startLaunchNetLog(): Promise<void> {
-		const netLogPath = getLaunchNetLogPath(userDataConfig.base, process.argv);
-		if (!netLogPath) {
-			return;
-		}
-		try {
-			fs.mkdirSync(path.dirname(netLogPath), {recursive: true});
-			await netLog.startLogging(netLogPath, {captureMode: 'default'});
-			log.info('[DebugInfo] Chromium net log started', {path: netLogPath});
-		} catch (error) {
-			log.error('[DebugInfo] Failed to start Chromium net log:', error);
-		}
-	}
-	const isLegacySquirrelStartupArg = (arg: string): boolean =>
-		arg === '--squirrel-install' ||
-		arg === '--squirrel-updated' ||
-		arg === '--squirrel-uninstall' ||
-		arg === '--squirrel-obsolete' ||
-		arg === '--squirrel-firstrun';
-	const hasLegacySquirrelArg = process.platform === 'win32' && process.argv.some(isLegacySquirrelStartupArg);
-	if (hasLegacySquirrelArg) {
-		app.exit(0);
+}
+async function startLaunchNetLog(): Promise<void> {
+	const netLogPath = getLaunchNetLogPath(userDataConfig.base, process.argv);
+	if (!netLogPath) {
+		return;
 	}
 	try {
-		runStartupPhase('native-module-preflight', runNativeModulePreflight);
+		fs.mkdirSync(path.dirname(netLogPath), {recursive: true});
+		await netLog.startLogging(netLogPath, {captureMode: 'default'});
+		log.info('[DebugInfo] Chromium net log started', {path: netLogPath});
 	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
+		log.error('[DebugInfo] Failed to start Chromium net log:', error);
+	}
+}
+
+const startupController = new AbortController();
+let degradedNativeModules = new Set<string>();
+let appStoreSchemaVersion = 0;
+let startupStorage: Promise<string | null> | null = null;
+let finishSyncAnswers!: () => void;
+const syncAnswersReady = new Promise<void>((resolve) => {
+	finishSyncAnswers = resolve;
+});
+let quitCleanupStarted = false;
+
+function stopStartupIfQuitting(): void {
+	if (hasQuitStarted()) throw new Error('The app started quitting during startup');
+}
+
+function initializeStartupNativeModules(): void {
+	let nativeModulePreflight: NativeModulePreflightResult = {degraded: []};
+	try {
+		nativeModulePreflight = runStartupPhase('native-module-preflight', runNativeModulePreflight);
+	} catch (error) {
+		const message = errorMessage(error);
 		log.error('[NativeModulePreflight] Fatal native module preflight failure:', error);
 		console.error(message);
 		try {
-			dialog.showErrorBox('Fluxer failed to start', message);
+			dialog.showErrorBox(t('desktop.startup.failedTitle'), message);
 		} catch {}
 		app.exit(1);
 		process.exit(1);
 	}
-	app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
-	const windowBehaviorSettings = getDesktopWindowBehaviorSettings();
-	app.commandLine.appendSwitch(
-		windowBehaviorSettings.smoothScrolling ? 'enable-smooth-scrolling' : 'disable-smooth-scrolling',
-	);
-	if (process.platform === 'linux' && windowBehaviorSettings.middleClickAutoscroll) {
-		appendEnabledBlinkFeature(MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE);
+	degradedNativeModules = new Set(nativeModulePreflight.degraded);
+}
+
+const loadNativeAddon = (addonPackage: string, load: () => unknown): boolean => {
+	if (degradedNativeModules.has(addonPackage)) return false;
+	const startedAt = performance.now();
+	const loaded = load() !== null;
+	log.info('[Capabilities] Native addon loaded', {
+		addon: addonPackage,
+		loaded,
+		durationMs: Math.round(performance.now() - startedAt),
+	});
+	return loaded;
+};
+let appStoreAddonLoaded: boolean | null = null;
+const loadAppStoreAddon = (): boolean => {
+	appStoreAddonLoaded ??= loadNativeAddon(APP_STORE_ADDON_PACKAGE, loadAppStoreBinding);
+	return appStoreAddonLoaded;
+};
+let desktopCapabilityManifest: DesktopCapabilityManifest | null = null;
+const resolveDesktopCapabilityManifest = (): DesktopCapabilityManifest => {
+	if (desktopCapabilityManifest === null) {
+		desktopCapabilityManifest = {
+			appStore: loadAppStoreAddon(),
+			gatewaySocket: loadNativeAddon(GATEWAY_SOCKET_ADDON_PACKAGE, loadGatewaySocketBinding),
+		};
+		log.info('[Capabilities] Desktop capability manifest', desktopCapabilityManifest);
 	}
-	const disabledChromiumFeatures = new Set(BASE_DISABLED_CHROMIUM_FEATURES);
-	const enabledChromiumFeatures = new Set<string>();
-	if (!disableHardwareAccelerationRequested) {
-		addLinuxHardwareVideoEncodeFeatures(enabledChromiumFeatures);
-		addWindowsHardwareVideoEncodeFeatures(enabledChromiumFeatures);
+	return desktopCapabilityManifest;
+};
+
+export function prepareMainProcess(): boolean {
+	let launchDiagnosticOptions: Record<string, unknown>;
+	try {
+		launchDiagnosticOptions = describeLaunchDiagnosticOptions(process.argv);
+	} catch (error) {
+		const message = errorMessage(error);
+		console.error(`Fluxer desktop launch configuration error: ${message}`);
+		log.error('Launch configuration error:', error);
+		app.exit(1);
+		return false;
 	}
-	addLinuxScreenCapturePipeWireFeature(enabledChromiumFeatures);
-	if (process.platform === 'darwin') {
-		addMacosPreSequoiaScreenCaptureDisabledFeatures(disabledChromiumFeatures);
-	}
-	appendDisabledChromiumFeatures(disabledChromiumFeatures);
-	if (enabledChromiumFeatures.size > 0) {
-		appendEnabledChromiumFeatures(enabledChromiumFeatures);
-	}
-	appendConfiguredChromiumSwitches(getConfiguredChromiumSwitches());
-	if (launchDiagnosticOptions.safeMode !== true) {
-		appendLinuxChromiumFlagsConfig(userDataConfig.channel);
-	}
-	appendLinuxOzonePlatformHint();
-	if (process.platform === 'win32') {
-		app.setToastActivatorCLSID(WINDOWS_TOAST_ACTIVATOR_CLSID);
-		app.setAppUserModelId(WINDOWS_APP_USER_MODEL_ID);
-	}
-	appendOpenH264Switches();
-	const gotTheLock = app.requestSingleInstanceLock();
-	if (!gotTheLock) {
-		app.quit();
-	} else {
-		runStartupPhase('runtime-cache-guard', () => {
-			purgeChromiumRuntimeCachesIfNeeded(userDataConfig.base);
-		});
-		app.on('second-instance', (_event, argv, _workingDirectory) => {
-			handleSecondInstance(argv);
-		});
-		app.on('child-process-gone', (_event, details) => {
-			log.error('Child process gone', details);
-		});
-		app.on('open-url', (event, url) => {
-			event.preventDefault();
-			handleOpenUrl(url);
-		});
-		app.on('ready', (_event, launchInfo) => {
-			const fallbackDeepLink = (launchInfo as {userInfo?: {fallbackDeepLink?: unknown}} | undefined)?.userInfo
-				?.fallbackDeepLink;
-			if (typeof fallbackDeepLink === 'string') {
-				handleOpenUrl(fallbackDeepLink);
-			}
-		});
-		runStartupPhaseAsync('gpu-driver-workarounds', appendWindowsGpuDriverWorkaroundSwitches)
-			.then(() => app.whenReady())
-			.then(async () => {
-				log.info('App ready, initializing...');
-				await runStartupPhaseAsync('launch-net-log', startLaunchNetLog);
+	if (hasDesktopDebugInfoArg(process.argv)) {
+		void getDesktopDebugInfo(userDataConfig.base, {nativeProbes: false})
+			.then((info) => {
 				try {
-					await runStartupPhaseAsync('desktop-debug-info', async () => {
-						logDesktopDebugInfo(await getDesktopDebugInfo(userDataConfig.base, {nativeProbes: false}));
-					});
-				} catch (error) {
-					log.error('[DebugInfo] Failed to collect desktop debug info:', error);
-				}
-				try {
-					runStartupPhase('main-i18n', initializeMainI18n);
-				} catch (error) {
-					log.error('[Init] Failed to initialize native i18n:', error);
-				}
-				try {
-					runStartupPhase('deep-links', initializeDeepLinks);
-				} catch (error) {
-					log.error('[Init] Failed to initialize deep links:', error);
-				}
-				try {
-					runStartupPhase('jump-list', initializeJumpList);
-				} catch (error) {
-					log.error('[Init] Failed to initialize JumpList:', error);
-				}
-				try {
-					runStartupPhase('dock-menu', initializeDockMenu);
-				} catch (error) {
-					log.error('[Init] Failed to initialize macOS dock menu:', error);
-				}
-				try {
-					runStartupPhase('ipc-handlers', registerIpcHandlers);
-				} catch (error) {
-					log.error('[Init] Failed to register IPC handlers:', error);
-				}
-				try {
-					const {initOpenH264} = await import('@electron/main/OpenH264Manager');
-					initOpenH264();
-				} catch (error) {
-					log.warn('[Init] OpenH264 initialization skipped:', error);
-				}
-				try {
-					runStartupPhase('autostart-handlers', registerAutostartHandlers);
-				} catch (error) {
-					log.error('[Init] Failed to register autostart handlers:', error);
-				}
-				try {
-					runStartupPhase('global-key-hook-handlers', registerGlobalKeyHookHandlers);
-				} catch (error) {
-					log.error('[Init] Failed to register global key hook handlers:', error);
-				}
-				try {
-					runStartupPhase('display-media-handlers', registerDisplayMediaHandlers);
-				} catch (error: unknown) {
-					log.error('[Init] Failed to register display media handlers:', error);
-				}
-				try {
-					runStartupPhase('virtmic-handlers', registerVirtmicHandlers);
-				} catch (error: unknown) {
-					log.error('[Init] Failed to register virtmic handlers:', error);
-				}
-				try {
-					runStartupPhase('native-audio-handlers', registerNativeAudioHandlers);
-				} catch (error: unknown) {
-					log.error('[Init] Failed to register native audio handlers:', error);
-				}
-				try {
-					runStartupPhase('vulkan-layer-cleanup', removeFluxerVulkanLayerRegistrations);
-				} catch (error: unknown) {
-					log.error('[Init] Failed to remove stale Vulkan layer registrations:', error);
-				}
-				try {
-					runStartupPhase('native-screen-capture-handlers', registerNativeScreenCaptureHandlers);
-				} catch (error: unknown) {
-					log.error('[Init] Failed to register native screen capture handlers:', error);
-				}
-				try {
-					runStartupPhase('native-hardware-encoder-handlers', registerNativeHardwareEncoderHandlers);
-				} catch (error: unknown) {
-					log.error('[Init] Failed to register native hardware encoder handlers:', error);
-				}
-				try {
-					runStartupPhase('application-menu', createApplicationMenu);
-				} catch (error: unknown) {
-					log.error('[Init] Failed to create application menu:', error);
-				}
-				runStartupPhase('create-window', () => {
-					createWindow({startHidden: shouldStartHiddenAtLogin()});
-				});
-				const initialTask = consumeInitialJumpListTask();
-				if (initialTask) {
-					const mainWindow = getMainWindow();
-					mainWindow?.webContents.once('did-finish-load', () => {
-						if (initialTask === 'open-settings') {
-							mainWindow.webContents.send('open-settings');
-						} else {
-							mainWindow.webContents.send('jump-list-new-dm');
-						}
-					});
-				}
-				runStartupPhase('desktop-tray', () => {
-					initializeDesktopTray({
-						createWindow,
-						getMainWindow,
-						hideWindow,
-						setQuitting,
-						showWindow,
-					});
-				});
-				registerUpdater(getMainWindow);
-				app.on('activate', () => {
-					const mainWindow = getMainWindow();
-					if (mainWindow === null || mainWindow.isDestroyed()) {
-						createWindow();
-					} else {
-						showWindow();
-					}
-				});
-				log.info('App initialized successfully');
+					logDesktopDebugInfo(info);
+				} catch {}
+				writeCliAndExit(process.stdout, formatDesktopDebugInfo(info), 0);
 			})
 			.catch((error: unknown) => {
-				log.error('[Startup] whenReady chain rejected:', error);
+				const message = errorMessage(error);
+				log.error('Failed to collect desktop debug info:', error);
+				writeCliAndExit(process.stderr, `Failed to collect Fluxer desktop debug info: ${message}`, 1);
 			});
-		app.on('window-all-closed', () => {
-			const settings = getDesktopWindowBehaviorSettings();
-			if (process.platform !== 'darwin' && !(hasActiveDesktopTray() && settings.showTrayIcon && settings.closeToTray)) {
-				app.quit();
-			} else if (process.platform !== 'darwin') {
-				log.info('[Shutdown] All windows closed; keeping app alive because close-to-tray is enabled');
-			}
+		return false;
+	}
+	if (
+		process.platform === 'win32' &&
+		process.argv.some(
+			(arg) =>
+				arg === '--squirrel-install' ||
+				arg === '--squirrel-updated' ||
+				arg === '--squirrel-uninstall' ||
+				arg === '--squirrel-obsolete' ||
+				arg === '--squirrel-firstrun',
+		)
+	) {
+		app.exit(0);
+		return false;
+	}
+	app.setName(DESKTOP_APP_NAME);
+	if (shouldResetWindowStateOnLaunch(process.argv)) clearSavedWindowBounds();
+	runStartupPhase('runtime-cache-guard', () => purgeChromiumRuntimeCachesIfNeeded(userDataConfig.base));
+	log.info('Launch diagnostic modes', launchDiagnosticOptions);
+	try {
+		runStartupPhase('main-i18n', initializeMainI18n);
+	} catch (error) {
+		log.error('[Init] Failed to initialize native i18n:', error);
+	}
+	return true;
+}
+
+export function initializeMainWindowStartup(): void {
+	ipcMain.on(DESKTOP_CAPABILITY_MANIFEST_CHANNEL, (event) => {
+		void syncAnswersReady
+			.then(() => {
+				if (event.sender.isDestroyed()) return;
+				event.returnValue = hasQuitStarted()
+					? {appStore: false, gatewaySocket: false}
+					: resolveDesktopCapabilityManifest();
+			})
+			.catch((error: unknown) => {
+				log.error('[Capabilities] Failed to resolve the desktop capability manifest:', error);
+				event.returnValue = {appStore: false, gatewaySocket: false};
+			});
+	});
+	ipcMain.on(ACCOUNT_ENGINE_CHANNELS.isAvailable, (event) => {
+		void syncAnswersReady.then(() => {
+			if (event.sender.isDestroyed()) return;
+			event.returnValue = !hasQuitStarted() && isAccountEngineAvailable();
 		});
-		const QUIT_WATCHDOG_MS = 15000;
-		let quitWatchdog: NodeJS.Timeout | null = null;
-		function armQuitWatchdog(reason: string): void {
-			if (quitWatchdog) return;
-			quitWatchdog = setTimeout(() => {
-				log.warn('[Shutdown] Process did not exit before watchdog timeout; forcing exit', {
-					reason,
-					timeoutMs: QUIT_WATCHDOG_MS,
-				});
-				process.exit(0);
-			}, QUIT_WATCHDOG_MS);
-			quitWatchdog.unref?.();
+	});
+	ipcMain.on(DESKTOP_LAST_ROUTE_CHANNEL, (_event, routePath: unknown) => {
+		recordDesktopLastRoute(app.getPath('userData'), routePath);
+	});
+	setMainWindowFactory(() => createWindow());
+	app.on('activate', () => {
+		if (hasQuitStarted()) return;
+		const mainWindow = getMainWindow();
+		if (mainWindow === null || mainWindow.isDestroyed()) {
+			if (!isStartupWindowPending()) createWindow();
+		} else {
+			showWindow();
 		}
-		app.on('before-quit', () => {
-			log.info('[Shutdown] before-quit received');
-			setQuitting(true);
-			armQuitWatchdog('before-quit');
-		});
-		let quitCleanupStarted = false;
-		app.on('will-quit', (event) => {
-			if (quitCleanupStarted) return;
-			quitCleanupStarted = true;
-			log.info('[Shutdown] will-quit cleanup started');
-			armQuitWatchdog('will-quit');
+	});
+	app.on('child-process-gone', (_event, details) => {
+		log.error('Child process gone', details);
+	});
+	app.on('window-all-closed', () => {
+		if (isStartupWindowPending()) {
+			log.info('[Shutdown] All windows closed before startup created the main window, keeping app alive');
+			return;
+		}
+		const settings = getDesktopWindowBehaviorSettings();
+		if (process.platform !== 'darwin' && !(hasActiveDesktopTray() && settings.showTrayIcon && settings.closeToTray)) {
+			app.quit();
+		} else if (process.platform !== 'darwin') {
+			log.info('[Shutdown] All windows closed; keeping app alive because close-to-tray is enabled');
+		}
+	});
+	autoUpdater.on('before-quit-for-update', () => {
+		log.info('[Shutdown] before-quit-for-update received');
+		setQuitting(true);
+	});
+	app.on('before-quit', (event) => {
+		finishSyncAnswers();
+		if (deferQuitForBootStateFlush()) {
 			event.preventDefault();
-			cleanupIpcHandlers({quitting: true});
-			cleanupGlobalKeyHook();
-			cleanupNativeAudio();
-			cleanupNativeScreenCapture();
-			cleanupNativeHardwareEncoderHandlers();
-			cleanupVirtmic();
-			destroyDesktopTray();
-			const asyncCleanups: Array<Promise<unknown>> = [];
-			if (netLog.currentlyLogging) {
-				asyncCleanups.push(
-					netLog.stopLogging().catch((error) => {
-						log.warn('[DebugInfo] Failed to stop Chromium net log:', error);
-					}),
-				);
-			}
-			void Promise.allSettled(asyncCleanups).finally(() => {
-				log.info('[Shutdown] will-quit cleanup complete; exiting');
-				app.exit(0);
-			});
+			return;
+		}
+		log.info('[Shutdown] before-quit received');
+		setQuitting(true);
+		startupController.abort();
+		armQuitWatchdog('before-quit');
+	});
+	app.on('will-quit', (event) => {
+		if (quitCleanupStarted) return;
+		quitCleanupStarted = true;
+		log.info('[Shutdown] will-quit cleanup started');
+		armQuitWatchdog('will-quit');
+		event.preventDefault();
+		startupController.abort();
+		try {
+			cleanupLegacyHarvestHandlers();
+		} catch (error) {
+			log.error('[Shutdown] Failed to remove the legacy harvest IPC handlers:', error);
+		}
+		try {
+			closeDesktopAppStorage();
+			log.info('[Shutdown] Desktop app store closed and checkpointed');
+		} catch (error) {
+			log.error('[Shutdown] Failed to close the desktop app store:', error);
+		}
+		try {
+			cleanupGatewayTransportHandlers();
+		} catch (error) {
+			log.error('[Shutdown] Failed to close the native gateway transport:', error);
+		}
+		try {
+			cleanupDesktopOutboundHTTP();
+		} catch (error) {
+			log.error('[Shutdown] Failed to close the desktop outbound HTTP client:', error);
+		}
+		cleanupIpcHandlers({quitting: true});
+		cleanupGlobalShortcuts();
+		cleanupNativeAudio();
+		cleanupNativeHardwareEncoderHandlers();
+		cleanupVirtmic();
+		destroyDesktopTray();
+		const asyncCleanups = [
+			{name: 'local-app-protocol', run: cleanupDesktopLocalAppProtocol},
+			{name: 'account-engine', run: stopAccountEngine},
+			{name: 'certificate-stores', run: cleanupDesktopTrustedCertificates},
+		];
+		if (netLog.currentlyLogging) {
+			asyncCleanups.push({name: 'net-log', run: () => netLog.stopLogging()});
+		}
+		void settleShutdownCleanups(asyncCleanups, QUIT_CLEANUP_DEADLINE_MS).finally(() => {
+			log.info('[Shutdown] will-quit cleanup complete; exiting');
+			app.exit(0);
 		});
-		app.on('quit', (_event, exitCode) => {
-			log.info('[Shutdown] quit received', {exitCode});
+	});
+	app.on('quit', (_event, exitCode) => {
+		log.info('[Shutdown] quit received', {exitCode});
+	});
+}
+
+const QUIT_WATCHDOG_MS = 15000;
+const QUIT_CLEANUP_DEADLINE_MS = 5000;
+let quitWatchdog: NodeJS.Timeout | null = null;
+function armQuitWatchdog(reason: string): void {
+	if (quitWatchdog) return;
+	quitWatchdog = setTimeout(() => {
+		log.warn('[Shutdown] Process did not exit before watchdog timeout; forcing exit', {
+			reason,
+			timeoutMs: QUIT_WATCHDOG_MS,
+		});
+		process.exit(0);
+	}, QUIT_WATCHDOG_MS);
+	quitWatchdog.unref?.();
+}
+const BOOT_STATE_QUIT_FLUSH_TIMEOUT_MS = 1500;
+let bootStateQuitFlush: 'pending' | 'flushing' | 'settled' = 'pending';
+const deferQuitForBootStateFlush = (): boolean => {
+	if (bootStateQuitFlush === 'flushing') return true;
+	if (bootStateQuitFlush === 'settled') return false;
+	bootStateQuitFlush = 'settled';
+	const mainWindow = getMainWindow();
+	if (isStartupWindowPending() || mainWindow === null || mainWindow.isDestroyed()) return false;
+	bootStateQuitFlush = 'flushing';
+	const startedAt = Date.now();
+	void requestBootStateFlush(mainWindow.webContents, BOOT_STATE_QUIT_FLUSH_TIMEOUT_MS)
+		.then((result) => {
+			log.info('[Shutdown] Boot state flush before quit settled', {result, elapsedMs: Date.now() - startedAt});
+		})
+		.catch((error: unknown) => {
+			log.error('[Shutdown] Boot state flush before quit failed:', error);
+		})
+		.finally(() => {
+			bootStateQuitFlush = 'settled';
+			app.quit();
+		});
+	return true;
+};
+
+export function openStartupAppStorage(): Promise<string | null> {
+	if (startupStorage !== null) return startupStorage;
+	stopStartupIfQuitting();
+	initializeStartupNativeModules();
+	runStartupPhase('app-store-addon', loadAppStoreAddon);
+	try {
+		const appStore = runStartupPhase('app-store-open', () =>
+			openDesktopAppStorage({
+				userDataPath: userDataConfig.base,
+				createBoundary: createAppStoreBoundary,
+				describeLoadFailure: getAppStoreLoadFailure,
+			}),
+		);
+		const health = evaluateDesktopAppStoreHealth({
+			available: appStore.status.available,
+			state: readDesktopAppStoreState(userDataConfig.base),
+		});
+		log.info('[AppStore] Desktop app store opened', {
+			available: appStore.status.available,
+			schemaVersion: appStore.status.schemaVersion,
+			storeFile: appStore.storeFile,
+			quarantineReason: appStore.status.quarantineReason,
+			quarantinedFile: appStore.quarantinedFile,
+			unavailableReason: appStore.status.unavailableReason,
+			health,
+		});
+		if (!appStore.status.available) {
+			recordDesktopAccountStoreEvent(userDataConfig.base, DesktopAccountStoreEvent.FALLBACK_TO_WEB);
+			if (health === DesktopAppStoreHealth.REGRESSED) {
+				reportUnreadableDesktopAppStore(appStore.storeFile, appStore.status.unavailableReason);
+			}
+		}
+		if (appStore.status.quarantined) {
+			recordDesktopAccountStoreEvent(userDataConfig.base, DesktopAccountStoreEvent.QUARANTINED);
+		}
+		const permissions = probeDesktopStorePermissions(appStore.storeFile);
+		if (permissions === DesktopStorePermissionState.WIDENED) {
+			recordDesktopAccountStoreEvent(userDataConfig.base, DesktopAccountStoreEvent.PERMISSION_HARDENING_FAILED);
+			log.warn('[AppStore] The account store is readable beyond this user and permission hardening did not hold', {
+				storeFile: appStore.storeFile,
+			});
+		}
+		appStoreSchemaVersion = appStore.status.schemaVersion;
+	} catch (error) {
+		log.error('[AppStore] Failed to open the desktop app store:', error);
+	}
+	const accountPointer = readActiveAccountKey();
+	startupStorage = (async () => {
+		try {
+			const recovery = await runStartupPhaseAsync('app-store-recovery', recoverDesktopAppStorage);
+			if (recovery.reseedRequired) {
+				recordDesktopAccountStoreEvent(userDataConfig.base, DesktopAccountStoreEvent.QUARANTINED);
+				log.warn('[AppStore] The previous store was quarantined and the renderer re-seeds the fresh one', {
+					quarantineReason: recovery.status.quarantineReason,
+				});
+			}
+		} catch (error) {
+			log.error('[AppStore] Desktop app store recovery failed:', error);
+		}
+		if (hasQuitStarted()) return null;
+		if (!(await getDesktopAppStorage()?.getStoreStatus())?.available) return null;
+		return accountPointer;
+	})();
+	return startupStorage;
+}
+
+function readStartupBootFrame() {
+	return takeBootFrame(userDataConfig.base, readActiveAccountKey());
+}
+
+export function admitStartupBootFrame(declaredFormat: string | null): boolean {
+	const admitted = admitBootStateFormat(declaredFormat);
+	void prepareMainWindowBootFrame(admitted ? readStartupBootFrame : null);
+	return admitted;
+}
+
+export async function prepareStartupBootFrame(
+	declaredFormat: string | null,
+	activeAccountKey: Promise<string | null>,
+): Promise<void> {
+	const admitted = admitBootStateFormat(declaredFormat);
+	await prepareMainWindowBootFrame(admitted ? () => takeBootFrame(userDataConfig.base, activeAccountKey) : null);
+}
+
+export async function startMainApp(
+	moduleReady: Promise<void>,
+	storageReady: Promise<unknown>,
+	frameAdmission: Promise<void>,
+): Promise<boolean | null> {
+	stopStartupIfQuitting();
+	await storageReady;
+	await moduleReady;
+	await frameAdmission;
+	await new Promise<void>((resolve) => setImmediate(resolve));
+	stopStartupIfQuitting();
+	try {
+		runStartupPhase('host-resolver', () => app.configureHostResolver({enableAdditionalDnsQueryTypes: false}));
+	} catch (error) {
+		log.error('[Init] Failed to configure the host resolver:', error);
+	}
+	try {
+		await runStartupPhaseAsync('system-trust', () => installDesktopSystemTrustVerifier(session.defaultSession));
+	} catch (error) {
+		log.error('[Init] Failed to install the system trust verifier:', error);
+	}
+	const recoveredStorage = getDesktopAppStorage();
+	if (recoveredStorage !== null) {
+		void retainBootStateForStoredAccounts(recoveredStorage);
+	}
+	stopStartupIfQuitting();
+	try {
+		try {
+			runStartupPhase('app-store-ipc', registerDesktopAppStorageHandlers);
+		} catch (error) {
+			log.error('[AppStore] Failed to register desktop app store IPC handlers:', error);
+		}
+		try {
+			runStartupPhase('boot-state-ipc', () =>
+				registerBootStateIpc(userDataConfig.base, {
+					takeFrame: takeMainWindowBootFrame,
+					isAppDocumentWindowContents,
+					isPrivilegedRendererDocumentSender,
+				}),
+			);
+		} catch (error) {
+			log.error('[BootState] Failed to register the boot state IPC handlers:', error);
+		}
+		try {
+			runStartupPhase('gateway-transport-ipc', registerGatewayTransportHandlers);
+		} catch (error) {
+			log.error('[NativeGateway] Failed to register native gateway transport IPC handlers:', error);
+		}
+		try {
+			runStartupPhase('ipc-handlers', registerIpcHandlers);
+		} catch (error) {
+			log.error('[Init] Failed to register IPC handlers:', error);
+		}
+		try {
+			runStartupPhase('api-attachment-authorization', registerApiAttachmentAuthorizationIpc);
+		} catch (error) {
+			log.error('[Init] Failed to register the attachment authorization handler:', error);
+		}
+		try {
+			runStartupPhase('autostart-handlers', registerAutostartHandlers);
+		} catch (error) {
+			log.error('[Init] Failed to register autostart handlers:', error);
+		}
+		try {
+			runStartupPhase('global-shortcuts', initializeGlobalShortcuts);
+		} catch (error) {
+			log.error('[Init] Failed to initialize global shortcuts:', error);
+		}
+		try {
+			runStartupPhase('display-media-handlers', registerDisplayMediaHandlers);
+		} catch (error: unknown) {
+			log.error('[Init] Failed to register display media handlers:', error);
+		}
+		try {
+			runStartupPhase('virtmic-handlers', registerVirtmicHandlers);
+		} catch (error: unknown) {
+			log.error('[Init] Failed to register virtmic handlers:', error);
+		}
+		try {
+			runStartupPhase('native-audio-handlers', registerNativeAudioHandlers);
+		} catch (error: unknown) {
+			log.error('[Init] Failed to register native audio handlers:', error);
+		}
+		try {
+			runStartupPhase('native-hardware-encoder-handlers', registerNativeHardwareEncoderHandlers);
+		} catch (error: unknown) {
+			log.error('[Init] Failed to register native hardware encoder handlers:', error);
+		}
+		try {
+			runStartupPhase('legacy-harvest-ipc', registerLegacyHarvestHandlers);
+		} catch (error: unknown) {
+			log.error('[LegacyHarvest] Failed to register legacy harvest IPC handlers:', error);
+		}
+		try {
+			await runStartupPhaseAsync('legacy-origin-harvest', () =>
+				initializeLegacyOriginHarvest(startupController.signal),
+			);
+		} catch (error: unknown) {
+			log.error('[LegacyHarvest] Legacy origin harvest failed:', error);
+		}
+		stopStartupIfQuitting();
+		try {
+			runStartupPhase('runtime-config-ipc', registerDesktopRuntimeConfigHandlers);
+		} catch (error: unknown) {
+			log.error('[LocalApp] Failed to register runtime config IPC handlers:', error);
+		}
+		try {
+			runStartupPhase('account-engine', () => startAccountEngine(userDataConfig.base));
+		} catch (error) {
+			log.error('[AccountEngine] Failed to start the account engine:', error);
+		}
+
+		try {
+			runStartupPhase('deep-links', initializeDeepLinks);
+		} catch (error) {
+			log.error('[Init] Failed to initialize deep links:', error);
+		}
+		runStartupPhase('native-addons', resolveDesktopCapabilityManifest);
+	} finally {
+		finishSyncAnswers();
+	}
+
+	stopStartupIfQuitting();
+	setSecondInstanceSink(handleSecondInstance);
+	setOpenUrlSink(handleOpenUrl);
+	const initialTask = consumeInitialJumpListTask();
+	if (initialTask) {
+		const mainWindow = getMainWindow();
+		mainWindow?.webContents.once('did-finish-load', () => {
+			if (initialTask === 'open-settings') {
+				mainWindow.webContents.send('open-settings');
+			} else {
+				mainWindow.webContents.send('jump-list-new-dm');
+			}
 		});
 	}
+	const bootSession = await readBootSession();
+
+	return bootSession;
+}
+
+export {readBootSession};
+
+export async function finishMainAppStartup(): Promise<void> {
+	if (process.env.FLUXER_OFFLINE !== '1' && !shouldDisableModuleUpdatesForLaunch()) {
+		runStartupPhase('updater', () => registerUpdater(getMainWindow));
+	}
+	await new Promise<void>((resolve) => setImmediate(resolve));
+	await new Promise<void>((resolve) => onMainWindowReady(resolve));
+	const launchNetLog = startLaunchNetLog();
+	stopStartupIfQuitting();
+	runStartupPhase('gateway-transport-warmup', warmGatewayTransport);
+	try {
+		runStartupPhase('linux-desktop-entry', ensureLinuxDesktopEntry);
+	} catch (error) {
+		log.error('[Init] Failed to ensure the Linux desktop entry:', error);
+	}
+	try {
+		runStartupPhase('jump-list', initializeJumpList);
+	} catch (error) {
+		log.error('[Init] Failed to initialize JumpList:', error);
+	}
+	try {
+		runStartupPhase('dock-menu', initializeDockMenu);
+	} catch (error) {
+		log.error('[Init] Failed to initialize macOS dock menu:', error);
+	}
+	try {
+		runStartupPhase('application-menu', createApplicationMenu);
+	} catch (error: unknown) {
+		log.error('[Init] Failed to create application menu:', error);
+	}
+	runStartupPhase('desktop-tray', () => {
+		initializeDesktopTray({
+			createWindow,
+			getMainWindow,
+			hideWindow,
+			setQuitting,
+			showWindow,
+		});
+	});
+	try {
+		runStartupPhase('vulkan-layer-cleanup', removeFluxerVulkanLayerRegistrations);
+	} catch (error: unknown) {
+		log.error('[Init] Failed to remove stale Vulkan layer registrations:', error);
+	}
+	try {
+		runStartupPhase('legacy-uninstall-entry-cleanup', removeLegacySquirrelUninstallEntry);
+	} catch (error: unknown) {
+		log.error('[Init] Failed to remove the legacy Squirrel uninstall entry:', error);
+	}
+	await recordDesktopAppStoreImportState(appStoreSchemaVersion);
+	try {
+		await runStartupPhaseAsync('desktop-debug-info', async () => {
+			logDesktopDebugInfo(await getDesktopDebugInfo(userDataConfig.base, {nativeProbes: false}));
+		});
+	} catch (error) {
+		log.error('[DebugInfo] Failed to collect desktop debug info:', error);
+	}
+	await launchNetLog;
+	log.info('App initialized successfully');
 }

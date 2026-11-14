@@ -2,12 +2,13 @@
 
 use crate::{
     api::types::{
-        AppPublicConfigResponse, ExperimentDeliveryConfigResponse, GatewayRolloutConfigResponse,
-        InstanceConfigResponse, InstanceIntegrationsResponse, InstanceMediaResponse,
-        InstancePolicyResponse, InstanceRegistrationResponse, LimitConfigResponse,
-        NoiseSuppressionBackend, PendingRegistrationResponse, RegistrationUrlResponse,
-        SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS,
-        VoiceNoiseSuppressionConfigResponse,
+        AccountIdentitySettings, AppPublicConfigResponse, CaptchaProvider, CleanupMode,
+        DateOfBirthPolicy, EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES, EXPERIMENT_MAX_TARGETED_USERS,
+        EmailDeliveryMode, EmailDeliveryState, ExperimentDeliveryConfigResponse,
+        GUILD_VISITS_DEFAULT_SALT, GatewayRolloutConfigResponse, GuildJoinGate,
+        GuildVisitsConfigResponse, IdentifierFirstMode, InstanceConfigResponse,
+        InstanceNoticeResponse, InteractionTierMode, LastSessionCleanupMode, LimitConfigResponse,
+        PushRelayConfigResponse, VerificationBasis,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -15,25 +16,82 @@ use crate::{
         components::{
             badge::{BadgeVariant, badge},
             form::{
-                FORM_INPUT_CLASS, checkbox, csrf_input, danger_button, form_actions,
-                form_field_group, secondary_button_link, select_input, submit_button, text_input,
-                textarea_input,
+                Checkbox, FORM_INPUT_CLASS, FORM_LABEL_CLASS, FORM_TEXTAREA_CLASS, NumberField,
+                csrf_input, form_actions, form_field_group, secondary_button_link, select_input,
+                submit_button, text_input, textarea_input,
             },
             page_container::page_header,
             section_card::{section_card_simple, section_card_with_description},
         },
         layout::admin_layout,
+        pages::{
+            instance_billing::{distribution_pricing_section, premium_billing_section},
+            instance_branding::branding_section,
+            instance_registration::registration_config_section,
+        },
     },
     utils::timestamps::format_admin_timestamp,
 };
 use maud::{Markup, html};
 
-fn format_percent(value: f64) -> String {
-    if value.fract() == 0.0 {
-        format!("{}", value as u64)
-    } else {
-        value.to_string()
+mod accounts;
+mod captcha;
+mod connections;
+mod experiments;
+mod integrations;
+mod media;
+mod policy;
+mod sso;
+
+use self::{
+    accounts::{AccountsSectionInput, account_identity_section, accounts_section},
+    captcha::captcha_section,
+    connections::connection_providers_section,
+    experiments::{domain_migration_section, voice_p2p_section},
+    integrations::integrations_config_section,
+    media::{HostingMode, media_access_section, media_config_section},
+    policy::policy_config_section,
+    sso::sso_config_section,
+};
+
+pub use self::connections::{CONNECTION_PROVIDER_COUNT_FIELD, connection_provider_field};
+
+pub const LOADED_CONFIG_FIELD: &str = "loaded_config";
+
+#[derive(Clone, Copy)]
+pub(crate) struct ConfigForm<'a> {
+    pub(crate) csrf_token: &'a str,
+    pub(crate) loaded: &'a str,
+}
+
+impl ConfigForm<'_> {
+    pub(crate) fn fields(&self) -> Markup {
+        html! {
+            (csrf_input(self.csrf_token))
+            input type="hidden" name=(LOADED_CONFIG_FIELD) value=(self.loaded);
+        }
     }
+}
+
+pub const REGISTRATION_ALLOWED_EMAIL_DOMAINS_FIELD: &str = "registration_allowed_email_domains";
+pub const SSO_ALLOWED_DOMAINS_FIELD: &str = "sso_allowed_domains";
+
+fn inherit_select(name: &str, label: &str, override_value: Option<bool>) -> Markup {
+    let selected = match override_value {
+        None => "inherit",
+        Some(true) => "on",
+        Some(false) => "off",
+    };
+    select_input(
+        name,
+        label,
+        &[
+            ("inherit", "Inherit env default"),
+            ("on", "Force on"),
+            ("off", "Force off"),
+        ],
+        selected,
+    )
 }
 
 fn format_decimal(value: f64) -> String {
@@ -55,27 +113,20 @@ fn entry_count_hint(count: usize, cap: usize) -> Markup {
     }
 }
 
-fn number_field(
-    name: &str,
-    label: &str,
-    value: &str,
-    min: Option<u32>,
-    max: Option<u32>,
-    step: &str,
-    helper: Option<&str>,
-) -> Markup {
-    form_field_group(
-        label,
-        name,
-        false,
-        None,
-        helper,
-        html! {
-            input type="number" id=(name) name=(name) step=(step)
-                value=(value)
-                min=[min] max=[max] class=(FORM_INPUT_CLASS);
-        },
-    )
+fn experiment_rollout_country_codes_field(name: &str, country_codes: &[String]) -> Markup {
+    html! {
+        div class="flex flex-col gap-2" {
+            (text_input(name, "Rollout Countries", &country_codes.join(", "), "SE, NO, FI"))
+            (entry_count_hint(country_codes.len(), EXPERIMENT_MAX_ROLLOUT_COUNTRY_CODES))
+            p class="text-xs text-neutral-500" {
+                "Two-letter ISO 3166-1 country codes, separated by commas or spaces. When set, \
+                 the user rollout percentage only applies to requests from these countries, and \
+                 a request with an unknown country is left out. Leave empty to apply the \
+                 percentage everywhere. The always-on lists, the premium switch and the \
+                 never-on list ignore the country. Invalid entries prevent the save."
+            }
+        }
+    }
 }
 
 pub fn instance_config_page(
@@ -86,6 +137,13 @@ pub fn instance_config_page(
     limit_config: Option<&LimitConfigResponse>,
 ) -> Markup {
     let base = &config.base_path;
+    let loaded = instance_config
+        .map(InstanceConfigResponse::loaded_marker)
+        .unwrap_or_default();
+    let config_form = ConfigForm {
+        csrf_token,
+        loaded: &loaded,
+    };
     let content = html! {
         (page_header("Instance Configuration", Some("Manage instance-wide settings")))
         div class="space-y-10" {
@@ -94,61 +152,152 @@ pub fn instance_config_page(
                     (config_group(
                         "Identity & branding",
                         "How the instance presents itself to clients and the public discovery document.",
-                        html! {
-                            (app_public_config_section(
-                                base,
-                                csrf_token,
+                        app_public_config_section(
+                                config,
+                                config_form,
                                 &instance_config.app_public,
-                                instance_config.self_hosted,
-                            ))
-                        },
+                            ),
                     ))
                 }
+                (config_group(
+                    "Notice",
+                    "A message for everyone on the instance, shown in the app.",
+                    notice_section(base, config_form, instance_config.notice.as_ref()),
+                ))
                 (config_group(
                     "Access & accounts",
                     "Who can sign in and create accounts on this instance.",
                     html! {
+                        @if instance_config.self_hosted {
+                            (account_identity_section(&instance_config.account_identity))
+                        }
                         (registration_config_section(
                             config,
-                            csrf_token,
+                            config_form,
                             &instance_config.registration,
-                            instance_config.app_public.registration.collect_date_of_birth,
-                            instance_config.self_hosted,
+                            instance_config.account_identity.mode,
                         ))
-                        (sso_config_section(base, csrf_token, &instance_config.sso))
-                        (deferred_phone_gate_form(base, csrf_token, &instance_config.policy))
+                        (sso_config_section(
+                            base,
+                            config_form,
+                            &instance_config.sso,
+                            instance_config.account_identity.mode,
+                        ))
+                        (accounts_section(
+                            base,
+                            config_form,
+                            &AccountsSectionInput {
+                                auth: &instance_config.auth,
+                                accounts: &instance_config.accounts,
+                                identity: AccountIdentitySettings {
+                                    mode: instance_config.account_identity.mode,
+                                    tag_style: instance_config.account_identity.tag_style,
+                                    emails_enabled: instance_config.integrations.email.delivery_state
+                                        == EmailDeliveryState::On,
+                                    username_from_provider: instance_config.sso.enabled
+                                        && instance_config.sso.username_from_provider,
+                                },
+                                delivery_state: instance_config.integrations.email.delivery_state,
+                                captcha_provider: instance_config.captcha.provider,
+                                guild_visits_enabled: instance_config.guild_visits.enabled,
+                            },
+                        ))
+                        (guild_visits_section(base, config_form, &instance_config.guild_visits))
                     },
+                ))
+                (config_group(
+                    "Bot protection",
+                    "A proof-of-work check on sign-up, login, password reset and a few other abuse-prone actions.",
+                    captcha_section(
+                            base,
+                            config_form,
+                            &instance_config.captcha,
+                            instance_config.auth.instant_accounts.enabled,
+                        ),
                 ))
                 @if instance_config.self_hosted {
                     (config_group(
                         "Community & policy",
                         "Community shape, direct messaging, the premium model, and optional embed services.",
-                        html! {
-                            (policy_config_section(base, csrf_token, &instance_config.policy))
-                        },
+                        policy_config_section(
+                                base,
+                                config_form,
+                                &instance_config.policy,
+                                &instance_config.app_public.branding.premium_product_name,
+                                instance_config.billing.enabled == Some(true),
+                            ),
+                    ))
+                    (config_group(
+                        "Premium & billing",
+                        "The premium tier's name, Stripe credentials and the prices members pay.",
+                        premium_billing_section(
+                                base,
+                                config_form,
+                                &instance_config.app_public.branding,
+                                &instance_config.billing,
+                                instance_config.policy.premium_mode,
+                            ),
                     ))
                 }
                 (config_group(
+                    "Distribution pricing",
+                    "Channel prices for app builds sold through a store that takes a share of each sale.",
+                    distribution_pricing_section(base, config_form, &instance_config.distribution_pricing),
+                ))
+                (config_group(
                     "Runtime integrations",
                     "Credentials and provider choices that override environment variables at runtime.",
-                    html! {
-                        (integrations_config_section(base, csrf_token, &instance_config.integrations))
-                    },
+                    integrations_config_section(
+                            base,
+                            config_form,
+                            &instance_config.integrations,
+                            instance_config.account_identity.mode,
+                            &instance_config.app_public.branding.product_name,
+                        ),
+                ))
+                @if instance_config.self_hosted {
+                    (config_group(
+                        "Profile connections",
+                        "OAuth 2.0 and OpenID Connect providers people can link to their profiles.",
+                        connection_providers_section(
+                                base,
+                                config_form,
+                                &instance_config.integrations.connection_providers,
+                            ),
+                    ))
+                }
+                (config_group(
+                    "Push notifications",
+                    "Consent for the relay that delivers official mobile app notifications.",
+                    push_relay_section(base, config_form, &instance_config.push_relay),
                 ))
                 (config_group(
                     "Media & retention",
-                    "Attachment expiry rules that can be changed without editing environment variables.",
+                    "Attachment expiry and access rules that can be changed without editing environment variables.",
                     html! {
-                        (media_config_section(base, csrf_token, &instance_config.media))
+                        (media_config_section(
+                            base,
+                            config_form,
+                            &instance_config.media,
+                            if instance_config.self_hosted {
+                                HostingMode::SelfHosted
+                            } else {
+                                HostingMode::Hosted
+                            },
+                        ))
+                        (media_access_section(base, config_form, &instance_config.media))
                     },
                 ))
                 (config_group(
                     "Infrastructure & limits",
                     "Gateway rollout behavior and the limit rules applied to users and guilds.",
                     html! {
-                        (gateway_rollout_section(base, csrf_token, &instance_config.gateway_rollout))
-                        (voice_noise_suppression_section(base, csrf_token, &instance_config.voice_noise_suppression))
-                        (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
+                        (gateway_rollout_section(base, config_form, &instance_config.gateway_rollout))
+                        @if !instance_config.self_hosted {
+                            (domain_migration_section(base, config_form, &instance_config.domain_migration))
+                        }
+                        (voice_p2p_section(base, config_form, &instance_config.voice_p2p))
+                        (experiment_delivery_section(base, config_form, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
                         } @else {
@@ -196,587 +345,61 @@ fn config_group(title: &str, description: &str, content: Markup) -> Markup {
     }
 }
 
-fn policy_config_section(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
-    section_card_with_description(
-        "Community & Policy",
-        "Control whether this instance runs as a single community, whether direct messages and \
-         friends are available, which premium model applies, and which optional embed services \
-         are enabled.",
-        html! {
-            div class="space-y-8" {
-                (single_community_form(base, csrf_token, policy))
-                (direct_messages_form(base, csrf_token, policy))
-                (premium_mode_form(base, csrf_token, policy))
-                (services_form(base, csrf_token, policy))
-            }
-        },
-    )
-}
-
-fn single_community_form(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
-    let status = if policy.single_community_enabled {
-        ("Enabled", BadgeVariant::Success)
-    } else {
-        ("Disabled", BadgeVariant::Default)
+fn notice_section(
+    base: &str,
+    config_form: ConfigForm<'_>,
+    notice: Option<&InstanceNoticeResponse>,
+) -> Markup {
+    let local_value = |value: Option<&str>| {
+        value
+            .map(|iso| iso.chars().take(16).collect::<String>())
+            .unwrap_or_default()
     };
-    html! {
-        div class="space-y-4" {
-            div class="flex flex-wrap items-center gap-2" {
-                h3 class="text-sm font-semibold text-neutral-900" { "Single community" }
-                (badge(status.0, status.1))
-            }
-            @if let Some(guild_id) = policy.single_community_guild_id.as_deref() {
-                p class="break-all text-xs text-neutral-500" { "Community guild ID: " (guild_id) }
-            }
-            @if policy.single_community_enabled {
-                p class="text-sm text-neutral-500" {
-                    "This instance funnels every member into a single community. You can turn this \
-                     off and on again from here. The community itself is kept either way."
-                }
-                form method="post" action={(base) "/instance-config?action=disable_single_community"} {
-                    (csrf_input(csrf_token))
-                    (form_actions(html! {
-                        (danger_button("Disable single-community mode"))
-                    }))
-                }
-            } @else if policy.single_community_guild_id.is_some() {
-                p class="text-sm text-neutral-500" {
-                    "Single-community mode is off. Turning it on again reuses the community above \
-                     if it still exists, otherwise a new one is created."
-                }
-                form method="post" action={(base) "/instance-config?action=enable_single_community"} {
-                    (csrf_input(csrf_token))
-                    (form_actions(html! {
-                        (submit_button("Enable single-community mode"))
-                    }))
-                }
-            } @else {
-                p class="text-sm text-neutral-500" {
-                    "Single-community mode is off. It can only be turned on for the first time \
-                     from the self-host setup wizard."
-                }
-            }
-        }
-    }
-}
-
-fn direct_messages_form(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
-    html! {
-        div class="space-y-4 border-t border-neutral-200 pt-6" {
-            div class="flex flex-wrap items-center gap-2" {
-                h3 class="text-sm font-semibold text-neutral-900" { "Direct messages & friends" }
-                @if policy.direct_messages_locked {
-                    (badge("Locked", BadgeVariant::Warning))
-                }
-            }
-            @if policy.direct_messages_locked {
-                p class="text-sm text-neutral-500" {
-                    @if policy.direct_messages_disabled {
-                        "Direct messages and friends are disabled and locked for this instance."
-                    } @else {
-                        "Direct messages and friends are enabled and locked for this instance."
-                    }
-                }
-            } @else {
-                form method="post" action={(base) "/instance-config?action=update_policy"} {
-                    (csrf_input(csrf_token))
-                    div class="space-y-4" {
-                        (select_input("policy_direct_messages_disabled", "Direct messages & friends", &[
-                            ("false", "Enabled"),
-                            ("true", "Disabled"),
-                        ], if policy.direct_messages_disabled { "true" } else { "false" }))
-                        p class="text-xs text-neutral-500" {
-                            "Re-enabling direct messages after they have been disabled locks this \
-                             setting permanently."
-                        }
-                        (form_actions(html! {
-                            (submit_button("Save direct message policy"))
+    let starts_at = local_value(notice.and_then(|notice| notice.starts_at.as_deref()));
+    let ends_at = local_value(notice.and_then(|notice| notice.ends_at.as_deref()));
+    section_card_with_description(
+        "Instance notice",
+        "A short message shown to everyone in the app, such as planned maintenance. It appears \
+         from the start time until the end time, and people can dismiss it.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_notice"} {
+                (config_form.fields())
+                div class="space-y-4" {
+                    (textarea_input(
+                        "notice_message",
+                        "Message",
+                        "We are upgrading the server on Saturday at 10:00 UTC. Expect about 15 minutes of downtime.",
+                        notice.map(|notice| notice.message.as_str()).unwrap_or(""),
+                        3,
+                        false,
+                    ))
+                    (text_input(
+                        "notice_url",
+                        "Link (optional)",
+                        notice.and_then(|notice| notice.url.as_deref()).unwrap_or(""),
+                        "https://status.example.com",
+                    ))
+                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
+                        (form_field_group("Starts (UTC, optional)", "notice_starts_at", false, None, None, html! {
+                            input type="datetime-local" id="notice_starts_at" name="notice_starts_at"
+                                value=(starts_at) class=(FORM_INPUT_CLASS);
+                        }))
+                        (form_field_group("Ends (UTC, optional)", "notice_ends_at", false, None, None, html! {
+                            input type="datetime-local" id="notice_ends_at" name="notice_ends_at"
+                                value=(ends_at) class=(FORM_INPUT_CLASS);
                         }))
                     }
-                }
-            }
-        }
-    }
-}
-
-fn deferred_phone_gate_form(
-    base: &str,
-    csrf_token: &str,
-    policy: &InstancePolicyResponse,
-) -> Markup {
-    let gate = &policy.deferred_phone_gate;
-    let status = if gate.enabled {
-        ("Enabled", BadgeVariant::Success)
-    } else {
-        ("Disabled", BadgeVariant::Default)
-    };
-    html! {
-        div class="space-y-4 border-t border-neutral-200 pt-6" {
-            div class="flex flex-wrap items-center gap-2" {
-                h3 class="text-sm font-semibold text-neutral-900" { "Deferred phone verification" }
-                (badge(status.0, status.1))
-            }
-            p class="text-sm text-neutral-500" {
-                "When enabled, a phone requirement raised at registration is held back and only \
-                 applied if the account joins a discoverable community, or one above the member \
-                 threshold, within the window. Accounts that wait out the window are not challenged. \
-                 Inbound-SMS requirements are never deferred."
-            }
-            form method="post" action={(base) "/instance-config?action=update_policy"} {
-                (csrf_input(csrf_token))
-                div class="space-y-4" {
-                    (select_input("policy_deferred_phone_gate_enabled", "Deferred phone verification", &[
-                        ("true", "Enabled"),
-                        ("false", "Disabled"),
-                    ], if gate.enabled { "true" } else { "false" }))
-                    (text_input(
-                        "policy_deferred_phone_gate_window_hours",
-                        "Window (hours)",
-                        &gate.window_hours.to_string(),
-                        "6",
-                    ))
-                    (text_input(
-                        "policy_deferred_phone_gate_member_threshold",
-                        "Member threshold",
-                        &gate.member_threshold.to_string(),
-                        "50",
-                    ))
-                    (form_actions(html! {
-                        (submit_button("Save deferred phone verification"))
-                    }))
-                }
-            }
-        }
-    }
-}
-
-fn premium_mode_form(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
-    html! {
-        div class="space-y-4 border-t border-neutral-200 pt-6" {
-            h3 class="text-sm font-semibold text-neutral-900" { "Premium model" }
-            form method="post" action={(base) "/instance-config?action=update_policy"} {
-                (csrf_input(csrf_token))
-                div class="space-y-4" {
-                    (select_input("policy_premium_mode", "Premium model", &[
-                        ("mirror", "Mirror (Free and Premium tiers)"),
-                        ("everyone", "Everyone (every member gets Plutonium limits)"),
-                    ], policy.premium_mode.as_str()))
-                    (form_actions(html! {
-                        (submit_button("Save premium model"))
-                    }))
-                }
-            }
-        }
-    }
-}
-
-fn service_select(name: &str, label: &str, override_value: Option<bool>, resolved: bool) -> Markup {
-    let selected = match override_value {
-        None => "inherit",
-        Some(true) => "on",
-        Some(false) => "off",
-    };
-    let resolved_text = if resolved {
-        "Effective: enabled"
-    } else {
-        "Effective: disabled"
-    };
-    html! {
-        div class="space-y-2" {
-            (select_input(name, label, &[
-                ("inherit", "Inherit env default"),
-                ("on", "Force on"),
-                ("off", "Force off"),
-            ], selected))
-            p class="text-xs text-neutral-500" { (resolved_text) }
-        }
-    }
-}
-
-fn services_form(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
-    let available = &policy.services_available;
-    if !available.gif && !available.youtube && !available.bluesky {
-        return html! {
-            div class="space-y-4 border-t border-neutral-200 pt-6" {
-                h3 class="text-sm font-semibold text-neutral-900" { "Optional services" }
-                p class="text-sm text-neutral-500" {
-                    "No optional embed services are available in this environment."
-                }
-            }
-        };
-    }
-    html! {
-        div class="space-y-4 border-t border-neutral-200 pt-6" {
-            h3 class="text-sm font-semibold text-neutral-900" { "Optional services" }
-            p class="text-sm text-neutral-500" {
-                "Override the environment default for each optional embed service. \
-                 \"Inherit env default\" keeps the value configured for this deployment."
-            }
-            form method="post" action={(base) "/instance-config?action=update_policy"} {
-                (csrf_input(csrf_token))
-                div class="space-y-4" {
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-3" {
-                        @if available.gif {
-                            (service_select(
-                                "policy_service_gif",
-                                "GIF picker",
-                                policy.services.gif_enabled,
-                                policy.services_resolved.gif_enabled,
-                            ))
-                        }
-                        @if available.youtube {
-                            (service_select(
-                                "policy_service_youtube",
-                                "YouTube embeds",
-                                policy.services.youtube_enabled,
-                                policy.services_resolved.youtube_enabled,
-                            ))
-                        }
-                        @if available.bluesky {
-                            (service_select(
-                                "policy_service_bluesky",
-                                "Bluesky embeds",
-                                policy.services.bluesky_enabled,
-                                policy.services_resolved.bluesky_enabled,
-                            ))
-                        }
+                    @if notice.is_some() {
+                        (Checkbox {
+                            name: "notice_clear",
+                            value: "true",
+                            label: "Remove the notice",
+                            checked: false,
+                            enabled: true,
+                        }.render())
                     }
                     (form_actions(html! {
-                        (submit_button("Save optional services"))
-                    }))
-                }
-            }
-        }
-    }
-}
-
-fn secret_badge(label: &str, is_set: bool) -> Markup {
-    if is_set {
-        badge(&format!("{label} set"), BadgeVariant::Success)
-    } else {
-        badge(&format!("{label} missing"), BadgeVariant::Default)
-    }
-}
-
-fn password_input(name: &str, label: &str, helper: Option<&str>) -> Markup {
-    form_field_group(
-        label,
-        name,
-        false,
-        None,
-        helper,
-        html! {
-            input type="password" id=(name) name=(name) value="" class=(FORM_INPUT_CLASS)
-                autocomplete="new-password";
-        },
-    )
-}
-
-fn integrations_config_section(
-    base: &str,
-    csrf_token: &str,
-    integrations: &InstanceIntegrationsResponse,
-) -> Markup {
-    let captcha_provider = integrations
-        .captcha
-        .provider
-        .as_deref()
-        .unwrap_or(integrations.captcha.effective_provider.as_str());
-    let smtp_port = integrations
-        .email
-        .smtp
-        .port
-        .map(|port| port.to_string())
-        .unwrap_or_else(|| "587".to_owned());
-    section_card_with_description(
-        "Runtime Integrations",
-        "Configure optional providers without changing environment variables. Blank secret fields keep the current value.",
-        html! {
-            form method="post" action={(base) "/instance-config?action=update_integrations"} {
-                (csrf_input(csrf_token))
-                div class="space-y-8" {
-                    div class="space-y-4" {
-                        div class="flex flex-wrap items-center gap-2" {
-                            h3 class="text-sm font-semibold text-neutral-900" { "GIF provider" }
-                            (secret_badge("KLIPY key", integrations.gif.klipy_api_key_set))
-                        }
-                        div class="grid grid-cols-1 gap-4" {
-                            (password_input("integration_klipy_api_key", "KLIPY API key", Some("Leave blank to keep the current key.")))
-                        }
-                    }
-
-                    div class="space-y-4 border-t border-neutral-200 pt-6" {
-                        div class="flex flex-wrap items-center gap-2" {
-                            h3 class="text-sm font-semibold text-neutral-900" { "YouTube Data API" }
-                            (secret_badge("API key", integrations.youtube.api_key_set))
-                        }
-                        (password_input("integration_youtube_api_key", "YouTube API key", Some("Leave blank to keep the current key.")))
-                    }
-
-                    div class="space-y-4 border-t border-neutral-200 pt-6" {
-                        div class="flex flex-wrap items-center gap-2" {
-                            h3 class="text-sm font-semibold text-neutral-900" { "Bot protection" }
-                            (secret_badge("hCaptcha secret", integrations.captcha.hcaptcha_secret_key_set))
-                            (secret_badge("Turnstile secret", integrations.captcha.turnstile_secret_key_set))
-                        }
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" {
-                            (select_input("integration_captcha_provider", "Provider", &[
-                                ("none", "Disabled"),
-                                ("hcaptcha", "hCaptcha"),
-                                ("turnstile", "Cloudflare Turnstile"),
-                            ], captcha_provider))
-                            (text_input(
-                                "integration_hcaptcha_site_key",
-                                "hCaptcha site key",
-                                integrations.captcha.hcaptcha_site_key.as_deref().unwrap_or(""),
-                                "",
-                            ))
-                            (password_input("integration_hcaptcha_secret_key", "hCaptcha secret key", Some("Leave blank to keep the current secret.")))
-                            (text_input(
-                                "integration_turnstile_site_key",
-                                "Turnstile site key",
-                                integrations.captcha.turnstile_site_key.as_deref().unwrap_or(""),
-                                "",
-                            ))
-                            (password_input("integration_turnstile_secret_key", "Turnstile secret key", Some("Leave blank to keep the current secret.")))
-                        }
-                    }
-
-                    div class="space-y-4 border-t border-neutral-200 pt-6" {
-                        div class="flex flex-wrap items-center gap-2" {
-                            h3 class="text-sm font-semibold text-neutral-900" { "Email delivery" }
-                            @if integrations.email.effective_enabled {
-                                (badge("Effective: enabled", BadgeVariant::Success))
-                            } @else {
-                                (badge("Effective: disabled", BadgeVariant::Default))
-                            }
-                            @if integrations.email.effective_disable_new_ip_authorization {
-                                (badge("IP auth disabled", BadgeVariant::Warning))
-                            } @else {
-                                (badge("IP auth required", BadgeVariant::Default))
-                            }
-                            (secret_badge("SMTP password", integrations.email.smtp.password_set))
-                        }
-                        (checkbox("integration_email_enabled", "true", "Enable email delivery", integrations.email.effective_enabled, true))
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                            (text_input(
-                                "integration_email_from_email",
-                                "From email",
-                                integrations.email.from_email.as_deref().unwrap_or(""),
-                                "notifications@example.com",
-                            ))
-                            (text_input(
-                                "integration_email_from_name",
-                                "From name",
-                                integrations.email.from_name.as_deref().unwrap_or(""),
-                                "Fluxer",
-                            ))
-                            (text_input(
-                                "integration_smtp_host",
-                                "SMTP host",
-                                integrations.email.smtp.host.as_deref().unwrap_or(""),
-                                "smtp.example.com",
-                            ))
-                            (text_input(
-                                "integration_smtp_port",
-                                "SMTP port",
-                                &smtp_port,
-                                "587",
-                            ))
-                            (text_input(
-                                "integration_smtp_username",
-                                "SMTP username",
-                                integrations.email.smtp.username.as_deref().unwrap_or(""),
-                                "user@example.com",
-                            ))
-                            (password_input("integration_smtp_password", "SMTP password", Some("Leave blank to keep the current password.")))
-                        }
-                        (checkbox("integration_smtp_secure", "true", "Use TLS", integrations.email.smtp.secure.unwrap_or(true), true))
-                        (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorisation", integrations.email.disable_new_ip_authorization, true))
-                        div class="flex flex-wrap gap-2" {
-                            button type="submit"
-                                formaction={(base) "/instance-config?action=test_smtp"}
-                                class="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2 font-medium text-base text-neutral-700 transition-all duration-150 hover:border-neutral-400 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white" {
-                                span { "Test SMTP connection" }
-                            }
-                        }
-                    }
-
-                    div class="space-y-4 border-t border-neutral-200 pt-6" {
-                        div class="flex flex-wrap items-center gap-2" {
-                            h3 class="text-sm font-semibold text-neutral-900" { "Bluesky OAuth" }
-                            @if integrations.bluesky.effective_enabled {
-                                (badge("Effective: enabled", BadgeVariant::Success))
-                            } @else {
-                                (badge("Effective: disabled", BadgeVariant::Default))
-                            }
-                            (badge(&format!("{} signing key(s)", integrations.bluesky.key_count), BadgeVariant::Default))
-                        }
-                        (checkbox("integration_bluesky_enabled", "true", "Enable Bluesky OAuth", integrations.bluesky.effective_enabled, true))
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                            (text_input(
-                                "integration_bluesky_client_name",
-                                "Client name",
-                                integrations.bluesky.client_name.as_deref().unwrap_or(""),
-                                "Fluxer",
-                            ))
-                            (text_input(
-                                "integration_bluesky_client_uri",
-                                "Client URL",
-                                integrations.bluesky.client_uri.as_deref().unwrap_or(""),
-                                "https://example.com",
-                            ))
-                            (text_input(
-                                "integration_bluesky_logo_uri",
-                                "Logo URL",
-                                integrations.bluesky.logo_uri.as_deref().unwrap_or(""),
-                                "https://example.com/logo.png",
-                            ))
-                            (text_input(
-                                "integration_bluesky_tos_uri",
-                                "Terms URL",
-                                integrations.bluesky.tos_uri.as_deref().unwrap_or(""),
-                                "https://example.com/terms",
-                            ))
-                            (text_input(
-                                "integration_bluesky_policy_uri",
-                                "Privacy URL",
-                                integrations.bluesky.policy_uri.as_deref().unwrap_or(""),
-                                "https://example.com/privacy",
-                            ))
-                            (text_input("integration_bluesky_key_id", "New signing key ID", "", "atproto-key-1"))
-                            (password_input("integration_bluesky_private_key", "New private key", Some("Provide this only when adding or replacing runtime Bluesky keys.")))
-                        }
-                    }
-
-                    (form_actions(html! {
-                        (submit_button("Save runtime integrations"))
-                    }))
-                }
-            }
-        },
-    )
-}
-
-fn media_config_section(base: &str, csrf_token: &str, media: &InstanceMediaResponse) -> Markup {
-    let decay = &media.attachment_decay;
-    let effective = &decay.effective;
-    let enabled = decay.enabled.unwrap_or(effective.enabled);
-    let min_size_mb = format_decimal(decay.min_size_mb.unwrap_or(effective.min_size_mb));
-    let max_size_mb = format_decimal(decay.max_size_mb.unwrap_or(effective.max_size_mb));
-    let max_eligible_size_mb = format_decimal(
-        decay
-            .max_eligible_size_mb
-            .unwrap_or(effective.max_eligible_size_mb),
-    );
-    let min_lifetime_days = decay
-        .min_lifetime_days
-        .unwrap_or(effective.min_lifetime_days)
-        .to_string();
-    let max_lifetime_days = decay
-        .max_lifetime_days
-        .unwrap_or(effective.max_lifetime_days)
-        .to_string();
-    let curve = format_decimal(decay.curve.unwrap_or(effective.curve));
-    let renew_threshold_days = decay
-        .renew_threshold_days
-        .unwrap_or(effective.renew_threshold_days)
-        .to_string();
-    let renew_window_days = decay
-        .renew_window_days
-        .unwrap_or(effective.renew_window_days)
-        .to_string();
-    section_card_with_description(
-        "Media Expiry",
-        "Expire eligible attachments using size-based lifetimes. This is disabled by default and applies at runtime.",
-        html! {
-            form method="post" action={(base) "/instance-config?action=update_media"} {
-                (csrf_input(csrf_token))
-                div class="space-y-6" {
-                    div class="flex flex-wrap items-center gap-2" {
-                        @if effective.enabled {
-                            (badge("Effective: enabled", BadgeVariant::Success))
-                        } @else {
-                            (badge("Effective: disabled", BadgeVariant::Default))
-                        }
-                    }
-                    (checkbox("media_attachment_decay_enabled", "true", "Enable attachment expiry", enabled, true))
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" {
-                        (number_field(
-                            "media_attachment_decay_min_size_mb",
-                            "Small file threshold (MB)",
-                            &min_size_mb,
-                            Some(1),
-                            Some(1_000_000),
-                            "0.1",
-                            Some("Attachments at or below this size keep the maximum lifetime."),
-                        ))
-                        (number_field(
-                            "media_attachment_decay_max_size_mb",
-                            "Large file threshold (MB)",
-                            &max_size_mb,
-                            Some(1),
-                            Some(1_000_000),
-                            "0.1",
-                            Some("Attachments at or above this size get the minimum lifetime."),
-                        ))
-                        (number_field(
-                            "media_attachment_decay_max_eligible_size_mb",
-                            "Maximum eligible size (MB)",
-                            &max_eligible_size_mb,
-                            Some(1),
-                            Some(1_000_000),
-                            "0.1",
-                            Some("Attachments above this size are not managed by expiry."),
-                        ))
-                        (number_field(
-                            "media_attachment_decay_min_lifetime_days",
-                            "Minimum lifetime (days)",
-                            &min_lifetime_days,
-                            Some(1),
-                            Some(36_500),
-                            "1",
-                            None,
-                        ))
-                        (number_field(
-                            "media_attachment_decay_max_lifetime_days",
-                            "Maximum lifetime (days)",
-                            &max_lifetime_days,
-                            Some(1),
-                            Some(36_500),
-                            "1",
-                            None,
-                        ))
-                        (number_field(
-                            "media_attachment_decay_curve",
-                            "Expiry curve",
-                            &curve,
-                            Some(0),
-                            Some(1),
-                            "0.05",
-                            Some("0 is linear. 1 is logarithmic."),
-                        ))
-                        (number_field(
-                            "media_attachment_decay_renew_threshold_days",
-                            "Renew threshold (days)",
-                            &renew_threshold_days,
-                            Some(1),
-                            Some(365),
-                            "1",
-                            Some("Viewed attachments renew when expiry is this close."),
-                        ))
-                        (number_field(
-                            "media_attachment_decay_renew_window_days",
-                            "Renew window (days)",
-                            &renew_window_days,
-                            Some(1),
-                            Some(365),
-                            "1",
-                            Some("Renewed attachments are extended by this many days."),
-                        ))
-                    }
-                    (form_actions(html! {
-                        (submit_button("Save media expiry"))
+                        (submit_button("Save notice"))
                     }))
                 }
             }
@@ -785,89 +408,22 @@ fn media_config_section(base: &str, csrf_token: &str, media: &InstanceMediaRespo
 }
 
 fn app_public_config_section(
-    base: &str,
-    csrf_token: &str,
+    config: &AdminConfig,
+    config_form: ConfigForm<'_>,
     app_public: &AppPublicConfigResponse,
-    self_hosted: bool,
 ) -> Markup {
-    let setup_helper = if self_hosted {
-        "When this is unchecked, the web app shows the self-host setup wizard."
-    } else {
-        "Hosted instances are treated as already configured by clients."
-    };
+    let base = &config.base_path;
+    let host = web_app_host(&config.web_app_endpoint);
     section_card_with_description(
         "Public App Identity",
-        "Configure the public product name, client-visible brand assets, and initial setup state returned by the instance discovery document.",
+        "The name, color and images people see on the sign-in page, in the apps and in the browser. The preview shows each place they are used.",
         html! {
             div class="space-y-8" {
-                form method="post" action={(base) "/instance-config?action=update_app_public"} {
-                    (csrf_input(csrf_token))
-                    div class="space-y-6" {
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                            (text_input(
-                                "app_product_name",
-                                "Product Name",
-                                &app_public.branding.product_name,
-                                "Fluxer",
-                            ))
-                            (text_input(
-                                "app_theme_color",
-                                "Theme Color",
-                                app_public.branding.theme_color.as_deref().unwrap_or(""),
-                                "#5865f2",
-                            ))
-                        }
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                            (text_input(
-                                "app_icon_url",
-                                "Icon URL",
-                                app_public.branding.icon_url.as_deref().unwrap_or(""),
-                                "https://example.com/icon.png",
-                            ))
-                            (text_input(
-                                "app_symbol_url",
-                                "Symbol URL",
-                                app_public.branding.symbol_url.as_deref().unwrap_or(""),
-                                "https://example.com/symbol.png",
-                            ))
-                            (text_input(
-                                "app_logo_url",
-                                "Logo URL",
-                                app_public.branding.logo_url.as_deref().unwrap_or(""),
-                                "https://example.com/logo.png",
-                            ))
-                            (text_input(
-                                "app_wordmark_url",
-                                "Wordmark URL",
-                                app_public.branding.wordmark_url.as_deref().unwrap_or(""),
-                                "https://example.com/wordmark.png",
-                            ))
-                            (text_input(
-                                "app_favicon_url",
-                                "Favicon URL",
-                                app_public.branding.favicon_url.as_deref().unwrap_or(""),
-                                "https://example.com/favicon.ico",
-                            ))
-                        }
-                        div class="space-y-2" {
-                            (checkbox(
-                                "app_setup_configured",
-                                "true",
-                                "Setup complete",
-                                app_public.setup.configured,
-                                true,
-                            ))
-                            p class="text-xs text-neutral-500" { (setup_helper) }
-                        }
-                        (form_actions(html! {
-                            (submit_button("Save Public App Identity"))
-                        }))
-                    }
-                }
+                (branding_section(config, config_form, app_public, &host))
                 div class="space-y-4 border-t border-neutral-200 pt-6" {
                     h3 class="text-sm font-semibold text-neutral-900" { "Legal Documents" }
                     form method="post" action={(base) "/instance-config?action=update_app_legal"} {
-                        (csrf_input(csrf_token))
+                        (config_form.fields())
                         div class="space-y-4" {
                             div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                                 (text_input(
@@ -882,9 +438,18 @@ fn app_public_config_section(
                                     app_public.legal.privacy_url.as_deref().unwrap_or(""),
                                     "https://example.com/privacy",
                                 ))
+                                (text_input(
+                                    "app_guidelines_url",
+                                    "Community Guidelines URL",
+                                    app_public.legal.guidelines_url.as_deref().unwrap_or(""),
+                                    "https://example.com/guidelines",
+                                ))
                             }
                             p class="text-xs text-neutral-500" {
-                                "Registration asks for agreement only to the documents configured here. Leave both blank to hide legal consent on self-hosted registration."
+                                "Registration asks for agreement only to the terms and privacy documents configured here. Leave both blank to hide legal consent on self-hosted registration."
+                            }
+                            p class="text-xs text-neutral-500" {
+                                "The community guidelines URL is linked from the app, the report flow and enforcement emails. Use an absolute http or https URL. Leave it blank to hide those links."
                             }
                             (form_actions(html! {
                                 (submit_button("Save Legal Documents"))
@@ -897,9 +462,19 @@ fn app_public_config_section(
     )
 }
 
+fn web_app_host(endpoint: &str) -> String {
+    endpoint
+        .split_once("://")
+        .map_or(endpoint, |(_, rest)| rest)
+        .split('/')
+        .next()
+        .unwrap_or_default()
+        .to_owned()
+}
+
 fn gateway_rollout_section(
     base: &str,
-    csrf_token: &str,
+    config_form: ConfigForm<'_>,
     gateway_rollout: &GatewayRolloutConfigResponse,
 ) -> Markup {
     section_card_with_description(
@@ -909,48 +484,68 @@ fn gateway_rollout_section(
          via NATS.",
         html! {
             form method="post" action={(base) "/instance-config?action=update_gateway_rollout"} {
-                (csrf_input(csrf_token))
+                (config_form.fields())
                 div class="space-y-6" {
                     h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
                     div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (number_field(
-                            "gateway_rollout_session_rollout_percentage",
-                            "Session Rollout (%)", &format_percent(gateway_rollout.session_rollout_percentage),
-                            Some(0), Some(100), "1",
-                            Some("Percentage of sessions allowed to start (0-100)."),
-                        ))
+                        (NumberField {
+                            name: "gateway_rollout_session_rollout_percentage",
+                            label: "Session Rollout (%)",
+                            value: &format_decimal(gateway_rollout.session_rollout_percentage),
+                            min: Some(0),
+                            max: Some(100),
+                            step: "1",
+                            helper: Some("Percentage of sessions allowed to start (0-100)."),
+                            placeholder: None,
+                        }.render())
                         (select_input("gateway_rollout_session_rollout_mode", "Session Rollout Mode", &[
                             ("modulo", "Modulo"),
                             ("random", "Random"),
                         ], gateway_rollout.session_rollout_mode.as_str()))
                     }
-                    (number_field(
-                        "gateway_rollout_guild_rollout_percentage",
-                        "Guild Rollout (%)", &format_percent(gateway_rollout.guild_rollout_percentage),
-                        Some(0), Some(100), "1",
-                        Some("Percentage of guilds allowed to start (0-100). Uses modulo mode."),
-                    ))
+                    (NumberField {
+                        name: "gateway_rollout_guild_rollout_percentage",
+                        label: "Guild Rollout (%)",
+                        value: &format_decimal(gateway_rollout.guild_rollout_percentage),
+                        min: Some(0),
+                        max: Some(100),
+                        step: "1",
+                        helper: Some("Percentage of guilds allowed to start (0-100). Uses modulo mode."),
+                        placeholder: None,
+                    }.render())
 
                     h3 class="text-sm font-semibold text-neutral-900" { "RPC and Concurrency" }
                     div class="grid grid-cols-1 gap-4 sm:grid-cols-3" {
-                        (number_field(
-                            "gateway_rollout_rpc_request_timeout_ms",
-                            "RPC Request Timeout (ms)", &gateway_rollout.rpc_request_timeout_ms.to_string(),
-                            Some(1000), Some(60000), "1",
-                            Some("Timeout for gateway-to-API RPC calls."),
-                        ))
-                        (number_field(
-                            "gateway_rollout_max_concurrent_session_starts",
-                            "Max Concurrent Session Starts", &gateway_rollout.max_concurrent_session_starts.to_string(),
-                            Some(1), None, "1",
-                            Some("Per-node concurrency limit."),
-                        ))
-                        (number_field(
-                            "gateway_rollout_max_concurrent_guild_starts",
-                            "Max Concurrent Guild Starts", &gateway_rollout.max_concurrent_guild_starts.to_string(),
-                            Some(1), None, "1",
-                            Some("Per-node concurrency limit."),
-                        ))
+                        (NumberField {
+                            name: "gateway_rollout_rpc_request_timeout_ms",
+                            label: "RPC Request Timeout (ms)",
+                            value: &gateway_rollout.rpc_request_timeout_ms.to_string(),
+                            min: Some(1000),
+                            max: Some(60000),
+                            step: "1",
+                            helper: Some("Timeout for gateway-to-API RPC calls."),
+                            placeholder: None,
+                        }.render())
+                        (NumberField {
+                            name: "gateway_rollout_max_concurrent_session_starts",
+                            label: "Max Concurrent Session Starts",
+                            value: &gateway_rollout.max_concurrent_session_starts.to_string(),
+                            min: Some(1),
+                            max: None,
+                            step: "1",
+                            helper: Some("Per-node concurrency limit."),
+                            placeholder: None,
+                        }.render())
+                        (NumberField {
+                            name: "gateway_rollout_max_concurrent_guild_starts",
+                            label: "Max Concurrent Guild Starts",
+                            value: &gateway_rollout.max_concurrent_guild_starts.to_string(),
+                            min: Some(1),
+                            max: None,
+                            step: "1",
+                            helper: Some("Per-node concurrency limit."),
+                            placeholder: None,
+                        }.render())
                     }
 
                     h3 class="text-sm font-semibold text-neutral-900" { "Voice E2EE" }
@@ -968,206 +563,248 @@ fn gateway_rollout_section(
     )
 }
 
-fn voice_noise_suppression_section(
+fn push_relay_section(
     base: &str,
-    csrf_token: &str,
-    voice_noise_suppression: &VoiceNoiseSuppressionConfigResponse,
+    config_form: ConfigForm<'_>,
+    push_relay: &PushRelayConfigResponse,
 ) -> Markup {
-    let status = if voice_noise_suppression.enabled {
-        ("Live", BadgeVariant::Success)
+    let status = if push_relay.relay_consent_accepted {
+        ("Accepted", BadgeVariant::Success)
     } else {
-        ("Inert", BadgeVariant::Default)
+        ("Not accepted", BadgeVariant::Default)
     };
-    let backend_labels =
-        NoiseSuppressionBackend::ALL.map(|backend| (backend.to_string(), backend.label()));
-    let backend_options = backend_labels
-        .iter()
-        .map(|(value, label)| (value.as_str(), *label))
-        .collect::<Vec<_>>();
-    let included_user_ids = voice_noise_suppression.included_user_ids.join("\n");
-    let excluded_user_ids = voice_noise_suppression.excluded_user_ids.join("\n");
-    let guild_overrides = voice_noise_suppression
-        .guild_overrides
-        .iter()
-        .map(|entry| format!("{}={}", entry.guild_id, entry.backend))
-        .collect::<Vec<_>>()
-        .join("\n");
+    let accepted_at =
+        format_optional_admin_timestamp(push_relay.relay_consent_accepted_at.as_deref(), "Never");
+    let accepted_by = push_relay
+        .relay_consent_accepted_by
+        .as_deref()
+        .unwrap_or("Nobody");
     section_card_with_description(
-        "Voice Noise Suppression",
-        "Pick which noise suppression backend targeted clients load in voice calls, and how many \
-         of them are targeted. While the master switch below is off nothing on this form reaches \
-         any client: every user keeps the audio pipeline they have today, whatever the rest of \
-         these fields say.",
+        "Push Relay",
+        "Official mobile app notifications travel through Fluxer's relay to Apple and Google. \
+         The relay delivers them only after an operator accepts its privacy notice.",
         html! {
-            form method="post" action={(base) "/instance-config?action=update_voice_noise_suppression"} {
-                (csrf_input(csrf_token))
+            form method="post" action={(base) "/instance-config?action=update_push_relay"} {
+                (config_form.fields())
                 div class="space-y-6" {
                     div class="flex flex-wrap items-center gap-2" {
-                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        h3 class="text-sm font-semibold text-neutral-900" { "Relay consent" }
                         (badge(status.0, status.1))
-                        span class="text-xs text-neutral-500" {
-                            "Config version " (voice_noise_suppression.config_version)
-                        }
                     }
-                    (checkbox(
-                        "voice_ns_enabled",
-                        "true",
-                        "Serve noise suppression assignments to clients",
-                        voice_noise_suppression.enabled,
-                        true,
-                    ))
+                    (Checkbox {
+                        name: "push_relay_consent_accepted",
+                        value: "true",
+                        label: "Accept the push relay supplemental privacy notice",
+                        checked: push_relay.relay_consent_accepted,
+                        enabled: true,
+                    }.render())
                     p class="text-xs text-neutral-500" {
-                        "Off is the safe state. With this unchecked every client is told the \
-                         feature is inert and keeps its current behavior, so the rollout, targeting \
-                         and override fields below have no effect at all."
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Backends" }
-                    (select_input(
-                        "voice_ns_default_backend",
-                        "Default Backend",
-                        &backend_options,
-                        &voice_noise_suppression.default_backend.to_string(),
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "The backend assigned by always-on user rules and the canary. A default \
-                         that is not ticked below is unavailable, but per-guild overrides can \
-                         still target users."
-                    }
-                    div class="grid grid-cols-1 gap-2 sm:grid-cols-2" {
-                        @for backend in NoiseSuppressionBackend::ALL {
-                            (checkbox(
-                                "voice_ns_enabled_backends[]",
-                                &backend.to_string(),
-                                backend.label(),
-                                voice_noise_suppression.enabled_backends.contains(&backend),
-                                true,
-                            ))
+                        "Until this is accepted official mobile app notifications are dropped. \
+                         Self-hosted UnifiedPush and ntfy endpoints never reach the relay and are \
+                         unaffected. "
+                        a href="https://fluxer.com/push-relay" target="_blank" rel="noreferrer"
+                            class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
+                            "Read the notice"
                         }
-                    }
-                    p class="text-xs text-neutral-500" {
-                        "Backends clients are allowed to load. Unticking one withdraws it from \
-                         every user, including anyone who picked it themselves."
-                    }
-                    (checkbox(
-                        "voice_ns_allow_user_override",
-                        "true",
-                        "Let users pick their own backend from the ticked list",
-                        voice_noise_suppression.allow_user_override,
-                        true,
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "Applies only to users who are already targeted. It never pulls anyone \
-                         into the rollout."
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
-                    (number_field(
-                        "voice_ns_rollout_basis_points",
-                        "Rollout (basis points)",
-                        &voice_noise_suppression.rollout_basis_points.to_string(),
-                        Some(0), Some(10000), "1",
-                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
-                    ))
-                    div class="flex flex-col gap-2" {
-                        (text_input(
-                            "voice_ns_rollout_salt",
-                            "Rollout Salt",
-                            &voice_noise_suppression.rollout_salt,
-                            "voice-ns-v1",
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
-                             inside the percentage above. Leave it alone to keep the current \
-                             cohort stable."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "voice_ns_included_user_ids",
-                            "Always-on User IDs",
-                            "1500000000000000001\n1500000000000000002",
-                            &included_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            voice_noise_suppression.included_user_ids.len(),
-                            VOICE_NS_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "One snowflake per line, or comma separated. These users are targeted \
-                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
-                             digits. Invalid entries prevent the save; blank entries and duplicate \
-                             IDs are ignored."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "voice_ns_excluded_user_ids",
-                            "Never-on User IDs",
-                            "1500000000000000003\n1500000000000000004",
-                            &excluded_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            voice_noise_suppression.excluded_user_ids.len(),
-                            VOICE_NS_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Same format. Exclusion wins over both the always-on list and the \
-                             percentage, so this is the per-user kill switch."
-                        }
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Per-guild overrides" }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "voice_ns_guild_overrides",
-                            "Guild Overrides",
-                            "1600000000000000001=rnnoise\n1600000000000000002=deep_filter",
-                            &guild_overrides,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            voice_noise_suppression.guild_overrides.len(),
-                            VOICE_NS_MAX_GUILD_OVERRIDES,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "One per line as guild_id=backend. A guild \
-                             rule targets callers even outside the canary. Always-on user rules \
-                             take precedence, and excluded users stay off. Invalid lines and \
-                             conflicting rules for the same guild prevent the save. \
-                             Unticked backends stay stored but are inactive."
-                        }
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Processing" }
-                    (checkbox(
-                        "voice_ns_stereo_enabled",
-                        "true",
-                        "Process stereo input instead of downmixing to mono",
-                        voice_noise_suppression.stereo_enabled,
-                        true,
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "Costs more CPU on the client. Leave off unless you are testing stereo \
-                         capture."
                     }
                     div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (number_field(
-                            "voice_ns_suppression_strength",
-                            "Suppression Strength",
-                            &voice_noise_suppression.suppression_strength.to_string(),
-                            Some(0), Some(100), "1",
-                            Some("How aggressively the backend removes noise, 0 to 100. Higher values cut more background but chew more of the voice."),
+                        (form_field_group("Accepted at", "push_relay_consent_accepted_at", false, None, None,
+                            html! {
+                                input type="text" id="push_relay_consent_accepted_at"
+                                    value=(accepted_at)
+                                    disabled class=(FORM_INPUT_CLASS);
+                            },
+                        ))
+                        (form_field_group("Accepted by user ID", "push_relay_consent_accepted_by", false, None, None,
+                            html! {
+                                input type="text" id="push_relay_consent_accepted_by"
+                                    value=(accepted_by)
+                                    disabled class=(FORM_INPUT_CLASS);
+                            },
                         ))
                     }
 
                     (form_actions(html! {
-                        (submit_button("Save Voice Noise Suppression Configuration"))
+                        (submit_button("Save Push Relay Settings"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+const IDENTIFIER_FIRST_CHOICES: &[(IdentifierFirstMode, &str)] = &[
+    (
+        IdentifierFirstMode::Auto,
+        "Automatic, on while the instance sends email",
+    ),
+    (IdentifierFirstMode::On, "On"),
+    (IdentifierFirstMode::Off, "Off"),
+];
+
+const DATE_OF_BIRTH_CHOICES: &[(DateOfBirthPolicy, &str)] = &[
+    (DateOfBirthPolicy::Off, "Don't ask"),
+    (DateOfBirthPolicy::Ask, "Ask, but let people skip it"),
+    (
+        DateOfBirthPolicy::RequireNewAccounts,
+        "Require it from accounts created without one",
+    ),
+    (
+        DateOfBirthPolicy::RequireAll,
+        "Require it from every account without one",
+    ),
+];
+
+const INTERACTION_TIER_CHOICES: &[(InteractionTierMode, &str)] = &[
+    (InteractionTierMode::Legacy, "Keep the older limits"),
+    (
+        InteractionTierMode::Enforced,
+        "Only allow what does not reach other people",
+    ),
+];
+
+const GUILD_JOIN_GATE_CHOICES: &[(GuildJoinGate, &str)] = &[
+    (GuildJoinGate::Off, "Never ask"),
+    (
+        GuildJoinGate::VisitsCapable,
+        "Ask only on clients that can preview communities",
+    ),
+    (GuildJoinGate::Always, "Ask on every client"),
+];
+
+const VERIFICATION_BASIS_CHOICES: &[(VerificationBasis, &str)] = &[
+    (
+        VerificationBasis::Auto,
+        "Automatic, a confirmed email while the instance sends email, otherwise a password or passkey",
+    ),
+    (VerificationBasis::ConfirmedEmail, "A confirmed email"),
+    (VerificationBasis::LocalCredential, "A password or passkey"),
+];
+
+const CLEANUP_MODE_CHOICES: &[(CleanupMode, &str)] = &[
+    (CleanupMode::Off, "Off"),
+    (
+        CleanupMode::AfterInactivity,
+        "After the days below without use",
+    ),
+];
+
+const LAST_SESSION_CLEANUP_CHOICES: &[(LastSessionCleanupMode, &str)] = &[
+    (LastSessionCleanupMode::Off, "Keep the account"),
+    (
+        LastSessionCleanupMode::AfterGrace,
+        "Delete the account after the grace period",
+    ),
+];
+
+const CAPTCHA_PROVIDER_CHOICES: &[(CaptchaProvider, &str)] = &[
+    (CaptchaProvider::Altcha, "Proof-of-work check"),
+    (CaptchaProvider::None, "Off"),
+];
+
+const EMAIL_DELIVERY_CHOICES: &[(EmailDeliveryMode, &str)] = &[
+    (EmailDeliveryMode::Smtp, "Send email through SMTP"),
+    (EmailDeliveryMode::Off, "Off"),
+];
+
+fn choice_options<T: std::fmt::Display>(
+    choices: &[(T, &'static str)],
+) -> Vec<(String, &'static str)> {
+    choices
+        .iter()
+        .map(|(value, label)| (value.to_string(), *label))
+        .collect()
+}
+
+fn choice_select<T: std::fmt::Display>(
+    name: &str,
+    label: &str,
+    choices: &[(T, &'static str)],
+    selected: &T,
+) -> Markup {
+    let options = choice_options(choices);
+    let options: Vec<(&str, &str)> = options
+        .iter()
+        .map(|(value, label)| (value.as_str(), *label))
+        .collect();
+    select_input(name, label, &options, &selected.to_string())
+}
+
+fn guild_visits_section(
+    base: &str,
+    config_form: ConfigForm<'_>,
+    guild_visits: &GuildVisitsConfigResponse,
+) -> Markup {
+    let status = if guild_visits.enabled {
+        ("On", BadgeVariant::Success)
+    } else {
+        ("Off", BadgeVariant::Default)
+    };
+    section_card_with_description(
+        "Community previews",
+        "Lets assigned people preview a community before joining it. For them, joining follows \
+         the \u{201c}Joining a community\u{201d} setting under Sign-in & new accounts while the \
+         stricter limits are on.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_guild_visits"} {
+                (config_form.fields())
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        (badge(status.0, status.1))
+                    }
+                    (Checkbox {
+                        name: "guild_visits_enabled",
+                        value: "true",
+                        label: "Allow community previews",
+                        checked: guild_visits.enabled,
+                        enabled: true,
+                    }.render())
+                    (NumberField {
+                        name: "guild_visits_user_basis_points",
+                        label: "Rollout (basis points)",
+                        value: &guild_visits.user_basis_points.to_string(),
+                        min: Some(0),
+                        max: Some(10000),
+                        step: "1",
+                        helper: Some("Share of people assigned: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                        placeholder: None,
+                    }.render())
+                    (text_input(
+                        "guild_visits_user_salt",
+                        "Rollout Salt",
+                        &guild_visits.user_salt,
+                        GUILD_VISITS_DEFAULT_SALT,
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "guild_visits_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &guild_visits.included_user_ids.join("\n"),
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            guild_visits.included_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "guild_visits_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003",
+                            &guild_visits.excluded_user_ids.join("\n"),
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            guild_visits.excluded_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                    }
+                    (form_actions(html! {
+                        (submit_button("Save"))
                     }))
                 }
             }
@@ -1177,34 +814,40 @@ fn voice_noise_suppression_section(
 
 fn experiment_delivery_section(
     base: &str,
-    csrf_token: &str,
+    config_form: ConfigForm<'_>,
     experiment_delivery: &ExperimentDeliveryConfigResponse,
 ) -> Markup {
     section_card_with_description(
         "Experiment Delivery",
         "How often every client revalidates its experiment assignments. This is instance-wide \
-         and covers every experiment, not just the one above. Raising the interval sheds \
+         and covers every experiment, not just the ones above. Raising the interval sheds \
          request volume and makes a change take longer to reach a client. Raising the jitter \
-         spreads a fleet that has synchronised on one tick back out across the interval.",
+         spreads a fleet that has synchronized on one tick back out across the interval.",
         html! {
             form method="post" action={(base) "/instance-config?action=update_experiment_delivery"} {
-                (csrf_input(csrf_token))
+                (config_form.fields())
                 div class="space-y-6" {
                     div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (number_field(
-                            "experiment_delivery_poll_interval_seconds",
-                            "Assignment Poll Interval (s)",
-                            &experiment_delivery.poll_interval_seconds.to_string(),
-                            Some(60), Some(86400), "1",
-                            Some("How often a client re-reads its assignments, 60 to 86400 seconds. Lower values pick up changes sooner at the cost of more requests."),
-                        ))
-                        (number_field(
-                            "experiment_delivery_poll_jitter_percent",
-                            "Assignment Poll Jitter (%)",
-                            &experiment_delivery.poll_jitter_percent.to_string(),
-                            Some(0), Some(50), "1",
-                            Some("How far each client spreads its poll around the interval, 0 to 50 percent. Raise it to break up a fleet that polls on the same tick, set it to 0 for an exact interval."),
-                        ))
+                        (NumberField {
+                            name: "experiment_delivery_poll_interval_seconds",
+                            label: "Assignment Poll Interval (s)",
+                            value: &experiment_delivery.poll_interval_seconds.to_string(),
+                            min: Some(60),
+                            max: Some(86400),
+                            step: "1",
+                            helper: Some("How often a client re-reads its assignments, 60 to 86400 seconds. Lower values pick up changes sooner at the cost of more requests."),
+                            placeholder: None,
+                        }.render())
+                        (NumberField {
+                            name: "experiment_delivery_poll_jitter_percent",
+                            label: "Assignment Poll Jitter (%)",
+                            value: &experiment_delivery.poll_jitter_percent.to_string(),
+                            min: Some(0),
+                            max: Some(50),
+                            step: "1",
+                            helper: Some("How far each client spreads its poll around the interval, 0 to 50 percent. Raise it to break up a fleet that polls on the same tick, set it to 0 for an exact interval."),
+                            placeholder: None,
+                        }.render())
                     }
 
                     (form_actions(html! {
@@ -1216,558 +859,35 @@ fn experiment_delivery_section(
     )
 }
 
-fn registration_config_section(
-    config: &AdminConfig,
-    csrf_token: &str,
-    registration: &InstanceRegistrationResponse,
-    collect_date_of_birth: bool,
-    self_hosted: bool,
-) -> Markup {
-    let base = &config.base_path;
-    section_card_with_description(
-        "Registration Controls",
-        "Control public registration, admin-issued registration URLs, and pending approval requests.",
-        html! {
-            div class="space-y-8" {
-                (registration_policy_form(base, csrf_token, registration))
-                @if self_hosted {
-                    (registration_fields_form(base, csrf_token, collect_date_of_birth))
-                }
-                (create_registration_url_form(base, csrf_token))
-                (registration_url_list(config, csrf_token, &registration.urls))
-                (pending_registration_list(config, csrf_token, &registration.pending_registrations))
-            }
-        },
-    )
-}
-
-fn registration_policy_form(
-    base: &str,
-    csrf_token: &str,
-    registration: &InstanceRegistrationResponse,
-) -> Markup {
-    html! {
-        div class="space-y-4" {
-            h3 class="text-sm font-semibold text-neutral-900" { "Registration Policy" }
-            form method="post" action={(base) "/instance-config?action=update_registration"} {
-                (csrf_input(csrf_token))
-                div class="space-y-4" {
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (select_input("registration_mode", "Mode", &[
-                            ("open", "Open"),
-                            ("approval", "Approval required"),
-                            ("closed", "Closed"),
-                        ], registration.mode.as_str()))
-                        div class="flex items-end pb-1" {
-                            (checkbox(
-                                "admin_registration_urls_enabled",
-                                "true",
-                                "Admin registration URLs enabled",
-                                registration.admin_registration_urls_enabled,
-                                true,
-                            ))
-                        }
-                    }
-                    (form_actions(html! {
-                        (submit_button("Save Registration Policy"))
-                    }))
-                }
-            }
-        }
-    }
-}
-
-fn registration_fields_form(base: &str, csrf_token: &str, collect_date_of_birth: bool) -> Markup {
-    html! {
-        div class="space-y-4 border-t border-neutral-200 pt-6" {
-            h3 class="text-sm font-semibold text-neutral-900" { "Registration Fields" }
-            form method="post" action={(base) "/instance-config?action=update_app_registration"} {
-                (csrf_input(csrf_token))
-                div class="space-y-4" {
-                    (checkbox(
-                        "app_collect_date_of_birth",
-                        "true",
-                        "Collect date of birth during registration",
-                        collect_date_of_birth,
-                        true,
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "When disabled, new self-hosted accounts do not store a date of birth and are treated as adults."
-                    }
-                    (form_actions(html! {
-                        (submit_button("Save Registration Fields"))
-                    }))
-                }
-            }
-        }
-    }
-}
-
-fn create_registration_url_form(base: &str, csrf_token: &str) -> Markup {
-    let action = format!("{base}/instance-config?action=create_registration_url");
-    html! {
-        div class="space-y-4 border-t border-neutral-200 pt-6" {
-            h3 class="text-sm font-semibold text-neutral-900" { "Create Admin-Issued Registration URL" }
-            form method="post" action=(&action)
-                hx-post=(&action)
-                hx-target="#registration-url-list"
-                hx-swap="outerHTML"
-                hx-push-url="false"
-                data-admin-allow-swap="true" {
-                (csrf_input(csrf_token))
-                div class="space-y-4" {
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" {
-                        (text_input(
-                            "registration_url_label",
-                            "Label",
-                            "",
-                            "Invite batch, partner, or support case",
-                        ))
-                        (number_field(
-                            "registration_url_expires_in_days",
-                            "Expires In Days",
-                            "",
-                            Some(1),
-                            None,
-                            "1",
-                            Some("Leave blank for no expiration."),
-                        ))
-                        (number_field(
-                            "registration_url_max_uses",
-                            "Max Uses",
-                            "",
-                            Some(1),
-                            Some(1_000_000),
-                            "1",
-                            Some("Leave blank for unlimited uses."),
-                        ))
-                        div class="flex items-end pb-1" {
-                            (checkbox(
-                                "registration_url_approval_required",
-                                "true",
-                                "Approval required",
-                                false,
-                                true,
-                            ))
-                        }
-                    }
-                    (form_actions(html! {
-                        (submit_button("Create Registration URL"))
-                    }))
-                }
-            }
-        }
-    }
-}
-
-pub fn registration_url_list(
-    config: &AdminConfig,
-    csrf_token: &str,
-    urls: &[RegistrationUrlResponse],
-) -> Markup {
-    let base = &config.base_path;
-    html! {
-        div id="registration-url-list" class="space-y-4 border-t border-neutral-200 pt-6" {
-            h3 class="text-sm font-semibold text-neutral-900" { "Existing Registration URLs" }
-            @if urls.is_empty() {
-                p class="text-sm text-neutral-500" { "No admin-issued registration URLs." }
-            } @else {
-                div class="overflow-x-auto rounded-lg border border-neutral-200" {
-                    table class="min-w-[1100px] divide-y divide-neutral-200 text-sm" {
-                        thead class="bg-neutral-50" {
-                            tr {
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Label / URL" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Created" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Expires" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Uses" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Status" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Approval" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Action" }
-                            }
-                        }
-                        tbody class="divide-y divide-neutral-200 bg-white" {
-                            @for url in urls {
-                                (registration_url_row(config, base, csrf_token, url))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn registration_url_row(
-    config: &AdminConfig,
-    base: &str,
-    csrf_token: &str,
-    url: &RegistrationUrlResponse,
-) -> Markup {
-    let label = url.label.as_deref().unwrap_or("Unlabeled");
-    let full_url = admin_issued_registration_url(config, &url.id);
-    let created_at = format_admin_timestamp(&url.created_at);
-    let expires_at = format_optional_admin_timestamp(url.expires_at.as_deref(), "Never");
-    let uses = registration_url_uses_text(url);
-    let status = registration_url_status(url);
-    let approval = if url.approval_required {
-        "Required"
-    } else {
-        "Not required"
-    };
-    let revoke_action = format!("{base}/instance-config?action=revoke_registration_url");
-    html! {
-        tr {
-            td class="min-w-[28rem] px-4 py-3 align-top" {
-                p class="font-medium text-neutral-900" { (label) }
-                (copyable_registration_url(&full_url, "Copy URL"))
-                p class="mt-1 whitespace-nowrap text-xs text-neutral-500" { "ID: " (&url.id) }
-            }
-            td class="px-4 py-3 align-top text-neutral-700" {
-                p class="whitespace-nowrap" { (created_at) }
-                p class="whitespace-nowrap text-xs text-neutral-500" { "By: " (&url.created_by_user_id) }
-            }
-            td class="px-4 py-3 align-top text-neutral-700 whitespace-nowrap" {
-                (expires_at)
-            }
-            td class="px-4 py-3 align-top text-neutral-700 whitespace-nowrap" {
-                (uses)
-            }
-            td class="px-4 py-3 align-top whitespace-nowrap" {
-                (registration_url_status_badge(status))
-            }
-            td class="px-4 py-3 align-top text-neutral-700 whitespace-nowrap" {
-                (approval)
-            }
-            td class="px-4 py-3 align-top" {
-                @if status == RegistrationUrlStatus::Active {
-                    form method="post" action=(&revoke_action)
-                        hx-post=(&revoke_action)
-                        hx-target="#registration-url-list"
-                        hx-swap="outerHTML"
-                        hx-push-url="false"
-                        data-admin-allow-swap="true" {
-                        (csrf_input(csrf_token))
-                        input type="hidden" name="registration_url_id" value=(&url.id);
-                        (compact_button("Revoke", true))
-                    }
-                } @else {
-                    span class="text-sm text-neutral-400" { "No action" }
-                }
-            }
-        }
-    }
-}
-
-pub fn pending_registration_list(
-    config: &AdminConfig,
-    csrf_token: &str,
-    pending_registrations: &[PendingRegistrationResponse],
-) -> Markup {
-    let base = &config.base_path;
-    html! {
-        div id="pending-registration-list" class="space-y-4 border-t border-neutral-200 pt-6" {
-            h3 class="text-sm font-semibold text-neutral-900" { "Pending Registrations" }
-            @if pending_registrations.is_empty() {
-                p class="text-sm text-neutral-500" { "No pending registrations." }
-            } @else {
-                div class="overflow-x-auto rounded-lg border border-neutral-200" {
-                    table class="min-w-[940px] divide-y divide-neutral-200 text-sm" {
-                        thead class="bg-neutral-50" {
-                            tr {
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Applicant" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Requested" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Registration URL" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "IP" }
-                                th scope="col" class="px-4 py-3 text-left font-semibold text-neutral-600" { "Action" }
-                            }
-                        }
-                        tbody class="divide-y divide-neutral-200 bg-white" {
-                            @for pending in pending_registrations {
-                                (pending_registration_row(config, base, csrf_token, pending))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn pending_registration_row(
-    config: &AdminConfig,
-    base: &str,
-    csrf_token: &str,
-    pending: &PendingRegistrationResponse,
-) -> Markup {
-    let account_name = pending_registration_account_name(pending);
-    let requested_at = format_admin_timestamp(&pending.requested_at);
-    let email = pending.email.as_deref().unwrap_or("None");
-    let link_id = pending.registration_url_id.as_deref().unwrap_or("None");
-    let client_ip = pending.client_ip.as_deref().unwrap_or("None");
-    let approve_action = format!("{base}/instance-config?action=approve_pending_registration");
-    let reject_action = format!("{base}/instance-config?action=reject_pending_registration");
-    html! {
-        tr {
-            td class="max-w-[20rem] px-4 py-3 align-top" {
-                p class="font-medium text-neutral-900" { (account_name) }
-                @if let Some(global_name) = pending.global_name.as_deref() {
-                    p class="truncate text-xs text-neutral-500" title=(global_name) { (global_name) }
-                }
-                p class="truncate text-xs text-neutral-500" title=(email) { (email) }
-                p class="whitespace-nowrap text-xs text-neutral-500" { "ID: " (&pending.user_id) }
-            }
-            td class="px-4 py-3 align-top text-neutral-700 whitespace-nowrap" {
-                (requested_at)
-            }
-            td class="px-4 py-3 align-top text-neutral-700" {
-                @if let Some(registration_url_id) = pending.registration_url_id.as_deref() {
-                    @let full_url = admin_issued_registration_url(config, registration_url_id);
-                    p class="whitespace-nowrap text-xs text-neutral-500" { "ID: " (registration_url_id) }
-                    div class="mt-1" {
-                        (compact_copy_button(&full_url, "Copy URL"))
-                    }
-                } @else {
-                    span class="text-neutral-500" { (link_id) }
-                }
-            }
-            td class="px-4 py-3 align-top text-neutral-700 whitespace-nowrap" {
-                (client_ip)
-            }
-            td class="px-4 py-3 align-top" {
-                div class="flex flex-nowrap gap-2" {
-                    form method="post" action=(&approve_action)
-                        hx-post=(&approve_action)
-                        hx-target="#pending-registration-list"
-                        hx-swap="outerHTML"
-                        hx-push-url="false"
-                        data-admin-allow-swap="true" {
-                        (csrf_input(csrf_token))
-                        input type="hidden" name="user_id" value=(&pending.user_id);
-                        (compact_button("Approve", false))
-                    }
-                    form method="post" action=(&reject_action)
-                        hx-post=(&reject_action)
-                        hx-target="#pending-registration-list"
-                        hx-swap="outerHTML"
-                        hx-push-url="false"
-                        data-admin-allow-swap="true" {
-                        (csrf_input(csrf_token))
-                        input type="hidden" name="user_id" value=(&pending.user_id);
-                        (compact_button("Reject", true))
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn admin_issued_registration_url(config: &AdminConfig, code: &str) -> String {
-    format!(
-        "{}/register?registration_url={}",
-        config.web_app_endpoint.trim_end_matches('/'),
-        urlencoding::encode(code)
-    )
-}
-
-fn copyable_registration_url(value: &str, label: &str) -> Markup {
-    html! {
-        div class="mt-2 flex items-center gap-2" {
-            input type="url" readonly value=(value)
-                aria-label="Registration URL"
-                class="h-8 min-w-0 flex-1 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-800";
-            (compact_copy_button(value, label))
-        }
-    }
-}
-
-fn compact_copy_button(value: &str, label: &str) -> Markup {
-    html! {
-        button type="button"
-            class="inline-flex h-8 shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-neutral-50 px-3 text-xs font-medium text-neutral-700 transition-all hover:border-neutral-400 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-            data-copy-value=(value)
-            onclick="window.__adminCopyToClipboard && window.__adminCopyToClipboard(this.dataset.copyValue, this, 'Copied')" {
-            (label)
-        }
-    }
-}
-
-fn compact_button(label: &str, danger: bool) -> Markup {
-    let variant_class = if danger {
-        "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500/30"
-    } else {
-        "bg-neutral-900 text-white hover:bg-neutral-800 focus:ring-brand-primary/20"
-    };
-    html! {
-        button type="submit"
-            class={"inline-flex h-8 shrink-0 items-center justify-center rounded-lg px-3 text-xs font-medium transition-all focus:outline-none focus:ring-2 " (variant_class)} {
-            (label)
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum RegistrationUrlStatus {
-    Active,
-    Revoked,
-    Expired,
-    Exhausted,
-}
-
-impl RegistrationUrlStatus {
-    fn label(self) -> &'static str {
-        match self {
-            Self::Active => "Active",
-            Self::Revoked => "Revoked",
-            Self::Expired => "Expired",
-            Self::Exhausted => "Exhausted",
-        }
-    }
-
-    fn variant(self) -> BadgeVariant {
-        match self {
-            Self::Active => BadgeVariant::Success,
-            Self::Revoked => BadgeVariant::Danger,
-            Self::Expired | Self::Exhausted => BadgeVariant::Warning,
-        }
-    }
-}
-
-fn registration_url_status(url: &RegistrationUrlResponse) -> RegistrationUrlStatus {
-    if url.revoked_at.is_some() {
-        return RegistrationUrlStatus::Revoked;
-    }
-    if url.expires_at.as_deref().is_some_and(timestamp_is_past) {
-        return RegistrationUrlStatus::Expired;
-    }
-    if url
-        .max_uses
-        .is_some_and(|max_uses| url.use_count >= max_uses)
-    {
-        return RegistrationUrlStatus::Exhausted;
-    }
-    RegistrationUrlStatus::Active
-}
-
-fn registration_url_status_badge(status: RegistrationUrlStatus) -> Markup {
-    badge(status.label(), status.variant())
-}
-
-fn timestamp_is_past(iso: &str) -> bool {
-    time::OffsetDateTime::parse(iso, &time::format_description::well_known::Rfc3339)
-        .or_else(|_| {
-            time::OffsetDateTime::parse(
-                iso,
-                &time::format_description::well_known::Iso8601::DEFAULT,
-            )
-        })
-        .map(|timestamp| timestamp < time::OffsetDateTime::now_utc())
-        .unwrap_or(false)
-}
-
-fn format_optional_admin_timestamp(value: Option<&str>, fallback: &str) -> String {
+pub(super) fn format_optional_admin_timestamp(value: Option<&str>, fallback: &str) -> String {
     value
         .map(format_admin_timestamp)
         .unwrap_or_else(|| fallback.to_owned())
 }
 
-fn registration_url_uses_text(url: &RegistrationUrlResponse) -> String {
-    match url.max_uses {
-        Some(max_uses) => format!("{} / {}", url.use_count, max_uses),
-        None => format!("{} / unlimited", url.use_count),
-    }
-}
-
-fn pending_registration_account_name(pending: &PendingRegistrationResponse) -> String {
-    if pending.discriminator == 0 {
-        pending.username.clone()
-    } else {
-        format!("{}#{:04}", pending.username, pending.discriminator)
-    }
-}
-
-fn sso_config_section(base: &str, csrf_token: &str, sso: &SsoConfigResponse) -> Markup {
-    let allowed_domains = sso.allowed_domains.join("\n");
-    let secret_caption = if sso.client_secret_set {
-        "A secret is set. Check to clear, or enter a new value to rotate."
-    } else {
-        "No secret set yet."
-    };
-    section_card_with_description(
-        "Single Sign-On (SSO)",
-        "Configure OIDC-style SSO for the admin and client apps. When enabled, \
-         users can sign in through your SSO provider. Require SSO to block local \
-         password registration and login.",
-        html! {
-            form method="post" action={(base) "/instance-config?action=update_sso"} {
-                (csrf_input(csrf_token))
-                div class="space-y-6" {
-                    div class="flex flex-col gap-2" {
-                        (checkbox("sso_enabled", "true", "Enable SSO", sso.enabled, true))
-                        (checkbox("sso_enforced", "true", "Require SSO (disables local password login and registration)", sso.enforced, true))
-                        (checkbox("sso_auto_provision", "true", "Automatically provision users on first SSO login", sso.auto_provision, true))
-                    }
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (text_input("sso_display_name", "Display Name", sso.display_name.as_deref().unwrap_or(""), "Example Identity Provider"))
-                        (text_input("sso_issuer", "Issuer", sso.issuer.as_deref().unwrap_or(""), "https://idp.example.com"))
-                    }
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (text_input("sso_authorization_url", "Authorization URL", sso.authorization_url.as_deref().unwrap_or(""), "https://idp.example.com/oauth/authorize"))
-                        (text_input("sso_token_url", "Token URL", sso.token_url.as_deref().unwrap_or(""), "https://idp.example.com/oauth/token"))
-                    }
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (text_input("sso_userinfo_url", "User Info URL", sso.userinfo_url.as_deref().unwrap_or(""), "https://idp.example.com/oauth/userinfo"))
-                        (text_input("sso_jwks_url", "JWKS URL", sso.jwks_url.as_deref().unwrap_or(""), "https://idp.example.com/.well-known/jwks.json"))
-                    }
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (text_input("sso_client_id", "Client ID", sso.client_id.as_deref().unwrap_or(""), "client-id"))
-                        div class="space-y-2" {
-                            (form_field_group("Client Secret", "sso_client_secret", false, None, None, html! {
-                                input type="password" id="sso_client_secret" name="sso_client_secret"
-                                    placeholder="Leave blank to keep existing"
-                                    class=(FORM_INPUT_CLASS);
-                            }))
-                            (checkbox("sso_clear_client_secret", "true", "Clear secret", false, true))
-                            p class="text-xs text-neutral-500" {
-                                (secret_caption)
-                            }
-                        }
-                    }
-                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                        (text_input("sso_scope", "Scope", sso.scope.as_deref().unwrap_or(""), "openid email profile"))
-                        (form_field_group("Redirect URI", "sso_redirect_uri", false, None,
-                            Some("Configure this exact URI in your IdP. It is derived from the public gateway URL."),
-                            html! {
-                                input type="url" id="sso_redirect_uri" name="sso_redirect_uri"
-                                    value=(sso.redirect_uri.as_deref().unwrap_or(""))
-                                    disabled class=(FORM_INPUT_CLASS);
-                            },
-                        ))
-                    }
-                    div class="space-y-2" {
-                        (textarea_input(
-                            "sso_allowed_domains",
-                            "Allowed Email Domains",
-                            "example.com\nexample.org",
-                            &allowed_domains,
-                            3,
-                            false,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Limit SSO logins to these domains (one per line). Leave empty to allow any verified email."
-                        }
-                    }
-                    (form_actions(html! {
-                        (submit_button("Save SSO Settings"))
-                    }))
+pub(super) fn allowed_domains_input(name: &str, value: &str, hint: &str) -> Markup {
+    let hint_id = format!("{name}-hint");
+    let error_id = format!("{name}-error");
+    html! {
+        div class="space-y-2" {
+            div class="flex flex-col gap-2" {
+                label for=(name) class=(FORM_LABEL_CLASS) { "Allowed Email Domains" }
+                textarea id=(name) name=(name) placeholder="example.com\nexample.org" rows="3"
+                    aria-describedby={(error_id) " " (hint_id)}
+                    class=(FORM_TEXTAREA_CLASS) {
+                    (value)
                 }
             }
-        },
-    )
+            p id=(error_id) class="text-xs leading-5 text-red-600"
+                data-field-error=(name) hidden {}
+            p id=(hint_id) class="text-xs text-neutral-500" { (hint) }
+        }
+    }
 }
 
 fn limit_config_section(base: &str, limit_config: &LimitConfigResponse) -> Markup {
     let description = if limit_config.self_hosted.unwrap_or(false) {
-        "Self-hosted instance with all premium features enabled. Configure user and guild limits."
+        "Self-hosted instance with all premium features enabled by default. Configure user and guild limits."
     } else {
         "Configure limit rules that control user and guild restrictions based on traits and features."
     };
@@ -1784,50 +904,4 @@ fn limit_config_section(base: &str, limit_config: &LimitConfigResponse) -> Marku
             }
         },
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::api::types::VoiceNoiseSuppressionGuildOverride;
-
-    fn rendered_voice_noise_suppression_section(
-        voice_noise_suppression: &VoiceNoiseSuppressionConfigResponse,
-    ) -> String {
-        voice_noise_suppression_section("/admin", "csrf", voice_noise_suppression).into_string()
-    }
-
-    #[test]
-    fn voice_noise_suppression_section_shows_list_counts_and_caps() {
-        let voice_noise_suppression = VoiceNoiseSuppressionConfigResponse {
-            included_user_ids: vec!["1500000000000000001".to_owned()],
-            excluded_user_ids: vec![
-                "1500000000000000002".to_owned(),
-                "1500000000000000003".to_owned(),
-            ],
-            guild_overrides: vec![VoiceNoiseSuppressionGuildOverride {
-                guild_id: "1600000000000000001".to_owned(),
-                backend: NoiseSuppressionBackend::Rnnoise,
-            }],
-            ..VoiceNoiseSuppressionConfigResponse::default()
-        };
-        let markup = rendered_voice_noise_suppression_section(&voice_noise_suppression);
-        assert!(markup.contains("1 of 1000 stored"));
-        assert!(markup.contains("2 of 1000 stored"));
-        assert!(markup.contains("1 of 200 stored"));
-        assert!(!markup.contains("at the cap"));
-    }
-
-    #[test]
-    fn voice_noise_suppression_section_flags_a_list_at_its_cap() {
-        let voice_noise_suppression = VoiceNoiseSuppressionConfigResponse {
-            included_user_ids: (0..VOICE_NS_MAX_TARGETED_USERS)
-                .map(|index| index.to_string())
-                .collect(),
-            ..VoiceNoiseSuppressionConfigResponse::default()
-        };
-        let markup = rendered_voice_noise_suppression_section(&voice_noise_suppression);
-        assert!(markup.contains("1000 of 1000 stored"));
-        assert!(markup.contains("at the cap"));
-    }
 }

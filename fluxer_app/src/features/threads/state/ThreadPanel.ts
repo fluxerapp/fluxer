@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
+import {makeAutoObservable, observable} from 'mobx';
+
+interface ThreadCreateTarget {
+	readonly parentId: string;
+	readonly messageId: string | null;
+}
+
+class ThreadPanel {
+	createTarget: ThreadCreateTarget | null = null;
+	private readonly createCooldowns = observable.map<string, number>();
+
+	constructor() {
+		makeAutoObservable<this, 'createCooldowns'>(this, {createCooldowns: false}, {autoBind: true});
+	}
+
+	getCreateCooldownUntil(parentId: string): number {
+		return this.createCooldowns.get(parentId) ?? 0;
+	}
+
+	startCreateCooldown(parentId: string, seconds: number): void {
+		if (seconds <= 0) return;
+		this.createCooldowns.set(parentId, Date.now() + seconds * 1000);
+	}
+
+	getCreateTarget(parentId: string): ThreadCreateTarget | null {
+		return this.createTarget?.parentId === parentId ? this.createTarget : null;
+	}
+
+	openCreate(parentId: string, messageId: string | null): void {
+		this.createTarget = {parentId, messageId};
+	}
+
+	closeCreate(): void {
+		this.createTarget = null;
+	}
+
+	reset(): void {
+		this.createTarget = null;
+		this.createCooldowns.clear();
+	}
+}
+
+const threadPanel = new ThreadPanel();
+
+ResettableStates.register(threadPanel, () => threadPanel.reset());
+
+export default threadPanel;

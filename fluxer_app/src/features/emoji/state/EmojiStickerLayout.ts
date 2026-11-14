@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {
 	EmojiPickerLayout,
@@ -8,8 +9,8 @@ import {
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
 import {makeAutoObservable} from 'mobx';
 
-export type EmojiLayout = 'list' | 'grid';
-export type StickerViewMode = 'cozy' | 'compact';
+type EmojiLayout = 'list' | 'grid';
+type StickerViewMode = 'cozy' | 'compact';
 
 const EMOJI_FROM_PROTO: Record<EmojiPickerLayout, EmojiLayout | null> = {
 	[EmojiPickerLayout.UNSPECIFIED]: null,
@@ -36,7 +37,7 @@ class EmojiStickerLayout {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
@@ -59,10 +60,6 @@ class EmojiStickerLayout {
 
 	getEmojiLayout(): EmojiLayout {
 		return this.emojiLayout;
-	}
-
-	setEmojiLayout(layout: EmojiLayout): void {
-		this.emojiLayout = layout;
 	}
 
 	getStickerViewMode(): StickerViewMode {

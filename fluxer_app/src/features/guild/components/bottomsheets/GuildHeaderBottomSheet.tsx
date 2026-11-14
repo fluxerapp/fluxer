@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {MuteDurationSheet} from '@app/features/app/components/bottomsheets/MuteDurationSheet';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import headerStyles from '@app/features/guild/components/bottomsheets/GuildHeaderBottomSheet.module.css';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -10,6 +10,7 @@ import {
 	MUTE_COMMUNITY_DESCRIPTOR,
 	UNMUTE_COMMUNITY_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {useMuteSheet} from '@app/features/notification/hooks/useMuteSheet';
 import {useGuildMenuData} from '@app/features/ui/action_menu/items/GuildMenuData';
 import {
@@ -19,6 +20,7 @@ import {
 	type MenuSheetItem,
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {GUILD_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/GuildSettingsConstants';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -62,7 +64,7 @@ export const GuildHeaderBottomSheet: React.FC<GuildHeaderBottomSheetProps> = obs
 	const {i18n} = useLingui();
 	useEffect(() => {
 		if (!isOpen) return;
-		GatewayConnection.syncGuildIfNeeded(guild.id, 'guild-header-bottom-sheet');
+		GatewaySessions.foregroundConnection.syncGuildIfNeeded(guild.id, 'guild-header-bottom-sheet');
 		GuildCount.requestCounts(guild.id, {force: true});
 	}, [guild.id, isOpen]);
 	const {muteSheetOpen, muteConfig, openMuteSheet, closeMuteSheet, handleMute, handleUnmute} = useMuteSheet({
@@ -80,6 +82,7 @@ export const GuildHeaderBottomSheet: React.FC<GuildHeaderBottomSheetProps> = obs
 	const guildCounts = GuildCount.getCounts(guild.id);
 	const presenceCount = guildCounts?.onlineCount ?? 0;
 	const memberCount = guildCounts?.memberCount ?? 0;
+	const formattedPresenceCount = getCachedNumberFormat(getFormattingLocale()).format(presenceCount);
 	const headerContent = (
 		<div className={headerStyles.header} data-flx="guild.guild-header-bottom-sheet.div">
 			<div className={headerStyles.avatarWrapper} data-flx="guild.guild-header-bottom-sheet.div--2">
@@ -104,7 +107,7 @@ export const GuildHeaderBottomSheet: React.FC<GuildHeaderBottomSheetProps> = obs
 								data-flx="guild.guild-header-bottom-sheet.div--6"
 							/>
 							<span className={headerStyles.statText} data-flx="guild.guild-header-bottom-sheet.span--2">
-								{i18n._(ONLINE_DESCRIPTOR, {presenceCount})}
+								{i18n._(ONLINE_DESCRIPTOR, {presenceCount: formattedPresenceCount})}
 							</span>
 						</div>
 						<div className={headerStyles.stat} data-flx="guild.guild-header-bottom-sheet.div--7">

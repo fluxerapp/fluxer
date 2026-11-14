@@ -1,99 +1,90 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Hono} from 'hono';
-import {afterEach, describe, expect, it} from 'vitest';
-import type {SsoService} from '../auth/services/SsoService';
-import {setCassandraQueryExecutorForTesting} from '../database/CassandraQueryExecution';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {InMemoryCassandraQueryExecutor} from '../test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '../test/mocks/MockKVProvider';
-import type {HonoEnv} from '../types/HonoEnv';
-import {InstanceConfigRepository} from './InstanceConfigRepository';
-import {InstanceController} from './InstanceController';
+import {createAuthHarness} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {DEFAULT_DOMAIN_MIGRATION_CONFIG} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
-interface DiscoveryCaptcha {
-	provider: string;
-	hcaptcha_site_key: string | null;
-	turnstile_site_key: string | null;
+interface DiscoveryResponse {
+	captcha: {provider: string};
+	features: {discovery_enabled?: boolean};
+	domain_migration: unknown;
 }
 
-describe('InstanceController discovery captcha', () => {
-	const repositories: Array<InstanceConfigRepository> = [];
+describe('InstanceController discovery', () => {
+	let harness: ApiTestHarness;
+	let repository: InstanceConfigRepository;
+	const previousDiscoveryEnabled = Config.discovery.enabled;
 
+	beforeAll(async () => {
+		harness = await createAuthHarness();
+	});
+	beforeEach(async () => {
+		await harness.reset();
+		repository = getInstanceConfigRepository();
+	});
 	afterEach(() => {
-		for (const repository of repositories) {
-			repository.shutdown();
-		}
-		repositories.length = 0;
+		Config.discovery.enabled = previousDiscoveryEnabled;
+		repository.clearCacheForTesting();
+	});
+	afterAll(async () => {
+		await harness?.shutdown();
 	});
 
-	function createRepository(): InstanceConfigRepository {
-		setCassandraQueryExecutorForTesting(new InMemoryCassandraQueryExecutor());
-		const repository = new InstanceConfigRepository(new MockKVProvider());
-		repositories.push(repository);
-		return repository;
+	async function fetchDiscovery() {
+		const result = await createBuilderWithoutAuth<DiscoveryResponse>(harness).get('/.well-known/fluxer').executeRaw();
+		expect(result.response.status).toBe(200);
+		return result;
 	}
 
-	function createApp(repository: InstanceConfigRepository): Hono<HonoEnv> {
-		const app = new Hono<HonoEnv>({strict: true});
-		app.use('*', async (ctx, next) => {
-			ctx.set('instanceConfigRepository', repository);
-			ctx.set('limitConfigService', {
-				getConfigWireFormat: () => ({version: 2, traitDefinitions: [], rules: [], defaultsHash: 'test'}),
-			} as unknown as LimitConfigService);
-			ctx.set('ssoService', {
-				getPublicStatus: async () => ({
-					enabled: false,
-					enforced: false,
-					display_name: null,
-					redirect_uri: '',
-				}),
-			} as unknown as SsoService);
-			await next();
-		});
-		InstanceController(app);
-		return app;
-	}
-
-	async function readCaptcha(repository: InstanceConfigRepository): Promise<DiscoveryCaptcha> {
-		const response = await createApp(repository).request('http://localhost/.well-known/fluxer');
-		expect(response.status).toBe(200);
-		return ((await response.json()) as {captcha: DiscoveryCaptcha}).captcha;
-	}
-
-	it('advertises no provider and no site key while the selected pair is incomplete', async () => {
-		const repository = createRepository();
-		await repository.setInstanceIntegrationsConfig({
-			captcha: {
-				provider: 'turnstile',
-				hcaptcha_site_key: 'hcaptcha-site-key',
-				hcaptcha_secret_key: 'hcaptcha-secret-key',
-			},
-		});
-
-		await expect(readCaptcha(repository)).resolves.toEqual({
-			provider: 'none',
-			hcaptcha_site_key: null,
-			turnstile_site_key: null,
-		});
+	it('advertises altcha by default', async () => {
+		expect((await fetchDiscovery()).json.captcha).toEqual({provider: 'altcha'});
 	});
 
-	it('advertises only the site key that matches the named provider', async () => {
-		const repository = createRepository();
-		await repository.setInstanceIntegrationsConfig({
-			captcha: {
-				provider: 'turnstile',
-				hcaptcha_site_key: 'hcaptcha-site-key',
-				hcaptcha_secret_key: 'hcaptcha-secret-key',
-				turnstile_site_key: 'turnstile-site-key',
-				turnstile_secret_key: 'turnstile-secret-key',
-			},
+	it('advertises no provider once an admin turns the captcha off', async () => {
+		await repository.updateCaptchaConfig({enabled: false});
+
+		expect((await fetchDiscovery()).json.captcha).toEqual({provider: 'none'});
+	});
+
+	it('publishes whether discovery is enabled', async () => {
+		Config.discovery.enabled = false;
+		expect((await fetchDiscovery()).json.features.discovery_enabled).toBe(false);
+
+		Config.discovery.enabled = true;
+		expect((await fetchDiscovery()).json.features.discovery_enabled).toBe(true);
+	});
+
+	it('publishes the domain migration kill switch and anonymous rollout without the targeting lists', async () => {
+		const initial = await fetchDiscovery();
+		expect(initial.json.domain_migration).toEqual({
+			enabled: false,
+			anonymous_rollout_basis_points: 0,
+			rollout_salt: 'domain-migration-v1',
+			standalone_forwarding: false,
 		});
 
-		await expect(readCaptcha(repository)).resolves.toEqual({
-			provider: 'turnstile',
-			hcaptcha_site_key: null,
-			turnstile_site_key: 'turnstile-site-key',
+		await repository.setDomainMigrationConfig({
+			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
+			enabled: true,
+			config_version: 2,
+			rollout_basis_points: 100,
+			anonymous_rollout_basis_points: 1500,
+			included_user_ids: ['1400000000000000001'],
+			standalone_forwarding: true,
+		});
+
+		const updated = await fetchDiscovery();
+		expect(updated.response.headers.get('etag')).not.toBe(initial.response.headers.get('etag'));
+		expect(updated.json.domain_migration).toEqual({
+			enabled: true,
+			anonymous_rollout_basis_points: 1500,
+			rollout_salt: 'domain-migration-v1',
+			standalone_forwarding: true,
 		});
 	});
 });

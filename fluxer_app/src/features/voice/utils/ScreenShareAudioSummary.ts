@@ -13,51 +13,97 @@ import {
 	supportsWindowShareAudioScope,
 	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {MICROPHONE_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import type {VirtmicNode} from '@app/types/electron.d';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
-export const NO_AUDIO_DESCRIPTOR = msg({
+const NO_AUDIO_DESCRIPTOR = msg({
 	message: 'No audio',
 	comment: 'Screen-share audio summary shown when the share publishes no audio at all.',
 });
-export const CUSTOM_SOURCES_DESCRIPTOR = msg({
+const CUSTOM_SOURCES_DESCRIPTOR = msg({
 	message: 'Custom',
+	context: 'screen-share-audio-source',
 	comment: 'Screen-share audio summary shown when one audio source is selected but it has no readable name.',
 });
-export const APP_COUNT_DESCRIPTOR = msg({
-	message: '{length} apps',
+const APP_COUNT_DESCRIPTOR = msg({
+	message: '{length, plural, one {# app} other {# apps}}',
 	comment: 'Screen-share audio summary listing how many apps are captured. {length} is the integer app count.',
 });
-export const ENTIRE_SYSTEM_DESCRIPTOR = msg({
+const ENTIRE_SYSTEM_DESCRIPTOR = msg({
 	message: 'Entire system',
 	comment: 'Screen-share audio summary shown when the whole system audio mix is captured.',
 });
-export const SHARED_WINDOW_DESCRIPTOR = msg({
+const SHARED_WINDOW_DESCRIPTOR = msg({
 	message: 'Shared window',
 	comment: 'Screen-share audio summary shown when a window share captures only the audio of the window it shares.',
 });
-export const MICROPHONE_DESCRIPTOR = msg({
-	message: 'Microphone',
-	comment: 'Screen-share audio summary on a video device share whose audio comes from an unnamed microphone.',
-});
+
 export const MICROPHONE_WITH_DEVICE_DESCRIPTOR = msg({
 	message: 'Microphone ({deviceLabel})',
 	comment:
 		'Screen-share audio summary on a video device share. {deviceLabel} is the name of the selected audio input device.',
 });
+const DEVICE_AUDIO_ONLY_DESCRIPTOR = msg({
+	message: 'Device audio only',
+	comment:
+		'Screen-share audio summary on a video device share that publishes only the audio of the capture device itself.',
+});
+const DEVICE_AUDIO_WITH_DEVICE_DESCRIPTOR = msg({
+	message: 'Device audio ({deviceLabel})',
+	comment:
+		'Screen-share audio summary on a video device share. {deviceLabel} is the name of the audio input paired with the capture device.',
+});
+const NO_DEVICE_AUDIO_DESCRIPTOR = msg({
+	message: 'No audio from this device',
+	comment: 'Screen-share audio summary on a video device share whose capture device has no audio input of its own.',
+});
+
+export type DeviceShareAudioPairing =
+	| {readonly kind: 'unknown'}
+	| {readonly kind: 'none'}
+	| {readonly kind: 'paired'; readonly label: string};
+
+export function findPairedDeviceShareAudioInput(
+	devices: ReadonlyArray<MediaDeviceInfo>,
+	videoDeviceId: string,
+): MediaDeviceInfo | undefined {
+	if (videoDeviceId === '' || videoDeviceId === 'default') return undefined;
+	const videoDevice = devices.find((device) => device.kind === 'videoinput' && device.deviceId === videoDeviceId);
+	if (!videoDevice?.groupId) return undefined;
+	return devices.find(
+		(device) =>
+			device.kind === 'audioinput' &&
+			device.groupId === videoDevice.groupId &&
+			device.deviceId !== '' &&
+			device.deviceId !== 'default' &&
+			device.deviceId !== 'communications',
+	);
+}
+
+export function resolveDeviceShareAudioPairing(
+	devices: ReadonlyArray<MediaDeviceInfo>,
+	videoDeviceId: string,
+): DeviceShareAudioPairing {
+	if (videoDeviceId === '') return {kind: 'unknown'};
+	const pairedInput = findPairedDeviceShareAudioInput(devices, videoDeviceId);
+	return pairedInput === undefined ? {kind: 'none'} : {kind: 'paired', label: pairedInput.label};
+}
 
 export interface ScreenShareAudioSummaryInput {
 	sourceMode: ScreenShareAudioSourceMode;
 	includeSources: ReadonlyArray<VirtmicNode>;
 	shareContext: StreamSettingsShareContext;
 	microphoneLabel?: string | null;
+	chosenAudioDeviceId?: string;
+	deviceAudioPairing?: DeviceShareAudioPairing;
 	displayShareEnvironment?: DisplayShareEnvironment;
 	windowAudioScope?: WindowShareAudioScope;
 	usesDeviceMicrophone?: boolean;
 }
 
-export type ScreenShareAudioSummary =
+type ScreenShareAudioSummary =
 	| {readonly kind: 'sourceName'; readonly name: string}
 	| {
 			readonly kind: 'message';
@@ -80,13 +126,29 @@ function summariseMicrophone(microphoneLabel?: string | null): ScreenShareAudioS
 	return {kind: 'message', descriptor: MICROPHONE_WITH_DEVICE_DESCRIPTOR, values: {deviceLabel: microphoneLabel}};
 }
 
-export function resolveScreenShareAudioSummary(input: ScreenShareAudioSummaryInput): ScreenShareAudioSummary {
+function publishesTheMicrophone(input: ScreenShareAudioSummaryInput): boolean {
+	const chosenAudioDeviceId = input.chosenAudioDeviceId ?? '';
+	if (chosenAudioDeviceId !== '' && chosenAudioDeviceId !== 'default') return true;
+	return input.usesDeviceMicrophone === true;
+}
+
+function summariseDeviceShareAudio(input: ScreenShareAudioSummaryInput): ScreenShareAudioSummary {
+	if (publishesTheMicrophone(input)) return summariseMicrophone(input.microphoneLabel);
+	const pairing = input.deviceAudioPairing;
+	if (pairing?.kind === 'none') return {kind: 'message', descriptor: NO_DEVICE_AUDIO_DESCRIPTOR};
+	if (pairing?.kind === 'paired' && pairing.label !== '') {
+		return {kind: 'message', descriptor: DEVICE_AUDIO_WITH_DEVICE_DESCRIPTOR, values: {deviceLabel: pairing.label}};
+	}
+	return {kind: 'message', descriptor: DEVICE_AUDIO_ONLY_DESCRIPTOR};
+}
+
+function resolveScreenShareAudioSummary(input: ScreenShareAudioSummaryInput): ScreenShareAudioSummary {
 	const selected = filterRoutableLinuxAudioSources(input.includeSources);
 	const routesSelectedSources = input.sourceMode === 'specific' && selected.length > 0;
 	if (input.shareContext === 'device') {
 		return routesSelectedSources && input.usesDeviceMicrophone !== true
 			? summariseSelectedSources(selected)
-			: summariseMicrophone(input.microphoneLabel);
+			: summariseDeviceShareAudio(input);
 	}
 	if (supportsWindowShareAudioScope(input)) {
 		const route = selectAppShareAudioRoute({

@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import i18n from '@app/app/I18n';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
+import {getPremiumProductFullName, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import type {SettingsTab} from '@app/features/user/components/settings_utils/SettingsConstants';
 import {
 	getSettingsAudience,
 	type SettingsCategoryTag,
-	type SettingsStatusBadgeKind,
 } from '@app/features/user/components/settings_utils/SettingsMetadata';
 import {
 	ACCOUNT_SETTINGS_TAB,
@@ -37,11 +36,15 @@ import {languageIndex} from '@app/features/user/components/settings_utils/search
 import {linkedAccountsIndex} from '@app/features/user/components/settings_utils/search_index/LinkedAccountsIndex';
 import {myProfileIndex} from '@app/features/user/components/settings_utils/search_index/MyProfileIndex';
 import {notificationsIndex} from '@app/features/user/components/settings_utils/search_index/NotificationsIndex';
+import {operatorPassIndex} from '@app/features/user/components/settings_utils/search_index/OperatorPassIndex';
+import {paymentsIndex} from '@app/features/user/components/settings_utils/search_index/PaymentsIndex';
 import {plutoniumIndex} from '@app/features/user/components/settings_utils/search_index/PlutoniumIndex';
 import type {
 	SearchableSettingDescriptor,
 	SearchableSettingKeyword,
 } from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
+import {subscriptionsIndex} from '@app/features/user/components/settings_utils/search_index/SubscriptionsIndex';
+import {themesIndex} from '@app/features/user/components/settings_utils/search_index/ThemesIndex';
 import {voiceVideoIndex} from '@app/features/user/components/settings_utils/search_index/VoiceVideoIndex';
 import type {I18n} from '@lingui/core';
 
@@ -59,9 +62,12 @@ function translateSearchableKeyword(keyword: SearchableSettingKeyword, activeI18
 	if (typeof keyword === 'string') {
 		return keyword;
 	}
+	if (typeof keyword === 'function') {
+		return keyword();
+	}
 	return activeI18n._(keyword, {
-		premiumProductName: PREMIUM_PRODUCT_NAME,
-		premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+		premiumProductName: getPremiumProductName(),
+		premiumProductFullName: getPremiumProductFullName(),
 	});
 }
 
@@ -98,8 +104,12 @@ const ADDITIONAL_SEARCHABLE_ITEMS: Array<SearchableSettingDescriptor> = [
 	...blockedUsersIndex,
 	...devicesIndex,
 	...plutoniumIndex,
+	...subscriptionsIndex,
+	...operatorPassIndex,
 	...giftInventoryIndex,
+	...paymentsIndex,
 	...appearanceIndex,
+	...themesIndex,
 	...notificationsIndex,
 	...chatSettingsIndex,
 	...voiceVideoIndex,
@@ -123,14 +133,14 @@ function createSearchableItems(): Array<SearchableSettingItem> {
 
 let cachedSearchableItems: Array<SearchableSettingItem> | null = null;
 
-export function getSearchableItems(): Array<SearchableSettingItem> {
+function getSearchableItems(): Array<SearchableSettingItem> {
 	if (!cachedSearchableItems) {
 		cachedSearchableItems = createSearchableItems();
 	}
 	return cachedSearchableItems;
 }
 
-export function invalidateSearchCache(): void {
+function invalidateSearchCache(): void {
 	cachedSearchableItems = null;
 }
 
@@ -282,22 +292,6 @@ export function filterAdvancedSettingItems(
 		.filter(({score}) => score > 0)
 		.sort((a, b) => b.score - a.score || a.item.label.localeCompare(b.item.label))
 		.map(({item}) => item);
-}
-
-export function getSearchableItemStatusBadges(item: SearchableSettingItem): ReadonlyArray<SettingsStatusBadgeKind> {
-	return item.badges ?? [];
-}
-
-export function getMatchedSectionIds(results: Array<SettingsSearchResult>): Set<string> {
-	const sectionIds = new Set<string>();
-	for (const result of results) {
-		for (const item of result.matchedItems) {
-			if (item.sectionId) {
-				sectionIds.add(item.sectionId);
-			}
-		}
-	}
-	return sectionIds;
 }
 
 export function getMatchedTabTypes(results: Array<SettingsSearchResult>): Set<UserSettingsTabType> {

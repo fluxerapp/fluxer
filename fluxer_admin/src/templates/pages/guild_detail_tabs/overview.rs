@@ -3,11 +3,12 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
-    api::types::GuildDetailInfo,
+    acl,
+    api::types::{GuildDetailInfo, GuildRoleSummary},
     config::AdminConfig,
     templates::components::{
         badge::{BadgeVariant, badge},
-        form::{csrf_input, form_actions, submit_button},
+        form::{csrf_input, danger_button, form_actions, submit_button},
         media::{guild_asset_url, guild_icon_url},
         nsfw_indicators::{adult_content_badge, channel_nsfw_state_badge, content_warning_badge},
         page_container::{card_with_header, detail_row},
@@ -32,21 +33,55 @@ fn channel_type_label(channel_type: i32) -> &'static str {
         0 => "Text",
         2 => "Voice",
         4 => "Category",
-        13 => "Link",
+        5 => "Announcement",
+        11 => "Public thread",
+        12 => "Private thread",
+        15 => "Forum",
+        16 => "Media",
+        998 => "Link",
         _ => "Unknown",
     }
 }
 
-pub fn overview_tab(config: &AdminConfig, guild: &GuildDetailInfo, csrf_token: &str) -> Markup {
-    let base = &config.base_path;
+fn role_has_icon(role: &GuildRoleSummary) -> bool {
+    role.icon.is_some() || role.unicode_emoji.is_some()
+}
 
-    let mut sorted_channels = guild.channels.clone();
+fn role_icon(config: &AdminConfig, role: &GuildRoleSummary) -> Markup {
+    let image_url = guild_asset_url(
+        config,
+        "role-icons",
+        &role.id,
+        role.icon.as_deref(),
+        32,
+        true,
+    );
+    html! {
+        @if let Some(url) = image_url {
+            img src=(url) alt=(format!("Role icon, {}", role.name)) width="16" height="16"
+                class="h-4 w-4 object-contain";
+        } @else if let Some(emoji) = role.unicode_emoji.as_deref() {
+            span class="text-sm leading-none" title=(format!("Role icon, {}", role.name)) { (emoji) }
+        }
+    }
+}
+
+pub fn overview_tab(
+    config: &AdminConfig,
+    guild: &GuildDetailInfo,
+    csrf_token: &str,
+    admin_acls: &[String],
+) -> Markup {
+    let base = &config.base_path;
+    let can_clear_role_icons = acl::has_permission(admin_acls, acl::GUILD_UPDATE_SETTINGS);
+
+    let mut sorted_channels: Vec<_> = guild.channels.iter().collect();
     sorted_channels.sort_by_key(|c| c.position);
 
     let channels_by_id: std::collections::HashMap<&str, &crate::api::types::GuildChannelSummary> =
         guild.channels.iter().map(|c| (c.id.as_str(), c)).collect();
 
-    let mut sorted_roles = guild.roles.clone();
+    let mut sorted_roles: Vec<_> = guild.roles.iter().collect();
     sorted_roles.sort_by_key(|role| std::cmp::Reverse(role.position));
 
     let icon_url = guild_icon_url(config, &guild.id, guild.icon.as_deref(), 256, true);
@@ -102,16 +137,10 @@ pub fn overview_tab(config: &AdminConfig, guild: &GuildDetailInfo, csrf_token: &
                             p class="text-sm font-semibold text-neutral-500" {
                                 "Custom warning text"
                             }
-                            @if let Some(ref text) = guild.content_warning_text {
-                                @if !text.trim().is_empty() {
-                                    blockquote class="border-amber-300 border-l-2 bg-amber-50 \
-                                                      px-3 py-2 text-neutral-800 text-sm italic" {
-                                        (text)
-                                    }
-                                } @else {
-                                    p class="text-sm text-neutral-500" {
-                                        "\u{2014} (default fallback shown to users)"
-                                    }
+                            @if let Some(text) = guild.content_warning_text.as_deref().filter(|text| !text.trim().is_empty()) {
+                                blockquote class="border-amber-300 border-l-2 bg-amber-50 \
+                                                  px-3 py-2 text-neutral-800 text-sm italic" {
+                                    (text)
                                 }
                             } @else {
                                 p class="text-sm text-neutral-500" {
@@ -184,7 +213,7 @@ pub fn overview_tab(config: &AdminConfig, guild: &GuildDetailInfo, csrf_token: &
                 } @else {
                     div class="flex flex-col gap-2" {
                         @for channel in &sorted_channels {
-                            @let is_link = channel.channel_type == 13;
+                            @let is_link = channel.channel_type == 998;
                             @let parent = channel.parent_id.as_deref()
                                 .and_then(|pid| channels_by_id.get(pid));
                             @let parent_nsfw_override = parent
@@ -273,6 +302,7 @@ pub fn overview_tab(config: &AdminConfig, guild: &GuildDetailInfo, csrf_token: &
                                        border-neutral-200 bg-neutral-50 p-3" {
                                 div style=(format!("background-color: #{color_hex}"))
                                     class="h-4 w-4 rounded" {}
+                                (role_icon(config, role))
                                 div class="flex flex-1 flex-col gap-0" {
                                     span class="text-sm font-semibold" {
                                         (role.name)
@@ -287,6 +317,14 @@ pub fn overview_tab(config: &AdminConfig, guild: &GuildDetailInfo, csrf_token: &
                                     }
                                     @if role.mentionable {
                                         (badge("Mentionable", BadgeVariant::Success))
+                                    }
+                                }
+                                @if can_clear_role_icons && role_has_icon(role) {
+                                    form method="post"
+                                        action={(base) "/guilds/" (guild.id) "?action=clear_role_icon"} {
+                                        (csrf_input(csrf_token))
+                                        input type="hidden" name="role_id" value=(role.id);
+                                        (danger_button("Clear icon"))
                                     }
                                 }
                             }

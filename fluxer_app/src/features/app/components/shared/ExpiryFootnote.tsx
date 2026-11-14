@@ -46,10 +46,22 @@ export const ExpiryFootnote: FC<ExpiryFootnoteProps> = ({expiresAt, isExpired, l
 			return null;
 		}
 	}
+	const footnoteClassName = clsx(inline ? styles.inlineFootnote : styles.footnote, className);
+	if (!helpUrl) {
+		return (
+			<span
+				className={footnoteClassName}
+				data-message-copy-hidden="true"
+				data-flx="app.expiry-footnote.inline-footnote.text"
+			>
+				{resolved}
+			</span>
+		);
+	}
 	return (
 		<FocusRing data-flx="app.expiry-footnote.focus-ring">
 			<a
-				className={clsx(inline ? styles.inlineFootnote : styles.footnote, className)}
+				className={footnoteClassName}
 				href={helpUrl}
 				onContextMenu={handleContextMenu}
 				target="_blank"

@@ -22,7 +22,7 @@ import {
 } from '@app/features/voice/components/IncomingCallOverlayConstants';
 import {useIncomingCallPortalRoot} from '@app/features/voice/components/IncomingCallPortal';
 import {IncomingCallUI} from '@app/features/voice/components/IncomingCallUI';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime, {useVoiceRuntimeVersion} from '@app/features/voice/engine/VoiceRuntime';
 import CallInitiator from '@app/features/voice/state/CallInitiator';
 import CallState from '@app/features/voice/state/CallState';
 import MockIncomingCall from '@app/features/voice/state/MockIncomingCall';
@@ -103,7 +103,7 @@ function resolveInitiatorUserId(
 }
 
 export const IncomingCallManager: React.FC = observer(function IncomingCallManager() {
-	useMediaEngineVersion();
+	useVoiceRuntimeVersion();
 	const calls = CallState.getActiveCalls();
 	const mockCall = MockIncomingCall.mockCall;
 	const portalRoot = useIncomingCallPortalRoot();
@@ -116,11 +116,11 @@ export const IncomingCallManager: React.FC = observer(function IncomingCallManag
 		return getCenterPosition(getWindowSize());
 	});
 	const isInCurrentCall = useCallback(
-		(channelId: string) => MediaEngine.connected && MediaEngine.channelId === channelId,
+		(channelId: string) => VoiceRuntime.connected && VoiceRuntime.channelId === channelId,
 		[],
 	);
-	const isVoiceConnected = MediaEngine.connected;
-	const isVoiceConnecting = MediaEngine.connecting;
+	const isVoiceConnected = VoiceRuntime.connected;
+	const isVoiceConnecting = VoiceRuntime.connecting;
 	const {incomingCallIds, popoutModels, hasRingingCalls} = useMemo(() => {
 		const nextIds: Array<string> = [];
 		const seenIds = new Set<string>();

@@ -1,0 +1,41 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.shell {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+	width: 100%;
+	min-width: 0;
+}
+
+.backButton {
+	align-self: flex-start;
+	margin-inline-start: calc(-1 * var(--spacing-2));
+}
+
+.inlineLink {
+	align-self: flex-start;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--text-tertiary);
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	text-align: start;
+	text-decoration: none;
+}
+
+.inlineLink:hover {
+	color: var(--text-primary);
+	text-decoration: underline;
+}
+
+.inlineRegisterContainer {
+	width: 100%;
+}
+
+.untitled > form {
+	margin-top: 0;
+}

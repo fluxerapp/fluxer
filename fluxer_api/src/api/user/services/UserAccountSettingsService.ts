@@ -1,5 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHash} from 'node:crypto';
+import {
+	type ChannelID,
+	createChannelID,
+	createGuildID,
+	createUserID,
+	type GuildID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import type {ChannelOverride, UserGuildSettingsRow} from '@app/api/database/types/UserTypes';
+import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {guildVisitRepository} from '@app/api/guild/visits/GuildVisitorAccess';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {GuildChannelOverride} from '@app/api/models/GuildChannelOverride';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import type {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {CustomStatusValidator} from '@app/api/user/services/CustomStatusValidator';
+import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
+import {controlUserGuildSettingsView} from '@app/api/user/UserGuildSettingsThreadView';
+import {dispatchUserUpdate, mapRelationshipToResponse} from '@app/api/user/UserMappers';
+import {dedupeGuildFolders} from '@app/api/user/utils/GuildFolderUtils';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
+import {CHANNEL_OVERRIDE_FLAG_MASK} from '@fluxer/constants/src/ThreadConstants';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
 	GroupDmAddPermissionFlags,
@@ -13,6 +43,8 @@ import {
 } from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import {SyncedPreferencesConflictError} from '@fluxer/errors/src/domains/user/SyncedPreferencesConflictError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {ValidationError} from '@fluxer/errors/src/ValidationError';
 import {
@@ -26,42 +58,20 @@ import type {
 	UserGuildSettingsUpdateRequest,
 	UserSettingsUpdateRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import {
-	type ChannelID,
-	createChannelID,
-	createGuildID,
-	createUserID,
-	type GuildID,
-	type UserID,
-} from '../../BrandedTypes';
-import type {ChannelOverride, UserGuildSettingsRow} from '../../database/types/UserTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {User} from '../../models/User';
-import type {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {UserSettings} from '../../models/UserSettings';
-import {isUserAdult} from '../../utils/AgeUtils';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import type {IUserSettingsRepository} from '../repositories/IUserSettingsRepository';
-import {getCachedUserPartialResponse} from '../UserCacheHelpers';
-import {mapRelationshipToResponse} from '../UserMappers';
-import {dedupeGuildFolders} from '../utils/GuildFolderUtils';
-import {CustomStatusValidator} from './CustomStatusValidator';
-import type {UserAccountUpdatePropagator} from './UserAccountUpdatePropagator';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
+
+const VOICE_ACTIVITY_SHARING_LOCK_TTL_SECONDS = 60;
 
 interface UserAccountSettingsServiceDeps {
-	userAccountRepository: IUserAccountRepository;
-	userSettingsRepository: IUserSettingsRepository;
-	userRelationshipRepository: IUserRelationshipRepository;
+	userAccountRepository: UserRepository;
+
 	updatePropagator: UserAccountUpdatePropagator;
 	gatewayService: IGatewayService;
 	userCacheService: UserCacheService;
-	guildRepository: IGuildRepositoryAggregate;
+	guildRepository: GuildRepository;
 	limitConfigService: LimitConfigService;
+	cacheService: ICacheService;
+	labsRoleService: Pick<OperatorPassLabsRoleService, 'resyncLabsRoles'> | null;
 }
 
 export class UserAccountSettingsService {
@@ -76,7 +86,7 @@ export class UserAccountSettingsService {
 	}
 
 	async findSettings(userId: UserID): Promise<UserSettings> {
-		const userSettings = await this.deps.userSettingsRepository.findSettings(userId);
+		const userSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!userSettings) throw new UnknownUserError();
 		return userSettings;
 	}
@@ -84,11 +94,11 @@ export class UserAccountSettingsService {
 	async updateSettings(params: {
 		userId: UserID;
 		data: UserSettingsUpdateRequest;
-		dateOfBirth?: string | null;
+		ageUser: Pick<User, 'dateOfBirth'>;
 		flags?: bigint;
 	}): Promise<UserSettings> {
-		const {userId, data, dateOfBirth, flags = 0n} = params;
-		const currentSettings = await this.deps.userSettingsRepository.findSettings(userId);
+		const {userId, data, ageUser, flags = 0n} = params;
+		const currentSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!currentSettings) {
 			throw new UnknownUserError();
 		}
@@ -132,6 +142,10 @@ export class UserAccountSettingsService {
 		}
 		if (data.bot_default_guilds_restricted !== undefined) {
 			updatedRowData.bot_default_guilds_restricted = data.bot_default_guilds_restricted;
+		}
+		if (data.privacy_setup_version !== undefined) {
+			updatedRowData.privacy_setup_version = data.privacy_setup_version;
+			updatedRowData.privacy_setup_completed_at = new Date();
 		}
 		if (data.inline_attachment_media !== undefined) {
 			updatedRowData.inline_attachment_media = data.inline_attachment_media;
@@ -185,6 +199,8 @@ export class UserAccountSettingsService {
 		}
 		if (data.afk_timeout !== undefined) updatedRowData.afk_timeout = data.afk_timeout;
 		if (data.time_format !== undefined) updatedRowData.time_format = data.time_format;
+		if (data.timestamp_format !== undefined) updatedRowData.timestamp_format = data.timestamp_format;
+		if (data.regional_format !== undefined) updatedRowData.regional_format = data.regional_format;
 		if (data.developer_mode !== undefined) updatedRowData.developer_mode = data.developer_mode;
 		if (data.trusted_domains !== undefined) {
 			const domainsSet = new Set(data.trusted_domains);
@@ -200,7 +216,7 @@ export class UserAccountSettingsService {
 		if (data.default_hide_muted_channels !== undefined) {
 			updatedRowData.default_hide_muted_channels = data.default_hide_muted_channels;
 		}
-		const userIsAdult = isUserAdult(dateOfBirth);
+		const userIsAdult = canUserAccessNsfwContent({isBot: false, ...ageUser});
 		if (userIsAdult) {
 			if (data.sensitive_content_friend_dm_filter !== undefined) {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;
@@ -210,6 +226,9 @@ export class UserAccountSettingsService {
 			}
 			if (data.sensitive_content_guild_filter !== undefined) {
 				updatedRowData.sensitive_content_guild_filter = data.sensitive_content_guild_filter;
+			}
+			if (data.allow_mature_content_on_ios !== undefined) {
+				updatedRowData.allow_mature_content_on_ios = data.allow_mature_content_on_ios;
 			}
 		} else {
 			if (data.sensitive_content_friend_dm_filter !== undefined) {
@@ -226,11 +245,17 @@ export class UserAccountSettingsService {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;
 			}
 			if (data.sensitive_content_non_friend_dm_filter !== undefined) {
-				throw ValidationError.fromPath(
-					'sensitive_content_non_friend_dm_filter',
-					'AGE_RESTRICTED',
-					'Non-adult users cannot modify the non-friend DM content filter',
-				);
+				const allowed =
+					data.sensitive_content_non_friend_dm_filter === SensitiveMediaFilterLevel.BLUR ||
+					data.sensitive_content_non_friend_dm_filter === SensitiveMediaFilterLevel.BLOCK;
+				if (!allowed) {
+					throw ValidationError.fromPath(
+						'sensitive_content_non_friend_dm_filter',
+						'AGE_RESTRICTED',
+						'Non-adult users can only set non-friend DM filter to blur or block',
+					);
+				}
+				updatedRowData.sensitive_content_non_friend_dm_filter = data.sensitive_content_non_friend_dm_filter;
 			}
 			if (data.sensitive_content_guild_filter !== undefined) {
 				throw ValidationError.fromPath(
@@ -238,6 +263,16 @@ export class UserAccountSettingsService {
 					'AGE_RESTRICTED',
 					'Non-adult users cannot modify the guild content filter',
 				);
+			}
+			if (data.allow_mature_content_on_ios === true) {
+				throw ValidationError.fromPath(
+					'allow_mature_content_on_ios',
+					'AGE_RESTRICTED',
+					'Non-adult users cannot allow 18+ content on iOS',
+				);
+			}
+			if (data.allow_mature_content_on_ios === false) {
+				updatedRowData.allow_mature_content_on_ios = false;
 			}
 		}
 		if (isStaffUser) {
@@ -258,11 +293,22 @@ export class UserAccountSettingsService {
 			updatedRowData.staff_dm_access_user_ids = null;
 		}
 		if (data.synced_preferences !== undefined) {
+			if (
+				data.synced_preferences_base_hash !== undefined &&
+				data.synced_preferences_base_hash !== hashSyncedPreferencesSnapshot(currentSettings.syncedPreferences)
+			) {
+				throw new SyncedPreferencesConflictError();
+			}
 			updatedRowData.synced_preferences = normalizeSyncedPreferencesSnapshot(data.synced_preferences);
 		}
-		await this.deps.userSettingsRepository.upsertSettings(updatedRowData);
-		const updatedSettings = await this.findSettings(userId);
+		const updatedSettings = await this.deps.userAccountRepository.upsertSettings(
+			updatedRowData,
+			currentSettings.toRow(),
+		);
 		await this.deps.updatePropagator.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
+		if (updatedSettings.profilePrivacy !== currentSettings.profilePrivacy) {
+			await this.deps.labsRoleService?.resyncLabsRoles(userId);
+		}
 		if (localeChanged) {
 			const user = await this.deps.userAccountRepository.findUnique(userId);
 			if (user) {
@@ -271,23 +317,24 @@ export class UserAccountSettingsService {
 					{locale: data.locale},
 					user.toRow(),
 				);
-				await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
+				await dispatchUserUpdate(this.deps.gatewayService, updatedUser);
 			}
 		}
 		return updatedSettings;
-	}
-
-	async findGuildSettings(userId: UserID, guildId: GuildID | null): Promise<UserGuildSettings | null> {
-		return await this.deps.userSettingsRepository.findGuildSettings(userId, guildId);
 	}
 
 	async updateGuildSettings(params: {
 		userId: UserID;
 		guildId: GuildID | null;
 		data: UserGuildSettingsUpdateRequest;
+		viewer?: ThreadViewer;
 	}): Promise<UserGuildSettings> {
 		const {userId, guildId, data} = params;
-		const currentSettings = await this.deps.userSettingsRepository.findGuildSettings(userId, guildId);
+		const currentSettings = await this.deps.userAccountRepository.findGuildSettings(userId, guildId);
+		if (guildId !== null && !currentSettings) {
+			if (!(await this.canCreateGuildSettings(userId, guildId))) throw new UnknownGuildError();
+			await this.deleteGuildSettingsOutsideCurrentGuilds(userId, guildId);
+		}
 		const resolvedGuildId = guildId ?? createGuildID(0n);
 		const baseRow: UserGuildSettingsRow = currentSettings
 			? {
@@ -326,31 +373,59 @@ export class UserAccountSettingsService {
 		if (data.hide_muted_channels !== undefined) updatedRowData.hide_muted_channels = data.hide_muted_channels;
 		if (data.unread_badges !== undefined) updatedRowData.unread_badges = data.unread_badges ?? null;
 		if (data.channel_overrides !== undefined) {
-			if (data.channel_overrides) {
-				const channelOverrides = new Map<ChannelID, ChannelOverride>();
-				for (const [channelIdStr, override] of Object.entries(data.channel_overrides)) {
-					const channelId = createChannelID(BigInt(channelIdStr));
-					channelOverrides.set(channelId, {
-						collapsed: override.collapsed,
-						message_notifications: override.message_notifications,
-						muted: override.muted,
-						mute_config: override.mute_config
-							? {
-									end_time: override.mute_config.end_time ?? null,
-									selected_time_window: override.mute_config.selected_time_window,
-								}
-							: null,
-						unread_badges: override.unread_badges ?? null,
-					});
-				}
-				updatedRowData.channel_overrides = channelOverrides.size > 0 ? channelOverrides : null;
-			} else {
-				updatedRowData.channel_overrides = null;
+			const flagsWritable = guildId !== null && params.viewer !== undefined && viewerActive(params.viewer, guildId);
+			const previousOverrides = currentSettings?.channelOverrides ?? new Map<ChannelID, GuildChannelOverride>();
+			const channelOverrides = new Map<ChannelID, ChannelOverride>();
+			for (const [channelIdStr, override] of Object.entries(data.channel_overrides ?? {})) {
+				const channelId = createChannelID(BigInt(channelIdStr));
+				const flags =
+					flagsWritable && override.flags !== undefined
+						? override.flags & CHANNEL_OVERRIDE_FLAG_MASK
+						: previousOverrides.get(channelId)?.flags;
+				channelOverrides.set(channelId, {
+					collapsed: override.collapsed,
+					message_notifications: override.message_notifications,
+					muted: override.muted,
+					mute_config: override.mute_config
+						? {
+								end_time: override.mute_config.end_time ?? null,
+								selected_time_window: override.mute_config.selected_time_window,
+							}
+						: null,
+					unread_badges: override.unread_badges ?? null,
+					...(flags ? {flags} : {}),
+				});
 			}
+			if (!flagsWritable && currentSettings) {
+				const hidden = (await controlUserGuildSettingsView(currentSettings))?.hiddenChannelIds;
+				for (const [channelId, override] of previousOverrides) {
+					if (hidden?.has(channelId.toString())) channelOverrides.set(channelId, override.toChannelOverride());
+				}
+			}
+			updatedRowData.channel_overrides = channelOverrides.size > 0 ? channelOverrides : null;
 		}
-		const updatedSettings = await this.deps.userSettingsRepository.upsertGuildSettings(updatedRowData);
+		const updatedSettings = await this.deps.userAccountRepository.upsertGuildSettings(updatedRowData);
 		await this.deps.updatePropagator.dispatchUserGuildSettingsUpdate({userId, settings: updatedSettings});
 		return updatedSettings;
+	}
+
+	private async canCreateGuildSettings(userId: UserID, guildId: GuildID): Promise<boolean> {
+		if (await this.deps.guildRepository.getMember(guildId, userId)) return true;
+		return (await guildVisitRepository().get(userId, guildId)) !== null;
+	}
+
+	private async deleteGuildSettingsOutsideCurrentGuilds(userId: UserID, guildId: GuildID): Promise<void> {
+		const [rows, memberGuildIds, visits] = await Promise.all([
+			this.deps.userAccountRepository.findAllGuildSettings(userId),
+			this.deps.userAccountRepository.getUserGuildIds(userId),
+			guildVisitRepository().list(userId),
+		]);
+		const keep = new Set<GuildID>([createGuildID(0n), guildId, ...memberGuildIds, ...visits.map((v) => v.guild_id)]);
+		await Promise.all(
+			rows
+				.filter((row) => !keep.has(row.guildId))
+				.map((row) => this.deps.userAccountRepository.deleteGuildSettings(userId, row.guildId)),
+		);
 	}
 
 	private normalizeIncomingCallFlags(flags: number): number {
@@ -395,9 +470,29 @@ export class UserAccountSettingsService {
 		shareVoiceActivity: boolean;
 		requestCache: RequestCache;
 	}): Promise<User> {
+		const lockKey = `voice_activity_sharing_change:${params.userId}`;
+		const token = await this.deps.cacheService.acquireLock(lockKey, VOICE_ACTIVITY_SHARING_LOCK_TTL_SECONDS);
+		if (!token) {
+			throw InputValidationError.fromCode(
+				'share_voice_activity',
+				ValidationErrorCodes.VOICE_ACTIVITY_SHARING_ON_COOLDOWN,
+				{retry_after: VOICE_ACTIVITY_SHARING_LOCK_TTL_SECONDS},
+			);
+		}
+		try {
+			return await this.applyVoiceActivitySharingDefault(params);
+		} finally {
+			await this.deps.cacheService.releaseLock(lockKey, token);
+		}
+	}
+
+	private async applyVoiceActivitySharingDefault(params: {
+		userId: UserID;
+		shareVoiceActivity: boolean;
+		requestCache: RequestCache;
+	}): Promise<User> {
 		const {userId, shareVoiceActivity, requestCache} = params;
-		const user = await this.deps.userAccountRepository.findUnique(userId);
-		if (!user) throw new UnknownUserError();
+		const user = await this.deps.userAccountRepository.findUniqueAssert(userId);
 		const lastChange = user.lastVoiceActivitySharingChangeAt;
 		const now = new Date();
 		if (lastChange != null) {
@@ -411,7 +506,7 @@ export class UserAccountSettingsService {
 				);
 			}
 		}
-		const currentSettings = await this.deps.userSettingsRepository.findSettings(userId);
+		const currentSettings = await this.deps.userAccountRepository.findSettings(userId);
 		if (!currentSettings) throw new UnknownUserError();
 		const settingsUnchanged = currentSettings.defaultShareVoiceActivity === shareVoiceActivity;
 		const updatedSettingsRow = {
@@ -419,24 +514,21 @@ export class UserAccountSettingsService {
 			user_id: userId,
 			default_share_voice_activity: shareVoiceActivity,
 		};
-		await this.deps.userSettingsRepository.upsertSettings(updatedSettingsRow);
-		const updatedSettings = await this.findSettings(userId);
-		const updatedFriendRows = await this.deps.userRelationshipRepository.bulkUpdateFriendShareVoiceActivity(
+		const updatedSettings = await this.deps.userAccountRepository.upsertSettings(
+			updatedSettingsRow,
+			currentSettings.toRow(),
+		);
+		const updatedFriendRows = await this.deps.userAccountRepository.bulkUpdateFriendShareVoiceActivity(
 			userId,
 			shareVoiceActivity,
 		);
-		const userPartialResolver = (id: UserID) =>
-			getCachedUserPartialResponse({
-				userId: id,
-				userCacheService: this.deps.userCacheService,
-				requestCache,
-			});
+		const userPartialResolver = (id: UserID) => this.deps.userCacheService.getUserPartialResponse(id, requestCache);
 		await Promise.all(
 			updatedFriendRows.flatMap((friendRel) => {
 				const dispatches: Array<Promise<unknown>> = [];
 				dispatches.push(
 					(async () => {
-						const inverse = await this.deps.userRelationshipRepository.getRelationship(
+						const inverse = await this.deps.userAccountRepository.getRelationship(
 							friendRel.targetUserId,
 							userId,
 							RelationshipTypes.FRIEND,
@@ -454,12 +546,12 @@ export class UserAccountSettingsService {
 				);
 				dispatches.push(
 					(async () => {
-						const inverseForFriend = await this.deps.userRelationshipRepository.getRelationship(
+						const inverseForFriend = await this.deps.userAccountRepository.getRelationship(
 							userId,
 							friendRel.targetUserId,
 							RelationshipTypes.FRIEND,
 						);
-						const friendOwnRow = await this.deps.userRelationshipRepository.getRelationship(
+						const friendOwnRow = await this.deps.userAccountRepository.getRelationship(
 							friendRel.targetUserId,
 							userId,
 							RelationshipTypes.FRIEND,
@@ -485,12 +577,16 @@ export class UserAccountSettingsService {
 			user.toRow(),
 		);
 		const finalUser = updatedUser ?? user;
-		await this.deps.updatePropagator.dispatchUserUpdate(finalUser);
+		await dispatchUserUpdate(this.deps.gatewayService, finalUser);
 		if (!settingsUnchanged) {
 			await this.deps.updatePropagator.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
 		}
 		return finalUser;
 	}
+}
+
+function hashSyncedPreferencesSnapshot(stored: string): string {
+	return createHash('sha256').update(Buffer.from(stored, 'base64')).digest('hex');
 }
 
 function normalizeSyncedPreferencesSnapshot(value: string | null | undefined): string | null {

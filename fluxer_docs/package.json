@@ -7,13 +7,7 @@
 		"build": "astro build",
 		"dev": "astro dev",
 		"start": "tsx scripts/StartServer.ts",
-		"test": "node --import tsx --test scripts/*.test.ts",
-		"typecheck": "astro check --minimumFailingSeverity warning",
-		"verify": "pnpm verify:sidebar && pnpm verify:coverage && pnpm verify:schemas && pnpm verify:style",
-		"verify:coverage": "tsx scripts/VerifyDocsCoverage.ts",
-		"verify:schemas": "tsx scripts/VerifyDocsSchemas.ts",
-		"verify:sidebar": "tsx scripts/VerifyDocsSidebar.ts",
-		"verify:style": "tsx scripts/VerifyDocsStyle.ts"
+		"typecheck": "astro check --minimumFailingSeverity warning"
 	},
 	"dependencies": {
 		"@astrojs/markdown-remark": "catalog:",
@@ -24,15 +18,15 @@
 		"astro": "catalog:",
 		"send": "catalog:",
 		"sharp": "catalog:",
-		"tsx": "catalog:"
+		"tsx": "catalog:",
+		"@fluxer/constants": "workspace:*"
 	},
 	"devDependencies": {
 		"@astrojs/check": "catalog:",
-		"@fluxer/openapi": "workspace:*",
 		"@types/hast": "catalog:",
 		"@types/node": "catalog:",
 		"@types/send": "catalog:",
 		"mdast-util-to-hast": "catalog:",
-		"typescript": "6.0.2"
+		"typescript": "catalog:"
 	}
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildModerationTab.module.css';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -26,6 +27,7 @@ import {
 	GuildMFALevel,
 	GuildVerificationLevel,
 	getEffectiveGuildVerificationLevel,
+	guildRequiresMfa,
 } from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -38,6 +40,11 @@ const ONLY_OWNER_CAN_CHANGE_TOOLTIP_DESCRIPTOR = msg({
 	message: 'Only the community owner can change this setting',
 	comment:
 		'Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the viewer is not the owner. Plain explanatory tone.',
+});
+const MFA_REQUIRED_BY_STATUS_TOOLTIP_DESCRIPTOR = msg({
+	message: 'Verified and partnered communities always require 2FA for moderators',
+	comment:
+		'Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the community is verified or partnered, so the switch stays on and cannot be changed.',
 });
 const ENABLE_2FA_TO_CHANGE_TOOLTIP_DESCRIPTOR = msg({
 	message: 'Enable 2FA on your account to change this setting',
@@ -62,14 +69,24 @@ const VERIFICATION_LEVEL_LOW_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Requires a verified email address.',
 	comment: 'Helper text for the "Low" member verification level option in the community moderation settings tab.',
 });
+const VERIFICATION_LEVEL_LOW_USERNAME_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Requires a claimed account.',
+	comment:
+		'Helper text for the "Low" member verification level option on an instance where people sign in with a username and no email.',
+});
 const VERIFICATION_LEVEL_MEDIUM_NAME_DESCRIPTOR = msg({
 	message: 'Medium',
 	comment:
 		'Member verification level option in the community moderation settings tab. Short standalone severity label.',
 });
 const VERIFICATION_LEVEL_MEDIUM_DESCRIPTION_DESCRIPTOR = msg({
-	message: "Requires a verified email address, and an account that's at least 5 minutes old.",
+	message: "Requires a verified email address and an account that's at least 5 minutes old.",
 	comment: 'Helper text for the "Medium" member verification level option in the community moderation settings tab.',
+});
+const VERIFICATION_LEVEL_MEDIUM_USERNAME_DESCRIPTION_DESCRIPTOR = msg({
+	message: "Requires a claimed account that's at least 5 minutes old.",
+	comment:
+		'Helper text for the "Medium" member verification level option on an instance where people sign in with a username and no email.',
 });
 const VERIFICATION_LEVEL_HIGH_NAME_DESCRIPTOR = msg({
 	message: 'High',
@@ -80,15 +97,6 @@ const VERIFICATION_LEVEL_HIGH_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Requires everything in medium, plus being a member of the community for at least 10 minutes.',
 	comment:
 		'Helper text for the "High" member verification level option in the community moderation settings tab. "Medium" refers to the matching level option.',
-});
-const VERIFICATION_LEVEL_VERY_HIGH_NAME_DESCRIPTOR = msg({
-	message: 'Very high',
-	comment:
-		'Member verification level option in the community moderation settings tab. Short standalone severity label.',
-});
-const VERIFICATION_LEVEL_VERY_HIGH_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Requires a verified phone number.',
-	comment: 'Helper text for the "Very high" member verification level option in the community moderation settings tab.',
 });
 const MEMBER_VERIFICATION_LEVEL_ARIA_DESCRIPTOR = msg({
 	message: 'Member verification level',
@@ -107,7 +115,7 @@ const EXPLICIT_CONTENT_FILTER_OFF_DESCRIPTION_DESCRIPTOR = msg({
 const EXPLICIT_CONTENT_FILTER_MEMBERS_WITHOUT_ROLES_NAME_DESCRIPTOR = msg({
 	message: 'Filter members without roles',
 	comment:
-		'Explicit content filter option in the community moderation settings tab. Filters messages from members who have no roles assigned.',
+		'Explicit content filter option in the community moderation settings tab. Checks images and videos from members who have no roles assigned.',
 });
 const EXPLICIT_CONTENT_FILTER_MEMBERS_WITHOUT_ROLES_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Suggested for most communities',
@@ -117,7 +125,7 @@ const EXPLICIT_CONTENT_FILTER_MEMBERS_WITHOUT_ROLES_DESCRIPTION_DESCRIPTOR = msg
 const EXPLICIT_CONTENT_FILTER_EVERYONE_NAME_DESCRIPTOR = msg({
 	message: 'Filter everyone',
 	comment:
-		'Explicit content filter option in the community moderation settings tab. Filters messages from every member regardless of role.',
+		'Explicit content filter option in the community moderation settings tab. Checks images and videos from every member regardless of role.',
 });
 const EXPLICIT_CONTENT_FILTER_EVERYONE_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Maximum protection for family-friendly spaces',
@@ -158,6 +166,16 @@ const REQUIRE_2FA_FOR_MODERATION_SWITCH_LABEL_DESCRIPTOR = msg({
 	comment:
 		'Switch label in the community moderation settings tab. Requires moderators to have two-factor auth enabled before they can ban, kick, time out, or delete messages. Security-sensitive; keep tone plain.',
 });
+const MEMBER_DMS_DISABLED_SWITCH_LABEL_DESCRIPTOR = msg({
+	message: "Turn off DMs between members who aren't friends",
+	comment:
+		'Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.',
+});
+const MEMBER_DMS_DISABLED_SWITCH_DESCRIPTION_DESCRIPTOR = msg({
+	message: "Friends can still DM each other, and so can members who share another community. Bots aren't affected.",
+	comment:
+		'Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.',
+});
 
 interface FormInputs {
 	verification_level: number;
@@ -166,6 +184,7 @@ interface FormInputs {
 	content_warning_level: number;
 	content_warning_text: string;
 	explicit_content_filter: number;
+	member_dms_disabled: boolean;
 }
 
 const GUILD_MODERATION_TAB_ID = 'moderation';
@@ -183,6 +202,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		content_warning_level: guild?.contentWarningLevel ?? ContentWarningLevel.INHERIT,
 		content_warning_text: guild?.contentWarningText ?? '',
 		explicit_content_filter: guild?.explicitContentFilter ?? GuildExplicitContentFilterTypes.DISABLED,
+		member_dms_disabled: guild?.features.has(GuildFeatures.MEMBER_DMS_DISABLED) ?? false,
 	};
 	const form = useForm<FormInputs>({defaultValues: remoteValues});
 	const {resetToRemoteValues, commitRemoteValues} = useRemoteFormReset<FormInputs>({
@@ -203,6 +223,15 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 				updateData.content_warning_text = trimmed.length > 0 ? trimmed : null;
 			}
 			if (dirtyFields.explicit_content_filter) updateData.explicit_content_filter = data.explicit_content_filter;
+			if (data.member_dms_disabled !== guild.features.has(GuildFeatures.MEMBER_DMS_DISABLED)) {
+				const features = new Set(guild.features);
+				if (data.member_dms_disabled) {
+					features.add(GuildFeatures.MEMBER_DMS_DISABLED);
+				} else {
+					features.delete(GuildFeatures.MEMBER_DMS_DISABLED);
+				}
+				updateData.features = Array.from(features);
+			}
 			if (isGuildOwner && dirtyFields.mfa_level && data.mfa_level !== guild.mfaLevel) {
 				updateData.mfa_level = data.mfa_level;
 			}
@@ -248,8 +277,12 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		) : (
 			label
 		);
-	const isMfaDisabled = !isGuildOwner || !currentUserHas2FA;
+	const isMfaRequiredByStatus = !RuntimeConfig.isSelfHosted() && guildRequiresMfa(guild.features);
+	const isMfaDisabled = !isGuildOwner || !currentUserHas2FA || isMfaRequiredByStatus;
 	const getMfaTooltipText = (): string | undefined => {
+		if (isMfaRequiredByStatus) {
+			return i18n._(MFA_REQUIRED_BY_STATUS_TOOLTIP_DESCRIPTOR);
+		}
 		if (!isGuildOwner) {
 			return i18n._(ONLY_OWNER_CAN_CHANGE_TOOLTIP_DESCRIPTOR);
 		}
@@ -258,6 +291,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		}
 		return;
 	};
+	const usesUsernameSignIn = RuntimeConfig.usesUsernameSignIn;
 	const verificationLevelOptions: ReadonlyArray<RadioOption<number>> = [
 		{
 			value: GuildVerificationLevel.NONE,
@@ -268,22 +302,25 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		{
 			value: GuildVerificationLevel.LOW,
 			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_LOW_NAME_DESCRIPTOR), '#22c55e'),
-			desc: i18n._(VERIFICATION_LEVEL_LOW_DESCRIPTION_DESCRIPTOR),
+			desc: i18n._(
+				usesUsernameSignIn
+					? VERIFICATION_LEVEL_LOW_USERNAME_DESCRIPTION_DESCRIPTOR
+					: VERIFICATION_LEVEL_LOW_DESCRIPTION_DESCRIPTOR,
+			),
 		},
 		{
 			value: GuildVerificationLevel.MEDIUM,
 			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_MEDIUM_NAME_DESCRIPTOR), '#f59e0b'),
-			desc: i18n._(VERIFICATION_LEVEL_MEDIUM_DESCRIPTION_DESCRIPTOR),
+			desc: i18n._(
+				usesUsernameSignIn
+					? VERIFICATION_LEVEL_MEDIUM_USERNAME_DESCRIPTION_DESCRIPTOR
+					: VERIFICATION_LEVEL_MEDIUM_DESCRIPTION_DESCRIPTOR,
+			),
 		},
 		{
 			value: GuildVerificationLevel.HIGH,
 			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_HIGH_NAME_DESCRIPTOR), '#f97316'),
 			desc: i18n._(VERIFICATION_LEVEL_HIGH_DESCRIPTION_DESCRIPTOR),
-		},
-		{
-			value: GuildVerificationLevel.VERY_HIGH,
-			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_VERY_HIGH_NAME_DESCRIPTOR), '#ef4444'),
-			desc: i18n._(VERIFICATION_LEVEL_VERY_HIGH_DESCRIPTION_DESCRIPTOR),
 		},
 	];
 	const matureContentOptions: ReadonlyArray<ComboboxOption<string>> = [
@@ -298,27 +335,27 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 						<h3 className={styles.sectionTitle} data-flx="guild.guild-tabs.guild-moderation-tab.section-title">
 							<Trans>Member verification</Trans>
 						</h3>
-						<div
-							className={styles.sectionDescriptionMultiline}
-							data-flx="guild.guild-tabs.guild-moderation-tab.section-description-multiline"
+						<p
+							className={styles.sectionDescription}
+							data-flx="guild.guild-tabs.guild-moderation-tab.section-description--verification"
 						>
-							<p data-flx="guild.guild-tabs.guild-moderation-tab.p">
-								<Trans>Choose what members must have before they can post or DM community members.</Trans>
-							</p>
-							<p data-flx="guild.guild-tabs.guild-moderation-tab.p--2">
+							<Trans>
+								Choose what members must have before they can post or DM community members. Members with roles can
+								bypass these checks. For public spaces, we recommend enabling verification.
+							</Trans>
+						</p>
+						{isDiscoverable && (
+							<p
+								className={styles.sectionDescription}
+								style={{fontStyle: 'italic'}}
+								data-flx="guild.guild-tabs.guild-moderation-tab.section-description--verification-discovery"
+							>
 								<Trans>
-									Members with roles can bypass these checks. For public spaces, we recommend enabling verification.
+									Communities listed in Explore need at least email verification. You can't pick "None" while your
+									community is listed in Explore.
 								</Trans>
 							</p>
-							{isDiscoverable && (
-								<p data-flx="guild.guild-tabs.guild-moderation-tab.p--3">
-									<Trans>
-										Communities listed in Discovery require at least verified email. None cannot be selected while
-										Discovery is enabled.
-									</Trans>
-								</p>
-							)}
-						</div>
+						)}
 						<Controller
 							name="verification_level"
 							control={form.control}
@@ -344,7 +381,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 							data-flx="guild.guild-tabs.guild-moderation-tab.section-description"
 						>
 							<Trans>
-								Automatically screen messages for explicit content in channels not marked for mature content.
+								Automatically check images and videos for explicit content in channels not marked for mature content.
 							</Trans>
 						</p>
 						{isDiscoverable && (
@@ -354,8 +391,8 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 								data-flx="guild.guild-tabs.guild-moderation-tab.section-description--2"
 							>
 								<Trans>
-									Communities listed in Discovery are required to scan all members. This setting cannot be changed while
-									Discovery is enabled.
+									Communities listed in Explore must check images and videos from all members. You can't change this
+									setting while your community is listed in Explore.
 								</Trans>
 							</p>
 						)}
@@ -454,6 +491,29 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 							/>
 						)}
 					</div>
+					<div className={styles.section} data-flx="guild.guild-tabs.guild-moderation-tab.section--member-dms">
+						<h3
+							className={styles.sectionTitle}
+							data-flx="guild.guild-tabs.guild-moderation-tab.section-title--member-dms"
+						>
+							<Trans>Direct messages</Trans>
+						</h3>
+						<Controller
+							name="member_dms_disabled"
+							control={form.control}
+							render={({field}) => (
+								<Switch
+									label={i18n._(MEMBER_DMS_DISABLED_SWITCH_LABEL_DESCRIPTOR)}
+									description={i18n._(MEMBER_DMS_DISABLED_SWITCH_DESCRIPTION_DESCRIPTOR)}
+									value={field.value}
+									onChange={field.onChange}
+									disabled={!canManageGuild}
+									data-flx="guild.guild-tabs.guild-moderation-tab.switch.member-dms-disabled"
+								/>
+							)}
+							data-flx="guild.guild-tabs.guild-moderation-tab.controller--member-dms"
+						/>
+					</div>
 					{isGuildOwner && (
 						<div className={styles.section} data-flx="guild.guild-tabs.guild-moderation-tab.section--4">
 							<h3 className={styles.sectionTitle} data-flx="guild.guild-tabs.guild-moderation-tab.section-title--4">
@@ -464,7 +524,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 								data-flx="guild.guild-tabs.guild-moderation-tab.section-description--4"
 							>
 								<Trans>
-									Require two-factor authentication for moderators before they can ban, kick, timeout, or remove
+									Require two-factor authentication for moderators before they can ban, kick, time out, or remove
 									messages.
 								</Trans>
 							</p>

@@ -1,11 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {availableParallelism} from 'node:os';
+import type {
+	AgePolicyConfig,
+	APIConfig,
+	BlueskyOAuthConfig,
+	OperatorPassConfig,
+	TrustedCallerConfig,
+} from '@app/api/config/APIConfig';
+import {
+	parseOperatorPassMaxQuantity,
+	parseOperatorPassReleaseLists,
+	parseOperatorPassStandardPrices,
+	parseOperatorPassWallTiers,
+	parseOperatorPassWithdrawalCountries,
+	resolveOperatorPassDisabledCurrencies,
+} from '@app/api/operator_pass/OperatorPassPrices';
+import {DonationRateLimitConfigs} from '@app/api/rate_limit_configs/DonationRateLimitConfig';
+import {OperatorPassRateLimitConfigs} from '@app/api/rate_limit_configs/OperatorPassRateLimitConfig';
+import {parseIpBanEntry} from '@app/api/utils/IpRangeUtils';
+import {trimTrailingSlash} from '@app/api/utils/UrlUtils';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {parseUploadsTtlMs} from '@fluxer/config/src/ConfigLoader';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
-import {resolveDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
+import {EmailDeliveryModes} from '@fluxer/constants/src/AccountConfigConstants';
+import {smtpTlsModeFromSecure} from '@fluxer/constants/src/SmtpConstants';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
+import type {GeoEntry} from '@fluxer/schema/src/domains/geolocation/GeolocationSchemas';
+import {normalizeString} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
-import type {APIConfig, BlueskyOAuthConfig} from './config/APIConfig';
-import type {WorkerTaskName} from './worker/WorkerLaneConfig';
 
 function extractHostname(url: string): string {
 	try {
@@ -13,10 +36,6 @@ function extractHostname(url: string): string {
 	} catch {
 		throw new Error(`Invalid URL: ${url}`);
 	}
-}
-
-function trimTrailingSlash(url: string): string {
-	return url.replace(/\/+$/u, '');
 }
 
 function resolveEmailAppBaseUrl(master: MasterConfig): string {
@@ -39,25 +58,28 @@ function resolveEmailAppBaseUrl(master: MasterConfig): string {
 	}
 }
 
-function resolveGatewayInternalUrl(master: MasterConfig): string {
-	const configuredInternalGateway = (
-		master.internal as {
-			gateway?: string;
-		}
-	).gateway;
-	if (typeof configuredInternalGateway === 'string' && configuredInternalGateway.length > 0) {
-		return trimTrailingSlash(configuredInternalGateway);
-	}
-	try {
-		const gatewayUrl = new URL(master.endpoints.gateway);
-		if (gatewayUrl.protocol === 'ws:') {
-			gatewayUrl.protocol = 'http:';
-		} else if (gatewayUrl.protocol === 'wss:') {
-			gatewayUrl.protocol = 'https:';
-		}
-		return trimTrailingSlash(gatewayUrl.toString());
-	} catch {
-		throw new Error(`Invalid gateway endpoint URL: ${master.endpoints.gateway}`);
+function toSmtpConfig(
+	smtp: NonNullable<MasterConfig['integrations']['email']['smtp']>,
+): NonNullable<APIConfig['email']['smtp']> {
+	return {
+		host: smtp.host,
+		port: smtp.port,
+		username: smtp.username,
+		password: smtp.password,
+		tlsMode: smtp.tls_mode ?? smtpTlsModeFromSecure(smtp.secure, smtp.port),
+	};
+}
+
+function resolveEnvEmailSwitch(
+	email: MasterConfig['integrations']['email'],
+): Pick<APIConfig['email'], 'enabled' | 'provider'> {
+	switch (email.delivery) {
+		case undefined:
+			return {enabled: email.enabled, provider: email.provider};
+		case EmailDeliveryModes.SMTP:
+			return {enabled: true, provider: 'smtp'};
+		case EmailDeliveryModes.OFF:
+			return {enabled: false, provider: email.provider};
 	}
 }
 
@@ -83,6 +105,14 @@ function resolveTrustClientIpHeader(proxyConfig: object): boolean {
 function normalizeIpBanExemptIps(values: Array<string>): Array<string> {
 	const normalized = new Set<string>();
 	for (const value of values) {
+		if (value.includes('/')) {
+			const range = parseIpBanEntry(value);
+			if (range?.type !== 'range') {
+				throw new Error(`FLUXER_API_IP_BAN_EXEMPT_IPS contains an invalid CIDR range: ${value}`);
+			}
+			normalized.add(range.canonical);
+			continue;
+		}
 		const parsed = parseIpAddress(value);
 		if (!parsed) {
 			throw new Error(`FLUXER_API_IP_BAN_EXEMPT_IPS contains an invalid IP address: ${value}`);
@@ -92,40 +122,210 @@ function normalizeIpBanExemptIps(values: Array<string>): Array<string> {
 	return Array.from(normalized);
 }
 
-function normalizeCountryCodes(values: Array<string>, configName: string): ReadonlySet<string> {
-	const normalized = new Set<string>();
-	for (const value of values) {
-		const countryCode = value.trim().toUpperCase();
-		if (!/^[A-Z]{2}$/u.test(countryCode)) {
-			throw new Error(`${configName} contains an invalid ISO 3166-1 alpha-2 country code: ${value}`);
-		}
-		normalized.add(countryCode);
+const TRUSTED_CALLER_MIN_KEY_LENGTH = 32;
+
+function parseTrustedCaller(entry: unknown, index: number): TrustedCallerConfig {
+	const label = `FLUXER_API_TRUSTED_CALLERS entry ${index + 1}`;
+	if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+		throw new Error(`${label} must be a JSON object`);
 	}
-	return normalized;
+	const name = Reflect.get(entry, 'name');
+	if (typeof name !== 'string' || name.trim().length === 0) {
+		throw new Error(`${label} must have a name`);
+	}
+	const key = Reflect.get(entry, 'key');
+	if (typeof key !== 'string' || key.trim().length < TRUSTED_CALLER_MIN_KEY_LENGTH) {
+		throw new Error(`${label} key must be at least ${TRUSTED_CALLER_MIN_KEY_LENGTH} characters`);
+	}
+	const buckets = Reflect.get(entry, 'buckets');
+	if (
+		!Array.isArray(buckets) ||
+		buckets.length === 0 ||
+		!buckets.every((bucket) => typeof bucket === 'string' && bucket.trim().length > 0)
+	) {
+		throw new Error(`${label} buckets must be a non-empty list of bucket names`);
+	}
+	return {
+		name: name.trim(),
+		key: key.trim(),
+		buckets: buckets.map((bucket: string) => bucket.trim()),
+	};
 }
 
-function mapPushProviderApps(
-	apps:
-		| Array<{
-				app_id?: string;
-				topic?: string;
-				environment?: 'production' | 'development';
-				project_id?: string;
-		  }>
-		| undefined,
-	configName: string,
-): APIConfig['push']['apns']['apps'] {
-	return (apps ?? []).map((app) => {
-		if (!app.app_id) {
-			throw new Error(`${configName} contains an entry with no app_id`);
-		}
-		return {
-			appId: app.app_id,
-			topic: app.topic,
-			environment: app.environment,
-			projectId: app.project_id,
-		};
-	});
+function buildTrustedCallers(master: MasterConfig): Array<TrustedCallerConfig> {
+	const trustedCallers = (master.services.api.trusted_callers ?? []).map(parseTrustedCaller);
+	const donationProxyKey = (master.services.api.donation_proxy_key ?? '').trim();
+	if (donationProxyKey.length > 0 && donationProxyKey.length < TRUSTED_CALLER_MIN_KEY_LENGTH) {
+		throw new Error(`FLUXER_API_DONATION_PROXY_KEY must be at least ${TRUSTED_CALLER_MIN_KEY_LENGTH} characters`);
+	}
+	if (donationProxyKey.length > 0) {
+		trustedCallers.push({
+			name: 'donation',
+			key: donationProxyKey,
+			buckets: [
+				...Object.values(DonationRateLimitConfigs).map((routeConfig) => routeConfig.bucket),
+				...Object.values(OperatorPassRateLimitConfigs)
+					.filter((routeConfig) => routeConfig.trustForwardedClientIp === true)
+					.map((routeConfig) => routeConfig.bucket),
+			],
+		});
+	}
+	return trustedCallers;
+}
+
+const HOSTED_AGE_RESTRICTED_REGIONS = ['GB', 'BR'];
+
+function toGeoEntry(region: string): GeoEntry {
+	const separator = region.indexOf('-');
+	if (separator === -1) {
+		return {countryCode: region, regionCode: null};
+	}
+	return {countryCode: region.slice(0, separator), regionCode: region.slice(separator + 1)};
+}
+
+function buildAgePolicyConfig(master: MasterConfig): AgePolicyConfig {
+	const {enabled, restricted_regions} = master.instance.age_policy;
+	const regionsSet = restricted_regions !== undefined;
+	if (!(enabled ?? (regionsSet || !master.instance.self_hosted))) {
+		return {restricted: []};
+	}
+	const restricted = regionsSet ? restricted_regions : HOSTED_AGE_RESTRICTED_REGIONS;
+	return {restricted: restricted.map(toGeoEntry)};
+}
+
+const SETUP_TOKEN_MIN_LENGTH = 32;
+const SETUP_TOKEN_MAX_LENGTH = 256;
+
+function resolveSetupToken(master: MasterConfig): string | null {
+	const token = master.instance.setup.token?.trim();
+	if (!token) return null;
+	if (
+		token.length < SETUP_TOKEN_MIN_LENGTH ||
+		token.length > SETUP_TOKEN_MAX_LENGTH ||
+		normalizeString(token) !== token
+	) {
+		throw new Error(
+			`FLUXER_SETUP_TOKEN must be ${SETUP_TOKEN_MIN_LENGTH} to ${SETUP_TOKEN_MAX_LENGTH} printable characters`,
+		);
+	}
+	return token;
+}
+
+const ISO_INSTANT_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/u;
+const OPERATOR_PASS_MAX_GRACE_MINUTES = 24 * 60;
+
+function parseIsoInstant(value: string | undefined, envName: string): Date {
+	const trimmed = (value ?? '').trim();
+	const parsed = ISO_INSTANT_PATTERN.test(trimmed) ? Date.parse(trimmed) : Number.NaN;
+	if (!Number.isFinite(parsed)) {
+		throw new Error(`${envName} must be an ISO-8601 instant such as 2026-11-01T16:00:00Z`);
+	}
+	return new Date(parsed);
+}
+
+function parseOptionalIsoInstant(value: string | undefined, envName: string): Date | null {
+	return (value ?? '').trim().length === 0 ? null : parseIsoInstant(value, envName);
+}
+
+function parseOptionalSnowflake(value: string | undefined, envName: string): bigint | null {
+	const trimmed = (value ?? '').trim();
+	if (trimmed.length === 0) {
+		return null;
+	}
+	if (!/^[1-9]\d{0,19}$/u.test(trimmed)) {
+		throw new Error(`${envName} must be a snowflake ID`);
+	}
+	return BigInt(trimmed);
+}
+
+function resolveOperatorPassClockOffsetMs(master: MasterConfig): number {
+	const override = (master.operator_pass.now_override ?? '').trim();
+	if (override.length === 0) {
+		return 0;
+	}
+	const overrideAt = parseIsoInstant(override, 'FLUXER_OPERATOR_PASS_NOW');
+	if (master.env === 'production' && !master.dev.test_mode_enabled) {
+		console.warn('FLUXER_OPERATOR_PASS_NOW is ignored in production');
+		return 0;
+	}
+	return overrideAt.getTime() - Date.now();
+}
+
+function buildOperatorPassConfig(master: MasterConfig): OperatorPassConfig {
+	const source = master.operator_pass;
+	const priceRisesAt = parseOptionalIsoInstant(source.price_rises_at, 'FLUXER_OPERATOR_PASS_PRICE_RISES_AT');
+	if (priceRisesAt === null && master.env === 'production' && !master.instance.self_hosted) {
+		console.warn('FLUXER_OPERATOR_PASS_PRICE_RISES_AT is not set, the Operator Pass early bird price never ends');
+	}
+	const graceMinutes = source.grace_minutes;
+	if (
+		typeof graceMinutes !== 'number' ||
+		!Number.isInteger(graceMinutes) ||
+		graceMinutes < 0 ||
+		graceMinutes > OPERATOR_PASS_MAX_GRACE_MINUTES
+	) {
+		throw new Error(
+			`FLUXER_OPERATOR_PASS_GRACE_MINUTES must be an integer between 0 and ${OPERATOR_PASS_MAX_GRACE_MINUTES}`,
+		);
+	}
+	const labsGuildId = parseOptionalSnowflake(source.labs_guild_id, 'FLUXER_LABS_GUILD_ID');
+	const labsOperatorRoleId = parseOptionalSnowflake(source.labs_operator_role_id, 'FLUXER_LABS_OPERATOR_ROLE_ID');
+	if ((labsGuildId === null) !== (labsOperatorRoleId === null)) {
+		throw new Error('FLUXER_LABS_GUILD_ID and FLUXER_LABS_OPERATOR_ROLE_ID must be set together');
+	}
+	const labsVisionaryRoleId = parseOptionalSnowflake(source.labs_visionary_role_id, 'FLUXER_LABS_VISIONARY_ROLE_ID');
+	if (labsVisionaryRoleId !== null && labsGuildId === null) {
+		throw new Error('FLUXER_LABS_VISIONARY_ROLE_ID needs FLUXER_LABS_GUILD_ID');
+	}
+	const labsOperatorsChannelId = parseOptionalSnowflake(
+		source.labs_operators_channel_id,
+		'FLUXER_LABS_OPERATORS_CHANNEL_ID',
+	);
+	if (labsOperatorsChannelId !== null && labsGuildId === null) {
+		throw new Error('FLUXER_LABS_OPERATORS_CHANNEL_ID needs FLUXER_LABS_GUILD_ID');
+	}
+	const standardPricesMinor = parseOperatorPassStandardPrices(source.standard_prices_minor);
+	const hostedSale = priceRisesAt !== null && master.env === 'production' && !master.instance.self_hosted;
+	if (hostedSale && standardPricesMinor === null) {
+		throw new Error(
+			'FLUXER_OPERATOR_PASS_STANDARD_PRICE_* must be set in production when FLUXER_OPERATOR_PASS_PRICE_RISES_AT is set',
+		);
+	}
+	if (hostedSale && (labsGuildId === null || labsVisionaryRoleId === null || labsOperatorsChannelId === null)) {
+		throw new Error(
+			'FLUXER_LABS_GUILD_ID, FLUXER_LABS_OPERATOR_ROLE_ID, FLUXER_LABS_VISIONARY_ROLE_ID and FLUXER_LABS_OPERATORS_CHANNEL_ID must be set in production when FLUXER_OPERATOR_PASS_PRICE_RISES_AT is set',
+		);
+	}
+	return {
+		priceRisesAt,
+		graceMs: graceMinutes * 60 * 1000,
+		clockOffsetMs: resolveOperatorPassClockOffsetMs(master),
+		labsGuildId,
+		labsOperatorRoleId,
+		labsVisionaryRoleId,
+		labsOperatorsChannelId,
+		standardPricesMinor,
+		releaseLists: parseOperatorPassReleaseLists(source.release_lists),
+		withdrawalCountries: parseOperatorPassWithdrawalCountries(source.withdrawal_countries),
+		wallTierMinimums: parseOperatorPassWallTiers(source.wall_tiers),
+		maxQuantity: parseOperatorPassMaxQuantity(source.max_quantity),
+		disabledCurrencies: resolveOperatorPassDisabledCurrencies(source.localized_prices_enabled),
+	};
+}
+
+const VALKEY_DEFAULT_MAXMEMORY_BYTES = 192 * 1024 * 1024;
+const KV_POSTGRES_ROW_OVERHEAD_FACTOR = 4;
+
+function defaultKVPostgresMaxConnections(embeddedWorker: boolean): number {
+	return Math.min(25, Math.max(4, (embeddedWorker ? 3 : 2) * availableParallelism()));
+}
+
+function buildStorageConfig(master: MasterConfig): APIConfig['storage'] {
+	const {backend, root, uploads_ttl, read_only} = master.storage;
+	if (backend === 's3') {
+		return {backend, root: '', uploadsTtlMs: null, readOnly: read_only};
+	}
+	return {backend, root, uploadsTtlMs: parseUploadsTtlMs(uploads_ttl), readOnly: read_only};
 }
 
 export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
@@ -136,6 +336,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	const postgresSource = master.database.postgres;
 	const apiWorkerConfig = master.services.api?.worker;
 	const s3Config = master.s3;
+	const storage = buildStorageConfig(master);
 	const geoipSourceConfig = resolveGeoipRuntimeSourceConfig(parseGeoipSourceConfig(master.geoip.maxmind_db_path), {
 		serviceName: 'api',
 	});
@@ -147,13 +348,13 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	if (Buffer.from(uploadRelaySecretBase64, 'base64').length < 32) {
 		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes');
 	}
+	const trustedCallers = buildTrustedCallers(master);
 	if (!s3Config) {
 		throw new Error('S3 configuration is required for the API');
 	}
 	const s3Buckets = s3Config.buckets ?? {
 		cdn: '',
 		uploads: '',
-		downloads: '',
 		reports: '',
 		harvests: '',
 	};
@@ -166,14 +367,13 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	return {
 		nodeEnv: master.env === 'test' ? 'development' : master.env,
 		port: master.services.api.port,
+		host: master.services.api.host,
 		headersTimeoutMs: master.services.api.headers_timeout_ms,
 		requestTimeoutMs: master.services.api.request_timeout_ms,
 		maxInflightRequests: master.services.api.max_inflight_requests,
+		maxConcurrentFormUploads: master.services.api.max_concurrent_form_uploads,
+		automatedMessageDeletionDelayDays: master.services.api.automated_message_deletion_delay_days,
 		ipBanExemptIps: normalizeIpBanExemptIps(master.services.api.ip_ban_exempt_ips),
-		desktopGitHubRedirectCountries: normalizeCountryCodes(
-			master.services.api.desktop_github_redirect_countries,
-			'FLUXER_API_DESKTOP_GITHUB_REDIRECT_COUNTRIES',
-		),
 		cassandra: {
 			hosts: cassandraSource?.hosts.join(',') ?? '',
 			port: cassandraSource?.port ?? 9042,
@@ -199,39 +399,24 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			backend: master.database.backend,
 		},
 		kv: {
-			provider: 'redis' as const,
 			url: master.internal.kv,
-			mode: ((
-				master.internal as {
-					kv_mode?: string;
-				}
-			).kv_mode ?? 'standalone') as 'standalone' | 'cluster',
-			clusterNodes:
-				(
-					master.internal as {
-						kv_cluster_nodes?: Array<{
-							host: string;
-							port: number;
-						}>;
-					}
-				).kv_cluster_nodes ?? [],
-			clusterNatMap:
-				(
-					master.internal as {
-						kv_cluster_nat_map?: Record<
-							string,
-							{
-								host: string;
-								port: number;
-							}
-						>;
-					}
-				).kv_cluster_nat_map ?? {},
+			mode: master.internal.kv_mode,
+			postgresMaxConnections:
+				master.internal.kv_postgres?.max_connections ??
+				defaultKVPostgresMaxConnections(apiWorkerConfig?.embedded ?? false),
+			postgresMaxBytes:
+				master.internal.kv_postgres?.max_bytes ?? VALKEY_DEFAULT_MAXMEMORY_BYTES * KV_POSTGRES_ROW_OVERHEAD_FACTOR,
 		},
 		nats: {
 			coreUrl: master.services.nats?.core_url ?? 'nats://127.0.0.1:4222',
 			jetStreamUrl: master.services.nats?.jetstream_url ?? 'nats://127.0.0.1:4223',
 			authToken: master.services.nats?.auth_token ?? '',
+		},
+		storage,
+		storageChangeFeed: {
+			enabled: master.services.api.storage_change_feed?.enabled ?? false,
+			stream: master.services.api.storage_change_feed?.stream ?? 'STORAGE_CHANGES',
+			skipBuckets: master.services.api.storage_change_feed?.skip_buckets ?? [s3Buckets.uploads],
 		},
 		search: {
 			engine: master.integrations.search?.engine ?? 'elasticsearch',
@@ -254,6 +439,9 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				tokenTtlSecs: uploadRelayConfig.token_ttl_secs,
 				keepDirectCountries: uploadRelayConfig.keep_direct_countries,
 			},
+			attachmentUrls: {
+				secretsBase64: master.services.media_proxy.attachment_urls.secrets_base64,
+			},
 		},
 		geoip: geoipSourceConfig,
 		proxy: {
@@ -262,8 +450,11 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		},
 		endpoints: {
 			apiPublic: master.endpoints.api,
+			apiPublicDiscovery: master.services.api.discovery_public_endpoint || master.endpoints.api,
+			apiTransportDiscovery: master.services.api.discovery_transport_endpoint || null,
 			apiClient: master.endpoints.api_client,
 			webApp: master.endpoints.app,
+			webAppOrigins: [...new Set([new URL(master.endpoints.app).origin, ...master.services.api.app_origin_aliases])],
 			gateway: master.endpoints.gateway,
 			media: master.endpoints.media,
 			marketing: master.endpoints.marketing,
@@ -273,25 +464,13 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			staticCdn: master.endpoints.static_cdn,
 		},
 		internal: {
-			gateway: resolveGatewayInternalUrl(master),
 			gatewayRpcAuthToken: master.services.gateway.rpc_auth_token ?? '',
+			trustedCallers,
 		},
 		hosts: {
-			invite: extractHostname(master.endpoints.invite),
-			gift: extractHostname(master.endpoints.gift),
 			marketing: extractHostname(master.endpoints.marketing),
 			unfurlIgnored: master.services.api.unfurl_ignored_hosts,
 		},
-		embeds: {
-			oEmbedHtmlEnabled: master.services.api.embeds.oembed_html_enabled,
-			oEmbedHtmlAllowUntrustedOnSelfHosted: master.services.api.embeds.oembed_html_allow_untrusted_on_self_hosted,
-			oEmbedHtmlAllowedHosts: master.services.api.embeds.oembed_html_allowed_hosts,
-			cacheDefaultTtlSeconds: master.services.api.embeds.cache_default_ttl_seconds,
-			cacheMaxTtlSeconds: master.services.api.embeds.cache_max_ttl_seconds,
-			cacheMinTtlSeconds: master.services.api.embeds.cache_min_ttl_seconds,
-			cacheRespectRemoteTtl: master.services.api.embeds.cache_respect_remote_ttl,
-		},
-		s3Downloads: resolveDownloadsProvider(master),
 		s3: {
 			endpoint: s3Config.endpoint,
 			presignedUrlBase: s3Config.presigned_url_base,
@@ -302,66 +481,44 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			buckets: s3Buckets,
 		},
 		email: {
-			enabled: master.integrations.email.enabled,
-			provider: master.integrations.email.provider,
+			...resolveEnvEmailSwitch(master.integrations.email),
 			webhookSecret: master.integrations.email.webhook_secret ?? undefined,
 			fromEmail: master.integrations.email.from_email,
 			fromName: master.integrations.email.from_name,
+			replyToEmail: master.integrations.email.reply_to_email,
+			supportAlertEmail: master.integrations.email.support_alert_email?.trim() || null,
 			appBaseUrl: resolveEmailAppBaseUrl(master),
-			smtp: master.integrations.email.smtp
+			smtp: master.integrations.email.smtp ? toSmtpConfig(master.integrations.email.smtp) : undefined,
+			fallback: master.integrations.email.fallback
 				? {
-						host: master.integrations.email.smtp.host,
-						port: master.integrations.email.smtp.port,
-						username: master.integrations.email.smtp.username,
-						password: master.integrations.email.smtp.password,
-						secure: master.integrations.email.smtp.secure ?? true,
+						domains: master.integrations.email.fallback.domains,
+						smtp: {
+							...toSmtpConfig(master.integrations.email.fallback.smtp),
+							headers: master.integrations.email.fallback.smtp.headers,
+						},
 					}
 				: undefined,
-		},
-		sms: {
-			enabled: master.integrations.sms.enabled,
-			accountSid: master.integrations.sms.account_sid,
-			authToken: master.integrations.sms.auth_token,
-			verifyServiceSid: master.integrations.sms.verify_service_sid,
-			inboundChallengeNumber: master.integrations.sms.inbound_challenge_number || undefined,
-			inboundWebhookAuthToken: master.integrations.sms.inbound_webhook_auth_token || master.integrations.sms.auth_token,
-			inboundWebhookPublicUrl: master.integrations.sms.inbound_webhook_public_url || undefined,
-		},
-		risk: {
-			enabled: master.integrations.risk_integration.enabled,
-			ipinfoApiKey: master.integrations.risk_integration.ipinfo_api_key || undefined,
-			accountPolicyDsl: master.integrations.risk_integration.account_policy_dsl,
 		},
 		blocklistFeeds: {
 			enabled: master.integrations.blocklist_feeds.enabled ?? !master.instance.self_hosted,
 		},
-		captcha: {
-			enabled: master.integrations.captcha.enabled,
-			provider: master.integrations.captcha.provider,
-			hcaptcha: master.integrations.captcha.hcaptcha
-				? {
-						siteKey: master.integrations.captcha.hcaptcha.site_key,
-						secretKey: master.integrations.captcha.hcaptcha.secret_key,
-					}
-				: undefined,
-			turnstile: master.integrations.captcha.turnstile
-				? {
-						siteKey: master.integrations.captcha.turnstile.site_key,
-						secretKey: master.integrations.captcha.turnstile.secret_key,
-					}
-				: undefined,
-		},
-		contentModeration: {
-			nsfwThreshold: master.services.api.content_moderation?.nsfw_threshold ?? 0.7,
+		breachedPasswordCheck: {
+			enabled: master.integrations.breached_password_check.enabled ?? !master.instance.self_hosted,
 		},
 		voice: {
 			enabled: master.integrations.voice.enabled,
 			apiKey: master.integrations.voice.api_key,
 			apiSecret: master.integrations.voice.api_secret,
-			webhookUrl: master.integrations.voice.webhook_url,
 			url: master.integrations.voice.url,
 			internalUrl: master.integrations.voice.internal_url,
+			bundled: master.integrations.voice.bundled ?? true,
 			defaultRegion: master.integrations.voice.default_region,
+			p2pStunUrls: master.integrations.voice.p2p_stun_urls,
+			turnServers: master.integrations.voice.turn_servers ?? [],
+			joinAllowPrivateEndpoints: master.integrations.voice.join_allow_private_endpoints ?? false,
+			healthIntervalMs: master.integrations.voice.health_interval_ms ?? 15000,
+			participantSweepEnabled: master.integrations.voice.participant_sweep_enabled ?? true,
+			participantSweepDryRun: master.integrations.voice.participant_sweep_dry_run ?? true,
 		},
 		stripe: {
 			enabled: master.integrations.stripe.enabled,
@@ -374,6 +531,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 						monthlyBrl: master.integrations.stripe.prices.monthly_brl,
 						monthlyDkk: master.integrations.stripe.prices.monthly_dkk,
 						monthlyInr: master.integrations.stripe.prices.monthly_inr,
+						monthlyIsk: master.integrations.stripe.prices.monthly_isk,
 						monthlyNok: master.integrations.stripe.prices.monthly_nok,
 						monthlyPln: master.integrations.stripe.prices.monthly_pln,
 						monthlySek: master.integrations.stripe.prices.monthly_sek,
@@ -383,6 +541,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 						yearlyBrl: master.integrations.stripe.prices.yearly_brl,
 						yearlyDkk: master.integrations.stripe.prices.yearly_dkk,
 						yearlyInr: master.integrations.stripe.prices.yearly_inr,
+						yearlyIsk: master.integrations.stripe.prices.yearly_isk,
 						yearlyNok: master.integrations.stripe.prices.yearly_nok,
 						yearlyPln: master.integrations.stripe.prices.yearly_pln,
 						yearlySek: master.integrations.stripe.prices.yearly_sek,
@@ -395,6 +554,8 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 						gift1YearDkk: master.integrations.stripe.prices.gift_1_year_dkk,
 						gift1MonthNok: master.integrations.stripe.prices.gift_1_month_nok,
 						gift1YearNok: master.integrations.stripe.prices.gift_1_year_nok,
+						gift1MonthIsk: master.integrations.stripe.prices.gift_1_month_isk,
+						gift1YearIsk: master.integrations.stripe.prices.gift_1_year_isk,
 						gift1MonthBrl: master.integrations.stripe.prices.gift_1_month_brl,
 						gift1MonthInr: master.integrations.stripe.prices.gift_1_month_inr,
 						gift1MonthPln: master.integrations.stripe.prices.gift_1_month_pln,
@@ -409,10 +570,18 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				: undefined,
 			legacyPrices: master.integrations.stripe.legacy_prices,
 		},
-		bunny: {
-			purgeEnabled: master.integrations.bunny.purge_enabled,
-			apiKey: master.integrations.bunny.api_key,
-			pullZoneId: master.integrations.bunny.pull_zone_id,
+		cachePurge: {
+			adapter: master.integrations.cache_purge.adapter,
+			http: {
+				endpoint: master.integrations.cache_purge.http.endpoint,
+				token: master.integrations.cache_purge.http.token,
+				timeoutMs: master.integrations.cache_purge.http.timeout_ms,
+			},
+			controller: {
+				endpoint: master.integrations.cache_purge.controller.endpoint,
+				token: master.integrations.cache_purge.controller.token,
+				timeoutMs: master.integrations.cache_purge.controller.timeout_ms,
+			},
 		},
 		clamav: {
 			enabled: master.integrations.clamav.enabled,
@@ -420,30 +589,22 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			port: master.integrations.clamav.port,
 			failOpen: master.integrations.clamav.fail_open,
 		},
-		ncmec: {
-			enabled: master.integrations.ncmec.enabled,
-			baseUrl: master.integrations.ncmec.base_url,
-			username: master.integrations.ncmec.username,
-			password: master.integrations.ncmec.password,
-			reporterEmail: master.integrations.ncmec.reporter_email ?? '',
-		},
 		admin: {
-			basePath: master.services.admin.base_path,
 			oauthClientSecret: master.services.admin.oauth_client_secret,
+			sso: {
+				issuer: master.services.admin.sso.issuer,
+				clientId: master.services.admin.sso.client_id,
+			},
 		},
 		auth: {
 			sudoModeSecret: master.auth.sudo_mode_secret,
 			connectionInitiationSecret: master.auth.connection_initiation_secret,
+			profilePseudonymSecret: master.auth.profile_pseudonym_secret,
 			ssoAllowPrivateAddresses: master.auth.sso_allow_private_addresses,
 			passkeys: {
 				rpName: master.auth.passkeys.rp_name,
 				rpId: master.auth.passkeys.rp_id,
 				allowedOrigins: master.auth.passkeys.additional_allowed_origins,
-			},
-			vapid: {
-				publicKey: master.auth.vapid.public_key,
-				privateKey: master.auth.vapid.private_key,
-				email: master.auth.vapid.email,
 			},
 			bluesky: master.auth.bluesky as BlueskyOAuthConfig,
 		},
@@ -455,6 +616,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		},
 		instance: {
 			selfHosted: master.instance.self_hosted,
+			baseDomain: master.domain.base_domain,
 			autoJoinInviteCode: master.instance.auto_join_invite_code,
 			visionariesGuildId: master.instance.visionaries_guild_id,
 			visionariesGuildVisionaryRoleId: master.instance.visionaries_guild_visionary_role_id,
@@ -465,31 +627,30 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				logoUrl: master.instance.branding.logo_url,
 				wordmarkUrl: master.instance.branding.wordmark_url,
 				faviconUrl: master.instance.branding.favicon_url,
+				faviconDarkUrl: master.instance.branding.favicon_dark_url,
+				signInBackdropUrl: master.instance.branding.sign_in_backdrop_url,
 				themeColor: master.instance.branding.theme_color,
+				statusPageUrl: master.instance.branding.status_page_url,
+				statusPageIncidentHistoryUrl: master.instance.branding.status_page_incident_history_url,
 			},
 			setup: {
 				configured: master.instance.setup.configured,
+				token: resolveSetupToken(master),
 			},
-		},
-		abusePolicy: {
-			inboundPhoneCountryCodes: master.instance.abuse_policy.inbound_phone_country_codes,
-			phoneVerification: {
-				inboundRequiredPrefixes: master.instance.abuse_policy.phone_verification.inbound_required_prefixes,
-			},
-			directContactSpam: {
-				enabled: master.instance.abuse_policy.direct_contact_spam.enabled,
-				countryCodes: master.instance.abuse_policy.direct_contact_spam.country_codes,
-				distinctTargetThreshold: master.instance.abuse_policy.direct_contact_spam.distinct_target_threshold,
-				targetWindowMs: master.instance.abuse_policy.direct_contact_spam.target_window_ms,
-				action: master.instance.abuse_policy.direct_contact_spam.action,
-			},
-		},
-		domain: {
-			baseDomain: master.domain.base_domain,
+			accountIdentity: master.instance.account_identity,
+			tagStyle: master.instance.tag_style,
+			agePolicy: buildAgePolicyConfig(master),
 		},
 		discovery: {
 			enabled: master.discovery.enabled,
 			minMemberCount: master.discovery.min_member_count,
+		},
+		operatorPass: buildOperatorPassConfig(master),
+		paymentDisputes: {
+			closureEffectiveAt: parseOptionalIsoInstant(
+				master.payment_disputes.closure_effective_at,
+				'FLUXER_PAYMENT_DISPUTE_CLOSURE_EFFECTIVE_AT',
+			),
 		},
 		dev: {
 			relaxRegistrationRateLimits: master.dev.relax_registration_rate_limits,
@@ -499,43 +660,61 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			validateResponses: resolveValidateResponses(master),
 		},
 		presignedAttachmentUploadsEnabled: master.services.api.presigned_attachment_uploads_enabled ?? false,
-		presignedDownloadsEnabled: master.services.api.presigned_downloads_enabled ?? false,
-		presignedHarvestDownloadsEnabled: master.services.api.presigned_harvest_downloads_enabled ?? true,
+		presignedHarvestDownloadsEnabled:
+			storage.backend === 's3' && (master.services.api.presigned_harvest_downloads_enabled ?? true),
 		attachmentDecayEnabled: master.attachment_decay_enabled,
 		deletionGracePeriodHours: master.dev.test_mode_enabled ? 0.01 : master.deletion_grace_period_hours,
 		inactivityDeletionThresholdDays: master.inactivity_deletion_threshold_days,
+		reportRetention: {
+			days: master.report_retention.days,
+			dryRun: master.report_retention.dry_run,
+		},
 		push: {
 			publicVapidKey: master.auth.vapid.public_key,
-			apns: {
-				enabled: master.integrations.push.apns.enabled,
-				teamId: master.integrations.push.apns.team_id,
-				keyId: master.integrations.push.apns.key_id,
-				privateKey: master.integrations.push.apns.private_key,
-				privateKeyPath: master.integrations.push.apns.private_key_path,
-				defaultEnvironment: master.integrations.push.apns.default_environment ?? 'production',
-				apps: mapPushProviderApps(master.integrations.push.apns.apps, 'FLUXER_PUSH_APNS_APPS'),
-			},
-			fcm: {
-				enabled: master.integrations.push.fcm.enabled,
-				projectId: master.integrations.push.fcm.project_id,
-				clientEmail: master.integrations.push.fcm.client_email,
-				privateKey: master.integrations.push.fcm.private_key,
-				privateKeyPath: master.integrations.push.fcm.private_key_path,
-				serviceAccountJsonPath: master.integrations.push.fcm.service_account_json_path,
-				tokenUri: master.integrations.push.fcm.token_uri ?? 'https://oauth2.googleapis.com/token',
-				apps: mapPushProviderApps(master.integrations.push.fcm.apps, 'FLUXER_PUSH_FCM_APPS'),
-			},
+		},
+		appStore: {
+			enabled: master.integrations.app_store.enabled,
+			issuerId: master.integrations.app_store.issuer_id,
+			keyId: master.integrations.app_store.key_id,
+			privateKey: master.integrations.app_store.private_key,
+			privateKeyPath: master.integrations.app_store.private_key_path,
+			apps: (master.integrations.app_store.apps ?? []).map((app) => ({
+				bundleId: app.bundle_id,
+				appAppleId: app.app_apple_id,
+			})),
+			products: master.integrations.app_store.products ?? {},
+		},
+		googlePlay: {
+			enabled: master.integrations.google_play.enabled,
+			packages: master.integrations.google_play.packages ?? [],
+			clientEmail: master.integrations.google_play.client_email,
+			privateKey: master.integrations.google_play.private_key,
+			privateKeyPath: master.integrations.google_play.private_key_path,
+			serviceAccountJsonPath: master.integrations.google_play.service_account_json_path,
+			tokenUri: master.integrations.google_play.token_uri ?? 'https://oauth2.googleapis.com/token',
+			products: master.integrations.google_play.products ?? {},
+			pushAudience: master.integrations.google_play.push_audience,
+			pushServiceAccountEmail: master.integrations.google_play.push_service_account_email,
+			selfServiceRefunds: master.integrations.google_play.self_service_refunds,
+		},
+		storeBilling: {
+			sandboxUserIds: master.integrations.store_billing.sandbox_user_ids ?? [],
+			sandboxEntitlesAll: master.integrations.store_billing.sandbox_entitles_all,
+			sandboxSubscriptions: master.integrations.store_billing.sandbox_subscriptions,
 		},
 		worker: {
 			mode: apiWorkerConfig?.mode ?? 'all_lanes',
 			laneName: apiWorkerConfig?.lane,
 			taskName: apiWorkerConfig?.task as WorkerTaskName | undefined,
 			enableCronScheduler: apiWorkerConfig?.enable_cron_scheduler,
+			metricsPort: apiWorkerConfig?.metrics_port,
+			embedded: apiWorkerConfig?.embedded ?? false,
 			laneConcurrencyOverrides: {
 				realtime: apiWorkerConfig?.lane_concurrency_overrides?.realtime,
 				unfurl: apiWorkerConfig?.lane_concurrency_overrides?.unfurl,
 				lifecycle: apiWorkerConfig?.lane_concurrency_overrides?.lifecycle,
 				batch: apiWorkerConfig?.lane_concurrency_overrides?.batch,
+				crosspost: apiWorkerConfig?.lane_concurrency_overrides?.crosspost,
 			},
 		},
 	};
@@ -543,6 +722,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 
 interface APIServerOptions {
 	port: number;
+	hostname?: string;
 	headersTimeoutMs: number;
 	requestTimeoutMs: number;
 }
@@ -550,6 +730,7 @@ interface APIServerOptions {
 export function buildAPIServerOptions(config: APIConfig): APIServerOptions {
 	return {
 		port: config.port,
+		hostname: config.host,
 		headersTimeoutMs: config.headersTimeoutMs,
 		requestTimeoutMs: config.requestTimeoutMs,
 	};

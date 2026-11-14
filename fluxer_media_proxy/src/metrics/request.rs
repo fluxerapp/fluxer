@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::histogram::Histogram;
+use fluxer_common::metrics::Histogram;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -8,6 +8,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 pub enum RequestKind {
     Health,
     Metadata,
+    Sniff,
     Thumbnail,
     Frames,
     AssetImage,
@@ -21,9 +22,10 @@ pub enum RequestKind {
 }
 
 impl RequestKind {
-    pub const ALL: [RequestKind; 12] = [
+    pub const ALL: [RequestKind; 13] = [
         Self::Health,
         Self::Metadata,
+        Self::Sniff,
         Self::Thumbnail,
         Self::Frames,
         Self::AssetImage,
@@ -40,6 +42,7 @@ impl RequestKind {
         match self {
             Self::Health => "health",
             Self::Metadata => "metadata",
+            Self::Sniff => "sniff",
             Self::Thumbnail => "thumbnail",
             Self::Frames => "frames",
             Self::AssetImage => "asset_image",

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::fmt;
+use std::sync::Arc;
 
-use crate::ast::{Node, ParserFlags};
+use crate::ast::Node;
+use crate::block::ClosingFenceLines;
 use crate::constants::{MAX_AST_NODES, MAX_LINE_LENGTH};
 use crate::emoji::EmojiContext;
 use crate::normalize::{
@@ -35,7 +37,7 @@ impl From<serde_json::Error> for ParseError {
 #[derive(Clone, Debug)]
 pub struct MarkdownParser {
     flags: u32,
-    emoji_context: EmojiContext,
+    emoji_context: Arc<EmojiContext>,
     pub(crate) node_count: usize,
 }
 
@@ -43,7 +45,7 @@ impl MarkdownParser {
     pub fn new(flags: u32, emoji_context: EmojiContext) -> Self {
         Self {
             flags,
-            emoji_context,
+            emoji_context: Arc::new(emoji_context),
             node_count: 0,
         }
     }
@@ -56,6 +58,10 @@ impl MarkdownParser {
         &self.emoji_context
     }
 
+    pub(crate) fn shared_emoji_context(&self) -> Arc<EmojiContext> {
+        Arc::clone(&self.emoji_context)
+    }
+
     pub fn parse(&mut self, input: &str) -> Result<Vec<Node>, ParseError> {
         let lines = text::split_lines(input);
         self.parse_lines(lines)
@@ -66,12 +72,17 @@ impl MarkdownParser {
             parser: self,
             lines,
             current_line: 0,
+            fences: ClosingFenceLines::default(),
         }
         .parse()
     }
 
     pub(crate) fn child_with_flags(&self, flags: u32) -> Self {
-        Self::new(flags, self.emoji_context.clone())
+        Self {
+            flags,
+            emoji_context: Arc::clone(&self.emoji_context),
+            node_count: 0,
+        }
     }
 }
 
@@ -79,9 +90,15 @@ pub(crate) struct RuntimeState<'a> {
     pub(crate) parser: &'a mut MarkdownParser,
     pub(crate) lines: Vec<Line>,
     pub(crate) current_line: usize,
+    pub(crate) fences: ClosingFenceLines,
 }
 
 impl RuntimeState<'_> {
+    pub(crate) fn replace_line(&mut self, index: usize, text: String, offset: usize) {
+        self.lines[index] = Line { text, offset };
+        self.fences.line_replaced(index);
+    }
+
     fn parse(&mut self) -> Result<Vec<Node>, ParseError> {
         let mut ast = Vec::new();
         if self.lines.is_empty() {
@@ -93,18 +110,12 @@ impl RuntimeState<'_> {
                 self.lines[self.current_line].text =
                     text::bounded_line_text(&self.lines[self.current_line].text).to_owned();
             }
-            let line = self.lines[self.current_line].text.clone();
-            let trimmed = trim_start(&line);
-            if trim(trimmed).is_empty() {
+            if trim(&self.lines[self.current_line].text).is_empty() {
                 let blank_count = self.count_blank_lines();
                 if !ast.is_empty() && self.current_line + blank_count < self.lines.len() {
-                    let next_line = self.lines[self.current_line + blank_count].clone();
-                    let next_trimmed = trim_start(&next_line.text);
-                    let next_offset =
-                        next_line.offset + (next_line.text.len() - next_trimmed.len());
-                    let is_next_heading =
-                        crate::block::parse_heading_node(self.parser, next_trimmed, next_offset)?
-                            .is_some();
+                    let next_trimmed =
+                        trim_start(&self.lines[self.current_line + blank_count].text);
+                    let is_next_heading = crate::block::heading_content(next_trimmed).is_some();
                     let is_prev_heading = matches!(ast.last(), Some(Node::Heading { .. }));
                     if !is_next_heading && !is_prev_heading {
                         ast.push(Node::Text {
@@ -168,6 +179,7 @@ impl RuntimeState<'_> {
                     &self.lines,
                     self.current_line + consumed,
                     self.parser.flags(),
+                    &mut self.fences,
                 )
                 || trimmed_next.is_empty()
             {
@@ -198,9 +210,4 @@ impl RuntimeState<'_> {
         self.current_line += consumed - 1;
         Ok(())
     }
-}
-
-#[allow(dead_code)]
-pub(crate) fn all_flags() -> u32 {
-    ParserFlags::ALL
 }

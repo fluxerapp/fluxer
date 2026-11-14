@@ -8,7 +8,8 @@
 	box-sizing: border-box;
 	min-width: 0;
 	width: 100%;
-	padding: 0.625rem 3.25rem 0.625rem 0.75rem;
+	padding-block: 0.625rem;
+	padding-inline: 0.75rem 3.25rem;
 }
 
 .richInput [contenteditable] {
@@ -21,11 +22,15 @@
 	caret-color: var(--text-chat);
 }
 
-.inputAreaContainer {
+.footerSection {
 	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
 	width: 100%;
 	flex-shrink: 0;
 	padding: 0.75rem 1rem;
+	border-top: 0.0625rem solid var(--background-modifier-accent);
 }
 
 .messageInputContainer {
@@ -64,14 +69,14 @@
 }
 
 .messageInputContainerWithCounter.messageInputContainerWithNotice .slowmodeNotice {
-	padding-right: 4.75rem;
+	padding-inline-end: 4.75rem;
 }
 
 .messageInputActions {
 	position: absolute;
 	z-index: 1;
 	top: 0.0625rem;
-	right: 0.0625rem;
+	inset-inline-end: 0.0625rem;
 }
 
 .emojiPickerButton {

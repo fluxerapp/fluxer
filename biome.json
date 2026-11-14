@@ -48,10 +48,11 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"complexity": {
 				"noForEach": "off",
 				"noImportantStyles": "off",
+				"noUselessCatch": "error",
 				"useLiteralKeys": "off"
 			},
 			"correctness": {
@@ -83,6 +84,7 @@
 					}
 				},
 				"useConst": "error",
+				"noDescendingSpecificity": "off",
 				"noNonNullAssertion": "off",
 				"noParameterAssign": "off",
 				"noRestrictedImports": {
@@ -98,7 +100,7 @@
 				}
 			},
 			"a11y": {
-				"recommended": true,
+				"preset": "recommended",
 				"useAriaPropsForRole": "error",
 				"useValidAriaRole": "error",
 				"useValidAriaValues": "error",
@@ -121,26 +123,89 @@
 				"noSvgWithoutTitle": "off"
 			},
 			"nursery": {
-				"useSortedClasses": "error"
+				"useTailwindSortedClasses": "error"
 			}
 		}
 	},
 	"assist": {"actions": {"source": {"organizeImports": "on"}}},
 	"overrides": [
 		{
+			"includes": [
+				"packages/**",
+				"fluxer_desktop/**",
+				"fluxer_docs/**",
+				"fluxer_api/**",
+				"fluxer_app/**",
+				"!fluxer_app/pkgs/livekit-client/**"
+			],
+			"linter": {"rules": {"style": {"noNestedTernary": "error"}}}
+		},
+		{
+			"includes": [
+				"packages/constants/**",
+				"packages/date_utils/**",
+				"packages/number_utils/**",
+				"packages/snowflake/**"
+			],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"noExcessiveCognitiveComplexity": {"level": "error", "options": {"maxAllowedComplexity": 25}}
+					},
+					"suspicious": {"noEmptyBlockStatements": "error"}
+				}
+			}
+		},
+		{
+			"includes": ["fluxer_app/inline_scripts/boot-shell.js"],
+			"linter": {
+				"rules": {
+					"complexity": {"useOptionalChain": "off", "useMathMinMax": "off"},
+					"correctness": {"noInnerDeclarations": "off"},
+					"style": {"noNestedTernary": "off", "useTemplate": "off"},
+					"suspicious": {"noVar": "off", "noGlobalIsFinite": "off"}
+				}
+			}
+		},
+		{
 			"includes": ["fluxer_app/src/**/*.tsx"],
 			"plugins": ["./tools/lint/no-adjacent-jsx-text.grit"]
 		},
 		{
-			"includes": ["fluxer_docs/scripts/VerifyDocsCoverage.ts"],
-			"linter": {"rules": {"suspicious": {"noTemplateCurlyInString": "off"}}}
+			"includes": [
+				"fluxer_app/src/**/*.css",
+				"!fluxer_app/src/features/accessibility/components/NekoSprite.module.css",
+				"!fluxer_app/src/features/app/components/layout/AuthLayout.module.css",
+				"!fluxer_app/src/features/channel/components/ChannelOriginIcon.module.css",
+				"!fluxer_app/src/features/messaging/components/modals/MediaModal.module.css",
+				"!fluxer_app/src/features/search/components/quick_switcher/OtherAccountAvatar.module.css",
+				"!fluxer_app/src/features/theme_settings/components/QuickCssEditorPanel.module.css",
+				"!fluxer_app/src/features/ui/components/BaseAvatar.module.css",
+				"!fluxer_app/src/features/ui/components/SliderTooltip.module.css",
+				"!fluxer_app/src/features/ui/floating_pane/FloatingPaneResizeHandles.module.css",
+				"!fluxer_app/src/features/ui/resizable_pane/ResizablePaneHandles.module.css",
+				"!fluxer_app/src/features/ui/tooltip/Tooltip.module.css",
+				"!fluxer_app/src/features/voice/components/AudioWaveform.module.css",
+				"!fluxer_app/src/features/voice/components/LiveRecordingWaveform.module.css",
+				"!fluxer_app/src/features/voice/components/PiPOverlay.module.css",
+				"!fluxer_app/src/features/voice/components/media_player/InlineAudioPlayer.module.css",
+				"!fluxer_app/src/features/voice/components/media_player/MediaProgressBar.module.css",
+				"!fluxer_app/src/features/voice/components/media_player/MediaVolumeControl.module.css",
+				"!fluxer_app/src/features/voice/components/modals/MobileVideoViewer.module.css"
+			],
+			"plugins": ["./tools/lint/no-physical-css.grit"]
 		},
 		{
-			"includes": [
-				"fluxer_app/src/features/i18n/components/AppI18nProvider.tsx",
-				"fluxer_app/src/features/i18n/components/AppI18nProvider.test.tsx"
-			],
+			"includes": ["fluxer_app/src/features/i18n/components/AppI18nProvider.tsx"],
 			"linter": {"rules": {"style": {"noRestrictedImports": "off"}}}
+		},
+		{
+			"includes": ["fluxer_app/src/**/*.worklet.js"],
+			"javascript": {"globals": ["AudioWorkletProcessor", "registerProcessor", "sampleRate", "currentTime"]}
+		},
+		{
+			"includes": ["fluxer_app/src/features/app/config/WebAppHostedImages.json"],
+			"json": {"formatter": {"indentStyle": "space", "indentWidth": 2}}
 		},
 		{
 			"includes": ["**/*.astro"],
@@ -158,7 +223,6 @@
 			"**",
 			"!**/.git",
 			"!**/app.css",
-			"!fluxer_admin/public/static/app.css",
 			"!**/build",
 			"fluxer_app/scripts/build",
 			"!**/dist",
@@ -173,19 +237,22 @@
 			"!packages/schema/src/gen",
 			"!**/tailwind.css",
 			"!**/*.html",
+			"!**/*.md",
+			"!**/*.yaml",
+			"!**/*.yml",
 			"!**/*.module.css.d.ts",
 			"!**/fluxer_app/src/features/ui/components/SVGMasks.tsx",
 			"!fluxer_static",
 			"!packages/fonts",
 			"!fluxer_admin/static/htmx.min.js",
 			"!fluxer_api/src/api/openapi/openapi.json",
-			"!fluxer_api/pkgs/email/src/email_i18n/locales",
+			"!fluxer_admin/openapi-admin.json",
 			"!fluxer_api/pkgs/email/src/email_i18n/weblate",
-			"!fluxer_api/src/api/content_i18n/locales",
 			"!fluxer_api/src/api/content_i18n/weblate",
-			"!packages/errors/src/i18n/locales",
 			"!packages/errors/src/i18n/weblate",
-			"!**/auto-i18n-reviewed-unchanged.json"
+			"!fluxer_rexctl/internal/adminapi/configschema.json",
+			"!fluxer_rexctl/internal/stack/imageset.json",
+			"!fluxer_rexctl/internal/stack/files/profiles.json"
 		],
 		"ignoreUnknown": true
 	}

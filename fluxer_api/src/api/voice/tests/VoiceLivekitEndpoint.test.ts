@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveLivekitEndpoint} from '@app/api/voice/VoiceDataInitializer';
 import {describe, expect, it} from 'vitest';
-import {resolveLivekitEndpoint} from '../VoiceDataInitializer';
 
 describe('resolveLivekitEndpoint', () => {
 	it('keeps the public port when the instance does not serve on the default port', () => {

@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDateOfBirthStepOpen} from '@app/features/auth/state/DateOfBirthStep';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {registerKeyboardModeRestoreCallback, registerKeyboardModeStateResolver} from '@app/features/ui/state/Modal';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
+import ModalState, {
+	registerKeyboardModeRestoreCallback,
+	registerKeyboardModeStateResolver,
+} from '@app/features/ui/state/Modal';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {KeyboardModeIntroStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable, runInAction} from 'mobx';
@@ -14,15 +19,17 @@ class KeyboardMode {
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void makeSyncedField(this, {
-			field: 'keyboardModeIntro',
-			schema: KeyboardModeIntroStateSchema,
-			persist: ['introSeen'],
-			toMessage: (s) => ({seen: s.introSeen}),
-			applyMessage: (s, m) => {
-				s.introSeen = m.seen;
-			},
-		});
+		initializeStore(this, () =>
+			makeSyncedField(this, {
+				field: 'keyboardModeIntro',
+				schema: KeyboardModeIntroStateSchema,
+				persist: ['introSeen'],
+				toMessage: (s) => ({seen: s.introSeen}),
+				applyMessage: (s, m) => {
+					s.introSeen = m.seen;
+				},
+			}),
+		);
 	}
 
 	enterKeyboardMode(showIntro = true): void {
@@ -32,7 +39,7 @@ class KeyboardMode {
 		runInAction(() => {
 			this.keyboardModeEnabled = true;
 		});
-		if (showIntro && !this.introSeen) {
+		if (showIntro && !this.introSeen && !ModalState.hasModalOpen() && !isDateOfBirthStepOpen()) {
 			this.introSeen = true;
 			void Promise.all([
 				import('@app/features/ui/commands/ModalCommands'),

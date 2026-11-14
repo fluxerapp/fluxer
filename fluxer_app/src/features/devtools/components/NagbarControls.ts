@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ACCOUNT_LIMITED_DESCRIPTOR} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
 import type {Nagbar, NagbarToggleKey} from '@app/features/ui/state/Nagbar';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -8,6 +9,11 @@ const DESKTOP_DOWNLOAD_NAGBAR_DESCRIPTOR = msg({
 	message: 'Desktop download nagbar',
 	comment:
 		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the desktop-download banner.',
+});
+const ANDROID_APP_NAGBAR_DESCRIPTOR = msg({
+	message: 'Android app nagbar',
+	comment:
+		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the Android app on Google Play banner.',
 });
 const COMMUNITY_MEMBERSHIP_CTA_NAGBAR_DESCRIPTOR = msg({
 	message: 'Community membership CTA nagbar',
@@ -23,6 +29,11 @@ const SCHEDULED_MAINTENANCE_NAGBAR_DESCRIPTOR = msg({
 	message: 'Scheduled maintenance nagbar',
 	comment:
 		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.',
+});
+const SERVICE_INCIDENT_NAGBAR_DESCRIPTOR = msg({
+	message: 'Service incident nagbar',
+	comment:
+		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.',
 });
 const UNCLAIMED_ACCOUNT_NAGBAR_DESCRIPTOR = msg({
 	message: 'Unclaimed account nagbar',
@@ -67,6 +78,11 @@ const VOICE_SESSION_RESTORE_NAGBAR_DESCRIPTOR = msg({
 const INVITES_DISABLED_NAGBAR_DESCRIPTOR = msg({
 	message: 'Invites disabled nagbar',
 	comment: 'Developer control label for the invites-disabled banner.',
+});
+const DOMAIN_MOVED_NAGBAR_DESCRIPTOR = msg({
+	message: 'Domain moved nagbar',
+	comment:
+		'Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.',
 });
 const GUILD_MFA_REQUIREMENT_NAGBAR_DESCRIPTOR = msg({
 	message: 'Community MFA requirement nagbar',
@@ -121,271 +137,205 @@ const USING_ACTUAL_STATE = msg({
 	message: 'Using actual state',
 	comment: 'Developer nagbar status: banner follows the real app state.',
 });
+interface NagbarControlOptions
+	extends Pick<NagbarControlDefinition, 'key' | 'label' | 'forceKey' | 'forceHideKey' | 'resetKeys'> {
+	actualStatus: MessageDescriptor;
+	dismissedKey?: NagbarToggleKey;
+}
+
+function createNagbarControl({
+	actualStatus,
+	dismissedKey,
+	...definition
+}: NagbarControlOptions): NagbarControlDefinition {
+	const {forceKey, forceHideKey} = definition;
+	return {
+		...definition,
+		status(state) {
+			if (state[forceKey]) {
+				return FORCE_ENABLED;
+			}
+			if (state[forceHideKey]) {
+				return FORCE_DISABLED;
+			}
+			if (dismissedKey !== undefined && state[dismissedKey]) {
+				return CURRENTLY_DISMISSED;
+			}
+			return actualStatus;
+		},
+		useActualDisabled: (state) =>
+			!state[forceKey] && (dismissedKey === undefined || !state[dismissedKey]) && !state[forceHideKey],
+		forceShowDisabled: (state) => state[forceKey],
+		forceHideDisabled: (state) => state[forceHideKey],
+	};
+}
+
 export const getNagbarControls = (): Array<NagbarControlDefinition> => [
-	{
+	createNagbarControl({
 		key: 'forceUnclaimedAccount',
 		label: UNCLAIMED_ACCOUNT_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceUnclaimedAccount',
 		forceHideKey: 'forceHideUnclaimedAccount',
 		resetKeys: ['forceUnclaimedAccount'],
-		status: (state) =>
-			state.forceUnclaimedAccount
-				? FORCE_ENABLED
-				: state.forceHideUnclaimedAccount
-					? FORCE_DISABLED
-					: USING_ACTUAL_ACCOUNT_STATE,
-		useActualDisabled: (state) => !state.forceUnclaimedAccount && !state.forceHideUnclaimedAccount,
-		forceShowDisabled: (state) => state.forceUnclaimedAccount,
-		forceHideDisabled: (state) => state.forceHideUnclaimedAccount,
-	},
-	{
+		actualStatus: USING_ACTUAL_ACCOUNT_STATE,
+	}),
+	createNagbarControl({
 		key: 'forceEmailVerification',
 		label: EMAIL_VERIFICATION_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceEmailVerification',
 		forceHideKey: 'forceHideEmailVerification',
 		resetKeys: ['forceEmailVerification'],
-		status: (state) =>
-			state.forceEmailVerification
-				? FORCE_ENABLED
-				: state.forceHideEmailVerification
-					? FORCE_DISABLED
-					: USING_ACTUAL_VERIFICATION_STATE,
-		useActualDisabled: (state) => !state.forceEmailVerification && !state.forceHideEmailVerification,
-		forceShowDisabled: (state) => state.forceEmailVerification,
-		forceHideDisabled: (state) => state.forceHideEmailVerification,
-	},
-	{
+		actualStatus: USING_ACTUAL_VERIFICATION_STATE,
+	}),
+	createNagbarControl({
+		key: 'forceAccountLimited',
+		label: ACCOUNT_LIMITED_DESCRIPTOR,
+		forceKey: 'forceAccountLimited',
+		forceHideKey: 'forceHideAccountLimited',
+		resetKeys: ['forceAccountLimited'],
+		actualStatus: USING_ACTUAL_ACCOUNT_STATE,
+	}),
+	createNagbarControl({
 		key: 'forceDesktopNotification',
 		label: DESKTOP_NOTIFICATION_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceDesktopNotification',
 		forceHideKey: 'forceHideDesktopNotification',
 		resetKeys: ['forceDesktopNotification', 'desktopNotificationDismissed'],
-		status: (state) =>
-			state.forceDesktopNotification
-				? FORCE_ENABLED
-				: state.forceHideDesktopNotification
-					? FORCE_DISABLED
-					: state.desktopNotificationDismissed
-						? CURRENTLY_DISMISSED
-						: CURRENTLY_SHOWING,
-		useActualDisabled: (state) =>
-			!state.forceDesktopNotification && !state.desktopNotificationDismissed && !state.forceHideDesktopNotification,
-		forceShowDisabled: (state) => state.forceDesktopNotification,
-		forceHideDisabled: (state) => state.forceHideDesktopNotification,
-	},
-	{
+		actualStatus: CURRENTLY_SHOWING,
+		dismissedKey: 'desktopNotificationDismissed',
+	}),
+	createNagbarControl({
 		key: 'forcePremiumGracePeriod',
 		label: PREMIUM_GRACE_PERIOD_NAGBAR_DESCRIPTOR,
 		forceKey: 'forcePremiumGracePeriod',
 		forceHideKey: 'forceHidePremiumGracePeriod',
 		resetKeys: ['forcePremiumGracePeriod'],
-		status: (state) =>
-			state.forcePremiumGracePeriod
-				? FORCE_ENABLED
-				: state.forceHidePremiumGracePeriod
-					? FORCE_DISABLED
-					: USING_ACTUAL_PREMIUM_STATE,
-		useActualDisabled: (state) => !state.forcePremiumGracePeriod && !state.forceHidePremiumGracePeriod,
-		forceShowDisabled: (state) => state.forcePremiumGracePeriod,
-		forceHideDisabled: (state) => state.forceHidePremiumGracePeriod,
-	},
-	{
+		actualStatus: USING_ACTUAL_PREMIUM_STATE,
+	}),
+	createNagbarControl({
 		key: 'forcePremiumExpired',
 		label: PREMIUM_EXPIRED_NAGBAR_DESCRIPTOR,
 		forceKey: 'forcePremiumExpired',
 		forceHideKey: 'forceHidePremiumExpired',
 		resetKeys: ['forcePremiumExpired'],
-		status: (state) =>
-			state.forcePremiumExpired
-				? FORCE_ENABLED
-				: state.forceHidePremiumExpired
-					? FORCE_DISABLED
-					: USING_ACTUAL_PREMIUM_STATE,
-		useActualDisabled: (state) => !state.forcePremiumExpired && !state.forceHidePremiumExpired,
-		forceShowDisabled: (state) => state.forcePremiumExpired,
-		forceHideDisabled: (state) => state.forceHidePremiumExpired,
-	},
-	{
+		actualStatus: USING_ACTUAL_PREMIUM_STATE,
+	}),
+	createNagbarControl({
 		key: 'forcePremiumOnboarding',
 		label: PREMIUM_ONBOARDING_NAGBAR_DESCRIPTOR,
 		forceKey: 'forcePremiumOnboarding',
 		forceHideKey: 'forceHidePremiumOnboarding',
 		resetKeys: ['forcePremiumOnboarding', 'premiumOnboardingDismissed'],
-		status: (state) =>
-			state.forcePremiumOnboarding
-				? FORCE_ENABLED
-				: state.forceHidePremiumOnboarding
-					? FORCE_DISABLED
-					: state.premiumOnboardingDismissed
-						? CURRENTLY_DISMISSED
-						: USING_ACTUAL_PREMIUM_STATE,
-		useActualDisabled: (state) =>
-			!state.forcePremiumOnboarding && !state.premiumOnboardingDismissed && !state.forceHidePremiumOnboarding,
-		forceShowDisabled: (state) => state.forcePremiumOnboarding,
-		forceHideDisabled: (state) => state.forceHidePremiumOnboarding,
-	},
-	{
+		actualStatus: USING_ACTUAL_PREMIUM_STATE,
+		dismissedKey: 'premiumOnboardingDismissed',
+	}),
+	createNagbarControl({
 		key: 'forceGiftInventory',
 		label: GIFT_INVENTORY_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceGiftInventory',
 		forceHideKey: 'forceHideGiftInventory',
 		resetKeys: ['forceGiftInventory', 'giftInventoryDismissed'],
-		status: (state) =>
-			state.forceGiftInventory
-				? FORCE_ENABLED
-				: state.forceHideGiftInventory
-					? FORCE_DISABLED
-					: state.giftInventoryDismissed
-						? CURRENTLY_DISMISSED
-						: USING_ACTUAL_GIFT_INVENTORY_STATE,
-		useActualDisabled: (state) =>
-			!state.forceGiftInventory && !state.giftInventoryDismissed && !state.forceHideGiftInventory,
-		forceShowDisabled: (state) => state.forceGiftInventory,
-		forceHideDisabled: (state) => state.forceHideGiftInventory,
-	},
-	{
+		actualStatus: USING_ACTUAL_GIFT_INVENTORY_STATE,
+		dismissedKey: 'giftInventoryDismissed',
+	}),
+	createNagbarControl({
 		key: 'forceVisionaryMfa',
 		label: VISIONARY_2FA_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceVisionaryMfa',
 		forceHideKey: 'forceHideVisionaryMfa',
 		resetKeys: ['forceVisionaryMfa', 'visionaryMfaDismissed'],
-		status: (state) =>
-			state.forceVisionaryMfa
-				? FORCE_ENABLED
-				: state.forceHideVisionaryMfa
-					? FORCE_DISABLED
-					: state.visionaryMfaDismissed
-						? CURRENTLY_DISMISSED
-						: USING_ACTUAL_STATE,
-		useActualDisabled: (state) =>
-			!state.forceVisionaryMfa && !state.visionaryMfaDismissed && !state.forceHideVisionaryMfa,
-		forceShowDisabled: (state) => state.forceVisionaryMfa,
-		forceHideDisabled: (state) => state.forceHideVisionaryMfa,
-	},
-	{
+		actualStatus: USING_ACTUAL_STATE,
+		dismissedKey: 'visionaryMfaDismissed',
+	}),
+	createNagbarControl({
 		key: 'forceTermsAcceptance',
 		label: TERMS_ACCEPTANCE_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceTermsAcceptance',
 		forceHideKey: 'forceHideTermsAcceptance',
 		resetKeys: ['forceTermsAcceptance'],
-		status: (state) =>
-			state.forceTermsAcceptance ? FORCE_ENABLED : state.forceHideTermsAcceptance ? FORCE_DISABLED : USING_ACTUAL_STATE,
-		useActualDisabled: (state) => !state.forceTermsAcceptance && !state.forceHideTermsAcceptance,
-		forceShowDisabled: (state) => state.forceTermsAcceptance,
-		forceHideDisabled: (state) => state.forceHideTermsAcceptance,
-	},
-	{
+		actualStatus: USING_ACTUAL_STATE,
+	}),
+	createNagbarControl({
 		key: 'forceDesktopDownload',
 		label: DESKTOP_DOWNLOAD_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceDesktopDownload',
 		forceHideKey: 'forceHideDesktopDownload',
 		resetKeys: ['forceDesktopDownload', 'desktopDownloadDismissed'],
-		status: (state) =>
-			state.forceDesktopDownload
-				? FORCE_ENABLED
-				: state.forceHideDesktopDownload
-					? FORCE_DISABLED
-					: state.desktopDownloadDismissed
-						? CURRENTLY_DISMISSED
-						: USING_ACTUAL_STATE,
-		useActualDisabled: (state) =>
-			!state.forceDesktopDownload && !state.desktopDownloadDismissed && !state.forceHideDesktopDownload,
-		forceShowDisabled: (state) => state.forceDesktopDownload,
-		forceHideDisabled: (state) => state.forceHideDesktopDownload,
-	},
-	{
+		actualStatus: USING_ACTUAL_STATE,
+		dismissedKey: 'desktopDownloadDismissed',
+	}),
+	createNagbarControl({
+		key: 'forceAndroidApp',
+		label: ANDROID_APP_NAGBAR_DESCRIPTOR,
+		forceKey: 'forceAndroidApp',
+		forceHideKey: 'forceHideAndroidApp',
+		resetKeys: ['forceAndroidApp', 'androidAppDismissed'],
+		actualStatus: USING_ACTUAL_STATE,
+		dismissedKey: 'androidAppDismissed',
+	}),
+	createNagbarControl({
 		key: 'forceGuildMembershipCta',
 		label: COMMUNITY_MEMBERSHIP_CTA_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceGuildMembershipCta',
 		forceHideKey: 'forceHideGuildMembershipCta',
 		resetKeys: ['forceGuildMembershipCta', 'guildMembershipCtaDismissed'],
-		status: (state) =>
-			state.forceGuildMembershipCta
-				? FORCE_ENABLED
-				: state.forceHideGuildMembershipCta
-					? FORCE_DISABLED
-					: state.guildMembershipCtaDismissed
-						? CURRENTLY_DISMISSED
-						: USING_ACTUAL_STATE,
-		useActualDisabled: (state) =>
-			!state.forceGuildMembershipCta && !state.guildMembershipCtaDismissed && !state.forceHideGuildMembershipCta,
-		forceShowDisabled: (state) => state.forceGuildMembershipCta,
-		forceHideDisabled: (state) => state.forceHideGuildMembershipCta,
-	},
-	{
+		actualStatus: USING_ACTUAL_STATE,
+		dismissedKey: 'guildMembershipCtaDismissed',
+	}),
+	createNagbarControl({
 		key: 'forceCorruptedInstallation',
 		label: CORRUPTED_INSTALLATION_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceCorruptedInstallation',
 		forceHideKey: 'forceHideCorruptedInstallation',
 		resetKeys: ['forceCorruptedInstallation'],
-		status: (state) =>
-			state.forceCorruptedInstallation
-				? FORCE_ENABLED
-				: state.forceHideCorruptedInstallation
-					? FORCE_DISABLED
-					: USING_ACTUAL_STATE,
-		useActualDisabled: (state) => !state.forceCorruptedInstallation && !state.forceHideCorruptedInstallation,
-		forceShowDisabled: (state) => state.forceCorruptedInstallation,
-		forceHideDisabled: (state) => state.forceHideCorruptedInstallation,
-	},
-	{
+		actualStatus: USING_ACTUAL_STATE,
+	}),
+	createNagbarControl({
 		key: 'forceScheduledMaintenance',
 		label: SCHEDULED_MAINTENANCE_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceScheduledMaintenance',
 		forceHideKey: 'forceHideScheduledMaintenance',
 		resetKeys: ['forceScheduledMaintenance'],
-		status: (state) =>
-			state.forceScheduledMaintenance
-				? FORCE_ENABLED
-				: state.forceHideScheduledMaintenance
-					? FORCE_DISABLED
-					: USING_ACTUAL_STATE,
-		useActualDisabled: (state) => !state.forceScheduledMaintenance && !state.forceHideScheduledMaintenance,
-		forceShowDisabled: (state) => state.forceScheduledMaintenance,
-		forceHideDisabled: (state) => state.forceHideScheduledMaintenance,
-	},
-	{
+		actualStatus: USING_ACTUAL_STATE,
+	}),
+	createNagbarControl({
+		key: 'forceIncident',
+		label: SERVICE_INCIDENT_NAGBAR_DESCRIPTOR,
+		forceKey: 'forceConnectionNotice',
+		forceHideKey: 'forceHideConnectionNotice',
+		resetKeys: ['forceConnectionNotice'],
+		actualStatus: USING_ACTUAL_STATE,
+	}),
+	createNagbarControl({
 		key: 'forceVoiceSessionRestore',
 		label: VOICE_SESSION_RESTORE_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceVoiceSessionRestore',
 		forceHideKey: 'forceHideVoiceSessionRestore',
 		resetKeys: ['forceVoiceSessionRestore'],
-		status: (state) =>
-			state.forceVoiceSessionRestore
-				? FORCE_ENABLED
-				: state.forceHideVoiceSessionRestore
-					? FORCE_DISABLED
-					: USING_ACTUAL_STATE,
-		useActualDisabled: (state) => !state.forceVoiceSessionRestore && !state.forceHideVoiceSessionRestore,
-		forceShowDisabled: (state) => state.forceVoiceSessionRestore,
-		forceHideDisabled: (state) => state.forceHideVoiceSessionRestore,
-	},
-	{
+		actualStatus: USING_ACTUAL_STATE,
+	}),
+	createNagbarControl({
 		key: 'forceInvitesDisabled',
 		label: INVITES_DISABLED_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceInvitesDisabled',
 		forceHideKey: 'forceHideInvitesDisabled',
 		resetKeys: ['forceInvitesDisabled'],
-		status: (state) =>
-			state.forceInvitesDisabled ? FORCE_ENABLED : state.forceHideInvitesDisabled ? FORCE_DISABLED : USING_ACTUAL_STATE,
-		useActualDisabled: (state) => !state.forceInvitesDisabled && !state.forceHideInvitesDisabled,
-		forceShowDisabled: (state) => state.forceInvitesDisabled,
-		forceHideDisabled: (state) => state.forceHideInvitesDisabled,
-	},
-	{
+		actualStatus: USING_ACTUAL_STATE,
+	}),
+	createNagbarControl({
 		key: 'forceGuildMfaRequirement',
 		label: GUILD_MFA_REQUIREMENT_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceGuildMfaRequirement',
 		forceHideKey: 'forceHideGuildMfaRequirement',
 		resetKeys: ['forceGuildMfaRequirement'],
-		status: (state) =>
-			state.forceGuildMfaRequirement
-				? FORCE_ENABLED
-				: state.forceHideGuildMfaRequirement
-					? FORCE_DISABLED
-					: USING_ACTUAL_STATE,
-		useActualDisabled: (state) => !state.forceGuildMfaRequirement && !state.forceHideGuildMfaRequirement,
-		forceShowDisabled: (state) => state.forceGuildMfaRequirement,
-		forceHideDisabled: (state) => state.forceHideGuildMfaRequirement,
-	},
+		actualStatus: USING_ACTUAL_STATE,
+	}),
+	createNagbarControl({
+		key: 'forceDomainMoved',
+		label: DOMAIN_MOVED_NAGBAR_DESCRIPTOR,
+		forceKey: 'forceDomainMoved',
+		forceHideKey: 'forceHideDomainMoved',
+		resetKeys: ['forceDomainMoved'],
+		actualStatus: USING_ACTUAL_STATE,
+	}),
 ];

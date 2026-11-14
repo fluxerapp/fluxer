@@ -1,213 +1,176 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: User settings Protobuf
-description: The client preference snapshot in the user settings object.
+description: The Protobuf messages and enumerations in the synced_preferences field of user settings.
 ---
 
-A synced preferences snapshot holds the client settings an account shares between its devices. It is one base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` message in the `synced_preferences` field of the [user settings object](/http-api/users/#user-settings-object). Fluxer stores it and interprets no field on this page.
+The `synced_preferences` field of the [user settings object](/http-api/users/#user-settings-object) is a base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` message with the client preferences an account shares between its devices. The API stores the snapshot and doesn't act on any field in it. The schema is in `packages/schema/proto/fluxer/user/preferences/v1`.
 
 ## Reading and writing the snapshot
 
-Decode the string before reading any preference, and encode a valid `SyncedPreferences` message when writing one. [Modify current user settings](/http-api/users/settings/#modify-current-user-settings) takes the complete snapshot every time.
+[Modify current user settings](/http-api/users/settings/#modify-current-user-settings) replaces the whole snapshot. To change one preference, decode the stored snapshot, change it and send all of it back. Sending null or the empty string clears it, and the API returns the empty string when nothing is stored. Each change goes to every session of the account in [User Settings Update](/gateway/events/#user-settings-update).
 
-The empty string in a response means nothing is stored. Sending null or the empty string clears it. A stored snapshot reaches the account's other sessions through [User Settings Update](/gateway/events/#user-settings-update).
+The API accepts standard or URL-safe base64, with or without padding, and returns standard base64 with padding. The API re-encodes what you send and keeps unknown fields. A snapshot with only default values comes back as the empty string.
 
-Fluxer decodes every submitted snapshot and re-encodes it in canonical form before storing it, so a read can return a different string from the one submitted. Known fields are emitted in ascending field number order, and an unrecognised field number is preserved and re-emitted after them. Enums here are open, and an unassigned numeric value survives the round trip. When every known field holds its zero value and no unrecognised field is present, the snapshot encodes to zero bytes and is stored as the empty string.
-
-A submission may use either the standard or the URL-safe base64 alphabet, with or without padding. Fluxer always returns the standard alphabet with padding.
-
-## How to read the type column
-
-Types here are the declared Protobuf types. A field whose declared type is an enumeration appears as `int32`, its wire representation, and the Description column links the enumeration.
-
-A field without the optional marker always decodes and holds its Protobuf zero value. That is false for a bool, 0 for a numeric type, the empty string, an empty repeated field, or an empty map. A field with the optional marker tracks presence and is absent until a value is stored. Every singular message field tracks presence the same way, so a preference group is absent from the snapshot until a client writes to it.
-
-Fluxer applies no bound to any individual field of the message, so every length, range, and enumeration membership below describes what the first-party client writes and reads.
-
-## Rejection grounds
-
-Fluxer reports every entry in the resulting `errors` array against the path `synced_preferences`. It checks the encoded string first.
+An invalid snapshot returns 400 with errors at the path `synced_preferences`.
 
 | Condition | Status and code | Element codes |
 | --- | --- | --- |
-| Encoded string longer than 349528 characters | 400 `INVALID_FORM_BODY` | `CONTENT_EXCEEDS_MAX_LENGTH` and `INVALID_FORMAT` |
+| Encoded string longer than 699052 characters | 400 `INVALID_FORM_BODY` | `CONTENT_EXCEEDS_MAX_LENGTH` and `INVALID_FORMAT` |
 | Encoded string outside the base64 alphabet | 400 `INVALID_FORM_BODY` | `INVALID_FORMAT` |
-| Decoded message above 262144 bytes | 400 `INVALID_FORM_BODY` | `TOO_LARGE` |
-| Bytes that do not decode as `SyncedPreferences` | 400 `INVALID_FORM_BODY` | `INVALID_FORMAT` |
-
-An over-length string draws two entries for the one path.
-
+| Decoded message above 524288 bytes (512 KiB) | 400 `VALIDATION_ERROR` | `TOO_LARGE` |
+| Bytes that don't decode as `SyncedPreferences` | 400 `VALIDATION_ERROR` | `INVALID_FORMAT` |
 ## Synced preferences object
 
-The `SyncedPreferences` message is the root of the snapshot. Every field is a preference group defined in its own section, except `sanitize_urls` and `save_camera_uploads_to_device`, which are bools. Field numbers are allocated in blocks: 1 to 3, 20 to 25, 40 to 45, 60 to 63, 80 to 82, and 100 to 113. Never derive a field number from a field's position in this table.
+A field marked `?` is absent until a client sets it. Every other scalar field is 0, false or empty when unset. An enumeration field has the type `int32` and links to its values.
+
+`SyncedPreferences` is the root message.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| accessibility? | [accessibility settings](#accessibility-settings-object) object | Accessibility, display, motion, media, and interaction preferences |
-| accessibility_overrides? | [accessibility overrides](#accessibility-overrides-object) object | Dirty flags for media settings, with no live consumer |
-| textual_preview? | [textual preview settings](#textual-preview-settings-object) object | Textual preview wrapping preferences |
-| emoji_picker? | [emoji picker state](#emoji-picker-state-object) object | Emoji picker usage, favourites, and collapsed categories |
-| sticker_picker? | [sticker picker state](#sticker-picker-state-object) object | Sticker picker usage, favourites, and collapsed categories |
-| memes_picker? | [memes picker state](#memes-picker-state-object) object | Meme picker usage, favourites, and collapsed categories |
-| emoji? | [emoji state](#emoji-state-object) object | Emoji skin tone preference |
-| emoji_sticker_layout? | [emoji and sticker layout settings](#emoji-and-sticker-layout-settings-object) object | Emoji and sticker picker layout preferences |
-| favorite_gifs?<sup>1</sup> | [favourite GIF settings](#favourite-gif-settings-object) object | Saved favourite GIF entries |
-| favorites? | [favourites state](#favourites-state-object) object | Favourite channel and category layout |
-| recent_mentions? | [recent mentions settings](#recent-mentions-settings-object) object | Recent mention inclusion filters |
+| accessibility? | [accessibility settings](#accessibility-settings-object) object | Display, motion, media and other accessibility preferences |
+| accessibility_overrides? | [accessibility overrides](#accessibility-overrides-object) object | Media setting dirty flags |
+| textual_preview? | [textual preview settings](#textual-preview-settings-object) object | Textual attachment preview preferences |
+| emoji_picker? | [emoji picker state](#emoji-picker-state-object) object | Emoji picker usage and favorites |
+| sticker_picker? | [sticker picker state](#sticker-picker-state-object) object | Sticker picker usage and favorites |
+| memes_picker? | [memes picker state](#memes-picker-state-object) object | Memes picker usage and favorites |
+| emoji? | [emoji state](#emoji-state-object) object | Emoji skin tone |
+| emoji_sticker_layout? | [emoji and sticker layout settings](#emoji-and-sticker-layout-settings-object) object | Emoji and sticker picker layout |
+| favorite_gifs? | [favorite GIF settings](#favorite-gif-settings-object) object | Favorite GIFs |
+| favorites? | [favorites state](#favorites-state-object) object | Favorite channels and their categories |
+| recent_mentions? | [recent mentions settings](#recent-mentions-settings-object) object | Recent mentions filters |
 | sidebar? | [sidebar preferences](#sidebar-preferences-object) object | Direct message sidebar state |
-| member_list? | [member list state](#member-list-state-object) object | Member list visibility state |
-| unread_channels? | [unread channels state](#unread-channels-state-object) object | Collapsed unread channel state |
-| mention_frecency? | [mention frecency state](#mention-frecency-state-object) object | Per-guild mention frequency and recency state |
-| nagbars? | [nagbar dismissals](#nagbar-dismissals-object) object | Dismissed account and guild notice state |
-| dismissed_upsells? | [dismissed upsells](#dismissed-upsells-object) object | Dismissed upsell state |
-| guild_nsfw_agreements? | [guild mature content agreements](#guild-mature-content-agreements-object) object | Accepted mature guild, category, and channel notices |
+| member_list? | [member list state](#member-list-state-object) object | Member list visibility |
+| unread_channels? | [unread channels state](#unread-channels-state-object) object | Collapsed unread channels |
+| mention_frecency? | [mention frecency state](#mention-frecency-state-object) object | Mention autocomplete ranking per guild |
+| nagbars? | [nagbar dismissals](#nagbar-dismissals-object) object | Dismissed notices |
+| dismissed_upsells? | [dismissed upsells](#dismissed-upsells-object) object | Dismissed upsells |
+| guild_nsfw_agreements? | [guild mature content agreements](#guild-mature-content-agreements-object) object | Accepted mature content notices |
 | whats_new? | [what's new state](#whats-new-state-object) object | Last dismissed update entry |
-| privacy? | [privacy preferences](#privacy-preferences-object) object | Stream preview, activity, and attachment privacy preferences |
-| local_spam_overrides? | [local user spam overrides](#local-user-spam-overrides-object) object | Local user spam classification overrides |
-| sanitize_urls<sup>2</sup> | bool | Whether tracking parameters are stripped from the URLs in an outgoing message |
-| sound? | [sound settings](#sound-settings-object) object | Sound enablement, volume, and per-sound overrides |
-| spellcheck? | [spellcheck settings](#spellcheck-settings-object) object | Spellcheck language, dictionary, and engine preferences |
-| search_engines? | [search engine settings](#search-engine-settings-object) object | Text, reverse image, and translation provider choices |
-| permission_layout? | [permission layout settings](#permission-layout-settings-object) object | Permission editor layout preferences |
-| guild_member_layout? | [guild member layout settings](#guild-member-layout-settings-object) object | Guild member view layout preference |
-| guild_folders?<sup>3</sup> | [guild folder expanded state](#guild-folder-expanded-state-object) object | Expanded guild folder identifiers |
-| hidden_guild_buttons? | [hidden guild list buttons](#hidden-guild-list-buttons-object) object | Hidden guild list button state |
+| privacy? | [privacy preferences](#privacy-preferences-object) object | Client privacy preferences |
+| local_spam_overrides? | [local user spam overrides](#local-user-spam-overrides-object) object | Local spammer overrides |
+| sanitize_urls | bool | Whether to strip tracking parameters from URLs in outgoing messages |
+| sound? | [sound settings](#sound-settings-object) object | Sound preferences |
+| spellcheck? | [spellcheck settings](#spellcheck-settings-object) object | Spellcheck preferences |
+| search_engines? | [search engine settings](#search-engine-settings-object) object | Search and translation providers |
+| permission_layout? | [permission layout settings](#permission-layout-settings-object) object | Permission editor layout |
+| guild_member_layout? | [guild member layout settings](#guild-member-layout-settings-object) object | Guild member view layout |
+| guild_folders? | [guild folder expanded state](#guild-folder-expanded-state-object) object | Expanded guild folders |
+| hidden_guild_buttons? | [hidden guild list buttons](#hidden-guild-list-buttons-object) object | Hidden guild list buttons |
 | keyboard_mode_intro? | [keyboard mode intro state](#keyboard-mode-intro-state-object) object | Keyboard mode introduction state |
 | input_monitoring? | [input monitoring prompts state](#input-monitoring-prompts-state-object) object | Input monitoring prompt state |
-| voice_prompts? | [voice prompts state](#voice-prompts-state-object) object | Suppressed voice confirmation prompt state |
-| sudo_prompt? | [sudo prompt state](#sudo-prompt-state-object) object | Last used sudo verification method |
-| keybinds? | [keybind settings](#keybind-settings-object) object | Custom keybinds and transmit mode preferences |
-| chat_input? | [chat input settings](#chat-input-settings-object) object | Chat composer behaviour preferences |
-| save_camera_uploads_to_device?<sup>4</sup> | bool | Whether a camera upload is also written to the device |
-
-<sup>1</sup> The entries live inside the snapshot, and the account [memes](/http-api/memes/) collection holds none of them
-
-<sup>2</sup> The only bare scalar on the root message, so it has no presence and reads as false until a client stores true. It applies to the content a client is about to send, and the first-party client leaves the URLs inside inline code and code blocks unchanged
-
-<sup>3</sup> Holds only which folders are expanded. The folder layout itself is `guild_folders` on the [user settings object](/http-api/users/#user-settings-object)
-
-<sup>4</sup> The only optional scalar on the root message, so it tracks presence. No live surface reads or writes it
+| voice_prompts? | [voice prompts state](#voice-prompts-state-object) object | Skipped voice confirmations |
+| sudo_prompt? | [sudo prompt state](#sudo-prompt-state-object) object | Last sudo verification method |
+| keybinds? | [keybind settings](#keybind-settings-object) object | Custom keybinds and transmit mode |
+| chat_input? | [chat input settings](#chat-input-settings-object) object | Message composer preferences |
+| save_camera_uploads_to_device? | bool | Whether camera uploads are also saved to the device |
+| double_tap_reaction? | [reaction emoji](#reaction-emoji-object) object | Emoji that a double tap on a message adds |
+| channel_frecency? | [channel frecency state](#channel-frecency-state-object) object | Channel usage for ranking channel search |
+| announcement_prompts? | [announcement prompts state](#announcement-prompts-state-object) object | Hidden announcement channel prompts |
+| double_tap_action | int32 | [Double tap action](#double-tap-actions) on a message |
+| swipe_right_to_left_action | int32 | [Swipe right to left action](#swipe-right-to-left-actions) in a channel |
 
 ## Accessibility settings object
 
-The `accessibility` field has display, motion, message, media, voice, and interaction preferences. Almost every field is optional, so distinguish an absent field from a stored zero value before applying a default.
+Display, motion, message, media, voice and interaction preferences.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| saturation_factor?<sup>1</sup> | double | Colour saturation multiplier |
+| saturation_factor? | double | Color saturation multiplier, where 1 is unchanged |
 | always_underline_links | bool | Whether links are always underlined |
 | enable_text_selection? | bool | Whether message text can be selected |
-| show_message_send_button? | bool | Whether the message composer shows a send button |
-| show_textarea_focus_ring? | bool | Whether the message composer shows a focus ring |
+| show_message_send_button? | bool | Whether the composer shows a send button |
+| show_textarea_focus_ring? | bool | Whether the composer shows a focus ring |
 | hide_keyboard_hints | bool | Whether keyboard shortcut hints are hidden |
 | escape_exits_keyboard_mode? | bool | Whether Escape exits keyboard navigation mode |
-| sync_reduced_motion_with_system? | bool | Whether reduced motion follows the operating system preference |
-| reduced_motion_override?<sup>2</sup> | bool | Explicit reduced motion preference |
-| message_group_spacing?<sup>3</sup> | double | Spacing between message groups |
-| message_gutter?<sup>3</sup> | double | Horizontal message gutter size |
-| font_size?<sup>3</sup> | double | Message font size |
-| show_user_avatars_in_compact_mode? | bool | Whether compact messages show user avatars |
-| mobile_sticker_animation_overridden<sup>4</sup> | bool | Whether the mobile sticker animation value applies on a mobile layout |
-| mobile_gif_autoplay_overridden<sup>4</sup> | bool | Whether the mobile GIF autoplay value applies on a mobile layout |
-| mobile_animate_emoji_overridden<sup>4</sup> | bool | Whether the mobile emoji animation value applies on a mobile layout |
-| mobile_sticker_animation_value?<sup>5</sup> | int32 | Mobile [sticker animation setting](/http-api/users/#sticker-animation-settings) |
-| mobile_gif_autoplay_value? | bool | Mobile GIF autoplay value |
-| mobile_animate_emoji_value? | bool | Mobile emoji animation value |
-| auto_send_klipy_gifs | bool | Whether selecting a GIF sends it immediately |
+| sync_reduced_motion_with_system? | bool | Whether reduced motion follows the operating system |
+| reduced_motion_override? | bool | Reduced motion setting, used when it doesn't follow the operating system |
+| message_group_spacing? | double | Spacing between message groups in CSS pixels |
+| message_gutter? | double | Message gutter width in CSS pixels |
+| font_size? | double | Message font size in CSS pixels |
+| show_user_avatars_in_compact_mode? | bool | Whether compact mode shows avatars |
+| mobile_sticker_animation_overridden | bool | Whether the mobile sticker animation value is used |
+| mobile_gif_autoplay_overridden | bool | Whether the mobile GIF autoplay value is used |
+| mobile_animate_emoji_overridden | bool | Whether the mobile emoji animation value is used |
+| mobile_sticker_animation_value? | int32 | Mobile [sticker animation setting](/http-api/users/#sticker-animation-settings) |
+| mobile_gif_autoplay_value? | bool | Mobile GIF autoplay |
+| mobile_animate_emoji_value? | bool | Mobile emoji animation |
+| auto_send_klipy_gifs | bool | Whether picking a GIF sends it immediately |
 | show_gif_button? | bool | Whether the composer shows the GIF button |
 | show_memes_button? | bool | Whether the composer shows the memes button |
 | show_stickers_button? | bool | Whether the composer shows the sticker button |
 | show_emoji_button? | bool | Whether the composer shows the emoji button |
-| show_media_favorite_button? | bool | Whether media actions show the favourite button |
-| show_media_download_button? | bool | Whether media actions show the download button |
-| show_media_delete_button? | bool | Whether media actions show the delete button |
-| show_suppress_embeds_button? | bool | Whether message actions show the suppress embeds button |
-| show_gif_indicator? | bool | Whether GIF media shows a GIF indicator |
+| show_media_favorite_button? | bool | Whether media shows the favorite button |
+| show_media_download_button? | bool | Whether media shows the download button |
+| show_media_delete_button? | bool | Whether media shows the delete button |
+| show_suppress_embeds_button? | bool | Whether messages show the suppress embeds button |
+| show_gif_indicator? | bool | Whether GIFs show a GIF indicator |
 | show_attachment_expiry_indicator? | bool | Whether attachments show their expiry indicator |
-| use_browser_locale_for_time_format? | bool | Whether time formatting uses the browser locale |
 | channel_typing_indicator_mode | int32 | [Channel typing indicator mode](#channel-typing-indicator-modes) |
-| show_selected_channel_typing_indicator? | bool | Whether the typing indicator is shown for the selected channel |
+| show_selected_channel_typing_indicator? | bool | Whether the selected channel shows its typing indicator |
 | show_message_action_bar? | bool | Whether messages show the action bar |
-| show_message_action_bar_quick_reactions? | bool | Whether the message action bar shows quick reactions |
-| show_message_action_bar_shift_expand? | bool | Whether holding Shift expands the message action bar |
-| show_message_action_bar_only_more_button? | bool | Whether the message action bar shows only the more button |
+| show_message_action_bar_quick_reactions? | bool | Whether the action bar shows quick reactions |
+| show_message_action_bar_shift_expand? | bool | Whether holding Shift expands the action bar |
+| show_message_action_bar_only_more_button? | bool | Whether the action bar shows only the more button |
 | show_default_emojis_in_autocomplete? | bool | Whether autocomplete includes standard emoji |
 | show_custom_emojis_in_autocomplete? | bool | Whether autocomplete includes custom emoji |
 | show_stickers_in_autocomplete? | bool | Whether autocomplete includes stickers |
 | show_memes_in_autocomplete? | bool | Whether autocomplete includes memes |
-| voice_channel_join_requires_double_click? | bool | Whether joining a voice channel requires a double click |
-| custom_theme_css?<sup>6</sup> | string | Custom theme CSS |
-| show_favorites? | bool | Whether the favourites section is shown |
-| zoom_level?<sup>7</sup> | double | Application zoom level |
+| voice_channel_join_requires_double_click? | bool | Whether joining a voice channel needs a double click |
+| custom_theme_css? | string | CSS of the synced custom theme |
+| show_favorites? | bool | Whether the favorites section is shown |
+| zoom_level? | double | App zoom multiplier, where 1 is unscaled |
 | dm_message_preview_mode | int32 | [Direct message preview mode](#direct-message-preview-modes) |
-| enable_tts_command? | bool | Whether the text-to-speech command is enabled |
-| tts_rate?<sup>8</sup> | double | Text-to-speech playback rate |
-| show_faded_unread_on_muted_channels? | bool | Whether muted channels retain a faded unread indicator |
+| enable_tts_command? | bool | Whether the text-to-speech command is on |
+| tts_rate? | double | Text-to-speech rate multiplier, where 1 is normal |
+| show_faded_unread_on_muted_channels? | bool | Whether muted channels show a faded unread indicator |
 | show_context_menu_shortcuts? | bool | Whether context menus show keyboard shortcuts |
-| confirm_before_starting_calls? | bool | Whether starting a call requires confirmation |
+| confirm_before_starting_calls? | bool | Whether starting a call asks for confirmation |
 | hdr_display_mode | int32 | [HDR display mode](#hdr-display-modes) |
-| preserve_edit_draft? | bool | Whether cancelling a message edit preserves its draft |
-| stay_interactive_when_unfocused? | bool | Whether animation and interaction remain active while the application is unfocused |
-| confirm_before_joining_voice_channels? | bool | Whether joining a voice channel requires confirmation |
+| preserve_edit_draft? | bool | Whether canceling an edit keeps its draft |
+| stay_interactive_when_unfocused? | bool | Whether animation and interaction continue while the app is unfocused |
+| confirm_before_joining_voice_channels? | bool | Whether joining a voice channel asks for confirmation |
 | screen_reader_announce_new_messages? | bool | Whether a screen reader announces new messages |
-| first_click_pass_through_when_unfocused? | bool | Whether the first click also activates its control when the application is unfocused |
-| compact_message_group_spacing?<sup>3</sup> | double | Spacing between compact message groups |
-| scroll_to_bottom_on_message_send? | bool | Whether sending a message scrolls the channel to the bottom |
-| dim_strikethrough_text? | bool | Whether strikethrough text is visually dimmed |
-| sequential_file_send? | bool | Whether multiple selected files are sent one message at a time |
+| first_click_pass_through_when_unfocused? | bool | Whether the first click on an unfocused app also activates the control |
+| compact_message_group_spacing? | double | Spacing between compact message groups in CSS pixels |
+| scroll_to_bottom_on_message_send? | bool | Whether sending a message scrolls to the bottom |
+| dim_strikethrough_text? | bool | Whether strikethrough text is dimmed |
+| sequential_file_send? | bool | Whether multiple files are sent one message at a time |
 | mobile_splash_zoom_animation? | bool | Whether the mobile splash screen plays its zoom animation |
-
-<sup>1</sup> A multiplier applied to interface colour, where 1 leaves colour unchanged
-
-<sup>2</sup> Read only while `sync_reduced_motion_with_system` is false
-
-<sup>3</sup> A length in CSS pixels. The first-party client defaults to 16 for `message_group_spacing`, `message_gutter`, and `font_size`, and to 0 for `compact_message_group_spacing`
-
-<sup>4</sup> The paired `mobile_*_value` field is read only while this flag is true, and only on a mobile layout. While the flag is false the first-party client falls back to the account-level setting for emoji animation, and to a fixed mobile default for GIF autoplay and sticker animation
-
-<sup>5</sup> The same enumeration as `animate_stickers` on the [user settings object](/http-api/users/#user-settings-object). This field is the mobile-local replacement
-
-<sup>6</sup> The complete CSS of the account's synced custom theme, stored inline. A client that has opted out of syncing its theme applies a local one instead and re-emits this value unchanged, so it does not overwrite the value on the devices that do sync
-
-<sup>7</sup> A multiplier, where 1 is unscaled. The first-party client keeps its zoom level in browser storage and does not read or write this field
-
-<sup>8</sup> A multiplier, where 1 is the unmodified speaking rate
-
-Field numbers 42 and 43 are reserved, together with the names `attachment_media_dimension_size` and `embed_media_dimension_size`. Neither number can be reused.
+| message_double_click_actions? | bool | Whether double-clicking a message edits your own message or replies to others |
+| announce_call_joins_and_leaves? | bool | Whether a screen reader announces people joining and leaving calls. Clients treat it as on when it's unset |
 
 ### Channel typing indicator modes
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | CHANNEL_TYPING_INDICATOR_MODE_UNSPECIFIED | No explicit mode is selected |
+| 0 | CHANNEL_TYPING_INDICATOR_MODE_UNSPECIFIED | No mode is set |
 | 1 | CHANNEL_TYPING_INDICATOR_MODE_AVATARS | Show typing users as avatars |
-| 2 | CHANNEL_TYPING_INDICATOR_MODE_INDICATOR_ONLY | Show a typing indicator without avatars |
-| 3 | CHANNEL_TYPING_INDICATOR_MODE_HIDDEN | Hide the typing indicator |
+| 2 | CHANNEL_TYPING_INDICATOR_MODE_INDICATOR_ONLY | Show the indicator without avatars |
+| 3 | CHANNEL_TYPING_INDICATOR_MODE_HIDDEN | Hide the indicator |
 
 ### Direct message preview modes
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | DM_MESSAGE_PREVIEW_MODE_UNSPECIFIED | No explicit mode is selected |
-| 1 | DM_MESSAGE_PREVIEW_MODE_ALL | Show previews for all direct messages |
-| 2 | DM_MESSAGE_PREVIEW_MODE_UNREAD_ONLY | Show previews only for unread direct messages |
-| 3 | DM_MESSAGE_PREVIEW_MODE_NONE | Hide direct message previews |
+| 0 | DM_MESSAGE_PREVIEW_MODE_UNSPECIFIED | No mode is set |
+| 1 | DM_MESSAGE_PREVIEW_MODE_ALL | Preview all direct messages |
+| 2 | DM_MESSAGE_PREVIEW_MODE_UNREAD_ONLY | Preview only unread direct messages |
+| 3 | DM_MESSAGE_PREVIEW_MODE_NONE | Hide previews |
 
 ### HDR display modes
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | HDR_DISPLAY_MODE_UNSPECIFIED | No explicit mode is selected |
-| 1 | HDR_DISPLAY_MODE_FULL | Display HDR media without limiting its range |
-| 2 | HDR_DISPLAY_MODE_STANDARD | Display HDR media using the standard presentation |
+| 0 | HDR_DISPLAY_MODE_UNSPECIFIED | No mode is set |
+| 1 | HDR_DISPLAY_MODE_FULL | Show HDR media at full range |
+| 2 | HDR_DISPLAY_MODE_STANDARD | Limit HDR media to standard dynamic range |
 
 ## Accessibility overrides object
-
-The `accessibility_overrides` field holds dirty flags that no live surface reads or writes. The settings they name also appear in [accessibility settings](#accessibility-settings-object) as a `mobile_*_overridden` flag with a matching `mobile_*_value`.
 
 ### Structure
 
@@ -219,82 +182,70 @@ The `accessibility_overrides` field holds dirty flags that no live surface reads
 
 ## Textual preview settings object
 
-The `textual_preview` field controls line wrapping in the inline preview of a textual attachment.
+Line wrapping in the inline preview of a text attachment.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| wrap_text | bool | Whether long lines wrap in a textual preview |
+| wrap_text | bool | Whether long lines wrap |
 
 ## Usage stat object
 
-The usage stat object records picker usage for one expression or one meme. It is the map value of the `usage` field in every picker state group, so the emoji, sticker, and meme pickers all rank their entries from the same shape.
+How often and how recently one emoji, sticker or meme was used.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| count | uint32 | Number of recorded uses |
-| last_used_ms<sup>1</sup> | int64 | Unix timestamp in milliseconds of the most recent use |
-
-<sup>1</sup> Milliseconds since 1970-01-01T00:00:00Z
+| count | uint32 | Number of uses |
+| last_used_ms | int64 | Unix time in milliseconds of the last use |
 
 ## Emoji picker state object
 
-The `emoji_picker` field records emoji usage, favourites, and collapsed picker categories.
+Emoji usage, favorites and collapsed categories. Fluxer clients key emoji as `unicode:<name>` or `custom:<guild id>:<emoji id>`.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| usage<sup>1</sup> <sup>2</sup> | map[string, [usage stat](#usage-stat-object) object] | Usage keyed by emoji usage key |
-| favorite_emoji_ids<sup>1</sup> | array[string] | Favourite emoji usage keys in display order |
-| collapsed_category_ids | array[string] | Collapsed emoji category identifiers |
-
-<sup>1</sup> The first-party client writes `unicode:<unique name>` for a standard emoji and `custom:<guild id>:<emoji id>` for a custom emoji
-
-<sup>2</sup> The first-party client drops a key matching neither form when it reads the snapshot, and applies no such filter to `favorite_emoji_ids`
+| usage | map[string, [usage stat](#usage-stat-object) object] | Usage keyed by emoji key |
+| favorite_emoji_ids | array[string] | Favorite emoji keys in display order |
+| collapsed_category_ids | array[string] | Collapsed category IDs |
 
 ## Sticker picker state object
 
-The `sticker_picker` field records sticker usage, favourites, and collapsed picker categories.
+Sticker usage, favorites and collapsed categories.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| usage | map[string, [usage stat](#usage-stat-object) object] | Usage keyed by sticker identifier |
-| favorite_sticker_ids | array[string] | Favourite sticker identifiers in display order |
-| collapsed_category_ids | array[string] | Collapsed sticker category identifiers |
+| usage | map[string, [usage stat](#usage-stat-object) object] | Usage keyed by sticker ID |
+| favorite_sticker_ids | array[string] | Favorite sticker IDs in display order |
+| collapsed_category_ids | array[string] | Collapsed category IDs |
 
 ## Memes picker state object
 
-The `memes_picker` field records meme usage, favourites, and collapsed picker categories. The memes themselves belong to the account [memes](/http-api/memes/) collection and are not stored here.
+Meme usage, favorites and collapsed categories. The memes are in the account's [memes](/http-api/memes/).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| usage | map[string, [usage stat](#usage-stat-object) object] | Usage keyed by meme identifier |
-| favorite_meme_ids | array[string] | Favourite meme identifiers in display order |
-| collapsed_category_ids | array[string] | Collapsed meme category identifiers |
+| usage | map[string, [usage stat](#usage-stat-object) object] | Usage keyed by meme ID |
+| favorite_meme_ids | array[string] | Favorite meme IDs in display order |
+| collapsed_category_ids | array[string] | Collapsed category IDs |
 
 ## Emoji state object
 
-The `emoji` field holds the selected skin tone.
-
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| skin_tone<sup>1</sup> | string | Selected Unicode skin tone modifier |
-
-<sup>1</sup> One of the five Unicode skin tone modifiers, U+1F3FB through U+1F3FF. The empty string selects the default tone
+| skin_tone | string | Unicode skin tone modifier (U+1F3FB to U+1F3FF), or empty for the default |
 
 ## Emoji and sticker layout settings object
-
-The `emoji_sticker_layout` field controls how the emoji and sticker pickers lay out their contents.
 
 ### Structure
 
@@ -307,148 +258,116 @@ The `emoji_sticker_layout` field controls how the emoji and sticker pickers lay 
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | EMOJI_PICKER_LAYOUT_UNSPECIFIED | No explicit layout is selected |
-| 1 | EMOJI_PICKER_LAYOUT_LIST | Display emoji in a list layout |
-| 2 | EMOJI_PICKER_LAYOUT_GRID | Display emoji in a grid layout |
+| 0 | EMOJI_PICKER_LAYOUT_UNSPECIFIED | No layout is set |
+| 1 | EMOJI_PICKER_LAYOUT_LIST | List layout |
+| 2 | EMOJI_PICKER_LAYOUT_GRID | Grid layout |
 
 ### Sticker picker view modes
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | STICKER_PICKER_VIEW_MODE_UNSPECIFIED | No explicit view mode is selected |
-| 1 | STICKER_PICKER_VIEW_MODE_COZY | Display stickers with the roomy layout |
-| 2 | STICKER_PICKER_VIEW_MODE_COMPACT | Display stickers with the compact layout |
+| 0 | STICKER_PICKER_VIEW_MODE_UNSPECIFIED | No view mode is set |
+| 1 | STICKER_PICKER_VIEW_MODE_COZY | Roomy layout |
+| 2 | STICKER_PICKER_VIEW_MODE_COMPACT | Compact layout |
 
-## Favourite GIF settings object
+## Favorite GIF settings object
 
-The `favorite_gifs` field stores the GIFs the account has favourited, together with the metadata needed to render one without another lookup. Favouriting a GIF writes an entry here or writes a meme to the account [memes](/http-api/memes/) collection, never both, and `save_as_saved_media` selects which.
+Fluxer clients keep favorite GIFs here, or in the account's [memes](/http-api/memes/) when `save_as_saved_media` is true.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| entries<sup>1</sup> | array[[favourite GIF entry](#favourite-gif-entry-object) object] | Favourite GIFs in display order |
-| save_as_saved_media<sup>2</sup> | bool | Whether favouriting a GIF saves a meme to the account memes collection |
-| seen_first_time_prompt | bool | Whether the first-time favourite prompt has been shown |
+| entries | array[[favorite GIF entry](#favorite-gif-entry-object) object] | Favorite GIFs in display order |
+| save_as_saved_media | bool | Whether favoriting a GIF saves it as a meme |
+| seen_first_time_prompt | bool | Whether the first-time favorite prompt was shown |
 
-<sup>1</sup> The first-party client treats `url` as the identity of an entry and refuses to append a second entry with a `url` already present
+## Favorite GIF entry object
 
-<sup>2</sup> While this is true the first-party client leaves `entries` untouched and favourites through [Save meme from message](/http-api/memes/#save-meme-from-message) instead
-
-## Favourite GIF entry object
-
-One entry describes one favourited GIF. Its fields mirror the [resolved GIF entry object](/http-api/memes/#resolved-gif-entry-object) returned by [Resolve GIF URLs](/http-api/memes/#resolve-gif-urls), so a client can store a resolved entry without reshaping it.
+One favorite GIF, in the same format as a [resolved GIF entry](/http-api/memes/#resolved-gif-entry-object).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | url | string | Source URL of the GIF |
-| proxy_url | string | [Media Proxy](/media-proxy/overview/) URL for the preview format |
-| width<sup>1</sup> | uint32 | Width of the preview format in pixels |
-| height<sup>1</sup> | uint32 | Height of the preview format in pixels |
-| media | map[string, [favourite GIF media format](#favourite-gif-media-format-object) object] | Formats keyed by [GIF media format name](/http-api/memes/#gif-media-format-names) |
-| content_type<sup>2</sup> | string | Media type of the media addressed by `proxy_url` |
-| placeholder<sup>3</sup> | string | Compact thumbhash placeholder |
+| proxy_url | string | [Media Proxy](/media-proxy/overview/) URL of the preview |
+| width | uint32 | Preview width in pixels, or 0 if unknown |
+| height | uint32 | Preview height in pixels, or 0 if unknown |
+| media | map[string, [favorite GIF media format](#favorite-gif-media-format-object) object] | Formats keyed by [format name](/http-api/memes/#gif-media-format-names) |
+| content_type | string | Media type of the preview, or empty for `image/gif` |
+| placeholder | string | Thumbhash placeholder, or empty |
 
-<sup>1</sup> Zero when the dimensions could not be determined
+## Favorite GIF media format object
 
-<sup>2</sup> The empty string means the type is unknown, which a client reads as `image/gif`
-
-<sup>3</sup> The empty string means the Media Proxy emitted none
-
-## Favourite GIF media format object
-
-One descriptor addresses one encoding of one favourited GIF. It mirrors the [GIF media format object](/http-api/memes/#gif-media-format-object).
+One encoding of a favorite GIF, in the same format as a [GIF media format](/http-api/memes/#gif-media-format-object).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| src | string | Direct media URL of this format |
+| src | string | Direct URL of this format |
 | proxy_src | string | [Media Proxy](/media-proxy/overview/) URL of this format |
-| width | uint32 | Width of this format in pixels |
-| height | uint32 | Height of this format in pixels |
+| width | uint32 | Width in pixels |
+| height | uint32 | Height in pixels |
 
-## Favourites state object
+## Favorites state object
 
-The `favorites` field stores favourite channels, the categories they are grouped into, and the display state of that grouping. These categories are private to the favourites view.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| channels | array[[favourite channel](#favourite-channel-object) object] | Favourite channels |
-| categories | array[[favourite category](#favourite-category-object) object] | Favourite categories |
-| collapsed_category_ids | array[string] | Collapsed favourite category identifiers |
-| hide_muted_channels | bool | Whether muted channels are hidden from favourites |
-| muted | bool | Whether the favourites collection is muted |
-
-## Favourite channel object
-
-One entry marks one channel as a favourite. Channel and guild identifiers here are strings holding the decimal form of a [snowflake](/snowflakes/). Nothing removes an entry when the account loses access to the channel, so an entry can reference a channel the account can no longer resolve.
+Favorite channels and the categories they're grouped in. They aren't guild categories.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channel_id | string | Channel ID |
-| guild_id | string | Guild ID |
-| parent_id?<sup>1</sup> | string | Favourite category the channel is grouped under |
-| position<sup>2</sup> | int32 | Position across the whole favourites list |
-| nickname? | string | User-assigned channel nickname |
+| channels | array[[favorite channel](#favorite-channel-object) object] | Favorite channels |
+| categories | array[[favorite category](#favorite-category-object) object] | Favorite categories |
+| collapsed_category_ids | array[string] | Collapsed favorite category IDs |
+| hide_muted_channels | bool | Whether muted channels are hidden |
+| muted | bool | Whether favorites are muted |
 
-<sup>1</sup> The `id` of a [favourite category](#favourite-category-object), not a guild category channel. An absent value groups the channel outside every category
-
-<sup>2</sup> A single ordering over every favourite channel. The first-party client renumbers the whole list from 0 whenever an entry is removed or moved, and appends a new entry at the current entry count without renumbering
-
-## Favourite category object
-
-One entry names one grouping in the favourites view. The client chooses the identifier, so it is not a [snowflake](/snowflakes/) and Fluxer never resolves it.
+## Favorite channel object
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| id | string | Category identifier |
+| channel_id | string | The ID of the channel |
+| guild_id | string | The ID of the guild |
+| parent_id? | string | The `id` of the [favorite category](#favorite-category-object) it's in |
+| position | int32 | Position in the favorites list |
+| nickname? | string | Nickname the user gave the channel |
+
+## Favorite category object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | Category ID chosen by the client, not a snowflake |
 | name | string | Category name |
-| position<sup>1</sup> | int32 | Category position |
-
-<sup>1</sup> Renumbered from 0 across every category whenever one is removed or moved
+| position | int32 | Category position |
 
 ## Recent mentions settings object
 
-The `recent_mentions` field controls which mentions appear in the recent mentions view. The filters combine, and `include_guilds` selects by channel.
-
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| include_everyone?<sup>1</sup> | bool | Whether to include `@everyone` mentions |
-| include_roles?<sup>1</sup> | bool | Whether to include role mentions |
-| include_guilds?<sup>1</sup> <sup>2</sup> | bool | Whether to include mentions in a guild channel |
-
-<sup>1</sup> The first-party client defaults every filter to true and omits the field while it holds that default. A client that reads an absent value as the Protobuf zero then filters out mentions the account expects to see
-
-<sup>2</sup> False keeps direct message mentions and drops every mention whose channel belongs to a guild
+| include_everyone? | bool | Whether to include `@everyone` mentions (true when absent) |
+| include_roles? | bool | Whether to include role mentions (true when absent) |
+| include_guilds? | bool | Whether to include mentions in guild channels (true when absent) |
 
 ## Sidebar preferences object
-
-The `sidebar` field stores direct message sidebar display state.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | inline_dms_collapsed | bool | Whether the inline direct message section is collapsed |
-| show_collapsed_unread_dms_badge?<sup>1</sup> | bool | Whether the collapsed section shows an unread direct message badge |
-| show_incoming_friend_request_badge?<sup>1</sup> | bool | Whether the sidebar shows an incoming friend request badge |
-
-<sup>1</sup> The first-party client defaults it to true and omits the field while it holds that default, so a client that reads an absent value as the Protobuf zero hides a badge the account expects to see
+| show_collapsed_unread_dms_badge? | bool | Whether the collapsed section shows an unread badge (true when absent) |
+| show_incoming_friend_request_badge? | bool | Whether the sidebar shows a friend request badge (true when absent) |
 
 ## Member list state object
-
-The `member_list` field stores whether the member list panel is open.
 
 ### Structure
 
@@ -458,212 +377,203 @@ The `member_list` field stores whether the member list panel is open.
 
 ## Unread channels state object
 
-The `unread_channels` field stores which channels are collapsed in the unread view.
-
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| collapsed_channel_ids | array[string] | Collapsed channel IDs in decimal form |
+| collapsed_channel_ids | array[string] | IDs of collapsed channels in the unread view |
 
 ## Mention frecency state object
 
-The `mention_frecency` field records how often and how recently the account mentioned each user, one record set per guild, so a client can rank mention autocomplete without a server call. It nests the messages `MentionFrecencyState.Scope` and `MentionFrecencyState.Entry`.
+How often and how recently the account mentioned each user, per guild, for ranking mention autocomplete.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| scopes | array[[mention frecency scope](#mention-frecency-scope-object) object] | Per-guild mention records |
+| scopes | array[[mention frecency scope](#mention-frecency-scope-object) object] | Mention records per guild |
 
 ## Mention frecency scope object
 
-One scope holds every mention record for one guild. It is declared as `MentionFrecencyState.Scope`.
+The mention records for one guild, declared as `MentionFrecencyState.Scope`.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guild_id | string | Guild ID in decimal form |
-| entries | array[[mention frecency entry](#mention-frecency-entry-object) object] | User mention records for the guild |
+| guild_id | string | The ID of the guild |
+| entries | array[[mention frecency entry](#mention-frecency-entry-object) object] | Mention records for the guild |
 
 ## Mention frecency entry object
 
-One entry counts mentions of one user inside one scope. It is declared as `MentionFrecencyState.Entry`.
+Mentions of one user, declared as `MentionFrecencyState.Entry`.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user_id | string | Mentioned user ID in decimal form |
-| count | uint32 | Number of recorded mentions |
-| last_at_ms<sup>1</sup> | int64 | Unix timestamp in milliseconds of the most recent mention |
+| user_id | string | The ID of the mentioned user |
+| count | uint32 | Number of mentions |
+| last_at_ms | int64 | Unix time in milliseconds of the last mention |
 
-<sup>1</sup> Milliseconds since 1970-01-01T00:00:00Z
+## Channel frecency state object
+
+How often and how recently the account opened each channel.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| usage | map[string, [channel frecency entry](#channel-frecency-entry-object) object] | Usage keyed by channel ID |
+
+## Channel frecency entry object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| total_uses | uint32 | Number of uses |
+| recent_uses_ms | array[int64] | Unix times in milliseconds of recent uses |
 
 ## Nagbar dismissals object
 
-The `nagbars` field stores dismissed account-wide notices as bools and dismissed per-target notices as maps. Field number 13 is not assigned.
+Each field is true when the account dismissed that notice. In the map fields, a missing key means the notice wasn't dismissed.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| ios_install | bool | Whether the iOS installation notice is dismissed |
-| pwa_install | bool | Whether the progressive web application installation notice is dismissed |
-| push_notification | bool | Whether the push notification notice is dismissed |
-| desktop_notification | bool | Whether the desktop notification notice is dismissed |
-| premium_grace_period | bool | Whether the premium grace period notice is dismissed |
-| premium_expired | bool | Whether the premium expiry notice is dismissed |
-| premium_onboarding | bool | Whether the premium onboarding notice is dismissed |
-| premium_trial_expiring | bool | Whether the premium trial expiry notice is dismissed |
-| gift_inventory | bool | Whether the gift inventory notice is dismissed |
-| desktop_download | bool | Whether the desktop download notice is dismissed |
-| guild_membership_cta | bool | Whether the guild membership call to action notice is dismissed |
-| visionary_mfa<sup>1</sup> | bool | Whether the lifetime premium MFA notice is dismissed |
-| legacy_phone_unlink | bool | Whether the legacy phone unlink notice is dismissed |
-| pending_bulk_deletion | map[string, bool] | Dismissal state keyed by pending bulk deletion identifier |
-| invites_disabled<sup>2</sup> | map[string, bool] | Dismissal state keyed by guild ID for disabled-invite notices |
-| guild_mfa_requirement<sup>2</sup> | map[string, bool] | Dismissal state keyed by guild ID for MFA requirement notices |
-
-<sup>1</sup> The notice this dismisses is shown only to an account holding lifetime premium with no MFA authenticator enrolled
-
-<sup>2</sup> Keyed by the decimal form of a guild [snowflake](/snowflakes/). A missing key reads as not dismissed
+| ios_install | bool | iOS install notice |
+| pwa_install | bool | Progressive web app install notice |
+| push_notification | bool | Push notification notice |
+| desktop_notification | bool | Desktop notification notice |
+| premium_grace_period | bool | Premium grace period notice |
+| premium_expired | bool | Premium expired notice |
+| premium_onboarding | bool | Premium onboarding notice |
+| premium_trial_expiring | bool | Premium trial expiring notice |
+| gift_inventory | bool | Gift inventory notice |
+| desktop_download | bool | Desktop download notice |
+| guild_membership_cta | bool | Guild membership notice |
+| pending_bulk_deletion | map[string, bool] | Pending bulk deletion notices, keyed by deletion ID |
+| invites_disabled | map[string, bool] | Disabled invites notices, keyed by guild ID |
+| guild_mfa_requirement | map[string, bool] | Guild MFA requirement notices, keyed by guild ID |
 
 ## Dismissed upsells object
 
-The `dismissed_upsells` field stores dismissed upsells.
-
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| picker_premium | bool | Whether the premium picker upsell is dismissed |
+| picker_premium | bool | Whether the premium upsell in the picker is dismissed |
 
 ## Guild mature content agreements object
 
-The `guild_nsfw_agreements` field stores mature content acknowledgements. Acceptance is recorded per target, so accepting for a guild does not record acceptance for its categories or channels.
+The guilds, categories and channels where the account accepted the mature content notice, each accepted separately.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| agreed_channel_ids | array[string] | Channel IDs whose mature content notice was accepted |
-| agreed_guild_ids | array[string] | Guild IDs whose mature content notice was accepted |
-| agreed_category_ids | array[string] | Category IDs whose mature content notice was accepted |
+| agreed_channel_ids | array[string] | Channel IDs |
+| agreed_guild_ids | array[string] | Guild IDs |
+| agreed_category_ids | array[string] | Category IDs |
 
 ## What's new state object
 
-The `whats_new` field stores the most recently dismissed update entry.
-
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| last_dismissed_entry_id? | string | Most recently dismissed update entry ID |
+| last_dismissed_entry_id? | string | ID of the last dismissed update entry |
 
 ## Privacy preferences object
 
-The `privacy` field stores client privacy behaviour. Fluxer reads none of it, and none of it changes the privacy fields of the [user settings object](/http-api/users/#user-settings-object), which control what Fluxer itself discloses about the account.
+These preferences don't change the privacy fields of the [user settings object](/http-api/users/#user-settings-object).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| disable_stream_previews<sup>1</sup> | bool | Whether stream previews are disabled |
+| disable_stream_previews | bool | Whether the client stops uploading stream preview frames |
 | show_active_now? | bool | Whether the active now view is shown |
-| preupload_message_attachments? | bool | Whether message attachments are uploaded before the message is sent |
-
-<sup>1</sup> The only field in this group whose effect reaches past the account's own view. While it is true the first-party client uploads no stream preview frame, so no other viewer receives one
+| preupload_message_attachments? | bool | Whether attachments upload before the message is sent |
 
 ## Local user spam overrides object
 
-The `local_spam_overrides` field stores client-local classifications that override the [SPAMMER public user flag](/http-api/users/#public-user-flags) in display only. Fluxer neither reads these lists nor changes any flag because of them.
+Overrides for how the client shows the [SPAMMER public user flag](/http-api/users/#public-user-flags). They change only the display, and `not_spammer_user_ids` wins over both the other list and the flag.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| spammer_user_ids | array[string] | User IDs presented locally as spammers |
-| not_spammer_user_ids<sup>1</sup> | array[string] | User IDs presented locally as not being spammers |
-
-<sup>1</sup> This list wins over `spammer_user_ids` and over the `SPAMMER` flag, so a user ID present in both lists is presented as not a spammer
+| spammer_user_ids | array[string] | User IDs shown as spammers |
+| not_spammer_user_ids | array[string] | User IDs shown as not spammers |
 
 ## Sound settings object
 
-The `sound` field controls sound playback, master volume, and per-sound overrides.
+Volumes are percentages from 0 to 200, where 100 is the default.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| all_sounds_disabled | bool | Whether every application sound is disabled |
-| master_volume?<sup>1</sup> | double | Master sound volume |
-| disabled_sounds | map[string, bool] | Disabled state keyed by [sound identifier](#sound-identifiers) |
-| sound_overrides<sup>2</sup> | map[string, double] | Volume override keyed by [sound identifier](#sound-identifiers) |
-
-<sup>1</sup> A percentage. The first-party client clamps it to the range 0 through 200, treats 100 as the default, and omits the field entirely while it holds the default
-
-<sup>2</sup> A percentage on the same scale, and the complete volume for that one sound
+| all_sounds_disabled | bool | Whether all sounds are off |
+| master_volume? | double | Master volume |
+| disabled_sounds | map[string, bool] | Disabled sounds keyed by [sound identifier](#sound-identifiers) |
+| sound_overrides | map[string, double] | Volume per sound, keyed by [sound identifier](#sound-identifiers) |
 
 ### Sound identifiers
 
-Both maps are keyed by an arbitrary string, and Fluxer stores and returns any key unchanged. The first-party client uses the identifiers below, and a key outside this set has no defined playback effect.
+The API accepts any key. Fluxer clients use these.
 
 | Value | Description |
 | --- | --- |
-| deaf | Deafening sound |
-| undeaf | Undeafening sound |
-| mute | Muting sound |
-| unmute | Unmuting sound |
-| message | Message notification sound |
-| direct-message | Direct message notification sound |
-| same-channel-message | Notification sound for the channel already in view |
-| incoming-ring | Incoming call sound |
-| user-join | Voice participant join sound |
-| user-leave | Voice participant leave sound |
-| user-move | Voice participant move sound |
-| viewer-join | Stream viewer join sound |
-| viewer-leave | Stream viewer leave sound |
-| voice-disconnect | Voice disconnection sound |
-| camera-on | Camera enabled sound |
-| camera-off | Camera disabled sound |
-| screen-share-start | Screen share start sound |
-| screen-share-stop | Screen share stop sound |
+| deaf | Deafen |
+| undeaf | Undeafen |
+| mute | Mute |
+| unmute | Unmute |
+| message | Message notification |
+| direct-message | Direct message notification |
+| same-channel-message | Message in the channel you're viewing |
+| incoming-ring | Incoming call |
+| user-join | Someone joins voice |
+| user-leave | Someone leaves voice |
+| user-move | Someone is moved in voice |
+| viewer-join | Stream viewer joins |
+| viewer-leave | Stream viewer leaves |
+| voice-disconnect | Voice disconnects |
+| camera-on | Camera on |
+| camera-off | Camera off |
+| screen-share-start | Screen share starts |
+| screen-share-stop | Screen share stops |
 
 ## Spellcheck settings object
 
-The `spellcheck` field controls spellchecking, the selected languages, and the personal dictionary.
-
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| enabled? | bool | Whether spellchecking is enabled |
-| languages<sup>1</sup> | array[string] | Selected spellcheck languages |
-| personal_dictionary<sup>1</sup> | array[string] | Words in the personal dictionary |
-| auto_detect? | bool | Whether spellcheck languages are detected automatically |
-| engine?<sup>2</sup> | string | Selected spellcheck engine identifier |
-
-<sup>1</sup> The first-party client drops an empty entry and a duplicate entry when it reads the snapshot
-
-<sup>2</sup> The first-party client recognises `auto`, `system`, and `hunspell`, and ignores any other value
+| enabled? | bool | Whether spellcheck is on |
+| languages | array[string] | Spellcheck languages |
+| personal_dictionary | array[string] | Words in the personal dictionary |
+| auto_detect? | bool | Whether languages are detected automatically |
+| engine? | string | Spellcheck engine (`auto`, `system` or `hunspell`) |
 
 ## Search engine settings object
 
-The `search_engines` field stores the selected external providers. Every identifier names a provider the client defines, and Fluxer neither validates nor resolves one.
+Provider IDs that the client defines.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| text_search_engine_id? | string | Text search engine identifier |
-| reverse_image_search_engine_id? | string | Reverse image search engine identifier |
-| translation_provider_id? | string | Translation provider identifier |
+| text_search_engine_id? | string | Text search engine |
+| reverse_image_search_engine_id? | string | Reverse image search engine |
+| translation_provider_id? | string | Translation provider |
 
 ## Permission layout settings object
 
-The `permission_layout` field controls the layout of the [permission](/http-api/permissions/) editor.
+Layout of the [permission](/http-api/permissions/) editor.
 
 ### Structure
 
@@ -676,21 +586,19 @@ The `permission_layout` field controls the layout of the [permission](/http-api/
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | PERMISSION_LAYOUT_MODE_UNSPECIFIED | No explicit layout is selected |
-| 1 | PERMISSION_LAYOUT_MODE_COMFY | Use the roomy permission layout |
-| 2 | PERMISSION_LAYOUT_MODE_DENSE | Use the dense permission layout |
+| 0 | PERMISSION_LAYOUT_MODE_UNSPECIFIED | No layout is set |
+| 1 | PERMISSION_LAYOUT_MODE_COMFY | Roomy layout |
+| 2 | PERMISSION_LAYOUT_MODE_DENSE | Dense layout |
 
 ### Permission grid modes
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | PERMISSION_GRID_MODE_UNSPECIFIED | No explicit grid mode is selected |
-| 1 | PERMISSION_GRID_MODE_SINGLE | Show one permission category at a time |
-| 2 | PERMISSION_GRID_MODE_GRID | Show permission categories in a grid |
+| 0 | PERMISSION_GRID_MODE_UNSPECIFIED | No grid mode is set |
+| 1 | PERMISSION_GRID_MODE_SINGLE | One category at a time |
+| 2 | PERMISSION_GRID_MODE_GRID | Categories in a grid |
 
 ## Guild member layout settings object
-
-The `guild_member_layout` field controls how the guild member view presents its members.
 
 ### Structure
 
@@ -702,25 +610,21 @@ The `guild_member_layout` field controls how the guild member view presents its 
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | GUILD_MEMBER_VIEW_MODE_UNSPECIFIED | No explicit view mode is selected |
-| 1 | GUILD_MEMBER_VIEW_MODE_TABLE | Display guild members in a table |
-| 2 | GUILD_MEMBER_VIEW_MODE_GRID | Display guild members in a grid |
+| 0 | GUILD_MEMBER_VIEW_MODE_UNSPECIFIED | No view mode is set |
+| 1 | GUILD_MEMBER_VIEW_MODE_TABLE | Table |
+| 2 | GUILD_MEMBER_VIEW_MODE_GRID | Grid |
 
 ## Guild folder expanded state object
 
-The `guild_folders` field stores which guild folders are expanded in the sidebar. The folders themselves are `guild_folders` on the [user settings object](/http-api/users/#user-settings-object).
+The folders themselves are `guild_folders` on the [user settings object](/http-api/users/#user-settings-object).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| expanded_folder_ids<sup>1</sup> | array[fixed64] | Expanded guild folder identifiers |
-
-<sup>1</sup> Each value is the `id` of a [guild folder object](/http-api/users/#guild-folder-object). An identifier for a folder the layout no longer holds stays in the array and has no effect
+| expanded_folder_ids | array[fixed64] | IDs of expanded [guild folders](/http-api/users/#guild-folder-object) |
 
 ## Hidden guild list buttons object
-
-The `hidden_guild_buttons` field stores which guild list controls are hidden.
 
 ### Structure
 
@@ -731,93 +635,82 @@ The `hidden_guild_buttons` field stores which guild list controls are hidden.
 
 ## Keyboard mode intro state object
 
-The `keyboard_mode_intro` field stores whether the keyboard navigation introduction has been seen.
-
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| seen | bool | Whether the keyboard navigation introduction was seen |
+| seen | bool | Whether the keyboard navigation introduction was shown |
 
 ## Input monitoring prompts state object
 
-The `input_monitoring` field stores whether the input monitoring prompt has been seen. No live surface reads or writes it.
-
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| seen_cta | bool | Whether the input monitoring call to action was seen |
+| seen_cta | bool | Whether the input monitoring prompt was shown |
 
 ## Voice prompts state object
 
-The `voice_prompts` field stores which voice confirmation prompts the account has suppressed.
+Voice confirmations the account chose to skip.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| skip_hide_own_camera_confirm | bool | Whether hiding the caller's own camera skips confirmation |
-| skip_hide_own_screenshare_confirm | bool | Whether hiding the caller's own screen share skips confirmation |
+| skip_hide_own_camera_confirm | bool | Skip confirming before hiding your own camera |
+| skip_hide_own_screenshare_confirm | bool | Skip confirming before hiding your own screen share |
+| skip_p2p_join_confirm | bool | Skip confirming before joining a peer-to-peer call |
+
+## Announcement prompts state object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| hide_publish_nudge | bool | Whether the prompt to publish in an [announcement channel](/topics/announcement-channels/) is hidden |
 
 ## Sudo prompt state object
 
-The `sudo_prompt` field stores the verification method the account used most recently, so a client can preselect it the next time [sudo mode](/http-api/users/mfa/#sudo-mode) is required.
+The verification method used last for [sudo mode](/http-api/users/mfa/#sudo-mode), which clients preselect next time.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| last_used_mfa_method?<sup>1</sup> | int32 | [MFA method](#mfa-methods) most recently used for sudo verification |
-
-<sup>1</sup> The assigned values correspond to `totp` and `webauthn` in `mfa_method` of the [sudo verification object](/http-api/users/mfa/#sudo-verification-object)
+| last_used_mfa_method? | int32 | [MFA method](#mfa-methods) |
 
 ### MFA methods
 
 | Value | Name | Description |
 | --- | --- | --- |
 | 0 | MFA_METHOD_UNSPECIFIED | No method is recorded |
-| 1 | MFA_METHOD_TOTP | Time-based one-time password |
-| 3 | MFA_METHOD_WEBAUTHN | WebAuthn credential |
-
-The value 2 is not assigned.
+| 1 | MFA_METHOD_TOTP | Authenticator app (`totp`) |
+| 3 | MFA_METHOD_WEBAUTHN | Security key or passkey (`webauthn`) |
 
 ## Keybind settings object
-
-The `keybinds` field stores custom keybinds and voice transmit behaviour.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | custom_keybinds | array[[custom keybind](#custom-keybind-object) object] | Custom keybinds |
-| transmit_mode<sup>1</sup> | string | Voice transmit mode |
-| push_to_talk_release_delay_ms?<sup>2</sup> | uint32 | Push-to-talk release delay in milliseconds |
-
-<sup>1</sup> The first-party client recognises `voice_activity` and `voice_push_to_talk`, and falls back to `voice_activity` for the empty string and for any other value
-
-<sup>2</sup> Read only while `transmit_mode` is `voice_push_to_talk`. The first-party client clamps it to the range 20 through 2000, treats 20 as the default, and omits the field entirely while it holds the default
+| transmit_mode | string | `voice_activity` (default) or `voice_push_to_talk` |
+| push_to_talk_release_delay_ms? | uint32 | Push-to-talk release delay in milliseconds (20-2000) |
 
 ## Custom keybind object
-
-One entry binds one input combination to one action. The entry has its own `enabled` flag and its combination has another. The first-party client gates a custom keybind on the entry's flag alone, and reads `enabled` on a combination only for a built-in default binding.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| id<sup>1</sup> | string | Keybind identifier |
-| action?<sup>2</sup> | string | Action performed by the keybind |
+| id | string | Keybind ID chosen by the client |
+| action? | string | Action the client runs |
 | combo? | [keybind combo](#keybind-combo-object) object | Input combination |
-| enabled | bool | Whether the keybind is enabled |
-
-<sup>1</sup> Chosen by the client. The first-party client generates a replacement when it reads an entry whose `id` is the empty string
-
-<sup>2</sup> An action name the client defines. The first-party client keeps an entry whose action it does not recognise and clears `action`
+| enabled | bool | Whether the keybind is on |
 
 ## Keybind combo object
 
-One combination describes the key, modifiers, and buttons that trigger a keybind. The modifier flags are independent of each other, and `ctrl_or_meta` is a modifier of its own.
+The key, modifiers and buttons that trigger a keybind.
 
 ### Structure
 
@@ -825,28 +718,54 @@ One combination describes the key, modifiers, and buttons that trigger a keybind
 | --- | --- | --- |
 | key | string | Key value |
 | code? | string | Physical key code |
-| ctrl_or_meta<sup>1</sup> | bool | Whether Control or Meta is required according to the platform |
-| ctrl | bool | Whether Control is required |
-| alt | bool | Whether Alt is required |
-| shift | bool | Whether Shift is required |
-| meta | bool | Whether Meta is required |
-| global? | bool | Whether the combination is registered globally |
-| enabled?<sup>2</sup> | bool | Whether the combination is active |
-| modifier_only | bool | Whether the combination contains only modifier keys |
-| both_sides | bool | Whether either side of a paired modifier is accepted |
+| ctrl_or_meta | bool | Whether Meta on macOS or Control elsewhere is needed |
+| ctrl | bool | Whether Control is needed |
+| alt | bool | Whether Alt is needed |
+| shift | bool | Whether Shift is needed |
+| meta | bool | Whether Meta is needed |
+| global? | bool | Whether the combination works when the app is unfocused |
+| enabled? | bool | Ignored for custom keybinds, which use the keybind's own `enabled` |
+| modifier_only | bool | Whether the combination is only modifier keys |
+| both_sides | bool | Whether either side of a paired modifier works |
 | mouse_button? | uint32 | Mouse button number |
 | gamepad_button? | uint32 | Gamepad button number |
 
-<sup>1</sup> Resolves to Meta on macOS and to Control on every other platform, so one stored combination expresses the platform-native accelerator
-
-<sup>2</sup> An absent value here reads as active, the opposite of the default for `enabled` on the [custom keybind](#custom-keybind-object) that owns the combination
-
 ## Chat input settings object
-
-The `chat_input` field controls message composer behaviour.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| convert_emoticons? | bool | Whether emoticons are converted to emoji |
+| convert_emoticons? | bool | Whether emoticons turn into emoji |
+
+## Reaction emoji object
+
+The same format as the [reaction emoji object](/gateway/events/#reaction-emoji-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id? | string | The ID of a custom emoji, absent for a Unicode emoji |
+| name | string | The Unicode emoji, or the custom emoji's name |
+
+## Double tap actions
+
+What a double tap on a message does on mobile.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | DOUBLE_TAP_ACTION_UNSPECIFIED | No action is set, which Fluxer clients treat as react |
+| 1 | DOUBLE_TAP_ACTION_REACT | React with `double_tap_reaction` |
+| 2 | DOUBLE_TAP_ACTION_EDIT | Edit the message if it's your own |
+| 3 | DOUBLE_TAP_ACTION_NONE | Do nothing |
+
+## Swipe right to left actions
+
+What a right to left swipe in a channel does on mobile.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | SWIPE_ACTION_UNSPECIFIED | No action is set |
+| 1 | SWIPE_ACTION_CHANNEL_DETAILS | Open the channel details |
+| 2 | SWIPE_ACTION_REPLY | Reply to the message |

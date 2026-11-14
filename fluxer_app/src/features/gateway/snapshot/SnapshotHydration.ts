@@ -1,0 +1,506 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import AccountAccess from '@app/features/auth/state/AccountAccess';
+import AuthSession from '@app/features/auth/state/AuthSession';
+import type {ChannelWire} from '@app/features/channel/models/Channel';
+import Channels from '@app/features/channel/state/Channels';
+import UserConnection from '@app/features/connection/state/UserConnection';
+import Emoji from '@app/features/emoji/state/Emoji';
+import Sticker from '@app/features/emoji/state/EmojiSticker';
+import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
+import {
+	parseSnapshotEntity,
+	parseSnapshotGuildMemberKey,
+	parseSnapshotGuildRoleKey,
+	parseSnapshotSingleton,
+	SNAPSHOT_SCHEMA_EPOCH,
+	type SnapshotAccountMetadataRow,
+	type SnapshotEntityRowMap,
+	type SnapshotGuildMemberKey,
+	type SnapshotGuildRoleKey,
+	type SnapshotPresenceRow,
+	type SnapshotReadStateRow,
+	type SnapshotUnavailableGuildRow,
+	type SnapshotUserRow,
+	snapshotUserKey,
+} from '@app/features/gateway/snapshot/SnapshotEntities';
+import SnapshotSync from '@app/features/gateway/snapshot/SnapshotSync';
+import type {StateSnapshotEntries, StateSyncCursor} from '@app/features/gateway/snapshot/SnapshotTypes';
+import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
+import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
+import GuildAvailability from '@app/features/guild/state/GuildAvailability';
+import GuildCount from '@app/features/guild/state/GuildCount';
+import GuildList from '@app/features/guild/state/GuildList';
+import GuildReadState from '@app/features/guild/state/GuildReadState';
+import Guilds from '@app/features/guild/state/Guilds';
+import GuildVerification from '@app/features/guild/state/GuildVerification';
+import GuildMembers from '@app/features/member/state/GuildMembers';
+import MemberSearch from '@app/features/member/state/MemberSearch';
+import Permission from '@app/features/permissions/state/Permission';
+import SessionManager from '@app/features/platform/state/AuthSession';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import Presence from '@app/features/presence/state/Presence';
+import ReadStates from '@app/features/read_state/state/ReadStates';
+import type {RelationshipWire} from '@app/features/relationship/models/Relationship';
+import Relationships from '@app/features/relationship/state/Relationships';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
+import ThreadGuilds from '@app/features/threads/state/ThreadGuilds';
+import UserGuildSettings, {type GatewayGuildSettings} from '@app/features/user/state/UserGuildSettings';
+import UserNote from '@app/features/user/state/UserNote';
+import UserPinnedDM from '@app/features/user/state/UserPinnedDM';
+import UserSettings from '@app/features/user/state/UserSettings';
+import Users from '@app/features/user/state/Users';
+import WebAuthnCredentials from '@app/features/user/state/WebAuthnCredentials';
+import RtcRegions from '@app/features/voice/state/RtcRegions';
+import {seedVoiceStatesFromReady} from '@app/features/voice/VoiceGatewayLifecycle';
+import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import type {RtcRegionResponse, Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import type {ConnectionListResponse} from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
+import type {
+	GuildEmoji as WireGuildEmoji,
+	GuildSticker as WireGuildSticker,
+} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
+import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import type {GuildRole as WireGuildRole} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
+import type {UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import {runInAction} from 'mobx';
+
+interface ParsedSnapshot {
+	readonly selfUser: UserPrivate;
+	readonly users: Array<SnapshotUserRow>;
+	readonly guilds: Array<GuildReadyData>;
+	readonly unavailableGuilds: Array<SnapshotUnavailableGuildRow>;
+	readonly channels: Array<WireChannel>;
+	readonly relationships: Array<RelationshipWire>;
+	readonly userSettings: SnapshotEntityRowMap['user_settings'] | null;
+	readonly accountMetadata: SnapshotAccountMetadataRow;
+	readonly userConnections: ConnectionListResponse | null;
+	readonly userGuildSettings: Array<GatewayGuildSettings>;
+	readonly readStates: Map<string, SnapshotReadStateRow>;
+	readonly guildEmojis: Array<{guildId: string; emojis: ReadonlyArray<WireGuildEmoji>}>;
+	readonly guildStickers: Array<{guildId: string; stickers: ReadonlyArray<WireGuildSticker>}>;
+	readonly presences: Map<string, SnapshotPresenceRow>;
+	readonly voiceStates: Map<string, ReadonlyArray<VoiceState>>;
+}
+
+interface SnapshotHydrationDependencies {
+	readonly readSnapshot: (storageKey: string) => Promise<StateSnapshotEntries> | null;
+	readonly readCursor: (storageKey: string) => Promise<StateSyncCursor | null> | null;
+	readonly resolveSelfUserId: (storageKey: string) => string | null | Promise<string | null>;
+	readonly resolveCheckedSelfUser: (storageKey: string) => UserPrivate | null;
+	readonly evictSnapshot: (storageKey: string) => void | Promise<void>;
+}
+
+class SnapshotHydrationUnavailableError extends Error {
+	constructor(storageKey: string) {
+		super(`Snapshot hydration is unavailable for ${storageKey}`);
+		this.name = 'SnapshotHydrationUnavailableError';
+	}
+}
+
+const logger = new Logger('SnapshotHydration');
+
+const defaultDependencies: SnapshotHydrationDependencies = {
+	readSnapshot: (storageKey) => SnapshotSync.readSnapshot(storageKey),
+	readCursor: (storageKey) => SnapshotSync.readCursor(storageKey),
+	resolveSelfUserId: (storageKey) => SessionManager.getAccount(storageKey)?.userId ?? null,
+	resolveCheckedSelfUser: (storageKey) => AccountAccess.getCheckedUser(storageKey),
+	evictSnapshot: (storageKey) => SnapshotSync.evict(storageKey),
+};
+
+let hydrationEpoch = 0;
+
+function groupRolesByGuild(roleRows: Map<SnapshotGuildRoleKey, WireGuildRole>): Map<string, Array<WireGuildRole>> {
+	const rolesByGuild = new Map<string, Array<WireGuildRole>>();
+	for (const [key, role] of roleRows) {
+		const {guildId} = parseSnapshotGuildRoleKey(key);
+		let roles = rolesByGuild.get(guildId);
+		if (roles == null) {
+			roles = [];
+			rolesByGuild.set(guildId, roles);
+		}
+		roles.push(role);
+	}
+	return rolesByGuild;
+}
+
+function groupMembersByGuild(
+	memberRows: Map<SnapshotGuildMemberKey, GuildMemberData>,
+): Map<string, Array<GuildMemberData>> {
+	const membersByGuild = new Map<string, Array<GuildMemberData>>();
+	for (const [key, member] of memberRows) {
+		const {guildId} = parseSnapshotGuildMemberKey(key);
+		let members = membersByGuild.get(guildId);
+		if (members == null) {
+			members = [];
+			membersByGuild.set(guildId, members);
+		}
+		members.push(member);
+	}
+	return membersByGuild;
+}
+
+function parseSnapshot(entries: StateSnapshotEntries, selfUserId: string): ParsedSnapshot {
+	const usersById = parseSnapshotEntity(entries, 'user');
+	const selfUser = usersById.get(snapshotUserKey(selfUserId));
+	if (selfUser == null || selfUser.id !== selfUserId) {
+		throw new Error(`Snapshot is missing private self user ${selfUserId}`);
+	}
+	if (!('email' in selfUser)) {
+		throw new Error(`Snapshot self user ${selfUserId} is not a private user record`);
+	}
+	const accountMetadata = parseSnapshotSingleton(entries, 'account_metadata');
+	if (accountMetadata == null) {
+		throw new Error('Snapshot is missing account metadata');
+	}
+	const rolesByGuild = groupRolesByGuild(parseSnapshotEntity(entries, 'guild_role'));
+	const membersByGuild = groupMembersByGuild(parseSnapshotEntity(entries, 'guild_member'));
+	const channels: Array<WireChannel> = [];
+	const threadsByGuild = new Map<string, Array<ChannelWire>>();
+	for (const channel of parseSnapshotEntity(entries, 'channel').values()) {
+		if (!THREAD_CHANNEL_TYPES.has(channel.type) || channel.guild_id == null) {
+			channels.push(channel);
+			continue;
+		}
+		let threads = threadsByGuild.get(channel.guild_id);
+		if (threads == null) {
+			threads = [];
+			threadsByGuild.set(channel.guild_id, threads);
+		}
+		threads.push(channel);
+	}
+	const guilds: Array<GuildReadyData> = [];
+	for (const [guildId, row] of parseSnapshotEntity(entries, 'guild')) {
+		if (row.joined_at == null) {
+			throw new Error(`Snapshot guild ${guildId} is missing joined_at`);
+		}
+		guilds.push({
+			id: row.id,
+			properties: row.properties,
+			channels: [],
+			emojis: [],
+			members: membersByGuild.get(guildId) ?? [],
+			member_count: row.member_count,
+			online_count: row.online_count,
+			roles: rolesByGuild.get(guildId) ?? [],
+			joined_at: row.joined_at,
+			unavailable: false,
+			...(row.threads_active === true ? {threads: threadsByGuild.get(guildId) ?? []} : {}),
+		});
+	}
+	const guildEmojis: Array<{guildId: string; emojis: ReadonlyArray<WireGuildEmoji>}> = [];
+	for (const [guildId, emojis] of parseSnapshotEntity(entries, 'guild_emoji')) {
+		guildEmojis.push({guildId, emojis});
+	}
+	const guildStickers: Array<{guildId: string; stickers: ReadonlyArray<WireGuildSticker>}> = [];
+	for (const [guildId, stickers] of parseSnapshotEntity(entries, 'guild_sticker')) {
+		guildStickers.push({guildId, stickers});
+	}
+	return {
+		selfUser: selfUser as UserPrivate,
+		users: Array.from(usersById.values()),
+		guilds,
+		unavailableGuilds: Array.from(parseSnapshotEntity(entries, 'unavailable_guild').values()),
+		channels,
+		relationships: Array.from(parseSnapshotEntity(entries, 'relationship').values()),
+		userSettings: parseSnapshotSingleton(entries, 'user_settings'),
+		accountMetadata,
+		userConnections: parseSnapshotSingleton(entries, 'user_connections'),
+		userGuildSettings: Array.from(parseSnapshotEntity(entries, 'user_guild_settings').values()),
+		readStates: parseSnapshotEntity(entries, 'read_state'),
+		guildEmojis,
+		guildStickers,
+		presences: parseSnapshotEntity(entries, 'presence'),
+		voiceStates: parseSnapshotEntity(entries, 'voice_state'),
+	};
+}
+
+function hydrateAccountMetadata(metadata: SnapshotAccountMetadataRow): void {
+	UserNote.loadNotes(metadata.notes);
+	UserPinnedDM.setPinnedDMs(metadata.pinnedDmIds);
+	FavoriteMemes.loadFavoriteMemes(metadata.favoriteMemes);
+	RtcRegions.setRegions(metadata.rtcRegions as Array<RtcRegionResponse>);
+	AuthSession.handleGatewayReady(metadata.authSessionIdHash);
+	WebAuthnCredentials.setCredentials(metadata.webAuthnCredentials);
+}
+
+function guildsWithChannels(parsed: ParsedSnapshot): Array<GuildReadyData> {
+	const channelsByGuild = new Map<string, Array<WireChannel>>();
+	for (const channel of parsed.channels) {
+		if (channel.guild_id == null) continue;
+		let channels = channelsByGuild.get(channel.guild_id);
+		if (channels == null) {
+			channels = [];
+			channelsByGuild.set(channel.guild_id, channels);
+		}
+		channels.push(channel);
+	}
+	return parsed.guilds.map((guild) => ({...guild, channels: channelsByGuild.get(guild.id) ?? []}));
+}
+
+function applyParsedSnapshot(storageKey: string, parsed: ParsedSnapshot, selfUserId: string): void {
+	runInAction(() => {
+		hydrateAccountMetadata(parsed.accountMetadata);
+		Users.hydrateFromSnapshot(storageKey, parsed.selfUser, parsed.users);
+		Relationships.hydrateFromSnapshot(parsed.relationships);
+		Guilds.hydrateFromSnapshot(parsed.guilds);
+		if (parsed.userSettings != null) {
+			UserSettings.handleGatewayReady(parsed.userSettings);
+		}
+		GuildList.handleGatewayReady(parsed.guilds);
+		GuildCount.handleGatewayReady(parsed.guilds);
+		GuildMembers.handleGatewayReady(parsed.guilds, {keepRestoredMembers: false});
+		GuildAvailability.hydrateFromSnapshot(parsed.unavailableGuilds);
+		const threadGuilds = guildsWithChannels(parsed);
+		ThreadGuilds.handleGatewayReady(threadGuilds);
+		Channels.hydrateFromSnapshot(parsed.channels, selfUserId);
+		ChannelThreads.handleGatewayReady(threadGuilds);
+		GuildVerification.handleGatewayReady();
+		Permission.handleGatewayReady();
+		MemberSearch.handleGatewayReady();
+		UserGuildSettings.hydrateFromSnapshot(parsed.userGuildSettings);
+		ReadStates.hydrateFromSnapshot(parsed.readStates);
+		Emoji.hydrateFromSnapshot(parsed.guildEmojis);
+		Sticker.hydrateFromSnapshot(parsed.guildStickers);
+		Presence.hydrateFromSnapshot(parsed.presences, selfUserId);
+		seedVoiceStatesFromReady(
+			parsed.guilds.map((guild) => ({...guild, voice_states: parsed.voiceStates.get(guild.id) ?? []})),
+		);
+		GuildReadState.handleGatewayReady();
+		if (parsed.userConnections == null) {
+			UserConnection.handleGatewayReady();
+		} else {
+			UserConnection.setConnections(parsed.userConnections);
+		}
+	});
+}
+
+export function hydrateVisibleSnapshot(
+	storageKey: string,
+	selfUserId: string,
+	entries: StateSnapshotEntries,
+	mentionCounts: ReadonlyMap<string, number>,
+	guildId: string | null,
+	visibleIds: Set<string>,
+): Generator<void> {
+	const snapshot = parseSnapshot(entries, selfUserId);
+	const checkedSelfUser = defaultDependencies.resolveCheckedSelfUser(storageKey);
+	if (checkedSelfUser !== null && checkedSelfUser.id !== selfUserId) {
+		throw new Error(`Checked self user ${checkedSelfUser.id} does not match snapshot user ${selfUserId}`);
+	}
+	const parsed = {
+		...snapshot,
+		guilds: guildsWithChannels(snapshot),
+		selfUser: checkedSelfUser === null ? snapshot.selfUser : checkedSelfUser,
+		readStates: overlayMentionCounts(snapshot.readStates, mentionCounts),
+	};
+	for (const channel of parsed.channels) {
+		if (!visibleIds.has(channel.id)) continue;
+		for (const id of channel.topic?.match(/\d+/g) ?? []) visibleIds.add(id);
+	}
+	const visibleGuildIds = new Set<string>();
+	if (guildId !== null) visibleGuildIds.add(guildId);
+	for (const guild of parsed.guilds) {
+		if (
+			guild.channels.some((channel) => visibleIds.has(channel.id)) ||
+			guild.threads?.some((thread) => visibleIds.has(thread.id))
+		)
+			visibleGuildIds.add(guild.id);
+	}
+	for (const [id, states] of parsed.voiceStates) {
+		if (states.some((state) => state.user_id === selfUserId)) visibleGuildIds.add(id);
+		for (const state of states) visibleIds.add(state.user_id);
+	}
+	const visibleChannels = parsed.channels.filter(
+		(channel) => channel.guild_id == null || visibleGuildIds.has(channel.guild_id),
+	);
+	for (const channel of visibleChannels) {
+		for (const recipient of channel.recipients ?? []) visibleIds.add(recipient.id);
+	}
+	for (const relationship of parsed.relationships) visibleIds.add(relationship.id);
+	for (const [id, presence] of parsed.presences) {
+		if (visibleIds.has(id) && presence.customStatus?.emoji_id) visibleIds.add(presence.customStatus.emoji_id);
+	}
+	const visibleEmojiGuilds = new Set(
+		parsed.guildEmojis
+			.filter(({guildId, emojis}) => visibleGuildIds.has(guildId) || emojis.some((emoji) => visibleIds.has(emoji.id)))
+			.map(({guildId}) => guildId),
+	);
+	const visibleStickerGuilds = new Set(
+		parsed.guildStickers
+			.filter(
+				({guildId, stickers}) => visibleGuildIds.has(guildId) || stickers.some((sticker) => visibleIds.has(sticker.id)),
+			)
+			.map(({guildId}) => guildId),
+	);
+	const visibleChannelIds = new Set(visibleChannels.map((channel) => channel.id));
+	const selectedGuilds = parsed.guilds.filter((guild) => visibleGuildIds.has(guild.id));
+	for (const guild of selectedGuilds) {
+		for (const thread of guild.threads ?? []) visibleChannelIds.add(thread.id);
+	}
+	runInAction(() => {
+		UserPinnedDM.setPinnedDMs(parsed.accountMetadata.pinnedDmIds);
+		AuthSession.handleGatewayReady(parsed.accountMetadata.authSessionIdHash);
+		Users.hydrateFromSnapshot(storageKey, parsed.selfUser, parsed.users);
+		Relationships.hydrateFromSnapshot(parsed.relationships);
+		Guilds.hydrateFromSnapshot(parsed.guilds);
+		if (parsed.userSettings !== null) UserSettings.handleGatewayReady(parsed.userSettings);
+		GuildList.handleGatewayReady(parsed.guilds);
+		GuildCount.handleGatewayReady(parsed.guilds);
+		GuildMembers.handleGatewayReady(selectedGuilds, {keepRestoredMembers: false});
+		GuildAvailability.hydrateFromSnapshot(parsed.unavailableGuilds);
+		ThreadGuilds.handleGatewayReady(selectedGuilds);
+		Channels.hydrateFromSnapshot(visibleChannels, selfUserId);
+		ChannelThreads.handleGatewayReady(selectedGuilds);
+		Permission.handleGatewayReady();
+		for (const guild of selectedGuilds) GuildVerification.handleGuildCreate(guild);
+		UserGuildSettings.hydrateFromSnapshot(parsed.userGuildSettings);
+		ReadStates.hydrateFromSnapshot(new Map(Array.from(parsed.readStates).filter(([id]) => visibleChannelIds.has(id))));
+		Emoji.hydrateFromSnapshot(parsed.guildEmojis.filter(({guildId}) => visibleEmojiGuilds.has(guildId)));
+		Sticker.hydrateFromSnapshot(parsed.guildStickers.filter(({guildId}) => visibleStickerGuilds.has(guildId)));
+		Presence.hydrateFromSnapshot(
+			new Map(Array.from(parsed.presences).filter(([id]) => visibleIds.has(id))),
+			selfUserId,
+		);
+		seedVoiceStatesFromReady(
+			parsed.guilds.map((guild) => ({...guild, voice_states: parsed.voiceStates.get(guild.id) ?? []})),
+		);
+	});
+	return hydrateRemainingSnapshot();
+
+	function* hydrateRemainingSnapshot(): Generator<void> {
+		for (const guild of parsed.guilds) {
+			if (visibleGuildIds.has(guild.id)) continue;
+			GuildMembers.handleGuildCreate({...guild, members: []});
+			yield;
+			for (const member of guild.members) {
+				GuildMembers.hydrateIfMissing(guild.id, member);
+				yield;
+			}
+			ThreadGuilds.handleGuild(guild);
+			Permission.handleGuildRole(guild.id);
+			yield;
+			for (const channel of guild.channels) {
+				Channels.handleChannelCreate({channel});
+				Permission.handleChannelUpdate(channel.id);
+				yield;
+			}
+			for (const thread of guild.threads ?? []) {
+				Channels.upsertThread(thread);
+				Permission.handleChannelUpdate(thread.id);
+				yield;
+			}
+			ChannelThreads.hydrateGuildFromSnapshot(guild);
+			GuildVerification.handleGuildCreate(guild);
+			yield;
+		}
+		for (const [channelId, row] of parsed.readStates) {
+			if (visibleChannelIds.has(channelId)) continue;
+			ReadStates.hydrateSnapshotEntry(channelId, row);
+			yield;
+		}
+		for (const data of parsed.guildEmojis) {
+			if (visibleEmojiGuilds.has(data.guildId)) continue;
+			Emoji.hydrateFromSnapshot([data], {append: true});
+			yield;
+		}
+		for (const data of parsed.guildStickers) {
+			if (visibleStickerGuilds.has(data.guildId)) continue;
+			Sticker.hydrateFromSnapshot([data], {append: true});
+			yield;
+		}
+		for (const [id, row] of parsed.presences) {
+			if (visibleIds.has(id) || id === selfUserId) continue;
+			Presence.hydrateSnapshotEntry(id, row);
+			yield;
+		}
+		MemberSearch.handleGatewayReady();
+		yield;
+		UserNote.loadNotes(parsed.accountMetadata.notes);
+		yield;
+		FavoriteMemes.loadFavoriteMemes(parsed.accountMetadata.favoriteMemes);
+		yield;
+		RtcRegions.setRegions(parsed.accountMetadata.rtcRegions as Array<RtcRegionResponse>);
+		WebAuthnCredentials.setCredentials(parsed.accountMetadata.webAuthnCredentials);
+		if (parsed.userConnections === null) UserConnection.handleGatewayReady();
+		else UserConnection.setConnections(parsed.userConnections);
+	}
+}
+
+function overlayMentionCounts(
+	readStates: ReadonlyMap<string, SnapshotReadStateRow>,
+	mentionCounts: ReadonlyMap<string, number>,
+): Map<string, SnapshotReadStateRow> {
+	const overlaid = new Map<string, SnapshotReadStateRow>();
+	for (const [channelId, row] of readStates) {
+		const mentionCount = mentionCounts.get(channelId) ?? 0;
+		overlaid.set(channelId, row.mentionCount === mentionCount ? row : {...row, mentionCount});
+	}
+	return overlaid;
+}
+
+async function runSnapshotScopeHydration(
+	storageKey: string,
+	dependencies: SnapshotHydrationDependencies,
+	mentionCounts: ReadonlyMap<string, number> | null,
+): Promise<void> {
+	const epoch = ++hydrationEpoch;
+	const selfUserId = await dependencies.resolveSelfUserId(storageKey);
+	if (epoch !== hydrationEpoch) {
+		return;
+	}
+	if (selfUserId == null) {
+		throw new SnapshotHydrationUnavailableError(storageKey);
+	}
+	const cursorPending = dependencies.readCursor(storageKey);
+	const cursor = cursorPending == null ? null : await cursorPending;
+	if (epoch !== hydrationEpoch) {
+		return;
+	}
+	if (cursor == null || cursor.schemaEpoch !== SNAPSHOT_SCHEMA_EPOCH) {
+		await dependencies.evictSnapshot(storageKey);
+		throw new SnapshotHydrationUnavailableError(storageKey);
+	}
+	const snapshotPending = dependencies.readSnapshot(storageKey);
+	if (snapshotPending == null) {
+		throw new SnapshotHydrationUnavailableError(storageKey);
+	}
+	const entries = await snapshotPending;
+	if (epoch !== hydrationEpoch) {
+		return;
+	}
+	try {
+		const snapshot = parseSnapshot(entries, selfUserId);
+		const parsed =
+			mentionCounts === null
+				? snapshot
+				: {...snapshot, readStates: overlayMentionCounts(snapshot.readStates, mentionCounts)};
+		const checkedSelfUser = dependencies.resolveCheckedSelfUser(storageKey);
+		if (checkedSelfUser !== null) {
+			if (checkedSelfUser.id !== selfUserId) {
+				throw new Error(`Checked self user ${checkedSelfUser.id} does not match snapshot user ${selfUserId}`);
+			}
+			applyParsedSnapshot(storageKey, {...parsed, selfUser: checkedSelfUser}, selfUserId);
+		} else {
+			applyParsedSnapshot(storageKey, parsed, selfUserId);
+		}
+	} catch (error) {
+		await dependencies.evictSnapshot(storageKey);
+		throw error;
+	}
+}
+
+export async function hydrateStoresFromSnapshotScope(
+	storageKey: string,
+	mentionCounts: ReadonlyMap<string, number> | null,
+): Promise<void> {
+	if (!SnapshotSync.enabled) {
+		throw new SnapshotHydrationUnavailableError(storageKey);
+	}
+	try {
+		await runSnapshotScopeHydration(storageKey, defaultDependencies, mentionCounts);
+	} catch (error) {
+		logger.warn('Failed to hydrate stores from app-shell snapshot', {storageKey, error});
+		throw error;
+	}
+}

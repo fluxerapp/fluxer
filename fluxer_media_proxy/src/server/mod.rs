@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod asset_path;
+mod attachment_signature;
+mod cors;
 mod download_stream;
 mod external;
 mod format_policy;

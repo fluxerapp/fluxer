@@ -13,7 +13,7 @@
 	min-width: 0;
 	background: var(--settings-surface-background, var(--form-surface-background));
 	color: inherit;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	box-sizing: border-box;
 	transition: none;
@@ -37,17 +37,51 @@
 	flex: 1;
 }
 
+.userProfileText {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	flex: 1 1 0;
+	min-width: 0;
+	margin-inline-end: 0.5rem;
+}
+
 .userProfileName {
-	font-weight: 500;
-	font-size: 0.8125rem;
-	line-height: 1.125rem;
+	font-weight: 600;
+	font-size: 0.9375rem;
+	line-height: 1.25rem;
 	color: inherit;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	flex: 1 1 0;
 	min-width: 0;
-	margin-right: 0.5rem;
+}
+
+.userProfileHint {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	min-width: 0;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-weight: 500;
+	color: var(--text-tertiary);
+}
+
+.userProfile:hover .userProfileHint,
+.userProfileSelected .userProfileHint {
+	color: var(--text-secondary);
+}
+
+.userProfileHintIcon {
+	flex-shrink: 0;
+}
+
+.userProfileHintText {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
 }
 
 .mobileWrapper {
@@ -80,7 +114,7 @@
 .mobileContentPane {
 	position: absolute;
 	top: 0;
-	left: 0;
+	inset-inline-start: 0;
 	width: 100%;
 	height: 100%;
 	display: flex;
@@ -100,8 +134,4 @@
 	margin: 0 auto;
 	padding: 1rem;
 	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 1.25rem));
-}
-
-.fullWidth {
-	width: 100%;
 }

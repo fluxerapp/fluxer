@@ -1,21 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::paths::{DEV_GATEWAY_DIR, GATEWAY_CONFIG_DIR, ROOT};
+use crate::paths::{DEV_GATEWAY_DIR, GATEWAY_CONFIG_DIR, ROOT, write_private_file};
 use crate::proc::{
     AwaitOutcome, RESTART_LIMIT, RESTART_WINDOW, RunOptions, ShutdownSignal, await_or_shutdown,
-    configure_process_group, force_kill_process_group, format_command, merged_env,
-    pending_shutdown, prefix_output, process_group_running, restart_budget_exceeded,
-    run_command_interruptible, stop_process_group, terminate_process_group,
+    can_bind_tcp_port, cleanup_orphaned_process_groups, configure_process_group,
+    force_kill_process_group, format_command, merged_env, pending_shutdown, prefix_output,
+    process_group_running, restart_budget_exceeded, run_command_interruptible, stop_process_group,
+    terminate_process_group,
 };
 use anyhow::{Context, Result, bail};
 use sha2::{Digest, Sha256};
-#[cfg(target_os = "linux")]
-use std::collections::BTreeSet;
 use std::collections::VecDeque;
 use std::env;
 use std::fs;
 use std::io::Read;
-use std::net::{SocketAddr, TcpListener};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
@@ -118,7 +116,7 @@ pub fn write_gateway_config(
         .replace("${FLUXER_ERLANG_NODE_NAME}", node_name)
         .replace("${FLUXER_ERLANG_COOKIE}", cookie)
         .replace("${FLUXER_ERLANG_DIST_PORT}", dist_port);
-    fs::write(config_dir.join("vm.args"), vm_text)?;
+    write_private_file(&config_dir.join("vm.args"), &vm_text)?;
     Ok(())
 }
 
@@ -325,17 +323,7 @@ fn gateway_dependency_stamp() -> Result<String> {
         hasher.update(metadata.len().to_le_bytes());
         hasher.update(&bytes);
     }
-    Ok(bytes_to_lower_hex(&hasher.finalize()))
-}
-
-fn bytes_to_lower_hex(bytes: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut output = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        output.push(HEX[(byte >> 4) as usize] as char);
-        output.push(HEX[(byte & 0x0f) as usize] as char);
-    }
-    output
+    Ok(hex::encode(hasher.finalize()))
 }
 
 fn gateway_dependency_stamp_matches(expected: &str) -> Result<bool> {
@@ -516,200 +504,23 @@ async fn wait_for_ports_available_until(nodes: &[GatewayNode], deadline: Instant
     }
 }
 
-fn can_bind_tcp_port(port: u16) -> bool {
-    TcpListener::bind(SocketAddr::from(([0, 0, 0, 0], port))).is_ok()
-}
-
-#[cfg(target_os = "linux")]
 async fn cleanup_orphaned_gateway_processes(
     node_names: &std::collections::HashSet<String>,
 ) -> Result<()> {
-    let leaders = orphaned_gateway_leaders(node_names)?;
-    if leaders.is_empty() {
-        return Ok(());
-    }
-    let pids = leaders.iter().map(|leader| leader.pid).collect::<Vec<_>>();
-
-    println!(
-        "Stopping orphaned gateway process group(s): {}",
-        format_pids(&pids)
-    );
-    let term_failed = signal_process_groups(&leaders, libc::SIGTERM);
-    if !term_failed.is_empty() {
-        println!(
-            "SIGTERM delivery failed for orphaned gateway pid(s): {}",
-            format_pids(&term_failed)
-        );
-    }
-
-    let deadline = Instant::now() + Duration::from_secs(5);
-    loop {
-        let remaining = surviving_gateway_group_pids(&leaders)?;
-        if remaining.is_empty() {
-            return Ok(());
-        }
-        if Instant::now() >= deadline {
-            let remaining_leaders = leaders
-                .iter()
-                .filter(|leader| remaining.contains(&leader.pid))
-                .cloned()
-                .collect::<Vec<_>>();
-            let kill_failed = signal_process_groups(&remaining_leaders, libc::SIGKILL);
-            sleep(Duration::from_millis(200)).await;
-            let survivors = surviving_gateway_group_pids(&leaders)?;
-            if survivors.is_empty() {
-                return Ok(());
-            }
-            let delivery_failed = kill_failed
-                .into_iter()
-                .filter(|pid| survivors.contains(pid))
-                .collect::<Vec<_>>();
-            if delivery_failed.is_empty() {
-                bail!(
-                    "orphaned gateway node process(es) survived SIGKILL: {}",
-                    format_pids(&survivors)
-                );
-            }
-            bail!(
-                "orphaned gateway node process(es) survived SIGKILL: {} (signal delivery failed for: {})",
-                format_pids(&survivors),
-                format_pids(&delivery_failed)
-            );
-        }
-        sleep(Duration::from_millis(200)).await;
-    }
+    cleanup_orphaned_process_groups(
+        "gateway node",
+        |process, args| {
+            (cmdline_has_gateway_node(args, node_names) || cmdline_has_managed_gateway_config(args))
+                && fs::read_link(format!("/proc/{}/cwd", process.pid))
+                    .ok()
+                    .as_deref()
+                    == Some(gateway_dir().as_path())
+        },
+        cmdline_is_gateway_supervisor,
+    )
+    .await
 }
 
-#[cfg(target_os = "linux")]
-fn format_pids(pids: &[i32]) -> String {
-    if pids.is_empty() {
-        return "none".to_owned();
-    }
-    pids.iter()
-        .map(i32::to_string)
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
-#[cfg(not(target_os = "linux"))]
-async fn cleanup_orphaned_gateway_processes(
-    _node_names: &std::collections::HashSet<String>,
-) -> Result<()> {
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct GatewayLeader {
-    pid: i32,
-    members: Vec<GatewayProcessIdentity>,
-}
-
-#[cfg(target_os = "linux")]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct GatewayProcessIdentity {
-    pid: i32,
-    starttime: u64,
-}
-
-#[cfg(target_os = "linux")]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct GatewayProcess {
-    pid: i32,
-    ppid: i32,
-    pgid: i32,
-    state: char,
-    starttime: u64,
-}
-
-#[cfg(target_os = "linux")]
-fn orphaned_gateway_leaders(
-    node_names: &std::collections::HashSet<String>,
-) -> Result<Vec<GatewayLeader>> {
-    let current_exe = std::env::current_exe().context("failed to resolve fluxer-dev executable")?;
-    let processes = gateway_process_snapshot()?;
-    let mut owned_pids = BTreeSet::new();
-    for process in &processes {
-        if process.ppid != 1 || proc_stat_state_is_dead(process.state) {
-            continue;
-        }
-        let args = proc_cmdline(process.pid);
-        let orphaned_supervisor = cmdline_is_gateway_supervisor(&args, &current_exe);
-        let orphaned_node = (cmdline_has_gateway_node(&args, node_names)
-            || cmdline_has_managed_gateway_config(&args))
-            && fs::read_link(format!("/proc/{}/cwd", process.pid))
-                .ok()
-                .as_deref()
-                == Some(gateway_dir().as_path());
-        if orphaned_supervisor || orphaned_node {
-            owned_pids.insert(process.pid);
-        }
-    }
-    loop {
-        let previous_count = owned_pids.len();
-        for process in &processes {
-            if owned_pids.contains(&process.ppid) {
-                owned_pids.insert(process.pid);
-            }
-        }
-        if owned_pids.len() == previous_count {
-            break;
-        }
-    }
-    let group_pids = processes
-        .iter()
-        .filter(|process| owned_pids.contains(&process.pid) && process.pgid > 1)
-        .map(|process| process.pgid)
-        .collect::<BTreeSet<_>>();
-    let leaders = group_pids
-        .into_iter()
-        .map(|pid| GatewayLeader {
-            pid,
-            members: processes
-                .iter()
-                .filter(|process| owned_pids.contains(&process.pid) && process.pgid == pid)
-                .map(|process| GatewayProcessIdentity {
-                    pid: process.pid,
-                    starttime: process.starttime,
-                })
-                .collect(),
-        })
-        .collect::<Vec<_>>();
-    Ok(leaders)
-}
-
-#[cfg(target_os = "linux")]
-fn gateway_process_snapshot() -> Result<Vec<GatewayProcess>> {
-    let mut processes = Vec::new();
-    for entry in fs::read_dir("/proc").context("failed to read /proc")? {
-        let Ok(entry) = entry else {
-            continue;
-        };
-        let Some(pid) = entry
-            .file_name()
-            .to_str()
-            .and_then(|name| name.parse::<i32>().ok())
-        else {
-            continue;
-        };
-        let Ok(stat) = fs::read_to_string(format!("/proc/{pid}/stat")) else {
-            continue;
-        };
-        let Some((state, ppid, pgid, starttime)) = parse_proc_stat_process(&stat) else {
-            continue;
-        };
-        processes.push(GatewayProcess {
-            pid,
-            ppid,
-            pgid,
-            state,
-            starttime,
-        });
-    }
-    Ok(processes)
-}
-
-#[cfg(target_os = "linux")]
 fn cmdline_is_gateway_supervisor(args: &[String], current_exe: &Path) -> bool {
     args.first().map(Path::new) == Some(current_exe)
         && args.get(1).map(String::as_str) == Some("gateway")
@@ -719,7 +530,6 @@ fn cmdline_is_gateway_supervisor(args: &[String], current_exe: &Path) -> bool {
         }
 }
 
-#[cfg(target_os = "linux")]
 fn cmdline_has_managed_gateway_config(args: &[String]) -> bool {
     args.windows(2).any(|pair| {
         matches!(pair[0].as_str(), "-config" | "-args_file")
@@ -727,98 +537,12 @@ fn cmdline_has_managed_gateway_config(args: &[String]) -> bool {
     })
 }
 
-#[cfg(any(target_os = "linux", test))]
 fn cmdline_has_gateway_node(
     args: &[String],
     node_names: &std::collections::HashSet<String>,
 ) -> bool {
     args.windows(2)
         .any(|pair| pair[0] == "-name" && node_names.contains(&pair[1]))
-}
-
-#[cfg(target_os = "linux")]
-fn proc_cmdline(pid: i32) -> Vec<String> {
-    fs::read(format!("/proc/{pid}/cmdline"))
-        .unwrap_or_default()
-        .split(|byte| *byte == 0)
-        .filter(|arg| !arg.is_empty())
-        .map(|arg| String::from_utf8_lossy(arg).into_owned())
-        .collect()
-}
-
-#[cfg(any(target_os = "linux", test))]
-fn parse_proc_stat_state_and_pgid(stat: &str) -> Option<(char, i32)> {
-    let (_, after_comm) = stat.rsplit_once(')')?;
-    let mut fields = after_comm.split_ascii_whitespace();
-    let state = fields.next()?.chars().next()?;
-    let _ppid: i32 = fields.next()?.parse().ok()?;
-    let pgid: i32 = fields.next()?.parse().ok()?;
-    Some((state, pgid))
-}
-
-#[cfg(target_os = "linux")]
-fn parse_proc_stat_process(stat: &str) -> Option<(char, i32, i32, u64)> {
-    let (_, after_comm) = stat.rsplit_once(')')?;
-    let mut fields = after_comm.split_ascii_whitespace();
-    let state = fields.next()?.chars().next()?;
-    let ppid = fields.next()?.parse().ok()?;
-    let pgid = fields.next()?.parse().ok()?;
-    Some((state, ppid, pgid, parse_proc_stat_starttime(stat)?))
-}
-
-#[cfg(any(target_os = "linux", test))]
-fn parse_proc_stat_starttime(stat: &str) -> Option<u64> {
-    let (_, after_comm) = stat.rsplit_once(')')?;
-    after_comm.split_ascii_whitespace().nth(19)?.parse().ok()
-}
-
-#[cfg(any(target_os = "linux", test))]
-fn proc_stat_state_is_dead(state: char) -> bool {
-    state == 'Z' || state == 'X' || state == 'x'
-}
-
-#[cfg(target_os = "linux")]
-fn surviving_gateway_group_pids(leaders: &[GatewayLeader]) -> Result<Vec<i32>> {
-    Ok(leaders
-        .iter()
-        .filter(|leader| gateway_group_has_owned_member(leader))
-        .map(|leader| leader.pid)
-        .collect())
-}
-
-#[cfg(target_os = "linux")]
-fn gateway_group_has_owned_member(leader: &GatewayLeader) -> bool {
-    leader.members.iter().any(|member| {
-        let Ok(stat) = fs::read_to_string(format!("/proc/{}/stat", member.pid)) else {
-            return false;
-        };
-        let Some((state, pgid)) = parse_proc_stat_state_and_pgid(&stat) else {
-            return false;
-        };
-        !proc_stat_state_is_dead(state)
-            && pgid == leader.pid
-            && parse_proc_stat_starttime(&stat) == Some(member.starttime)
-    })
-}
-
-#[cfg(target_os = "linux")]
-fn signal_process_groups(leaders: &[GatewayLeader], signal: i32) -> Vec<i32> {
-    assert!(signal == libc::SIGTERM || signal == libc::SIGKILL);
-    let mut failed = Vec::with_capacity(leaders.len());
-    for leader in leaders {
-        assert!(leader.pid > 1);
-        if !gateway_group_has_owned_member(leader) {
-            continue;
-        }
-        let group_result = unsafe { libc::kill(-leader.pid, signal) };
-        if group_result == 0 {
-            continue;
-        }
-        if gateway_group_has_owned_member(leader) {
-            failed.push(leader.pid);
-        }
-    }
-    failed
 }
 
 fn setup_gateway_cluster_config(nodes: &[GatewayNode]) -> Result<()> {
@@ -1003,164 +727,4 @@ pub fn build_gateway_command(config_dir: &Path) -> Result<Vec<String>> {
         GATEWAY_FOREGROUND_EVAL.to_owned(),
     ]);
     Ok(args)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn builds_default_cluster_nodes() {
-        let nodes = build_gateway_cluster_nodes().unwrap();
-        assert_eq!(nodes.len(), 18);
-        assert_eq!(nodes[0].name(), "websocket-1");
-        assert_eq!(nodes[0].http_port, 8771);
-        assert_eq!(nodes[17].name(), "push-3");
-        assert_eq!(nodes[17].dist_port, 9018);
-    }
-
-    #[test]
-    fn node_env_contains_role_port_and_static_peers() {
-        let node = GatewayNode {
-            role: "calls".to_owned(),
-            ordinal: 2,
-            http_port: 8811,
-            dist_port: 9014,
-        };
-        let env = gateway_node_env(&node, "a,b");
-        assert!(
-            env.iter()
-                .any(|(key, value)| key == "FLUXER_GATEWAY_ROLE"
-                    && value.as_deref() == Some("calls"))
-        );
-        assert!(
-            env.iter().any(
-                |(key, value)| key == "FLUXER_GATEWAY_PORT" && value.as_deref() == Some("8811")
-            )
-        );
-        assert!(
-            env.iter()
-                .any(|(key, value)| key == "FLUXER_GATEWAY_CLUSTER_STATIC_PEERS"
-                    && value.as_deref() == Some("a,b"))
-        );
-    }
-
-    #[test]
-    fn cmdline_gateway_node_detection_matches_exact_name_argument() {
-        let node_names =
-            std::collections::HashSet::from([String::from("fluxer_gateway_websocket_1@127.0.0.1")]);
-
-        assert!(cmdline_has_gateway_node(
-            &strings(&[
-                "/usr/local/bin/beam.smp",
-                "-name",
-                "fluxer_gateway_websocket_1@127.0.0.1"
-            ]),
-            &node_names
-        ));
-        assert!(!cmdline_has_gateway_node(
-            &strings(&[
-                "/usr/local/bin/beam.smp",
-                "-sname",
-                "fluxer_gateway_websocket_1@127.0.0.1"
-            ]),
-            &node_names
-        ));
-        assert!(!cmdline_has_gateway_node(
-            &strings(&[
-                "/usr/local/bin/beam.smp",
-                "-name",
-                "other_gateway_websocket_1@127.0.0.1"
-            ]),
-            &node_names
-        ));
-    }
-
-    #[test]
-    fn proc_stat_parsing_extracts_state_and_pgid() {
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("1234 (beam.smp) S 1 1234 1234 0 -1 4194560 0"),
-            Some(('S', 1234))
-        );
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("77 (erl_child_setup) R 42 42 9000 0 -1"),
-            Some(('R', 42))
-        );
-    }
-
-    #[test]
-    fn proc_stat_parsing_handles_parentheses_and_spaces_in_comm() {
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("99 (weird) comm (name) Z 1 42 42 0 -1"),
-            Some(('Z', 42))
-        );
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("99 (spaced comm) T 1 99 99 0 -1"),
-            Some(('T', 99))
-        );
-    }
-
-    #[test]
-    fn proc_stat_parsing_rejects_malformed_lines() {
-        assert_eq!(parse_proc_stat_state_and_pgid(""), None);
-        assert_eq!(parse_proc_stat_state_and_pgid("1234 (beam.smp)"), None);
-        assert_eq!(parse_proc_stat_state_and_pgid("1234 (beam.smp) S"), None);
-        assert_eq!(parse_proc_stat_state_and_pgid("1234 (beam.smp) S 1"), None);
-        assert_eq!(
-            parse_proc_stat_state_and_pgid("1234 (beam.smp) S 1 not-a-pgid"),
-            None
-        );
-        assert_eq!(parse_proc_stat_state_and_pgid("no comm field here"), None);
-    }
-
-    #[test]
-    fn proc_stat_parsing_extracts_starttime() {
-        let stat =
-            "1234 (beam.smp) S 1 1234 1234 0 -1 4194560 0 0 0 0 5 3 0 0 20 0 30 0 12345678 4096";
-        assert_eq!(parse_proc_stat_starttime(stat), Some(12_345_678));
-    }
-
-    #[test]
-    fn proc_stat_starttime_parsing_handles_parentheses_and_spaces_in_comm() {
-        let stat =
-            "99 (weird) comm (name) S 1 42 42 0 -1 4194560 0 0 0 0 5 3 0 0 20 0 30 0 777 4096";
-        assert_eq!(parse_proc_stat_starttime(stat), Some(777));
-    }
-
-    #[test]
-    fn proc_stat_starttime_parsing_rejects_truncated_lines() {
-        assert_eq!(parse_proc_stat_starttime(""), None);
-        assert_eq!(parse_proc_stat_starttime("1234 (beam.smp)"), None);
-        assert_eq!(
-            parse_proc_stat_starttime("1234 (beam.smp) S 1 1234 1234 0 -1 4194560 0"),
-            None
-        );
-        assert_eq!(
-            parse_proc_stat_starttime(
-                "1234 (beam.smp) S 1 1234 1234 0 -1 4194560 0 0 0 0 5 3 0 0 20 0 30 0 not-a-number"
-            ),
-            None
-        );
-    }
-
-    #[test]
-    fn zombie_and_reaped_states_count_as_dead() {
-        assert!(proc_stat_state_is_dead('Z'));
-        assert!(proc_stat_state_is_dead('X'));
-        assert!(proc_stat_state_is_dead('x'));
-    }
-
-    #[test]
-    fn live_states_do_not_count_as_dead() {
-        assert!(!proc_stat_state_is_dead('R'));
-        assert!(!proc_stat_state_is_dead('S'));
-        assert!(!proc_stat_state_is_dead('D'));
-        assert!(!proc_stat_state_is_dead('T'));
-        assert!(!proc_stat_state_is_dead('t'));
-        assert!(!proc_stat_state_is_dead('I'));
-    }
-
-    fn strings(values: &[&str]) -> Vec<String> {
-        values.iter().map(|value| (*value).to_owned()).collect()
-    }
 }

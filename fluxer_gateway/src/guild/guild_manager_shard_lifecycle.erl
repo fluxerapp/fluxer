@@ -7,14 +7,11 @@
 
 -export([
     do_start_transferred/3,
-    do_stop_guild/2,
-    do_stop_guild/3,
+    do_stop_guild/2, do_stop_guild/3,
     do_shutdown_guild/2,
     start_guild/3,
-    start_new_guild/4,
     start_transferred_guild/3,
-    start_new_guild_from_state/4,
-    normalize_transferred_guild_state/2
+    start_new_guild_from_state/4
 ]).
 
 -type guild_id() :: integer().
@@ -88,7 +85,10 @@ start_new_guild_from_state(GuildId, GuildState, GuildKey, State) ->
 
 -spec normalize_transferred_guild_state(guild_id(), map()) -> map().
 normalize_transferred_guild_state(GuildId, TransferState) ->
-    #{
+    Threads = maps:with(
+        [thread_handoff_resends, thread_handoff_syncs, thread_handoff_lists], TransferState
+    ),
+    Threads#{
         id => GuildId,
         data => maps:get(data, TransferState, #{}),
         sessions => maps:get(sessions, TransferState, #{}),
@@ -101,7 +101,9 @@ normalize_transferred_guild_state(GuildId, TransferState) ->
             virtual_channel_access_preserve, TransferState, #{}
         ),
         virtual_channel_access_move_pending =>
-            maps:get(virtual_channel_access_move_pending, TransferState, #{})
+            maps:get(virtual_channel_access_move_pending, TransferState, #{}),
+        virtual_channel_access_view_only =>
+            maps:get(virtual_channel_access_view_only, TransferState, #{})
     }.
 
 -spec reply_start_transferred(guild_id(), map(), state()) ->

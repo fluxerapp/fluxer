@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createChannel,
+	sendChannelMessage,
+	setupTestGuildWithMembers,
+	updateChannel,
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted, getMessages} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {ensureSessionStarted, getMessages} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createChannel, sendChannelMessage, setupTestGuildWithMembers, updateChannel} from './ChannelTestUtils';
 
 describe('Slowmode Enforcement', () => {
 	let harness: ApiTestHarness;

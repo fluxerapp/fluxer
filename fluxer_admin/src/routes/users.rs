@@ -4,18 +4,25 @@ use crate::{
     acl,
     api::{
         client::{AdminApiClient, ApiResult, ApiResultExt},
+        generated::{snowflake, types::AdminUserMessageShredPreviewRequestEntriesItem},
         types::AdminUser,
     },
     middleware::{auth::AuthContext, csrf::CsrfToken, flash, htmx},
     routes::user_tabs,
     state::AppState,
-    templates,
+    templates::{
+        self,
+        pages::user_detail_tabs::{
+            account::{PASSWORD_RESET_LINK_RESULT_ID, password_reset_link_result},
+            moderation::{MESSAGE_SHRED_PREVIEW_ID, message_shred_preview},
+        },
+    },
     utils::forms::MultiValueForm,
 };
 use axum::{
     Router,
     extract::{Path, Query, Request, State},
-    http::HeaderMap,
+    http::{HeaderMap, Uri},
     response::{Html, IntoResponse, Response},
     routing::get,
 };
@@ -47,6 +54,10 @@ struct UserDetailQuery {
     delete_all_messages_dry_run: Option<String>,
     delete_all_messages_channel_count: Option<u64>,
     delete_all_messages_message_count: Option<u64>,
+    report_id: Option<String>,
+    message: Option<String>,
+    badge_q: Option<String>,
+    badge_pick: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -79,21 +90,22 @@ async fn users_list(
         query.page,
     );
     let is_results_fragment = htmx::targets(&headers, "users-results");
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
-    let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL);
+    let admin_acls = auth.0.acls();
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let username_sign_in = state.account_identity(&client).await.is_username();
+    let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL) && !username_sign_in;
+    let email = match (username_sign_in, can_view_email) {
+        (true, _) => templates::pages::users_list::UserEmailAccess::Hidden,
+        (false, true) => templates::pages::users_list::UserEmailAccess::SearchAndView,
+        (false, false) => templates::pages::users_list::UserEmailAccess::SearchOnly,
+    };
     let results = if params.has_id_lookup() {
         lookup_users_in_batches(&client, &params.requested_ids)
             .await
             .log_error("lookup users by ids")
-            .map(|users| (users, false))
-    } else if params.has_search() {
-        let offset = params.page.saturating_mul(params.limit);
+            .map(|users| (users, false, None))
+    } else {
+        let offset = u64::from(params.page) * u64::from(params.limit);
         client
             .search_users(
                 params.search_query(),
@@ -105,23 +117,27 @@ async fn users_list(
             .await
             .log_error("search users")
             .map(|r| {
-                let has_more = u64::from(offset) + (r.users.len() as u64) < r.total;
-                (r.users, has_more)
+                let has_more = (r.users.len() as u64) < r.total.saturating_sub(offset);
+                (r.users, has_more, Some(r.total))
             })
-    } else {
-        None
     };
-    let result_users = results.as_ref().map(|r| r.0.as_slice());
-    let has_more = results.as_ref().is_some_and(|r| r.1);
-    let markup = templates::pages::users_list::users_list_page(
-        config,
-        &auth.0,
-        &params,
-        result_users,
-        has_more,
-        can_view_email,
-        is_results_fragment,
-    );
+    let view = templates::pages::users_list::UserListView {
+        params: &params,
+        results: results
+            .as_ref()
+            .map(|result| templates::pages::users_list::UserListResults {
+                users: &result.0,
+                has_more: result.1,
+                total: result.2,
+            }),
+        email,
+        output: if is_results_fragment {
+            templates::pages::users_list::UserListOutput::Results
+        } else {
+            templates::pages::users_list::UserListOutput::Page
+        },
+    };
+    let markup = templates::pages::users_list::users_list_page(config, &auth.0, view);
     Html(markup.into_string()).into_response()
 }
 
@@ -153,15 +169,18 @@ async fn user_detail(
         .await
         .log_error("load user detail");
     let tq = to_tab_query(&query);
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.0.acls();
     let tab_body = if user.is_some() {
+        let account_identity = state.account_identity_settings(&client).await;
         user_tabs::render(
-            &client, config, &csrf.0.0, &user_id, active_tab, &tq, admin_acls,
+            &client,
+            config,
+            &csrf.0.0,
+            &user_id,
+            active_tab,
+            &tq,
+            admin_acls,
+            account_identity,
         )
         .await
     } else {
@@ -183,6 +202,7 @@ async fn user_detail_post(
     State(state): State<AppState>,
     headers: HeaderMap,
     auth: axum::Extension<AuthContext>,
+    csrf: axum::Extension<CsrfToken>,
     Path(user_id): Path<String>,
     Query(aq): Query<ActionQuery>,
     request: Request,
@@ -206,6 +226,13 @@ async fn user_detail_post(
     };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let action = aq.action.as_deref().unwrap_or("");
+    if action == "create_password_reset_link" {
+        return create_password_reset_link(&state, &headers, &auth.0, &csrf.0.0, &client, &user_id)
+            .await;
+    }
+    if action == "preview_message_shred" {
+        return preview_message_shred(&headers, &client, &user_id, &form).await;
+    }
     let outcome = super::user_actions::dispatch(&client, &user_id, action, &form).await;
     let mut redirect = if tab.is_empty() {
         format!("{base}/users/{user_id}")
@@ -222,13 +249,126 @@ async fn user_detail_post(
     flash::redirect_with_flash(&redirect, outcome.flash, config.secure_cookies())
 }
 
+async fn preview_message_shred(
+    headers: &HeaderMap,
+    client: &AdminApiClient,
+    user_id: &str,
+    form: &MultiValueForm,
+) -> Response {
+    if !htmx::is_htmx_request(headers) || !htmx::targets(headers, MESSAGE_SHRED_PREVIEW_ID) {
+        return htmx::toast_response(&flash::FlashData::error(
+            "Previewing a message shred needs JavaScript.",
+        ));
+    }
+    let entries = match super::user_actions::message_shred_entries(
+        form.first("csv_data").unwrap_or_default(),
+    ) {
+        Ok(entries) => entries,
+        Err(error) => return htmx::toast_response(&flash::FlashData::error(error)),
+    };
+    let entries = entries
+        .into_iter()
+        .map(
+            |(channel_id, message_id)| AdminUserMessageShredPreviewRequestEntriesItem {
+                channel_id: snowflake(&channel_id),
+                message_id: snowflake(&message_id),
+            },
+        )
+        .collect();
+    match client.preview_message_shred(user_id, entries).await {
+        Ok(preview) => Html(message_shred_preview(&preview).into_string()).into_response(),
+        Err(error) => {
+            tracing::warn!(%error, user_id, "admin API request failed: preview message shred");
+            let message = match error.detail_message() {
+                Some(detail) => format!("Failed to preview the messages: {detail}"),
+                None => "Failed to preview the messages".to_owned(),
+            };
+            htmx::toast_response(&flash::FlashData::error(message))
+        }
+    }
+}
+
+async fn create_password_reset_link(
+    state: &AppState,
+    headers: &HeaderMap,
+    auth: &AuthContext,
+    csrf_token: &str,
+    client: &AdminApiClient,
+    user_id: &str,
+) -> Response {
+    let config = state.config();
+    let account_url = format!("{}/users/{user_id}?tab=account", config.base_path);
+    let link = match client.create_password_reset_link(user_id).await {
+        Ok(link) => link,
+        Err(error) => {
+            tracing::warn!(%error, user_id, "admin API request failed: create password reset link");
+            let flash = flash::FlashData::error("Failed to create password reset link");
+            if htmx::is_htmx_request(headers)
+                && (htmx::targets(headers, "flash-container")
+                    || htmx::targets(headers, PASSWORD_RESET_LINK_RESULT_ID))
+            {
+                return htmx::toast_response(&flash);
+            }
+            return flash::redirect_with_flash(&account_url, flash, config.secure_cookies());
+        }
+    };
+    if htmx::is_htmx_request(headers) && htmx::targets(headers, PASSWORD_RESET_LINK_RESULT_ID) {
+        return Html(password_reset_link_result(Some(&link)).into_string()).into_response();
+    }
+    let admin_acls = auth.acls();
+    let (user, account_identity) = tokio::join!(
+        async {
+            client
+                .get_user_by_id(user_id)
+                .await
+                .log_error("load user after creating password reset link")
+        },
+        state.account_identity_settings(client)
+    );
+    let tab_body = user_tabs::render_account(
+        client,
+        config,
+        csrf_token,
+        user_id,
+        &templates::pages::user_detail_tabs::account::AccountTabOptions {
+            admin_acls,
+            account_identity: account_identity.mode,
+            username_from_sso: account_identity.sso_manages_usernames(),
+            reset_link_available: account_identity.admin_reset_links_available(),
+            password_reset_link: Some(&link),
+        },
+    )
+    .await;
+    let markup = templates::pages::user_detail::user_detail_with_tab(
+        config,
+        auth,
+        user.as_ref(),
+        user_id,
+        "account",
+        tab_body,
+        htmx::targets(headers, "main-content"),
+    );
+    Html(markup.into_string()).into_response()
+}
+
 async fn user_tab(
     State(state): State<AppState>,
     auth: axum::Extension<AuthContext>,
     csrf: axum::Extension<CsrfToken>,
     Path((user_id, tab)): Path<(String, String)>,
+    headers: HeaderMap,
+    uri: Uri,
 ) -> Response {
     let config = state.config();
+    if let Some(redirect) = htmx::tab_page_redirect(
+        &headers,
+        uri.query(),
+        &format!("{}/users", config.base_path),
+        &user_id,
+        &tab,
+    ) {
+        return redirect;
+    }
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let user = client
         .get_user_by_id(&user_id)
@@ -246,21 +386,26 @@ async fn user_tab(
         delete_all_messages_dry_run: None,
         delete_all_messages_channel_count: None,
         delete_all_messages_message_count: None,
+        report_id: None,
+        message: None,
+        badge_query: None,
+        badge_picks: Vec::new(),
     };
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.0.acls();
+    let account_identity = state.account_identity_settings(&client).await;
     let markup = match user {
-        Some(ref u) => {
-            user_tabs::render(&client, config, &csrf.0.0, &user_id, &tab, &tq, admin_acls)
-                .await
-                .unwrap_or_else(|| {
-                    templates::pages::user_detail::simple_tab_content(config, u, &tab)
-                })
-        }
+        Some(ref u) => user_tabs::render(
+            &client,
+            config,
+            &csrf.0.0,
+            &user_id,
+            &tab,
+            &tq,
+            admin_acls,
+            account_identity,
+        )
+        .await
+        .unwrap_or_else(|| templates::pages::user_detail::simple_tab_content(config, u, &tab)),
         None => maud::html! {
             div class="p-4 text-red-600 text-sm" { "Failed to load user data." }
         },
@@ -279,12 +424,7 @@ async fn user_peek(
         .get_user_by_id(&user_id)
         .await
         .log_error("load user peek");
-    let admin_acls = auth
-        .0
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.0.acls();
     let markup = match user {
         Some(ref u) => templates::pages::user_peek::user_peek_fragment(config, u, admin_acls),
         None => maud::html! {
@@ -307,6 +447,10 @@ fn to_tab_query(q: &UserDetailQuery) -> user_tabs::TabQuery {
         delete_all_messages_dry_run: q.delete_all_messages_dry_run.clone(),
         delete_all_messages_channel_count: q.delete_all_messages_channel_count,
         delete_all_messages_message_count: q.delete_all_messages_message_count,
+        report_id: q.report_id.clone(),
+        message: q.message.clone(),
+        badge_query: q.badge_q.clone(),
+        badge_picks: crate::api::badges::parse_badge_picks(q.badge_pick.as_deref()),
     }
 }
 

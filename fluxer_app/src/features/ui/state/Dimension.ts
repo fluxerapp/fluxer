@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {action, makeObservable, observable} from 'mobx';
 
 const BOTTOM_TOLERANCE = 2;
@@ -40,16 +41,8 @@ class Dimension {
 			updateGuildDimensions: action,
 			updateGuildListDimensions: action,
 			forgetChannelDimensions: action,
+			reset: action,
 		});
-	}
-
-	scrollProgressRatio(channelId: string): number {
-		const dimensions = this.channelDimensions.get(channelId);
-		if (dimensions != null) {
-			const {scrollTop, scrollHeight} = dimensions;
-			return scrollTop / scrollHeight;
-		}
-		return 1;
 	}
 
 	channelDimensionsFor(channelId: string): ChannelDimensions | undefined {
@@ -133,17 +126,19 @@ class Dimension {
 		this.channelDimensions.delete(channelId);
 	}
 
-	scrollGuildListTo(guildId: string, scrollTo: number): void {
-		this.updateGuildDimensions(guildId, undefined, scrollTo);
-	}
-
-	clearGuildListScrollTo(guildId: string): void {
-		this.updateGuildDimensions(guildId, undefined, null);
-	}
-
 	handleCallCreate(channelId: string): void {
 		this.forgetChannelDimensions(channelId);
 	}
+
+	reset(): void {
+		this.channelDimensions.clear();
+		this.guildDimensions.clear();
+		this.guildListDimensions.set({scrollTop: 0});
+	}
 }
 
-export default new Dimension();
+const dimension = new Dimension();
+
+ResettableStates.register(dimension, () => dimension.reset());
+
+export default dimension;

@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import GeoIP from '@app/features/app/state/GeoIP';
 import Channels from '@app/features/channel/state/Channels';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import Sound from '@app/features/ui/state/Sound';
 import Users from '@app/features/user/state/Users';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallInitiator from '@app/features/voice/state/CallInitiator';
 import CallState from '@app/features/voice/state/CallState';
 import RtcRegions from '@app/features/voice/state/RtcRegions';
-import type {VoiceSessionRestoreSnapshot} from '@app/features/voice/state/VoiceSessionRestore';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {AUTOMATIC_VOICE_REGION_ID} from '@fluxer/constants/src/ChannelConstants';
 import type {RtcRegionResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {reaction} from 'mobx';
@@ -110,12 +112,17 @@ function setupPendingRing(channelId: string, recipients: Array<string>): void {
 	clearPendingRing();
 	const dispose = reaction(
 		() => ({
-			connected: MediaEngine.connected,
-			currentChannelId: MediaEngine.channelId,
+			connected: VoiceRuntime.connected,
+			currentChannelId: VoiceRuntime.channelId,
 		}),
 		({connected, currentChannelId}) => {
 			if (connected && currentChannelId === channelId && pendingRing?.channelId === channelId) {
 				void ringCallRecipients(channelId, pendingRing.recipients).catch((error) => {
+					if (failureCode(error) === APIErrorCodes.NEW_CONVERSATIONS_LIMITED) {
+						showDmActionErrorModal(error);
+						void leaveCall(channelId);
+						return;
+					}
 					logger.error('Failed to ring call recipients:', error);
 				});
 				clearPendingRing();
@@ -134,7 +141,7 @@ export function startCall(channelId: string): void {
 	const recipients = channelRecipientIds(channelId, currentUser.id);
 	CallInitiator.markInitiated(channelId, recipients);
 	setupPendingRing(channelId, recipients);
-	void MediaEngine.connectToVoiceChannel(null, channelId);
+	void VoiceRuntime.withEngine('join', (engine) => engine.connectToVoiceChannel(null, channelId));
 }
 
 export function joinCall(channelId: string): void {
@@ -144,38 +151,7 @@ export function joinCall(channelId: string): void {
 	}
 	CallState.clearPendingRinging(channelId, [currentUser.id]);
 	Sound.stopIncomingRing();
-	void MediaEngine.connectToVoiceChannel(null, channelId);
-}
-
-export async function restoreOrStartDirectCall(
-	channelId: string,
-	snapshot: VoiceSessionRestoreSnapshot,
-	options?: {
-		restoreVideo?: boolean;
-		restoreStream?: boolean;
-	},
-): Promise<void> {
-	const currentUser = Users.getCurrentUser();
-	if (!currentUser) {
-		return;
-	}
-	const recipients = channelRecipientIds(channelId, currentUser.id);
-	CallInitiator.markInitiated(channelId, recipients);
-	clearPendingRing();
-	MediaEngine.prepareVoiceSessionRestore(snapshot, options);
-	try {
-		await ringCallRecipients(channelId, []);
-		await MediaEngine.connectToVoiceChannel(null, channelId);
-		if (
-			!MediaEngine.connecting &&
-			!(MediaEngine.connected && MediaEngine.guildId === null && MediaEngine.channelId === channelId)
-		) {
-			MediaEngine.clearPreparedVoiceSessionRestore(snapshot);
-		}
-	} catch (error) {
-		MediaEngine.clearPreparedVoiceSessionRestore(snapshot);
-		throw error;
-	}
+	void VoiceRuntime.withEngine('join', (engine) => engine.connectToVoiceChannel(null, channelId));
 }
 
 export async function leaveCall(channelId: string): Promise<void> {
@@ -196,7 +172,7 @@ export async function leaveCall(channelId: string): Promise<void> {
 		}
 	}
 	CallInitiator.clearChannel(channelId);
-	void MediaEngine.disconnectFromVoiceChannel('user');
+	void VoiceRuntime.engine?.disconnectFromVoiceChannel('user');
 }
 
 export function rejectCall(channelId: string): void {
@@ -205,9 +181,9 @@ export function rejectCall(channelId: string): void {
 		return;
 	}
 	CallState.clearPendingRinging(channelId, [currentUser.id]);
-	const connectedChannelId = MediaEngine.channelId;
+	const connectedChannelId = VoiceRuntime.channelId;
 	if (connectedChannelId === channelId) {
-		void MediaEngine.disconnectFromVoiceChannel('user');
+		void VoiceRuntime.engine?.disconnectFromVoiceChannel('user');
 	}
 	void stopRingingCallRecipients(channelId).catch((error) => {
 		logger.error('Failed to stop ringing:', error);

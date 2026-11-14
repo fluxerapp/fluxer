@@ -70,7 +70,7 @@ function attachToCaptureGraph(element: HTMLMediaElement): void {
 
 function detachFromCaptureGraph(element: HTMLMediaElement): void {
 	const entry = routedElements.get(element);
-	if (!entry || !entry.connected) return;
+	if (!entry?.connected) return;
 	entry.connected = false;
 	element.removeEventListener('volumechange', entry.volumeListener);
 	try {

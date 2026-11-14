@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID} from '@app/api/BrandedTypes';
+import {isMessageSearchIndexable} from '@app/api/channel/services/message/MessageSearchService';
+import {Logger} from '@app/api/Logger';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {seconds} from 'itty-time';
 import {z} from 'zod';
-import type {MessageID, UserID} from '../../BrandedTypes';
-import {createChannelID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import {getMessageSearchService} from '../../SearchFactory';
-import type {IMessageSearchService} from '../../search/IMessageSearchService';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	channelId: z.string(),
@@ -17,71 +18,73 @@ const PayloadSchema = z.object({
 });
 const BULK_BATCH_SIZE = 5000;
 const COMPLETION_KEY_TTL_SECONDS = seconds('1 day');
-function getMessageIndexServices(): Array<IMessageSearchService> {
-	const services: Array<IMessageSearchService> = [];
-	const defaultService = getMessageSearchService();
-	if (defaultService) {
-		services.push(defaultService);
+
+export async function indexChannelMessageHistory(
+	searchService: IMessageSearchService,
+	channelId: ChannelID,
+): Promise<number> {
+	const {channelRepository, userRepository} = getWorkerDependencies();
+	const authorBotCache = new Map<UserID, boolean>();
+	let cursor: MessageID | undefined;
+	let totalIndexed = 0;
+	while (true) {
+		const messages = await channelRepository.messages.listMessages(channelId, cursor, BULK_BATCH_SIZE);
+		if (messages.length === 0) {
+			break;
+		}
+		const newAuthorIds = [
+			...new Set(messages.map((m) => m.authorId).filter((id): id is UserID => id !== null && !authorBotCache.has(id))),
+		];
+		if (newAuthorIds.length > 0) {
+			const users = await userRepository.listUsers(newAuthorIds);
+			for (const user of users) {
+				authorBotCache.set(user.id, user.isBot);
+			}
+		}
+		const indexable = messages.filter(isMessageSearchIndexable);
+		await searchService.bulkIndexMessages(indexable, authorBotCache);
+		totalIndexed += messages.length;
+		cursor = messages[messages.length - 1]!.id;
+		Logger.debug(
+			{channelId: channelId.toString(), indexed: totalIndexed, batch: messages.length},
+			'Bulk indexed message batch',
+		);
+		if (messages.length < BULK_BATCH_SIZE) {
+			break;
+		}
 	}
-	return services;
+	const channel = await channelRepository.channelData.findUnique(channelId);
+	if (channel?.isThread()) {
+		await channelRepository.channelData.patchIndexedAt(channelId, new Date());
+	} else if (channel) {
+		await channelRepository.channelData.upsert({...channel.toRow(), indexed_at: new Date()}, channel.toRow());
+	}
+	return totalIndexed;
 }
 
 const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 	const validated = PayloadSchema.parse(payload);
-	const searchServices = getMessageIndexServices();
-	if (searchServices.length === 0) {
+	const searchService = getMessageSearchService();
+	if (!searchService) {
 		throw new Error('Search service is not available in this worker process');
 	}
 	const channelId = createChannelID(BigInt(validated.channelId));
-	const {channelRepository, userRepository, kvClient} = getWorkerDependencies();
-	const authorBotCache = new Map<UserID, boolean>();
-	let cursor: MessageID | undefined;
-	let totalIndexed = 0;
+	const {kvClient} = getWorkerDependencies();
 	try {
-		while (true) {
-			const messages = await channelRepository.listMessages(channelId, cursor, BULK_BATCH_SIZE);
-			if (messages.length === 0) {
-				break;
-			}
-			const newAuthorIds = [
-				...new Set(
-					messages.map((m) => m.authorId).filter((id): id is UserID => id !== null && !authorBotCache.has(id)),
-				),
-			];
-			if (newAuthorIds.length > 0) {
-				const users = await userRepository.listUsers(newAuthorIds);
-				for (const user of users) {
-					authorBotCache.set(user.id, user.isBot);
-				}
-			}
-			await Promise.all(searchServices.map((s) => s.bulkIndexMessages(messages, authorBotCache)));
-			totalIndexed += messages.length;
-			cursor = messages[messages.length - 1]!.id;
-			Logger.debug(
-				{channelId: channelId.toString(), indexed: totalIndexed, batch: messages.length},
-				'Bulk indexed message batch',
-			);
-			if (messages.length < BULK_BATCH_SIZE) {
-				break;
-			}
-		}
+		const totalIndexed = await indexChannelMessageHistory(searchService, channelId);
 		if (validated.completionKey && validated.channelCount) {
 			await kvClient.sadd(validated.completionKey, validated.channelId);
 			await kvClient.expire(validated.completionKey, COMPLETION_KEY_TTL_SECONDS);
 			const completed = await kvClient.scard(validated.completionKey);
 			if (completed >= validated.channelCount) {
 				try {
-					await Promise.all(searchServices.map((s) => s.refreshIndex()));
+					await searchService.refreshIndex();
 				} catch (error) {
 					Logger.warn({error}, 'Search refresh after bulk indexing failed');
 				}
 				await kvClient.del(validated.completionKey);
 				Logger.info({completionKey: validated.completionKey}, 'All channels indexed');
 			}
-		}
-		const channel = await channelRepository.findUnique(channelId);
-		if (channel) {
-			await channelRepository.upsert({...channel.toRow(), indexed_at: new Date()});
 		}
 		Logger.info({channelId: channelId.toString(), totalIndexed}, 'Bulk channel indexing complete');
 	} catch (error) {

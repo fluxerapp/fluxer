@@ -12,6 +12,7 @@ import {
 	isDuplicateEmbedAtIndex,
 	isMediaMatureContent,
 	isValidMedia,
+	withFreshEmbedMediaUrls,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {SuppressEmbedsConfirmModal} from '@app/features/channel/components/embeds/channel_embed/EmbedLink';
 import {RichEmbed} from '@app/features/channel/components/embeds/channel_embed/RichEmbed';
@@ -26,6 +27,7 @@ import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import {SUPPRESS_EMBEDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
 import {buildAnimatedImageProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {buildMessageEmbedCopyText} from '@app/features/messaging/utils/MessageCopyTextUtils';
@@ -39,6 +41,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {MessageAttachmentFlags, MessageEmbedTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {useLingui} from '@lingui/react/macro';
 import {XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -47,7 +50,38 @@ import type React from 'react';
 import {type FC, useCallback, useMemo} from 'react';
 
 const mediaFocusRingClass = messageStyles.mediaFocusRing;
-export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, contextualEmbeds, onDelete, isPreview}) => {
+
+function withFreshIconUrl<T extends {proxy_icon_url?: string | null}>(part: T | undefined): T | undefined {
+	if (!part?.proxy_icon_url) return part;
+	const proxyIconUrl = AttachmentUrlRefresher.fresh(part.proxy_icon_url);
+	return proxyIconUrl === part.proxy_icon_url ? part : {...part, proxy_icon_url: proxyIconUrl};
+}
+
+function withFreshEmbedUrls(embed: MessageEmbed): MessageEmbed {
+	const url = embed.url ? AttachmentUrlRefresher.fresh(embed.url) : embed.url;
+	const image = withFreshEmbedMediaUrls(embed.image);
+	const thumbnail = withFreshEmbedMediaUrls(embed.thumbnail);
+	const video = withFreshEmbedMediaUrls(embed.video);
+	const audio = withFreshEmbedMediaUrls(embed.audio);
+	const author = withFreshIconUrl(embed.author);
+	const footer = withFreshIconUrl(embed.footer);
+	if (
+		url === embed.url &&
+		image === embed.image &&
+		thumbnail === embed.thumbnail &&
+		video === embed.video &&
+		audio === embed.audio &&
+		author === embed.author &&
+		footer === embed.footer
+	) {
+		return embed;
+	}
+	return {...embed, url, image, thumbnail, video, audio, author, footer};
+}
+
+export const Embed: FC<EmbedProps> = observer((props: EmbedProps) => {
+	const {message, embedIndex, contextualEmbeds, contextualContent, onDelete, isPreview} = props;
+	const embed = withFreshEmbedUrls(props.embed);
 	const {i18n} = useLingui();
 	const {enabled: isMobile} = MobileLayout;
 	const channel = Channels.getChannel(message.channelId);
@@ -96,7 +130,8 @@ export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, cont
 				'data-message-copy-text': copyText,
 			} as const)
 		: {};
-	const spoileredUrls = useMemo(() => extractSpoileredUrls(message.content), [message.content]);
+	const spoilerSourceContent = contextualContent ?? message.content;
+	const spoileredUrls = useMemo(() => extractSpoileredUrls(spoilerSourceContent), [spoilerSourceContent]);
 	const {isSpoilerEmbed, matchingSpoilerUrls} = useMemo(() => {
 		const urlsToCheck = [
 			embed.url,

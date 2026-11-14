@@ -7,10 +7,16 @@ import {
 	PAUSE_DESCRIPTOR,
 	PLAY_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {PanZoomSurface} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomSurface';
 import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
+import {useApiAttachmentPlaybackSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
+import {useMediaSourceResume} from '@app/features/voice/components/media_player/hooks/useMediaSourceResume';
 import {
 	clampMediaTime,
 	getBufferedPercentage,
@@ -23,6 +29,11 @@ import {
 import styles from '@app/features/voice/components/modals/MobileVideoViewer.module.css';
 import {useInAppMediaSoundCapture} from '@app/features/voice/hooks/useInAppMediaSoundCapture';
 import VideoVolume from '@app/features/voice/state/VideoVolume';
+import {
+	MUTE_DESCRIPTOR_2 as MUTE_DESCRIPTOR,
+	UNMUTE_DESCRIPTOR_2 as UNMUTE_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
+import {formatDuration} from '@fluxer/date_utils/src/DateDuration';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {DotsThreeIcon, PauseIcon, PlayIcon, SpeakerHighIcon, SpeakerXIcon, XIcon} from '@phosphor-icons/react';
@@ -36,14 +47,7 @@ const TOGGLE_CONTROLS_DESCRIPTOR = msg({
 	message: 'Toggle controls',
 	comment: 'Aria label on the tap-to-toggle area of the mobile video viewer. Shows or hides the playback controls.',
 });
-const UNMUTE_DESCRIPTOR = msg({
-	message: 'Unmute',
-	comment: 'Mute toggle button label in the mobile video viewer (currently muted).',
-});
-const MUTE_DESCRIPTOR = msg({
-	message: 'Mute',
-	comment: 'Mute toggle button label in the mobile video viewer (currently unmuted).',
-});
+
 const VIDEO_PROGRESS_DESCRIPTOR = msg({
 	message: 'Video progress',
 	comment: 'Aria label on the video scrubber / progress slider in the mobile video viewer.',
@@ -64,13 +68,6 @@ interface MobileVideoViewerProps {
 	onMenuOpen?: () => void;
 }
 
-function formatTime(time: number): string {
-	if (!Number.isFinite(time)) return '0:00';
-	const minutes = Math.floor(time / 60);
-	const seconds = Math.floor(time % 60);
-	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
-
 export const MobileVideoViewer = observer(function MobileVideoViewer({
 	src,
 	initialTime,
@@ -80,6 +77,9 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 }: MobileVideoViewerProps) {
 	const {i18n} = useLingui();
 	const videoRef = useRef<HTMLVideoElement>(null);
+	useMediaSourceResume(videoRef);
+	const handleVideoError = useAttachmentRefreshOnError(src);
+	const playbackSrc = useApiAttachmentPlaybackSrc(src);
 	useInAppMediaSoundCapture(videoRef);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [zoomState, setZoomState] = useState<ZoomState>('fit');
@@ -399,12 +399,13 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 				<video
 					ref={videoRef}
 					className={styles.video}
-					src={src}
+					src={resolveDesktopCrossOriginMediaURL(playbackSrc)}
 					autoPlay={initialTime === undefined}
 					playsInline
 					loop={loop}
 					muted={VideoVolume.isMuted}
 					onPointerUp={handleVideoPointerUp}
+					onError={handleVideoError}
 					data-flx="voice.mobile-video-viewer.video"
 				/>
 			</PanZoomSurface>
@@ -423,7 +424,13 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 						aria-hidden="true"
 						data-flx="voice.mobile-video-viewer.seek-feedback"
 					>
-						{`${seekFeedback.direction === 'backward' ? '-' : '+'}${seekFeedback.seconds}s`}
+						{getCachedNumberFormat(getFormattingLocale(), {
+							style: 'unit',
+							unit: 'second',
+							unitDisplay: 'narrow',
+							maximumFractionDigits: 0,
+							signDisplay: 'always',
+						}).format(seekFeedback.direction === 'backward' ? -seekFeedback.seconds : seekFeedback.seconds)}
 					</motion.div>
 				)}
 			</AnimatePresence>
@@ -511,7 +518,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									aria-valuenow={Math.round(displayProgress * 100)}
 									aria-valuemin={0}
 									aria-valuemax={100}
-									aria-valuetext={formatTime(displayCurrentTime)}
+									aria-valuetext={formatDuration(displayCurrentTime, getFormattingLocale())}
 									aria-label={i18n._(VIDEO_PROGRESS_DESCRIPTOR)}
 									data-flx="voice.mobile-video-viewer.progress-bar-wrapper.progress-seek"
 								>
@@ -534,7 +541,8 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									</div>
 								</div>
 								<span className={styles.timeDisplay} data-flx="voice.mobile-video-viewer.time-display">
-									{formatTime(displayCurrentTime)} / {formatTime(duration)}
+									{formatDuration(displayCurrentTime, getFormattingLocale())} /{' '}
+									{formatDuration(duration, getFormattingLocale())}
 								</span>
 							</div>
 						</div>

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	clampVoiceChannelBitrate,
 	GuildFeatures,
+	GuildVerificationLevel,
+	getEffectiveGuildVerificationLevel,
 	getMaxVoiceChannelBitrate,
 	resolveVoiceChannelBitrate,
-} from './GuildConstants';
+} from '@fluxer/constants/src/GuildConstants';
+import {describe, expect, it} from 'vitest';
 
 describe('getMaxVoiceChannelBitrate', () => {
 	it('caps a guild holding no audio bitrate feature at 96 kbps', () => {
@@ -57,5 +59,22 @@ describe('resolveVoiceChannelBitrate', () => {
 	it('clamps a stored bitrate to what the guild currently holds', () => {
 		expect(resolveVoiceChannelBitrate(384000, [])).toBe(96000);
 		expect(resolveVoiceChannelBitrate(384000, [GuildFeatures.AUDIO_BITRATE_256_KBPS])).toBe(256000);
+	});
+});
+
+describe('getEffectiveGuildVerificationLevel', () => {
+	it('returns the stored level for a guild outside discovery', () => {
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, false)).toBe(GuildVerificationLevel.NONE);
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.MEDIUM, false)).toBe(
+			GuildVerificationLevel.MEDIUM,
+		);
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.HIGH, false)).toBe(GuildVerificationLevel.HIGH);
+	});
+	it('clamps a retired stored level to high', () => {
+		expect(getEffectiveGuildVerificationLevel(4, false)).toBe(GuildVerificationLevel.HIGH);
+		expect(getEffectiveGuildVerificationLevel(4, true)).toBe(GuildVerificationLevel.HIGH);
+	});
+	it('raises a discoverable guild to at least low', () => {
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, true)).toBe(GuildVerificationLevel.LOW);
 	});
 });

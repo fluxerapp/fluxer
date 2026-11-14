@@ -1,16 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {
+	CreateVoiceJoinTokenRequest,
+	CreateVoiceJoinTokenResponse,
 	CreateVoiceRegionRequest,
 	CreateVoiceRegionResponse,
 	CreateVoiceServerRequest,
 	CreateVoiceServerRequestBody,
 	CreateVoiceServerResponse,
+	CreateVoiceServerTestTokenResponse,
 	DeleteVoiceResponse,
 	GetVoiceRegionQuery,
 	GetVoiceRegionResponse,
 	GetVoiceServerResponse,
+	ListVoiceJoinTokensResponse,
 	ListVoiceRegionsQuery,
 	ListVoiceRegionsResponse,
 	ListVoiceServersResponse,
@@ -20,20 +33,11 @@ import {
 	UpdateVoiceServerRequest,
 	UpdateVoiceServerRequestBody,
 	UpdateVoiceServerResponse,
+	VoiceJoinTokenIdParam,
 	VoiceRegionIdParam,
 	VoiceServerIdParam,
 } from '@fluxer/schema/src/domains/admin/AdminVoiceSchemas';
 import type {Context} from 'hono';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp, HonoEnv} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 export function VoiceAdminController(app: HonoApp) {
 	app.get(
@@ -53,7 +57,15 @@ export function VoiceAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.voiceService.listVoiceRegions(ctx.req.valid('query')));
+			const query = ctx.req.valid('query');
+			const response = await adminService.voiceService.listVoiceRegions(query);
+			await recordAdminRead(ctx, {
+				targetType: 'voice_region',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_VOICE_REGIONS,
+				metadata: {include_servers: query.include_servers, result_count: response.regions.length},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.post(
@@ -98,12 +110,16 @@ export function VoiceAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(
-				await adminService.voiceService.getVoiceRegion({
-					id: ctx.req.valid('param').region_id,
-					include_servers: ctx.req.valid('query').include_servers,
-				}),
-			);
+			const {region_id} = ctx.req.valid('param');
+			const {include_servers} = ctx.req.valid('query');
+			const response = await adminService.voiceService.getVoiceRegion({id: region_id, include_servers});
+			await recordAdminRead(ctx, {
+				targetType: 'voice_region',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_VOICE_REGION,
+				metadata: {region_id, include_servers, found: response.region !== null},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.patch(
@@ -113,7 +129,7 @@ export function VoiceAdminController(app: HonoApp) {
 		Validator('param', VoiceRegionIdParam),
 		Validator('json', UpdateVoiceRegionRequest, {
 			pre: (value: unknown, ctx: Context<HonoEnv>) => ({
-				...(isPlainObject(value) ? value : {}),
+				...(isRecord(value) ? value : {}),
 				id: ctx.req.param('region_id'),
 			}),
 		}),
@@ -182,7 +198,15 @@ export function VoiceAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.voiceService.listVoiceServers({region_id: ctx.req.valid('param').region_id}));
+			const {region_id} = ctx.req.valid('param');
+			const response = await adminService.voiceService.listVoiceServers({region_id});
+			await recordAdminRead(ctx, {
+				targetType: 'voice_server',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_VOICE_SERVERS,
+				metadata: {region_id, result_count: response.servers.length},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.post(
@@ -192,7 +216,7 @@ export function VoiceAdminController(app: HonoApp) {
 		Validator('param', VoiceRegionIdParam),
 		Validator('json', CreateVoiceServerRequest, {
 			pre: (value: unknown, ctx: Context<HonoEnv>) => ({
-				...(isPlainObject(value) ? value : {}),
+				...(isRecord(value) ? value : {}),
 				region_id: ctx.req.param('region_id'),
 			}),
 		}),
@@ -234,7 +258,14 @@ export function VoiceAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const {region_id, server_id} = ctx.req.valid('param');
-			return ctx.json(await adminService.voiceService.getVoiceServer({region_id, server_id}));
+			const response = await adminService.voiceService.getVoiceServer({region_id, server_id});
+			await recordAdminRead(ctx, {
+				targetType: 'voice_server',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_VOICE_SERVER,
+				metadata: {region_id, server_id, found: response.server !== null},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.patch(
@@ -244,7 +275,7 @@ export function VoiceAdminController(app: HonoApp) {
 		Validator('param', VoiceServerIdParam),
 		Validator('json', UpdateVoiceServerRequest, {
 			pre: (value: unknown, ctx: Context<HonoEnv>) => ({
-				...(isPlainObject(value) ? value : {}),
+				...(isRecord(value) ? value : {}),
 				region_id: ctx.req.param('region_id'),
 				server_id: ctx.req.param('server_id'),
 			}),
@@ -291,6 +322,112 @@ export function VoiceAdminController(app: HonoApp) {
 			const {region_id, server_id} = ctx.req.valid('param');
 			return ctx.json(
 				await adminService.voiceService.deleteVoiceServer({region_id, server_id}, adminUserId, auditLogReason),
+			);
+		},
+	);
+	app.post(
+		'/admin/voice/regions/:region_id/servers/:server_id/test-token',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
+		requireAdminACL(AdminACLs.VOICE_SERVER_UPDATE),
+		Validator('param', VoiceServerIdParam),
+		OpenAPI({
+			operationId: 'create_admin_voice_server_test_token',
+			summary: 'Create a voice server test token',
+			responseSchema: CreateVoiceServerTestTokenResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Signs a 60 second LiveKit token for a hidden, audio only participant in a throwaway room on one server, for a connection test from outside its network. Fluxer ignores webhooks for these rooms. Creates audit log entry. Requires VOICE_SERVER_UPDATE permission.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const {region_id, server_id} = ctx.req.valid('param');
+			return ctx.json(
+				await adminService.voiceService.createServerTestToken(
+					{region_id, server_id},
+					ctx.get('adminUserId'),
+					ctx.get('auditLogReason'),
+				),
+			);
+		},
+	);
+	app.post(
+		'/admin/voice/join-tokens',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
+		requireAdminACL(AdminACLs.VOICE_JOIN_TOKEN_CREATE),
+		Validator('json', CreateVoiceJoinTokenRequest),
+		OpenAPI({
+			operationId: 'create_admin_voice_join_token',
+			summary: 'Create a voice join token',
+			requestSchema: CreateVoiceJoinTokenRequest,
+			responseSchema: CreateVoiceJoinTokenResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Creates a single use token that lets one machine register one voice server. The token appears in this response only. Creates audit log entry. Requires VOICE_JOIN_TOKEN_CREATE permission.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			return ctx.json(
+				await adminService.voiceService.createJoinToken(
+					ctx.req.valid('json'),
+					ctx.get('adminUserId'),
+					ctx.get('auditLogReason'),
+				),
+			);
+		},
+	);
+	app.get(
+		'/admin/voice/join-tokens',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAdminACL(AdminACLs.VOICE_JOIN_TOKEN_LIST),
+		OpenAPI({
+			operationId: 'list_admin_voice_join_tokens',
+			summary: 'List voice join tokens',
+			responseSchema: ListVoiceJoinTokensResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Lists voice join tokens from the last 7 days with their status, without the token values. Requires VOICE_JOIN_TOKEN_LIST permission.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const response = await adminService.voiceService.listJoinTokens();
+			await recordAdminRead(ctx, {
+				targetType: 'voice_join_token',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_VOICE_JOIN_TOKENS,
+				metadata: {result_count: response.tokens.length},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.delete(
+		'/admin/voice/join-tokens/:token_id',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
+		requireAdminACL(AdminACLs.VOICE_JOIN_TOKEN_REVOKE),
+		Validator('param', VoiceJoinTokenIdParam),
+		OpenAPI({
+			operationId: 'revoke_admin_voice_join_token',
+			summary: 'Revoke a voice join token',
+			responseSchema: DeleteVoiceResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Stops a pending voice join token from working. Creates audit log entry. Requires VOICE_JOIN_TOKEN_REVOKE permission.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			return ctx.json(
+				await adminService.voiceService.revokeJoinToken(
+					ctx.req.valid('param').token_id,
+					ctx.get('adminUserId'),
+					ctx.get('auditLogReason'),
+				),
 			);
 		},
 	);

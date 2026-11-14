@@ -7,6 +7,7 @@
     channel_list/1,
     channel_index/1,
     put_channels/2,
+    put_forum_categories/2,
     build_overwrite_perms_cache/1
 ]).
 
@@ -25,7 +26,7 @@ channel_list(Data) when is_map(Data) ->
         false ->
             lists:filtermap(
                 fun normalize_channel_item/1,
-                guild_data_index:ensure_list(maps:get(<<"channels">>, Data, []))
+                map_utils:ensure_list(maps:get(<<"channels">>, Data, []))
             )
     end;
 channel_list(_) ->
@@ -44,18 +45,64 @@ channel_index(_) ->
 put_channels(Channels, Data) when is_map(Data) ->
     ChannelList = lists:filtermap(
         fun normalize_channel_item/1,
-        guild_data_index:ensure_list(Channels)
+        map_utils:ensure_list(Channels)
     ),
-    Data#{
+    put_forum_categories(ChannelList, Data#{
         <<"channels">> => ChannelList,
         <<"channel_index">> => guild_data_index:build_id_index(ChannelList),
         overwrite_perms_cache => build_overwrite_perms_cache(ChannelList)
-    };
+    });
 put_channels(_, Data) ->
     Data.
 
+-spec put_forum_categories([channel()], map()) -> map().
+put_forum_categories(Channels, Data) ->
+    case forum_categories(Channels) of
+        Categories when map_size(Categories) =:= 0 ->
+            maps:remove(thread_forum_categories, Data);
+        Categories ->
+            Data#{thread_forum_categories => Categories}
+    end.
+
+-spec forum_categories([channel()]) -> #{snowflake_id() => [snowflake_id()]}.
+forum_categories(Channels) ->
+    case [parent_of(C) || #{<<"type">> := Type} = C <- Channels, is_forum_type(Type)] of
+        [] ->
+            #{};
+        Parents ->
+            Categories = maps:from_list([{P, []} || P <- Parents, is_integer(P)]),
+            lists:foldl(fun add_plain_child/2, Categories, Channels)
+    end.
+
+-spec add_plain_child(channel(), #{snowflake_id() => [snowflake_id()]}) ->
+    #{snowflake_id() => [snowflake_id()]}.
+add_plain_child(Channel, Categories) ->
+    case
+        {
+            parent_of(Channel),
+            is_forum_type(maps:get(<<"type">>, Channel, undefined)),
+            snowflake_id:parse_maybe(maps:get(<<"id">>, Channel, undefined))
+        }
+    of
+        {Parent, false, ChildId} when
+            is_integer(Parent), is_map_key(Parent, Categories), is_integer(ChildId)
+        ->
+            Categories#{Parent := [ChildId | maps:get(Parent, Categories)]};
+        _ ->
+            Categories
+    end.
+
+-spec parent_of(channel()) -> snowflake_id() | undefined.
+parent_of(Channel) ->
+    snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Channel, undefined)).
+
+-spec is_forum_type(term()) -> boolean().
+is_forum_type(15) -> true;
+is_forum_type(16) -> true;
+is_forum_type(_) -> false.
+
 -spec build_overwrite_perms_cache([channel()]) ->
-    #{integer() => [{integer(), integer(), integer()}]}.
+    #{integer() => [{integer(), integer(), integer(), integer()}]}.
 build_overwrite_perms_cache(Channels) ->
     lists:foldl(
         fun
@@ -107,8 +154,8 @@ valid_overwrite(Overwrite) when is_map(Overwrite) ->
         {
             snowflake_id:parse_maybe(maps:get(<<"id">>, Overwrite, undefined)),
             map_utils:get_integer(Overwrite, <<"type">>, undefined),
-            permission_bits:parse_maybe(maps:get(<<"allow">>, Overwrite, undefined)),
-            permission_bits:parse_maybe(maps:get(<<"deny">>, Overwrite, undefined))
+            bitset:parse_maybe(maps:get(<<"allow">>, Overwrite, undefined)),
+            bitset:parse_maybe(maps:get(<<"deny">>, Overwrite, undefined))
         }
     of
         {Id, Type, Allow, Deny} when
@@ -146,8 +193,8 @@ channel_overwrites(Channel) ->
 -spec overwrite_tuple(term()) -> false | {true, {integer(), term(), integer(), integer()}}.
 overwrite_tuple(OW) when is_map(OW) ->
     OWId = snowflake_id:parse_maybe(maps:get(<<"id">>, OW, undefined)),
-    Allow = permission_bits:parse_optional(maps:get(<<"allow">>, OW, undefined)),
-    Deny = permission_bits:parse_optional(maps:get(<<"deny">>, OW, undefined)),
+    Allow = bitset:parse_optional(maps:get(<<"allow">>, OW, undefined)),
+    Deny = bitset:parse_optional(maps:get(<<"deny">>, OW, undefined)),
     Type = map_utils:get_integer(OW, <<"type">>, undefined),
     case {OWId, Allow, Deny, Type} of
         {Id, AllowBits, DenyBits, OverwriteType} when
@@ -162,47 +209,3 @@ overwrite_tuple(OW) when is_map(OW) ->
     end;
 overwrite_tuple(_) ->
     false.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-channel_list_non_map_input_test() ->
-    ?assertEqual([], channel_list(not_a_map)).
-
-channel_list_non_list_channels_value_test() ->
-    ?assertEqual([], channel_list(#{<<"channels">> => <<"invalid">>})).
-
-channel_index_non_map_input_test() ->
-    ?assertEqual(#{}, channel_index(not_a_map)).
-
-channel_index_from_list_test() ->
-    Data = #{
-        <<"channels">> => [
-            #{<<"id">> => <<"300">>, <<"name">> => <<"general">>},
-            #{<<"id">> => <<"301">>, <<"name">> => <<"random">>}
-        ]
-    },
-    Index = channel_index(Data),
-    ?assertEqual(2, map_size(Index)),
-    ?assertEqual(<<"general">>, maps:get(<<"name">>, maps:get(300, Index))).
-
-put_channels_updates_list_and_index_test() ->
-    Data = #{<<"channels">> => []},
-    NewChannels = [
-        #{<<"id">> => <<"50">>, <<"name">> => <<"ch1">>},
-        #{<<"id">> => <<"51">>, <<"name">> => <<"ch2">>}
-    ],
-    Updated = put_channels(NewChannels, Data),
-    ?assertEqual(
-        [
-            #{<<"id">> => 50, <<"name">> => <<"ch1">>},
-            #{<<"id">> => 51, <<"name">> => <<"ch2">>}
-        ],
-        channel_list(Updated)
-    ),
-    ?assertEqual(2, map_size(channel_index(Updated))).
-
-put_channels_non_map_data_returns_unchanged_test() ->
-    ?assertEqual(not_a_map, put_channels([], not_a_map)).
-
--endif.

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Event} from '../protocol/events';
 import {
 	dispatchLocalMediaEvent,
 	dispatchObservabilityEvent,
 	dispatchPlatformEvent,
 	dispatchRuntimeEvent,
 	dispatchSessionEvent,
-} from './reducers/_dispatch';
-import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from './state';
+} from '@fluxer/voice_engine_v2/src/core/reducers/_dispatch';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 
-export {isVoiceEngineV2CommandCompletionStale} from './commandCompletion';
+export {isVoiceEngineV2CommandCompletionStale} from '@fluxer/voice_engine_v2/src/core/commandCompletion';
 
 export function transitionVoiceEngineV2(
 	snapshot: VoiceEngineV2Snapshot,

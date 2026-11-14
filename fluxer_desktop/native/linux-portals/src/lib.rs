@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 pub mod background;
-pub mod env;
-pub mod filechooser;
 pub mod global_shortcuts;
 pub mod gnome_shell;
 pub mod kwin;
 #[cfg(target_os = "linux")]
 pub mod portal;
+pub mod session_monitor;
 pub mod settings;
 pub mod x11;
 
@@ -19,7 +18,7 @@ mod napi_bindings {
     use std::sync::Arc;
 
     use napi::{
-        Env, Status,
+        Env, JsDeferred, Status,
         bindgen_prelude::{Array, AsyncTask, Function, Object, Result, Task, ToNapiValue},
         sys,
         threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue},
@@ -28,15 +27,18 @@ mod napi_bindings {
 
     use crate::{
         background::{self, RequestOptions, RequestResult},
-        filechooser::{self, FileChooserResult, Filter, FilterRule, Mode, Options},
-        global_shortcuts::{self, BoundShortcut, ConfigureResult, ShortcutEntry, ShortcutEvent},
+        global_shortcuts::{
+            BindOutcome, DEFAULT_SESSION_TOKEN, Desktop, GlobalShortcutsClient, OpenResult,
+            PortalEvent, PortalOptions, Responder, ShortcutBinding, ShortcutDefinition,
+            is_valid_token, validate_definitions,
+        },
         gnome_shell, kwin,
-        settings::{self, ChangeEvent, ChangePayload, ColorScheme, Contrast},
+        session_monitor::{MonitorEvent, SessionMonitor},
+        settings::{self, ChangeEvent, ChangePayload},
         x11,
     };
 
     const SETTINGS_EVENT_QUEUE_LIMIT: usize = 128;
-    const SHORTCUT_EVENT_QUEUE_LIMIT: usize = 128;
 
     fn generic_error(reason: impl Into<String>) -> napi::Error {
         napi::Error::new(Status::GenericFailure, reason.into())
@@ -50,16 +52,8 @@ mod napi_bindings {
         object.get::<String>(key).ok().flatten()
     }
 
-    fn read_string_field_or_empty(object: &Object, key: &str) -> String {
-        read_string_field(object, key).unwrap_or_default()
-    }
-
     fn read_bool_field(object: &Object, key: &str) -> Option<bool> {
         object.get::<bool>(key).ok().flatten()
-    }
-
-    fn read_object_field<'a>(object: &Object<'a>, key: &str) -> Option<Object<'a>> {
-        object.get::<Object>(key).ok().flatten()
     }
 
     fn read_array_field<'a>(object: &Object<'a>, key: &str) -> Option<Array<'a>> {
@@ -141,122 +135,6 @@ mod napi_bindings {
         Ok(AsyncTask::new(ResolveWindowPidTask { token }))
     }
 
-    fn parse_filter_rule(object: &Object) -> Result<FilterRule> {
-        let kind = object
-            .get::<u32>("kind")
-            .map_err(|err| invalid_arg(err.reason.clone()))?
-            .ok_or_else(|| invalid_arg("rule.kind must be a number"))?;
-        if kind > 1 {
-            return Err(invalid_arg("rule.kind must be 0 (glob) or 1 (mime-type)"));
-        }
-        let pattern = read_string_field(object, "pattern")
-            .ok_or_else(|| invalid_arg("rule.pattern must be a string"))?;
-        Ok(FilterRule { kind, pattern })
-    }
-
-    fn parse_filter(object: &Object) -> Result<Filter> {
-        let name = read_string_field(object, "name")
-            .ok_or_else(|| invalid_arg("filter.name must be a string"))?;
-        let rules_array = read_array_field(object, "rules")
-            .ok_or_else(|| invalid_arg("filter.rules must be an array"))?;
-        let mut rules = Vec::with_capacity(rules_array.len() as usize);
-        for i in 0..rules_array.len() {
-            let rule_obj = rules_array
-                .get::<Object>(i)
-                .map_err(|err| invalid_arg(err.reason.clone()))?
-                .ok_or_else(|| invalid_arg("rule must be an object"))?;
-            rules.push(parse_filter_rule(&rule_obj)?);
-        }
-        Ok(Filter { name, rules })
-    }
-
-    fn parse_filechooser_options(object: &Object) -> Result<Options> {
-        let parent_window = read_string_field_or_empty(object, "parentWindow");
-        let title = read_string_field_or_empty(object, "title");
-        let accept_label = read_string_field(object, "acceptLabel");
-        let modal = read_bool_field(object, "modal").unwrap_or(true);
-        let multiple = read_bool_field(object, "multiple").unwrap_or(false);
-        let directory = read_bool_field(object, "directory").unwrap_or(false);
-        let current_folder = read_string_field(object, "currentFolder");
-        let current_name = read_string_field(object, "currentName");
-        let current_file = read_string_field(object, "currentFile");
-        let filters = if let Some(array) = read_array_field(object, "filters") {
-            let mut out = Vec::with_capacity(array.len() as usize);
-            for i in 0..array.len() {
-                let f_obj = array
-                    .get::<Object>(i)
-                    .map_err(|err| invalid_arg(err.reason.clone()))?
-                    .ok_or_else(|| invalid_arg("filter must be an object"))?;
-                out.push(parse_filter(&f_obj)?);
-            }
-            out
-        } else {
-            Vec::new()
-        };
-        let current_filter = if let Some(obj) = read_object_field(object, "currentFilter") {
-            Some(parse_filter(&obj)?)
-        } else {
-            None
-        };
-        Ok(Options {
-            parent_window,
-            title,
-            accept_label,
-            modal,
-            multiple,
-            directory,
-            current_folder,
-            current_name,
-            current_file,
-            filters,
-            current_filter,
-        })
-    }
-
-    pub struct FileChooserTask {
-        mode: Mode,
-        options: Options,
-    }
-
-    impl Task for FileChooserTask {
-        type Output = FileChooserResult;
-        type JsValue = Object<'static>;
-
-        fn compute(&mut self) -> Result<Self::Output> {
-            filechooser::invoke(self.mode, self.options.clone())
-                .map_err(|err| generic_error(format!("FileChooser portal: {err}")))
-        }
-
-        fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-            let mut obj = Object::new(&env)?;
-            obj.set("cancelled", output.cancelled)?;
-            let mut array = env.create_array(output.uris.len() as u32)?;
-            for (i, uri) in output.uris.iter().enumerate() {
-                array.set(i as u32, uri.as_str())?;
-            }
-            obj.set("uris", array)?;
-            Ok(unsafe { std::mem::transmute::<Object<'_>, Object<'static>>(obj) })
-        }
-    }
-
-    #[napi(js_name = "openFile")]
-    pub fn open_file(options: Object) -> Result<AsyncTask<FileChooserTask>> {
-        let parsed = parse_filechooser_options(&options)?;
-        Ok(AsyncTask::new(FileChooserTask {
-            mode: Mode::Open,
-            options: parsed,
-        }))
-    }
-
-    #[napi(js_name = "saveFile")]
-    pub fn save_file(options: Object) -> Result<AsyncTask<FileChooserTask>> {
-        let parsed = parse_filechooser_options(&options)?;
-        Ok(AsyncTask::new(FileChooserTask {
-            mode: Mode::Save,
-            options: parsed,
-        }))
-    }
-
     fn parse_string_array_field(object: &Object, key: &str) -> Result<Vec<String>> {
         let Some(array) = read_array_field(object, key) else {
             return Ok(Vec::new());
@@ -310,73 +188,43 @@ mod napi_bindings {
         Ok(AsyncTask::new(BackgroundTask { options: parsed }))
     }
 
-    #[napi(js_name = "isAvailable")]
-    pub fn is_available_js() -> bool {
-        global_shortcuts::is_available()
-    }
-
-    #[napi(js_name = "getPortalVersion")]
-    pub fn get_portal_version_js() -> Option<u32> {
-        global_shortcuts::get_portal_version()
-    }
-
-    fn parse_shortcut_entries(array: Array) -> Result<Vec<ShortcutEntry>> {
-        let mut entries = Vec::with_capacity(array.len() as usize);
+    fn parse_shortcut_definitions(array: Array) -> Result<Vec<ShortcutDefinition>> {
+        let mut shortcuts = Vec::with_capacity(array.len() as usize);
         for i in 0..array.len() {
             let object = array
                 .get::<Object>(i)
                 .map_err(|err| invalid_arg(err.reason.clone()))?
-                .ok_or_else(|| invalid_arg("shortcut entries must be objects"))?;
+                .ok_or_else(|| invalid_arg("shortcuts must be objects"))?;
             let id = read_string_field(&object, "id")
                 .ok_or_else(|| invalid_arg("shortcut.id must be a string"))?;
             let description = read_string_field(&object, "description")
                 .ok_or_else(|| invalid_arg("shortcut.description must be a string"))?;
-            entries.push(ShortcutEntry {
+            shortcuts.push(ShortcutDefinition {
                 id,
                 description,
                 preferred_trigger: read_string_field(&object, "preferredTrigger"),
             });
         }
-        Ok(entries)
+        validate_definitions(&shortcuts).map_err(|err| invalid_arg(err.message()))?;
+        Ok(shortcuts)
     }
 
-    fn bound_shortcuts_to_array(env: &Env, shortcuts: &[BoundShortcut]) -> Result<Array<'static>> {
+    fn bindings_to_array(env: &Env, shortcuts: &[ShortcutBinding]) -> Result<Array<'static>> {
         let mut array = env.create_array(shortcuts.len() as u32)?;
         for (i, shortcut) in shortcuts.iter().enumerate() {
             let mut obj = Object::new(env)?;
             obj.set("id", shortcut.id.as_str())?;
-            if let Some(description) = shortcut.description.as_deref() {
-                obj.set("description", description)?;
-            }
-            if let Some(trigger) = shortcut.trigger_description.as_deref() {
-                obj.set("triggerDescription", trigger)?;
-            }
+            obj.set("description", shortcut.description.as_deref())?;
+            obj.set(
+                "triggerDescription",
+                shortcut.trigger_description.as_deref(),
+            )?;
             array.set(i as u32, obj)?;
         }
         Ok(unsafe { std::mem::transmute::<Array<'_>, Array<'static>>(array) })
     }
 
-    pub enum NapiShortcutEvent {
-        Activated { id: String },
-        Deactivated { id: String },
-        ShortcutsChanged { shortcuts: Vec<BoundShortcut> },
-        Closed,
-    }
-
-    impl From<ShortcutEvent> for NapiShortcutEvent {
-        fn from(event: ShortcutEvent) -> Self {
-            match event {
-                ShortcutEvent::Activated { id } => Self::Activated { id },
-                ShortcutEvent::Deactivated { id } => Self::Deactivated { id },
-                ShortcutEvent::ShortcutsChanged { shortcuts } => {
-                    Self::ShortcutsChanged { shortcuts }
-                }
-                ShortcutEvent::Closed => Self::Closed,
-            }
-        }
-    }
-
-    impl ToNapiValue for NapiShortcutEvent {
+    impl ToNapiValue for PortalEvent {
         unsafe fn to_napi_value(raw_env: sys::napi_env, event: Self) -> Result<sys::napi_value> {
             let env = Env::from_raw(raw_env);
             let mut obj = Object::new(&env)?;
@@ -391,137 +239,205 @@ mod napi_bindings {
                 }
                 Self::ShortcutsChanged { shortcuts } => {
                     obj.set("type", "shortcuts-changed")?;
-                    obj.set("shortcuts", bound_shortcuts_to_array(&env, &shortcuts)?)?;
+                    obj.set("shortcuts", bindings_to_array(&env, &shortcuts)?)?;
                 }
-                Self::Closed => {
-                    obj.set("type", "closed")?;
+                Self::SessionLost { reason } => {
+                    obj.set("type", "session-lost")?;
+                    obj.set("reason", reason.as_str())?;
+                }
+                Self::PortalAvailable => {
+                    obj.set("type", "portal-available")?;
                 }
             }
             unsafe { <Object<'_> as ToNapiValue>::to_napi_value(raw_env, obj) }
         }
     }
 
-    type ShortcutTsfn = Arc<
-        ThreadsafeFunction<
-            NapiShortcutEvent,
-            UnknownReturnValue,
-            NapiShortcutEvent,
-            Status,
-            false,
-            true,
-            SHORTCUT_EVENT_QUEUE_LIMIT,
-        >,
-    >;
-
-    pub struct ConfigureShortcutsTask {
-        entries: Vec<ShortcutEntry>,
-        state: Arc<std::sync::Mutex<Option<global_shortcuts::Subscription>>>,
-        callback: ShortcutTsfn,
+    impl ToNapiValue for OpenResult {
+        unsafe fn to_napi_value(raw_env: sys::napi_env, result: Self) -> Result<sys::napi_value> {
+            let env = Env::from_raw(raw_env);
+            let mut obj = Object::new(&env)?;
+            obj.set("version", result.version)?;
+            obj.set("appIdSource", result.app_id_source.as_str())?;
+            obj.set("uniqueName", result.unique_name)?;
+            obj.set("listed", bindings_to_array(&env, &result.listed)?)?;
+            unsafe { <Object<'_> as ToNapiValue>::to_napi_value(raw_env, obj) }
+        }
     }
 
-    impl Task for ConfigureShortcutsTask {
-        type Output = ConfigureResult;
-        type JsValue = Object<'static>;
-
-        fn compute(&mut self) -> Result<Self::Output> {
-            let tsfn_for_cb = self.callback.clone();
-            let callback = Arc::new(move |event: ShortcutEvent| {
-                let _ = tsfn_for_cb.call(
-                    NapiShortcutEvent::from(event),
-                    ThreadsafeFunctionCallMode::NonBlocking,
-                );
-            });
-            let (subscription, result) =
-                global_shortcuts::Subscription::configure(self.entries.clone(), callback)
-                    .map_err(|err| generic_error(format!("GlobalShortcuts portal: {err}")))?;
-            let mut guard = self
-                .state
-                .lock()
-                .map_err(|_| generic_error("global shortcuts lock poisoned"))?;
-            if let Some(previous) = guard.replace(subscription) {
-                previous.close();
-            }
-            Ok(result)
-        }
-
-        fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+    impl ToNapiValue for BindOutcome {
+        unsafe fn to_napi_value(raw_env: sys::napi_env, outcome: Self) -> Result<sys::napi_value> {
+            let env = Env::from_raw(raw_env);
             let mut obj = Object::new(&env)?;
-            obj.set("action", output.action)?;
-            obj.set(
-                "shortcuts",
-                bound_shortcuts_to_array(&env, &output.shortcuts)?,
-            )?;
-            Ok(unsafe { std::mem::transmute::<Object<'_>, Object<'static>>(obj) })
+            match outcome {
+                Self::Bound(shortcuts) => {
+                    obj.set("outcome", "bound")?;
+                    obj.set("shortcuts", bindings_to_array(&env, &shortcuts)?)?;
+                }
+                Self::Cancelled => obj.set("outcome", "cancelled")?,
+                Self::Denied => obj.set("outcome", "denied")?,
+                Self::Failed(code) => {
+                    obj.set("outcome", "failed")?;
+                    obj.set("code", code)?;
+                }
+            }
+            unsafe { <Object<'_> as ToNapiValue>::to_napi_value(raw_env, obj) }
         }
+    }
+
+    type PortalEventTsfn =
+        ThreadsafeFunction<PortalEvent, UnknownReturnValue, PortalEvent, Status, false, true, 0>;
+
+    type Settle<T> = JsDeferred<T, Box<dyn FnOnce(Env) -> Result<T>>>;
+
+    fn deferred_responder<T: ToNapiValue + 'static>(deferred: Settle<T>) -> Responder<T> {
+        Responder::new(move |result| match result {
+            Ok(value) => deferred.resolve(Box::new(move |_env| Ok(value))),
+            Err(err) => deferred.reject(generic_error(err.to_string())),
+        })
+    }
+
+    fn create_promise<T: ToNapiValue + 'static>(
+        env: &Env,
+    ) -> Result<(Responder<T>, Object<'static>)> {
+        let (deferred, promise) = env.create_deferred::<T, Box<dyn FnOnce(Env) -> Result<T>>>()?;
+        Ok((deferred_responder(deferred), unsafe {
+            std::mem::transmute::<Object<'_>, Object<'static>>(promise)
+        }))
     }
 
     #[napi]
     pub struct GlobalShortcutsPortal {
-        subscription: Arc<std::sync::Mutex<Option<global_shortcuts::Subscription>>>,
-        callback: ShortcutTsfn,
-        #[allow(dead_code)]
-        app_id: Option<String>,
+        client: GlobalShortcutsClient,
     }
 
     #[napi]
     impl GlobalShortcutsPortal {
         #[napi(constructor)]
         pub fn new(
-            on_event: Function<NapiShortcutEvent, UnknownReturnValue>,
-            app_id: Option<String>,
+            on_event: Function<PortalEvent, UnknownReturnValue>,
+            options: Object,
         ) -> Result<Self> {
-            let callback: ShortcutTsfn = Arc::new(
-                on_event
-                    .build_threadsafe_function::<NapiShortcutEvent>()
-                    .weak::<true>()
-                    .callee_handled::<false>()
-                    .max_queue_size::<SHORTCUT_EVENT_QUEUE_LIMIT>()
-                    .build()
-                    .map_err(|err| {
-                        generic_error(format!(
-                            "failed to create global shortcuts callback: {}",
-                            err.reason
-                        ))
-                    })?,
-            );
-            Ok(Self {
-                subscription: Arc::new(std::sync::Mutex::new(None)),
-                callback,
-                app_id,
-            })
-        }
-
-        #[napi]
-        pub fn configure(&self, entries: Array) -> Result<AsyncTask<ConfigureShortcutsTask>> {
-            let parsed = parse_shortcut_entries(entries)?;
-            Ok(AsyncTask::new(ConfigureShortcutsTask {
-                entries: parsed,
-                state: self.subscription.clone(),
-                callback: self.callback.clone(),
-            }))
-        }
-
-        #[napi]
-        pub fn close(&self) -> Result<()> {
-            if let Some(subscription) = self
-                .subscription
-                .lock()
-                .map_err(|_| generic_error("global shortcuts lock poisoned"))?
-                .take()
-            {
-                subscription.close();
+            let sandboxed = read_bool_field(&options, "sandboxed")
+                .ok_or_else(|| invalid_arg("options.sandboxed must be a boolean"))?;
+            let portal_app_id = read_string_field(&options, "portalAppId");
+            let session_token = read_string_field(&options, "sessionToken")
+                .unwrap_or_else(|| DEFAULT_SESSION_TOKEN.to_string());
+            if !is_valid_token(&session_token) {
+                return Err(invalid_arg(
+                    "options.sessionToken must only contain A-Z, a-z, 0-9 and _",
+                ));
             }
-            Ok(())
+            let desktop = read_string_field(&options, "desktop")
+                .map_or(Desktop::Other, |value| Desktop::parse(&value));
+            let callback: PortalEventTsfn = on_event
+                .build_threadsafe_function::<PortalEvent>()
+                .weak::<true>()
+                .callee_handled::<false>()
+                .build()
+                .map_err(|err| {
+                    generic_error(format!(
+                        "failed to create global shortcuts callback: {}",
+                        err.reason
+                    ))
+                })?;
+            let sink = Arc::new(move |event: PortalEvent| {
+                let _ = callback.call(event, ThreadsafeFunctionCallMode::Blocking);
+            });
+            let client = GlobalShortcutsClient::spawn(
+                PortalOptions {
+                    portal_app_id,
+                    sandboxed,
+                    session_token,
+                    desktop,
+                },
+                sink,
+            )
+            .map_err(|err| generic_error(format!("failed to start global shortcuts: {err}")))?;
+            Ok(Self { client })
+        }
+
+        #[napi]
+        pub fn open(&self, env: Env) -> Result<Object<'static>> {
+            let (reply, promise) = create_promise::<OpenResult>(&env)?;
+            self.client.open(reply);
+            Ok(promise)
+        }
+
+        #[napi]
+        pub fn bind(
+            &self,
+            env: Env,
+            shortcuts: Array,
+            parent_window: String,
+        ) -> Result<Object<'static>> {
+            let shortcuts = parse_shortcut_definitions(shortcuts)?;
+            let (reply, promise) = create_promise::<BindOutcome>(&env)?;
+            self.client.bind(shortcuts, parent_window, reply);
+            Ok(promise)
+        }
+
+        #[napi]
+        pub fn configure(&self, env: Env, parent_window: String) -> Result<Object<'static>> {
+            let (reply, promise) = create_promise::<()>(&env)?;
+            self.client.configure(parent_window, reply);
+            Ok(promise)
+        }
+
+        #[napi]
+        pub fn close(&self) {
+            self.client.close();
         }
     }
 
-    impl Drop for GlobalShortcutsPortal {
-        fn drop(&mut self) {
-            if let Ok(mut guard) = self.subscription.lock()
-                && let Some(subscription) = guard.take()
-            {
-                subscription.close();
-            }
+    impl ToNapiValue for MonitorEvent {
+        unsafe fn to_napi_value(raw_env: sys::napi_env, event: Self) -> Result<sys::napi_value> {
+            let env = Env::from_raw(raw_env);
+            let mut obj = Object::new(&env)?;
+            obj.set(
+                "type",
+                match event {
+                    Self::ScreenLocked => "screen-locked",
+                    Self::ScreenUnlocked => "screen-unlocked",
+                },
+            )?;
+            unsafe { <Object<'_> as ToNapiValue>::to_napi_value(raw_env, obj) }
+        }
+    }
+
+    type MonitorEventTsfn =
+        ThreadsafeFunction<MonitorEvent, UnknownReturnValue, MonitorEvent, Status, false, true, 0>;
+
+    #[napi]
+    pub struct SessionStateMonitor {
+        monitor: SessionMonitor,
+    }
+
+    #[napi]
+    impl SessionStateMonitor {
+        #[napi(constructor)]
+        pub fn new(on_event: Function<MonitorEvent, UnknownReturnValue>) -> Result<Self> {
+            let callback: MonitorEventTsfn = on_event
+                .build_threadsafe_function::<MonitorEvent>()
+                .weak::<true>()
+                .callee_handled::<false>()
+                .build()
+                .map_err(|err| {
+                    generic_error(format!(
+                        "failed to create session monitor callback: {}",
+                        err.reason
+                    ))
+                })?;
+            let monitor = SessionMonitor::spawn(Arc::new(move |event: MonitorEvent| {
+                let _ = callback.call(event, ThreadsafeFunctionCallMode::Blocking);
+            }))
+            .map_err(|err| generic_error(format!("failed to start session monitor: {err}")))?;
+            Ok(Self { monitor })
+        }
+
+        #[napi]
+        pub fn close(&self) {
+            self.monitor.close();
         }
     }
 
@@ -703,9 +619,6 @@ mod napi_bindings {
             }
         }
     }
-
-    #[allow(dead_code)]
-    fn _link_unused(_c: Contrast, _s: ColorScheme) {}
 }
 
 #[cfg(not(target_os = "linux"))]

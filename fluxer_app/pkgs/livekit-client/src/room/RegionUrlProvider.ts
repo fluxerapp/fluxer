@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 import {Mutex} from '@livekit/mutex';
 import type {RegionInfo, RegionSettings} from '@livekit/protocol';
-import log from '../logger.ts';
+import {getLogger, LoggerNames} from '../logger.ts';
 import {ConnectionError, ConnectionErrorReason} from './errors.ts';
 import CriticalTimers, {type TimerHandle} from './timers.ts';
 import {extractMaxAgeFromRequestHeaders, isCloud} from './utils.ts';
+
+const log = getLogger(LoggerNames.Region);
 
 export const DEFAULT_MAX_AGE_MS = 5_000;
 const STOP_REFETCH_DELAY_MS = 30_000;
@@ -177,6 +179,9 @@ export class RegionUrlProvider {
 
 	updateToken(token: string) {
 		this.token = token;
+		const url = this.getServerUrl();
+		const settings = RegionUrlProvider.cache.get(url.hostname);
+		RegionUrlProvider.scheduleRefetch(this.serverUrl, this.token, settings?.maxAgeInMs ?? DEFAULT_MAX_AGE_MS);
 	}
 
 	isCloud() {
@@ -209,7 +214,7 @@ export class RegionUrlProvider {
 		if (regionsLeft.length > 0) {
 			const nextRegion = regionsLeft[0];
 			this.attemptedRegions.push(nextRegion);
-			log.debug(`next region: ${nextRegion.region}`);
+			log.info(`switching to region: ${nextRegion.region}`, {region: nextRegion.region});
 			return nextRegion.url;
 		} else {
 			return null;

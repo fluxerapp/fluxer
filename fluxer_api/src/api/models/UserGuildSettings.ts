@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelOverride, UserGuildSettingsRow} from '@app/api/database/types/UserTypes';
+import {GuildChannelOverride} from '@app/api/models/GuildChannelOverride';
+import {MuteConfiguration} from '@app/api/models/MuteConfiguration';
 import type {ChannelMessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import type {ChannelOverride, UserGuildSettingsRow} from '../database/types/UserTypes';
-import {GuildChannelOverride} from './GuildChannelOverride';
-import {MuteConfiguration} from './MuteConfiguration';
 
 export class UserGuildSettings {
 	readonly userId: UserID;

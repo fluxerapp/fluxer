@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
-
 export interface RoleReorderPoint {
 	x: number;
 	y: number;
@@ -25,7 +23,7 @@ export interface RoleReorderDragItem {
 	isLocked: boolean;
 }
 
-export interface RoleReorderTargetRole {
+interface RoleReorderTargetRole {
 	id: string;
 	isEveryone: boolean;
 	isLocked: boolean;
@@ -36,24 +34,24 @@ export interface RoleReorderTarget {
 	isTerminal: boolean;
 }
 
-export type RoleReorderPosition = 'before' | 'after';
+type RoleReorderPosition = 'before' | 'after';
 
-export interface RoleReorderDropResult {
+interface RoleReorderDropResult {
 	targetRoleId: string | null;
 	position: RoleReorderPosition;
 }
 
-export interface RoleReorderIndicator {
+interface RoleReorderIndicator {
 	position: 'top' | 'bottom';
 	isValid: boolean;
 }
 
-export interface RoleReorderIntent {
+interface RoleReorderIntent {
 	indicator: RoleReorderIndicator;
 	result: RoleReorderDropResult;
 }
 
-export type RoleReorderBlockedReason =
+type RoleReorderBlockedReason =
 	| 'missing-manage-roles-permission'
 	| 'source-is-everyone'
 	| 'source-is-locked'
@@ -68,27 +66,7 @@ export interface RoleReorderResolution {
 	blockedReason: RoleReorderBlockedReason | null;
 }
 
-export interface RoleReorderMachineContext extends RoleReorderResolution {}
-
-export type RoleReorderEvent =
-	| {
-			type: 'drag.hover';
-			item: RoleReorderDragItem;
-			target: RoleReorderTarget;
-			access: RoleReorderAccess;
-			clientOffset: RoleReorderPoint;
-			targetRect: RoleReorderRect;
-	  }
-	| {type: 'drag.leave'}
-	| {type: 'drag.drop'};
-
 type VerticalZone = 'before' | 'after';
-
-const initialRoleReorderMachineContext: RoleReorderMachineContext = {
-	intent: null,
-	indicator: null,
-	blockedReason: null,
-};
 
 function getTargetHeight(rect: RoleReorderRect): number {
 	return rect.bottom - rect.top;
@@ -162,7 +140,7 @@ function getResultBlockedReason(
 	return null;
 }
 
-export function getRoleDropBlockedReason(
+function getRoleDropBlockedReason(
 	item: RoleReorderDragItem,
 	target: RoleReorderTarget,
 	access: RoleReorderAccess,
@@ -181,7 +159,7 @@ export function canRoleDropOnTarget(
 	return getRoleDropBlockedReason(item, target, access) === null;
 }
 
-export function resolveRoleReorderHover(
+function resolveRoleReorderHover(
 	item: RoleReorderDragItem,
 	target: RoleReorderTarget,
 	access: RoleReorderAccess,
@@ -224,71 +202,6 @@ export function resolveRoleReorderHover(
 	};
 }
 
-export const roleReorderStateMachine = setup({
-	types: {} as {
-		context: RoleReorderMachineContext;
-		events: RoleReorderEvent;
-	},
-	guards: {
-		hasIntent: ({context}) => context.intent !== null,
-	},
-	actions: {
-		resolveHover: assign(({event}) => {
-			if (event.type !== 'drag.hover') return initialRoleReorderMachineContext;
-			return resolveRoleReorderHover(event.item, event.target, event.access, event.clientOffset, event.targetRect);
-		}),
-		clear: assign(() => initialRoleReorderMachineContext),
-	},
-}).createMachine({
-	id: 'roleReorder',
-	initial: 'idle',
-	context: initialRoleReorderMachineContext,
-	states: {
-		idle: {
-			on: {
-				'drag.hover': {target: 'resolving', actions: 'resolveHover'},
-				'drag.leave': {actions: 'clear'},
-				'drag.drop': {actions: 'clear'},
-			},
-		},
-		resolving: {
-			always: [{target: 'targeting', guard: 'hasIntent'}, {target: 'blocked'}],
-		},
-		targeting: {
-			on: {
-				'drag.hover': {target: 'resolving', actions: 'resolveHover'},
-				'drag.leave': {target: 'idle', actions: 'clear'},
-				'drag.drop': {target: 'idle', actions: 'clear'},
-			},
-		},
-		blocked: {
-			on: {
-				'drag.hover': {target: 'resolving', actions: 'resolveHover'},
-				'drag.leave': {target: 'idle', actions: 'clear'},
-				'drag.drop': {target: 'idle', actions: 'clear'},
-			},
-		},
-	},
-});
-
-export type RoleReorderSnapshot = SnapshotFrom<typeof roleReorderStateMachine>;
-export type RoleReorderStateValue = 'idle' | 'resolving' | 'targeting' | 'blocked';
-
-export function createRoleReorderSnapshot(): RoleReorderSnapshot {
-	return initialTransition(roleReorderStateMachine)[0];
-}
-
-export function transitionRoleReorderSnapshot(
-	snapshot: RoleReorderSnapshot,
-	event: RoleReorderEvent,
-): RoleReorderSnapshot {
-	return transition(roleReorderStateMachine, snapshot, event)[0] as RoleReorderSnapshot;
-}
-
-export function getRoleReorderStateValue(snapshot: RoleReorderSnapshot): RoleReorderStateValue {
-	return snapshot.value as RoleReorderStateValue;
-}
-
 export function selectRoleReorderResolution(
 	item: RoleReorderDragItem,
 	target: RoleReorderTarget,
@@ -296,23 +209,5 @@ export function selectRoleReorderResolution(
 	clientOffset: RoleReorderPoint,
 	targetRect: RoleReorderRect,
 ): RoleReorderResolution {
-	const snapshot = transitionRoleReorderSnapshot(createRoleReorderSnapshot(), {
-		type: 'drag.hover',
-		item,
-		target,
-		access,
-		clientOffset,
-		targetRect,
-	});
-	return snapshot.context;
-}
-
-export function selectRoleReorderIntent(
-	item: RoleReorderDragItem,
-	target: RoleReorderTarget,
-	access: RoleReorderAccess,
-	clientOffset: RoleReorderPoint,
-	targetRect: RoleReorderRect,
-): RoleReorderIntent | null {
-	return selectRoleReorderResolution(item, target, access, clientOffset, targetRect).intent;
+	return resolveRoleReorderHover(item, target, access, clientOffset, targetRect);
 }

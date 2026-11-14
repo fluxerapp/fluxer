@@ -9,6 +9,7 @@ import type {User} from '@app/features/user/models/User';
 import {type FloatingContext, FloatingFocusManager} from '@floating-ui/react';
 import {Trans} from '@lingui/react/macro';
 import {PlusIcon} from '@phosphor-icons/react';
+import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
 interface ChannelPermissionsSidebarProps {
@@ -36,119 +37,121 @@ interface ChannelPermissionsSidebarProps {
 	getOverwriteUser: (overwrite: PermissionOverwrite) => User | null;
 }
 
-export const ChannelPermissionsSidebar: React.FC<ChannelPermissionsSidebarProps> = ({
-	guildId,
-	overwritesWithUpdates,
-	selectedOverwriteId,
-	canManageChannels,
-	canManageRoles,
-	canManageOverwrites,
-	onDeleteOverwrite,
-	isAddOverrideOpen,
-	setIsAddOverrideOpen,
-	existingOverwriteIds,
-	addOverrideContext,
-	addOverrideFloatingStyles,
-	addOverrideReferenceRef,
-	addOverrideFloatingRef,
-	addOverrideReferenceWidth,
-	getAddOverrideReferenceProps,
-	getAddOverrideFloatingProps,
-	onAddOverride,
-	onSelectOverwrite,
-	getOverwriteName,
-	getOverwriteColor,
-	getOverwriteUser,
-}) => {
-	return (
-		<div data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.div">
-			<div
-				className={styles.leftTitle}
-				style={{padding: '6px 8px'}}
-				data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.left-title"
-			>
-				<Trans>Access overrides</Trans>
-			</div>
-			<div
-				ref={addOverrideReferenceRef}
-				data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.div--2"
-				{...getAddOverrideReferenceProps()}
-				style={{padding: '0 8px 8px 8px'}}
-			>
-				<Button
-					variant="secondary"
-					small={true}
-					disabled={!canManageChannels || !canManageRoles}
-					leftIcon={
-						<PlusIcon
-							size={18}
-							weight="bold"
-							data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.plus-icon"
-						/>
-					}
-					onClick={() => setIsAddOverrideOpen(!isAddOverrideOpen)}
-					data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.button.set-is-add-override-open"
+export const ChannelPermissionsSidebar: React.FC<ChannelPermissionsSidebarProps> = observer(
+	({
+		guildId,
+		overwritesWithUpdates,
+		selectedOverwriteId,
+		canManageChannels,
+		canManageRoles,
+		canManageOverwrites,
+		onDeleteOverwrite,
+		isAddOverrideOpen,
+		setIsAddOverrideOpen,
+		existingOverwriteIds,
+		addOverrideContext,
+		addOverrideFloatingStyles,
+		addOverrideReferenceRef,
+		addOverrideFloatingRef,
+		addOverrideReferenceWidth,
+		getAddOverrideReferenceProps,
+		getAddOverrideFloatingProps,
+		onAddOverride,
+		onSelectOverwrite,
+		getOverwriteName,
+		getOverwriteColor,
+		getOverwriteUser,
+	}) => {
+		return (
+			<div data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.div">
+				<div
+					className={styles.leftTitle}
+					style={{padding: '6px 8px'}}
+					data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.left-title"
 				>
-					<Trans>Add override</Trans>
-				</Button>
-			</div>
-			{isAddOverrideOpen && (
-				<FloatingFocusManager
-					context={addOverrideContext}
-					modal={true}
-					data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.floating-focus-manager"
+					<Trans>Access overrides</Trans>
+				</div>
+				<div
+					ref={addOverrideReferenceRef}
+					data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.div--2"
+					{...getAddOverrideReferenceProps()}
+					style={{padding: '0 8px 8px 8px'}}
 				>
-					<div
-						ref={addOverrideFloatingRef}
-						style={{
-							...addOverrideFloatingStyles,
-							zIndex: 99999,
-							width: addOverrideReferenceWidth ?? 'auto',
-							left: addOverrideFloatingStyles.left,
-						}}
-						data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.div--3"
-						{...getAddOverrideFloatingProps()}
+					<Button
+						variant="secondary"
+						small={true}
+						disabled={!canManageChannels || !canManageRoles}
+						leftIcon={
+							<PlusIcon
+								size={18}
+								weight="bold"
+								data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.plus-icon"
+							/>
+						}
+						onClick={() => setIsAddOverrideOpen(!isAddOverrideOpen)}
+						data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.button.set-is-add-override-open"
 					>
-						<AddOverridePopout
-							guildId={guildId}
-							existingOverwriteIds={existingOverwriteIds}
-							onSelect={onAddOverride}
-							onClose={() => setIsAddOverrideOpen(false)}
-							data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.add-override-popout"
-						/>
-					</div>
-				</FloatingFocusManager>
-			)}
-			<div
-				style={{padding: '0 8px 8px 8px'}}
-				data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.div--4"
-			>
-				{overwritesWithUpdates.map((overwrite) => {
-					const name = getOverwriteName(overwrite);
-					const color = getOverwriteColor(overwrite);
-					const user = getOverwriteUser(overwrite);
-					const isSelected = selectedOverwriteId === overwrite.id;
-					const isEveryone = overwrite.id === guildId;
-					const roleId = overwrite.type === 0 ? overwrite.id : null;
-					return (
-						<OverwriteItem
-							key={overwrite.id}
-							overwrite={overwrite}
-							name={name}
-							color={color}
-							user={user}
-							roleId={roleId}
-							isSelected={isSelected}
-							isEveryone={isEveryone}
-							canDelete={canManageOverwrites && !isEveryone}
-							onDelete={onDeleteOverwrite}
-							onClick={() => onSelectOverwrite(overwrite.id)}
-							guildId={guildId}
-							data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.overwrite-item.set-selected-overwrite-id"
-						/>
-					);
-				})}
+						<Trans>Add override</Trans>
+					</Button>
+				</div>
+				{isAddOverrideOpen && (
+					<FloatingFocusManager
+						context={addOverrideContext}
+						modal={true}
+						data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.floating-focus-manager"
+					>
+						<div
+							ref={addOverrideFloatingRef}
+							style={{
+								...addOverrideFloatingStyles,
+								zIndex: 99999,
+								width: addOverrideReferenceWidth ?? 'auto',
+								left: addOverrideFloatingStyles.left,
+							}}
+							data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.div--3"
+							{...getAddOverrideFloatingProps()}
+						>
+							<AddOverridePopout
+								guildId={guildId}
+								existingOverwriteIds={existingOverwriteIds}
+								onSelect={onAddOverride}
+								onClose={() => setIsAddOverrideOpen(false)}
+								data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.add-override-popout"
+							/>
+						</div>
+					</FloatingFocusManager>
+				)}
+				<div
+					style={{padding: '0 8px 8px 8px'}}
+					data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.div--4"
+				>
+					{overwritesWithUpdates.map((overwrite) => {
+						const name = getOverwriteName(overwrite);
+						const color = getOverwriteColor(overwrite);
+						const user = getOverwriteUser(overwrite);
+						const isSelected = selectedOverwriteId === overwrite.id;
+						const isEveryone = overwrite.id === guildId;
+						const roleId = overwrite.type === 0 ? overwrite.id : null;
+						return (
+							<OverwriteItem
+								key={overwrite.id}
+								overwrite={overwrite}
+								name={name}
+								color={color}
+								user={user}
+								roleId={roleId}
+								isSelected={isSelected}
+								isEveryone={isEveryone}
+								canDelete={canManageOverwrites && !isEveryone}
+								onDelete={onDeleteOverwrite}
+								onClick={() => onSelectOverwrite(overwrite.id)}
+								guildId={guildId}
+								data-flx="channel.channel-tabs.channel-permissions-tab.sidebar-content.overwrite-item.set-selected-overwrite-id"
+							/>
+						);
+					})}
+				</div>
 			</div>
-		</div>
-	);
-};
+		);
+	},
+);

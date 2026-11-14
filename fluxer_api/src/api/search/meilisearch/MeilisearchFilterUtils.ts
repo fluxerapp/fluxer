@@ -52,11 +52,13 @@ export function meiliRangeFilter(field: string, options: MeilisearchRangeOptions
 }
 
 export function meiliExistsFilter(field: string): MeilisearchFilter {
-	return `${quoteIdentifier(field)} EXISTS`;
+	const fieldName = quoteIdentifier(field);
+	return `(${fieldName} EXISTS AND ${fieldName} IS NOT NULL)`;
 }
 
 export function meiliNotExistsFilter(field: string): MeilisearchFilter {
-	return `NOT ${meiliExistsFilter(field)}`;
+	const fieldName = quoteIdentifier(field);
+	return `(${fieldName} NOT EXISTS OR ${fieldName} IS NULL)`;
 }
 
 export function meiliAndTerms(field: string, values: Array<ScalarFilterValue>): Array<MeilisearchFilter> {

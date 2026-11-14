@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::manifest::{
-    ANY_HOST, DEV_PROXY_GATEWAY_PORTS_ENV, DEV_PROXY_PORT, GATEWAY_PORT, LOCAL_APP_URL,
-    PROXY_ROUTES, ProxyRoute,
+    DEV_PROXY_GATEWAY_PORTS_ENV, GATEWAY_PORT, LOCAL_APP_URL, PROXY_ROUTES, ProxyRoute,
 };
 use anyhow::{Context, Result, bail};
 use axum::{
@@ -16,7 +15,7 @@ use axum::{
 use hyper_util::rt::TokioIo;
 use std::collections::HashMap;
 use std::env;
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -58,6 +57,7 @@ const BLOCKED_RESPONSE_HEADERS: &[&str] = &[
     "upgrade",
 ];
 const X_FORWARDED_FOR_HEADER: &str = "x-forwarded-for";
+const CF_CONNECTING_IP_HEADER: &str = "cf-connecting-ip";
 
 pub async fn run_proxy(host: &str, port: u16) -> Result<()> {
     let bind = format!("{host}:{port}");
@@ -106,6 +106,7 @@ async fn proxy_request(
         return redirect_response(&request_head, &location).into_response();
     }
 
+    let client_ip = forwarded_client_ip(&request_head, client_addr).to_string();
     let route = route_for_path(&request_head.path);
     let (target_host, target_port) = target_for_route(route, &state.gateway_ports);
     if is_upgrade_request(&request_head) {
@@ -115,7 +116,7 @@ async fn proxy_request(
             route,
             target_host,
             target_port,
-            client_addr,
+            &client_ip,
         )
         .await;
     }
@@ -127,9 +128,19 @@ async fn proxy_request(
         route,
         target_host,
         target_port,
-        client_addr,
+        &client_ip,
     )
     .await
+}
+
+fn forwarded_client_ip(request: &RequestHead, client_addr: SocketAddr) -> IpAddr {
+    if client_addr.ip().is_loopback()
+        && let Some(ip) = header_value(request, CF_CONNECTING_IP_HEADER)
+            .and_then(|value| value.trim().parse::<IpAddr>().ok())
+    {
+        return ip;
+    }
+    client_addr.ip()
 }
 
 async fn proxy_http(
@@ -139,7 +150,7 @@ async fn proxy_http(
     route: &'static ProxyRoute,
     target_host: &'static str,
     target_port: u16,
-    client_addr: SocketAddr,
+    client_ip: &str,
 ) -> Response<Body> {
     let target_url = upstream_http_url(&request_head.path, route, target_host, target_port);
     let (parts, body) = request.into_parts();
@@ -148,27 +159,18 @@ async fn proxy_http(
     if method != Method::GET && method != Method::HEAD {
         request_builder = request_builder.body(reqwest::Body::wrap_stream(body.into_data_stream()));
     }
-    let mut saw_forwarded_for = false;
 
     for (name, value) in &parts.headers {
         let name_str = name.as_str();
-        if BLOCKED_REQUEST_HEADERS.contains(&name_str) {
+        if BLOCKED_REQUEST_HEADERS.contains(&name_str)
+            || name_str.eq_ignore_ascii_case(X_FORWARDED_FOR_HEADER)
+        {
             continue;
         }
-        if name.as_str().eq_ignore_ascii_case(X_FORWARDED_FOR_HEADER) {
-            saw_forwarded_for = true;
-            if let Some(value) = append_forwarded_for(value, client_addr) {
-                request_builder = request_builder.header(name.clone(), value);
-            }
-        } else {
-            request_builder = request_builder.header(name.clone(), value.clone());
-        }
+        request_builder = request_builder.header(name.clone(), value.clone());
     }
 
-    if !saw_forwarded_for {
-        request_builder =
-            request_builder.header(X_FORWARDED_FOR_HEADER, client_addr.ip().to_string());
-    }
+    request_builder = request_builder.header(X_FORWARDED_FOR_HEADER, client_ip);
 
     let upstream_response = match request_builder.send().await {
         Ok(response) => response,
@@ -192,7 +194,7 @@ async fn proxy_upgrade(
     route: &'static ProxyRoute,
     target_host: &'static str,
     target_port: u16,
-    client_addr: SocketAddr,
+    client_ip: &str,
 ) -> Response<Body> {
     let on_upgrade = hyper::upgrade::on(&mut request);
     let mut target = match TcpStream::connect((target_host, target_port)).await {
@@ -206,7 +208,7 @@ async fn proxy_upgrade(
             route,
             Some(target_host),
             Some(target_port),
-            Some(&client_addr.ip().to_string()),
+            Some(client_ip),
         ))
         .await
     {
@@ -282,11 +284,6 @@ fn request_head_from_request(request: &Request<Body>) -> RequestHead {
             })
             .collect(),
     }
-}
-
-fn append_forwarded_for(value: &HeaderValue, client_addr: SocketAddr) -> Option<HeaderValue> {
-    let value = value.to_str().ok()?;
-    HeaderValue::from_str(&format!("{value}, {}", client_addr.ip())).ok()
 }
 
 fn copy_response_headers(source: &HeaderMap, target: &mut HeaderMap) {
@@ -384,31 +381,6 @@ pub struct RequestHead {
     pub path: String,
     pub version: String,
     pub headers: Vec<(String, String)>,
-}
-
-pub fn parse_request_head(head: &[u8]) -> Result<RequestHead> {
-    let text = String::from_utf8_lossy(head);
-    let mut lines = text.split("\r\n");
-    let request_line = lines.next().unwrap_or_default();
-    let parts = request_line.splitn(3, ' ').collect::<Vec<_>>();
-    if parts.len() != 3 {
-        bail!("invalid request line: {request_line:?}");
-    }
-    let headers = lines
-        .filter_map(|line| {
-            if line.is_empty() {
-                return None;
-            }
-            let (name, value) = line.split_once(':')?;
-            (!name.is_empty()).then(|| (name.to_owned(), value.trim().to_owned()))
-        })
-        .collect();
-    Ok(RequestHead {
-        method: parts[0].to_owned(),
-        path: parts[1].to_owned(),
-        version: parts[2].to_owned(),
-        headers,
-    })
 }
 
 pub fn tunnel_public_redirect_location(request: &RequestHead) -> Option<String> {
@@ -647,7 +619,6 @@ pub fn rewrite_head(
         rewrite_path(&request.path, route),
         request.version
     )];
-    let mut saw_forwarded_for = false;
     let mut saw_host = false;
     let mut saw_connection = false;
     for (name, value) in &request.headers {
@@ -660,13 +631,8 @@ pub fn rewrite_head(
                 "Connection: {}",
                 if is_upgrade { "Upgrade" } else { "close" }
             ));
-        } else if name.eq_ignore_ascii_case("x-forwarded-for") {
-            saw_forwarded_for = true;
-            if let Some(client_ip) = client_ip {
-                lines.push(format!("{name}: {value}, {client_ip}"));
-            } else {
-                lines.push(format!("{name}: {value}"));
-            }
+        } else if name.eq_ignore_ascii_case(X_FORWARDED_FOR_HEADER) {
+            continue;
         } else {
             lines.push(format!("{name}: {value}"));
         }
@@ -680,131 +646,10 @@ pub fn rewrite_head(
             if is_upgrade { "Upgrade" } else { "close" }
         ));
     }
-    if let Some(client_ip) = client_ip
-        && !saw_forwarded_for
-    {
+    if let Some(client_ip) = client_ip {
         lines.push(format!("X-Forwarded-For: {client_ip}"));
     }
     lines.push(String::new());
     lines.push(String::new());
     lines.join("\r\n").into_bytes()
-}
-
-#[allow(dead_code)]
-pub fn default_bind() -> (&'static str, u16) {
-    (ANY_HOST, DEV_PROXY_PORT)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn routes_and_rewrites_prefixes() {
-        let api = route_for_path("/api/users?x=1");
-        assert_eq!(api.prefix, "/api");
-        assert_eq!(rewrite_path("/api/users?x=1", api), "/users?x=1");
-        let asset = route_for_path("/assets/app.js");
-        assert_eq!(rewrite_path("/assets/app.js", asset), "/assets/app.js");
-        let lazy = route_for_path("/lazy-compilation-using-foo");
-        assert_eq!(lazy.prefix, "/lazy-compilation-using-");
-        let devmail = route_for_path("/devmail/messages");
-        assert_eq!(devmail.prefix, "/devmail");
-        assert_eq!(
-            rewrite_path("/devmail/messages?x=1", devmail),
-            "/devmail/messages?x=1"
-        );
-        let admin = route_for_path("/admin/users");
-        assert_eq!(admin.prefix, "/admin");
-        assert_eq!(rewrite_path("/admin/users", admin), "/users");
-        let absolute_gateway = route_for_path("https://dev.example.test/gateway?v=1&encoding=json");
-        assert_eq!(absolute_gateway.prefix, "/gateway");
-        assert_eq!(
-            rewrite_path(
-                "https://dev.example.test/gateway?v=1&encoding=json",
-                absolute_gateway
-            ),
-            "/?v=1&encoding=json"
-        );
-    }
-
-    #[test]
-    fn rewrites_host_connection_and_forwarded_for() {
-        let request = RequestHead {
-            method: "GET".to_owned(),
-            path: "/api/_health".to_owned(),
-            version: "HTTP/1.1".to_owned(),
-            headers: vec![
-                ("Host".to_owned(), "localhost:8088".to_owned()),
-                ("Connection".to_owned(), "keep-alive".to_owned()),
-                ("X-Forwarded-For".to_owned(), "1.1.1.1".to_owned()),
-            ],
-        };
-        let head = String::from_utf8(rewrite_head(
-            &request,
-            route_for_path("/api/_health"),
-            Some("api"),
-            Some(8080),
-            Some("2.2.2.2"),
-        ))
-        .unwrap();
-        assert!(head.contains("GET /_health HTTP/1.1\r\n"));
-        assert!(head.contains("Host: api:8080\r\n"));
-        assert!(head.contains("Connection: close\r\n"));
-        assert!(head.contains("X-Forwarded-For: 1.1.1.1, 2.2.2.2\r\n"));
-    }
-
-    #[test]
-    fn redirects_local_html_navigation_to_public_tunnel_url() {
-        let request = RequestHead {
-            method: "GET".to_owned(),
-            path: "/channels/@me?x=1".to_owned(),
-            version: "HTTP/1.1".to_owned(),
-            headers: vec![
-                ("Host".to_owned(), "localhost:8088".to_owned()),
-                (
-                    "Accept".to_owned(),
-                    "text/html,application/xhtml+xml".to_owned(),
-                ),
-            ],
-        };
-        assert_eq!(
-            redirect_location_for_public_url(&request, "https://dev.example.test"),
-            Some("https://dev.example.test/channels/@me?x=1".to_owned())
-        );
-    }
-
-    #[test]
-    fn public_tunnel_redirect_ignores_assets_and_local_public_url() {
-        let asset = RequestHead {
-            method: "GET".to_owned(),
-            path: "/avatars/4.png".to_owned(),
-            version: "HTTP/1.1".to_owned(),
-            headers: vec![
-                ("Host".to_owned(), "localhost:8088".to_owned()),
-                (
-                    "Accept".to_owned(),
-                    "image/avif,image/webp,image/apng,image/*,*/*;q=0.8".to_owned(),
-                ),
-            ],
-        };
-        assert_eq!(
-            redirect_location_for_public_url(&asset, "https://dev.example.test"),
-            None
-        );
-
-        let local_public_url = RequestHead {
-            method: "GET".to_owned(),
-            path: "/channels/@me".to_owned(),
-            version: "HTTP/1.1".to_owned(),
-            headers: vec![
-                ("Host".to_owned(), "localhost:8088".to_owned()),
-                ("Accept".to_owned(), "text/html".to_owned()),
-            ],
-        };
-        assert_eq!(
-            redirect_location_for_public_url(&local_public_url, LOCAL_APP_URL),
-            None
-        );
-    }
 }

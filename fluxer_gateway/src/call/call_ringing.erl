@@ -16,6 +16,7 @@
     dispatch_call_create/1,
     dispatch_call_update/1,
     dispatch_call_delete/1,
+    dispatch_voice_state_update/2,
     handle_ring_timeout/2,
     handle_idle_timeout/1,
     maybe_stop_or_reply/3,
@@ -59,7 +60,7 @@ dispatch_pending_ringing_ready(State, DispatchUpdates) ->
 
 -spec apply_pending_ringing([integer()], map(), boolean()) -> {map(), boolean()}.
 apply_pending_ringing(PendingUnique, State, DispatchUpdates) ->
-    ConnectedUsers = maps:keys(maps:get(voice_states, State)),
+    ConnectedUsers = call_state:voice_user_ids(maps:get(voice_states, State)),
     AlreadyRinging = maps:get(ringing, State),
     ToAdd = [
         User
@@ -73,6 +74,7 @@ apply_pending_ringing(PendingUnique, State, DispatchUpdates) ->
             _ -> lists:usort(AlreadyRinging ++ ToAdd)
         end,
     StateWithRinging = State#{pending_ringing => [], ringing => NewRinging},
+    ok = publish_rings(ToAdd, StateWithRinging),
     StateWithTimers = start_ringing_timers(ToAdd, StateWithRinging),
     case ToAdd of
         [] ->
@@ -83,6 +85,65 @@ apply_pending_ringing(PendingUnique, State, DispatchUpdates) ->
         _ ->
             {StateWithTimers, false}
     end.
+
+-spec publish_rings([integer()], map()) -> ok.
+publish_rings([], _State) ->
+    ok;
+publish_rings(UserIds, State) ->
+    Recipients = maps:get(recipients, State),
+    Ring = build_ring_context(State),
+    _ = proc_lib:spawn(fun() -> publish_ring_jobs(UserIds, Recipients, Ring) end),
+    ok.
+
+-spec build_ring_context(map()) -> map().
+build_ring_context(State) ->
+    StartedAt = erlang:system_time(millisecond),
+    #{
+        channel_id => maps:get(channel_id, State),
+        message_id => maps:get(message_id, State),
+        started_at_ms => StartedAt,
+        expires_at_ms => StartedAt + ?RING_TIMEOUT_MS,
+        caller => call_state:caller_from_state(State)
+    }.
+
+-spec publish_ring_jobs([integer()], [integer()], map()) -> ok.
+publish_ring_jobs(UserIds, Recipients, Ring) ->
+    lists:foreach(
+        fun(UserId) -> publish_ring_job(UserId, Recipients, Ring) end,
+        UserIds
+    ).
+
+-spec publish_ring_job(integer(), [integer()], map()) -> ok.
+publish_ring_job(UserId, Recipients, Ring) ->
+    case ring_suppressed(UserId, Recipients) of
+        true ->
+            ok;
+        false ->
+            dispatch_ring_job(UserId, Ring)
+    end.
+
+-spec dispatch_ring_job(integer(), map()) -> ok.
+dispatch_ring_job(UserId, #{
+    channel_id := ChannelId,
+    message_id := MessageId,
+    started_at_ms := StartedAt,
+    expires_at_ms := ExpiresAt,
+    caller := Caller
+}) ->
+    _ = push_job_publisher:publish_ring(
+        UserId, ChannelId, MessageId, StartedAt, ExpiresAt, Caller
+    ),
+    ok.
+
+-spec ring_suppressed(integer(), [integer()]) -> boolean().
+ring_suppressed(UserId, Recipients) ->
+    all_blocked(UserId, [Other || Other <- Recipients, Other =/= UserId]).
+
+-spec all_blocked(integer(), [integer()]) -> boolean().
+all_blocked(_UserId, []) ->
+    false;
+all_blocked(UserId, Others) ->
+    lists:all(fun(Other) -> push_eligibility:is_user_blocked(UserId, Other) end, Others).
 
 -spec maybe_dispatch_state_update(map(), map()) -> {map(), boolean()}.
 maybe_dispatch_state_update(PrevState, NewState) ->
@@ -189,6 +250,14 @@ dispatch_call_delete(State) ->
     Recipients = maps:get(recipients, State),
     dispatch_to_recipients(Recipients, call_delete, Event),
     notify_call_ended(cancel_all_ringing_timers(State)),
+    ok.
+
+-spec dispatch_voice_state_update(map(), map()) -> ok.
+dispatch_voice_state_update(VoiceState, State) ->
+    Event = voice_state_utils:sanitize_voice_state_for_broadcast(
+        call_state:format_voice_state(VoiceState)
+    ),
+    _ = dispatch_to_recipients(maps:get(recipients, State), voice_state_update, Event),
     ok.
 
 -spec dispatch_to_recipients([integer()], atom(), map()) -> pid().

@@ -15,6 +15,7 @@ type DeviceListener = (state: VoiceDeviceState) => void;
 class VoiceDevicePermissionState {
 	deviceState: VoiceDeviceState = voiceDeviceManager.getState();
 	private deviceListeners = new Set<DeviceListener>();
+	private deviceStateReconcilers = new Set<DeviceListener>();
 	private permissionRequestsInFlight = new Map<'audio' | 'video', Promise<boolean>>();
 
 	constructor() {
@@ -23,6 +24,13 @@ class VoiceDevicePermissionState {
 
 	private handleDeviceStateChange(state: VoiceDeviceState): void {
 		this.deviceState = state;
+		this.deviceStateReconcilers.forEach((reconciler) => {
+			try {
+				reconciler(state);
+			} catch (error) {
+				logger.error('Voice device state reconciler threw', {error});
+			}
+		});
 		this.deviceListeners.forEach((listener) => {
 			try {
 				listener(state);
@@ -44,16 +52,17 @@ class VoiceDevicePermissionState {
 		};
 	}
 
+	addDeviceStateReconciler(reconciler: DeviceListener): void {
+		this.deviceStateReconcilers.add(reconciler);
+		reconciler(this.deviceState);
+	}
+
 	async ensureDevices(options: EnsureVoiceDevicesOptions = {}): Promise<VoiceDeviceState> {
 		const state = await voiceDeviceManager.ensureDevices(options);
 		if (this.deviceState !== state) {
 			this.handleDeviceStateChange(state);
 		}
 		return state;
-	}
-
-	async refreshDevices(requestPermissions?: boolean): Promise<VoiceDeviceState> {
-		return this.ensureDevices({requestPermissions, forceRefresh: true});
 	}
 
 	async requestPermissionFor(type: 'audio' | 'video'): Promise<boolean> {

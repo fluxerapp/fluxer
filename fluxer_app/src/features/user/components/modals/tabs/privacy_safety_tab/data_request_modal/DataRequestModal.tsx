@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import Guilds from '@app/features/guild/state/Guilds';
 import {
 	CANCEL_DESCRIPTOR,
 	CONTINUE_DESCRIPTOR,
 	GO_BACK_DESCRIPTOR,
+	COMMUNITIES_DESCRIPTOR as KIND_COMMUNITIES_LABEL_DESCRIPTOR,
+	COMMUNITIES_DESCRIPTOR as SUMMARY_COMMUNITIES_INCLUDED_DESCRIPTOR,
+	COMMUNITIES_DESCRIPTOR as SUMMARY_COMMUNITIES_LABEL_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -19,7 +23,22 @@ import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel
 import type {BulkDeleteMyMessagesFilter} from '@app/features/user/commands/UserCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import styles from '@app/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.module.css';
+import Users from '@app/features/user/state/Users';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
+import {
+	SUMMARY_ALL_TIME_DESCRIPTOR as DATE_MODE_ALL_TIME_DESCRIPTOR,
+	DATE_MODE_LABEL_DESCRIPTOR,
+	DELETE_MESSAGES_DESCRIPTOR as DELETE_SUBMIT_DESCRIPTOR,
+	KIND_GROUP_DMS_LABEL_DESCRIPTOR,
+	SUMMARY_ALL_TIME_DESCRIPTOR,
+	KIND_GROUP_DMS_LABEL_DESCRIPTOR as SUMMARY_GROUP_DMS_DESCRIPTOR,
+	SUMMARY_NONE_DESCRIPTOR,
+	DATE_MODE_LABEL_DESCRIPTOR as SUMMARY_TIME_RANGE_LABEL_DESCRIPTOR,
+	DATE_MODE_LABEL_DESCRIPTOR as WHEN_STEP_TITLE_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import * as FormUtils from '@app/lib/forms';
+import {EmailDeliveryStates} from '@fluxer/constants/src/AccountConfigConstants';
+import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -27,7 +46,8 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo, useState} from 'react';
 
-export type DataRequestVariant = 'export' | 'delete';
+type DataRequestVariant = 'export' | 'delete';
+type DeletionNotice = 'dm' | 'email' | 'none';
 type ScopeValue = 'everything' | 'custom' | 'selected' | 'inaccessible_only';
 type DateMode = 'all_time' | 'custom';
 type GuildFilterMode = 'exclude' | 'include_only';
@@ -47,10 +67,26 @@ const EXPORT_SUCCESS_DESCRIPTOR = msg({
 	message: "We'll process this as soon as possible. You'll get an email when your archive is ready.",
 	comment: 'Success toast shown after a filtered data export job is queued.',
 });
-const DELETE_SUCCESS_DESCRIPTOR = msg({
-	message: "We'll process this as soon as possible. You'll get a DM from us when it's done.",
-	comment: 'Success toast shown after a bulk message deletion job is queued.',
+const EXPORT_SUCCESS_IN_APP_DESCRIPTOR = msg({
+	message: "We'll process this as soon as possible. Check back here to download your archive when it's ready.",
+	comment: 'Success toast shown after a data export job is queued when no email can reach the account.',
 });
+const DELETE_SUCCESS_DESCRIPTORS: Record<DeletionNotice, MessageDescriptor> = {
+	dm: msg({
+		message: "We'll process this as soon as possible. You'll get a DM from us when it's done.",
+		comment: 'Success toast shown after a bulk message deletion job is queued.',
+	}),
+	email: msg({
+		message: "We'll process this as soon as possible. You'll get an email from us when it's done.",
+		comment:
+			'Success toast shown after a bulk message deletion job is queued, on an instance with direct messages turned off that sends email.',
+	}),
+	none: msg({
+		message: "We'll process this as soon as possible. Your messages will disappear as the work goes on.",
+		comment:
+			'Success toast shown after a bulk message deletion job is queued, on an instance with direct messages turned off, when no email can reach the account.',
+	}),
+};
 const EXPORT_SCOPE_EVERYTHING_LABEL_DESCRIPTOR = msg({
 	message: 'Everything',
 	comment: 'Scope option (radio) that exports the user every message and metadata. Default.',
@@ -100,10 +136,7 @@ const COMMUNITIES_STEP_TITLE_DESCRIPTOR = msg({
 	message: 'Which communities',
 	comment: 'Heading of the communities step in the data-request carousel modal.',
 });
-const WHEN_STEP_TITLE_DESCRIPTOR = msg({
-	message: 'Time range',
-	comment: 'Heading of the time-range step in the data-request carousel modal.',
-});
+
 const CONFIRM_STEP_TITLE_DESCRIPTOR = msg({
 	message: 'Review and confirm',
 	comment: 'Heading of the final confirm step in the data-request carousel modal showing a summary.',
@@ -118,14 +151,36 @@ const EXPORT_CONFIRM_CUSTOM_DESCRIPTOR = msg({
 		"We'll build a downloadable archive that matches the filters below and email you when it's ready. The download link in that email expires after 7 days.",
 	comment: 'Confirm-step copy in the data-export modal when scope is custom.',
 });
+const EXPORT_CONFIRM_EVERYTHING_IN_APP_DESCRIPTOR = msg({
+	message:
+		"We'll build a downloadable archive of every message you have ever sent. You can download it from this page when it's ready. The download expires after 7 days.",
+	comment: 'Confirm-step copy in the data-export modal when scope is everything, when no email can reach the account.',
+});
+const EXPORT_CONFIRM_CUSTOM_IN_APP_DESCRIPTOR = msg({
+	message:
+		"We'll build a downloadable archive that matches the filters below. You can download it from this page when it's ready. The download expires after 7 days.",
+	comment: 'Confirm-step copy in the data-export modal when scope is custom, when no email can reach the account.',
+});
 const DELETE_CONFIRM_DESCRIPTOR = msg({
 	message: 'Permanently delete the messages that match the filters below. This cannot be undone.',
 	comment: 'Confirm-step copy in the data-deletion modal explaining the destructive operation.',
 });
-const DELETE_DANGER_NOTICE_DESCRIPTOR = msg({
-	message: 'There is no recovery once this starts. We will DM you when it finishes.',
-	comment: 'Destructive notice on the confirm step of the data-deletion carousel modal.',
-});
+const DELETE_DANGER_NOTICE_DESCRIPTORS: Record<DeletionNotice, MessageDescriptor> = {
+	dm: msg({
+		message: 'There is no recovery once this starts. We will DM you when it finishes.',
+		comment: 'Destructive notice on the confirm step of the data-deletion carousel modal.',
+	}),
+	email: msg({
+		message: 'There is no recovery once this starts. We will email you when it finishes.',
+		comment:
+			'Destructive notice on the confirm step of the data-deletion carousel modal, on an instance with direct messages turned off that sends email.',
+	}),
+	none: msg({
+		message: 'There is no recovery once this starts.',
+		comment:
+			'Destructive notice on the confirm step of the data-deletion carousel modal, on an instance with direct messages turned off, when no email can reach the account.',
+	}),
+};
 const KIND_DMS_LABEL_DESCRIPTOR = msg({
 	message: 'Open DMs',
 	comment:
@@ -136,14 +191,7 @@ const KIND_DMS_CLOSED_LABEL_DESCRIPTOR = msg({
 	comment:
 		'Switch label for including 1:1 direct messages the user has previously closed. Independent companion to the Open DMs switch.',
 });
-const KIND_GROUP_DMS_LABEL_DESCRIPTOR = msg({
-	message: 'Group DMs',
-	comment: 'Switch label for including group DMs (3+ participants) in a data export / deletion scope.',
-});
-const KIND_COMMUNITIES_LABEL_DESCRIPTOR = msg({
-	message: 'Communities',
-	comment: 'Switch label for including community (guild) channels in a data export / deletion scope.',
-});
+
 const GUILD_FILTER_MODE_LABEL_DESCRIPTOR = msg({
 	message: 'Community filter',
 	comment: 'Form label for the dropdown that switches the community filter between exclude and include-only modes.',
@@ -160,14 +208,7 @@ const COMMUNITIES_EMPTY_DESCRIPTOR = msg({
 	message: "You aren't in any communities right now.",
 	comment: 'Placeholder shown when the user has no communities to filter.',
 });
-const DATE_MODE_LABEL_DESCRIPTOR = msg({
-	message: 'Time range',
-	comment: 'Form label for the dropdown that picks between all-time and a custom date range.',
-});
-const DATE_MODE_ALL_TIME_DESCRIPTOR = msg({
-	message: 'All time',
-	comment: 'Dropdown option that applies the action to every message.',
-});
+
 const DATE_MODE_CUSTOM_DESCRIPTOR = msg({
 	message: 'Custom range',
 	comment: 'Dropdown option that lets the user pick a start and end date.',
@@ -196,10 +237,7 @@ const EXPORT_SUBMIT_DESCRIPTOR = msg({
 	message: 'Request export',
 	comment: 'Footer submit button label on the confirm step of the data-export modal.',
 });
-const DELETE_SUBMIT_DESCRIPTOR = msg({
-	message: 'Delete messages',
-	comment: 'Footer submit button label on the confirm step of the data-deletion modal.',
-});
+
 const SUMMARY_SCOPE_LABEL_DESCRIPTOR = msg({
 	message: 'Scope',
 	comment: 'Summary row label on the confirm step showing the user-picked scope.',
@@ -208,22 +246,7 @@ const SUMMARY_CONVERSATIONS_LABEL_DESCRIPTOR = msg({
 	message: 'Conversations',
 	comment: 'Summary row label on the confirm step showing the user-picked conversation kinds.',
 });
-const SUMMARY_COMMUNITIES_LABEL_DESCRIPTOR = msg({
-	message: 'Communities',
-	comment: 'Summary row label on the confirm step showing the community filter selection.',
-});
-const SUMMARY_TIME_RANGE_LABEL_DESCRIPTOR = msg({
-	message: 'Time range',
-	comment: 'Summary row label on the confirm step showing the chosen time range.',
-});
-const SUMMARY_NONE_DESCRIPTOR = msg({
-	message: 'None',
-	comment: 'Summary row value on the confirm step when no items in the category were selected.',
-});
-const SUMMARY_ALL_TIME_DESCRIPTOR = msg({
-	message: 'All time',
-	comment: 'Summary row value on the confirm step indicating no date filter is applied.',
-});
+
 const SUMMARY_FROM_DESCRIPTOR = msg({
 	message: 'From {start}',
 	comment: 'Summary row value on the confirm step when only a start date is set. {start} is a localized date.',
@@ -233,7 +256,7 @@ const SUMMARY_UNTIL_DESCRIPTOR = msg({
 	comment: 'Summary row value on the confirm step when only an end date is set. {end} is a localized date.',
 });
 const SUMMARY_BETWEEN_DESCRIPTOR = msg({
-	message: '{start} – {end}',
+	message: '{start} to {end}',
 	comment: 'Summary row value when both a start and end date are set. Both values are localized dates.',
 });
 const SUMMARY_GUILD_EXCLUDE_DESCRIPTOR = msg({
@@ -256,24 +279,31 @@ const SUMMARY_DMS_WITH_CLOSED_DESCRIPTOR = msg({
 	message: 'Direct messages (open and closed)',
 	comment: 'Summary chip on the confirm step indicating both open and closed 1:1 DMs are included.',
 });
-const SUMMARY_GROUP_DMS_DESCRIPTOR = msg({
-	message: 'Group DMs',
-	comment: 'Summary chip on the confirm step indicating that group DMs are included.',
-});
-const SUMMARY_COMMUNITIES_INCLUDED_DESCRIPTOR = msg({
-	message: 'Communities',
-	comment: 'Summary chip on the confirm step indicating that community channels are included.',
-});
+
 const EXPORT_TAB_DESCRIPTION_DESCRIPTOR = msg({
 	message:
 		'Build a downloadable archive of your account data, including messages and attachment URLs. Most people want everything, but you can narrow the scope below.',
 	comment: 'Description shown on the settings page above the Export my data button.',
 });
-const DELETE_TAB_DESCRIPTION_DESCRIPTOR = msg({
-	message:
-		'Permanently remove messages you have sent across DMs, group DMs, and communities. The work runs in the background, and you will get a DM when it finishes.',
-	comment: 'Description shown on the settings page above the Delete my messages button.',
-});
+const DELETE_TAB_DESCRIPTION_DESCRIPTORS: Record<DeletionNotice, MessageDescriptor> = {
+	dm: msg({
+		message:
+			'Permanently remove messages you have sent across DMs, group DMs, and communities. The work runs in the background, and you will get a DM when it finishes.',
+		comment: 'Description shown on the settings page above the Delete my messages button.',
+	}),
+	email: msg({
+		message:
+			'Permanently remove messages you have sent across DMs, group DMs, and communities. The work runs in the background, and you will get an email when it finishes.',
+		comment:
+			'Description shown on the settings page above the Delete my messages button, on an instance with direct messages turned off that sends email.',
+	}),
+	none: msg({
+		message:
+			'Permanently remove messages you have sent across DMs, group DMs, and communities. The work runs in the background, so your messages may take a while to disappear.',
+		comment:
+			'Description shown on the settings page above the Delete my messages button, on an instance with direct messages turned off, when no email can reach the account.',
+	}),
+};
 
 interface ScopeOptionDescriptors {
 	value: ScopeValue;
@@ -291,11 +321,26 @@ interface VariantConfig {
 	successToastDescriptor: MessageDescriptor;
 	confirmSimpleDescriptor: MessageDescriptor;
 	confirmCustomDescriptor: MessageDescriptor;
+	dangerNoticeDescriptor: MessageDescriptor | null;
 	isDelete: boolean;
+}
+
+export function accountGetsEmail(): boolean {
+	return RuntimeConfig.emailDeliveryState === EmailDeliveryStates.ON && Boolean(Users.currentUser?.email);
+}
+
+function deletionNotice(): DeletionNotice {
+	if (!RuntimeConfig.directMessagesDisabled) return 'dm';
+	return accountGetsEmail() ? 'email' : 'none';
+}
+
+export function deleteTabDescription(): MessageDescriptor {
+	return DELETE_TAB_DESCRIPTION_DESCRIPTORS[deletionNotice()];
 }
 
 function getVariantConfig(variant: DataRequestVariant): VariantConfig {
 	if (variant === 'export') {
+		const byEmail = accountGetsEmail();
 		return {
 			titleDescriptor: EXPORT_TITLE_DESCRIPTOR,
 			defaultScope: 'everything',
@@ -314,12 +359,16 @@ function getVariantConfig(variant: DataRequestVariant): VariantConfig {
 			],
 			submitLabelDescriptor: EXPORT_SUBMIT_DESCRIPTOR,
 			submitVariant: 'primary',
-			successToastDescriptor: EXPORT_SUCCESS_DESCRIPTOR,
-			confirmSimpleDescriptor: EXPORT_CONFIRM_EVERYTHING_DESCRIPTOR,
-			confirmCustomDescriptor: EXPORT_CONFIRM_CUSTOM_DESCRIPTOR,
+			successToastDescriptor: byEmail ? EXPORT_SUCCESS_DESCRIPTOR : EXPORT_SUCCESS_IN_APP_DESCRIPTOR,
+			confirmSimpleDescriptor: byEmail
+				? EXPORT_CONFIRM_EVERYTHING_DESCRIPTOR
+				: EXPORT_CONFIRM_EVERYTHING_IN_APP_DESCRIPTOR,
+			confirmCustomDescriptor: byEmail ? EXPORT_CONFIRM_CUSTOM_DESCRIPTOR : EXPORT_CONFIRM_CUSTOM_IN_APP_DESCRIPTOR,
+			dangerNoticeDescriptor: null,
 			isDelete: false,
 		};
 	}
+	const notice = deletionNotice();
 	return {
 		titleDescriptor: DELETE_TITLE_DESCRIPTOR,
 		defaultScope: 'selected',
@@ -338,24 +387,26 @@ function getVariantConfig(variant: DataRequestVariant): VariantConfig {
 		],
 		submitLabelDescriptor: DELETE_SUBMIT_DESCRIPTOR,
 		submitVariant: 'danger',
-		successToastDescriptor: DELETE_SUCCESS_DESCRIPTOR,
+		successToastDescriptor: DELETE_SUCCESS_DESCRIPTORS[notice],
 		confirmSimpleDescriptor: DELETE_CONFIRM_DESCRIPTOR,
 		confirmCustomDescriptor: DELETE_CONFIRM_DESCRIPTOR,
+		dangerNoticeDescriptor: DELETE_DANGER_NOTICE_DESCRIPTORS[notice],
 		isDelete: true,
 	};
 }
 
-function formatDateForSummary(date: Date): string {
-	return date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'});
+function formatDateForSummary(date: Date, locale: string): string {
+	return getDateFormatter(locale, {year: 'numeric', month: 'short', day: 'numeric'}).format(date);
 }
 
 interface DataRequestModalProps {
 	variant: DataRequestVariant;
+	onExportRequested?: () => void;
 }
 
-export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({variant}) => {
+export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({variant, onExportRequested}) => {
 	const {i18n} = useLingui();
-	const config = useMemo(() => getVariantConfig(variant), [variant]);
+	const config = getVariantConfig(variant);
 	const scopeOptions = useMemo<ReadonlyArray<RadioOption<ScopeValue>>>(
 		() =>
 			config.scopeOptionDescriptors.map((opt) => ({
@@ -489,6 +540,7 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 				} else {
 					await UserCommands.requestFilteredDataHarvest(buildFilter('selected'));
 				}
+				onExportRequested?.();
 			} else {
 				const filterScope: BulkDeleteMyMessagesFilter['scope'] =
 					scope === 'inaccessible_only' ? 'inaccessible_only' : 'selected';
@@ -501,7 +553,7 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 		} finally {
 			setIsSubmitting(false);
 		}
-	}, [variant, scope, buildFilter, isSubmitting, i18n, config.successToastDescriptor, closeModal]);
+	}, [variant, scope, buildFilter, isSubmitting, i18n, config.successToastDescriptor, closeModal, onExportRequested]);
 	const dateModeOptions = useMemo(
 		() => [
 			{value: 'all_time' as const, label: i18n._(DATE_MODE_ALL_TIME_DESCRIPTOR)},
@@ -730,13 +782,13 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 			timeRangeValue = i18n._(SUMMARY_ALL_TIME_DESCRIPTOR);
 		} else if (startDate && endDate) {
 			timeRangeValue = i18n._(SUMMARY_BETWEEN_DESCRIPTOR, {
-				start: formatDateForSummary(startDate),
-				end: formatDateForSummary(endDate),
+				start: formatDateForSummary(startDate, getFormattingLocale()),
+				end: formatDateForSummary(endDate, getFormattingLocale()),
 			});
 		} else if (startDate) {
-			timeRangeValue = i18n._(SUMMARY_FROM_DESCRIPTOR, {start: formatDateForSummary(startDate)});
+			timeRangeValue = i18n._(SUMMARY_FROM_DESCRIPTOR, {start: formatDateForSummary(startDate, getFormattingLocale())});
 		} else if (endDate) {
-			timeRangeValue = i18n._(SUMMARY_UNTIL_DESCRIPTOR, {end: formatDateForSummary(endDate)});
+			timeRangeValue = i18n._(SUMMARY_UNTIL_DESCRIPTOR, {end: formatDateForSummary(endDate, getFormattingLocale())});
 		} else {
 			timeRangeValue = i18n._(SUMMARY_ALL_TIME_DESCRIPTOR);
 		}
@@ -833,12 +885,12 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 						</div>
 					)}
 				</div>
-				{config.isDelete && (
+				{config.dangerNoticeDescriptor && (
 					<div
 						className={styles.dangerNotice}
 						data-flx="user.privacy-safety-tab.data-request-modal.data-request-modal.render-confirm-step.danger-notice"
 					>
-						{i18n._(DELETE_DANGER_NOTICE_DESCRIPTOR)}
+						{i18n._(config.dangerNoticeDescriptor)}
 					</div>
 				)}
 			</div>
@@ -908,4 +960,3 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 	);
 });
 export const EXPORT_TAB_DESCRIPTION = EXPORT_TAB_DESCRIPTION_DESCRIPTOR;
-export const DELETE_TAB_DESCRIPTION = DELETE_TAB_DESCRIPTION_DESCRIPTOR;

@@ -21,7 +21,7 @@
 }
 
 .spinnerItem:not(:first-child) {
-	margin-left: 0.125rem;
+	margin-inline-start: 0.125rem;
 }
 
 .spinnerItem.small {

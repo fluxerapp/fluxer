@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
-import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
-import {SettingsTabContainer, SettingsTabContent} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
 import {
 	COPY_USER_ID_DESCRIPTOR,
@@ -200,22 +197,3 @@ export const BlockedUsersContent: React.FC = observer(() => {
 		</>
 	);
 });
-
-const BlockedUsersTab: React.FC = observer(() => {
-	return (
-		<SettingsTabContainer data-flx="user.blocked-users-tab.settings-tab-container">
-			<SettingsTabContent data-flx="user.blocked-users-tab.settings-tab-content">
-				<SettingsSection
-					id="blocked-users"
-					title={<Trans>Blocked users</Trans>}
-					description={<Trans>Blocked users can't send you friend requests or message you directly.</Trans>}
-					data-flx="user.blocked-users-tab.blocked-users"
-				>
-					<BlockedUsersContent data-flx="user.blocked-users-tab.blocked-users-content" />
-				</SettingsSection>
-			</SettingsTabContent>
-		</SettingsTabContainer>
-	);
-});
-
-export default BlockedUsersTab;

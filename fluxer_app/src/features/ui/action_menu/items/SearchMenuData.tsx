@@ -3,18 +3,13 @@
 import {
 	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
 	REVERSE_IMAGE_SEARCH_DESCRIPTOR,
-	TRANSLATE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import Translation from '@app/features/messaging/state/Translation';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
+import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {SearchProviderPickerModal} from '@app/features/search/components/modals/SearchProviderPickerModal';
 import ReverseImageSearch from '@app/features/search/state/ReverseImageSearch';
-import SearchEngine from '@app/features/search/state/SearchEngine';
-import {
-	CopyLinkIcon,
-	OpenMediaLinkIcon,
-	SearchIcon,
-	TranslateIcon,
-} from '@app/features/ui/action_menu/ContextMenuIcons';
+import {CopyLinkIcon, OpenMediaLinkIcon, SearchIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {
 	buildSearchProviderSheetItems,
 	getSearchProviderMenuState,
@@ -44,10 +39,6 @@ const DEFAULT_DESCRIPTOR = msg({
 	message: 'Default',
 	comment: 'Option label representing the default value.',
 });
-const SEARCH_THE_WEB_DESCRIPTOR = msg({
-	message: 'Search the web',
-	comment: 'Action that opens a web search for the selected text or media.',
-});
 
 interface ReverseImageSearchMenuOptions {
 	i18n: I18n;
@@ -58,12 +49,13 @@ interface ReverseImageSearchMenuOptions {
 	openLabel?: string;
 }
 
-const openReverseImageSearchWith = (engineId: string, url: string) => {
-	const target = ReverseImageSearch.buildSearchUrl(engineId, url);
+export async function openReverseImageSearchWith(engineId: string, url: string): Promise<void> {
+	const imageUrl = attachmentUrlMayNeedRefresh(url, Date.now()) ? await AttachmentUrlRefresher.refresh(url) : url;
+	const target = ReverseImageSearch.buildSearchUrl(engineId, imageUrl);
 	if (target) {
-		void openExternalUrl(target);
+		await openExternalUrl(target);
 	}
-};
+}
 
 export function buildReverseImageSearchMenuGroups(
 	imageUrl: string | null | undefined,
@@ -108,11 +100,11 @@ export function buildReverseImageSearchMenuGroups(
 			},
 		});
 	}
-	if (state.enabledEngines.length > 0) {
+	if (state.enabledEngines.length > 0 && !isApiAttachmentUrl(imageUrl)) {
 		const handleDefault = () => {
 			const defaultEngine = ReverseImageSearch.defaultEngine;
 			if (defaultEngine) {
-				openReverseImageSearchWith(defaultEngine.id, imageUrl);
+				void openReverseImageSearchWith(defaultEngine.id, imageUrl);
 				onClose();
 				return;
 			}
@@ -122,7 +114,7 @@ export function buildReverseImageSearchMenuGroups(
 				modal(() => (
 					<SearchProviderPickerModal
 						mode="image"
-						onPick={(engineId) => openReverseImageSearchWith(engineId, targetImageUrl)}
+						onPick={(engineId) => void openReverseImageSearchWith(engineId, targetImageUrl)}
 						data-flx="ui.action-menu.items.search-menu-data.handle-default.search-provider-picker-modal"
 					/>
 				)),
@@ -137,7 +129,7 @@ export function buildReverseImageSearchMenuGroups(
 				),
 				onDefaultSearch: handleDefault,
 				onSearchWithEngine: (engine) => {
-					openReverseImageSearchWith(engine.id, imageUrl);
+					void openReverseImageSearchWith(engine.id, imageUrl);
 					onClose();
 				},
 			}),
@@ -145,106 +137,4 @@ export function buildReverseImageSearchMenuGroups(
 	}
 	if (items.length === 0) return [];
 	return [{items}];
-}
-
-interface WebSearchMenuOptions {
-	i18n: I18n;
-	onClose: () => void;
-}
-
-const openWebSearchWith = (engineId: string, query: string) => {
-	const url = SearchEngine.buildSearchUrl(engineId, query);
-	if (url) {
-		void openExternalUrl(url);
-	}
-};
-
-export function buildWebSearchMenuGroup(selectionText: string, options: WebSearchMenuOptions): MenuGroupType | null {
-	if (!selectionText) return null;
-	const {i18n, onClose} = options;
-	const state = getSearchProviderMenuState(SearchEngine);
-	if (state.enabledEngines.length === 0) return null;
-	const handleDefault = () => {
-		const defaultEngine = SearchEngine.defaultEngine;
-		if (defaultEngine) {
-			openWebSearchWith(defaultEngine.id, selectionText);
-			onClose();
-			return;
-		}
-		const queryToSearch = selectionText;
-		ModalCommands.pushAfterBottomSheetClose(
-			onClose,
-			modal(() => (
-				<SearchProviderPickerModal
-					mode="text"
-					onPick={(engineId) => openWebSearchWith(engineId, queryToSearch)}
-					data-flx="ui.action-menu.items.search-menu-data.handle-default.search-provider-picker-modal--2"
-				/>
-			)),
-		);
-	};
-	const items = buildSearchProviderSheetItems(state, {
-		defaultLabel: i18n._(SEARCH_THE_WEB_DESCRIPTOR),
-		defaultSubtext: i18n._(DEFAULT_DESCRIPTOR),
-		renderIcon: () => (
-			<SearchIcon size={20} data-flx="ui.action-menu.items.search-menu-data.render-icon.search-icon--2" />
-		),
-		onDefaultSearch: handleDefault,
-		onSearchWithEngine: (engine) => {
-			openWebSearchWith(engine.id, selectionText);
-			onClose();
-		},
-	});
-	return {items};
-}
-
-interface TranslateMenuOptions {
-	i18n: I18n;
-	onClose: () => void;
-}
-
-const openTranslateWith = (engineId: string, query: string) => {
-	const url = Translation.buildSearchUrl(engineId, query);
-	if (url) {
-		void openExternalUrl(url);
-	}
-};
-
-export function buildTranslateMenuGroup(selectionText: string, options: TranslateMenuOptions): MenuGroupType | null {
-	if (!selectionText) return null;
-	const {i18n, onClose} = options;
-	const state = getSearchProviderMenuState(Translation);
-	if (state.enabledEngines.length === 0) return null;
-	const handleDefault = () => {
-		const defaultEngine = Translation.defaultEngine;
-		if (defaultEngine) {
-			openTranslateWith(defaultEngine.id, selectionText);
-			onClose();
-			return;
-		}
-		const queryToTranslate = selectionText;
-		ModalCommands.pushAfterBottomSheetClose(
-			onClose,
-			modal(() => (
-				<SearchProviderPickerModal
-					mode="translate"
-					onPick={(engineId) => openTranslateWith(engineId, queryToTranslate)}
-					data-flx="ui.action-menu.items.search-menu-data.handle-default.search-provider-picker-modal--3"
-				/>
-			)),
-		);
-	};
-	const items = buildSearchProviderSheetItems(state, {
-		defaultLabel: i18n._(TRANSLATE_DESCRIPTOR),
-		defaultSubtext: i18n._(DEFAULT_DESCRIPTOR),
-		renderIcon: () => (
-			<TranslateIcon size={20} data-flx="ui.action-menu.items.search-menu-data.render-icon.translate-icon" />
-		),
-		onDefaultSearch: handleDefault,
-		onSearchWithEngine: (engine) => {
-			openTranslateWith(engine.id, selectionText);
-			onClose();
-		},
-	});
-	return {items};
 }

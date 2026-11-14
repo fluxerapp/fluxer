@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {fromBinary, toBinary} from '@bufbuild/protobuf';
-import {type SyncedPreferences, SyncedPreferencesSchema} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
-import {base64ToUint8Array, uint8ArrayToBase64} from 'uint8array-extras';
-
-const EMPTY_BYTES = new Uint8Array();
+import {
+	createEmptySyncedPreferences,
+	type SyncedPreferences,
+	SyncedPreferencesSchema,
+} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 
 export type SyncedPreferencesField = Exclude<keyof SyncedPreferences, '$typeName' | '$unknown'>;
 
@@ -18,7 +19,7 @@ interface TopLevelFieldChunk {
 export const SYNCED_PREFERENCES_FIELDS = SyncedPreferencesSchema.fields.map(
 	(field) => field.localName as SyncedPreferencesField,
 );
-export const SYNCED_PREFERENCES_FIELD_NAMES = new Set<string>(SYNCED_PREFERENCES_FIELDS.map(String));
+const SYNCED_PREFERENCES_FIELD_NAMES = new Set<string>(SYNCED_PREFERENCES_FIELDS.map(String));
 const FIELD_TO_NUMBER = new Map<SyncedPreferencesField, number>(
 	SyncedPreferencesSchema.fields.map((field) => [field.localName as SyncedPreferencesField, field.number]),
 );
@@ -178,44 +179,6 @@ export function preferencesFromBytes(bytes: Uint8Array): SyncedPreferences {
 	return fromBinary(SyncedPreferencesSchema, bytes);
 }
 
-export function createEmptySyncedPreferences(): SyncedPreferences {
-	return fromBinary(SyncedPreferencesSchema, EMPTY_BYTES);
-}
-
-export function encodeSyncedPreferences(preferences: SyncedPreferences): string {
-	const bytes = preferencesToBytes(preferences);
-	if (bytes.byteLength === 0) return '';
-	return uint8ArrayToBase64(bytes);
-}
-
-export function decodeSyncedPreferencesBytes(encoded: string | null | undefined): Uint8Array {
-	if (!encoded) return EMPTY_BYTES;
-	try {
-		return base64ToUint8Array(encoded);
-	} catch (error) {
-		throw new SyncedPreferencesDecodeError(
-			error instanceof Error ? `invalid base64: ${error.message}` : 'invalid base64',
-		);
-	}
-}
-
-export function decodeSyncedPreferences(encoded: string | null | undefined): SyncedPreferences {
-	try {
-		return preferencesFromBytes(decodeSyncedPreferencesBytes(encoded));
-	} catch (error) {
-		if (error instanceof SyncedPreferencesDecodeError) throw error;
-		throw new SyncedPreferencesDecodeError(error instanceof Error ? error.message : 'invalid synced preferences');
-	}
-}
-
-export function decodeSyncedPreferencesLenient(encoded: string | null | undefined): SyncedPreferences {
-	try {
-		return decodeSyncedPreferences(encoded);
-	} catch {
-		return createEmptySyncedPreferences();
-	}
-}
-
 export function changedSyncedPreferenceFields(
 	left: SyncedPreferences,
 	right: SyncedPreferences,
@@ -225,15 +188,6 @@ export function changedSyncedPreferenceFields(
 
 export function syncedPreferencesEqual(left: SyncedPreferences, right: SyncedPreferences): boolean {
 	return changedFieldNumbers(preferencesToBytes(left), preferencesToBytes(right)).length === 0;
-}
-
-export function copySyncedPreferenceField(
-	target: SyncedPreferences,
-	source: SyncedPreferences,
-	field: SyncedPreferencesField,
-): SyncedPreferences {
-	const bytes = replaceField(preferencesToBytes(target), preferencesToBytes(source), fieldNumber(field));
-	return preferencesFromBytes(bytes);
 }
 
 export function mergeIncomingSyncedPreferences(args: {
@@ -289,15 +243,4 @@ export function mergeIncomingSyncedPreferences(args: {
 		wire: preferencesFromBytes(wire),
 		dirtyFields: toFieldNames(dirtyFieldNumbers),
 	};
-}
-
-export function isEmptySyncedPreferencesEncoded(encoded: string | null | undefined): boolean {
-	return !encoded;
-}
-
-export class SyncedPreferencesDecodeError extends Error {
-	constructor(message: string) {
-		super(`failed to decode synced_preferences: ${message}`);
-		this.name = 'SyncedPreferencesDecodeError';
-	}
 }

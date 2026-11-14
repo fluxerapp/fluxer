@@ -1,0 +1,60 @@
+diff --git a/dist/private/utils/domHelpers.cjs b/dist/private/utils/domHelpers.cjs
+index a3c1264bc62bd5fc3938dc6c175e7a1e7a81646b..2505e9cb6742f3e270cc36ddeaed4f823dc06777 100644
+--- a/dist/private/utils/domHelpers.cjs
++++ b/dist/private/utils/domHelpers.cjs
+@@ -49,12 +49,12 @@ function $49582955cc364b1c$export$af51f0f06c0f328a(value) {
+ }
+ function $49582955cc364b1c$export$f531f92e2a15358f(target, event, listener, options) {
+     if (listener == null || target == null) return ()=>{};
+-    let eventTargets = Array.isArray(target) ? target : [
++    let eventTargets = (Array.isArray(target) ? target : [
+         target
+-    ];
++    ]).filter((eventTarget)=>typeof eventTarget?.addEventListener === 'function');
+     for (let eventTarget of eventTargets)eventTarget.addEventListener(event, listener, options);
+     return ()=>{
+-        for (let eventTarget of eventTargets)eventTarget.removeEventListener(event, listener, options);
++        for (let eventTarget of eventTargets)if (typeof eventTarget.removeEventListener === 'function') eventTarget.removeEventListener(event, listener, options);
+     };
+ }
+ function $49582955cc364b1c$export$37a5fde709c1db82(target, property, value, priority) {
+diff --git a/dist/private/utils/domHelpers.js b/dist/private/utils/domHelpers.js
+index 24ce2d4b97cdbdd991811847d81c235ee732770d..a49c86a520d3701d629e2fbda254231941c4ff02 100644
+--- a/dist/private/utils/domHelpers.js
++++ b/dist/private/utils/domHelpers.js
+@@ -39,12 +39,12 @@ function $cc3c3666b64debad$export$af51f0f06c0f328a(value) {
+ }
+ function $cc3c3666b64debad$export$f531f92e2a15358f(target, event, listener, options) {
+     if (listener == null || target == null) return ()=>{};
+-    let eventTargets = Array.isArray(target) ? target : [
++    let eventTargets = (Array.isArray(target) ? target : [
+         target
+-    ];
++    ]).filter((eventTarget)=>typeof eventTarget?.addEventListener === 'function');
+     for (let eventTarget of eventTargets)eventTarget.addEventListener(event, listener, options);
+     return ()=>{
+-        for (let eventTarget of eventTargets)eventTarget.removeEventListener(event, listener, options);
++        for (let eventTarget of eventTargets)if (typeof eventTarget.removeEventListener === 'function') eventTarget.removeEventListener(event, listener, options);
+     };
+ }
+ function $cc3c3666b64debad$export$37a5fde709c1db82(target, property, value, priority) {
+diff --git a/dist/private/utils/domHelpers.mjs b/dist/private/utils/domHelpers.mjs
+index dc2ee7fcee4ab3b07a15704321e7d2b95c716554..15c39cb64f67462b153da81026140772a943fe40 100644
+--- a/dist/private/utils/domHelpers.mjs
++++ b/dist/private/utils/domHelpers.mjs
+@@ -37,12 +37,12 @@ function $d447af545b77c9f1$export$af51f0f06c0f328a(value) {
+ }
+ function $d447af545b77c9f1$export$f531f92e2a15358f(target, event, listener, options) {
+     if (listener == null || target == null) return ()=>{};
+-    let eventTargets = Array.isArray(target) ? target : [
++    let eventTargets = (Array.isArray(target) ? target : [
+         target
+-    ];
++    ]).filter((eventTarget)=>typeof eventTarget?.addEventListener === 'function');
+     for (let eventTarget of eventTargets)eventTarget.addEventListener(event, listener, options);
+     return ()=>{
+-        for (let eventTarget of eventTargets)eventTarget.removeEventListener(event, listener, options);
++        for (let eventTarget of eventTargets)if (typeof eventTarget.removeEventListener === 'function') eventTarget.removeEventListener(event, listener, options);
+     };
+ }
+ function $d447af545b77c9f1$export$37a5fde709c1db82(target, property, value, priority) {

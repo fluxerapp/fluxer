@@ -25,6 +25,12 @@ export const VoiceStateResponse = z.object({
 		.optional()
 		.describe('The stream keys the user is currently viewing'),
 	version: Int32Type.optional().describe('The voice state version for ordering updates'),
+	p2p: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether this connection exchanges media peer-to-peer. A channel or call is peer-to-peer iff it has at least one voice state and every voice state in it has p2p=true.',
+		),
 	e2ee_capable: z
 		.boolean()
 		.optional()
@@ -41,6 +47,7 @@ export const ReadStateResponse = z.object({
 	last_message_id: SnowflakeStringType.nullable().describe('The ID of the last message read'),
 	last_pin_timestamp: z.string().nullable().describe('ISO8601 timestamp of the last pinned message acknowledged'),
 	version: UnsignedInt64StringType.optional().describe('Read-state version for ordering updates as a decimal uint64'),
+	flags: Int32Type.optional().describe('Server-stamped read state flags, present only on thread and forum read states'),
 });
 
 export type ReadStateResponse = z.infer<typeof ReadStateResponse>;

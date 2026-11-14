@@ -26,21 +26,27 @@
 -spec handle_voice_disconnect(
     binary() | undefined, term(), integer(), voice_state_map() | term(), guild_state()
 ) -> voice_reply().
-handle_voice_disconnect(undefined, _SessionId, _UserId, _VoiceStates, State) ->
-    {reply, gateway_errors:error(voice_missing_connection_id), State};
+handle_voice_disconnect(undefined, SessionId, UserId, VoiceStates0, State) ->
+    case guild_voice_connection_normalize:normalize_session_id(SessionId) of
+        undefined ->
+            {reply, gateway_errors:error(voice_missing_connection_id), State};
+        RequestSessionId ->
+            VoiceStates = voice_state_utils:ensure_voice_states(VoiceStates0),
+            disconnect_all_user_connections(UserId, RequestSessionId, VoiceStates, State)
+    end;
 handle_voice_disconnect(ConnectionId, _SessionId, UserId, VoiceStates0, State) ->
     VoiceStates = voice_state_utils:ensure_voice_states(VoiceStates0),
     case maps:get(ConnectionId, VoiceStates, undefined) of
         undefined ->
-            clear_missing_connection_success(ConnectionId, State);
+            clear_missing_connection_success(ConnectionId, UserId, State);
         OldVoiceState ->
             handle_existing_voice_state(ConnectionId, UserId, OldVoiceState, VoiceStates, State)
     end.
 
--spec clear_missing_connection_success(binary(), guild_state()) -> voice_reply().
-clear_missing_connection_success(ConnectionId, State) ->
+-spec clear_missing_connection_success(binary(), integer(), guild_state()) -> voice_reply().
+clear_missing_connection_success(ConnectionId, UserId, State) ->
     State1 = guild_voice_disconnect_broadcast:clear_pending_voice_connection(
-        ConnectionId, State
+        ConnectionId, UserId, State
     ),
     {reply, #{success => true}, State1}.
 
@@ -98,7 +104,9 @@ do_voice_disconnect(
 -spec disconnect_voice_user(map(), guild_state()) -> voice_reply().
 disconnect_voice_user(#{user_id := UserId} = Request, State) ->
     ConnectionId = maps:get(connection_id, Request, null),
-    RequestSessionId = normalize_session_id(maps:get(session_id, Request, undefined)),
+    RequestSessionId = guild_voice_connection_normalize:normalize_session_id(
+        maps:get(session_id, Request, undefined)
+    ),
     VoiceStates = voice_state_utils:voice_states(State),
     case ConnectionId of
         null ->
@@ -149,7 +157,7 @@ clear_recently_disconnected_connections(UserVoiceStates, State) ->
 disconnect_specific_connection(UserId, ConnId, VoiceStates, State) ->
     case maps:get(ConnId, VoiceStates, undefined) of
         undefined ->
-            clear_missing_connection_success(ConnId, State);
+            clear_missing_connection_success(ConnId, UserId, State);
         VoiceState ->
             handle_specific_disconnect(UserId, ConnId, VoiceState, VoiceStates, State)
     end.
@@ -238,8 +246,11 @@ cleanup_virtual_channel_without_connection(UserId, ChannelId, AccState) ->
         true ->
             AccState;
         false ->
-            ok = maybe_dispatch_visibility_remove(UserId, ChannelId, AccState),
-            guild_virtual_channel_access:remove_virtual_access(UserId, ChannelId, AccState)
+            State1 = guild_virtual_channel_access:remove_virtual_access(
+                UserId, ChannelId, AccState
+            ),
+            ok = maybe_dispatch_visibility_remove(UserId, ChannelId, AccState, State1),
+            State1
     end.
 
 -spec has_pending_or_preserve(integer(), integer(), guild_state()) -> boolean().
@@ -260,11 +271,10 @@ matching_user_voice_states(UserId, RequestSessionId, VoiceStates) ->
 voice_state_session_matches(_VoiceState, undefined) ->
     true;
 voice_state_session_matches(VoiceState, RequestSessionId) ->
-    normalize_session_id(maps:get(<<"session_id">>, VoiceState, undefined)) =:=
+    guild_voice_connection_normalize:normalize_session_id(
+        maps:get(<<"session_id">>, VoiceState, undefined)
+    ) =:=
         RequestSessionId.
-
--spec normalize_session_id(term()) -> binary() | undefined.
-normalize_session_id(Value) -> voice_state_utils:normalize_session_id(Value).
 
 -spec maybe_cleanup_after_disconnect(integer(), integer(), guild_state()) -> guild_state().
 maybe_cleanup_after_disconnect(UserId, ChannelId, State) ->
@@ -306,9 +316,13 @@ voice_connection_matches(VoiceState, UserId, ChannelIdBin) ->
     voice_state_utils:voice_state_user_id(VoiceState) =:= UserId andalso
         maps:get(<<"channel_id">>, VoiceState, null) =:= ChannelIdBin.
 
--spec maybe_dispatch_visibility_remove(integer(), integer(), guild_state()) -> ok.
-maybe_dispatch_visibility_remove(UserId, ChannelId, State) ->
-    case guild_virtual_channel_access:has_virtual_access(UserId, ChannelId, State) of
+-spec maybe_dispatch_visibility_remove(integer(), integer(), guild_state(), guild_state()) ->
+    ok.
+maybe_dispatch_visibility_remove(UserId, ChannelId, PrevState, State) ->
+    case
+        guild_virtual_channel_access:has_virtual_access(UserId, ChannelId, PrevState) andalso
+            not can_view_without_grant(UserId, ChannelId, State)
+    of
         true ->
             guild_virtual_channel_access:dispatch_channel_visibility_change(
                 UserId, ChannelId, remove, State
@@ -316,6 +330,11 @@ maybe_dispatch_visibility_remove(UserId, ChannelId, State) ->
         false ->
             ok
     end.
+
+-spec can_view_without_grant(integer(), integer(), guild_state()) -> boolean().
+can_view_without_grant(UserId, ChannelId, State) ->
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
+    guild_permissions_check:can_view_channel(UserId, ChannelId, Member, State).
 
 -spec maybe_force_disconnect(integer(), integer(), integer(), binary(), guild_state()) ->
     {ok, map()} | {error, term()}.
@@ -354,7 +373,7 @@ maybe_force_disconnect_voice_state(ConnectionId, VoiceState, State) ->
 resolve_guild_id(VoiceState, State) ->
     case voice_state_utils:voice_state_guild_id(VoiceState) of
         undefined ->
-            guild_voice_connection_normalize:normalize_positive_snowflake(
+            snowflake_id:parse_maybe(
                 maps:get(id, State, undefined)
             );
         GuildId ->

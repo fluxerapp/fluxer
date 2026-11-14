@@ -5,8 +5,7 @@ import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 
 type VoiceLayoutCommand =
 	| {kind: 'layout-mode'; mode: LayoutMode}
-	| {kind: 'pin-participant'; identity: string | null; source?: PinnedParticipantSource}
-	| {kind: 'user-override'};
+	| {kind: 'pin-participant'; identity: string | null; source?: PinnedParticipantSource};
 
 function dispatchVoiceLayoutCommand(command: VoiceLayoutCommand): void {
 	switch (command.kind) {
@@ -15,9 +14,6 @@ function dispatchVoiceLayoutCommand(command: VoiceLayoutCommand): void {
 			return;
 		case 'pin-participant':
 			VoiceCallLayout.setPinnedParticipant(command.identity, command.source);
-			return;
-		case 'user-override':
-			VoiceCallLayout.markUserOverride();
 			return;
 	}
 }
@@ -28,8 +24,4 @@ export function setLayoutMode(mode: LayoutMode): void {
 
 export function setPinnedParticipant(identity: string | null, source?: PinnedParticipantSource): void {
 	dispatchVoiceLayoutCommand({kind: 'pin-participant', identity, source});
-}
-
-export function markUserOverride(): void {
-	dispatchVoiceLayoutCommand({kind: 'user-override'});
 }

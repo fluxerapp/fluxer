@@ -37,19 +37,6 @@
 	padding: 0.25rem;
 }
 
-.gifBadge {
-	position: absolute;
-	top: 0.25rem;
-	left: 0.25rem;
-	border-radius: var(--radius-sm);
-	background-color: rgba(0, 0, 0, 0.6);
-	padding: 0.125rem 0.25rem;
-	font-weight: 600;
-	font-size: 0.625rem;
-	color: white;
-	line-height: 1;
-}
-
 .stickerInfo {
 	flex: 1;
 }

@@ -4,7 +4,6 @@ import {Routes} from '@app/app/Routes';
 import {isAutoRedirectExemptPath} from '@app/app/router/RouterConstants';
 import {KeyboardModeListener} from '@app/features/app/components/layout/KeyboardModeListener';
 import {MobileBottomNav} from '@app/features/app/components/layout/MobileBottomNav';
-import {SelfHostedSetupWizardGate} from '@app/features/app/components/setup/SelfHostedSetupWizardGate';
 import {AppSkeleton} from '@app/features/app/components/skeleton/AppSkeleton';
 import {useLoadingSkeletonRetention} from '@app/features/app/hooks/useLoadingSkeletonRetention';
 import {useSkeletonLayoutMemoryCapture} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
@@ -15,18 +14,22 @@ import {
 import {isClientBooting} from '@app/features/app/state/ClientReadiness';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
+import {AccountHandoffArrival} from '@app/features/auth/components/AccountHandoffArrival';
 import {isHandoffRequest} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
-import AccountManager from '@app/features/auth/state/AccountManager';
+import {endAccountHandoffArrival, isAccountHandoffArrival} from '@app/features/auth/state/AccountHandoffCapture';
+import Accounts from '@app/features/auth/state/Accounts';
 import Authentication from '@app/features/auth/state/Authentication';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
+import {useLastLocationPersistence} from '@app/features/navigation/hooks/useLastLocationPersistence';
 import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
 import {navigateToWithMobileHistory} from '@app/features/navigation/utils/MobileNavigation';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import * as PushSubscriptionService from '@app/features/platform/push/PushSubscriptionService';
 import SessionManager from '@app/features/platform/state/AuthSession';
+import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {useHolidayClasses} from '@app/features/theme/hooks/useHolidayClasses';
 import Location from '@app/features/ui/state/Location';
@@ -37,6 +40,12 @@ import Users from '@app/features/user/state/Users';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+
+const SelfHostedSetupWizardGate = createNamedLoadableComponent({
+	displayName: 'SelfHostedSetupWizardGate',
+	load: async () =>
+		(await import('@app/features/app/components/setup/SelfHostedSetupWizardGate')).SelfHostedSetupWizardGate,
+});
 
 const logger = new Logger('RootComponent');
 export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({children}) => {
@@ -58,14 +67,17 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 	const hasStartedRestoreRef = useRef(false);
 	const pathname = location.pathname;
 	const isHandoff = isHandoffRequest(location.searchParams);
+	const isHandoffArrival = isAccountHandoffArrival(pathname);
 	const isAutoRedirectExemptRoute = isAutoRedirectExemptPath(pathname);
 	const shouldSkipAutoRedirect = isAutoRedirectExemptRoute || (pathname === Routes.LOGIN && isHandoff);
 	const isStandaloneRoute = useMemo(() => {
 		return (
+			isHandoffArrival ||
 			pathname.startsWith(Routes.LOGIN) ||
 			pathname.startsWith(Routes.REGISTER) ||
 			pathname.startsWith(Routes.FORGOT_PASSWORD) ||
 			pathname.startsWith(Routes.RESET_PASSWORD) ||
+			pathname.startsWith(Routes.RECOVER_ACCOUNT) ||
 			pathname.startsWith(Routes.VERIFY_EMAIL) ||
 			pathname.startsWith(Routes.AUTHORIZE_IP) ||
 			pathname.startsWith(Routes.EMAIL_REVERT) ||
@@ -73,17 +85,16 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			pathname.startsWith(Routes.SSO_CALLBACK) ||
 			pathname.startsWith(Routes.REPORT) ||
 			pathname.startsWith(Routes.PREMIUM_CALLBACK) ||
-			pathname.startsWith(Routes.AGE_VERIFICATION_CALLBACK) ||
 			pathname.startsWith(Routes.CONNECTION_CALLBACK) ||
 			pathname === '/__notfound' ||
 			pathname.startsWith('/invite/') ||
 			pathname.startsWith('/gift/') ||
 			pathname.startsWith('/theme/')
 		);
-	}, [pathname]);
+	}, [isHandoffArrival, pathname]);
 	const shouldShowSelfHostedSetup = requiresSelfHostedSetup && !isStandaloneRoute;
 	const shouldBypassGateway = requiresSelfHostedSetup || isStandaloneRoute;
-	const authToken = Authentication.authToken;
+	const authToken = SessionManager.token;
 	const shouldShowLoadingSkeleton = getShouldShowLoadingSkeleton({
 		booting: isClientBooting(),
 		isAuthenticated,
@@ -101,7 +112,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 	if (
 		isAuthenticated &&
 		isLocationStateHydrated &&
-		!AccountManager.isSwitching &&
+		!Accounts.isSwitching &&
 		pathname === Routes.ME &&
 		!hasRestoredLocation
 	) {
@@ -114,7 +125,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		if (
 			!isAuthenticated ||
 			!isLocationStateHydrated ||
-			AccountManager.isSwitching ||
+			Accounts.isSwitching ||
 			pathname !== Routes.ME ||
 			hasRestoredLocation
 		) {
@@ -141,7 +152,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 	}, [isAuthenticated]);
 	const normalizeInternalUrl = useCallback((rawUrl: string): string => {
 		try {
-			const u = new URL(rawUrl, window.location.origin);
+			const u = resolveDocumentURLFromRoot(rawUrl);
 			if (u.origin === window.location.origin) {
 				return u.pathname + u.search + u.hash;
 			}
@@ -156,7 +167,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 	}, [shouldDismissTransientOverlays]);
 	useEffect(() => {
 		if (!SessionManager.isInitialized) return;
-		if (AccountManager.isSwitching) return;
+		if (Accounts.isSwitching) return;
 		const isAuth = Authentication.isAuthenticated;
 		if (isAuth && isStandaloneRoute) return;
 		if (shouldBypassGateway) {
@@ -166,8 +177,16 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 				}
 				return;
 			}
-			if (GatewayConnection.isConnected || GatewayConnection.isConnecting || GatewayConnection.socket) {
-				GatewayConnection.logout();
+			if (requiresSelfHostedSetup && pathname === Routes.LOGIN && pendingRedirectRef.current) {
+				RouterUtils.replaceWith(pendingRedirectRef.current);
+				pendingRedirectRef.current = null;
+			}
+			if (
+				GatewaySessions.foregroundConnection.isConnected ||
+				GatewaySessions.foregroundConnection.isConnecting ||
+				GatewaySessions.foregroundConnection.socket
+			) {
+				GatewaySessions.foregroundConnection.logout();
 			}
 			return;
 		}
@@ -179,20 +198,17 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			RouterUtils.replaceWith(setPathQueryParams(Routes.LOGIN, {redirect_to: pendingRedirectRef.current}));
 			return;
 		}
-		if (isAuth && Initialization.isLoading) {
-			void AuthenticationCommands.ensureSessionStarted();
-		}
 	}, [
 		SessionManager.isInitialized,
 		authToken,
-		AccountManager.isSwitching,
+		Accounts.isSwitching,
 		Authentication.isAuthenticated,
-		GatewayConnection.isConnected,
-		GatewayConnection.isConnecting,
-		Initialization.isLoading,
+		GatewaySessions.foregroundConnection.isConnected,
+		GatewaySessions.foregroundConnection.isConnecting,
 		shouldBypassGateway,
 		shouldSkipAutoRedirect,
 		pendingRedirectRef,
+		requiresSelfHostedSetup,
 	]);
 	useEffect(() => {
 		if (!Authentication.isAuthenticated) return;
@@ -205,7 +221,11 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		pendingRedirectRef.current = null;
 	}, [Authentication.isAuthenticated, location.pathname]);
 	useEffect(() => {
+		if (pathname !== Routes.ME) endAccountHandoffArrival();
+	}, [pathname]);
+	useEffect(() => {
 		if (
+			isHandoffArrival ||
 			!isAuthenticated ||
 			hasRestoredLocation ||
 			hasStartedRestoreRef.current ||
@@ -214,7 +234,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		) {
 			return;
 		}
-		if (location.pathname === Routes.HOME) {
+		if (location.pathname === Routes.HOME || location.pathname === Routes.APP) {
 			return;
 		}
 		hasStartedRestoreRef.current = true;
@@ -230,6 +250,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			}
 		}
 	}, [
+		isHandoffArrival,
 		isAuthenticated,
 		hasRestoredLocation,
 		mobileLayoutState.enabled,
@@ -237,12 +258,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		canNavigateToProtectedRoutes,
 		location.pathname,
 	]);
-	useEffect(() => {
-		const shouldSaveLocation = Routes.isChannelRoute(location.pathname) || Routes.isSpecialPage(location.pathname);
-		if (isAuthenticated && shouldSaveLocation) {
-			Location.saveLocation(location.pathname);
-		}
-	}, [isAuthenticated, location.pathname]);
+	useLastLocationPersistence(isHandoffArrival ? null : location.pathname);
 	useEffect(() => {
 		if (!isAuthenticated || !hasRestoredLocation) return;
 		const previousMobileLayoutState = previousMobileLayoutStateRef.current;
@@ -296,11 +312,22 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 				}
 				lastNotificationNavRef.current = {ts: now, key};
 				void (async () => {
-					if (targetUserId && targetUserId !== AccountManager.currentUserId && AccountManager.canSwitchAccounts) {
+					const targetAccountKey =
+						targetUserId == null ? null : (Accounts.getAccount(targetUserId)?.storageKey ?? null);
+					if (targetUserId != null && targetUserId !== Accounts.currentUserId) {
+						if (targetAccountKey == null || !Accounts.canSwitchAccounts) {
+							logger.error('Cannot activate the notification target account', {targetUserId});
+							return;
+						}
 						try {
-							await AccountManager.switchToAccount(targetUserId);
+							await Accounts.switchToAccount(targetAccountKey);
 						} catch (error) {
 							logger.error('Failed to switch account for notification', error);
+							return;
+						}
+						if (Accounts.currentUserId !== targetUserId) {
+							logger.error('Notification target account was not activated', {targetUserId});
+							return;
 						}
 					}
 					if (mobileLayoutState.enabled) {
@@ -326,7 +353,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			if (urlParams.get('fromNotification') === '1') {
 				const newParams = new URLSearchParams(urlParams);
 				newParams.delete('fromNotification');
-				const cleanUrl = new URL(location.pathname, window.location.origin);
+				const cleanUrl = resolveDocumentURLFromRoot(location.pathname);
 				cleanUrl.search = newParams.toString();
 				const cleanPath = `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`;
 				if (mobileLayoutState.enabled) {
@@ -349,10 +376,12 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		navigateWithHistoryStack,
 		normalizeInternalUrl,
 	]);
-	const showBottomNav = shouldShowMobileBottomNav({
-		mobileLayoutEnabled: mobileLayoutState.enabled,
-		pathname,
-	});
+	const showBottomNav =
+		!isHandoffArrival &&
+		shouldShowMobileBottomNav({
+			mobileLayoutEnabled: mobileLayoutState.enabled,
+			pathname,
+		});
 	if (shouldShowSelfHostedSetup) {
 		return <SelfHostedSetupWizardGate data-flx="app.router.root-component.self-hosted-setup-wizard-gate" />;
 	}
@@ -361,7 +390,11 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			{!shouldShowLoadingSkeleton && (
 				<>
 					<KeyboardModeListener data-flx="app.router.root-component.keyboard-mode-listener" />
-					{children}
+					{isHandoffArrival ? (
+						<AccountHandoffArrival data-flx="app.router.root-component.account-handoff-arrival" />
+					) : (
+						children
+					)}
 					{showBottomNav && currentUser && (
 						<MobileBottomNav currentUser={currentUser} data-flx="app.router.root-component.mobile-bottom-nav" />
 					)}
@@ -369,7 +402,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			)}
 			{(shouldShowLoadingSkeleton || isLoadingSkeletonRetained) && (
 				<AppSkeleton
-					key={`loading-skeleton:${AccountManager.currentUserId ?? 'unauthenticated'}`}
+					key={`loading-skeleton:${Accounts.currentUserId ?? 'unauthenticated'}`}
 					effectivePathname={effectiveSkeletonPathname ?? pendingRestorableSkeletonPathname ?? pathname}
 					isExiting={!shouldShowLoadingSkeleton}
 					onTransitionEnd={handleLoadingSkeletonTransitionEnd}

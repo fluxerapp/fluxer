@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {trackSearchTask} from '@app/api/search/SearchTaskTracker';
 import type {ISearchAdapter, SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
-import {trackSearchTask} from './SearchTaskTracker';
 
 export abstract class SearchAdapterServiceBase<
 	TFilters,
 	TDocument,
 	TAdapter extends ISearchAdapter<TFilters, TDocument>,
 > {
-	protected readonly adapter: TAdapter;
-
-	protected constructor(adapter: TAdapter) {
-		this.adapter = adapter;
-	}
+	constructor(protected readonly adapter: TAdapter) {}
 
 	initialize(): Promise<void> {
 		return this.adapter.initialize();

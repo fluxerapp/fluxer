@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserHarvestRow} from '@app/api/database/types/UserTypes';
 import type {HarvestStatus, HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
-import type {UserID} from '../BrandedTypes';
-import type {UserHarvestRow} from '../database/types/UserTypes';
 
 export class UserHarvest {
 	userId: UserID;
 	harvestId: bigint;
 	requestedAt: Date;
+	attemptId: string | null;
 	startedAt: Date | null;
 	completedAt: Date | null;
 	failedAt: Date | null;
+	terminalFailedAt: Date | null;
 	storageKey: string | null;
 	fileSize: bigint | null;
 	progressPercent: number;
@@ -22,9 +24,11 @@ export class UserHarvest {
 		this.userId = row.user_id;
 		this.harvestId = row.harvest_id;
 		this.requestedAt = row.requested_at;
+		this.attemptId = row.attempt_id ?? null;
 		this.startedAt = row.started_at ?? null;
 		this.completedAt = row.completed_at ?? null;
 		this.failedAt = row.failed_at ?? null;
+		this.terminalFailedAt = row.terminal_failed_at ?? null;
 		this.storageKey = row.storage_key ?? null;
 		this.fileSize = row.file_size ?? null;
 		this.progressPercent = row.progress_percent;
@@ -38,9 +42,11 @@ export class UserHarvest {
 			user_id: this.userId,
 			harvest_id: this.harvestId,
 			requested_at: this.requestedAt,
+			attempt_id: this.attemptId,
 			started_at: this.startedAt,
 			completed_at: this.completedAt,
 			failed_at: this.failedAt,
+			terminal_failed_at: this.terminalFailedAt,
 			storage_key: this.storageKey,
 			file_size: this.fileSize,
 			progress_percent: this.progressPercent,

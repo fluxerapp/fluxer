@@ -3,7 +3,7 @@
 import type * as React from 'react';
 
 export type SearchParamsInput = Record<string, string | ReadonlyArray<string>>;
-export type NavigateDestination =
+type NavigateDestination =
 	| string
 	| {
 			to: string;
@@ -55,7 +55,7 @@ export interface RouteComponentProps {
 	url: URL;
 }
 
-export interface RouteLayoutProps extends RouteComponentProps {
+interface RouteLayoutProps extends RouteComponentProps {
 	children: React.ReactNode;
 }
 
@@ -79,7 +79,6 @@ export interface Route extends Omit<RouteConfig, 'pattern'> {
 export interface RouterOptions {
 	routes: Array<RouteConfig>;
 	history?: HistoryAdapter;
-	baseHref?: string;
 	notFoundRouteId?: string;
 	scrollRestoration?: ScrollBehavior;
 }
@@ -91,14 +90,12 @@ export interface Router {
 	preload(to: To): Promise<void>;
 	resolveTo(to: To, from?: URL): URL;
 	canHandle(to: To, from?: URL): boolean;
-	getRoutes(): Array<Route>;
 	destroy(): void;
 }
 
 export interface RouterProviderProps {
 	router: Router;
 	children?: React.ReactNode;
-	linkContainerRef?: React.RefObject<HTMLElement>;
 }
 
 export interface HistoryLocation {
@@ -113,6 +110,8 @@ export interface HistoryAdapter {
 	listen(listener: (location: HistoryLocation, action: 'pop') => void): () => void;
 	go(delta: number): void;
 	back(): void;
+	markBoundary(): void;
+	canGo(delta: number): boolean;
 	readonly location: URL;
 }
 

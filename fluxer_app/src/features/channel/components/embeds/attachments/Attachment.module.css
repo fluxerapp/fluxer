@@ -11,52 +11,6 @@
 	margin-top: 0;
 }
 
-.expired {
-	display: grid;
-	gap: 0.15rem;
-	padding: 0.75rem;
-	border: 0.0625rem solid var(--border-color);
-	border-radius: 0.5rem;
-	background: var(--background-secondary-alt);
-	color: var(--text-primary);
-	font-size: 0.9rem;
-}
-
-.statusBadge {
-	position: absolute;
-	top: 0.375rem;
-	right: 0.375rem;
-	display: inline-flex;
-	align-items: center;
-	gap: 0.3rem;
-	padding: 0.2rem 0.45rem;
-	border-radius: 0.75rem;
-	background: color-mix(in srgb, var(--background-secondary) 86%, transparent);
-	color: var(--text-secondary);
-	border: 0.0625rem solid color-mix(in srgb, var(--border-color) 80%, transparent);
-	font-size: 0.75rem;
-	z-index: 2;
-	backdrop-filter: blur(0.375rem);
-	opacity: 0;
-	visibility: hidden;
-}
-
-.statusIcon {
-	width: 0.875rem;
-	height: 0.875rem;
-}
-
-.statusBadgeExpired {
-	background: color-mix(in srgb, var(--background-secondary-alt) 85%, transparent);
-	color: var(--text-primary);
-}
-
-.attachmentWrapper:hover .statusBadge,
-.attachmentWrapper:focus-within .statusBadge {
-	opacity: 1;
-	visibility: visible;
-}
-
 .expiredOverlay {
 	position: absolute;
 	inset: 0;

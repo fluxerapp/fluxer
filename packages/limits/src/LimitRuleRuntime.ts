@@ -52,11 +52,19 @@ function isValidLimitValue(value: number | undefined): value is number {
 	return value >= 0;
 }
 
+function areRequiredTraitsPresent(required: Array<string> | undefined, available: Set<string>): boolean {
+	if (!required || required.length === 0) {
+		return true;
+	}
+	const normalized = new Set(Array.from(available, (trait) => trait.toLowerCase()));
+	return required.every((trait) => normalized.has(trait.toLowerCase()));
+}
+
 export function ruleMatches(filters: LimitFilter | undefined, ctx: LimitMatchContext): boolean {
 	if (!filters) {
 		return true;
 	}
-	if (!areRequiredEntriesPresent(filters.traits, ctx.traits)) {
+	if (!areRequiredTraitsPresent(filters.traits, ctx.traits)) {
 		return false;
 	}
 	if (!areRequiredEntriesPresent(filters.guildFeatures, ctx.guildFeatures)) {
@@ -72,10 +80,6 @@ export function calculateSpecificity(filters: LimitFilter | undefined): number {
 	const traitCount = filters.traits?.length ?? 0;
 	const guildFeatureCount = filters.guildFeatures?.length ?? 0;
 	return traitCount + guildFeatureCount;
-}
-
-export function compareSpecificity(a: LimitFilter | undefined, b: LimitFilter | undefined): number {
-	return calculateSpecificity(a) - calculateSpecificity(b);
 }
 
 export function sortRulesBySpecificity(rules: Array<LimitRule>): Array<LimitRule> {

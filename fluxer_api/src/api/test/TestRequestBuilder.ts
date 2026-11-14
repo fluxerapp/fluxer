@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {drainSearchTasks} from '../search/SearchTaskTracker';
-import type {ApiTestHarness} from './ApiTestHarness';
+import {drainSearchTasks} from '@app/api/search/SearchTaskTracker';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 
 export class TestRequestBuilder<TResponse = unknown> {
 	private path: string = '';
@@ -87,7 +87,7 @@ export class TestRequestBuilder<TResponse = unknown> {
 			try {
 				json = JSON.parse(text) as TResponse;
 			} catch {
-				throw new Error(`Failed to parse response as JSON: ${text}`);
+				throw new Error(`Failed to parse response as JSON: ${JSON.stringify(text)}`);
 			}
 			if (this.expectedErrorCode !== null) {
 				const actualCode = (
@@ -129,7 +129,7 @@ export class TestRequestBuilder<TResponse = unknown> {
 				try {
 					json = JSON.parse(text) as TResponse;
 				} catch {
-					throw new Error(`Failed to parse response as JSON: ${text}`);
+					throw new Error(`Failed to parse response as JSON: ${JSON.stringify(text)}`);
 				}
 			}
 			return {response, json};

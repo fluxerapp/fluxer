@@ -8,6 +8,7 @@ import {getReactionTooltip, useEmojiURL} from '@app/features/messaging/utils/Rea
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {EmojiTooltipContent} from '@app/features/ui/emoji_tooltip_content/EmojiTooltipContent';
+import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {HoverFloatingTooltipSurface} from '@app/features/ui/tooltip/HoverFloatingTooltipSurface';
 import {HoverFloatingTooltipTrigger} from '@app/features/ui/tooltip/HoverFloatingTooltipTrigger';
 import {useHoverFloatingTooltip} from '@app/features/ui/tooltip/useHoverFloatingTooltip';
@@ -15,29 +16,64 @@ import type {MessageReaction} from '@fluxer/schema/src/domains/message/MessageRe
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import type React from 'react';
-import {useEffect, useRef} from 'react';
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 
 const CLICK_TO_VIEW_ALL_REACTIONS_DESCRIPTOR = msg({
 	message: 'Click to view all reactions',
 	comment: 'Label in the reaction tooltip popout.',
 });
-export const ReactionTooltip = observer(
+interface ReactionTooltipProps {
+	message: Message;
+	reaction: MessageReaction;
+	children: React.ReactElement<
+		Record<string, unknown> & {
+			ref?: React.Ref<HTMLElement>;
+			onPointerEnter?: React.PointerEventHandler<HTMLElement>;
+			onFocus?: React.FocusEventHandler<HTMLElement>;
+		}
+	>;
+	hoveredEmojiUrl?: string | null;
+	onTooltipHoverChange?: (hovering: boolean) => void;
+}
+
+export function ReactionTooltip(props: ReactionTooltipProps) {
+	const [armed, setArmed] = useState<{focusTarget: HTMLElement | null} | null>(null);
+	if (armed !== null)
+		return (
+			<ArmedReactionTooltip
+				data-flx="messaging.reaction-tooltip.armed-reaction-tooltip"
+				{...props}
+				focusTarget={armed.focusTarget}
+			/>
+		);
+	const child = React.Children.only(props.children);
+	return React.cloneElement(child, {
+		onPointerEnter: (event: React.PointerEvent<HTMLElement>) => {
+			child.props.onPointerEnter?.(event);
+			setArmed({focusTarget: null});
+		},
+		onFocus: (event: React.FocusEvent<HTMLElement>) => {
+			child.props.onFocus?.(event);
+			setArmed({focusTarget: event.currentTarget});
+		},
+	});
+}
+
+const ArmedReactionTooltip = observer(
 	({
 		message,
 		reaction,
 		children,
 		hoveredEmojiUrl,
 		onTooltipHoverChange,
-	}: {
-		message: Message;
-		reaction: MessageReaction;
-		children: React.ReactElement<Record<string, unknown> & {ref?: React.Ref<HTMLElement>}>;
-		hoveredEmojiUrl?: string | null;
-		onTooltipHoverChange?: (hovering: boolean) => void;
-	}) => {
+		focusTarget,
+	}: ReactionTooltipProps & {focusTarget: HTMLElement | null}) => {
 		const {i18n} = useLingui();
 		const tooltip = useHoverFloatingTooltip(500);
+		const {show} = tooltip;
+		useLayoutEffect(() => {
+			if (focusTarget?.matches(':focus-within') && KeyboardMode.keyboardModeEnabled) show();
+		}, [focusTarget, show]);
 		useEffect(() => {
 			onTooltipHoverChange?.(tooltip.state.isOpen);
 		}, [tooltip.state.isOpen, onTooltipHoverChange]);

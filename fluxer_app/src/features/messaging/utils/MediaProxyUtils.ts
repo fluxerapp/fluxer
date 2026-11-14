@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	resolveDesktopDisplayResourceURL,
+	resolveDesktopDisplayResourceURLForInstance,
+	unwrapDesktopLocalResourceURL,
+} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {MEDIA_PROXY_IMAGE_SIZES, type MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 
 export const MEDIA_PROXY_IMAGE_SIZE_LADDER = MEDIA_PROXY_IMAGE_SIZES;
@@ -92,16 +97,27 @@ function getFitInsideProxyOptions(options: FitInsideMediaProxyOptions): MediaPro
 
 export function buildMediaProxyURL(originalUrl: string, options: MediaProxyOptions = {}): string {
 	if (!originalUrl) return originalUrl;
-	const url = new URL(originalUrl);
+	const url = new URL(unwrapDesktopLocalResourceURL(originalUrl));
 	appendMediaProxyParams(url, options);
-	return url.toString();
+	return resolveDesktopDisplayResourceURL(url.toString());
+}
+
+export function buildMediaProxyURLForInstance(
+	originalUrl: string,
+	instanceKey: string,
+	options: MediaProxyOptions = {},
+): string {
+	if (!originalUrl) return originalUrl;
+	const url = new URL(unwrapDesktopLocalResourceURL(originalUrl));
+	appendMediaProxyParams(url, options);
+	return resolveDesktopDisplayResourceURLForInstance(url.toString(), instanceKey);
 }
 
 export function buildFitInsideMediaProxyURL(originalUrl: string, options: FitInsideMediaProxyOptions = {}): string {
 	if (!originalUrl) return originalUrl;
-	const url = new URL(originalUrl);
+	const url = new URL(unwrapDesktopLocalResourceURL(originalUrl));
 	appendMediaProxyParams(url, getFitInsideProxyOptions(options));
-	return url.toString();
+	return resolveDesktopDisplayResourceURL(url.toString());
 }
 
 function readProxyDimensionParam(url: URL, key: 'width' | 'height'): number | undefined {
@@ -110,7 +126,7 @@ function readProxyDimensionParam(url: URL, key: 'width' | 'height'): number | un
 	return resolveProxyDimension(Number(raw));
 }
 
-function carriedProxyDimensions(proxyURL: string): {width?: number; height?: number} | undefined {
+function proxyUrlDimensions(proxyURL: string): {width?: number; height?: number} | undefined {
 	let parsed: URL;
 	try {
 		parsed = new URL(proxyURL);
@@ -124,17 +140,17 @@ function carriedProxyDimensions(proxyURL: string): {width?: number; height?: num
 }
 
 function variantDimensions(proxyURL: string, width?: number, height?: number): {width?: number; height?: number} {
-	return carriedProxyDimensions(proxyURL) ?? {width, height};
+	return proxyUrlDimensions(proxyURL) ?? {width, height};
 }
 
 export function stripMediaProxyParams(proxyURL: string): string {
-	const url = new URL(proxyURL);
+	const url = new URL(unwrapDesktopLocalResourceURL(proxyURL));
 	url.searchParams.delete('width');
 	url.searchParams.delete('height');
 	url.searchParams.delete('format');
 	url.searchParams.delete('quality');
 	url.searchParams.delete('animated');
-	return url.toString();
+	return resolveDesktopDisplayResourceURL(url.toString());
 }
 
 export function buildAnimatedImageProxyURL(proxyURL: string, width?: number, height?: number): string {

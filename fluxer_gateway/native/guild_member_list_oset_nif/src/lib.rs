@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::cmp::Ordering;
-use std::mem;
+use std::hash::{BuildHasher, RandomState};
 use std::sync::Mutex;
 
 use rustler::types::binary::{Binary, OwnedBinary};
@@ -9,17 +9,15 @@ use rustler::{Decoder, Encoder, Env, Error, NifResult, Resource, ResourceArc, Te
 
 const MAX_RANGE_COUNT: usize = 65_536;
 const MAX_SORT_KEY_BYTES: usize = 512;
-const MAX_FROM_SORTED_KEYS: usize = 250_000;
 
 mod atoms {
     rustler::atoms! {
         ok,
-        none,
         not_found
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 struct MemberKey {
     section_idx: u64,
     sort_key: Vec<u8>,
@@ -57,9 +55,9 @@ impl<'a> Decoder<'a> for MemberKey {
 
 impl Encoder for MemberKey {
     fn encode<'a>(&self, env: Env<'a>) -> Term<'a> {
-        let mut sort_key = OwnedBinary::new(self.sort_key.len()).expect("binary allocation failed");
-        sort_key.as_mut_slice().copy_from_slice(&self.sort_key);
-        let sort_key_term = sort_key.release(env).to_term(env);
+        let sort_key_term = OwnedBinary::from_slice(&self.sort_key)
+            .release(env)
+            .to_term(env);
         let terms = [
             self.section_idx.encode(env),
             sort_key_term,
@@ -79,6 +77,7 @@ impl Resource for OSetResource {}
 #[derive(Default)]
 struct MemberOSet {
     root: Link,
+    hasher: RandomState,
 }
 
 type Link = Option<Box<Node>>;
@@ -92,8 +91,7 @@ struct Node {
 }
 
 impl Node {
-    fn new(key: MemberKey) -> Self {
-        let priority = priority_for_key(&key);
+    fn new(key: MemberKey, priority: u64) -> Self {
         Self {
             key,
             priority,
@@ -112,7 +110,7 @@ impl MemberOSet {
     fn replace_from_keys(&mut self, mut keys: Vec<MemberKey>) {
         keys.sort_unstable();
         keys.dedup();
-        self.root = build_balanced(&keys);
+        self.root = build_balanced(&keys, &self.hasher);
     }
 
     fn clear(&mut self) {
@@ -123,15 +121,12 @@ impl MemberOSet {
         link_size(&self.root)
     }
 
-    fn memory_bytes(&self) -> usize {
-        memory_bytes_link(&self.root)
-    }
-
     fn insert(&mut self, key: MemberKey) -> usize {
         match rank_or_insert_pos(&self.root, &key, 0) {
             RankLookup::Found(rank) => rank,
             RankLookup::InsertAt(rank) => {
-                self.root = insert_link(self.root.take(), key);
+                let priority = self.hasher.hash_one(&key);
+                self.root = insert_link(self.root.take(), key, priority);
                 rank
             }
         }
@@ -145,17 +140,6 @@ impl MemberOSet {
             }
             RankLookup::InsertAt(_) => None,
         }
-    }
-
-    fn rank(&self, key: &MemberKey) -> Option<usize> {
-        match rank_or_insert_pos(&self.root, key, 0) {
-            RankLookup::Found(rank) => Some(rank),
-            RankLookup::InsertAt(_) => None,
-        }
-    }
-
-    fn at(&self, index: usize) -> Option<MemberKey> {
-        select_key(&self.root, index).cloned()
     }
 
     fn range(&self, start: usize, count: usize) -> Vec<MemberKey> {
@@ -188,9 +172,6 @@ fn from_sorted<'a>(
     keys: Term<'a>,
 ) -> NifResult<Term<'a>> {
     let keys = decode_key_list(keys)?;
-    if keys.len() > MAX_FROM_SORTED_KEYS {
-        return Err(Error::BadArg);
-    }
     let mut set = resource.inner.lock().map_err(|_| Error::BadArg)?;
     set.replace_from_keys(keys);
     Ok(atoms::ok().encode(env))
@@ -201,18 +182,6 @@ fn destroy<'a>(env: Env<'a>, resource: ResourceArc<OSetResource>) -> NifResult<T
     let mut set = resource.inner.lock().map_err(|_| Error::BadArg)?;
     set.clear();
     Ok(atoms::ok().encode(env))
-}
-
-#[rustler::nif]
-fn size(resource: ResourceArc<OSetResource>) -> NifResult<usize> {
-    let set = resource.inner.lock().map_err(|_| Error::BadArg)?;
-    Ok(set.size())
-}
-
-#[rustler::nif(schedule = "DirtyCpu")]
-fn memory_bytes(resource: ResourceArc<OSetResource>) -> NifResult<usize> {
-    let set = resource.inner.lock().map_err(|_| Error::BadArg)?;
-    Ok(set.memory_bytes())
 }
 
 #[rustler::nif]
@@ -231,31 +200,6 @@ fn delete<'a>(
     match set.delete(&key) {
         Some(rank) => Ok(rank.encode(env)),
         None => Ok(atoms::not_found().encode(env)),
-    }
-}
-
-#[rustler::nif]
-fn rank<'a>(
-    env: Env<'a>,
-    resource: ResourceArc<OSetResource>,
-    key: MemberKey,
-) -> NifResult<Term<'a>> {
-    let set = resource.inner.lock().map_err(|_| Error::BadArg)?;
-    match set.rank(&key) {
-        Some(rank) => Ok(rank.encode(env)),
-        None => Ok(atoms::not_found().encode(env)),
-    }
-}
-
-#[rustler::nif]
-fn at<'a>(env: Env<'a>, resource: ResourceArc<OSetResource>, index: i64) -> NifResult<Term<'a>> {
-    if index < 0 {
-        return Ok(atoms::none().encode(env));
-    }
-    let set = resource.inner.lock().map_err(|_| Error::BadArg)?;
-    match set.at(index as usize) {
-        Some(key) => Ok(key.encode(env)),
-        None => Ok(atoms::none().encode(env)),
     }
 }
 
@@ -282,14 +226,16 @@ fn decode_key_list<'a>(term: Term<'a>) -> NifResult<Vec<MemberKey>> {
     term.decode::<Vec<MemberKey>>()
 }
 
-fn build_balanced(keys: &[MemberKey]) -> Link {
+fn build_balanced(keys: &[MemberKey], hasher: &RandomState) -> Link {
     if keys.is_empty() {
         return None;
     }
     let mid = keys.len() / 2;
-    let mut node = Box::new(Node::new(keys[mid].clone()));
-    node.left = build_balanced(&keys[..mid]);
-    node.right = build_balanced(&keys[mid + 1..]);
+    let key = keys[mid].clone();
+    let priority = hasher.hash_one(&key);
+    let mut node = Box::new(Node::new(key, priority));
+    node.left = build_balanced(&keys[..mid], hasher);
+    node.right = build_balanced(&keys[mid + 1..], hasher);
     node.refresh_size();
     Some(node)
 }
@@ -298,17 +244,17 @@ fn link_size(link: &Link) -> usize {
     link.as_ref().map_or(0, |node| node.size)
 }
 
-fn insert_link(link: Link, key: MemberKey) -> Link {
+fn insert_link(link: Link, key: MemberKey, priority: u64) -> Link {
     match link {
-        None => Some(Box::new(Node::new(key))),
+        None => Some(Box::new(Node::new(key, priority))),
         Some(mut node) => {
             if key < node.key {
-                node.left = insert_link(node.left.take(), key);
+                node.left = insert_link(node.left.take(), key, priority);
                 if child_priority(&node.left) < node.priority {
                     return Some(rotate_right(node));
                 }
             } else {
-                node.right = insert_link(node.right.take(), key);
+                node.right = insert_link(node.right.take(), key, priority);
                 if child_priority(&node.right) < node.priority {
                     return Some(rotate_left(node));
                 }
@@ -397,16 +343,6 @@ fn rank_or_insert_pos(link: &Link, key: &MemberKey, base: usize) -> RankLookup {
     }
 }
 
-fn select_key(link: &Link, index: usize) -> Option<&MemberKey> {
-    let node = link.as_ref()?;
-    let left_size = link_size(&node.left);
-    match index.cmp(&left_size) {
-        Ordering::Less => select_key(&node.left, index),
-        Ordering::Equal => Some(&node.key),
-        Ordering::Greater => select_key(&node.right, index - left_size - 1),
-    }
-}
-
 fn collect_range(link: &Link, start: usize, end: usize, base: usize, out: &mut Vec<MemberKey>) {
     let Some(node) = link.as_ref() else {
         return;
@@ -422,51 +358,6 @@ fn collect_range(link: &Link, start: usize, end: usize, base: usize, out: &mut V
     if rank + 1 < end {
         collect_range(&node.right, start, end, rank + 1, out);
     }
-}
-
-fn memory_bytes_link(link: &Link) -> usize {
-    match link {
-        None => 0,
-        Some(node) => {
-            mem::size_of::<Node>()
-                + node.key.sort_key.len()
-                + memory_bytes_link(&node.left)
-                + memory_bytes_link(&node.right)
-        }
-    }
-}
-
-fn priority_for_key(key: &MemberKey) -> u64 {
-    let mut hash = 0xcbf29ce484222325u64;
-    hash_u64(&mut hash, key.section_idx);
-    hash_bytes(&mut hash, &key.sort_key);
-    hash_u64(&mut hash, key.user_id as u64);
-    splitmix64(hash)
-}
-
-fn hash_u64(hash: &mut u64, value: u64) {
-    for byte in value.to_le_bytes() {
-        hash_byte(hash, byte);
-    }
-}
-
-fn hash_bytes(hash: &mut u64, bytes: &[u8]) {
-    hash_u64(hash, bytes.len() as u64);
-    for byte in bytes {
-        hash_byte(hash, *byte);
-    }
-}
-
-fn hash_byte(hash: &mut u64, byte: u8) {
-    *hash ^= byte as u64;
-    *hash = hash.wrapping_mul(0x100000001b3);
-}
-
-fn splitmix64(mut value: u64) -> u64 {
-    value = value.wrapping_add(0x9e3779b97f4a7c15);
-    value = (value ^ (value >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
-    value = (value ^ (value >> 27)).wrapping_mul(0x94d049bb133111eb);
-    value ^ (value >> 31)
 }
 
 rustler::init!("guild_member_list_oset_nif");

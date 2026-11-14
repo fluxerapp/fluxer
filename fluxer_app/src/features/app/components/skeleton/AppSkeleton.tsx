@@ -45,6 +45,8 @@ import {useLayoutEffect, useRef, useState} from 'react';
 
 const SIDEBAR_WIDTH_VARIABLE = '--layout-sidebar-width';
 const VOICE_CONNECTION_HEIGHT_VARIABLE = '--layout-voice-connection-height';
+const SKELETON_SHIMMER_DELAY_VARIABLE = '--skeleton-shimmer-delay';
+const SKELETON_SHIMMER_DURATION_MS = 3200;
 const GUILD_ID_PATH_INDEX = 2;
 
 function resolveSkeletonGuildId(pathname: string): string | null {
@@ -69,6 +71,8 @@ function renderSidebar(sidebar: SkeletonSidebarVariant, guildId: string | null) 
 			return (
 				<DiscoverySidebarSkeleton data-flx="app.skeleton.app-skeleton.render-sidebar.discovery-sidebar-skeleton" />
 			);
+		case SkeletonSidebarVariant.NONE:
+			return null;
 	}
 }
 
@@ -127,6 +131,7 @@ export const AppSkeleton = observer(({isExiting = false, onTransitionEnd, effect
 		}),
 	);
 	const voicePanelHeightPx = rememberedChrome.voice.panelHeightPx;
+	const [shimmerDelayMs] = useState(() => -(performance.now() % SKELETON_SHIMMER_DURATION_MS));
 	const canFitMemberList = useCanFitMemberList();
 	const frozenChatPresentationRef = useRef<FrozenChatSkeletonPresentation | null>(null);
 	let frozenChatPresentation = frozenChatPresentationRef.current;
@@ -170,12 +175,14 @@ export const AppSkeleton = observer(({isExiting = false, onTransitionEnd, effect
 			</flx-app-skeleton>
 		);
 	}
-	const showMobileSidebarInline = isMobile && showsMobileSidebar(pathname);
+	const hasSidebar = shell.sidebar !== SkeletonSidebarVariant.NONE;
+	const showMobileSidebarInline = isMobile && hasSidebar && showsMobileSidebar(pathname);
 	const showRail = !isMobile || showsMobileGuildRail(pathname);
 	const reserveMobileBottomNav = isMobile && reservesMobileBottomNavSpace(pathname);
 	const showUserArea = !isMobile && !isVoiceCallFullscreenActive;
 	const sidebarWidth = SidebarWidth.cssValue;
 	const shellStyle: React.CSSProperties = {};
+	Object.assign(shellStyle, {[SKELETON_SHIMMER_DELAY_VARIABLE]: `${shimmerDelayMs}ms`});
 	if (!isMobile && sidebarWidth != null && sidebarWidth !== '') {
 		Object.assign(shellStyle, {[SIDEBAR_WIDTH_VARIABLE]: sidebarWidth});
 	}
@@ -223,7 +230,7 @@ export const AppSkeleton = observer(({isExiting = false, onTransitionEnd, effect
 					data-flx="app.skeleton.app-skeleton.outline-frame"
 				>
 					<flx-app-skeleton-main
-						className={flxElementClassName(styles.main, isMobile && styles.mainSidebarless)}
+						className={flxElementClassName(styles.main, (isMobile || !hasSidebar) && styles.mainSidebarless)}
 						data-flx="app.skeleton.app-skeleton.main"
 					>
 						{!isMobile && renderSidebar(shell.sidebar, guildId)}

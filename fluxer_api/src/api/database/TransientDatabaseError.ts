@@ -67,7 +67,7 @@ function collectErrorChain(error: unknown): Array<ErrorNode> {
 	return nodes;
 }
 
-function carriesPostgresClient(node: ErrorNode): boolean {
+function hasPostgresClient(node: ErrorNode): boolean {
 	const client = node['client'];
 	return typeof client === 'object' && client !== null;
 }
@@ -92,7 +92,7 @@ export function isTransientDatabaseError(error: unknown): boolean {
 	if (nodes.some(hasTransientSqlState)) {
 		return true;
 	}
-	if (nodes.some(carriesPostgresClient) && nodes.some(hasTransientSocketCode)) {
+	if (nodes.some(hasPostgresClient) && nodes.some(hasTransientSocketCode)) {
 		return true;
 	}
 	return nodes.some(hasTransientDriverMessage);

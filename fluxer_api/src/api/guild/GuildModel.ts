@@ -1,5 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
+import {
+	stripGuildBannerForFeatures,
+	stripGuildIconForFeatures,
+	stripGuildSplashForFeatures,
+} from '@app/api/infrastructure/AssetEntitlementUtils';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildBan} from '@app/api/models/GuildBan';
+import type {GuildEmoji} from '@app/api/models/GuildEmoji';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {GuildRole} from '@app/api/models/GuildRole';
+import type {GuildSticker} from '@app/api/models/GuildSticker';
+import {hiddenGuildMember, isHiddenPartial} from '@app/api/user/ProfileVisibility';
+import {getEffectiveGuildMfaLevel} from '@fluxer/constants/src/GuildConstants';
 import type {
 	GuildEmojiResponse,
 	GuildEmojiWithUserResponse,
@@ -10,21 +27,6 @@ import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/dom
 import type {GuildPartialResponse, GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {
-	stripGuildBannerForFeatures,
-	stripGuildIconForFeatures,
-	stripGuildSplashForFeatures,
-} from '../infrastructure/AssetEntitlementUtils';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Guild} from '../models/Guild';
-import type {GuildBan} from '../models/GuildBan';
-import type {GuildEmoji} from '../models/GuildEmoji';
-import type {GuildMember} from '../models/GuildMember';
-import type {GuildRole} from '../models/GuildRole';
-import type {GuildSticker} from '../models/GuildSticker';
-import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '../user/UserCacheHelpers';
-import {mapGuildFeatures} from './GuildFeatureUtils';
 
 export function mapGuildToPartialResponse(guild: Guild): GuildPartialResponse {
 	const guildId = guild.id.toString();
@@ -47,6 +49,7 @@ export function mapGuildToPartialResponse(guild: Guild): GuildPartialResponse {
 		embed_splash_height: embedSplashHash ? guild.embedSplashHeight : null,
 		splash_card_alignment: guild.splashCardAlignment,
 		features: mapGuildFeatures(guild.features),
+		badge_ids: Array.from(guild.badgeIds, String),
 	};
 }
 
@@ -56,24 +59,8 @@ export function mapGuildToGuildResponse(
 		permissions?: bigint | null;
 	},
 ): GuildResponse {
-	const iconHash = stripGuildIconForFeatures(guild.iconHash, guild.features);
-	const bannerHash = stripGuildBannerForFeatures(guild.bannerHash, guild.features);
-	const splashHash = stripGuildSplashForFeatures(guild.splashHash, guild.features);
-	const embedSplashHash = stripGuildSplashForFeatures(guild.embedSplashHash, guild.features);
 	return {
-		id: guild.id.toString(),
-		name: guild.name,
-		icon: iconHash,
-		banner: bannerHash,
-		banner_width: bannerHash ? guild.bannerWidth : null,
-		banner_height: bannerHash ? guild.bannerHeight : null,
-		splash: splashHash,
-		splash_width: splashHash ? guild.splashWidth : null,
-		splash_height: splashHash ? guild.splashHeight : null,
-		embed_splash: embedSplashHash,
-		embed_splash_width: embedSplashHash ? guild.embedSplashWidth : null,
-		embed_splash_height: embedSplashHash ? guild.embedSplashHeight : null,
-		splash_card_alignment: guild.splashCardAlignment,
+		...mapGuildToPartialResponse(guild),
 		vanity_url_code: guild.vanityUrlCode,
 		owner_id: guild.ownerId.toString(),
 		system_channel_id: guild.systemChannelId ? guild.systemChannelId.toString() : null,
@@ -81,9 +68,8 @@ export function mapGuildToGuildResponse(
 		rules_channel_id: guild.rulesChannelId ? guild.rulesChannelId.toString() : null,
 		afk_channel_id: guild.afkChannelId ? guild.afkChannelId.toString() : null,
 		afk_timeout: guild.afkTimeout,
-		features: mapGuildFeatures(guild.features),
 		verification_level: guild.verificationLevel,
-		mfa_level: guild.mfaLevel,
+		mfa_level: getEffectiveGuildMfaLevel(guild.mfaLevel, guild.features, Config.instance.selfHosted),
 		nsfw_level: guild.nsfwLevel,
 		nsfw: guild.nsfw,
 		content_warning_level: guild.contentWarningLevel as 0 | 1,
@@ -106,6 +92,8 @@ export function mapGuildRoleToResponse(role: GuildRole): GuildRoleResponse {
 		permissions: role.permissions.toString(),
 		hoist: role.isHoisted,
 		mentionable: role.isMentionable,
+		icon: role.iconHash,
+		unicode_emoji: role.unicodeEmoji,
 	};
 }
 
@@ -132,6 +120,11 @@ export function mapGuildStickerToResponse(sticker: GuildSticker): GuildStickerRe
 }
 
 function mapMemberWithUser(member: GuildMember, userPartial: UserPartialResponse): GuildMemberResponse {
+	const response = mapMemberFields(member, userPartial);
+	return isHiddenPartial(userPartial) ? hiddenGuildMember(response) : response;
+}
+
+function mapMemberFields(member: GuildMember, userPartial: UserPartialResponse): GuildMemberResponse {
 	const now = Date.now();
 	const isTimedOut = member.communicationDisabledUntil != null && member.communicationDisabledUntil.getTime() > now;
 	return {
@@ -163,7 +156,7 @@ export async function mapGuildMemberToResponse(
 	userCacheService: Pick<UserCacheService, 'getUserPartialResponse'>,
 	requestCache: RequestCache,
 ): Promise<GuildMemberResponse> {
-	const userPartial = await getCachedUserPartialResponse({userId: member.userId, userCacheService, requestCache});
+	const userPartial = await userCacheService.getUserPartialResponse(member.userId, requestCache);
 	return mapMemberWithUser(member, userPartial);
 }
 
@@ -184,7 +177,7 @@ export async function mapGuildEmojisWithUsersToResponse(
 	requestCache: RequestCache,
 ): Promise<Array<GuildEmojiWithUserResponse>> {
 	const userIds = [...new Set(emojis.map((emoji) => emoji.creatorId))];
-	const userPartials = await getCachedUserPartialResponses({userIds, userCacheService, requestCache});
+	const userPartials = await userCacheService.getUserPartialResponses(userIds, requestCache);
 	return emojis
 		.filter((emoji) => userPartials.has(emoji.creatorId))
 		.map((emoji) => mapEmojiWithUser(emoji, userPartials.get(emoji.creatorId)!));
@@ -208,7 +201,7 @@ export async function mapGuildStickersWithUsersToResponse(
 	requestCache: RequestCache,
 ): Promise<Array<GuildStickerWithUserResponse>> {
 	const userIds = [...new Set(stickers.map((sticker) => sticker.creatorId))];
-	const userPartials = await getCachedUserPartialResponses({userIds, userCacheService, requestCache});
+	const userPartials = await userCacheService.getUserPartialResponses(userIds, requestCache);
 	return stickers
 		.filter((sticker) => userPartials.has(sticker.creatorId))
 		.map((sticker) => mapStickerWithUser(sticker, userPartials.get(sticker.creatorId)!));
@@ -230,7 +223,7 @@ export async function mapGuildBansToResponse(
 	requestCache: RequestCache,
 ): Promise<Array<GuildBanResponse>> {
 	const userIds = [...new Set(bans.map((ban) => ban.userId))];
-	const userPartials = await getCachedUserPartialResponses({userIds, userCacheService, requestCache});
+	const userPartials = await userCacheService.getUserPartialResponses(userIds, requestCache);
 	return bans
 		.filter((ban) => userPartials.has(ban.userId))
 		.map((ban) => mapBanWithUser(ban, userPartials.get(ban.userId)!));

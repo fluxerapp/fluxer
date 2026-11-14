@@ -40,7 +40,7 @@ export type VoiceGatewayStateEvent =
 	| {type: 'guild.delete'; guildId: string}
 	| {type: 'clear.all'};
 
-export function createEmptyVoiceGatewayStateContext(): VoiceGatewayStateContext {
+function createEmptyVoiceGatewayStateContext(): VoiceGatewayStateContext {
 	return {
 		voiceStates: {},
 		userVoiceStates: {},
@@ -200,6 +200,7 @@ function removeStaleSessionConnections(
 	for (const [connectionId, existing] of Object.entries(indexedGuildStates)) {
 		if (connectionId === voiceState.connection_id) continue;
 		if (existing.session_id !== voiceState.session_id) continue;
+		if (existing.channel_id !== voiceState.channel_id) continue;
 		next = removeConnection(next, connectionId);
 	}
 	return next;
@@ -310,7 +311,7 @@ function replaceGuild(context: VoiceGatewayStateContext, guild: GuildReadyData):
 	};
 }
 
-export const voiceGatewayStateMachine = setup({
+const voiceGatewayStateMachine = setup({
 	types: {} as {
 		context: VoiceGatewayStateContext;
 		events: VoiceGatewayStateEvent;

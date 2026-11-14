@@ -8,6 +8,7 @@ import {
 	SystemChannelFlags,
 	SystemChannelFlagsDescriptions,
 } from '@fluxer/constants/src/GuildConstants';
+import {CustomBadgeIdListResponse} from '@fluxer/schema/src/domains/admin/AdminBadgeSchemas';
 import {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {GuildEmojiResponse, GuildStickerResponse} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
@@ -30,6 +31,7 @@ import {
 	withFieldDescription,
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {withSchemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 function normalizeGuildFeatures(features: Array<string>): Array<string> {
@@ -108,6 +110,26 @@ export const GuildFeatureSchema = withOpenApiType(
 			[GuildFeatures.VISIONARY, 'VISIONARY', 'Guild is a visionary guild'],
 			[GuildFeatures.LARGE_GUILD_OVERRIDE, 'LARGE_GUILD_OVERRIDE', 'Guild has large guild overrides enabled'],
 			[GuildFeatures.VERY_LARGE_GUILD, 'VERY_LARGE_GUILD', 'Guild has increased member capacity enabled'],
+			[
+				GuildFeatures.ANNOUNCEMENT_CHANNELS_DISABLED,
+				'ANNOUNCEMENT_CHANNELS_DISABLED',
+				'Guild cannot publish announcement messages or gain new followers',
+			],
+			[
+				GuildFeatures.VISITS_ENABLED,
+				'VISITS_ENABLED',
+				'People with an invite or a discovery listing can read channels that @everyone can see without joining',
+			],
+			[
+				GuildFeatures.MEMBER_DMS_DISABLED,
+				'MEMBER_DMS_DISABLED',
+				"Members who aren't friends can't use the guild as a shared guild for direct messages",
+			],
+			[
+				GuildFeatures.PLANNED_JOIN_WAVES,
+				'PLANNED_JOIN_WAVES',
+				'Guild expects large planned waves of new members. Invites are not paused after a raid',
+			],
 		],
 		'A guild feature flag',
 	),
@@ -144,6 +166,9 @@ export const GuildResponse = z.object({
 	afk_channel_id: SnowflakeStringType.nullish().describe('The ID of the AFK voice channel'),
 	afk_timeout: Int32Type.describe('AFK timeout in seconds before moving users to the AFK channel'),
 	features: GuildFeatureListSchema,
+	badge_ids: CustomBadgeIdListResponse.describe(
+		'IDs of the custom badges assigned to the community. Look them up in guild_badges of the instance discovery document. When guild_badges_partial is true, look up the IDs that are not there with GET /instance/badges?ids=...&version=custom_badges_version, and skip IDs that it does not return',
+	),
 	verification_level: withFieldDescription(
 		GuildVerificationLevelSchema,
 		'Required verification level for members to participate',
@@ -194,6 +219,18 @@ export const GuildResponse = z.object({
 	approximate_presence_count: Int32Type.optional().describe(
 		'Approximate online member count (only when with_counts is true)',
 	),
+	threads_active: withSchemaMetadata(
+		z
+			.literal(true)
+			.describe(
+				'Present and true when threads, forum and media channels are active in this guild for the requesting client. Only set on the current user guild list',
+			),
+		{experiment: 'channel_threads'},
+	).optional(),
+	visiting: withSchemaMetadata(
+		z.literal(true).describe('Present and true when the requesting user is visiting the guild without being a member'),
+		{experiment: 'guild_visits'},
+	).optional(),
 });
 
 export type GuildResponse = z.infer<typeof GuildResponse>;
@@ -213,6 +250,16 @@ export const GuildPartialResponse = GuildResponse.pick({
 	embed_splash_width: true,
 	embed_splash_height: true,
 	features: true,
+	badge_ids: true,
+}).extend({
+	visits_enabled: withSchemaMetadata(
+		z
+			.boolean()
+			.describe(
+				'Whether opening this invite starts a visit instead of a join for the requesting user. Omitted for a caller outside the guild visits experiment',
+			),
+		{experiment: 'guild_visits'},
+	).optional(),
 });
 
 export type GuildPartialResponse = z.infer<typeof GuildPartialResponse>;
@@ -246,6 +293,7 @@ export interface Guild {
 	readonly afk_channel_id?: string | null;
 	readonly afk_timeout?: number;
 	readonly features: ReadonlyArray<string>;
+	readonly badge_ids?: ReadonlyArray<string>;
 	readonly verification_level?: number;
 	readonly mfa_level?: number;
 	readonly nsfw_level?: number;
@@ -258,6 +306,7 @@ export interface Guild {
 	readonly message_history_cutoff?: string | null;
 	readonly joined_at?: string;
 	readonly unavailable?: boolean;
+	readonly visiting?: boolean;
 	readonly unavailable_hidden?: boolean;
 	readonly member_count?: number;
 	readonly online_count?: number;

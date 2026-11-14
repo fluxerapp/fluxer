@@ -70,13 +70,13 @@ async fn send_external_request(
         .map_err(|_| ExternalFetchError::BufferAllocationFailed)?;
     for _ in 0..=EXTERNAL_FETCH_REDIRECT_LIMIT {
         if visited.iter().any(|seen| seen == &current_url) {
-            warn!(url = %current_url, "redirect loop detected");
+            warn!(url = %public_net_policy::external_url_for_log(&current_url), "redirect loop detected");
             return Err(ExternalFetchError::TooManyRedirects);
         }
         visited.push(current_url.clone());
         if let Err(err) = public_net_policy::validate_url(&current_url) {
-            warn!(?err, url = %current_url, "blocked external fetch");
-            external_metrics.record_blocked_url();
+            warn!(?err, url = %public_net_policy::external_url_for_log(&current_url), "blocked external fetch");
+            external_metrics.blocked_url_attempts.inc();
             return Err(ExternalFetchError::BlockedUrl);
         }
         let mut outbound = app
@@ -87,13 +87,14 @@ async fn send_external_request(
             outbound = outbound.header(header::RANGE, range.header_value());
         }
         let response = outbound.send().await.map_err(|err| {
+            let err = err.without_url();
             if public_net_policy::is_pinned_dns_failure(&err) {
-                warn!(?err, url = %current_url, "blocked external fetch");
-                external_metrics.record_blocked_url();
+                warn!(?err, url = %public_net_policy::external_url_for_log(&current_url), "blocked external fetch");
+                external_metrics.blocked_url_attempts.inc();
                 return ExternalFetchError::BlockedUrl;
             }
-            warn!(url = %current_url, %err, "external send failed");
-            external_metrics.record_fetch_failure();
+            warn!(url = %public_net_policy::external_url_for_log(&current_url), %err, "external send failed");
+            external_metrics.fetch_failures.inc();
             ExternalFetchError::FetchFailed
         })?;
         let status = response.status();
@@ -104,15 +105,15 @@ async fn send_external_request(
             ) {
                 Some(location) if !location.is_empty() => location,
                 Some(_) | None => {
-                    warn!(url = %current_url, status = status.as_u16(), "redirect has an invalid Location");
-                    external_metrics.record_fetch_failure();
+                    warn!(url = %public_net_policy::external_url_for_log(&current_url), status = status.as_u16(), "redirect has an invalid Location");
+                    external_metrics.fetch_failures.inc();
                     return Err(ExternalFetchError::FetchFailed);
                 }
             };
             current_url =
                 public_net_policy::resolve_redirect(&current_url, location).map_err(|err| {
-                    warn!(url = %current_url, %location, ?err, "redirect target blocked");
-                    external_metrics.record_blocked_url();
+                    warn!(url = %public_net_policy::external_url_for_log(&current_url), location = %public_net_policy::external_url_for_log(location), ?err, "redirect target blocked");
+                    external_metrics.blocked_url_attempts.inc();
                     ExternalFetchError::BlockedUrl
                 })?;
             continue;
@@ -170,7 +171,7 @@ async fn fetch_external_inner(
     if let Some(len) = declared_length
         && len > constants::MAX_MEDIA_PROXY_BYTES as u64
     {
-        warn!(url = %current_url, len, "external payload too large");
+        warn!(url = %public_net_policy::external_url_for_log(&current_url), len, "external payload too large");
         return Err(ExternalFetchError::PayloadTooLarge);
     }
     let status = if response.status() == StatusCode::PARTIAL_CONTENT {
@@ -182,8 +183,8 @@ async fn fetch_external_inner(
             declared_length,
             constants::MAX_MEDIA_PROXY_BYTES,
         ) else {
-            warn!(url = %current_url, "invalid upstream partial response");
-            external_metrics.record_fetch_failure();
+            warn!(url = %public_net_policy::external_url_for_log(&current_url), "invalid upstream partial response");
+            external_metrics.fetch_failures.inc();
             return Err(ExternalFetchError::FetchFailed);
         };
         ExternalSuccessStatus::Partial(partial)
@@ -225,8 +226,8 @@ async fn fetch_external_inner(
         .and_then(|partial| partial.content_length())
         .is_some_and(|expected| data.len() as u64 != expected)
     {
-        warn!(url = %current_url, "upstream partial response body length mismatch");
-        external_metrics.record_fetch_failure();
+        warn!(url = %public_net_policy::external_url_for_log(&current_url), "upstream partial response body length mismatch");
+        external_metrics.fetch_failures.inc();
         return Err(ExternalFetchError::FetchFailed);
     }
     Ok(FetchedExternal {
@@ -253,29 +254,25 @@ async fn external_body_prefix(
     prefix
         .try_reserve_exact(EXTERNAL_SNIFF_PREFIX_BYTES)
         .map_err(|_| ExternalFetchError::BufferAllocationFailed)?;
-    let mut chunks_read = 0_u64;
-    let chunks_max =
+    let mut empty_chunks_remaining =
         response_body_limit::response_body_chunk_limit(constants::MAX_MEDIA_PROXY_BYTES as u64);
     while prefix.len() < EXTERNAL_SNIFF_PREFIX_BYTES {
         let Some(chunk) = response.chunk().await.map_err(|err| {
-            warn!(url = %url, %err, "external body read failed");
-            metrics.record_fetch_failure();
+            let err = err.without_url();
+            warn!(url = %public_net_policy::external_url_for_log(url), %err, "external body read failed");
+            metrics.fetch_failures.inc();
             ExternalFetchError::FetchFailed
         })?
         else {
             break;
         };
-        if chunk.len() > response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX {
-            warn!(url = %url, "external response transport chunk exceeded its byte bound");
-            return Err(ExternalFetchError::PayloadTooLarge);
-        }
-        chunks_read = chunks_read
-            .checked_add(1)
-            .filter(|chunks| *chunks <= chunks_max)
-            .ok_or_else(|| {
-                warn!(url = %url, chunks_max, "external sniff prefix exceeded its chunk limit");
+        if chunk.is_empty() {
+            empty_chunks_remaining = empty_chunks_remaining.checked_sub(1).ok_or_else(|| {
+                warn!(url = %public_net_policy::external_url_for_log(url), "external sniff prefix exceeded its empty chunk limit");
                 ExternalFetchError::PayloadTooLarge
             })?;
+            continue;
+        }
         prefix.extend_from_slice(&chunk);
     }
     Ok(Bytes::from(prefix))
@@ -349,7 +346,7 @@ pub(super) async fn buffer_external_response(
     } = request;
     let declared_length = match content_length {
         Some(length) if length > limit as u64 => {
-            warn!(url = %url, length, "external payload too large");
+            warn!(url = %public_net_policy::external_url_for_log(url), length, "external payload too large");
             return Err(ExternalFetchError::PayloadTooLarge);
         }
         Some(length) => {
@@ -370,30 +367,26 @@ pub(super) async fn buffer_external_response(
     let mut reserved_bytes =
         grow_to_capacity(&mut reservation, metrics, buf.capacity(), initial_capacity)?;
     buf.extend_from_slice(&prefix);
-    let mut chunks_read = 0_u64;
-    let chunks_max = response_body_limit::response_body_chunk_limit(limit as u64);
+    let mut empty_chunks_remaining = response_body_limit::response_body_chunk_limit(limit as u64);
     while let Some(chunk) = response.chunk().await.map_err(|err| {
-        warn!(url = %url, %err, "external body read failed");
-        metrics.record_fetch_failure();
+        let err = err.without_url();
+        warn!(url = %public_net_policy::external_url_for_log(url), %err, "external body read failed");
+        metrics.fetch_failures.inc();
         ExternalFetchError::FetchFailed
     })? {
-        if chunk.len() > response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX {
-            warn!(url = %url, "external response transport chunk exceeded its byte bound");
-            return Err(ExternalFetchError::PayloadTooLarge);
-        }
-        chunks_read = chunks_read
-            .checked_add(1)
-            .filter(|chunks| *chunks <= chunks_max)
-            .ok_or_else(|| {
-                warn!(url = %url, chunks_max, "external payload exceeded its chunk limit");
+        if chunk.is_empty() {
+            empty_chunks_remaining = empty_chunks_remaining.checked_sub(1).ok_or_else(|| {
+                warn!(url = %public_net_policy::external_url_for_log(url), "external payload exceeded its empty chunk limit");
                 ExternalFetchError::PayloadTooLarge
             })?;
+            continue;
+        }
         let Some(next_len) = buf
             .len()
             .checked_add(chunk.len())
             .filter(|len| *len <= limit)
         else {
-            warn!(url = %url, "external payload too large");
+            warn!(url = %public_net_policy::external_url_for_log(url), "external payload too large");
             return Err(ExternalFetchError::PayloadTooLarge);
         };
         if next_len > buf.capacity() {
@@ -407,7 +400,7 @@ pub(super) async fn buffer_external_response(
                 .checked_sub(reserved_bytes)
                 .expect("an external buffer target capacity covers its reservation");
             if !reservation.try_grow(additional) {
-                metrics.record_buffer_rejected();
+                metrics.external_buffer_rejected.inc();
                 return Err(ExternalFetchError::BufferBudgetExhausted);
             }
             reserved_bytes = target_capacity;
@@ -422,12 +415,12 @@ pub(super) async fn buffer_external_response(
         && buf.len() != expected_length
     {
         warn!(
-            url = %url,
+            url = %public_net_policy::external_url_for_log(url),
             expected_length,
             actual_length = buf.len(),
             "external buffered body length did not match Content-Length"
         );
-        metrics.record_fetch_failure();
+        metrics.fetch_failures.inc();
         return Err(ExternalFetchError::FetchFailed);
     }
     reservation.shrink_to(buf.capacity());
@@ -440,7 +433,7 @@ fn reserve(
     amount: usize,
 ) -> Result<ByteReservation, ExternalFetchError> {
     budget.try_reserve(amount).ok_or_else(|| {
-        metrics.record_buffer_rejected();
+        metrics.external_buffer_rejected.inc();
         ExternalFetchError::BufferBudgetExhausted
     })
 }
@@ -455,7 +448,7 @@ fn grow_to_capacity(
         return Ok(reserved_bytes);
     }
     if !reservation.try_grow(capacity - reserved_bytes) {
-        metrics.record_buffer_rejected();
+        metrics.external_buffer_rejected.inc();
         return Err(ExternalFetchError::BufferBudgetExhausted);
     }
     Ok(capacity)

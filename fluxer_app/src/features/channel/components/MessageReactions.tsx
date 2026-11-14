@@ -9,26 +9,27 @@ import {
 	useMessagePermissions,
 } from '@app/features/channel/components/MessageActionUtils';
 import styles from '@app/features/channel/components/MessageReactions.module.css';
-import {EmojiInfoBottomSheet} from '@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet';
 import {EmojiPickerPopout} from '@app/features/emoji/components/popouts/EmojiPickerPopout';
 import Emoji from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import {ADD_REACTION_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import {ReactionTooltip} from '@app/features/messaging/components/popouts/ReactionTooltip';
 import {ReactionImage} from '@app/features/messaging/components/ReactionImage';
-import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getEmojiName, getReactionKey, useEmojiURL} from '@app/features/messaging/utils/ReactionUtils';
-import matureStyles from '@app/features/theme/styles/MatureBlur.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {EmojiContextMenuItems} from '@app/features/ui/action_menu/items/EmojiContextMenuItems';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import type {MessageReaction} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -136,7 +137,6 @@ const MessageReactionItem = observer(
 		};
 		const emojiName = getEmojiName(reaction.emoji);
 		const emojiUrl = useEmojiURL({emoji: reaction.emoji, isHovering: isHovering || tooltipHovering});
-		const {shouldBlur: reactionShouldBlur, shouldBlock: reactionShouldBlock} = useMatureMedia(false, message.channelId);
 		const variants = {
 			up: {y: -20, opacity: 0},
 			down: {y: 20, opacity: 0},
@@ -174,16 +174,14 @@ const MessageReactionItem = observer(
 						data-flx="channel.message-reactions.message-reaction-item.reaction-inner"
 					>
 						{emojiUrl ? (
-							reactionShouldBlock ? null : (
-								<ReactionImage
-									src={emojiUrl}
-									alt={emojiName}
-									aria-hidden={true}
-									draggable={false}
-									className={clsx('emoji', styles.emoji, reactionShouldBlur && matureStyles.matureBlurred)}
-									data-flx="channel.message-reactions.message-reaction-item.emoji"
-								/>
-							)
+							<ReactionImage
+								src={emojiUrl}
+								alt={emojiName}
+								aria-hidden={true}
+								draggable={false}
+								className={clsx('emoji', styles.emoji)}
+								data-flx="channel.message-reactions.message-reaction-item.emoji"
+							/>
 						) : null}
 						<div
 							className={styles.countWrapper}
@@ -202,7 +200,7 @@ const MessageReactionItem = observer(
 									transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2}}
 									data-flx="channel.message-reactions.message-reaction-item.div"
 								>
-									{reaction.count}
+									{getCachedNumberFormat(getFormattingLocale()).format(reaction.count)}
 								</motion.div>
 							</AnimatePresence>
 						</div>
@@ -230,11 +228,12 @@ const MessageReactionItem = observer(
 					data-flx="channel.message-reactions.message-reaction-item.long-pressable"
 				>
 					{buttonContent}
-					<EmojiInfoBottomSheet
+					<ExpressionInfoBottomSheet
+						kind="emoji"
 						isOpen={emojiInfoOpen}
 						onClose={handleCloseEmojiInfo}
 						emoji={selectedEmoji}
-						data-flx="channel.message-reactions.message-reaction-item.emoji-info-bottom-sheet"
+						data-flx="channel.message-reactions.message-reaction-item.expression-info-bottom-sheet"
 					/>
 				</LongPressable>
 			);
@@ -304,7 +303,10 @@ export const MessageReactions = observer(
 		}, [emojiPickerOpen, onPopoutToggle]);
 		const hasReactions = reactions.length > 0;
 		return (
-			<div className={styles.reactionsGrid} data-flx="channel.message-reactions.reactions-grid">
+			<div
+				className={clsx(styles.reactionsGrid, styles.uniformRows)}
+				data-flx="channel.message-reactions.reactions-grid"
+			>
 				{reactions.map((reaction) => (
 					<MessageReactionItem
 						key={getReactionKey(message.id, reaction.emoji)}
@@ -333,7 +335,7 @@ export const MessageReactions = observer(
 									onClick={handleEmojiPickerOpen}
 									data-flx="channel.message-reactions.add-reaction-button.emoji-picker-open"
 								>
-									<SmileyIcon size={20} weight="fill" data-flx="channel.message-reactions.smiley-icon" />
+									<SmileyIcon size={remFromPx(20)} weight="fill" data-flx="channel.message-reactions.smiley-icon" />
 								</button>
 							</FocusRing>
 							<ExpressionPickerSheet
@@ -374,7 +376,7 @@ export const MessageReactions = observer(
 									data-action="message-add-reaction-button"
 									data-flx="channel.message-reactions.add-reaction-button"
 								>
-									<SmileyIcon size={20} weight="fill" data-flx="channel.message-reactions.smiley-icon--2" />
+									<SmileyIcon size={remFromPx(20)} weight="fill" data-flx="channel.message-reactions.smiley-icon--2" />
 								</button>
 							</FocusRing>
 						</Popout>

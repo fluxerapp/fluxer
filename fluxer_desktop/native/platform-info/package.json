@@ -14,16 +14,11 @@
 		"index.js",
 		"index.d.ts",
 		"loader-diagnostics.cjs",
-		"pure.cjs",
 		"platform-info.darwin-x64.node",
 		"platform-info.darwin-arm64.node",
 		"platform-info.win32-x64-msvc.node",
 		"platform-info.win32-arm64-msvc.node",
 		"platform-info.linux-x64-gnu.node",
 		"platform-info.linux-arm64-gnu.node"
-	],
-	"scripts": {
-		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
-		"test": "cargo test --manifest-path Cargo.toml && node --test test/*.test.mjs"
-	}
+	]
 }

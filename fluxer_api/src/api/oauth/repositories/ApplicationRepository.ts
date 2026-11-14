@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ApplicationID, createApplicationID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {ApplicationByOwnerRow, ApplicationRow} from '@app/api/database/types/OAuth2Types';
+import {APPLICATION_COLUMNS} from '@app/api/database/types/OAuth2Types';
+import {getInstanceProductName} from '@app/api/instance/ProductName';
+import {Application} from '@app/api/models/Application';
+import {Applications, ApplicationsByOwner} from '@app/api/Tables';
+import {hashStoredSecret} from '@app/api/utils/StoredSecret';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
-import {type ApplicationID, createApplicationID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import {BatchBuilder, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
-import {buildPatchFromData, executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
-import type {ApplicationByOwnerRow, ApplicationRow} from '../../database/types/OAuth2Types';
-import {APPLICATION_COLUMNS} from '../../database/types/OAuth2Types';
-import {Application} from '../../models/Application';
-import {Applications, ApplicationsByOwner} from '../../Tables';
-import {hashPassword} from '../../utils/PasswordUtils';
-import type {IApplicationRepository} from './IApplicationRepository';
 
 const SELECT_APPLICATION_CQL = Applications.selectCql({
 	where: Applications.where.eq('application_id'),
@@ -32,13 +32,13 @@ export function resetAdminSecretHashForTesting(): void {
 	cachedAdminSecretHash = null;
 }
 
-async function getAdminSecretHash(): Promise<string | null> {
+function getAdminSecretHash(): string | null {
 	const secret = Config.admin.oauthClientSecret;
 	if (!secret) {
 		return null;
 	}
 	if (cachedAdminSecretHash === null) {
-		cachedAdminSecretHash = await hashPassword(secret);
+		cachedAdminSecretHash = hashStoredSecret(secret);
 	}
 	return cachedAdminSecretHash;
 }
@@ -51,7 +51,7 @@ function buildAdminApplication(secretHash: string | null): Application {
 	const row: ApplicationRow = {
 		application_id: createApplicationID(ADMIN_OAUTH2_APPLICATION_ID),
 		owner_user_id: SYSTEM_USER_ID,
-		name: 'Fluxer Admin',
+		name: `${getInstanceProductName()} Admin`,
 		bot_user_id: null,
 		bot_is_public: false,
 		bot_require_code_grant: false,
@@ -66,10 +66,10 @@ function buildAdminApplication(secretHash: string | null): Application {
 	return new Application(row);
 }
 
-export class ApplicationRepository implements IApplicationRepository {
+export class ApplicationRepository {
 	async getApplication(applicationId: ApplicationID): Promise<Application | null> {
 		if (applicationId === createApplicationID(ADMIN_OAUTH2_APPLICATION_ID)) {
-			const secretHash = await getAdminSecretHash();
+			const secretHash = getAdminSecretHash();
 			if (secretHash === null) {
 				return null;
 			}
@@ -86,9 +86,15 @@ export class ApplicationRepository implements IApplicationRepository {
 		if (ids.length === 0) {
 			return [];
 		}
-		const rows = await fetchMany<ApplicationRow>(FETCH_APPLICATIONS_BY_IDS_CQL, {
-			application_ids: ids.map((r) => r.application_id),
-		});
+		return this.listApplicationsByIds(ids.map((r) => r.application_id));
+	}
+
+	async listApplicationsByIds(applicationIds: Array<ApplicationID>): Promise<Array<Application>> {
+		const rows = await fetchManyInChunks<ApplicationRow, ApplicationID>(
+			FETCH_APPLICATIONS_BY_IDS_CQL,
+			applicationIds,
+			(chunk) => ({application_ids: chunk}),
+		);
 		return rows.map((r) => new Application(r));
 	}
 

@@ -6,7 +6,7 @@ export const WATCH_ATTEMPT_TIMEOUT_MS = 15000;
 export const PUBLISHER_REPUBLISH_GRACE_MS = 4000;
 export const PUBLICATION_MISSING_TIMEOUT_MS = 15000;
 
-export type VoiceMediaGraphDeadlineKind = 'watchAttempt' | 'deferredStop' | 'publicationMissing';
+type VoiceMediaGraphDeadlineKind = 'watchAttempt' | 'deferredStop' | 'publicationMissing';
 
 export interface VoiceMediaGraphDeadline {
 	kind: VoiceMediaGraphDeadlineKind;

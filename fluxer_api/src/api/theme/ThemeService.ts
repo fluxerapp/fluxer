@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomBytes} from 'node:crypto';
+import {Config} from '@app/api/Config';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
-import {Config} from '../Config';
-import type {IStorageService} from '../infrastructure/IStorageService';
 
 export const THEME_CSS_MAX_BYTES = 8 * 1024 * 1024;
 
@@ -13,7 +13,7 @@ export function setThemeCssMaxBytesForTesting(bytes: number | undefined): void {
 	themeCssMaxBytesOverride = bytes;
 }
 
-export function resolveThemeCssMaxBytes(): number {
+function resolveThemeCssMaxBytes(): number {
 	if (Config.dev.testModeEnabled && themeCssMaxBytesOverride !== undefined) {
 		return themeCssMaxBytesOverride;
 	}

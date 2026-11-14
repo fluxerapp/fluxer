@@ -7,17 +7,17 @@
 	gap: var(--spacing-1-5);
 	--radio-indicator-size: 1.125rem;
 	--radio-indicator-border: color-mix(in srgb, var(--border-color) 70%, #fff 30%);
-	--radio-indicator-border-selected: var(--brand-primary);
+	--radio-indicator-border-selected: var(--brand-primary-foreground);
 	--radio-dot-bg: var(--brand-primary);
-	--radio-dot-fill: #fff;
+	--radio-dot-fill: var(--brand-primary-fill);
 	--radio-transition: var(--transition-normal, 150ms ease);
 }
 
 :global(.theme-light) .group {
 	--radio-indicator-border: color-mix(in srgb, var(--text-secondary) 70%, #000 30%);
-	--radio-indicator-border-selected: color-mix(in srgb, var(--brand-primary) 85%, var(--text-primary) 15%);
+	--radio-indicator-border-selected: color-mix(in srgb, var(--brand-primary-foreground) 85%, var(--text-primary) 15%);
 	--radio-dot-bg: var(--brand-primary);
-	--radio-dot-fill: #fff;
+	--radio-dot-fill: var(--brand-primary-fill);
 }
 
 .radioGroupOption {
@@ -29,6 +29,10 @@
 	line-height: 1.3;
 	padding: var(--spacing-1) 0;
 	width: 100%;
+}
+
+.radioGroupOptionCenter {
+	align-items: center;
 }
 
 .label {
@@ -57,7 +61,7 @@
 	gap: var(--spacing-1);
 	width: 100%;
 	align-items: flex-start;
-	text-align: left;
+	text-align: start;
 }
 
 .customContent {
@@ -147,33 +151,4 @@
 
 .focusRing {
 	border-radius: var(--radius-sm);
-}
-
-.enable-forced-colors .outerRadioBase {
-	fill: Canvas;
-}
-
-.enable-forced-colors .innerDotRadio {
-	fill: HighlightText;
-}
-
-.enable-forced-colors .radioGroupOption[data-disabled] {
-	opacity: 1;
-}
-
-.enable-forced-colors .radioGroupOption[data-disabled],
-.enable-forced-colors .radioGroupOption[data-disabled]:hover {
-	color: GrayText;
-}
-
-.enable-forced-colors .radioGroupOption[data-state='checked'] .outerRadioBase {
-	fill: Highlight;
-}
-
-.enable-forced-colors .radioGroupOption[data-disabled] .outerRadioBase {
-	fill: Canvas;
-}
-
-.enable-forced-colors .radioGroupOption[data-disabled] .innerDotRadio {
-	fill: GrayText;
 }

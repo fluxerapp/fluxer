@@ -2,8 +2,8 @@
 
 .channelItemCore {
 	position: relative;
-	margin-left: 0.5rem;
-	margin-right: 0;
+	margin-inline-start: 0.5rem;
+	margin-inline-end: 0;
 	display: flex;
 	min-width: 0;
 	flex: 1;
@@ -13,8 +13,8 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	border-radius: 0.375rem;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-inline-start: 0.5rem;
+	padding-inline-end: 0.5rem;
 	gap: 0.375rem;
 	padding-top: 0.375rem;
 	padding-bottom: 0.375rem;
@@ -101,7 +101,7 @@
 }
 
 .iconContainer {
-	margin-right: 0.5rem;
+	margin-inline-end: 0.5rem;
 	display: flex;
 	align-items: center;
 }
@@ -116,7 +116,7 @@
 .actionsContainer {
 	display: flex;
 	align-items: center;
-	margin-left: 0.5rem;
+	margin-inline-start: 0.5rem;
 }
 
 .channelItemIconUnselected {
@@ -140,7 +140,7 @@
 }
 
 .channelItemActions {
-	margin-left: auto;
+	margin-inline-start: auto;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -164,7 +164,7 @@
 .unreadIndicator {
 	position: absolute;
 	top: 50%;
-	left: -0.25rem;
+	inset-inline-start: -0.25rem;
 	transform: translateY(-50%);
 	height: 0.5rem;
 	width: 0.5rem;
@@ -178,8 +178,8 @@
 
 .channelItem {
 	position: relative;
-	margin-left: 0.5rem;
-	margin-right: 0;
+	margin-inline-start: 0.5rem;
+	margin-inline-end: 0;
 	display: flex;
 	min-width: 0;
 	flex: 1;
@@ -189,8 +189,8 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	border-radius: 0.375rem;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-inline-start: 0.5rem;
+	padding-inline-end: 0.5rem;
 }
 
 .channelItemCategory {
@@ -274,11 +274,6 @@
 	opacity: 0.5;
 }
 
-.channelItemDisabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-}
-
 .hoverAffordance {
 	display: none;
 }
@@ -303,7 +298,7 @@
 }
 
 .channelItemAutocompleteHighlight {
-	box-shadow: 0 0 0 0.125rem var(--brand-primary);
+	box-shadow: 0 0 0 0.125rem var(--brand-primary-foreground);
 }
 
 .categoryContent {
@@ -371,7 +366,7 @@
 .voiceUserCount {
 	display: flex;
 	flex-shrink: 0;
-	margin-right: 0.5rem;
+	margin-inline-end: 0.5rem;
 }
 
 .channelItemVoice.contextMenuOpen .voiceUserCount {

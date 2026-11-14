@@ -2,4 +2,9 @@
 
 import type React from 'react';
 
-export type ModalRender = () => React.ReactElement;
+export type ModalType = 'user-settings' | 'guild-settings' | 'channel-settings';
+
+export interface ModalRender {
+	(): React.ReactElement;
+	modalType?: ModalType;
+}

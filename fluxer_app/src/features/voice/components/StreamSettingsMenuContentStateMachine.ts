@@ -1,12 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ScreenshareResolution, StreamingMode} from '@app/features/voice/state/VoiceSettings';
 import {
 	canRestartDisplayShareWithoutPreselectedSource,
 	type DisplayShareEnvironment,
 	prestartAudioToggleIsPickerOwned,
 } from '@app/features/voice/utils/ScreenShareEnvironment';
 import {
+	capsAllowScreenShareFrameRate,
+	capsAllowScreenShareResolution,
+	normaliseStreamingModeForContext,
+	resolveScreenShareQualityPick,
+	type ScreenShareContext,
+	type ScreenShareQualityInput,
+	type ScreenShareQualityPatch,
+	type ScreenShareQualityPick,
+	type ScreenShareTarget,
+	type SupportedScreenShareFrameRate,
+} from '@app/features/voice/utils/ScreenShareOptions';
+import {
 	canSelectManualAudioSources,
+	canSelectWindowsDesktopAudioSource,
 	manualAudioSourcesGovernShare,
 	resolveWindowShareAudioScope,
 	type ScreenShareAudioSourceMode,
@@ -14,23 +28,31 @@ import {
 	selectAppShareAudioRoute,
 	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {BASE_VIDEO_QUALITY_CAPS} from '@app/features/voice/utils/VideoQualityCaps';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
+import {msg} from '@lingui/core/macro';
 import {initialTransition, setup, transition} from 'xstate';
 
-export type StreamSettingsAudioControlStateValue =
+export const CAPTURE_DEVICES_USE_THE_GAMING_PRESET_DESCRIPTOR = msg({
+	message: 'Capture devices use the Gaming preset.',
+	comment:
+		'Note shown beside the stored Screen share preset in the stream settings menu and the video settings tab of a capture device share, explaining why that preset is not used.',
+});
+
+type StreamSettingsAudioControlStateValue =
 	| 'hidden'
 	| 'unsupported'
 	| 'prestartNativePickerOwned'
 	| 'restartRequired'
 	| 'toggle';
-export type StreamSettingsAudioControlLabelKey =
+type StreamSettingsAudioControlLabelKey =
 	| 'captureAppAudio'
 	| 'captureDesktopAudio'
 	| 'captureDeviceAudio'
 	| 'captureSystemAudio';
 type StreamSettingsNativeAudioUnsupportedScope = 'process' | 'system';
 
-export interface StreamSettingsNativeAudioSignals {
+interface StreamSettingsNativeAudioSignals {
 	shareContext: StreamSettingsShareContext;
 	platform?: string | null;
 	nativeAudioAvailability: NativeAudioAvailability | null;
@@ -47,7 +69,7 @@ export interface StreamSettingsAudioControlSignals extends StreamSettingsNativeA
 	windowAudioScope?: WindowShareAudioScope;
 }
 
-export interface StreamSettingsAudioControlViewState {
+interface StreamSettingsAudioControlViewState {
 	value: StreamSettingsAudioControlStateValue;
 	checked: boolean;
 	labelKey: StreamSettingsAudioControlLabelKey;
@@ -56,6 +78,7 @@ export interface StreamSettingsAudioControlViewState {
 export interface StreamSettingsAudioMenuViewState {
 	control: StreamSettingsAudioControlViewState;
 	showManualAudioSources: boolean;
+	showWindowsAudioSourceMenu: boolean;
 	showDeviceAudioMenu: boolean;
 }
 
@@ -110,7 +133,7 @@ function shouldDisablePrestartNativeAudioToggle(signals: StreamSettingsAudioCont
 	);
 }
 
-export const streamSettingsAudioControlStateMachine = setup({
+const streamSettingsAudioControlStateMachine = setup({
 	types: {} as {
 		events: StreamSettingsAudioControlEvent;
 	},
@@ -141,7 +164,7 @@ export const streamSettingsAudioControlStateMachine = setup({
 	},
 });
 
-export function selectStreamSettingsAudioControlState(
+function selectStreamSettingsAudioControlState(
 	signals: StreamSettingsAudioControlSignals,
 ): StreamSettingsAudioControlStateValue {
 	const [snapshot] = transition(
@@ -184,6 +207,129 @@ export function selectStreamSettingsAudioMenuState(
 				platform: signals.platform,
 				nativeAudioAvailability: signals.nativeAudioAvailability,
 			}),
+		showWindowsAudioSourceMenu:
+			signals.supportsStreamAudio &&
+			signals.captureAudioEnabled &&
+			canSelectWindowsDesktopAudioSource({
+				platform: signals.platform,
+				shareContext: signals.shareContext,
+				nativeAudioAvailability: signals.nativeAudioAvailability,
+			}),
 		showDeviceAudioMenu: signals.shareContext === 'device' && signals.captureAudioEnabled,
 	};
+}
+
+export type StreamSettingsQualityWrite =
+	| {kind: 'none'}
+	| {kind: 'premium'}
+	| {kind: 'write'; patch: ScreenShareQualityPatch};
+
+interface StreamSettingsQualitySignals {
+	quality: ScreenShareQualityInput;
+	pick: ScreenShareQualityPick;
+	locked: boolean;
+	showPremiumFeatures: boolean;
+}
+
+function selectStreamSettingsQualityWrite(signals: StreamSettingsQualitySignals): StreamSettingsQualityWrite {
+	if (signals.locked) {
+		return signals.showPremiumFeatures ? {kind: 'premium'} : {kind: 'none'};
+	}
+	const patch = resolveScreenShareQualityPick(signals.quality, signals.pick);
+	return patch === null ? {kind: 'none'} : {kind: 'write', patch};
+}
+
+export const OFFERED_SCREEN_SHARE_RESOLUTIONS = [
+	'low_480p',
+	'medium',
+	'high',
+	'ultra',
+	'source',
+] as const satisfies ReadonlyArray<ScreenshareResolution>;
+
+export type OfferedScreenShareResolution = (typeof OFFERED_SCREEN_SHARE_RESOLUTIONS)[number];
+
+export function offeredScreenShareResolution(resolution: ScreenshareResolution): OfferedScreenShareResolution {
+	return resolution === 'low_240p' ? 'low_480p' : resolution;
+}
+
+export const OFFERED_SCREEN_SHARE_FRAME_RATES = [
+	15, 30, 60, 120,
+] as const satisfies ReadonlyArray<SupportedScreenShareFrameRate>;
+
+interface StreamSettingsQualityOption<T> {
+	value: T;
+	premium: boolean;
+	locked: boolean;
+	selected: boolean;
+	write: StreamSettingsQualityWrite;
+}
+
+export interface StreamSettingsQualityMenuViewState {
+	resolutions: Array<StreamSettingsQualityOption<OfferedScreenShareResolution>>;
+	frameRates: Array<StreamSettingsQualityOption<SupportedScreenShareFrameRate>>;
+}
+
+export interface StreamSettingsQualityMenuSignals {
+	quality: ScreenShareQualityInput;
+	target: ScreenShareTarget;
+	showPremiumFeatures: boolean;
+}
+
+export function selectStreamSettingsQualityMenuState(
+	signals: StreamSettingsQualityMenuSignals,
+): StreamSettingsQualityMenuViewState {
+	const caps = signals.quality.caps;
+	const selectedResolution = offeredScreenShareResolution(signals.target.resolution);
+	const buildOption = <T>(
+		value: T,
+		premium: boolean,
+		locked: boolean,
+		selected: boolean,
+		pick: ScreenShareQualityPick,
+	): StreamSettingsQualityOption<T> => ({
+		value,
+		premium,
+		locked,
+		selected,
+		write: selectStreamSettingsQualityWrite({
+			quality: signals.quality,
+			pick,
+			locked,
+			showPremiumFeatures: signals.showPremiumFeatures,
+		}),
+	});
+	return {
+		resolutions: OFFERED_SCREEN_SHARE_RESOLUTIONS.filter(
+			(value) =>
+				value === selectedResolution || capsAllowScreenShareResolution(caps, value) || signals.showPremiumFeatures,
+		).map((value) =>
+			buildOption(
+				value,
+				!capsAllowScreenShareResolution(BASE_VIDEO_QUALITY_CAPS, value),
+				!capsAllowScreenShareResolution(caps, value),
+				value === selectedResolution,
+				{axis: 'resolution', resolution: value},
+			),
+		),
+		frameRates: OFFERED_SCREEN_SHARE_FRAME_RATES.filter(
+			(value) =>
+				value === signals.target.frameRate || capsAllowScreenShareFrameRate(caps, value) || signals.showPremiumFeatures,
+		).map((value) =>
+			buildOption(
+				value,
+				!capsAllowScreenShareFrameRate(BASE_VIDEO_QUALITY_CAPS, value),
+				!capsAllowScreenShareFrameRate(caps, value),
+				value === signals.target.frameRate,
+				{axis: 'frameRate', frameRate: value},
+			),
+		),
+	};
+}
+
+export function selectStreamSettingsPresetOverriddenByContext(
+	mode: StreamingMode,
+	context: ScreenShareContext,
+): boolean {
+	return normaliseStreamingModeForContext(mode, context) !== mode;
 }

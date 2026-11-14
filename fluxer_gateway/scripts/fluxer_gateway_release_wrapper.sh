@@ -13,4 +13,13 @@ eval | console | remote_console | remote | remsh | console_clean | console_boot 
 esac
 
 script_dir="$(CDPATH='' cd "$(dirname "$0")" && pwd -P)"
+node_name_file="$script_dir/../node_name"
+if [ -r "$node_name_file" ]; then
+	FLUXER_ERLANG_NODE_NAME="$(cat "$node_name_file")"
+	export FLUXER_ERLANG_NODE_NAME
+fi
+if [ -r "${FLUXER_ERLANG_COOKIE_FILE:-}" ] && [ -z "$(printf '%s' "${FLUXER_ERLANG_COOKIE:-}" | tr -d '[:space:]')" ]; then
+	FLUXER_ERLANG_COOKIE="$(cat "$FLUXER_ERLANG_COOKIE_FILE")"
+	export FLUXER_ERLANG_COOKIE
+fi
 exec "$script_dir/fluxer_gateway.real" "$@"

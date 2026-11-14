@@ -1,0 +1,35 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.crumb {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+	max-width: 40%;
+	flex-shrink: 1;
+	border: 0;
+	background: transparent;
+	padding: 0;
+	cursor: pointer;
+	color: var(--text-secondary);
+	font: inherit;
+	font-weight: 600;
+}
+
+.crumb:hover {
+	color: var(--text-primary);
+}
+
+.crumbName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.separator {
+	flex-shrink: 0;
+	width: 0.875rem;
+	height: 0.875rem;
+	margin: 0 0.25rem;
+	color: var(--text-tertiary);
+}

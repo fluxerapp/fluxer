@@ -1,23 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomInt} from 'node:crypto';
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {User} from '@app/api/models/User';
+import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {NON_SELF_HOSTED_RESERVED_DISCRIMINATORS} from '@fluxer/constants/src/DiscriminatorConstants';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {ms, seconds} from 'itty-time';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import type {User} from '../models/User';
-import type {IUserRepository} from '../user/IUserRepository';
 
 interface GenerateDiscriminatorParams {
 	username: string;
 	requestedDiscriminator?: number;
 	user?: User | null;
+	adminOverride?: boolean;
 }
 
 interface GenerateDiscriminatorResult {
@@ -38,33 +40,27 @@ interface ResolveUsernameChangeResult {
 	discriminator: number;
 }
 
-export class UsernameNotAvailableError extends BadRequestError {
+class UsernameNotAvailableError extends BadRequestError {
 	constructor() {
 		super({code: APIErrorCodes.USERNAME_NOT_AVAILABLE});
 		this.name = 'UsernameNotAvailableError';
 	}
 }
 
-export interface IDiscriminatorService {
-	generateDiscriminator(params: GenerateDiscriminatorParams): Promise<GenerateDiscriminatorResult>;
-	isDiscriminatorAvailableForUsername(username: string, discriminator: number): Promise<boolean>;
-	resolveUsernameChange(params: ResolveUsernameChangeParams): Promise<ResolveUsernameChangeResult>;
-}
-
-export class DiscriminatorService implements IDiscriminatorService {
+export class DiscriminatorService {
 	private static readonly LOCK_TTL_MS = ms('5 seconds');
 	private static readonly LOCK_RETRY_DELAY_MS = 50;
 	private static readonly LOCK_MAX_WAIT_MS = ms('10 seconds');
 	private static readonly DISCRIM_CACHE_TTL_S = seconds('30 seconds');
 
 	constructor(
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private cacheService: ICacheService,
 		private limitConfigService: LimitConfigService,
 	) {}
 
 	private async canUseCustomDiscriminator(user?: User | null): Promise<boolean> {
-		if (Config.instance.selfHosted) {
+		if (Config.instance.selfHosted && !isPremiumTieringActive()) {
 			return true;
 		}
 		if (!user) {
@@ -81,7 +77,7 @@ export class DiscriminatorService implements IDiscriminatorService {
 	}
 
 	async generateDiscriminator(params: GenerateDiscriminatorParams): Promise<GenerateDiscriminatorResult> {
-		const {username, requestedDiscriminator, user} = params;
+		const {username, requestedDiscriminator, user, adminOverride} = params;
 		const usernameLower = username.toLowerCase();
 		const lockKey = `discrim-lock:${usernameLower}`;
 		const lockToken = await this.acquireLockWithRetry(lockKey);
@@ -89,7 +85,7 @@ export class DiscriminatorService implements IDiscriminatorService {
 			return {discriminator: -1, available: false};
 		}
 		try {
-			const allowCustomDiscriminator = await this.canUseCustomDiscriminator(user);
+			const allowCustomDiscriminator = adminOverride === true || (await this.canUseCustomDiscriminator(user));
 			if (allowCustomDiscriminator && requestedDiscriminator !== undefined) {
 				const isAvailable = await this.isDiscriminatorAvailable(usernameLower, requestedDiscriminator);
 				if (isAvailable) {

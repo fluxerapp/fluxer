@@ -1,0 +1,17 @@
+ca-certificates
+zstd
+libjemalloc2
+libstdc++6
+libcurl4t64
+libvips42t64
+libwebp7
+libwebpmux3
+libwebpdemux2
+liblcms2-2
+libyuv0
+libde265-0
+libdav1d7
+libaom3
+libssl3t64
+zlib1g
+postgresql-17

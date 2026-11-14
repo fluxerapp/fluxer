@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {TestAccount} from '../../auth/tests/AuthTestUtils';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface InstanceConfigPolicyResponse {
 	policy: {

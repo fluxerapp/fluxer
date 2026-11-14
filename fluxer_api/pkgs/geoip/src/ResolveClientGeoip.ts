@@ -1,36 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AGE_BLOCKED_GEOS, AGE_RESTRICTED_GEOS} from '@fluxer/instance_bootstrap/src/AgeGeos';
-import type {GeolocationResponse} from '@fluxer/instance_bootstrap/src/Types';
-import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
-import {lookupGeoipByIp} from './GeoipLookup';
-
-interface ResolveClientGeoipOptions {
-	maxmindDbPath: string | undefined;
-	trustClientIpHeader: boolean;
-	clientIpHeaderName: string;
-}
+import type {GeoEntry, GeolocationResponse} from '@fluxer/instance_bootstrap/src/Types';
+import {lookupGeoipByIp} from '@pkgs/geoip/src/GeoipLookup';
 
 export async function resolveClientGeoip(
-	req: Request,
-	options: ResolveClientGeoipOptions,
+	ip: string | null,
+	maxmindDbPath: string | undefined,
+	agePolicy: {restricted: ReadonlyArray<GeoEntry>},
 ): Promise<GeolocationResponse> {
 	const response: GeolocationResponse = {
 		countryCode: null,
 		regionCode: null,
 		latitude: null,
 		longitude: null,
-		ageRestrictedGeos: AGE_RESTRICTED_GEOS,
-		ageBlockedGeos: AGE_BLOCKED_GEOS,
+		ageRestrictedGeos: agePolicy.restricted,
+		ageBlockedGeos: [],
 	};
-	const ip = extractClientIp(req, {
-		trustClientIpHeader: options.trustClientIpHeader,
-		clientIpHeaderName: options.clientIpHeaderName,
-	});
 	if (!ip) {
 		return response;
 	}
-	const geoip = await lookupGeoipByIp(ip, options.maxmindDbPath);
+	const geoip = await lookupGeoipByIp(ip, maxmindDbPath);
 	response.countryCode = geoip.countryCode;
 	response.regionCode = geoip.regionCode ?? null;
 	response.latitude = geoip.latitude != null ? geoip.latitude.toString() : null;

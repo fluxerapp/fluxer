@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 
 export type RateLimitSection = {
 	readonly [key: string]: RouteRateLimitConfig;

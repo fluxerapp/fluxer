@@ -2,7 +2,7 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import type {Channel} from '@app/features/channel/models/Channel';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallInitiator from '@app/features/voice/state/CallInitiator';
 import CallState, {type Call} from '@app/features/voice/state/CallState';
 
@@ -14,7 +14,6 @@ interface CallHeaderState {
 	controlsVariant: CallHeaderControlsVariant;
 	isDeviceInRoomForChannelCall: boolean;
 	isDeviceConnectingToChannelCall: boolean;
-	isRingingForCurrentUserOnThisDevice: boolean;
 }
 
 export function useCallHeaderState(channel?: Channel | null): CallHeaderState {
@@ -37,28 +36,30 @@ export function useCallHeaderState(channel?: Channel | null): CallHeaderState {
 	);
 	const normalizedGuildId = channel?.guildId ?? null;
 	const matchesConnectionContext = Boolean(
-		channelId && MediaEngine.channelId === channelId && (MediaEngine.guildId ?? null) === normalizedGuildId,
+		channelId && VoiceRuntime.channelId === channelId && (VoiceRuntime.guildId ?? null) === normalizedGuildId,
 	);
-	const isDeviceInRoomForChannelCall = Boolean(matchesConnectionContext && MediaEngine.room);
+	const isDeviceInRoomForChannelCall = Boolean(matchesConnectionContext && VoiceRuntime.room);
 	const isDeviceConnectingToChannelCall =
-		matchesConnectionContext && (MediaEngine.connecting || (MediaEngine.connected && !isDeviceInRoomForChannelCall));
-	const controlsVariant: CallHeaderControlsVariant = !callExistsAndOngoing
-		? 'hidden'
-		: isDeviceInRoomForChannelCall
-			? 'inCall'
-			: isRingingForCurrentUserOnThisDevice
-				? 'incoming'
-				: isDeviceConnectingToChannelCall
-					? 'connecting'
-					: isCurrentUserParticipantInCall
-						? 'inCall'
-						: 'join';
+		matchesConnectionContext && (VoiceRuntime.connecting || (VoiceRuntime.connected && !isDeviceInRoomForChannelCall));
+	let controlsVariant: CallHeaderControlsVariant;
+	if (!callExistsAndOngoing) {
+		controlsVariant = 'hidden';
+	} else if (isDeviceInRoomForChannelCall) {
+		controlsVariant = 'inCall';
+	} else if (isRingingForCurrentUserOnThisDevice) {
+		controlsVariant = 'incoming';
+	} else if (isDeviceConnectingToChannelCall) {
+		controlsVariant = 'connecting';
+	} else if (isCurrentUserParticipantInCall) {
+		controlsVariant = 'inCall';
+	} else {
+		controlsVariant = 'join';
+	}
 	return {
 		call,
 		callExistsAndOngoing,
 		controlsVariant,
 		isDeviceInRoomForChannelCall,
 		isDeviceConnectingToChannelCall,
-		isRingingForCurrentUserOnThisDevice,
 	};
 }

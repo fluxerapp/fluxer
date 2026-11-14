@@ -67,7 +67,7 @@
 }
 
 .inputError {
-	color: var(--status-danger);
+	color: color-mix(in srgb, var(--status-danger) 70%, var(--text-primary));
 }
 
 .divider {

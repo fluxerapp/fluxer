@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getActiveInstanceProductName} from '@app/features/app/state/ActiveInstanceProductName';
+import {getAccountDisplayLabels, resolveAccountInstanceLabel} from '@app/features/auth/AccountDisplayUtils';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {InviteHeader} from '@app/features/auth/flow/InviteHeader';
+import Accounts from '@app/features/auth/state/Accounts';
+import Authentication from '@app/features/auth/state/Authentication';
+import {switchStoredAccountFromSwitcher} from '@app/features/auth/utils/AccountSwitcherModalUtils';
+import Guilds from '@app/features/guild/state/Guilds';
 import {JOIN_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import styles from '@app/features/invite/components/modals/InviteAcceptModal.module.css';
@@ -22,17 +28,23 @@ import {
 	INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR,
 	INVITE_NOT_FOUND_TITLE_DESCRIPTOR,
 	INVITES_PAUSED_TRY_AGAIN_DESCRIPTOR,
+	PREVIEW_COMMUNITY_DESCRIPTOR,
 	RAID_INVITES_PAUSED_SHORT_DESCRIPTOR,
 } from '@app/features/invite/utils/InviteMessageDescriptors';
+import {findInviteOnOtherAccount, type InviteAccountMatch} from '@app/features/invite/utils/InviteOtherAccountLookup';
+import {REPORT_COMMUNITY_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
+import {openReportGuildModal} from '@app/features/moderation/utils/ReportActionUtils';
+import {currentInstanceTarget, type InstanceHTTPTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import foodPatternUrl from '@app/media/images/i-like-food.svg';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {type ReactNode, useCallback, useEffect, useMemo, useState} from 'react';
 
 const JOIN_GROUP_DM_DESCRIPTOR = msg({
 	message: 'Join group DM',
@@ -46,22 +58,63 @@ const GO_TO_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Go to community',
 	comment: 'Short label in the invite accept modal. Keep it concise.',
 });
+const INVITE_ON_OTHER_INSTANCE_DESCRIPTOR = msg({
+	message: 'This invite is on {instanceName}, where you also have an account.',
+	comment:
+		'Invite accept modal text shown when the invite does not exist on the current instance but does on another instance the user is signed in to. instanceName is a server or instance domain.',
+});
+const OPEN_INVITE_WITH_ACCOUNT_DESCRIPTOR = msg({
+	message: 'Open with {accountName} on {instanceName}',
+	comment:
+		'Button in the invite accept modal that switches to another signed-in account and opens the invite there. instanceName is a server or instance domain.',
+});
+const ADULTS_ONLY_COMMUNITY_DESCRIPTOR = msg({
+	message: 'This community is for adults only.',
+	comment: 'Text in the invite dialog when the community is marked 18+ and the person is not an adult.',
+});
+const OPEN_INVITE_ON_INSTANCE_DESCRIPTOR = msg({
+	message: 'Open on {instanceName}',
+	comment:
+		'Button in the invite accept modal that switches to the signed-in account on another instance and opens the invite there, used when the account name is unknown. instanceName is a server or instance domain.',
+});
 const logger = new Logger('InviteAcceptModal');
 
 interface InviteAcceptModalProps {
 	code: string;
+	target: InstanceHTTPTarget;
 }
 
-export const InviteAcceptModal = observer(function InviteAcceptModal({code}: InviteAcceptModalProps) {
+export const InviteAcceptModal = observer(function InviteAcceptModal({code, target}: InviteAcceptModalProps) {
 	const {i18n} = useLingui();
-	const inviteState = Invites.invites.get(code) ?? null;
+	const inviteState = Invites.getInvite(code, target);
 	const invite = inviteState?.data ?? null;
 	const [isAccepting, setIsAccepting] = useState(false);
+	const [otherAccountMatch, setOtherAccountMatch] = useState<InviteAccountMatch | null>(null);
 	useEffect(() => {
 		if (!inviteState) {
-			void InviteCommands.fetchWithCoalescing(code).catch(() => {});
+			void InviteCommands.fetchWithCoalescing(code, target).catch(() => {});
 		}
-	}, [code, inviteState]);
+	}, [code, inviteState, target]);
+	const isInviteMissing = inviteState != null && !inviteState.loading && (inviteState.error != null || !invite);
+	useEffect(() => {
+		setOtherAccountMatch(null);
+		if (!isInviteMissing) return;
+		let cancelled = false;
+		void findInviteOnOtherAccount(
+			code,
+			{accountKey: Accounts.currentAccountKey, instanceKey: target.instanceKey},
+			Accounts.getAllAccounts(),
+		)
+			.then((match) => {
+				if (!cancelled) setOtherAccountMatch(match);
+			})
+			.catch((error: unknown) => {
+				logger.warn('Failed to look the invite up on other accounts:', error);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [code, isInviteMissing, target.instanceKey]);
 	const isGroupDM = invite != null && isGroupDmInvite(invite);
 	const groupDMCounts =
 		invite && isGroupDM
@@ -99,7 +152,12 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 			splash: guild.splash,
 		});
 	}, [invite]);
-	const isJoinDisabled = isGuildInviteActionDisabled(guildActionState);
+	const adultsOnly =
+		invite != null &&
+		isGuildInvite(invite) &&
+		invite.guild.nsfw === true &&
+		Users.currentUser?.matureContentAllowed === false;
+	const isJoinDisabled = isGuildInviteActionDisabled(guildActionState) || adultsOnly;
 	const primaryActionType = getGuildInvitePrimaryAction(guildActionState);
 	const primaryLabel = useMemo(() => {
 		if (isGroupDM) return i18n._(JOIN_GROUP_DM_DESCRIPTOR);
@@ -108,6 +166,8 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 				return i18n._(INVITES_PAUSED_DESCRIPTOR);
 			case GuildInvitePrimaryAction.GoToCommunity:
 				return i18n._(GO_TO_COMMUNITY_DESCRIPTOR);
+			case GuildInvitePrimaryAction.OpenVisit:
+				return i18n._(PREVIEW_COMMUNITY_DESCRIPTOR);
 			default:
 				return i18n._(JOIN_COMMUNITY_DESCRIPTOR);
 		}
@@ -118,13 +178,55 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 	const handleAccept = useCallback(async () => {
 		setIsAccepting(true);
 		try {
-			await InviteCommands.acceptAndTransitionToChannel(code, i18n);
+			await InviteCommands.acceptAndTransitionToChannel(code, i18n, target);
 			ModalCommands.pop();
 		} catch (error) {
 			logger.error(' Failed to accept invite:', error);
 			setIsAccepting(false);
 		}
-	}, [code, i18n]);
+	}, [code, i18n, target]);
+	const reportableGuild =
+		invite != null &&
+		isGuildInvite(invite) &&
+		target.instanceKey === currentInstanceTarget().instanceKey &&
+		Guilds.getGuild(invite.guild.id)?.isOwner(Authentication.currentUserId) !== true
+			? invite.guild
+			: null;
+	const handleReportGuild = useCallback(() => {
+		if (reportableGuild === null) return;
+		openReportGuildModal({
+			guild: {id: reportableGuild.id, name: reportableGuild.name, icon: reportableGuild.icon ?? null},
+			inviteCode: code,
+		});
+	}, [code, reportableGuild]);
+	const handleOpenWithOtherAccount = useCallback(() => {
+		if (otherAccountMatch == null) return;
+		ModalCommands.pop();
+		void switchStoredAccountFromSwitcher({
+			accountKey: otherAccountMatch.account.storageKey,
+			onSessionExpired: null,
+			onSuccess: null,
+			redirectAfterSwitch: Routes.inviteRegister(code),
+			switchAccount: null,
+		});
+	}, [code, otherAccountMatch]);
+	const renderOtherAccountOffer = (match: InviteAccountMatch) => {
+		const instanceName = resolveAccountInstanceLabel(match.account) ?? match.instanceKey;
+		const labels = getAccountDisplayLabels(match.account);
+		return (
+			<div className={styles.actions} data-flx="invite.invite-accept-modal.render-other-account-offer.actions">
+				<Button
+					onClick={handleOpenWithOtherAccount}
+					disabled={Accounts.isSwitching || Accounts.isLoading}
+					data-flx="invite.invite-accept-modal.render-other-account-offer.button.open-with-account"
+				>
+					{labels.available
+						? i18n._(OPEN_INVITE_WITH_ACCOUNT_DESCRIPTOR, {accountName: labels.displayLabel, instanceName})
+						: i18n._(OPEN_INVITE_ON_INSTANCE_DESCRIPTOR, {instanceName})}
+				</Button>
+			</div>
+		);
+	};
 	const renderBody = () => {
 		if (!inviteState || inviteState.loading) {
 			return (
@@ -138,22 +240,46 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 				<div className={styles.stateHost} data-flx="invite.invite-accept-modal.render-body.state-host--2">
 					<AuthErrorState
 						title={i18n._(INVITE_NOT_FOUND_TITLE_DESCRIPTOR)}
-						text={i18n._(INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR)}
+						text={
+							otherAccountMatch == null
+								? i18n._(INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR)
+								: i18n._(INVITE_ON_OTHER_INSTANCE_DESCRIPTOR, {
+										instanceName:
+											resolveAccountInstanceLabel(otherAccountMatch.account) ?? otherAccountMatch.instanceKey,
+									})
+						}
+						action={otherAccountMatch == null ? null : renderOtherAccountOffer(otherAccountMatch)}
 						data-flx="invite.invite-accept-modal.render-body.auth-error-state"
 					/>
 				</div>
 			);
 		}
+		const cardClassName = styles.cardInner;
+		const header = (
+			<InviteHeader invite={inviteForHeader} data-flx="invite.invite-accept-modal.render-body.invite-header--2" />
+		);
+		let restriction: ReactNode;
+		if (adultsOnly) {
+			restriction = (
+				<p className={styles.disabledText} data-flx="invite.invite-accept-modal.render-body.adults-only-text">
+					{i18n._(ADULTS_ONLY_COMMUNITY_DESCRIPTOR)}
+				</p>
+			);
+		} else if (isJoinDisabled) {
+			restriction = (
+				<p className={styles.disabledText} data-flx="invite.invite-accept-modal.render-body.disabled-text">
+					{guildActionState.isRaidDetected
+						? i18n._(RAID_INVITES_PAUSED_SHORT_DESCRIPTOR, {productName: getActiveInstanceProductName()})
+						: i18n._(INVITES_PAUSED_TRY_AGAIN_DESCRIPTOR)}
+				</p>
+			);
+		} else {
+			restriction = null;
+		}
 		return (
-			<div className={styles.cardInner} data-flx="invite.invite-accept-modal.render-body.card-inner--2">
-				<InviteHeader invite={inviteForHeader} data-flx="invite.invite-accept-modal.render-body.invite-header--2" />
-				{isJoinDisabled ? (
-					<p className={styles.disabledText} data-flx="invite.invite-accept-modal.render-body.disabled-text">
-						{guildActionState.isRaidDetected
-							? i18n._(RAID_INVITES_PAUSED_SHORT_DESCRIPTOR, {productName: PRODUCT_NAME})
-							: i18n._(INVITES_PAUSED_TRY_AGAIN_DESCRIPTOR)}
-					</p>
-				) : null}
+			<div className={cardClassName} data-flx="invite.invite-accept-modal.render-body.card-inner--2">
+				{header}
+				{restriction}
 				<div className={styles.actions} data-flx="invite.invite-accept-modal.render-body.actions--2">
 					<Button
 						onClick={handleAccept}
@@ -164,6 +290,19 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 						{primaryLabel}
 					</Button>
 				</div>
+				{reportableGuild !== null && (
+					<div className={styles.reportActions} data-flx="invite.invite-accept-modal.render-body.report-actions">
+						<Button
+							variant="ghost"
+							small
+							fitContent
+							onClick={handleReportGuild}
+							data-flx="invite.invite-accept-modal.render-body.button.report-guild"
+						>
+							{i18n._(REPORT_COMMUNITY_DESCRIPTOR)}
+						</Button>
+					</div>
+				)}
 			</div>
 		);
 	};

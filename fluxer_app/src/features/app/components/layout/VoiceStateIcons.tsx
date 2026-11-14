@@ -18,6 +18,7 @@ import {observer} from 'mobx-react-lite';
 
 const MUTED_DESCRIPTOR = msg({
 	message: 'Muted',
+	context: 'microphone-state',
 	comment: 'Short label in the app layout voice state icons.',
 });
 
@@ -46,11 +47,14 @@ export const VoiceStateIcons = observer(
 		className,
 	}: Props) => {
 		const {i18n} = useLingui();
-		const muteLabel = isGuildMuted
-			? i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR)
-			: isPermissionMuted
-				? getVoiceNoSpeakPermissionLabel(i18n, isCurrentUser)
-				: i18n._(MUTED_DESCRIPTOR);
+		let muteLabel: string;
+		if (isGuildMuted) {
+			muteLabel = i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR);
+		} else if (isPermissionMuted) {
+			muteLabel = getVoiceNoSpeakPermissionLabel(i18n, isCurrentUser);
+		} else {
+			muteLabel = i18n._(MUTED_DESCRIPTOR);
+		}
 		const muteClassName = isGuildMuted || isPermissionMuted ? styles.iconGuildAction : styles.iconMuted;
 		const deafenLabel = isGuildDeafened
 			? getVoiceDeafenedByModeratorsStatusLabel(i18n, isCurrentUser)

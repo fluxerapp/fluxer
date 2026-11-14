@@ -8,7 +8,7 @@
     cache_recently_disconnected/2,
     clear_recently_disconnected/2,
     clear_recently_disconnected_for_channel/2,
-    clear_pending_voice_connection/2,
+    clear_pending_voice_connection/3,
     clear_pending_voice_connections_for_user/3,
     clear_pending_voice_connections_for_user_channel/3,
     clear_pending_voice_connections_for_channel/2,
@@ -79,22 +79,21 @@ clear_recently_disconnected_for_channel(ChannelId, State) ->
     ),
     State#{recently_disconnected_voice_states => NewCache}.
 
--spec clear_pending_voice_connection(binary(), guild_state()) -> guild_state().
-clear_pending_voice_connection(ConnectionId, State) ->
+-spec clear_pending_voice_connection(binary(), integer(), guild_state()) -> guild_state().
+clear_pending_voice_connection(ConnectionId, UserId, State) ->
     PendingConnections = maps:get(pending_voice_connections, State, #{}),
-    case maps:is_key(ConnectionId, PendingConnections) of
-        false ->
-            State;
-        true ->
-            PendingData = maps:get(ConnectionId, PendingConnections, #{}),
+    case maps:get(ConnectionId, PendingConnections, undefined) of
+        #{user_id := UserId} = PendingData ->
             NewPending = maps:remove(ConnectionId, PendingConnections),
             NewState = State#{pending_voice_connections => NewPending},
-            clear_e2ee_room_keys_for_removed_pending(
+            release_removed_pending(
                 #{ConnectionId => PendingData},
                 voice_state_utils:voice_states(State),
                 NewPending,
                 NewState
-            )
+            );
+        _ ->
+            State
     end.
 
 -spec clear_pending_voice_connections_for_user(integer(), binary() | undefined, guild_state()) ->
@@ -117,7 +116,7 @@ clear_pending_voice_connections_for_user(UserId, RequestSessionId, State) ->
         PendingConnections
     ),
     NewState = State#{pending_voice_connections => FilteredPending},
-    clear_e2ee_room_keys_for_removed_pending(
+    release_removed_pending(
         RemovedPending, voice_state_utils:voice_states(State), FilteredPending, NewState
     ).
 
@@ -125,10 +124,9 @@ clear_pending_voice_connections_for_user(UserId, RequestSessionId, State) ->
 pending_session_matches(_PendingData, undefined) ->
     true;
 pending_session_matches(PendingData, RequestSessionId) ->
-    normalize_session_id(maps:get(session_id, PendingData, undefined)) =:= RequestSessionId.
-
--spec normalize_session_id(term()) -> binary() | undefined.
-normalize_session_id(Value) -> voice_state_utils:normalize_session_id(Value).
+    guild_voice_connection_normalize:normalize_session_id(
+        maps:get(session_id, PendingData, undefined)
+    ) =:= RequestSessionId.
 
 -spec clear_pending_voice_connections_for_user_channel(integer(), integer(), guild_state()) ->
     guild_state().
@@ -147,7 +145,7 @@ clear_pending_voice_connections_for_user_channel(UserId, ChannelId, State) ->
         PendingConnections
     ),
     NewState = State#{pending_voice_connections => FilteredPending},
-    clear_e2ee_room_keys_for_removed_pending(
+    release_removed_pending(
         RemovedPending, voice_state_utils:voice_states(State), FilteredPending, NewState
     ).
 
@@ -194,10 +192,11 @@ clear_e2ee_room_keys_for_removed(RemovedVoiceStates, NewVoiceStates, State) ->
         RemovedVoiceStates
     ).
 
--spec clear_e2ee_room_keys_for_removed_pending(
+-spec release_removed_pending(
     map(), voice_state_map(), map(), guild_state()
 ) -> guild_state().
-clear_e2ee_room_keys_for_removed_pending(Removed, VS, Remaining, State) ->
+release_removed_pending(Removed, VS, Remaining, State) ->
+    ok = guild_voice_connection_pending:broadcast_moved_removals(maps:to_list(Removed), State),
     maps:fold(
         fun(_ConnId, PendingData, AccState) ->
             clear_e2ee_room_key_for_removed_pending(

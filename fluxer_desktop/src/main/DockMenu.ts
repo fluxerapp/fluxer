@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChildLogger} from '@electron/common/Logger';
+import {onAccountEngineSummaries} from '@electron/main/AccountEngineHost';
+import {createRefreshThrottle} from '@electron/main/AccountMenu';
+import {buildAccountSwitchMenuItems, onAccountMenuPrivacyChange} from '@electron/main/DesktopTray';
+import {isDirectMessagesAvailable, onDirectMessagesAvailabilityChange} from '@electron/main/JumpList';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {getMainWindow, showWindow} from '@electron/main/Window';
 import {app, Menu} from 'electron';
@@ -16,16 +20,22 @@ function dispatchToRenderer(channel: string): void {
 }
 
 function buildDockMenu(): Menu {
-	return Menu.buildFromTemplate([
+	const accountItems = buildAccountSwitchMenuItems();
+	const items: Array<Electron.MenuItemConstructorOptions> = [
+		...accountItems,
+		...(accountItems.length > 0 ? [{type: 'separator' as const}] : []),
 		{
 			label: t('desktop.jumpList.openSettings'),
 			click: () => dispatchToRenderer('open-settings'),
 		},
-		{
+	];
+	if (isDirectMessagesAvailable()) {
+		items.push({
 			label: t('desktop.jumpList.newDirectMessage'),
 			click: () => dispatchToRenderer('jump-list-new-dm'),
-		},
-	]);
+		});
+	}
+	return Menu.buildFromTemplate(items);
 }
 
 function refreshDockMenu(): void {
@@ -46,4 +56,7 @@ export function initializeDockMenu(): void {
 	installed = true;
 	refreshDockMenu();
 	onLocaleChange(refreshDockMenu);
+	onDirectMessagesAvailabilityChange(refreshDockMenu);
+	onAccountEngineSummaries(createRefreshThrottle(refreshDockMenu, 1000).schedule);
+	onAccountMenuPrivacyChange(refreshDockMenu);
 }

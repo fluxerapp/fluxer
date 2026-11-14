@@ -12,6 +12,8 @@ import {MagnifyingGlassIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
+const UNNAMED_CHANNEL_DESCRIPTOR = msg({message: 'Unnamed channel'});
+
 const CHANNELS_DESCRIPTOR = msg({
 	message: 'Channels',
 	comment: 'Section header in the message search popout listing matching channels for the in: filter. Title Case.',
@@ -72,7 +74,7 @@ export const ChannelsSection: React.FC<ChannelsSectionProps> = observer(
 										className={styles.channelName}
 										data-flx="channel.message-search-bar.channels-section.channel-name"
 									>
-										{resolveChannelSuggestionDisplayName(channelOption) || 'Unnamed Channel'}
+										{resolveChannelSuggestionDisplayName(channelOption) || i18n._(UNNAMED_CHANNEL_DESCRIPTOR)}
 									</span>
 								</div>
 							</div>

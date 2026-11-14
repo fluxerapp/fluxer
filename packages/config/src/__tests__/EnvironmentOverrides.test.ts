@@ -1,127 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	buildNamedFluxerEnvOverrides,
-	parseEnvValue,
-	setNestedValue,
-} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
-import {describe, expect, test} from 'vitest';
-
-describe('parseEnvValue', () => {
-	test('parses boolean true', () => {
-		expect(parseEnvValue('true')).toBe(true);
-		expect(parseEnvValue(' true ')).toBe(true);
-	});
-	test('parses boolean false', () => {
-		expect(parseEnvValue('false')).toBe(false);
-		expect(parseEnvValue(' false ')).toBe(false);
-	});
-	test('parses integers', () => {
-		expect(parseEnvValue('42')).toBe(42);
-		expect(parseEnvValue('-7')).toBe(-7);
-		expect(parseEnvValue('0')).toBe(0);
-	});
-	test('parses floats', () => {
-		expect(parseEnvValue('3.14')).toBe(3.14);
-		expect(parseEnvValue('-0.5')).toBe(-0.5);
-	});
-	test('parses JSON objects', () => {
-		expect(parseEnvValue('{"key": "value"}')).toEqual({key: 'value'});
-	});
-	test('parses JSON arrays', () => {
-		expect(parseEnvValue('[1, 2, 3]')).toEqual([1, 2, 3]);
-	});
-	test('rejects invalid JSON-like values', () => {
-		expect(() => parseEnvValue('{not json}')).toThrow('must be valid JSON');
-	});
-	test('returns raw string for plain strings', () => {
-		expect(parseEnvValue('hello')).toBe('hello');
-		expect(parseEnvValue('localhost')).toBe('localhost');
-	});
-});
-
-describe('setNestedValue', () => {
-	test('sets a top-level key', () => {
-		const target: Record<string, unknown> = {};
-		setNestedValue(target, ['port'], 8080);
-		expect(target).toEqual({port: 8080});
-	});
-	test('sets a nested key', () => {
-		const target: Record<string, unknown> = {};
-		setNestedValue(target, ['database', 'host'], 'localhost');
-		expect(target).toEqual({database: {host: 'localhost'}});
-	});
-	test('sets a deeply nested key', () => {
-		const target: Record<string, unknown> = {};
-		setNestedValue(target, ['a', 'b', 'c'], 'deep');
-		expect(target).toEqual({a: {b: {c: 'deep'}}});
-	});
-	test('does nothing for empty keys', () => {
-		const target: Record<string, unknown> = {existing: true};
-		setNestedValue(target, [], 'value');
-		expect(target).toEqual({existing: true});
-	});
-	test('overwrites non-object intermediate values', () => {
-		const target: Record<string, unknown> = {a: 'string'};
-		setNestedValue(target, ['a', 'b'], 'nested');
-		expect(target).toEqual({a: {b: 'nested'}});
-	});
-	test('creates arrays for numeric path keys', () => {
-		const target: Record<string, unknown> = {};
-		setNestedValue(target, ['auth', 'bluesky', 'keys', 0, 'kid'], 'key-1');
-		setNestedValue(target, ['auth', 'bluesky', 'keys', 0, 'private_key_path'], '/etc/fluxer/keys/key.pem');
-		expect(target).toEqual({
-			auth: {
-				bluesky: {
-					keys: [{kid: 'key-1', private_key_path: '/etc/fluxer/keys/key.pem'}],
-				},
-			},
-		});
-	});
-});
+import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {buildNamedFluxerEnvOverrides, readEnvValue} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
+import {afterAll, describe, expect, test} from 'vitest';
 
 describe('buildNamedFluxerEnvOverrides', () => {
-	test('builds canonical split env overrides and preserves empty strings', () => {
-		const overrides = buildNamedFluxerEnvOverrides({
-			FLUXER_BASE_DOMAIN: 'canonical.example',
-			FLUXER_API_ENDPOINT: 'https://canonical.example/api',
-			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: 'https://a.example, https://b.example',
-			FLUXER_S3_FORCE_PATH_STYLE: 'true',
-			FLUXER_AUTH_BLUESKY_KEYS: '[{"kid":"key-1","private_key_path":"/etc/fluxer/keys/bluesky.pem"}]',
-			FLUXER_ADMIN_BASE_PATH: '',
-			FLUXER_STRIPE_PRICE_MONTHLY_USD: 'price_monthly_usd',
-		});
-
-		expect(overrides).toMatchObject({
-			domain: {base_domain: 'canonical.example'},
-			endpoint_overrides: {api: 'https://canonical.example/api'},
-			auth: {
-				passkeys: {additional_allowed_origins: ['https://a.example', 'https://b.example']},
-				bluesky: {keys: [{kid: 'key-1', private_key_path: '/etc/fluxer/keys/bluesky.pem'}]},
-			},
-			s3: {force_path_style: true},
-			services: {
-				admin: {base_path: ''},
-			},
-			integrations: {stripe: {prices: {monthly_usd: 'price_monthly_usd'}}},
-		});
-	});
-
-	test('maps the internal scheme and KV provider names', () => {
-		expect(buildNamedFluxerEnvOverrides({FLUXER_INTERNAL_SCHEME: 'https', FLUXER_KV_PROVIDER: 'redis'})).toMatchObject({
-			domain: {internal_scheme: 'https'},
-			internal: {kv_provider: 'redis'},
-		});
-	});
-
-	test('rejects a non-integer value for an integer override', () => {
-		expect(() => buildNamedFluxerEnvOverrides({FLUXER_API_PORT: '80a'})).toThrow(
-			'FLUXER_API_PORT must be an integer, got "80a"',
-		);
-	});
-
-	test('leaves the default in place for a blank integer override', () => {
-		expect(buildNamedFluxerEnvOverrides({FLUXER_API_PORT: ''})).toEqual({});
+	test.each(['', ' ', '\t\n'])('treats %j as unset for every value type', (blank) => {
+		expect(
+			buildNamedFluxerEnvOverrides({
+				FLUXER_BASE_DOMAIN: blank,
+				FLUXER_API_PORT: blank,
+				FLUXER_S3_FORCE_PATH_STYLE: blank,
+				FLUXER_API_IP_BAN_EXEMPT_IPS: blank,
+				FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: blank,
+				FLUXER_LIVEKIT_DEFAULT_REGION: blank,
+				FLUXER_VOICE_P2P_STUN_URLS: blank,
+				FLUXER_AUTH_BLUESKY_KEYS: blank,
+				FLUXER_EMAIL_FROM_NAME: blank,
+				FLUXER_EMAIL_REPLY_TO_EMAIL: blank,
+				FLUXER_EMAIL_FALLBACK_DOMAINS: blank,
+				FLUXER_EMAIL_FALLBACK_SMTP_HOST: blank,
+				FLUXER_EMAIL_FALLBACK_SMTP_HEADERS: blank,
+			}),
+		).toEqual({});
 	});
 
 	test('the canonical name wins over its alias regardless of declaration order', () => {
@@ -136,62 +39,6 @@ describe('buildNamedFluxerEnvOverrides', () => {
 			internal: {media_proxy: 'http://canonical'},
 			services: {nats: {core_url: 'nats://canonical'}},
 		});
-	});
-
-	test('an alias alone still applies', () => {
-		expect(
-			buildNamedFluxerEnvOverrides({
-				FLUXER_MEDIA_PROXY_ENDPOINT: 'http://alias',
-				FLUXER_NATS_CORE_URL: 'nats://alias',
-			}),
-		).toMatchObject({
-			internal: {media_proxy: 'http://alias'},
-			services: {nats: {core_url: 'nats://alias'}},
-		});
-	});
-
-	test('rejects malformed JSON for a JSON-shaped override', () => {
-		expect(() => buildNamedFluxerEnvOverrides({FLUXER_LIVEKIT_DEFAULT_REGION: '{bad'})).toThrow(
-			'FLUXER_LIVEKIT_DEFAULT_REGION must be valid JSON',
-		);
-	});
-
-	test('parses the legacy Stripe price map onto integrations.stripe.legacy_prices', () => {
-		const overrides = buildNamedFluxerEnvOverrides({
-			FLUXER_STRIPE_LEGACY_PRICES:
-				'{"monthly_brl":["price_old_monthly_brl","price_older_monthly_brl"],"yearly_brl":["price_old_yearly_brl"],"monthly_try":["price_archived_monthly_try"],"gift_1_month_brl":["price_old_gift_1_month_brl"],"gift_1_year_brl":["price_old_gift_1_year_brl"]}',
-		});
-
-		expect(overrides).toMatchObject({
-			integrations: {
-				stripe: {
-					legacy_prices: {
-						monthly_brl: ['price_old_monthly_brl', 'price_older_monthly_brl'],
-						yearly_brl: ['price_old_yearly_brl'],
-						monthly_try: ['price_archived_monthly_try'],
-						gift_1_month_brl: ['price_old_gift_1_month_brl'],
-						gift_1_year_brl: ['price_old_gift_1_year_brl'],
-					},
-				},
-			},
-		});
-	});
-
-	test('the legacy Stripe price map does not disturb the live price map', () => {
-		const overrides = buildNamedFluxerEnvOverrides({
-			FLUXER_STRIPE_PRICES: '{"monthly_brl":"price_new_monthly_brl"}',
-			FLUXER_STRIPE_LEGACY_PRICES: '{"monthly_brl":["price_old_monthly_brl"]}',
-		});
-
-		const stripe = (overrides.integrations as {stripe: Record<string, unknown>}).stripe;
-		expect(stripe.prices).toEqual({monthly_brl: 'price_new_monthly_brl'});
-		expect(stripe.legacy_prices).toEqual({monthly_brl: ['price_old_monthly_brl']});
-	});
-
-	test('rejects malformed JSON for the legacy Stripe price map', () => {
-		expect(() => buildNamedFluxerEnvOverrides({FLUXER_STRIPE_LEGACY_PRICES: '{"monthly_brl":['})).toThrow(
-			'FLUXER_STRIPE_LEGACY_PRICES must be valid JSON',
-		);
 	});
 
 	test('an individual Stripe price env var wins over the blob, and the blob keys it does not name survive', () => {
@@ -225,15 +72,70 @@ describe('buildNamedFluxerEnvOverrides', () => {
 			monthly_eur: 'price_individual_monthly_eur',
 		});
 	});
+});
 
-	test('the Stripe price blob applies on its own when no individual price var is set', () => {
-		const overrides = buildNamedFluxerEnvOverrides({
-			FLUXER_STRIPE_PRICES: '{"monthly_brl":"price_blob_monthly_brl","yearly_brl":"price_blob_yearly_brl"}',
-		});
+describe('readEnvValue with NAME_FILE', () => {
+	const dir = mkdtempSync(join(tmpdir(), 'fluxer-env-file-'));
+	afterAll(() => rmSync(dir, {recursive: true, force: true}));
 
-		expect((overrides.integrations as {stripe: {prices: unknown}}).stripe.prices).toEqual({
-			monthly_brl: 'price_blob_monthly_brl',
-			yearly_brl: 'price_blob_yearly_brl',
+	function secretFile(name: string, contents: string): string {
+		const path = join(dir, name);
+		writeFileSync(path, contents);
+		return path;
+	}
+
+	test('reads the value from NAME_FILE when NAME is unset', () => {
+		const path = secretFile('plain', 'from-file\n');
+		expect(readEnvValue({FLUXER_SUDO_MODE_SECRET_FILE: path}, 'FLUXER_SUDO_MODE_SECRET')).toBe('from-file');
+	});
+
+	test('reads the value from NAME_FILE when NAME is blank', () => {
+		const path = secretFile('blank', 'from-file');
+		expect(
+			readEnvValue({FLUXER_SUDO_MODE_SECRET: ' ', FLUXER_SUDO_MODE_SECRET_FILE: path}, 'FLUXER_SUDO_MODE_SECRET'),
+		).toBe('from-file');
+	});
+
+	test('trims only one trailing newline', () => {
+		const crlf = secretFile('crlf', 'value\r\n');
+		const multi = secretFile('multi', '-----BEGIN-----\nabc\n-----END-----\n\n');
+		expect(readEnvValue({X_FILE: crlf}, 'X')).toBe('value');
+		expect(readEnvValue({X_FILE: multi}, 'X')).toBe('-----BEGIN-----\nabc\n-----END-----\n');
+	});
+
+	test('treats an empty file as unset', () => {
+		const path = secretFile('empty', '\n');
+		expect(readEnvValue({X_FILE: path}, 'X')).toBeUndefined();
+	});
+
+	test('keeps NAME when NAME_FILE is blank', () => {
+		expect(readEnvValue({X: 'direct', X_FILE: ''}, 'X')).toBe('direct');
+	});
+
+	test('rejects NAME and NAME_FILE together', () => {
+		const path = secretFile('both', 'from-file');
+		expect(() => readEnvValue({X: 'direct', X_FILE: path}, 'X')).toThrow('X and X_FILE are both set, set only one');
+	});
+
+	test('names NAME_FILE and the path when the file is missing', () => {
+		const path = join(dir, 'missing');
+		expect(() => readEnvValue({X_FILE: path}, 'X')).toThrow(`X_FILE could not read ${path} (ENOENT)`);
+	});
+
+	test('rejects a file that is not valid UTF-8', () => {
+		const path = join(dir, 'binary');
+		writeFileSync(path, Buffer.from([0xff, 0x61]));
+		expect(() => readEnvValue({X_FILE: path}, 'X')).toThrow(`X_FILE could not read ${path} (`);
+	});
+
+	test('feeds named overrides and aliases', () => {
+		const secret = secretFile('stripe', 'sk_test_file\n');
+		const nats = secretFile('nats', 'nats://nats:4222\n');
+		expect(
+			buildNamedFluxerEnvOverrides({FLUXER_STRIPE_SECRET_KEY_FILE: secret, FLUXER_NATS_CORE_URL_FILE: nats}),
+		).toMatchObject({
+			integrations: {stripe: {secret_key: 'sk_test_file'}},
+			services: {nats: {core_url: 'nats://nats:4222'}},
 		});
 	});
 });

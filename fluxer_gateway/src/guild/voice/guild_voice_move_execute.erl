@@ -112,11 +112,22 @@ broadcast_disconnects(ConnectionsToMove, NewState) ->
         ConnectionsToMove
     ).
 
+-spec broadcast_moves(voice_state_map(), binary(), guild_state()) -> ok.
+broadcast_moves(ConnectionsToMove, ChannelIdBin, Snapshot) ->
+    maps:foreach(
+        fun(_ConnId, VoiceState) ->
+            OldChannelIdBin = maps:get(<<"channel_id">>, VoiceState, null),
+            MovedVS = VoiceState#{<<"channel_id">> => ChannelIdBin},
+            guild_voice_broadcast:broadcast_voice_state_move(MovedVS, Snapshot, OldChannelIdBin)
+        end,
+        ConnectionsToMove
+    ).
+
 -spec handle_channel_move(
     voice_state_map(), integer(), integer(), integer(), voice_state_map(), guild_state()
 ) -> voice_reply().
 handle_channel_move(Conns, ChannelIdValue, UserId, ModeratorId, VoiceStates, State) ->
-    Channel = guild_voice_member:find_channel_by_id(ChannelIdValue, State),
+    Channel = guild_permissions_check:find_channel_by_id(ChannelIdValue, State),
     case Channel of
         undefined ->
             {reply, gateway_errors:error(voice_channel_not_found), State};
@@ -136,13 +147,10 @@ handle_channel_move(Conns, ChannelIdValue, UserId, ModeratorId, VoiceStates, Sta
     guild_state()
 ) -> voice_reply().
 handle_valid_channel(Conns, ChannelId, UserId, ModId, VoiceStates, Channel, State) ->
-    StateWithPending = mark_pending_states(UserId, ChannelId, State),
     ChannelType = map_utils:get_integer(Channel, <<"type">>, undefined),
     case ChannelType of
         2 ->
-            check_perms_and_execute(
-                Conns, ChannelId, UserId, ModId, VoiceStates, StateWithPending
-            );
+            check_perms_and_execute(Conns, ChannelId, UserId, ModId, VoiceStates, State);
         _ ->
             {reply, gateway_errors:error(voice_channel_not_voice), State}
     end.
@@ -158,12 +166,19 @@ check_perms_and_execute(Conns, ChannelId, UserId, ModId, VoiceStates, State) ->
     ViewPerm = constants:view_channel_permission(),
     ConnectPerm = constants:connect_permission(),
     ModPerms = guild_permissions:get_member_permissions(ModId, ChannelId, State),
-    ModHasConnect = permission_bits:has(ModPerms, ConnectPerm),
-    ModHasView = permission_bits:has(ModPerms, ViewPerm),
-    case ModHasConnect andalso ModHasView of
-        false ->
+    ModHasConnect = bitset:has(ModPerms, ConnectPerm),
+    ModHasView = bitset:has(ModPerms, ViewPerm),
+    case
+        {
+            ModHasConnect andalso ModHasView,
+            voice_p2p:guild_join_decision(false, ChannelId, State)
+        }
+    of
+        {false, _Decision} ->
             {reply, gateway_errors:error(voice_moderator_missing_connect), State};
-        true ->
+        {true, {reject, ErrorAtom}} ->
+            {reply, gateway_errors:error(ErrorAtom), State};
+        {true, _Decision} ->
             execute_move(Conns, ChannelId, UserId, VoiceStates, State)
     end.
 
@@ -181,7 +196,8 @@ execute_move(ConnectionsToMove, ChannelIdValue, UserId, VoiceStates, State) ->
     StateWithVA = maybe_add_virtual_access(UserId, ChannelIdValue, StateAfterDisconnect),
     StateCleaned = cleanup_stale_virtual_access(UserId, StateWithVA),
     BroadcastSnapshot = build_broadcast_snapshot(StateCleaned),
-    spawn(fun() -> broadcast_disconnects(ConnectionsToMove, BroadcastSnapshot) end),
+    ChannelIdBin = integer_to_binary(ChannelIdValue),
+    spawn(fun() -> broadcast_moves(ConnectionsToMove, ChannelIdBin, BroadcastSnapshot) end),
     SessionData = extract_session_data(ConnectionsToMove),
     Reply = #{
         success => true,
@@ -209,7 +225,7 @@ extract_session_data(ConnectionsToMove) ->
 
 -spec maybe_add_virtual_access(integer(), integer(), guild_state()) -> guild_state().
 maybe_add_virtual_access(UserId, ChannelId, State) ->
-    Member = guild_permissions:find_member_by_user_id(UserId, State),
+    Member = guild_permissions_check:find_member_by_user_id(UserId, State),
     case Member of
         undefined -> State;
         _ -> maybe_grant_virtual_access(UserId, ChannelId, State)
@@ -220,8 +236,8 @@ maybe_grant_virtual_access(UserId, ChannelId, State) ->
     Permissions = guild_permissions:get_member_permissions(UserId, ChannelId, State),
     ViewPerm = constants:view_channel_permission(),
     ConnectPerm = constants:connect_permission(),
-    HasView = permission_bits:has(Permissions, ViewPerm),
-    HasConnect = permission_bits:has(Permissions, ConnectPerm),
+    HasView = bitset:has(Permissions, ViewPerm),
+    HasConnect = bitset:has(Permissions, ConnectPerm),
     case HasView andalso HasConnect of
         true ->
             State;
@@ -250,7 +266,7 @@ member_user_id(Member) ->
     User = map_utils:ensure_map(
         maps:get(<<"user">>, map_utils:ensure_map(Member), #{})
     ),
-    guild_voice_connection_normalize:normalize_positive_snowflake(
+    snowflake_id:parse_maybe(
         maps:get(<<"id">>, User, undefined)
     ).
 
@@ -278,7 +294,7 @@ request_and_broadcast(GuildId, ChannelId, SessionInfo, GuildPid, UserId, Member,
     Latitude = maps:get(latitude, SessionInfo, undefined),
     Longitude = maps:get(longitude, SessionInfo, undefined),
     case
-        guild_voice_connection:request_voice_token(
+        guild_voice_connection_token:request_voice_token(
             GuildId,
             ChannelId,
             UserId,
@@ -375,6 +391,7 @@ build_pending_metadata(
         region_id => maps:get(region_id, TokenData, undefined),
         server_id => maps:get(server_id, TokenData, undefined),
         token_nonce => TokenNonce,
+        moved => true,
         created_at => Now,
         expires_at => Now + ?MOVE_PENDING_TTL_MS
     }.

@@ -6,11 +6,18 @@ import {Link} from '@app/features/platform/components/router/RouterReact';
 import {Button} from '@app/features/ui/button/Button';
 import {FluxerIcon} from '@app/features/ui/components/icons/FluxerIcon';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
-import {Trans} from '@lingui/react/macro';
+import {msg} from '@lingui/core/macro';
+import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
+const PAGE_NOT_FOUND_TITLE_DESCRIPTOR = msg({
+	message: 'Not found',
+	comment: 'Browser tab and window title for the 404 page.',
+});
+
 export const NotFoundPage = observer(() => {
-	useFluxerDocumentTitle('Not Found');
+	const {i18n} = useLingui();
+	useFluxerDocumentTitle(i18n._(PAGE_NOT_FOUND_TITLE_DESCRIPTOR));
 	return (
 		<div className={styles.container} data-flx="app.not-found-page.container">
 			<FluxerIcon className={styles.icon} data-flx="app.not-found-page.icon" />

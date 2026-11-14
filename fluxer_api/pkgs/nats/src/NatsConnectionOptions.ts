@@ -7,4 +7,5 @@ export interface NatsConnectionOptions {
 	maxReconnectAttempts?: number;
 	reconnectTimeWaitMs?: number;
 	connectTimeoutMs?: number;
+	drainTimeoutMs?: number;
 }

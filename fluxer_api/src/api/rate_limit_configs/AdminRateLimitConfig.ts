@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const AdminRateLimitConfigs = {
+	ADMIN_SSO_SIGN_IN: {
+		bucket: 'admin:sso:sign_in',
+		config: {limit: 15, windowMs: ms('10 seconds')},
+		trustForwardedClientIp: true,
+	} as RouteRateLimitConfig,
 	ADMIN_LOOKUP: {
 		bucket: 'admin:lookup',
 		config: {limit: 200, windowMs: ms('1 minute')},
@@ -43,13 +48,5 @@ export const AdminRateLimitConfigs = {
 	ADMIN_JOBS_VIEW: {
 		bucket: 'admin:jobs:view',
 		config: {limit: 600, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	ADMIN_GENERAL: {
-		bucket: 'admin:general',
-		config: {limit: 200, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	ADMIN_SYSTEM_HEAP_SNAPSHOT: {
-		bucket: 'admin:system:heap_snapshot',
-		config: {limit: 2, windowMs: ms('5 minutes')},
 	} as RouteRateLimitConfig,
 } as const;

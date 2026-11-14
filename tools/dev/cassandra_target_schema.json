@@ -22,6 +22,10 @@
 				{
 					"name": "unread_badges",
 					"type": "int"
+				},
+				{
+					"name": "flags",
+					"type": "int"
 				}
 			]
 		},
@@ -47,6 +51,31 @@
 				{
 					"name": "expires_at",
 					"type": "timestamp"
+				}
+			]
+		},
+		{
+			"name": "forum_tag",
+			"fields": [
+				{
+					"name": "id",
+					"type": "bigint"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "moderated",
+					"type": "boolean"
+				},
+				{
+					"name": "emoji_id",
+					"type": "bigint"
+				},
+				{
+					"name": "emoji_name",
+					"type": "text"
 				}
 			]
 		},
@@ -149,6 +178,18 @@
 				{
 					"name": "sticker_items",
 					"type": "frozen<list<message_sticker_item>>"
+				},
+				{
+					"name": "webhook_id",
+					"type": "bigint"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "missing_attachments",
+					"type": "frozen<list<message_attachment>>"
 				}
 			]
 		},
@@ -617,6 +658,29 @@
 	],
 	"tables": [
 		{
+			"name": "active_threads_by_guild",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "int"
+				}
+			],
+			"primary_key": "((guild_id), thread_id)",
+			"options": ""
+		},
+		{
 			"name": "admin_api_keys",
 			"columns": [
 				{
@@ -789,6 +853,10 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "attempt_id",
+					"type": "text"
+				},
+				{
 					"name": "started_at",
 					"type": "timestamp"
 				},
@@ -798,6 +866,10 @@
 				},
 				{
 					"name": "failed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "terminal_failed_at",
 					"type": "timestamp"
 				},
 				{
@@ -939,6 +1011,83 @@
 			"options": ""
 		},
 		{
+			"name": "app_attest_challenges",
+			"columns": [
+				{
+					"name": "challenge",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "purpose",
+					"type": "text"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "(challenge)",
+			"options": ""
+		},
+		{
+			"name": "app_attest_key_lookup",
+			"columns": [
+				{
+					"name": "key_id",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "(key_id)",
+			"options": ""
+		},
+		{
+			"name": "app_attest_keys",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "key_id",
+					"type": "text"
+				},
+				{
+					"name": "public_key",
+					"type": "blob"
+				},
+				{
+					"name": "environment",
+					"type": "text"
+				},
+				{
+					"name": "app_id",
+					"type": "text"
+				},
+				{
+					"name": "counter",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "last_used_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id), key_id)",
+			"options": ""
+		},
+		{
 			"name": "applications",
 			"columns": [
 				{
@@ -1011,6 +1160,33 @@
 			],
 			"primary_key": "((owner_user_id), application_id)",
 			"options": "CLUSTERING ORDER BY (application_id DESC)"
+		},
+		{
+			"name": "archived_threads_by_parent",
+			"columns": [
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "is_private",
+					"type": "boolean"
+				},
+				{
+					"name": "archive_timestamp",
+					"type": "timestamp"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((parent_id, is_private), archive_timestamp, thread_id)",
+			"options": "CLUSTERING ORDER BY (archive_timestamp DESC, thread_id DESC)"
 		},
 		{
 			"name": "attachment_decay_by_expiry",
@@ -1330,11 +1506,58 @@
 					"type": "boolean"
 				},
 				{
+					"name": "app_platform",
+					"type": "text"
+				},
+				{
+					"name": "app_version",
+					"type": "text"
+				},
+				{
+					"name": "app_release_channel",
+					"type": "text"
+				},
+				{
+					"name": "app_build_number",
+					"type": "int"
+				},
+				{
+					"name": "app_beta_number",
+					"type": "int"
+				},
+				{
+					"name": "auth_method",
+					"type": "text"
+				},
+				{
 					"name": "version",
 					"type": "int"
 				}
 			],
 			"primary_key": "((session_id_hash))",
+			"options": ""
+		},
+		{
+			"name": "auth_sessions_by_app_channel",
+			"columns": [
+				{
+					"name": "app_platform",
+					"type": "text"
+				},
+				{
+					"name": "app_release_channel",
+					"type": "text"
+				},
+				{
+					"name": "session_id_hash",
+					"type": "blob"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((app_platform, app_release_channel), session_id_hash)",
 			"options": ""
 		},
 		{
@@ -1489,20 +1712,13 @@
 				{
 					"name": "created_at",
 					"type": "timestamp"
+				},
+				{
+					"name": "decision_id",
+					"type": "bigint"
 				}
 			],
 			"primary_key": "(ip)",
-			"options": ""
-		},
-		{
-			"name": "banned_phone_prefixes",
-			"columns": [
-				{
-					"name": "prefix",
-					"type": "text"
-				}
-			],
-			"primary_key": "(prefix)",
 			"options": ""
 		},
 		{
@@ -3527,6 +3743,10 @@
 				{
 					"name": "content_warning_text",
 					"type": "text"
+				},
+				{
+					"name": "rtc_p2p",
+					"type": "boolean"
 				}
 			],
 			"primary_key": "((channel_id, soft_deleted))",
@@ -3546,6 +3766,146 @@
 			],
 			"primary_key": "((guild_id), channel_id)",
 			"options": ""
+		},
+		{
+			"name": "crosspost_sources_by_channel",
+			"columns": [
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source_message_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((source_channel_id), source_message_id)",
+			"options": ""
+		},
+		{
+			"name": "crossposted_messages",
+			"columns": [
+				{
+					"name": "source_message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "webhook_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "target_guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "target_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "target_message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "state",
+					"type": "text"
+				},
+				{
+					"name": "reserved_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "source_fingerprint",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((source_message_id), webhook_id)",
+			"options": ""
+		},
+		{
+			"name": "custom_badges",
+			"columns": [
+				{
+					"name": "badge_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "text"
+				},
+				{
+					"name": "position",
+					"type": "bigint"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "description",
+					"type": "text"
+				},
+				{
+					"name": "asset",
+					"type": "text"
+				},
+				{
+					"name": "href",
+					"type": "text"
+				},
+				{
+					"name": "updated_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((badge_id))",
+			"options": ""
+		},
+		{
+			"name": "custom_badges_by_position",
+			"columns": [
+				{
+					"name": "badge_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "text"
+				},
+				{
+					"name": "position",
+					"type": "bigint"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "description",
+					"type": "text"
+				},
+				{
+					"name": "asset",
+					"type": "text"
+				},
+				{
+					"name": "href",
+					"type": "text"
+				},
+				{
+					"name": "updated_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((type), position)",
+			"options": "CLUSTERING ORDER BY (position ASC) AND gc_grace_seconds = 86400"
 		},
 		{
 			"name": "data_service_search_index_files",
@@ -3619,17 +3979,6 @@
 				}
 			],
 			"primary_key": "((shard_id), index_name)",
-			"options": ""
-		},
-		{
-			"name": "disposable_email_domains",
-			"columns": [
-				{
-					"name": "domain",
-					"type": "text"
-				}
-			],
-			"primary_key": "(domain)",
 			"options": ""
 		},
 		{
@@ -3737,6 +4086,10 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "subscription_status",
+					"type": "text"
+				},
+				{
 					"name": "created_at",
 					"type": "timestamp"
 				},
@@ -3803,7 +4156,7 @@
 				}
 			],
 			"primary_key": "((email_lower))",
-			"options": ""
+			"options": "default_time_to_live = 600"
 		},
 		{
 			"name": "dsa_report_tickets",
@@ -3826,7 +4179,7 @@
 				}
 			],
 			"primary_key": "((ticket))",
-			"options": ""
+			"options": "default_time_to_live = 3600 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
 		},
 		{
 			"name": "email_change_tickets",
@@ -3965,6 +4318,221 @@
 			"options": "default_time_to_live = 86400 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
 		},
 		{
+			"name": "enforcement_decision_evidence",
+			"columns": [
+				{
+					"name": "decision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "messages",
+					"type": "frozen<list<iar_message_context>>"
+				},
+				{
+					"name": "message_locations",
+					"type": "map<bigint, text>"
+				},
+				{
+					"name": "profile_values",
+					"type": "map<text, text>"
+				}
+			],
+			"primary_key": "(decision_id)",
+			"options": "default_time_to_live = 31536000"
+		},
+		{
+			"name": "enforcement_decision_notes",
+			"columns": [
+				{
+					"name": "decision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "note_id",
+					"type": "bigint"
+				},
+				{
+					"name": "author_id",
+					"type": "bigint"
+				},
+				{
+					"name": "body",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((decision_id), note_id)",
+			"options": "CLUSTERING ORDER BY (note_id ASC) AND default_time_to_live = 31536000"
+		},
+		{
+			"name": "enforcement_decisions",
+			"columns": [
+				{
+					"name": "decision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "subject_type",
+					"type": "text"
+				},
+				{
+					"name": "subject_id",
+					"type": "bigint"
+				},
+				{
+					"name": "subject_name",
+					"type": "text"
+				},
+				{
+					"name": "recipient_user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "kind",
+					"type": "text"
+				},
+				{
+					"name": "reason_code",
+					"type": "int"
+				},
+				{
+					"name": "source",
+					"type": "text"
+				},
+				{
+					"name": "automation",
+					"type": "text"
+				},
+				{
+					"name": "statement",
+					"type": "text"
+				},
+				{
+					"name": "rights_holder",
+					"type": "text"
+				},
+				{
+					"name": "ends_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "deletion_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "feature_limit",
+					"type": "text"
+				},
+				{
+					"name": "profile_fields",
+					"type": "set<text>"
+				},
+				{
+					"name": "removed_message_count",
+					"type": "int"
+				},
+				{
+					"name": "removed_all_messages",
+					"type": "boolean"
+				},
+				{
+					"name": "payment_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "report_ids",
+					"type": "set<bigint>"
+				},
+				{
+					"name": "decided_by",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "status",
+					"type": "text"
+				},
+				{
+					"name": "end_outcome",
+					"type": "text"
+				},
+				{
+					"name": "ended_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "ended_by",
+					"type": "bigint"
+				},
+				{
+					"name": "end_statement",
+					"type": "text"
+				},
+				{
+					"name": "notice_status",
+					"type": "text"
+				},
+				{
+					"name": "notice_channels",
+					"type": "set<text>"
+				},
+				{
+					"name": "notice_locale",
+					"type": "text"
+				},
+				{
+					"name": "notice_text",
+					"type": "text"
+				},
+				{
+					"name": "notice_sent_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "(decision_id)",
+			"options": ""
+		},
+		{
+			"name": "enforcement_decisions_by_subject",
+			"columns": [
+				{
+					"name": "subject_type",
+					"type": "text"
+				},
+				{
+					"name": "subject_id",
+					"type": "bigint"
+				},
+				{
+					"name": "decision_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((subject_type, subject_id), decision_id)",
+			"options": "CLUSTERING ORDER BY (decision_id DESC)"
+		},
+		{
+			"name": "enforcement_review_queue",
+			"columns": [
+				{
+					"name": "bucket",
+					"type": "int"
+				},
+				{
+					"name": "decision_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((bucket), decision_id)",
+			"options": "CLUSTERING ORDER BY (decision_id DESC)"
+		},
+		{
 			"name": "favorite_memes",
 			"columns": [
 				{
@@ -4042,6 +4610,10 @@
 				{
 					"name": "placeholder",
 					"type": "text"
+				},
+				{
+					"name": "nsfw",
+					"type": "boolean"
 				}
 			],
 			"primary_key": "((user_id), meme_id)",
@@ -4815,6 +5387,21 @@
 			"options": "CLUSTERING ORDER BY (created_at DESC, request_id ASC, exposure_index ASC) AND default_time_to_live = 7776000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '3'}"
 		},
 		{
+			"name": "forum_pinned_thread",
+			"columns": [
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((parent_id))",
+			"options": ""
+		},
+		{
 			"name": "gift_codes",
 			"columns": [
 				{
@@ -4852,6 +5439,14 @@
 				{
 					"name": "checkout_session_id",
 					"type": "text"
+				},
+				{
+					"name": "revoked_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "premium_reversed_seconds",
+					"type": "int"
 				},
 				{
 					"name": "duration_type",
@@ -5417,6 +6012,29 @@
 			"options": "default_time_to_live = 0"
 		},
 		{
+			"name": "guild_report_submissions_by_reporter",
+			"columns": [
+				{
+					"name": "reporter_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "report_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((reporter_id), reported_guild_id)",
+			"options": "default_time_to_live = 86400 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
+		},
+		{
 			"name": "guild_roles",
 			"columns": [
 				{
@@ -5546,6 +6164,99 @@
 			"options": ""
 		},
 		{
+			"name": "guild_thread_state",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "first_active_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "perms_seeded_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "search_backfilled_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((guild_id))",
+			"options": ""
+		},
+		{
+			"name": "guild_visits_by_guild",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source",
+					"type": "int"
+				},
+				{
+					"name": "invite_code",
+					"type": "text"
+				},
+				{
+					"name": "invite_expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "started_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "opened_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((guild_id), user_id)",
+			"options": "default_time_to_live = 1209600"
+		},
+		{
+			"name": "guild_visits_by_user",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source",
+					"type": "int"
+				},
+				{
+					"name": "invite_code",
+					"type": "text"
+				},
+				{
+					"name": "invite_expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "started_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "opened_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id), guild_id)",
+			"options": "default_time_to_live = 1209600"
+		},
+		{
 			"name": "guilds",
 			"columns": [
 				{
@@ -5611,6 +6322,10 @@
 				{
 					"name": "features",
 					"type": "set<text>"
+				},
+				{
+					"name": "badge_ids",
+					"type": "set<bigint>"
 				},
 				{
 					"name": "verification_level",
@@ -5687,10 +6402,45 @@
 				{
 					"name": "content_warning_text",
 					"type": "text"
+				},
+				{
+					"name": "invites_paused_until",
+					"type": "timestamp"
+				},
+				{
+					"name": "planned_join_waves_until",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((guild_id))",
 			"options": ""
+		},
+		{
+			"name": "iar_report_notes",
+			"columns": [
+				{
+					"name": "report_id",
+					"type": "bigint"
+				},
+				{
+					"name": "note_id",
+					"type": "bigint"
+				},
+				{
+					"name": "author_id",
+					"type": "bigint"
+				},
+				{
+					"name": "body",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((report_id), note_id)",
+			"options": "CLUSTERING ORDER BY (note_id ASC)"
 		},
 		{
 			"name": "iar_submissions",
@@ -5830,68 +6580,110 @@
 				{
 					"name": "reported_channel_effective_content_warning_text",
 					"type": "text"
+				},
+				{
+					"name": "reason",
+					"type": "text"
+				},
+				{
+					"name": "flow_revision",
+					"type": "text"
+				},
+				{
+					"name": "flow_steps",
+					"type": "text"
+				},
+				{
+					"name": "flow_locale",
+					"type": "text"
+				},
+				{
+					"name": "flow_surface",
+					"type": "text"
+				},
+				{
+					"name": "reporter_good_faith_confirmed",
+					"type": "boolean"
+				},
+				{
+					"name": "reported_webhook_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_webhook_name",
+					"type": "text"
+				},
+				{
+					"name": "reported_webhook_avatar_hash",
+					"type": "text"
+				},
+				{
+					"name": "reported_webhook_default_name",
+					"type": "text"
+				},
+				{
+					"name": "reported_webhook_default_avatar_hash",
+					"type": "text"
+				},
+				{
+					"name": "reported_webhook_type",
+					"type": "int"
+				},
+				{
+					"name": "reported_webhook_application_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_webhook_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_webhook_guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_webhook_created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "reported_webhook_creator_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_webhook_creator_username",
+					"type": "text"
+				},
+				{
+					"name": "reported_webhook_creator_discriminator",
+					"type": "int"
+				},
+				{
+					"name": "reported_webhook_creator_global_name",
+					"type": "text"
+				},
+				{
+					"name": "reported_webhook_creator_avatar_hash",
+					"type": "text"
+				},
+				{
+					"name": "reported_profile_snapshot",
+					"type": "text"
+				},
+				{
+					"name": "legal_hold_until",
+					"type": "timestamp"
+				},
+				{
+					"name": "legal_hold_reason",
+					"type": "text"
+				},
+				{
+					"name": "reporter_outcome",
+					"type": "text"
 				}
 			],
 			"primary_key": "((report_id))",
 			"options": ""
-		},
-		{
-			"name": "inbound_sms_challenges",
-			"columns": [
-				{
-					"name": "challenge_code",
-					"type": "text"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "our_number",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "expires_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "consumed_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "consumed_from_phone",
-					"type": "text"
-				}
-			],
-			"primary_key": "(challenge_code)",
-			"options": "default_time_to_live = 900 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "inbound_sms_challenges_by_user",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "challenge_code",
-					"type": "text"
-				},
-				{
-					"name": "expires_at",
-					"type": "timestamp"
-				}
-			],
-			"primary_key": "(user_id, created_at)",
-			"options": "CLUSTERING ORDER BY (created_at DESC) AND default_time_to_live = 900 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
 		},
 		{
 			"name": "instance_configuration",
@@ -6011,120 +6803,6 @@
 			],
 			"primary_key": "((token_), user_id)",
 			"options": "default_time_to_live = 1800 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "ipinfo_cache",
-			"columns": [
-				{
-					"name": "cache_key",
-					"type": "text"
-				},
-				{
-					"name": "payload",
-					"type": "text"
-				}
-			],
-			"primary_key": "(cache_key)",
-			"options": "default_time_to_live = 1209600 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '12'}"
-		},
-		{
-			"name": "ipinfo_requests_by_hour",
-			"columns": [
-				{
-					"name": "bucket_date",
-					"type": "text"
-				},
-				{
-					"name": "bucket_hour",
-					"type": "tinyint"
-				},
-				{
-					"name": "requested_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "event_id",
-					"type": "uuid"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				},
-				{
-					"name": "reason",
-					"type": "text"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "cache_key",
-					"type": "text"
-				},
-				{
-					"name": "request_url",
-					"type": "text"
-				},
-				{
-					"name": "http_status",
-					"type": "int"
-				},
-				{
-					"name": "outcome",
-					"type": "text"
-				},
-				{
-					"name": "available",
-					"type": "boolean"
-				},
-				{
-					"name": "risk_note",
-					"type": "text"
-				},
-				{
-					"name": "latency_ms",
-					"type": "int"
-				},
-				{
-					"name": "response_ip",
-					"type": "text"
-				},
-				{
-					"name": "country_code",
-					"type": "text"
-				},
-				{
-					"name": "asn",
-					"type": "int"
-				},
-				{
-					"name": "is_anonymous",
-					"type": "boolean"
-				},
-				{
-					"name": "is_tor",
-					"type": "boolean"
-				},
-				{
-					"name": "is_vpn",
-					"type": "boolean"
-				},
-				{
-					"name": "is_proxy",
-					"type": "boolean"
-				},
-				{
-					"name": "is_residential_proxy",
-					"type": "boolean"
-				},
-				{
-					"name": "metadata_json",
-					"type": "text"
-				}
-			],
-			"primary_key": "((bucket_date, bucket_hour), requested_at, event_id)",
-			"options": "CLUSTERING ORDER BY (requested_at DESC, event_id ASC) AND default_time_to_live = 7776000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '3'}"
 		},
 		{
 			"name": "jobs_active",
@@ -6280,37 +6958,6 @@
 			"options": "default_time_to_live = 7776000"
 		},
 		{
-			"name": "latest_risk_context_by_user",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "updated_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "subnet",
-					"type": "text"
-				},
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "asn",
-					"type": "int"
-				}
-			],
-			"primary_key": "(user_id)",
-			"options": ""
-		},
-		{
 			"name": "message_reactions",
 			"columns": [
 				{
@@ -6374,7 +7021,7 @@
 				}
 			],
 			"primary_key": "((reporter_id), channel_id, message_id)",
-			"options": ""
+			"options": "default_time_to_live = 31536000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '12'}"
 		},
 		{
 			"name": "messages",
@@ -6518,141 +7165,22 @@
 			"options": ""
 		},
 		{
-			"name": "ncmec_attachment_submissions",
-			"columns": [
-				{
-					"name": "attachment_id",
-					"type": "bigint"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "channel_id",
-					"type": "bigint"
-				},
-				{
-					"name": "message_id",
-					"type": "bigint"
-				},
-				{
-					"name": "filename",
-					"type": "text"
-				},
-				{
-					"name": "source_report_id",
-					"type": "bigint"
-				},
-				{
-					"name": "status",
-					"type": "text"
-				},
-				{
-					"name": "ncmec_report_id",
-					"type": "text"
-				},
-				{
-					"name": "ncmec_file_id",
-					"type": "text"
-				},
-				{
-					"name": "submitted_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "submitted_by_admin_id",
-					"type": "bigint"
-				},
-				{
-					"name": "reporter_full_name",
-					"type": "text"
-				},
-				{
-					"name": "failure_reason",
-					"type": "text"
-				},
-				{
-					"name": "archive_completed_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "content_deleted_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "updated_at",
-					"type": "timestamp"
-				}
-			],
-			"primary_key": "(attachment_id)",
-			"options": ""
-		},
-		{
-			"name": "ncmec_user_workflows",
+			"name": "user_recovery_kits",
 			"columns": [
 				{
 					"name": "user_id",
 					"type": "bigint"
 				},
 				{
-					"name": "deleted_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "deleted_by_admin_id",
-					"type": "bigint"
-				},
-				{
-					"name": "deletion_private_reason",
+					"name": "secret_hash",
 					"type": "text"
-				},
-				{
-					"name": "deletion_ncmec_report_id",
-					"type": "text"
-				},
-				{
-					"name": "archive_id",
-					"type": "bigint"
-				},
-				{
-					"name": "archive_requested_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "archive_requested_by_admin_id",
-					"type": "bigint"
-				},
-				{
-					"name": "archive_audit_log_reason",
-					"type": "text"
-				},
-				{
-					"name": "archive_completed_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "deletion_job_queued_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "previous_report_ids",
-					"type": "set<text>"
 				},
 				{
 					"name": "created_at",
 					"type": "timestamp"
-				},
-				{
-					"name": "updated_at",
-					"type": "timestamp"
 				}
 			],
-			"primary_key": "(user_id)",
+			"primary_key": "((user_id))",
 			"options": ""
 		},
 		{
@@ -6804,6 +7332,1262 @@
 			],
 			"primary_key": "((user_id), token_)",
 			"options": "CLUSTERING ORDER BY (token_ DESC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
+		},
+		{
+			"name": "operator_pass_certificates",
+			"columns": [
+				{
+					"name": "pass_id",
+					"type": "text"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				},
+				{
+					"name": "number",
+					"type": "int"
+				},
+				{
+					"name": "purchase_id",
+					"type": "text"
+				},
+				{
+					"name": "holder_name",
+					"type": "text"
+				},
+				{
+					"name": "issued_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "paid_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "phase",
+					"type": "text"
+				},
+				{
+					"name": "terms_version",
+					"type": "text"
+				},
+				{
+					"name": "sha256",
+					"type": "text"
+				},
+				{
+					"name": "pdf",
+					"type": "blob"
+				},
+				{
+					"name": "source",
+					"type": "text"
+				},
+				{
+					"name": "cancelled_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "reissue_reason",
+					"type": "text"
+				},
+				{
+					"name": "link_token",
+					"type": "text"
+				}
+			],
+			"primary_key": "((pass_id), version)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_certificates_by_purchase",
+			"columns": [
+				{
+					"name": "purchase_id",
+					"type": "text"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((purchase_id), pass_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_certificate_numbers",
+			"columns": [
+				{
+					"name": "number",
+					"type": "int"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((number))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_certificate_links",
+			"columns": [
+				{
+					"name": "token_",
+					"type": "text"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((token_))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_purchases",
+			"columns": [
+				{
+					"name": "checkout_session_id",
+					"type": "text"
+				},
+				{
+					"name": "purchaser_id",
+					"type": "bigint"
+				},
+				{
+					"name": "quantity",
+					"type": "int"
+				},
+				{
+					"name": "status",
+					"type": "text"
+				},
+				{
+					"name": "phase",
+					"type": "text"
+				},
+				{
+					"name": "amount_minor",
+					"type": "int"
+				},
+				{
+					"name": "currency",
+					"type": "text"
+				},
+				{
+					"name": "quote_honored",
+					"type": "boolean"
+				},
+				{
+					"name": "payment_intent_id",
+					"type": "text"
+				},
+				{
+					"name": "invoice_id",
+					"type": "text"
+				},
+				{
+					"name": "subscription_id",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "completed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "refunded_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				},
+				{
+					"name": "waiver_consent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "waiver_consent_version",
+					"type": "text"
+				},
+				{
+					"name": "waiver_consent_text",
+					"type": "text"
+				},
+				{
+					"name": "waiver_consent_ip",
+					"type": "text"
+				},
+				{
+					"name": "waiver_consent_user_agent",
+					"type": "text"
+				},
+				{
+					"name": "wall_name",
+					"type": "text"
+				},
+				{
+					"name": "wall_opt_out",
+					"type": "boolean"
+				},
+				{
+					"name": "withdrawal_country",
+					"type": "text"
+				},
+				{
+					"name": "withdrawal_days",
+					"type": "int"
+				},
+				{
+					"name": "withdrawal_rule_version",
+					"type": "text"
+				},
+				{
+					"name": "fraud_warning_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "stripe_terms_consent",
+					"type": "text"
+				},
+				{
+					"name": "operator_pass_terms_version",
+					"type": "text"
+				},
+				{
+					"name": "purchased_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "withdrawal_ends_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "perks_granted_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "confirmation_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "withdrawn_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "withdrawal_name",
+					"type": "text"
+				},
+				{
+					"name": "withdrawal_refund_id",
+					"type": "text"
+				},
+				{
+					"name": "withdrawal_channel",
+					"type": "text"
+				},
+				{
+					"name": "withdrawal_receipts_owed",
+					"type": "map<text, text>"
+				},
+				{
+					"name": "invoice_number",
+					"type": "text"
+				},
+				{
+					"name": "invoice_document_id",
+					"type": "bigint"
+				},
+				{
+					"name": "dispute_id",
+					"type": "text"
+				},
+				{
+					"name": "dispute_reason",
+					"type": "text"
+				},
+				{
+					"name": "dispute_status",
+					"type": "text"
+				},
+				{
+					"name": "disputed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "dispute_closed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "certificate_names",
+					"type": "list<text>"
+				},
+				{
+					"name": "age_confirmed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "delivered_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "delivery_recorded_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "welcome_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "welcome_skipped_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "refusal_reason",
+					"type": "text"
+				},
+				{
+					"name": "charge_id",
+					"type": "text"
+				},
+				{
+					"name": "business_buyer",
+					"type": "boolean"
+				},
+				{
+					"name": "holder_had_pass",
+					"type": "boolean"
+				},
+				{
+					"name": "labs_greeting",
+					"type": "boolean"
+				},
+				{
+					"name": "preview_label",
+					"type": "text"
+				}
+			],
+			"primary_key": "((checkout_session_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_purchases_by_payment_intent",
+			"columns": [
+				{
+					"name": "payment_intent_id",
+					"type": "text"
+				},
+				{
+					"name": "checkout_session_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((payment_intent_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_purchases_by_purchaser",
+			"columns": [
+				{
+					"name": "purchaser_id",
+					"type": "bigint"
+				},
+				{
+					"name": "checkout_session_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((purchaser_id), checkout_session_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_waitlist",
+			"columns": [
+				{
+					"name": "email",
+					"type": "text"
+				},
+				{
+					"name": "entry_id",
+					"type": "text"
+				},
+				{
+					"name": "status",
+					"type": "text"
+				},
+				{
+					"name": "locale",
+					"type": "text"
+				},
+				{
+					"name": "country_code",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "updated_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "confirmed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "unsubscribed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "consent_ip",
+					"type": "text"
+				},
+				{
+					"name": "verify_token_hash",
+					"type": "text"
+				},
+				{
+					"name": "verify_expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "sale_email_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "price_feedback",
+					"type": "text"
+				},
+				{
+					"name": "currency",
+					"type": "text"
+				},
+				{
+					"name": "followup_picks",
+					"type": "set<text>"
+				},
+				{
+					"name": "followup_about",
+					"type": "set<text>"
+				},
+				{
+					"name": "followup_other_text",
+					"type": "text"
+				},
+				{
+					"name": "followup_answered_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((email))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_waitlist_by_entry_id",
+			"columns": [
+				{
+					"name": "entry_id",
+					"type": "text"
+				},
+				{
+					"name": "email",
+					"type": "text"
+				}
+			],
+			"primary_key": "((entry_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_passes",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "granted_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "source",
+					"type": "text"
+				},
+				{
+					"name": "pass_count",
+					"type": "int"
+				},
+				{
+					"name": "checkout_session_id",
+					"type": "text"
+				},
+				{
+					"name": "payment_intent_id",
+					"type": "text"
+				},
+				{
+					"name": "amount_minor",
+					"type": "int"
+				},
+				{
+					"name": "currency",
+					"type": "text"
+				},
+				{
+					"name": "waiver_consent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "waiver_consent_version",
+					"type": "text"
+				},
+				{
+					"name": "waiver_consent_ip",
+					"type": "text"
+				},
+				{
+					"name": "waiver_consent_user_agent",
+					"type": "text"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				},
+				{
+					"name": "paused_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "terms_version",
+					"type": "text"
+				},
+				{
+					"name": "terms_accepted_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_removals",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "removal_state",
+					"type": "text"
+				},
+				{
+					"name": "rule",
+					"type": "text"
+				},
+				{
+					"name": "facts",
+					"type": "text"
+				},
+				{
+					"name": "automated",
+					"type": "boolean"
+				},
+				{
+					"name": "serious",
+					"type": "boolean"
+				},
+				{
+					"name": "removed_until",
+					"type": "timestamp"
+				},
+				{
+					"name": "notice_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "removed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "admin_user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "updated_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_removal_history",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "removed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "removed_until",
+					"type": "timestamp"
+				},
+				{
+					"name": "rule",
+					"type": "text"
+				},
+				{
+					"name": "facts",
+					"type": "text"
+				},
+				{
+					"name": "automated",
+					"type": "boolean"
+				},
+				{
+					"name": "serious",
+					"type": "boolean"
+				},
+				{
+					"name": "notice_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "admin_user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "ended_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "end_reason",
+					"type": "text"
+				}
+			],
+			"primary_key": "((user_id), removed_at)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_wall_entries",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "quote",
+					"type": "text"
+				},
+				{
+					"name": "opted_out",
+					"type": "boolean"
+				},
+				{
+					"name": "keep_as_is",
+					"type": "boolean"
+				},
+				{
+					"name": "release_list_opt_in",
+					"type": "boolean"
+				},
+				{
+					"name": "hidden",
+					"type": "boolean"
+				},
+				{
+					"name": "legal_hold",
+					"type": "boolean"
+				},
+				{
+					"name": "left_wall_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "username_declined",
+					"type": "boolean"
+				},
+				{
+					"name": "live_revision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "live_name",
+					"type": "text"
+				},
+				{
+					"name": "live_avatar",
+					"type": "text"
+				},
+				{
+					"name": "live_business",
+					"type": "boolean"
+				},
+				{
+					"name": "pending_revision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "pending_name",
+					"type": "text"
+				},
+				{
+					"name": "pending_avatar",
+					"type": "text"
+				},
+				{
+					"name": "pending_source",
+					"type": "text"
+				},
+				{
+					"name": "pending_since",
+					"type": "timestamp"
+				},
+				{
+					"name": "declined_revision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "declined_name",
+					"type": "text"
+				},
+				{
+					"name": "declined_avatar",
+					"type": "text"
+				},
+				{
+					"name": "decline_reason",
+					"type": "text"
+				},
+				{
+					"name": "decline_note",
+					"type": "text"
+				},
+				{
+					"name": "decline_statement_id",
+					"type": "text"
+				},
+				{
+					"name": "reviewed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "reviewed_by",
+					"type": "bigint"
+				},
+				{
+					"name": "listed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "delivered_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "release_published_year",
+					"type": "int"
+				},
+				{
+					"name": "release_published_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "release_erased_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "updated_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_wall_revisions",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "revision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "avatar",
+					"type": "text"
+				},
+				{
+					"name": "business",
+					"type": "boolean"
+				},
+				{
+					"name": "source",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "created_by",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((user_id), revision_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_wall_decisions",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "decision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "revision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "kind",
+					"type": "text"
+				},
+				{
+					"name": "decided_by",
+					"type": "bigint"
+				},
+				{
+					"name": "decided_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "reason",
+					"type": "text"
+				},
+				{
+					"name": "note",
+					"type": "text"
+				},
+				{
+					"name": "statement_id",
+					"type": "text"
+				},
+				{
+					"name": "username_declined",
+					"type": "boolean"
+				}
+			],
+			"primary_key": "((user_id), decision_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_wall_audit_logs",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "log_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((user_id), log_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_wall_avatar_refs",
+			"columns": [
+				{
+					"name": "avatar",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((avatar), user_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_wall_pending",
+			"columns": [
+				{
+					"name": "bucket",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((bucket), user_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_wall_tombstones",
+			"columns": [
+				{
+					"name": "token_",
+					"type": "bigint"
+				},
+				{
+					"name": "left_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "purged_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((token_))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_wall_state",
+			"columns": [
+				{
+					"name": "id",
+					"type": "text"
+				},
+				{
+					"name": "wall_version",
+					"type": "bigint"
+				},
+				{
+					"name": "frozen",
+					"type": "boolean"
+				},
+				{
+					"name": "frozen_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "frozen_by",
+					"type": "bigint"
+				},
+				{
+					"name": "frozen_snapshot",
+					"type": "text"
+				},
+				{
+					"name": "published_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_wall_events",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "occurred_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "event_id",
+					"type": "text"
+				},
+				{
+					"name": "kind",
+					"type": "text"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "reason",
+					"type": "text"
+				},
+				{
+					"name": "cause",
+					"type": "text"
+				},
+				{
+					"name": "purchase_id",
+					"type": "text"
+				},
+				{
+					"name": "release_year",
+					"type": "int"
+				},
+				{
+					"name": "release_tag",
+					"type": "text"
+				},
+				{
+					"name": "actor_id",
+					"type": "bigint"
+				},
+				{
+					"name": "pass_count",
+					"type": "int"
+				},
+				{
+					"name": "first_pass_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id), occurred_at, event_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_releases",
+			"columns": [
+				{
+					"name": "year",
+					"type": "int"
+				},
+				{
+					"name": "tag",
+					"type": "text"
+				},
+				{
+					"name": "released_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "published_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "published_by",
+					"type": "bigint"
+				},
+				{
+					"name": "cutoff_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "names",
+					"type": "list<text>"
+				},
+				{
+					"name": "erased_names",
+					"type": "list<text>"
+				}
+			],
+			"primary_key": "((year))",
+			"options": ""
+		},
+		{
+			"name": "payment_dispute_reviews",
+			"columns": [
+				{
+					"name": "dispute_id",
+					"type": "text"
+				},
+				{
+					"name": "product",
+					"type": "text"
+				},
+				{
+					"name": "order_id",
+					"type": "text"
+				},
+				{
+					"name": "invoice_number",
+					"type": "text"
+				},
+				{
+					"name": "purchaser_id",
+					"type": "bigint"
+				},
+				{
+					"name": "is_gift",
+					"type": "boolean"
+				},
+				{
+					"name": "reason",
+					"type": "text"
+				},
+				{
+					"name": "payment_intent_id",
+					"type": "text"
+				},
+				{
+					"name": "charge_id",
+					"type": "text"
+				},
+				{
+					"name": "amount_minor",
+					"type": "int"
+				},
+				{
+					"name": "currency",
+					"type": "text"
+				},
+				{
+					"name": "evidence_submitted",
+					"type": "boolean"
+				},
+				{
+					"name": "evidence_due_by",
+					"type": "timestamp"
+				},
+				{
+					"name": "disputed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "closed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "outcome",
+					"type": "text"
+				},
+				{
+					"name": "purchased_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "perks_started_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "withdrawal_ends_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "withdrawn_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "refunded_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "perks_removed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "status",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "decided_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "decided_by",
+					"type": "bigint"
+				},
+				{
+					"name": "decision_note",
+					"type": "text"
+				},
+				{
+					"name": "warning_deadline",
+					"type": "timestamp"
+				},
+				{
+					"name": "warned_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "warning_email_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "warning_dm_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "enforcement_decision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reversed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "reversed_by",
+					"type": "bigint"
+				},
+				{
+					"name": "reversal_note",
+					"type": "text"
+				},
+				{
+					"name": "dispute_purchase_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((dispute_id))",
+			"options": ""
+		},
+		{
+			"name": "payment_dispute_reviews_by_purchaser",
+			"columns": [
+				{
+					"name": "purchaser_id",
+					"type": "bigint"
+				},
+				{
+					"name": "dispute_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((purchaser_id), dispute_id)",
+			"options": ""
 		},
 		{
 			"name": "password_change_tickets",
@@ -6976,6 +8760,34 @@
 				{
 					"name": "eu_withdrawal_waiver_text_version",
 					"type": "text"
+				},
+				{
+					"name": "distribution",
+					"type": "text"
+				},
+				{
+					"name": "distribution_rate_bps",
+					"type": "int"
+				},
+				{
+					"name": "distribution_rule_version",
+					"type": "int"
+				},
+				{
+					"name": "distribution_base_amount_minor",
+					"type": "int"
+				},
+				{
+					"name": "distribution_purchase_ref",
+					"type": "text"
+				},
+				{
+					"name": "tax_amount_minor",
+					"type": "int"
+				},
+				{
+					"name": "tax_country",
+					"type": "text"
 				}
 			],
 			"primary_key": "((checkout_session_id))",
@@ -7041,107 +8853,6 @@
 			],
 			"primary_key": "((user_id), created_at)",
 			"options": "CLUSTERING ORDER BY (created_at DESC)"
-		},
-		{
-			"name": "phone_lookup_cache",
-			"columns": [
-				{
-					"name": "phone",
-					"type": "text"
-				},
-				{
-					"name": "looked_up_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "valid",
-					"type": "boolean"
-				},
-				{
-					"name": "line_type",
-					"type": "text"
-				},
-				{
-					"name": "country_code",
-					"type": "text"
-				},
-				{
-					"name": "carrier_name",
-					"type": "text"
-				},
-				{
-					"name": "sms_pumping_risk_score",
-					"type": "int"
-				}
-			],
-			"primary_key": "(phone)",
-			"options": "default_time_to_live = 604800 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '6'}"
-		},
-		{
-			"name": "phone_tokens",
-			"columns": [
-				{
-					"name": "token_",
-					"type": "text"
-				},
-				{
-					"name": "phone",
-					"type": "text"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				}
-			],
-			"primary_key": "(token_)",
-			"options": "default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "phone_verification_attempts",
-			"columns": [
-				{
-					"name": "attempt_id",
-					"type": "uuid"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "phone",
-					"type": "text"
-				},
-				{
-					"name": "country_code",
-					"type": "text"
-				},
-				{
-					"name": "line_type",
-					"type": "text"
-				},
-				{
-					"name": "carrier_name",
-					"type": "text"
-				},
-				{
-					"name": "sms_pumping_risk_score",
-					"type": "int"
-				},
-				{
-					"name": "verdict",
-					"type": "text"
-				},
-				{
-					"name": "reject_reason",
-					"type": "text"
-				},
-				{
-					"name": "lookup_cache_hit",
-					"type": "boolean"
-				}
-			],
-			"primary_key": "(attempt_id)",
-			"options": "default_time_to_live = 7776000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '3'}"
 		},
 		{
 			"name": "pinned_dms",
@@ -7271,6 +8982,10 @@
 				{
 					"name": "provider_environment",
 					"type": "text"
+				},
+				{
+					"name": "thread_channels",
+					"type": "boolean"
 				}
 			],
 			"primary_key": "((user_id), subscription_id)",
@@ -7298,6 +9013,14 @@
 				{
 					"name": "last_pin_timestamp",
 					"type": "timestamp"
+				},
+				{
+					"name": "flags",
+					"type": "int"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
 				}
 			],
 			"primary_key": "((user_id), channel_id)",
@@ -7364,134 +9087,6 @@
 			],
 			"primary_key": "((user_id, guild_id), message_id)",
 			"options": "CLUSTERING ORDER BY (message_id DESC) AND default_time_to_live = 604800 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '6'}"
-		},
-		{
-			"name": "registration_events_by_email_domain",
-			"columns": [
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				}
-			],
-			"primary_key": "(email_domain, created_at, user_id)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "registration_events_by_ip",
-			"columns": [
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				}
-			],
-			"primary_key": "(ip, created_at, user_id)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "registration_events_by_plus_address_base",
-			"columns": [
-				{
-					"name": "plus_address_base",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				}
-			],
-			"primary_key": "(plus_address_base, created_at, user_id)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "registration_events_by_subnet",
-			"columns": [
-				{
-					"name": "subnet",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				}
-			],
-			"primary_key": "(subnet, created_at, user_id)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
 		},
 		{
 			"name": "relationships",
@@ -7564,204 +9159,6 @@
 			"options": "CLUSTERING ORDER BY (source_user_id ASC, type ASC)"
 		},
 		{
-			"name": "risk_assessments",
-			"columns": [
-				{
-					"name": "assessment_id",
-					"type": "uuid"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				},
-				{
-					"name": "risk_level",
-					"type": "text"
-				},
-				{
-					"name": "risk_score",
-					"type": "int"
-				},
-				{
-					"name": "suspicious",
-					"type": "boolean"
-				},
-				{
-					"name": "method",
-					"type": "text"
-				},
-				{
-					"name": "recommended_action",
-					"type": "text"
-				},
-				{
-					"name": "reasoning",
-					"type": "text"
-				},
-				{
-					"name": "signals_json",
-					"type": "text"
-				},
-				{
-					"name": "model_used",
-					"type": "text"
-				}
-			],
-			"primary_key": "(assessment_id)",
-			"options": ""
-		},
-		{
-			"name": "risk_assessments_by_user",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "assessment_id",
-					"type": "uuid"
-				},
-				{
-					"name": "risk_level",
-					"type": "text"
-				},
-				{
-					"name": "risk_score",
-					"type": "int"
-				}
-			],
-			"primary_key": "(user_id, created_at)",
-			"options": "CLUSTERING ORDER BY (created_at DESC)"
-		},
-		{
-			"name": "risk_outcomes_by_asn",
-			"columns": [
-				{
-					"name": "asn",
-					"type": "int"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "outcome_code",
-					"type": "text"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				}
-			],
-			"primary_key": "(asn, created_at, user_id, outcome_code)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC, outcome_code ASC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
-		},
-		{
-			"name": "risk_outcomes_by_email_domain",
-			"columns": [
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "outcome_code",
-					"type": "text"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				}
-			],
-			"primary_key": "(email_domain, created_at, user_id, outcome_code)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC, outcome_code ASC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
-		},
-		{
-			"name": "risk_outcomes_by_ip",
-			"columns": [
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "outcome_code",
-					"type": "text"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				}
-			],
-			"primary_key": "(ip, created_at, user_id, outcome_code)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC, outcome_code ASC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
-		},
-		{
-			"name": "risk_outcomes_by_subnet",
-			"columns": [
-				{
-					"name": "subnet",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "outcome_code",
-					"type": "text"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				}
-			],
-			"primary_key": "(subnet, created_at, user_id, outcome_code)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC, outcome_code ASC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
-		},
-		{
 			"name": "saved_messages",
 			"columns": [
 				{
@@ -7785,22 +9182,185 @@
 			"options": "CLUSTERING ORDER BY (message_id DESC)"
 		},
 		{
-			"name": "suspicious_email_domains",
+			"name": "store_account_tokens",
 			"columns": [
 				{
-					"name": "domain",
+					"name": "token_",
 					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
 				}
 			],
-			"primary_key": "(domain)",
+			"primary_key": "((token_))",
 			"options": ""
 		},
 		{
-			"name": "suspicious_ips",
+			"name": "store_account_tokens_by_user",
 			"columns": [
 				{
-					"name": "ip",
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "token_",
 					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "store_purchases",
+			"columns": [
+				{
+					"name": "store_key",
+					"type": "text"
+				},
+				{
+					"name": "id",
+					"type": "bigint"
+				},
+				{
+					"name": "provider",
+					"type": "text"
+				},
+				{
+					"name": "kind",
+					"type": "text"
+				},
+				{
+					"name": "slot",
+					"type": "text"
+				},
+				{
+					"name": "environment",
+					"type": "text"
+				},
+				{
+					"name": "app_id",
+					"type": "text"
+				},
+				{
+					"name": "product_id",
+					"type": "text"
+				},
+				{
+					"name": "base_plan_id",
+					"type": "text"
+				},
+				{
+					"name": "store_reference",
+					"type": "text"
+				},
+				{
+					"name": "latest_transaction_id",
+					"type": "text"
+				},
+				{
+					"name": "app_transaction_id",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "bound_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "released_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "account_token",
+					"type": "text"
+				},
+				{
+					"name": "ownership_type",
+					"type": "text"
+				},
+				{
+					"name": "state",
+					"type": "text"
+				},
+				{
+					"name": "store_state",
+					"type": "text"
+				},
+				{
+					"name": "entitled",
+					"type": "boolean"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "grace_ends_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "auto_renew",
+					"type": "boolean"
+				},
+				{
+					"name": "auto_renew_product_id",
+					"type": "text"
+				},
+				{
+					"name": "started_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "purchased_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "revoked_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "revocation_reason",
+					"type": "text"
+				},
+				{
+					"name": "linked_store_key",
+					"type": "text"
+				},
+				{
+					"name": "superseded_by_store_key",
+					"type": "text"
+				},
+				{
+					"name": "acknowledged",
+					"type": "boolean"
+				},
+				{
+					"name": "gift_code",
+					"type": "text"
+				},
+				{
+					"name": "region",
+					"type": "text"
+				},
+				{
+					"name": "last_event_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "synced_at",
+					"type": "timestamp"
 				},
 				{
 					"name": "created_at",
@@ -7811,48 +9371,280 @@
 					"type": "timestamp"
 				},
 				{
-					"name": "expires_at",
-					"type": "timestamp"
-				},
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((store_key))",
+			"options": ""
+		},
+		{
+			"name": "store_purchases_by_user",
+			"columns": [
 				{
-					"name": "source",
-					"type": "text"
-				},
-				{
-					"name": "reason",
-					"type": "text"
-				},
-				{
-					"name": "source_user_id",
+					"name": "user_id",
 					"type": "bigint"
 				},
 				{
-					"name": "deletion_reason_code",
-					"type": "int"
-				},
-				{
-					"name": "provider_name",
+					"name": "store_key",
 					"type": "text"
 				},
 				{
-					"name": "asn",
-					"type": "int"
-				},
-				{
-					"name": "asn_name",
-					"type": "text"
-				},
-				{
-					"name": "asn_type",
-					"type": "text"
-				},
-				{
-					"name": "risk_note",
-					"type": "text"
+					"name": "created_at",
+					"type": "timestamp"
 				}
 			],
-			"primary_key": "(ip)",
-			"options": "default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
+			"primary_key": "((user_id), store_key)",
+			"options": ""
+		},
+		{
+			"name": "thread_members",
+			"columns": [
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "join_timestamp",
+					"type": "timestamp"
+				},
+				{
+					"name": "flags",
+					"type": "int"
+				},
+				{
+					"name": "muted",
+					"type": "boolean"
+				},
+				{
+					"name": "mute_config",
+					"type": "frozen<mute_config>"
+				}
+			],
+			"primary_key": "((thread_id), user_id)",
+			"options": ""
+		},
+		{
+			"name": "thread_members_by_user",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "is_private",
+					"type": "boolean"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((user_id), guild_id, parent_id, is_private, thread_id)",
+			"options": "CLUSTERING ORDER BY (guild_id ASC, parent_id ASC, is_private ASC, thread_id DESC)"
+		},
+		{
+			"name": "thread_only_channels_by_guild",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((guild_id), channel_id)",
+			"options": ""
+		},
+		{
+			"name": "thread_parent_config",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "flags",
+					"type": "int"
+				},
+				{
+					"name": "default_auto_archive_duration",
+					"type": "int"
+				},
+				{
+					"name": "default_thread_rate_limit_per_user",
+					"type": "int"
+				},
+				{
+					"name": "available_tags",
+					"type": "frozen<list<forum_tag>>"
+				},
+				{
+					"name": "default_reaction_emoji_id",
+					"type": "bigint"
+				},
+				{
+					"name": "default_reaction_emoji_name",
+					"type": "text"
+				},
+				{
+					"name": "default_sort_order",
+					"type": "int"
+				},
+				{
+					"name": "default_forum_layout",
+					"type": "int"
+				},
+				{
+					"name": "default_tag_setting",
+					"type": "text"
+				},
+				{
+					"name": "has_threads",
+					"type": "boolean"
+				}
+			],
+			"primary_key": "((guild_id), channel_id)",
+			"options": ""
+		},
+		{
+			"name": "thread_state",
+			"columns": [
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "int"
+				},
+				{
+					"name": "archived",
+					"type": "boolean"
+				},
+				{
+					"name": "locked",
+					"type": "boolean"
+				},
+				{
+					"name": "invitable",
+					"type": "boolean"
+				},
+				{
+					"name": "auto_archive_duration",
+					"type": "int"
+				},
+				{
+					"name": "archive_timestamp",
+					"type": "timestamp"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "flags",
+					"type": "int"
+				},
+				{
+					"name": "applied_tags",
+					"type": "frozen<list<bigint>>"
+				},
+				{
+					"name": "member_count",
+					"type": "int"
+				},
+				{
+					"name": "member_ids_preview",
+					"type": "frozen<list<bigint>>"
+				},
+				{
+					"name": "has_starter",
+					"type": "boolean"
+				},
+				{
+					"name": "state_version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((thread_id))",
+			"options": ""
+		},
+		{
+			"name": "thread_stats",
+			"columns": [
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "message_count",
+					"type": "int"
+				},
+				{
+					"name": "total_message_sent",
+					"type": "int"
+				}
+			],
+			"primary_key": "((thread_id))",
+			"options": ""
+		},
+		{
+			"name": "threads_by_parent",
+			"columns": [
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "type",
+					"type": "int"
+				}
+			],
+			"primary_key": "((parent_id), thread_id)",
+			"options": ""
 		},
 		{
 			"name": "user_connections",
@@ -7894,6 +9686,10 @@
 					"type": "text"
 				},
 				{
+					"name": "oauth_grant_id",
+					"type": "text"
+				},
+				{
 					"name": "verified_at",
 					"type": "timestamp"
 				},
@@ -7906,8 +9702,24 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "revision",
+					"type": "text"
+				},
+				{
 					"name": "version",
 					"type": "int"
+				},
+				{
+					"name": "membership",
+					"type": "text"
+				},
+				{
+					"name": "credential_payload",
+					"type": "text"
+				},
+				{
+					"name": "credential_expires_at",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((user_id), connection_type, connection_id)",
@@ -7951,29 +9763,6 @@
 			],
 			"primary_key": "((user_id), event_id)",
 			"options": "CLUSTERING ORDER BY (event_id DESC)"
-		},
-		{
-			"name": "user_country_history",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "country",
-					"type": "text"
-				},
-				{
-					"name": "first_seen_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "last_seen_at",
-					"type": "timestamp"
-				}
-			],
-			"primary_key": "(user_id, country)",
-			"options": "default_time_to_live = 31536000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '14'}"
 		},
 		{
 			"name": "user_dm_history",
@@ -8034,6 +9823,29 @@
 				}
 			],
 			"primary_key": "((provider_id), subject)",
+			"options": ""
+		},
+		{
+			"name": "user_sso_identities_by_user",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "provider_id",
+					"type": "text"
+				},
+				{
+					"name": "subject",
+					"type": "text"
+				},
+				{
+					"name": "claimed_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id), provider_id, subject)",
 			"options": ""
 		},
 		{
@@ -8173,6 +9985,10 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "attempt_id",
+					"type": "text"
+				},
+				{
 					"name": "started_at",
 					"type": "timestamp"
 				},
@@ -8182,6 +9998,10 @@
 				},
 				{
 					"name": "failed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "terminal_failed_at",
 					"type": "timestamp"
 				},
 				{
@@ -8211,6 +10031,29 @@
 			],
 			"primary_key": "((user_id), harvest_id)",
 			"options": "CLUSTERING ORDER BY (harvest_id DESC)"
+		},
+		{
+			"name": "user_report_submissions_by_reporter",
+			"columns": [
+				{
+					"name": "reporter_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "report_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((reporter_id), reported_user_id)",
+			"options": "default_time_to_live = 86400 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
 		},
 		{
 			"name": "user_settings",
@@ -8308,6 +10151,14 @@
 					"type": "int"
 				},
 				{
+					"name": "regional_format",
+					"type": "text"
+				},
+				{
+					"name": "timestamp_format",
+					"type": "int"
+				},
+				{
 					"name": "incoming_call_flags",
 					"type": "int"
 				},
@@ -8352,6 +10203,10 @@
 					"type": "int"
 				},
 				{
+					"name": "allow_mature_content_on_ios",
+					"type": "boolean"
+				},
+				{
 					"name": "version",
 					"type": "int"
 				},
@@ -8378,6 +10233,14 @@
 				{
 					"name": "default_share_voice_activity",
 					"type": "boolean"
+				},
+				{
+					"name": "privacy_setup_version",
+					"type": "int"
+				},
+				{
+					"name": "privacy_setup_completed_at",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((user_id))",
@@ -8483,6 +10346,14 @@
 					"type": "set<text>"
 				},
 				{
+					"name": "badge_ids",
+					"type": "set<bigint>"
+				},
+				{
+					"name": "hidden_profile_badges",
+					"type": "set<text>"
+				},
+				{
 					"name": "premium_type",
 					"type": "int"
 				},
@@ -8563,6 +10434,10 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "deletion_started_at",
+					"type": "timestamp"
+				},
+				{
 					"name": "pending_bulk_message_deletion_at",
 					"type": "timestamp"
 				},
@@ -8595,6 +10470,14 @@
 					"type": "text"
 				},
 				{
+					"name": "deletion_scheduled_by",
+					"type": "bigint"
+				},
+				{
+					"name": "deletion_scheduled_at",
+					"type": "timestamp"
+				},
+				{
 					"name": "first_refund_at",
 					"type": "timestamp"
 				},
@@ -8625,6 +10508,22 @@
 				{
 					"name": "timezone_privacy_flags",
 					"type": "int"
+				},
+				{
+					"name": "content_hidden_since",
+					"type": "timestamp"
+				},
+				{
+					"name": "enforcement_decision_id",
+					"type": "bigint"
+				},
+				{
+					"name": "attested_age_floor",
+					"type": "text"
+				},
+				{
+					"name": "age_attested_at",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((user_id))",
@@ -8681,6 +10580,21 @@
 				}
 			],
 			"primary_key": "((last_active_ip_trust_key), user_id)",
+			"options": ""
+		},
+		{
+			"name": "users_by_acl",
+			"columns": [
+				{
+					"name": "acl",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((acl), user_id)",
 			"options": ""
 		},
 		{
@@ -8798,6 +10712,10 @@
 					"type": "boolean"
 				},
 				{
+					"name": "hidden",
+					"type": "boolean"
+				},
+				{
 					"name": "vip_only",
 					"type": "boolean"
 				},
@@ -8887,10 +10805,220 @@
 				{
 					"name": "soft_connection_limit",
 					"type": "int"
+				},
+				{
+					"name": "notes",
+					"type": "text"
+				},
+				{
+					"name": "internal_endpoint",
+					"type": "text"
+				},
+				{
+					"name": "draining",
+					"type": "boolean"
+				},
+				{
+					"name": "pinned_hostname",
+					"type": "text"
+				},
+				{
+					"name": "pinned_soft_limit",
+					"type": "boolean"
+				},
+				{
+					"name": "public_ipv4",
+					"type": "text"
+				},
+				{
+					"name": "public_ipv6",
+					"type": "text"
 				}
 			],
 			"primary_key": "((region_id), server_id)",
 			"options": ""
+		},
+		{
+			"name": "voice_join_tokens",
+			"columns": [
+				{
+					"name": "token_id",
+					"type": "bigint"
+				},
+				{
+					"name": "secret_hash",
+					"type": "text"
+				},
+				{
+					"name": "created_by",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "claim_id",
+					"type": "text"
+				},
+				{
+					"name": "claimed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "used_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "used_by_ip",
+					"type": "text"
+				},
+				{
+					"name": "used_server_id",
+					"type": "text"
+				},
+				{
+					"name": "revoked_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "region_id",
+					"type": "text"
+				},
+				{
+					"name": "region_name",
+					"type": "text"
+				},
+				{
+					"name": "region_emoji",
+					"type": "text"
+				},
+				{
+					"name": "region_latitude",
+					"type": "double"
+				},
+				{
+					"name": "region_longitude",
+					"type": "double"
+				},
+				{
+					"name": "server_id",
+					"type": "text"
+				},
+				{
+					"name": "hostname",
+					"type": "text"
+				},
+				{
+					"name": "internal_endpoint",
+					"type": "text"
+				},
+				{
+					"name": "soft_connection_limit",
+					"type": "int"
+				},
+				{
+					"name": "notes",
+					"type": "text"
+				},
+				{
+					"name": "vip_only",
+					"type": "boolean"
+				},
+				{
+					"name": "required_guild_features",
+					"type": "set<text>"
+				},
+				{
+					"name": "allowed_guild_ids",
+					"type": "set<bigint>"
+				},
+				{
+					"name": "allowed_user_ids",
+					"type": "set<bigint>"
+				}
+			],
+			"primary_key": "((token_id))",
+			"options": ""
+		},
+		{
+			"name": "voice_p2p_connection_reports",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "report_id",
+					"type": "bigint"
+				},
+				{
+					"name": "reported_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "participant_count",
+					"type": "int"
+				},
+				{
+					"name": "outcome",
+					"type": "text"
+				},
+				{
+					"name": "local_candidate_type",
+					"type": "text"
+				},
+				{
+					"name": "remote_candidate_type",
+					"type": "text"
+				},
+				{
+					"name": "ip_family",
+					"type": "text"
+				},
+				{
+					"name": "protocol",
+					"type": "text"
+				},
+				{
+					"name": "setup_ms",
+					"type": "int"
+				},
+				{
+					"name": "ice_restarted",
+					"type": "boolean"
+				},
+				{
+					"name": "country",
+					"type": "text"
+				},
+				{
+					"name": "ip",
+					"type": "text"
+				},
+				{
+					"name": "client_platform",
+					"type": "text"
+				},
+				{
+					"name": "client_os",
+					"type": "text"
+				}
+			],
+			"primary_key": "((user_id), report_id)",
+			"options": "CLUSTERING ORDER BY (report_id DESC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
 		},
 		{
 			"name": "webauthn_credential_lookup",
@@ -8945,6 +11073,14 @@
 				{
 					"name": "version",
 					"type": "int"
+				},
+				{
+					"name": "rp_id",
+					"type": "text"
+				},
+				{
+					"name": "superseded_by",
+					"type": "text"
 				}
 			],
 			"primary_key": "((user_id), credential_id)",
@@ -8986,6 +11122,14 @@
 					"type": "text"
 				},
 				{
+					"name": "source_guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
 					"name": "version",
 					"type": "int"
 				}
@@ -9021,6 +11165,627 @@
 				}
 			],
 			"primary_key": "((guild_id), webhook_id)",
+			"options": ""
+		},
+		{
+			"name": "webhooks_by_source_channel_id",
+			"columns": [
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "webhook_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((source_channel_id), webhook_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_units",
+			"columns": [
+				{
+					"name": "pass_id",
+					"type": "text"
+				},
+				{
+					"name": "purchase_id",
+					"type": "text"
+				},
+				{
+					"name": "buyer_id",
+					"type": "bigint"
+				},
+				{
+					"name": "holder_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source",
+					"type": "text"
+				},
+				{
+					"name": "status",
+					"type": "text"
+				},
+				{
+					"name": "transferable",
+					"type": "boolean"
+				},
+				{
+					"name": "delivered_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "first_delivered_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "paused_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "ended_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "end_reason",
+					"type": "text"
+				},
+				{
+					"name": "withdrawal_country",
+					"type": "text"
+				},
+				{
+					"name": "withdrawal_days",
+					"type": "int"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((pass_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_units_by_holder",
+			"columns": [
+				{
+					"name": "holder_id",
+					"type": "bigint"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((holder_id), pass_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_units_by_purchase",
+			"columns": [
+				{
+					"name": "purchase_id",
+					"type": "text"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((purchase_id), pass_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_offers",
+			"columns": [
+				{
+					"name": "offer_id",
+					"type": "text"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				},
+				{
+					"name": "sender_id",
+					"type": "bigint"
+				},
+				{
+					"name": "recipient_id",
+					"type": "bigint"
+				},
+				{
+					"name": "status",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "accepted_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "completes_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "ended_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "wall_name",
+					"type": "text"
+				},
+				{
+					"name": "wall_opt_out",
+					"type": "boolean"
+				},
+				{
+					"name": "terms_version",
+					"type": "text"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				},
+				{
+					"name": "labs_greeting",
+					"type": "boolean"
+				}
+			],
+			"primary_key": "((offer_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_offers_by_user",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "offer_id",
+					"type": "text"
+				}
+			],
+			"primary_key": "((user_id), offer_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_unit_events",
+			"columns": [
+				{
+					"name": "pass_id",
+					"type": "text"
+				},
+				{
+					"name": "occurred_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "event_id",
+					"type": "text"
+				},
+				{
+					"name": "kind",
+					"type": "text"
+				},
+				{
+					"name": "payment_id",
+					"type": "text"
+				},
+				{
+					"name": "purchase_id",
+					"type": "text"
+				},
+				{
+					"name": "sender_id",
+					"type": "bigint"
+				},
+				{
+					"name": "recipient_id",
+					"type": "bigint"
+				},
+				{
+					"name": "offer_id",
+					"type": "text"
+				},
+				{
+					"name": "country",
+					"type": "text"
+				},
+				{
+					"name": "days",
+					"type": "int"
+				},
+				{
+					"name": "rule_version",
+					"type": "text"
+				},
+				{
+					"name": "reason",
+					"type": "text"
+				}
+			],
+			"primary_key": "((pass_id), occurred_at, event_id)",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_visionary_activations",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "visionary_since",
+					"type": "timestamp"
+				},
+				{
+					"name": "visionary_sequence",
+					"type": "int"
+				},
+				{
+					"name": "activated_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "terms_version",
+					"type": "text"
+				},
+				{
+					"name": "terms_box_text",
+					"type": "text"
+				},
+				{
+					"name": "age_confirmed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "consent_ip",
+					"type": "text"
+				},
+				{
+					"name": "consent_user_agent",
+					"type": "text"
+				},
+				{
+					"name": "pass_id",
+					"type": "text"
+				},
+				{
+					"name": "certificate_number",
+					"type": "int"
+				},
+				{
+					"name": "completed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "ended_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "end_reason",
+					"type": "text"
+				},
+				{
+					"name": "notice_emailed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "notice_skip_reason",
+					"type": "text"
+				},
+				{
+					"name": "notice_dm_sent_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_labs_members",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "greeting",
+					"type": "boolean"
+				},
+				{
+					"name": "added_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "left_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "left_reason",
+					"type": "text"
+				},
+				{
+					"name": "greeted_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "greeting_message_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "operator_pass_labs_greetings",
+			"columns": [
+				{
+					"name": "bucket",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "queued_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "message_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((bucket), user_id)",
+			"options": ""
+		},
+		{
+			"name": "billing_document_numbers",
+			"columns": [
+				{
+					"name": "series",
+					"type": "text"
+				},
+				{
+					"name": "number",
+					"type": "bigint"
+				},
+				{
+					"name": "last_number",
+					"type": "bigint"
+				},
+				{
+					"name": "source_key",
+					"type": "text"
+				},
+				{
+					"name": "document_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((series), number)",
+			"options": ""
+		},
+		{
+			"name": "billing_documents",
+			"columns": [
+				{
+					"name": "document_id",
+					"type": "bigint"
+				},
+				{
+					"name": "series",
+					"type": "text"
+				},
+				{
+					"name": "number",
+					"type": "bigint"
+				},
+				{
+					"name": "display_number",
+					"type": "text"
+				},
+				{
+					"name": "kind",
+					"type": "text"
+				},
+				{
+					"name": "flow",
+					"type": "text"
+				},
+				{
+					"name": "layout",
+					"type": "text"
+				},
+				{
+					"name": "issued_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "supply_date",
+					"type": "text"
+				},
+				{
+					"name": "period_start",
+					"type": "timestamp"
+				},
+				{
+					"name": "period_end",
+					"type": "timestamp"
+				},
+				{
+					"name": "currency",
+					"type": "text"
+				},
+				{
+					"name": "total_minor",
+					"type": "bigint"
+				},
+				{
+					"name": "tax_minor",
+					"type": "bigint"
+				},
+				{
+					"name": "tax_lines",
+					"type": "text"
+				},
+				{
+					"name": "sek_tax_minor",
+					"type": "bigint"
+				},
+				{
+					"name": "fx_rate",
+					"type": "text"
+				},
+				{
+					"name": "fx_date",
+					"type": "text"
+				},
+				{
+					"name": "buyer",
+					"type": "text"
+				},
+				{
+					"name": "seller",
+					"type": "text"
+				},
+				{
+					"name": "language",
+					"type": "text"
+				},
+				{
+					"name": "original_document_id",
+					"type": "bigint"
+				},
+				{
+					"name": "original_number",
+					"type": "text"
+				},
+				{
+					"name": "reason",
+					"type": "text"
+				},
+				{
+					"name": "source_key",
+					"type": "text"
+				},
+				{
+					"name": "stripe_refs",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "donor_email_hash",
+					"type": "text"
+				},
+				{
+					"name": "content",
+					"type": "text"
+				},
+				{
+					"name": "content_sha256",
+					"type": "text"
+				},
+				{
+					"name": "pdf",
+					"type": "blob"
+				},
+				{
+					"name": "pdf_sha256",
+					"type": "text"
+				},
+				{
+					"name": "render_version",
+					"type": "text"
+				},
+				{
+					"name": "emailed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "archived_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((document_id))",
+			"options": ""
+		},
+		{
+			"name": "billing_documents_by_source",
+			"columns": [
+				{
+					"name": "source_key",
+					"type": "text"
+				},
+				{
+					"name": "document_id",
+					"type": "bigint"
+				},
+				{
+					"name": "series",
+					"type": "text"
+				},
+				{
+					"name": "number",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((source_key))",
+			"options": ""
+		},
+		{
+			"name": "billing_documents_by_user",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "issued_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "document_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((user_id), issued_at, document_id)",
+			"options": "CLUSTERING ORDER BY (issued_at DESC, document_id DESC)"
+		},
+		{
+			"name": "billing_documents_by_month",
+			"columns": [
+				{
+					"name": "month",
+					"type": "text"
+				},
+				{
+					"name": "document_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((month), document_id)",
 			"options": ""
 		}
 	],

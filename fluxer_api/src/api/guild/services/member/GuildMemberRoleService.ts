@@ -1,48 +1,71 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {getGuildAuth} from '@app/api/guild/services/GuildMfaEnforcement';
+import {
+	type GuildMemberRoleWriteLocks,
+	withGuildMemberRoleWriteLock,
+} from '@app/api/guild/services/member/GuildMemberRoleWriteLock';
+import type {GuildMemberValidationService} from '@app/api/guild/services/member/GuildMemberValidationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
-import type {GuildID, RoleID, UserID} from '../../../BrandedTypes';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
-import type {GuildMemberAuthService} from './GuildMemberAuthService';
-import type {GuildMemberValidationService} from './GuildMemberValidationService';
 
 export class GuildMemberRoleService {
+	private async applyAddMemberRole(guildId: GuildID, targetId: UserID, roleId: RoleID): Promise<void> {
+		const wasTemporary = await withGuildMemberRoleWriteLock(this.cacheService, guildId, targetId, async () => {
+			const currentMember = await this.guildRepository.getMember(guildId, targetId);
+			if (!currentMember) throw new UnknownGuildMemberError();
+			if (currentMember.roleIds.has(roleId)) return false;
+			const updatedRoleIds = new Set(currentMember.roleIds);
+			updatedRoleIds.add(roleId);
+			const previousRow = currentMember.toRow();
+			await this.guildRepository.upsertMember(
+				{...previousRow, role_ids: updatedRoleIds, temporary: false},
+				previousRow,
+			);
+			return currentMember.isTemporary;
+		});
+		if (wasTemporary) {
+			await this.gatewayService.removeTemporaryGuild({userId: targetId, guildId});
+		}
+	}
+
+	private async applyRemoveMemberRole(guildId: GuildID, targetId: UserID, roleId: RoleID): Promise<void> {
+		await withGuildMemberRoleWriteLock(this.cacheService, guildId, targetId, async () => {
+			const currentMember = await this.guildRepository.getMember(guildId, targetId);
+			if (!currentMember) throw new UnknownGuildMemberError();
+			if (!currentMember.roleIds.has(roleId)) return;
+			const updatedRoleIds = new Set(currentMember.roleIds);
+			updatedRoleIds.delete(roleId);
+			const previousRow = currentMember.toRow();
+			await this.guildRepository.upsertMember({...previousRow, role_ids: updatedRoleIds}, previousRow);
+		});
+	}
+
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly guildRepository: GuildRepository,
 		private readonly gatewayService: IGatewayService,
-		private readonly authService: GuildMemberAuthService,
+		private readonly userRepository: UserRepository,
 		private readonly validationService: GuildMemberValidationService,
+		private readonly cacheService: GuildMemberRoleWriteLocks,
 	) {}
 
 	async systemAddMemberRole(params: {targetId: UserID; guildId: GuildID; roleId: RoleID}): Promise<void> {
-		const {targetId, guildId, roleId} = params;
-		const targetMember = await this.guildRepository.getMember(guildId, targetId);
-		if (!targetMember) throw new UnknownGuildMemberError();
-		if (targetMember.roleIds.has(roleId)) return;
-		const updatedRoleIds = new Set(targetMember.roleIds);
-		updatedRoleIds.add(roleId);
-		const updatedMemberData = {
-			...targetMember.toRow(),
-			role_ids: updatedRoleIds,
-			temporary: targetMember.isTemporary ? false : targetMember.isTemporary,
-		};
-		await this.guildRepository.upsertMember(updatedMemberData);
-		if (targetMember.isTemporary) {
-			await this.gatewayService.removeTemporaryGuild({userId: targetId, guildId});
-		}
+		await this.applyAddMemberRole(params.guildId, params.targetId, params.roleId);
 	}
 
-	async addMemberRole(params: {
-		userId: UserID;
-		targetId: UserID;
-		guildId: GuildID;
-		roleId: RoleID;
-		requestCache: RequestCache;
-	}): Promise<void> {
+	async systemRemoveMemberRole(params: {targetId: UserID; guildId: GuildID; roleId: RoleID}): Promise<void> {
+		await this.applyRemoveMemberRole(params.guildId, params.targetId, params.roleId);
+	}
+
+	async addMemberRole(params: {userId: UserID; targetId: UserID; guildId: GuildID; roleId: RoleID}): Promise<void> {
 		const {userId, targetId, guildId, roleId} = params;
-		const {guildData, hasPermission, canManageRoles} = await this.authService.getGuildAuthenticated({userId, guildId});
+		const {guildData, hasPermission, canManageRoles} = await getGuildAuth(this.gatewayService, this.userRepository, {
+			userId,
+			guildId,
+		});
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		await this.validationService.validateRoleAssignment({
@@ -54,29 +77,15 @@ export class GuildMemberRoleService {
 			hasPermission,
 			canManageRoles,
 		});
-		if (targetMember.roleIds.has(roleId)) return;
-		const updatedRoleIds = new Set(targetMember.roleIds);
-		updatedRoleIds.add(roleId);
-		const updatedMemberData = {
-			...targetMember.toRow(),
-			role_ids: updatedRoleIds,
-			temporary: targetMember.isTemporary ? false : targetMember.isTemporary,
-		};
-		await this.guildRepository.upsertMember(updatedMemberData);
-		if (targetMember.isTemporary) {
-			await this.gatewayService.removeTemporaryGuild({userId: targetId, guildId});
-		}
+		await this.applyAddMemberRole(guildId, targetId, roleId);
 	}
 
-	async removeMemberRole(params: {
-		userId: UserID;
-		targetId: UserID;
-		guildId: GuildID;
-		roleId: RoleID;
-		requestCache: RequestCache;
-	}): Promise<void> {
+	async removeMemberRole(params: {userId: UserID; targetId: UserID; guildId: GuildID; roleId: RoleID}): Promise<void> {
 		const {userId, targetId, guildId, roleId} = params;
-		const {guildData, hasPermission, canManageRoles} = await this.authService.getGuildAuthenticated({userId, guildId});
+		const {guildData, hasPermission, canManageRoles} = await getGuildAuth(this.gatewayService, this.userRepository, {
+			userId,
+			guildId,
+		});
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		await this.validationService.validateRoleAssignment({
@@ -88,10 +97,6 @@ export class GuildMemberRoleService {
 			hasPermission,
 			canManageRoles,
 		});
-		if (!targetMember.roleIds.has(roleId)) return;
-		const updatedRoleIds = new Set(targetMember.roleIds);
-		updatedRoleIds.delete(roleId);
-		const updatedMemberData = {...targetMember.toRow(), role_ids: updatedRoleIds};
-		await this.guildRepository.upsertMember(updatedMemberData);
+		await this.applyRemoveMemberRole(guildId, targetId, roleId);
 	}
 }

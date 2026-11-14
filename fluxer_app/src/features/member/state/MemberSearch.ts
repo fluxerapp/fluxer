@@ -1,46 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Guilds from '@app/features/guild/state/Guilds';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {
+	type MemberSearchFilters,
+	MessageTypes as MemberSearchWorkerMessageTypes,
+	type TransformedMember,
+} from '@app/features/member/workers/MemberSearchProtocol';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {randomUuid} from '@app/features/platform/utils/RandomUuid';
 import Relationships from '@app/features/relationship/state/Relationships';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {makeAutoObservable} from 'mobx';
-
-export enum MemberSearchActionTypes {
-	INGEST_DIRECTORY = 'INGEST_DIRECTORY',
-	MATCHES_READY = 'MATCHES_READY',
-	SEARCH_BEGIN = 'SEARCH_BEGIN',
-	SEARCH_CANCEL = 'SEARCH_CANCEL',
-}
-
-export enum MemberSearchWorkerMessageTypes {
-	INGEST_DIRECTORY = 'INGEST_DIRECTORY',
-	MATCHES_READY = 'MATCHES_READY',
-	SEARCH_BEGIN = 'SEARCH_BEGIN',
-	SEARCH_CANCEL = 'SEARCH_CANCEL',
-}
-
-export interface MemberSearchFilters {
-	friends?: boolean;
-	guild?: string;
-}
-
-export interface TransformedMember {
-	id: string;
-	username: string;
-	globalName?: string | null;
-	guildNicknames?: Record<string, string | null>;
-	isBot?: boolean;
-	isFriend?: boolean;
-	guildIds?: Array<string>;
-	_delete?: boolean;
-	_removeGuild?: string;
-	[key: string]: string | boolean | null | undefined | Array<string> | Record<string, string | null>;
-}
 
 export type QueryBlacklist = Set<string>;
 export type QueryWhitelist = Set<string>;
@@ -119,7 +95,7 @@ function isFriendRelationship(userId: string): boolean {
 function getTransformedUser(user: User): TransformedMember {
 	return {
 		id: user.id,
-		username: `${user.username}#${user.discriminator}`,
+		username: formatUserTag(user),
 		globalName: user.globalName,
 		isBot: user.bot,
 		isFriend: isFriendRelationship(user.id),
@@ -171,7 +147,7 @@ export class SearchContext {
 	private _attachedWorker: Worker | null = null;
 
 	constructor(callback: (results: Array<TransformedMember>) => void, limit: number = DEFAULT_LIMIT) {
-		this._contextId = crypto.randomUUID();
+		this._contextId = randomUuid();
 		this._deliverResults = callback;
 		this._maxResults = limit;
 		this._inFlightQuery = null;
@@ -376,13 +352,7 @@ class MemberSearch {
 	}
 
 	handleMemberUpdate(guildId: string, memberId: string): void {
-		if (!worker) return;
-		const member = GuildMembers.getMember(guildId, memberId);
-		if (!member) return;
-		const transformedMember = getTransformedMember(member, guildId);
-		if (transformedMember) {
-			updateMembers([transformedMember]);
-		}
+		this.handleMemberAdd(guildId, memberId);
 	}
 
 	handleMemberRemove(guildId: string, memberId: string): void {
@@ -403,24 +373,6 @@ class MemberSearch {
 		if (!worker) return;
 		const transformedMembers = updateMembersList(members, guildId);
 		updateMembers(transformedMembers);
-	}
-
-	handleUserUpdate(userId: string): void {
-		if (!worker) return;
-		const user = Users.getUser(userId);
-		if (user == null) return;
-		const allMembers: Array<TransformedMember> = [getTransformedUser(user)];
-		const guilds = Guilds.getGuilds();
-		for (const guild of guilds) {
-			const member = GuildMembers.getMember(guild.id, userId);
-			if (member) {
-				const transformedMember = getTransformedMember(member, guild.id);
-				if (transformedMember) {
-					allMembers.push(transformedMember);
-				}
-			}
-		}
-		updateMembers(allMembers);
 	}
 
 	handleFriendshipChange(userId: string, isFriend: boolean): void {
@@ -453,12 +405,6 @@ class MemberSearch {
 		this.initialized = false;
 	}
 
-	cleanup(): void {
-		this.terminate();
-		this.initialized = false;
-		this.recentFetches.clear();
-	}
-
 	async fetchMembersInBackground(query: string, guildIds: Array<string>, priorityGuildId?: string): Promise<void> {
 		const trimmed = query.trim();
 		if (!trimmed) {
@@ -467,9 +413,8 @@ class MemberSearch {
 		if (!guildIds || guildIds.length === 0) {
 			return;
 		}
-		const sortedGuildIds = priorityGuildId
-			? [...guildIds].sort((a, b) => (a === priorityGuildId ? -1 : b === priorityGuildId ? 1 : 0))
-			: guildIds;
+		const priorityRank = (guildId: string) => (guildId === priorityGuildId ? 0 : 1);
+		const sortedGuildIds = priorityGuildId ? [...guildIds].sort((a, b) => priorityRank(a) - priorityRank(b)) : guildIds;
 		const eligibleGuildIds = sortedGuildIds.filter((guildId) => {
 			if (!guildId) {
 				return false;
@@ -506,4 +451,8 @@ class MemberSearch {
 	}
 }
 
-export default new MemberSearch();
+const memberSearch = new MemberSearch();
+
+ResettableStates.register(memberSearch, () => memberSearch.handleLogout());
+
+export default memberSearch;

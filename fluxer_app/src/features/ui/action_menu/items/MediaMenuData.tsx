@@ -8,6 +8,7 @@ import FavoriteGif from '@app/features/expressions/state/FavoriteGif';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import * as FavoriteGifUtils from '@app/features/expressions/utils/FavoriteGifUtils';
 import * as FavoriteMemeUtils from '@app/features/expressions/utils/FavoriteMemeUtils';
+import {isMediaDownloadHidden} from '@app/features/forum/utils/MediaDownloadPolicy';
 import {
 	ADD_TO_FAVORITES_DESCRIPTOR,
 	COPY_LINK_DESCRIPTOR,
@@ -18,6 +19,14 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {EditAltTextModal} from '@app/features/messaging/components/modals/EditAltTextModal';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import apiAttachmentFileTokens from '@app/features/messaging/state/ApiAttachmentFileTokens';
+import {fetchApiAttachmentBlob} from '@app/features/messaging/state/ApiAttachmentMedia';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
+import {
+	unwrapDesktopLocalResourceURL,
+	wrapDesktopLocalResourceURL,
+} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import {buildMediaProxyURL, stripMediaProxyParams} from '@app/features/messaging/utils/MediaProxyUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -131,7 +140,7 @@ const DOWNLOAD_MEDIA_DESCRIPTOR = msg({
 	comment: 'Generic media context menu download action when the specific type is unknown.',
 });
 const ATTACHMENT_IS_EXPIRED_OR_UNAVAILABLE_DESCRIPTOR = msg({
-	message: 'Attachment is expired or unavailable',
+	message: 'Attachment has expired or is unavailable',
 	comment: 'Toast shown when an attachment URL is no longer accessible.',
 });
 const URL_COPIED_TO_CLIPBOARD_DESCRIPTOR = msg({
@@ -247,15 +256,21 @@ async function convertImageBlobToPng(blob: Blob): Promise<Blob> {
 	}
 }
 
+async function fetchImageBlob(url: string): Promise<Blob> {
+	const response = await fetch(wrapDesktopLocalResourceURL(url));
+	if (!response.ok) {
+		throw new Error(`Unexpected response status ${response.status} for ${url}`);
+	}
+	return response.blob();
+}
+
 async function fetchFirstPngBlob(urls: Array<string>): Promise<Blob> {
 	let lastError: unknown = null;
 	for (const url of urls) {
 		try {
-			const response = await fetch(url);
-			if (!response.ok) {
-				throw new Error(`Unexpected response status ${response.status} for ${url}`);
-			}
-			const blob = await response.blob();
+			const blob = isApiAttachmentUrl(unwrapDesktopLocalResourceURL(url))
+				? await fetchApiAttachmentBlob(url)
+				: await fetchImageBlob(url);
 			return await convertImageBlobToPng(blob);
 		} catch (error) {
 			lastError = error;
@@ -304,15 +319,9 @@ export interface MediaMenuData {
 }
 
 export interface MediaMenuHandlers {
-	handleAddToFavorites: () => void;
-	handleRemoveFromFavorites: () => Promise<void>;
-	handleEditAltText: () => void;
-	handleCopyMedia: () => Promise<void>;
-	handleDownloadMedia: () => void;
 	handleCopyLink: () => Promise<void>;
 	handleOpenLink: () => void;
 	handleCopyAttachmentId: () => Promise<void>;
-	canEditAltText: boolean;
 	canCopyAttachmentId: boolean;
 	copyLinkLabel: string;
 	openLinkLabel: string;
@@ -325,11 +334,9 @@ export const mediaMenuItemIds = {
 	openLink: 'media-open-link',
 	favorite: 'media-favorite',
 	editAltText: 'media-edit-alt-text',
-	copyAttachmentId: 'media-copy-attachment-id',
 } as const;
 
-export interface MediaMenuState {
-	isFavorited: boolean;
+interface MediaMenuState {
 	copyLabel: string;
 	downloadLabel: string;
 }
@@ -429,17 +436,22 @@ export async function copyMediaToClipboard({
 		);
 		return;
 	}
+	const freshSrc = await AttachmentUrlRefresher.refresh(originalSrc);
 	if (type === 'file') {
-		await TextCopyCommands.copy(i18n, originalSrc, true);
+		await TextCopyCommands.copy(i18n, freshSrc, true);
 		ToastCommands.createToast({type: 'success', children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR)});
 		return;
 	}
-	const baseProxyURL = proxyURL ? stripMediaProxyParams(proxyURL) : null;
+	const baseProxyURL = proxyURL
+		? wrapDesktopLocalResourceURL(
+				await AttachmentUrlRefresher.refresh(unwrapDesktopLocalResourceURL(stripMediaProxyParams(proxyURL))),
+			)
+		: null;
 	const clipboardFileMediaType = getClipboardFileMediaType(type);
 	if (clipboardFileMediaType) {
 		const electronApi = getElectronAPI();
 		if (!electronApi?.clipboardWriteFile) {
-			await TextCopyCommands.copy(i18n, originalSrc, true);
+			await TextCopyCommands.copy(i18n, freshSrc, true);
 			ToastCommands.createToast({type: 'success', children: i18n._(URL_COPIED_TO_CLIPBOARD_DESCRIPTOR)});
 			return;
 		}
@@ -451,7 +463,7 @@ export async function copyMediaToClipboard({
 				timeout: 0,
 			});
 			const result = await electronApi.clipboardWriteFile({
-				url: baseProxyURL || originalSrc,
+				url: await apiAttachmentFileTokens.linkUrl(unwrapDesktopLocalResourceURL(baseProxyURL || freshSrc)),
 				suggestedName: defaultName,
 				mediaType: clipboardFileMediaType,
 			});
@@ -470,7 +482,7 @@ export async function copyMediaToClipboard({
 	const urlsToTry: Array<string> = [];
 	if (baseProxyURL) urlsToTry.push(buildMediaProxyURL(baseProxyURL, {format: 'png'}));
 	if (baseProxyURL) urlsToTry.push(baseProxyURL);
-	urlsToTry.push(originalSrc);
+	urlsToTry.push(freshSrc);
 	let toastId: string | null = null;
 	try {
 		toastId = ToastCommands.createToast({
@@ -494,7 +506,7 @@ export async function copyMediaToClipboard({
 	} catch (error) {
 		logger.error('Failed to copy image to clipboard:', error);
 		if (toastId) ToastCommands.destroyToast(toastId);
-		await TextCopyCommands.copy(i18n, originalSrc, true);
+		await TextCopyCommands.copy(i18n, freshSrc, true);
 		ToastCommands.createToast({
 			type: 'success',
 			children: i18n._(URL_COPIED_TO_CLIPBOARD_DESCRIPTOR),
@@ -511,7 +523,7 @@ export async function copyMediaLinkToClipboard({i18n, originalSrc}: {i18n: I18n;
 		);
 		return;
 	}
-	await TextCopyCommands.copy(i18n, originalSrc, true);
+	await TextCopyCommands.copy(i18n, await AttachmentUrlRefresher.refresh(originalSrc), true);
 	ToastCommands.createToast({
 		type: 'success',
 		children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR),
@@ -705,37 +717,17 @@ export function useMediaMenuData(props: MediaMenuDataProps, options: MediaMenuDa
 	const openLinkLabel = useMemo(() => getOpenLinkLabel(type, i18n), [type, i18n.locale]);
 	const handlers: MediaMenuHandlers = useMemo(
 		() => ({
-			handleAddToFavorites,
-			handleRemoveFromFavorites,
-			handleEditAltText,
-			handleCopyMedia,
-			handleDownloadMedia,
 			handleCopyLink,
 			handleOpenLink,
 			handleCopyAttachmentId,
-			canEditAltText,
 			canCopyAttachmentId: Boolean(attachmentId),
 			copyLinkLabel,
 			openLinkLabel,
 		}),
-		[
-			handleAddToFavorites,
-			handleRemoveFromFavorites,
-			handleEditAltText,
-			handleCopyMedia,
-			handleDownloadMedia,
-			handleCopyLink,
-			handleOpenLink,
-			handleCopyAttachmentId,
-			canEditAltText,
-			attachmentId,
-			copyLinkLabel,
-			openLinkLabel,
-		],
+		[handleCopyLink, handleOpenLink, handleCopyAttachmentId, attachmentId, copyLinkLabel, openLinkLabel],
 	);
 	const state: MediaMenuState = useMemo(
 		() => ({
-			isFavorited,
 			copyLabel,
 			downloadLabel,
 		}),
@@ -836,6 +828,7 @@ export function useMediaMenuData(props: MediaMenuDataProps, options: MediaMenuDa
 				],
 			});
 		}
+		if (isMediaDownloadHidden(message.channelId, type)) return result;
 		result.push({
 			items: [
 				{

@@ -8,7 +8,6 @@ const logger = new Logger('useMediaPiP');
 
 export interface UseMediaPiPOptions {
 	videoRef: React.RefObject<HTMLVideoElement | null> | React.RefObject<HTMLVideoElement>;
-	onPiPChange?: (isPiP: boolean) => void;
 }
 
 export interface UseMediaPiPReturn {
@@ -20,7 +19,7 @@ export interface UseMediaPiPReturn {
 }
 
 export function useMediaPiP(options: UseMediaPiPOptions): UseMediaPiPReturn {
-	const {videoRef, onPiPChange} = options;
+	const {videoRef} = options;
 	const [isPiP, setIsPiP] = useState(false);
 	const [supportsPiP] = useState(() => {
 		if (!document.pictureInPictureEnabled) return false;
@@ -29,14 +28,8 @@ export function useMediaPiP(options: UseMediaPiPOptions): UseMediaPiPReturn {
 	useEffect(() => {
 		const video = videoRef.current;
 		if (!video) return;
-		const handleEnterPiP = () => {
-			setIsPiP(true);
-			onPiPChange?.(true);
-		};
-		const handleLeavePiP = () => {
-			setIsPiP(false);
-			onPiPChange?.(false);
-		};
+		const handleEnterPiP = () => setIsPiP(true);
+		const handleLeavePiP = () => setIsPiP(false);
 		video.addEventListener('enterpictureinpicture', handleEnterPiP);
 		video.addEventListener('leavepictureinpicture', handleLeavePiP);
 		if (document.pictureInPictureElement === video) {
@@ -46,7 +39,7 @@ export function useMediaPiP(options: UseMediaPiPOptions): UseMediaPiPReturn {
 			video.removeEventListener('enterpictureinpicture', handleEnterPiP);
 			video.removeEventListener('leavepictureinpicture', handleLeavePiP);
 		};
-	}, [videoRef, onPiPChange]);
+	}, [videoRef]);
 	const enterPiP = useCallback(async () => {
 		const video = videoRef.current;
 		if (!video || !supportsPiP) return;

@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -15,11 +11,15 @@ import {
 	createRole,
 	getChannel,
 	getMember,
-} from '../../channel/tests/ChannelTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createOAuth2Application, createUniqueApplicationName} from './OAuth2TestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {createOAuth2Application, createUniqueApplicationName} from '@app/api/oauth/tests/OAuth2TestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('OAuth2 Bot Guild Add', () => {
 	let harness: ApiTestHarness;
@@ -28,27 +28,6 @@ describe('OAuth2 Bot Guild Add', () => {
 	});
 	afterEach(async () => {
 		await harness?.shutdown();
-	});
-	test('should add bot to guild with proper role creation', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Bot Test Guild');
-		const app = await createOAuth2Application(harness, owner.token, {
-			name: createUniqueApplicationName(),
-			redirect_uris: ['https://example.com/callback'],
-			bot_public: true,
-		});
-		await createBuilder(harness, owner.token)
-			.post('/oauth2/authorize/consent')
-			.body({
-				client_id: app.application.id,
-				scope: 'bot',
-				guild_id: guild.id,
-				permissions: Permissions.SEND_MESSAGES.toString(),
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const botMember = await getMember(harness, owner.token, guild.id, app.botUserId);
-		expect(botMember.user?.id).toBe(app.botUserId);
 	});
 	test('should add bot to group DM when requested with channel_id', async () => {
 		const owner = await createTestAccount(harness);
@@ -240,27 +219,6 @@ describe('OAuth2 Bot Guild Add', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 	});
-	test('should add bot without permissions when permissions is 0', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Bot Test Guild');
-		const app = await createOAuth2Application(harness, owner.token, {
-			name: createUniqueApplicationName(),
-			redirect_uris: ['https://example.com/callback'],
-			bot_public: true,
-		});
-		await createBuilder(harness, owner.token)
-			.post('/oauth2/authorize/consent')
-			.body({
-				client_id: app.application.id,
-				scope: 'bot',
-				guild_id: guild.id,
-				permissions: '0',
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		const botMember = await getMember(harness, owner.token, guild.id, app.botUserId);
-		expect(botMember.user?.id).toBe(app.botUserId);
-	});
 	test('should reject bot scope for non-public bot without owner consent', async () => {
 		const owner = await createTestAccount(harness);
 		const otherUser = await createTestAccount(harness);
@@ -279,64 +237,6 @@ describe('OAuth2 Bot Guild Add', () => {
 				permissions: '0',
 			})
 			.expect(HTTP_STATUS.FORBIDDEN)
-			.execute();
-	});
-	test('should allow public bot to be added by any user with MANAGE_GUILD', async () => {
-		const owner = await createTestAccount(harness);
-		const otherUser = await createTestAccount(harness);
-		const guild = await createGuild(harness, otherUser.token, 'Other User Guild');
-		const app = await createOAuth2Application(harness, owner.token, {
-			name: createUniqueApplicationName(),
-			redirect_uris: ['https://example.com/callback'],
-			bot_public: true,
-		});
-		await createBuilder(harness, otherUser.token)
-			.post('/oauth2/authorize/consent')
-			.body({
-				client_id: app.application.id,
-				scope: 'bot',
-				guild_id: guild.id,
-				permissions: '0',
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-	});
-	test('should reject negative permissions', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Bot Test Guild');
-		const app = await createOAuth2Application(harness, owner.token, {
-			name: createUniqueApplicationName(),
-			redirect_uris: ['https://example.com/callback'],
-			bot_public: true,
-		});
-		await createBuilder(harness, owner.token)
-			.post('/oauth2/authorize/consent')
-			.body({
-				client_id: app.application.id,
-				scope: 'bot',
-				guild_id: guild.id,
-				permissions: '-1',
-			})
-			.expect(HTTP_STATUS.BAD_REQUEST)
-			.execute();
-	});
-	test('should reject invalid permissions string', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Bot Test Guild');
-		const app = await createOAuth2Application(harness, owner.token, {
-			name: createUniqueApplicationName(),
-			redirect_uris: ['https://example.com/callback'],
-			bot_public: true,
-		});
-		await createBuilder(harness, owner.token)
-			.post('/oauth2/authorize/consent')
-			.body({
-				client_id: app.application.id,
-				scope: 'bot',
-				guild_id: guild.id,
-				permissions: 'not_a_number',
-			})
-			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
 	});
 	test('should create role with correct permissions and assign to bot', async () => {

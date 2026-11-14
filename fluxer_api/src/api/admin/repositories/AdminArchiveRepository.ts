@@ -1,20 +1,45 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {AdminArchive} from '@app/api/admin/models/AdminArchiveModel';
+import {ArchiveAttemptSupersededError} from '@app/api/archive/ArchiveAttemptSupersededError';
+import {BatchBuilder, executeConditional, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, type DbOp} from '@app/api/database/CassandraTypes';
+import {
+	ADMIN_ARCHIVE_INDEX_COLUMNS,
+	type AdminArchiveIndexRow,
+	type AdminArchiveRow,
+} from '@app/api/database/types/AdminArchiveTypes';
+import {Logger} from '@app/api/Logger';
+import {AdminArchivesByRequester, AdminArchivesBySubject, AdminArchivesByType} from '@app/api/Tables';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {ArchiveSubjectType} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import {ms} from 'itty-time';
-import {BatchBuilder, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import type {AdminArchiveRow} from '../../database/types/AdminArchiveTypes';
-import {Logger} from '../../Logger';
-import {AdminArchivesByRequester, AdminArchivesBySubject, AdminArchivesByType} from '../../Tables';
-import {AdminArchive} from '../models/AdminArchiveModel';
 
 const RETENTION_DAYS = 365;
 const DEFAULT_RETENTION_MS = ms(`${RETENTION_DAYS} days`);
+const ARCHIVE_READ_CONCURRENCY = 10;
 
-function computeTtlSeconds(expiresAt: Date): number {
-	const diffSeconds = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
-	return Math.max(diffSeconds, 1);
+interface AdminArchivePatch {
+	completed_at?: DbOp<Date>;
+	failed_at?: DbOp<Date>;
+	terminal_failed_at?: DbOp<Date>;
+	storage_key?: DbOp<string>;
+	file_size?: DbOp<bigint>;
+	progress_percent?: DbOp<number>;
+	progress_step?: DbOp<string>;
+	error_message?: DbOp<string>;
+	download_url_expires_at?: DbOp<Date>;
+}
+
+function computeTtlSeconds(expiresAt: Date | null): number {
+	if (expiresAt === null || !Number.isFinite(expiresAt.getTime())) {
+		throw new Error('Admin archive has no valid expiry');
+	}
+	const ttlSeconds = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
+	if (ttlSeconds < 1) throw new Error('Admin archive has expired');
+	return ttlSeconds;
 }
 
 function filterExpired(rows: Array<AdminArchiveRow>, includeExpired: boolean): Array<AdminArchiveRow> {
@@ -24,163 +49,113 @@ function filterExpired(rows: Array<AdminArchiveRow>, includeExpired: boolean): A
 }
 
 export class AdminArchiveRepository {
-	private ensureExpiry(archive: AdminArchive): AdminArchive {
-		if (!archive.expiresAt) {
-			archive.expiresAt = new Date(Date.now() + DEFAULT_RETENTION_MS);
-		}
-		return archive;
-	}
-
 	async create(archive: AdminArchive): Promise<void> {
-		const withExpiry = this.ensureExpiry(archive);
-		const row = withExpiry.toRow();
-		const ttlSeconds = computeTtlSeconds(withExpiry.expiresAt!);
+		archive.expiresAt ??= new Date(archive.requestedAt.getTime() + DEFAULT_RETENTION_MS);
+		const row = archive.toRow();
+		const applied = await executeConditional(
+			AdminArchivesBySubject.insertIfNotExistsWithTtl(row, computeTtlSeconds(row.expires_at)),
+		);
+		if (!applied) {
+			throw new Error(`Admin archive ${row.archive_id} for ${row.subject_type} ${row.subject_id} already exists`);
+		}
+		const indexRow: AdminArchiveIndexRow = {
+			subject_type: row.subject_type,
+			subject_id: row.subject_id,
+			archive_id: row.archive_id,
+			requested_by: row.requested_by,
+		};
+		const ttlSeconds = computeTtlSeconds(row.expires_at);
 		const batch = new BatchBuilder();
-		batch.addPrepared(
-			AdminArchivesBySubject.insertWithTtlParam({...row, ttl_seconds: ttlSeconds} as AdminArchiveRow, 'ttl_seconds'),
-		);
-		batch.addPrepared(
-			AdminArchivesByRequester.insertWithTtlParam({...row, ttl_seconds: ttlSeconds} as AdminArchiveRow, 'ttl_seconds'),
-		);
-		batch.addPrepared(
-			AdminArchivesByType.insertWithTtlParam({...row, ttl_seconds: ttlSeconds} as AdminArchiveRow, 'ttl_seconds'),
-		);
+		batch.addPrepared(AdminArchivesByRequester.insertWithTtl(indexRow, ttlSeconds));
+		batch.addPrepared(AdminArchivesByType.insertWithTtl(indexRow, ttlSeconds));
 		await batch.execute();
 		Logger.debug(
-			{subjectType: withExpiry.subjectType, subjectId: withExpiry.subjectId, archiveId: withExpiry.archiveId},
+			{subjectType: archive.subjectType, subjectId: archive.subjectId, archiveId: archive.archiveId},
 			'Created admin archive record',
 		);
 	}
 
-	async update(archive: AdminArchive): Promise<void> {
-		const withExpiry = this.ensureExpiry(archive);
-		const row = withExpiry.toRow();
-		const ttlSeconds = computeTtlSeconds(withExpiry.expiresAt!);
-		const batch = new BatchBuilder();
-		batch.addPrepared(
-			AdminArchivesBySubject.insertWithTtlParam({...row, ttl_seconds: ttlSeconds} as AdminArchiveRow, 'ttl_seconds'),
+	private async patchOwned(archive: AdminArchive, patch: AdminArchivePatch): Promise<void> {
+		assert(archive.attemptId !== null, 'Admin archive mutation requires a claimed attempt');
+		const applied = await executeConditional(
+			AdminArchivesBySubject.conditionalPatchByPkWithTtl(
+				{
+					subject_type: archive.subjectType,
+					subject_id: archive.subjectId,
+					archive_id: archive.archiveId,
+				},
+				patch,
+				{
+					requested_at: archive.requestedAt,
+					attempt_id: archive.attemptId,
+					completed_at: null,
+					failed_at: null,
+					terminal_failed_at: null,
+				},
+				computeTtlSeconds(archive.expiresAt),
+			),
 		);
-		batch.addPrepared(
-			AdminArchivesByRequester.insertWithTtlParam({...row, ttl_seconds: ttlSeconds} as AdminArchiveRow, 'ttl_seconds'),
+		if (!applied) throw new ArchiveAttemptSupersededError();
+	}
+
+	private async hydrateIndexRows(
+		rows: ReadonlyArray<AdminArchiveIndexRow>,
+		includeExpired: boolean,
+	): Promise<Array<AdminArchive>> {
+		const archives = await mapWithConcurrency(rows, ARCHIVE_READ_CONCURRENCY, (row) =>
+			this.findBySubjectAndArchiveId(row.subject_type, row.subject_id, row.archive_id),
 		);
-		batch.addPrepared(
-			AdminArchivesByType.insertWithTtlParam({...row, ttl_seconds: ttlSeconds} as AdminArchiveRow, 'ttl_seconds'),
-		);
-		await batch.execute();
-		Logger.debug(
-			{subjectType: withExpiry.subjectType, subjectId: withExpiry.subjectId, archiveId: withExpiry.archiveId},
-			'Updated admin archive record',
+		const now = Date.now();
+		return archives.filter(
+			(archive): archive is AdminArchive =>
+				archive !== null && (includeExpired || archive.expiresAt === null || archive.expiresAt.getTime() > now),
 		);
 	}
 
-	async markAsStarted(archive: AdminArchive, progressStep = 'Starting archive'): Promise<void> {
-		const withExpiry = this.ensureExpiry(archive);
-		const ttlSeconds = computeTtlSeconds(withExpiry.expiresAt!);
-		const batch = new BatchBuilder();
-		batch.addPrepared(
-			AdminArchivesBySubject.patchByPkWithTtlParam(
+	async markAsStarted(archive: AdminArchive, progressStep = 'Starting archive'): Promise<AdminArchive> {
+		const attempt = new AdminArchive({
+			...archive.toRow(),
+			attempt_id: randomUUID(),
+			started_at: new Date(),
+			failed_at: null,
+			error_message: null,
+			progress_percent: 0,
+			progress_step: progressStep,
+		});
+		const applied = await executeConditional(
+			AdminArchivesBySubject.conditionalPatchByPkWithTtl(
 				{
-					subject_type: withExpiry.subjectType,
-					subject_id: withExpiry.subjectId,
-					archive_id: withExpiry.archiveId,
+					subject_type: archive.subjectType,
+					subject_id: archive.subjectId,
+					archive_id: archive.archiveId,
 				},
 				{
-					started_at: Db.set(new Date()),
+					attempt_id: Db.set(attempt.attemptId),
+					started_at: Db.set(attempt.startedAt),
 					failed_at: Db.clear(),
 					error_message: Db.clear(),
 					progress_percent: Db.set(0),
 					progress_step: Db.set(progressStep),
 				},
-				'ttl_seconds',
-				ttlSeconds,
+				{
+					requested_at: archive.requestedAt,
+					attempt_id: archive.attemptId,
+					completed_at: null,
+					terminal_failed_at: null,
+				},
+				computeTtlSeconds(archive.expiresAt),
 			),
 		);
-		batch.addPrepared(
-			AdminArchivesByRequester.patchByPkWithTtlParam(
-				{
-					requested_by: withExpiry.requestedBy,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					started_at: Db.set(new Date()),
-					failed_at: Db.clear(),
-					error_message: Db.clear(),
-					progress_percent: Db.set(0),
-					progress_step: Db.set(progressStep),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		batch.addPrepared(
-			AdminArchivesByType.patchByPkWithTtlParam(
-				{
-					subject_type: withExpiry.subjectType,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					started_at: Db.set(new Date()),
-					failed_at: Db.clear(),
-					error_message: Db.clear(),
-					progress_percent: Db.set(0),
-					progress_step: Db.set(progressStep),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		await batch.execute();
+		if (!applied) throw new ArchiveAttemptSupersededError();
+		return attempt;
 	}
 
 	async updateProgress(archive: AdminArchive, progressPercent: number, progressStep: string): Promise<void> {
-		const withExpiry = this.ensureExpiry(archive);
-		const ttlSeconds = computeTtlSeconds(withExpiry.expiresAt!);
-		const batch = new BatchBuilder();
-		batch.addPrepared(
-			AdminArchivesBySubject.patchByPkWithTtlParam(
-				{
-					subject_type: withExpiry.subjectType,
-					subject_id: withExpiry.subjectId,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					progress_percent: Db.set(progressPercent),
-					progress_step: Db.set(progressStep),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		batch.addPrepared(
-			AdminArchivesByRequester.patchByPkWithTtlParam(
-				{
-					requested_by: withExpiry.requestedBy,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					progress_percent: Db.set(progressPercent),
-					progress_step: Db.set(progressStep),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		batch.addPrepared(
-			AdminArchivesByType.patchByPkWithTtlParam(
-				{
-					subject_type: withExpiry.subjectType,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					progress_percent: Db.set(progressPercent),
-					progress_step: Db.set(progressStep),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		await batch.execute();
-		Logger.debug({archiveId: withExpiry.archiveId, progressPercent, progressStep}, 'Updated admin archive progress');
+		await this.patchOwned(archive, {
+			progress_percent: Db.set(progressPercent),
+			progress_step: Db.set(progressStep),
+		});
+		Logger.debug({archiveId: archive.archiveId, progressPercent, progressStep}, 'Updated admin archive progress');
 	}
 
 	async markAsCompleted(
@@ -189,118 +164,34 @@ export class AdminArchiveRepository {
 		fileSize: bigint,
 		downloadUrlExpiresAt: Date,
 	): Promise<void> {
-		const withExpiry = this.ensureExpiry(archive);
-		const ttlSeconds = computeTtlSeconds(withExpiry.expiresAt!);
-		const batch = new BatchBuilder();
-		batch.addPrepared(
-			AdminArchivesBySubject.patchByPkWithTtlParam(
-				{
-					subject_type: withExpiry.subjectType,
-					subject_id: withExpiry.subjectId,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					completed_at: Db.set(new Date()),
-					storage_key: Db.set(storageKey),
-					file_size: Db.set(fileSize),
-					download_url_expires_at: Db.set(downloadUrlExpiresAt),
-					progress_percent: Db.set(100),
-					progress_step: Db.set('Completed'),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		batch.addPrepared(
-			AdminArchivesByRequester.patchByPkWithTtlParam(
-				{
-					requested_by: withExpiry.requestedBy,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					completed_at: Db.set(new Date()),
-					storage_key: Db.set(storageKey),
-					file_size: Db.set(fileSize),
-					download_url_expires_at: Db.set(downloadUrlExpiresAt),
-					progress_percent: Db.set(100),
-					progress_step: Db.set('Completed'),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		batch.addPrepared(
-			AdminArchivesByType.patchByPkWithTtlParam(
-				{
-					subject_type: withExpiry.subjectType,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					completed_at: Db.set(new Date()),
-					storage_key: Db.set(storageKey),
-					file_size: Db.set(fileSize),
-					download_url_expires_at: Db.set(downloadUrlExpiresAt),
-					progress_percent: Db.set(100),
-					progress_step: Db.set('Completed'),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		await batch.execute();
+		await this.patchOwned(archive, {
+			completed_at: Db.set(new Date()),
+			failed_at: Db.clear(),
+			error_message: Db.clear(),
+			storage_key: Db.set(storageKey),
+			file_size: Db.set(fileSize),
+			download_url_expires_at: Db.set(downloadUrlExpiresAt),
+			progress_percent: Db.set(100),
+			progress_step: Db.set('Completed'),
+		});
 	}
 
 	async markAsFailed(archive: AdminArchive, errorMessage: string): Promise<void> {
-		const withExpiry = this.ensureExpiry(archive);
-		const ttlSeconds = computeTtlSeconds(withExpiry.expiresAt!);
-		const batch = new BatchBuilder();
-		batch.addPrepared(
-			AdminArchivesBySubject.patchByPkWithTtlParam(
-				{
-					subject_type: withExpiry.subjectType,
-					subject_id: withExpiry.subjectId,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					failed_at: Db.set(new Date()),
-					error_message: Db.set(errorMessage),
-					progress_step: Db.set('Failed'),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		batch.addPrepared(
-			AdminArchivesByRequester.patchByPkWithTtlParam(
-				{
-					requested_by: withExpiry.requestedBy,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					failed_at: Db.set(new Date()),
-					error_message: Db.set(errorMessage),
-					progress_step: Db.set('Failed'),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		batch.addPrepared(
-			AdminArchivesByType.patchByPkWithTtlParam(
-				{
-					subject_type: withExpiry.subjectType,
-					archive_id: withExpiry.archiveId,
-				},
-				{
-					failed_at: Db.set(new Date()),
-					error_message: Db.set(errorMessage),
-					progress_step: Db.set('Failed'),
-				},
-				'ttl_seconds',
-				ttlSeconds,
-			),
-		);
-		await batch.execute();
+		await this.patchOwned(archive, {
+			failed_at: Db.set(new Date()),
+			error_message: Db.set(errorMessage),
+			progress_step: Db.set('Failed'),
+		});
+	}
+
+	async markAsTerminallyFailed(archive: AdminArchive, errorMessage: string): Promise<void> {
+		const failedAt = new Date();
+		await this.patchOwned(archive, {
+			failed_at: Db.set(failedAt),
+			terminal_failed_at: Db.set(failedAt),
+			error_message: Db.set(errorMessage),
+			progress_step: Db.set('Failed'),
+		});
 	}
 
 	async findBySubjectAndArchiveId(
@@ -347,27 +238,29 @@ export class AdminArchiveRepository {
 
 	async listByType(subjectType: ArchiveSubjectType, limit = 50, includeExpired = false): Promise<Array<AdminArchive>> {
 		const query = AdminArchivesByType.select({
+			columns: ADMIN_ARCHIVE_INDEX_COLUMNS,
 			where: AdminArchivesByType.where.eq('subject_type'),
 			limit,
 		});
-		const rows = await fetchMany<AdminArchiveRow>(
+		const rows = await fetchMany<AdminArchiveIndexRow>(
 			query.bind({
 				subject_type: subjectType,
 			}),
 		);
-		return filterExpired(rows, includeExpired).map((row) => new AdminArchive(row));
+		return this.hydrateIndexRows(rows, includeExpired);
 	}
 
 	async listByRequester(requestedBy: bigint, limit = 50, includeExpired = false): Promise<Array<AdminArchive>> {
 		const query = AdminArchivesByRequester.select({
+			columns: ADMIN_ARCHIVE_INDEX_COLUMNS,
 			where: AdminArchivesByRequester.where.eq('requested_by'),
 			limit,
 		});
-		const rows = await fetchMany<AdminArchiveRow>(
+		const rows = await fetchMany<AdminArchiveIndexRow>(
 			query.bind({
 				requested_by: requestedBy,
 			}),
 		);
-		return filterExpired(rows, includeExpired).map((row) => new AdminArchive(row));
+		return this.hydrateIndexRows(rows, includeExpired);
 	}
 }

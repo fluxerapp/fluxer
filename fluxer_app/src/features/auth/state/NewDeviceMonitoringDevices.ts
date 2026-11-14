@@ -6,7 +6,7 @@ import {
 	type VoiceDeviceState,
 } from '@app/features/voice/utils/VoiceDeviceManager';
 
-export type DeviceType = 'input' | 'output' | 'input_output';
+type DeviceType = 'input' | 'output' | 'input_output';
 
 export interface PendingDevicePrompt {
 	deviceIds: Array<string>;
@@ -57,6 +57,12 @@ function isVirtualRouteDevice(device: MediaDeviceInfo): boolean {
 		return true;
 	}
 	return getVoiceAudioDeviceMetadata(device) !== null;
+}
+
+export function getRealDeviceIds(state: VoiceDeviceState): Array<string> {
+	return [...state.inputDevices, ...state.outputDevices]
+		.filter((device) => !isVirtualRouteDevice(device) && device.deviceId.trim().length > 0)
+		.map((device) => device.deviceId);
 }
 
 function isPromptableDevice(device: MediaDeviceInfo, context: PromptableDeviceContext): boolean {

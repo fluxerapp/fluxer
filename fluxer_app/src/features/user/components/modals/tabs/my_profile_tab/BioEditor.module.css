@@ -36,11 +36,6 @@
 	overflow: hidden;
 }
 
-:global([dir='rtl']) .editor {
-	--composer-placeholder-right: 1rem;
-	--composer-placeholder-left: 0px;
-}
-
 .editor [data-channel-textarea] {
 	box-sizing: border-box;
 	min-height: 6.25rem;

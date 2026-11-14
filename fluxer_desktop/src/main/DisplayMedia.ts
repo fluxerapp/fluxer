@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BrowserWindow, desktopCapturer, ipcMain, screen} from 'electron';
-import log from 'electron-log';
 import {
 	isListOnlyDesktopSourcesOption,
 	isValidDesktopSourceId,
 	isValidDisplayMediaRequestId,
 	normalizeDesktopSourceTypes,
-	shouldHonorSelectedAudio,
-} from './DisplayMediaValidation';
-import {startWindowsScreenCaptureGuardForSource} from './WindowsScreenCaptureGuard';
+} from '@electron/main/DisplayMediaValidation';
+import {isWaylandSession} from '@electron/main/LinuxSession';
+import {startWindowsScreenCaptureGuardForSource} from '@electron/main/WindowsScreenCaptureGuard';
+import {reuseWindowsCaptureItemsForSource} from '@electron/main/WindowsWindowCaptureItemReuse';
+import {BrowserWindow, desktopCapturer, ipcMain, screen} from 'electron';
+import log from 'electron-log';
 
 type DisplayMediaPortalSurfacePreference = 'window' | 'monitor';
 
@@ -112,16 +113,6 @@ function collectOwnWindowMediaSourceIds(): Set<string> {
 	return ids;
 }
 
-function _isOwnWindowSourceId(sourceId: string): boolean {
-	return collectOwnWindowMediaSourceIds().has(sourceId);
-}
-
-function isWaylandSession(): boolean {
-	return (
-		process.platform === 'linux' && (Boolean(process.env.WAYLAND_DISPLAY) || process.env.XDG_SESSION_TYPE === 'wayland')
-	);
-}
-
 function consumeWaylandPortalSurfacePreference(): DisplayMediaPortalSurfacePreference | null {
 	const preference = nextWaylandPortalSurfacePreference;
 	nextWaylandPortalSurfacePreference = null;
@@ -171,10 +162,6 @@ async function resolveWaylandPortalDisplayMedia(
 		return null;
 	}
 	return {video};
-}
-
-function _isWaylandPortalShareActive(): boolean {
-	return isWaylandSession();
 }
 
 export function drainPendingDisplayMediaRequests(reason: string): void {
@@ -461,8 +448,8 @@ export function registerDisplayMediaHandlers(): void {
 					name: selectedSource.name,
 					withAudio: withAudio === true,
 				});
-				startWindowsScreenCaptureGuardForSource(selectedSource);
-				const _attachAudio = shouldHonorSelectedAudio(pending.audioRequested, withAudio);
+				startWindowsScreenCaptureGuardForSource(selectedSource, event.sender);
+				reuseWindowsCaptureItemsForSource(selectedSource);
 				const streams: Electron.Streams = {
 					video: selectedSource,
 				};

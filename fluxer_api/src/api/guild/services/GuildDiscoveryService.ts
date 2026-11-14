@@ -1,5 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, type GuildID, guildIdToRoleId, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
+import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
+import type {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {channelToVisitorInput} from '@app/api/guild/visits/GuildVisitorAccess';
+import {bumpGuildVisitorViewGeneration} from '@app/api/guild/visits/GuildVisitorViewGeneration';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import {
 	DISCOVERY_DEFAULT_LANGUAGE,
 	DISCOVERY_MAX_TAGS,
@@ -10,6 +24,11 @@ import {
 	normalizeDiscoveryTag,
 } from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures, getEffectiveGuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
+import {
+	computeGuildVisitorChannelPermissions,
+	GUILD_VISITOR_PERMISSIONS_MASK,
+} from '@fluxer/constants/src/GuildVisitConstants';
+import {THREAD_CHANNEL_TYPES, THREAD_ONLY_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {DiscoveryAlreadyAppliedError} from '@fluxer/errors/src/domains/discovery/DiscoveryAlreadyAppliedError';
 import {DiscoveryApplicationAlreadyReviewedError} from '@fluxer/errors/src/domains/discovery/DiscoveryApplicationAlreadyReviewedError';
@@ -18,16 +37,6 @@ import {DiscoveryInsufficientMembersError} from '@fluxer/errors/src/domains/disc
 import {DiscoveryNotDiscoverableError} from '@fluxer/errors/src/domains/discovery/DiscoveryNotDiscoverableError';
 import type {GuildSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes.jsx';
 import type {DiscoveryApplicationPatchRequest} from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {GuildDiscoveryRow} from '../../database/types/GuildDiscoveryTypes';
-import {contentModerationService} from '../../infrastructure/ContentModerationService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import type {IGuildSearchService} from '../../search/IGuildSearchService';
-import {mapGuildToGuildResponse} from '../GuildModel';
-import type {IGuildDiscoveryRepository} from '../repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
 
 function sanitizeTags(tags: ReadonlyArray<string> | null | undefined): Array<string> {
 	if (!tags || tags.length === 0) return [];
@@ -50,54 +59,6 @@ function resolveLanguage(language: string | null | undefined, fallback: string |
 	return DISCOVERY_DEFAULT_LANGUAGE;
 }
 
-export abstract class IGuildDiscoveryService {
-	abstract apply(params: {
-		guildId: GuildID;
-		userId: UserID;
-		description: string;
-		categoryId: number;
-		primaryLanguage?: string;
-		customTags?: ReadonlyArray<string>;
-	}): Promise<GuildDiscoveryRow>;
-
-	abstract editApplication(params: {
-		guildId: GuildID;
-		userId: UserID;
-		data: DiscoveryApplicationPatchRequest;
-	}): Promise<GuildDiscoveryRow>;
-
-	abstract withdraw(params: {guildId: GuildID; userId: UserID}): Promise<void>;
-
-	abstract getStatus(guildId: GuildID): Promise<GuildDiscoveryRow | null>;
-
-	abstract approve(params: {guildId: GuildID; adminUserId: UserID; reason?: string}): Promise<GuildDiscoveryRow>;
-
-	abstract reject(params: {guildId: GuildID; adminUserId: UserID; reason: string}): Promise<GuildDiscoveryRow>;
-
-	abstract remove(params: {guildId: GuildID; adminUserId: UserID; reason: string}): Promise<GuildDiscoveryRow>;
-
-	abstract getEligibility(guildId: GuildID): Promise<{
-		eligible: boolean;
-		min_member_count: number;
-	}>;
-
-	abstract listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>>;
-
-	abstract searchDiscoverable(params: {
-		query?: string;
-		categoryId?: number;
-		primaryLanguage?: string;
-		tag?: string;
-		sortBy?: string;
-		limit: number;
-		offset: number;
-	}): Promise<{
-		guilds: Array<DiscoveryGuildResult>;
-		total: number;
-		category_counts: Array<DiscoveryCategoryCount>;
-	}>;
-}
-
 interface DiscoveryCategoryCount {
 	category_type: number;
 	count: number;
@@ -115,10 +76,20 @@ interface DiscoveryGuildResult {
 	member_count: number;
 	online_count: number;
 	features: Array<string>;
+	badge_ids: Array<string>;
 	verification_level: number;
 }
 
+interface DiscoveryChannelPreview {
+	guild: {id: string; name: string; icon: string | null};
+	channel: {id: string; name: string | null; type: number};
+}
+
 const DISCOVERY_CATEGORY_FACET = 'discoveryCategory';
+
+export function hasDiscoveryAutoApproval(features: ReadonlySet<string>): boolean {
+	return features.has(GuildFeatures.VERIFIED) || features.has(GuildFeatures.PARTNERED);
+}
 
 function toDiscoveryCategoryCounts(
 	counts: Readonly<Record<string, number>> | undefined,
@@ -137,15 +108,14 @@ function toDiscoveryCategoryCounts(
 	return entries.sort((left, right) => left.category_type - right.category_type);
 }
 
-export class GuildDiscoveryService extends IGuildDiscoveryService {
+export class GuildDiscoveryService {
 	constructor(
-		private readonly discoveryRepository: IGuildDiscoveryRepository,
-		private readonly guildRepository: IGuildRepositoryAggregate,
+		private readonly discoveryRepository: GuildDiscoveryRepository,
+		private readonly guildRepository: GuildRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly guildSearchService: IGuildSearchService | null,
-	) {
-		super();
-	}
+		private readonly channelDataRepository: ChannelDataRepository,
+	) {}
 
 	async apply(params: {
 		guildId: GuildID;
@@ -173,17 +143,15 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		if (!eligible) {
 			throw new DiscoveryInsufficientMembersError();
 		}
+		const shouldAutoApprove = hasDiscoveryAutoApproval(guild.features);
 		const existing = await this.discoveryRepository.findByGuildId(guildId);
-		if (existing) {
-			if (
-				existing.status === DiscoveryApplicationStatus.PENDING ||
-				existing.status === DiscoveryApplicationStatus.APPROVED
-			) {
-				throw new DiscoveryAlreadyAppliedError();
-			}
+		if (
+			existing?.status === DiscoveryApplicationStatus.APPROVED ||
+			(existing?.status === DiscoveryApplicationStatus.PENDING && !shouldAutoApprove)
+		) {
+			throw new DiscoveryAlreadyAppliedError();
 		}
 		const now = new Date();
-		const shouldAutoApprove = guild.features.has(GuildFeatures.VERIFIED) || guild.features.has(GuildFeatures.PARTNERED);
 		const row: GuildDiscoveryRow = {
 			guild_id: guildId,
 			status: shouldAutoApprove ? DiscoveryApplicationStatus.APPROVED : DiscoveryApplicationStatus.PENDING,
@@ -205,7 +173,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			await this.discoveryRepository.upsert(row);
 		}
 		if (shouldAutoApprove) {
-			await this.addDiscoverableFeature(guildId);
+			await this.setDiscoverableFeature(guildId, true);
 			if (this.guildSearchService) {
 				const updatedGuild = await this.guildRepository.findUnique(guildId);
 				if (updatedGuild) {
@@ -278,7 +246,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		}
 		await this.discoveryRepository.deleteByGuildId(guildId, existing.status, existing.applied_at);
 		if (existing.status === DiscoveryApplicationStatus.APPROVED) {
-			await this.removeDiscoverableFeature(guildId);
+			await this.setDiscoverableFeature(guildId, false);
 			if (this.guildSearchService) {
 				await this.guildSearchService.deleteGuild(guildId);
 			}
@@ -317,7 +285,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			review_reason: reason ?? null,
 		};
 		await this.discoveryRepository.updateStatus(guildId, existing.status, existing.applied_at, updatedRow);
-		await this.addDiscoverableFeature(guildId);
+		await this.setDiscoverableFeature(guildId, true);
 		if (this.guildSearchService) {
 			const guild = await this.guildRepository.findUnique(guildId);
 			if (guild) {
@@ -371,7 +339,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			removal_reason: reason,
 		};
 		await this.discoveryRepository.updateStatus(guildId, existing.status, existing.applied_at, updatedRow);
-		await this.removeDiscoverableFeature(guildId);
+		await this.setDiscoverableFeature(guildId, false);
 		if (this.guildSearchService) {
 			await this.guildSearchService.deleteGuild(guildId);
 		}
@@ -380,6 +348,48 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 
 	async listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>> {
 		return this.discoveryRepository.listFullByStatus(params.status);
+	}
+
+	async getChannelPreview(
+		guildId: GuildID,
+		channelId: ChannelID,
+		viewer: ThreadViewer,
+	): Promise<DiscoveryChannelPreview> {
+		const [status, guild, channel, everyoneRole] = await Promise.all([
+			this.discoveryRepository.findByGuildId(guildId),
+			this.guildRepository.findUnique(guildId),
+			this.channelDataRepository.findUnique(channelId),
+			this.guildRepository.getRole(guildIdToRoleId(guildId), guildId),
+		]);
+		if (
+			status?.status !== DiscoveryApplicationStatus.APPROVED ||
+			!guild ||
+			guild.nsfw ||
+			guild.features.has(GuildFeatures.INVITES_DISABLED) ||
+			!channel ||
+			channel.guildId !== guildId ||
+			!everyoneRole ||
+			THREAD_CHANNEL_TYPES.has(channel.type) ||
+			(THREAD_ONLY_CHANNEL_TYPES.has(channel.type) && !viewerActive(viewer, guildId))
+		) {
+			throw new DiscoveryNotDiscoverableError();
+		}
+		const parent = channel.parentId ? await this.channelDataRepository.findUnique(channel.parentId) : null;
+		const permissions = computeGuildVisitorChannelPermissions({
+			guildId: guildId.toString(),
+			everyonePermissions: everyoneRole.permissions,
+			guildNsfw: guild.nsfw,
+			channel: channelToVisitorInput(channel),
+			parent: parent && parent.guildId === guildId ? {nsfw_override: parent.nsfwOverride} : null,
+			adultContentAllowed: false,
+		});
+		if ((permissions & GUILD_VISITOR_PERMISSIONS_MASK) !== GUILD_VISITOR_PERMISSIONS_MASK) {
+			throw new DiscoveryNotDiscoverableError();
+		}
+		return {
+			guild: {id: guild.id.toString(), name: guild.name, icon: guild.iconHash},
+			channel: {id: channel.id.toString(), name: channel.name, type: channel.type},
+		};
 	}
 
 	async searchDiscoverable(params: {
@@ -434,6 +444,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			member_count: hit.memberCount,
 			online_count: 0,
 			features: hit.features,
+			badge_ids: hit.badgeIds ?? [],
 			verification_level: getEffectiveGuildVerificationLevel(hit.verificationLevel, hit.isDiscoverable),
 		}));
 		const total = results.total;
@@ -444,6 +455,9 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 				for (const guild of guilds) {
 					const counts = freshCounts.get(BigInt(guild.id) as GuildID);
 					if (counts) {
+						if (counts.memberCount > 0) {
+							guild.member_count = counts.memberCount;
+						}
 						guild.online_count = counts.onlineCount;
 					}
 				}
@@ -457,24 +471,17 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		return {guilds, total, category_counts: categoryCounts};
 	}
 
-	private async addDiscoverableFeature(guildId: GuildID): Promise<void> {
+	private async setDiscoverableFeature(guildId: GuildID, enabled: boolean): Promise<void> {
+		await bumpGuildVisitorViewGeneration(guildId);
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) return;
 		const newFeatures = new Set(guild.features);
-		newFeatures.add(GuildFeatures.DISCOVERABLE);
-		const updatedGuild = await this.guildRepository.upsertPartial(guildId, {features: newFeatures}, guild.toRow());
-		await this.gatewayService.dispatchGuild({
-			guildId,
-			event: 'GUILD_UPDATE',
-			data: mapGuildToGuildResponse(updatedGuild),
-		});
-	}
-
-	private async removeDiscoverableFeature(guildId: GuildID): Promise<void> {
-		const guild = await this.guildRepository.findUnique(guildId);
-		if (!guild) return;
-		const newFeatures = new Set(guild.features);
-		newFeatures.delete(GuildFeatures.DISCOVERABLE);
+		if (enabled) {
+			newFeatures.add(GuildFeatures.DISCOVERABLE);
+			newFeatures.add(GuildFeatures.VISITS_ENABLED);
+		} else {
+			newFeatures.delete(GuildFeatures.DISCOVERABLE);
+		}
 		const updatedGuild = await this.guildRepository.upsertPartial(guildId, {features: newFeatures}, guild.toRow());
 		await this.gatewayService.dispatchGuild({
 			guildId,

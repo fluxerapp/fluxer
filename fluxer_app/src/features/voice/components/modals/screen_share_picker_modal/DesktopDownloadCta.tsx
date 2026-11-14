@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
 import {Button} from '@app/features/ui/button/Button';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import styles from '@app/features/voice/components/modals/ScreenSharePickerModal.module.css';
@@ -14,8 +14,8 @@ const BEST_WITH_THE_DESKTOP_APP_DESCRIPTOR = msg({
 	comment: 'CTA card title in the screen-share picker promoting the desktop app for richer screen sharing.',
 });
 const INSTALL_FOR_THE_FULL_SOURCE_PICKER_AND_SMOOTHER_DESCRIPTOR = msg({
-	message: 'Install {productName} for the full source picker and smoother screen-sharing controls.',
-	comment: 'CTA card body in the screen-share picker promoting the desktop app. {productName} is Fluxer.',
+	message: 'Install the desktop app for the full source picker and smoother screen-sharing controls.',
+	comment: 'CTA card body in the screen-share picker promoting the desktop app.',
 });
 const GET_THE_DESKTOP_APP_DESCRIPTOR = msg({
 	message: 'Get the desktop app',
@@ -30,7 +30,7 @@ export const DesktopDownloadCta: React.FC = () => {
 					{i18n._(BEST_WITH_THE_DESKTOP_APP_DESCRIPTOR)}
 				</div>
 				<div className={styles.downloadDescription} data-flx="voice.screen-share-picker-modal.download-description">
-					{i18n._(INSTALL_FOR_THE_FULL_SOURCE_PICKER_AND_SMOOTHER_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					{i18n._(INSTALL_FOR_THE_FULL_SOURCE_PICKER_AND_SMOOTHER_DESCRIPTOR)}
 				</div>
 			</div>
 			<div className={styles.downloadActions} data-flx="voice.screen-share-picker-modal.download-actions">

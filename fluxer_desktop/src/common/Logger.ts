@@ -1,11 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import path from 'node:path';
+import {BUILD_CHANNEL, type BuildChannel} from '@electron/common/BuildChannel';
 import log from 'electron-log';
 
-log.transports.file.level = BUILD_CHANNEL === 'canary' ? 'debug' : 'info';
+const DEFAULT_LOG_FILE_NAME = 'main.log';
 
-log.transports.console.level = BUILD_CHANNEL === 'canary' ? 'debug' : 'info';
+const CHANNEL_LOG_LEVELS: Record<BuildChannel, 'debug' | 'info'> = {
+	stable: 'info',
+	canary: 'debug',
+	development: 'debug',
+};
+
+log.transports.file.level = CHANNEL_LOG_LEVELS[BUILD_CHANNEL];
+
+log.transports.console.level = CHANNEL_LOG_LEVELS[BUILD_CHANNEL];
 
 export const Logger = {
 	debug: (...args: Array<unknown>) => log.debug(...args),
@@ -22,4 +31,8 @@ export function createChildLogger(componentName: string): typeof Logger {
 		warn: (...args: Array<unknown>) => log.warn(prefix, ...args),
 		error: (...args: Array<unknown>) => log.error(prefix, ...args),
 	};
+}
+
+export function writeLogFilesUnder(logsPath: string): void {
+	log.transports.file.resolvePathFn = (variables) => path.join(logsPath, variables.fileName ?? DEFAULT_LOG_FILE_NAME);
 }

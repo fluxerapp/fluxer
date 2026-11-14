@@ -7,7 +7,6 @@
     node_pod_names/0,
     pod_name_for_node/1,
     cache_node_pod_name/2,
-    refresh_node_pod_names/0,
     refresh_node_pod_names/1,
     local_pod_name/0
 ]).
@@ -33,10 +32,6 @@ cache_node_pod_name(Node, PodName) when
     NodePodNames = node_pod_names(),
     persistent_term:put(?NODE_POD_NAMES_KEY, NodePodNames#{Node => PodName}),
     ok.
-
--spec refresh_node_pod_names() -> #{node() => binary()}.
-refresh_node_pod_names() ->
-    refresh_node_pod_names(gateway_cluster_membership:members()).
 
 -spec refresh_node_pod_names([node()]) -> #{node() => binary()}.
 refresh_node_pod_names(Members) ->

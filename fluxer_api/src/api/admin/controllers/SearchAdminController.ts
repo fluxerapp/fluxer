@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
 	IndexRefreshStatusResponse,
@@ -8,12 +14,6 @@ import {
 	SearchIndexNameParam,
 	SearchIndexRefreshIdParam,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function SearchAdminController(app: HonoApp) {
 	app.post(
@@ -26,7 +26,7 @@ export function SearchAdminController(app: HonoApp) {
 			operationId: 'create_admin_search_index_refresh',
 			summary: 'Refresh a search index',
 			description:
-				'Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages and guild_members indexes are rebuilt one guild at a time and require guild_id, and favorite_memes requires user_id. Requires GUILD_LOOKUP permission.',
+				'Trigger a full or partial rebuild of the named search index. Creates a background job and returns its refresh ID for status tracking. The channel_messages, guild_members and threads indexes are rebuilt one guild at a time and require guild_id, and all rebuilds every index, one at a time. Queueing all while one is running returns the running refresh ID. Requires GUILD_LOOKUP permission.',
 			responseSchema: RefreshSearchIndexResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -37,10 +37,10 @@ export function SearchAdminController(app: HonoApp) {
 			const adminUserId = ctx.get('adminUserId');
 			const auditLogReason = ctx.get('auditLogReason');
 			const {index_name} = ctx.req.valid('param');
-			const {guild_id, user_id} = ctx.req.valid('json');
+			const {guild_id} = ctx.req.valid('json');
 			return ctx.json(
 				await adminService.searchService.refreshSearchIndex(
-					{index_type: index_name, guild_id, user_id},
+					{index_type: index_name, guild_id},
 					adminUserId,
 					auditLogReason,
 				),

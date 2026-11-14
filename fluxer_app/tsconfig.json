@@ -13,8 +13,6 @@
 		"noUncheckedSideEffectImports": false,
 		"sourceMap": true,
 		"noImplicitReturns": true,
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
 		"paths": {
 			"@app/*": ["./src/*"],
 			"onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm": ["./src/types/ort-wasm-asset.d.ts"],

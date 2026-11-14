@@ -7,12 +7,8 @@ import UserSettingsState from '@app/features/user/state/UserSettings';
 
 export type UserSettingsPatch = Partial<UserSettings>;
 
-async function persistUserSettings(settings: UserSettingsPatch): Promise<void> {
-	await UserSettingsState.saveSettings(settings);
-}
-
 export async function update(settings: UserSettingsPatch): Promise<void> {
-	await persistUserSettings(settings);
+	await UserSettingsState.saveSettings(settings);
 }
 
 export async function updateVoiceActivitySharingDefault(value: boolean): Promise<void> {

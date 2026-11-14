@@ -17,12 +17,12 @@ import {
 	SKELETON_UNMEASURED_WIDTH_PX,
 } from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {SkeletonLine} from '@app/features/app/components/skeleton/SkeletonLine';
+import {skeletonGifEnabled} from '@app/features/app/components/skeleton/SkeletonRuntimeConfig';
 import {SkeletonEmphasis, SkeletonRadius} from '@app/features/app/components/skeleton/SkeletonStyle';
 import {
 	type SkeletonInjectedToken,
 	skeletonSurfaceVar,
 } from '@app/features/app/components/skeleton/SkeletonSurfaceContract';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CHANNEL_HEADER_DM_AVATAR_SIZE_PX} from '@app/features/channel/components/ChannelHeaderMetrics';
 import {MemberListSkeleton, MemberListSkeletonVariant} from '@app/features/channel/components/MemberListSkeleton';
 import composerWrapperStyles from '@app/features/channel/components/textarea/InputWrapper.module.css';
@@ -163,7 +163,7 @@ export const ChatSkeleton = observer(function ChatSkeleton({presentation}: ChatS
 	const [rememberedChatState] = useState(() =>
 		Object.freeze({
 			composerLayout:
-				getRememberedSkeletonComposerLayout() ?? resolveDefaultSkeletonComposerLayout(RuntimeConfig.gifEnabled),
+				getRememberedSkeletonComposerLayout() ?? resolveDefaultSkeletonComposerLayout(skeletonGifEnabled()),
 			messagePresentation: getRememberedSkeletonMessagePresentation() ?? resolveDefaultSkeletonMessagePresentation(),
 		}),
 	);

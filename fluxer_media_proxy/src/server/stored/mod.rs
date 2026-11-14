@@ -2,40 +2,42 @@
 
 pub(in crate::server) mod passthrough;
 pub(in crate::server) mod response;
-#[cfg(test)]
-mod tests;
 
 use crate::{
-    asset_size,
     coalescer::CoalescerError,
+    config::PolicyMode,
     constants::{self, AssetExtension, AssetKind},
     image_quality::ImageQuality,
     image_transform::{AnimationMode, ResizeMode},
     media_process, mime, output_format,
     server::{
         asset_path::{ParsedAssetPath, asset_filename_hint},
+        attachment_signature,
         format_policy::{
             OriginalImageRequest, default_transform_quality,
-            effective_animated_image_output_format, extension_from_mime, is_svg_content_type,
+            effective_animated_image_output_format, extension_from_mime,
+            is_browser_displayable_image, is_untransformed_fallback_image,
             same_format_loaded_image_request_can_use_original_with_sniff,
         },
+        media_operations::spool_stored_media,
         params::{
-            animated_param, asset_manual_format_override, asset_wants_animated, bool_param,
-            filename_from_storage_key,
+            asset_manual_format_override, asset_wants_animated, bool_param,
+            filename_from_storage_key, requests_transform,
         },
         response::{
-            MediaResponse, content_disposition_header,
+            GeneratedMediaResponse, MediaResponse, content_disposition_header,
             error::{storage_error_response, text_with_source},
-            media_response,
+            generated_media_response, media_response,
         },
         state::AppState,
         transform::{
-            ServeBytesRequest,
+            CachedVideoTransformRequest, ServeBytesRequest,
             cache::{
                 CachedTransformRequest, cached_transform, cached_transform_hit,
-                coalescer_failure_response,
+                coalescer_error_is_transient, coalescer_failure_response, forbid_storing,
             },
             cache_key::{TransformCacheKeyInput, transform_cache_key},
+            cached_video_transform_response,
             execution::{coalesced_work_result, deadline_instant, run_transform},
             original_image_content_type,
             parameters::TransformRoute,
@@ -48,6 +50,7 @@ use axum::{
     http::{HeaderMap, Method, StatusCode, header},
     response::Response,
 };
+use bytes::Bytes;
 pub(in crate::server) use passthrough::serve_stored_raw;
 use passthrough::{PassthroughDisposition, serve_stored_passthrough_stream};
 use std::{collections::HashMap, sync::Arc};
@@ -63,13 +66,16 @@ pub(in crate::server) async fn serve_asset_image(
     let range_header = headers.get(header::RANGE).and_then(|v| v.to_str().ok());
     let requested_download = bool_param(params, "download", false);
     let asset_filename = asset_filename_hint(&asset);
-    let size = asset_size::parse_image_size(params.get("size").map(String::as_str));
+    let requested_size = match (asset.kind, params.get("size")) {
+        (AssetKind::Branding, None) => None,
+        (_, raw) => Some(constants::parse_image_size(raw.map(String::as_str))),
+    };
     let requested_manual_format = asset_manual_format_override(params, asset.original_ext);
     let manual_format_override = asset.forced_output_format.or(requested_manual_format);
     let selected = output_format::select_url_variant(output_format::Input {
         kind: asset.kind,
         original: asset.original_ext,
-        requested_size: Some(size),
+        requested_size,
         manual_format_override,
     });
     let animated = asset_wants_animated(params, &asset.hash);
@@ -142,11 +148,10 @@ pub(in crate::server) async fn serve_asset_image(
         resize_mode: Some(resize_mode),
     });
     if let Some(hit) = cached_transform_hit(runtime, &cache_key) {
-        return media_response(MediaResponse {
+        return generated_media_response(GeneratedMediaResponse {
             method,
-            data: hit.data.as_bytes().clone().into(),
+            data: hit.data,
             content_type: hit.format.mime(),
-            range_header,
             disposition: Some(content_disposition_header(
                 hit.format.mime(),
                 requested_download,
@@ -177,7 +182,7 @@ pub(in crate::server) async fn serve_asset_image(
     })
     .await
     {
-        Ok(bytes) => bytes.as_bytes().clone(),
+        Ok(bytes) => bytes,
         Err(error) => {
             let detail = format!(
                 "asset key={} src_ct={} out={} size={:?} animated={}",
@@ -193,15 +198,15 @@ pub(in crate::server) async fn serve_asset_image(
                 object,
                 range_header,
                 source_format,
+                sniffed_content_type: sniffed.mime,
                 detail,
             });
         }
     };
-    media_response(MediaResponse {
+    generated_media_response(GeneratedMediaResponse {
         method,
-        data: transformed.into(),
+        data: transformed,
         content_type: out_ext.mime(),
-        range_header,
         disposition: Some(content_disposition_header(
             out_ext.mime(),
             requested_download,
@@ -216,25 +221,32 @@ struct AssetTransformFailure<'a> {
     object: storage::Object,
     range_header: Option<&'a str>,
     source_format: AssetExtension,
+    sniffed_content_type: &'static str,
     detail: String,
 }
 
 fn asset_transform_failure_response(failure: AssetTransformFailure<'_>) -> Response {
-    let src_ct = failure.object.content_type.as_str();
-    let src_is_displayable = src_ct.starts_with("image/")
-        && src_ct != "image/avif"
-        && src_ct != "image/heic"
-        && src_ct != "image/heif"
-        && failure.source_format != AssetExtension::Svg
-        && !is_svg_content_type(src_ct);
-    if src_is_displayable && failure.error != CoalescerError::RequestTimeout {
-        return media_response(MediaResponse {
+    let stored_ct = failure.object.content_type.as_str();
+    let sniffed_ct = failure.sniffed_content_type;
+    let src_ct = if !stored_ct.starts_with("image/")
+        && (is_browser_displayable_image(sniffed_ct) || sniffed_ct == "image/avif")
+    {
+        sniffed_ct
+    } else {
+        stored_ct
+    };
+    if is_untransformed_fallback_image(src_ct, Some(failure.source_format)) {
+        let mut response = media_response(MediaResponse {
             method: failure.method,
             data: failure.object.data.into(),
-            content_type: &failure.object.content_type,
+            content_type: src_ct,
             range_header: failure.range_header,
             disposition: None,
         });
+        if coalescer_error_is_transient(failure.error) {
+            forbid_storing(&mut response);
+        }
+        return response;
     }
     if let Some(response) =
         coalescer_failure_response(failure.error, "coalescer_timeout_asset_image")
@@ -261,16 +273,16 @@ async fn read_cdn_object_with_fallback(
 ) -> Result<CdnSourceObject, StorageError> {
     let bucket = &app.cfg.storage.bucket_cdn;
     let limit = constants::MAX_MEDIA_PROXY_BYTES;
-    let budget = storage::unversioned_read_budget(limit);
+    let budget = app.media.stored_buffer_bytes();
     let read = match app
         .store
-        .read_object_limited_with_digest(bucket, key, limit, &budget)
+        .read_object_limited_with_digest(bucket, key, limit, budget)
         .await
     {
         Err(StorageError::NotFound) => {
             let fallback_key = format!("{key}.{}", original_ext.name());
             app.store
-                .read_object_limited_with_digest(bucket, &fallback_key, limit, &budget)
+                .read_object_limited_with_digest(bucket, &fallback_key, limit, budget)
                 .await?
         }
         other => other?,
@@ -281,7 +293,7 @@ async fn read_cdn_object_with_fallback(
                 .expect("a digested read always reports its content digest"),
         ),
         object: storage::Object {
-            data: read.data.as_bytes().clone(),
+            data: Bytes::from_owner(read.data),
             content_type: read.content_type,
         },
     })
@@ -294,14 +306,24 @@ pub(in crate::server) async fn serve_attachment(
     params: &HashMap<String, String>,
     headers: &HeaderMap,
 ) -> Response {
+    let response = read_attachment(app, method, key, params, headers).await;
+    if app.cfg.attachment_signature.mode == PolicyMode::Enforce
+        && response.status() == StatusCode::NOT_FOUND
+    {
+        return attachment_signature::masked_not_found_response(key);
+    }
+    response
+}
+
+async fn read_attachment(
+    app: &Arc<AppState>,
+    method: Method,
+    key: &str,
+    params: &HashMap<String, String>,
+    headers: &HeaderMap,
+) -> Response {
     let filename = filename_from_storage_key(key);
-    let animated = animated_param(params, false);
-    let wants_transform = params.contains_key("width")
-        || params.contains_key("height")
-        || params.contains_key("format")
-        || params.contains_key("quality")
-        || animated;
-    if !wants_transform {
+    if !requests_transform(params) {
         return serve_stored_passthrough_stream(
             app,
             method,
@@ -317,8 +339,71 @@ pub(in crate::server) async fn serve_attachment(
     }
     let object = match app
         .store
-        .read_object(&app.cfg.storage.bucket_cdn, key)
+        .read_object_within(
+            &app.cfg.storage.bucket_cdn,
+            key,
+            app.media.stored_buffer_bytes(),
+        )
         .await
+    {
+        Ok(object) => object,
+        Err(StorageError::StreamTooLong) => {
+            return serve_spooled_attachment_video(app, method, key, params, headers).await;
+        }
+        Err(err) => return storage_error_response(key, err),
+    };
+    serve_bytes_or_transform(
+        app.media.transforms(),
+        ServeBytesRequest {
+            method,
+            data: object.data,
+            content_type: object.content_type,
+            cache_identity: key,
+            filename,
+            route: TransformRoute::Attachment,
+            params,
+            headers,
+        },
+    )
+    .await
+}
+
+static SPOOLED_ATTACHMENT_READS: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+async fn serve_spooled_attachment_video(
+    app: &Arc<AppState>,
+    method: Method,
+    key: &str,
+    params: &HashMap<String, String>,
+    headers: &HeaderMap,
+) -> Response {
+    let filename = filename_from_storage_key(key);
+    let cached = || {
+        cached_video_transform_response(
+            app.media.transforms(),
+            CachedVideoTransformRequest {
+                method: method.clone(),
+                cache_identity: key,
+                filename,
+                route: TransformRoute::Attachment,
+                params,
+            },
+        )
+    };
+    if let Some(response) = cached() {
+        return response;
+    }
+    let _serial = SPOOLED_ATTACHMENT_READS.lock().await;
+    if let Some(response) = cached() {
+        return response;
+    }
+    let object = match spool_stored_media(
+        app,
+        &app.cfg.storage.bucket_cdn,
+        key,
+        &[mime::Category::Video],
+    )
+    .await
     {
         Ok(object) => object,
         Err(err) => return storage_error_response(key, err),

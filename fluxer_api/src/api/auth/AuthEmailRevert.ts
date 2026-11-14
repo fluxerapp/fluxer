@@ -1,17 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import crypto from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {createEmailRevertToken, type UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import {getKVClient} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
+import {EMAIL_REVERT_TOKEN_TTL_SECONDS} from '@app/api/user/repositories/auth/TokenRepository';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
+import {UserTraits} from '@app/api/user/UserTraits';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
+import {requireConfiguredClientIp} from '@app/api/utils/RequestClientIp';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
-import type {ApiContext} from '../ApiContext';
-import {createEmailRevertToken} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {getUserSearchService} from '../SearchFactory';
-import {mapUserToPrivateResponse} from '../user/UserMappers';
-import * as AuthPassword from './AuthPassword';
-import * as AuthSession from './AuthSession';
-import * as AuthUtility from './AuthUtility';
 
 interface IssueEmailRevertTokenParams {
 	user: User;
@@ -30,13 +37,57 @@ export async function issueEmailRevertToken(ctx: ApiContext, params: IssueEmailR
 	const {user, previousEmail, newEmail} = params;
 	const trimmed = previousEmail.trim();
 	if (!trimmed) return;
-	const token = createEmailRevertToken(await AuthUtility.generateSecureToken(ctx));
+	const token = createEmailRevertToken(await RandomUtils.randomString(64));
 	await users.createEmailRevertToken({
 		token_: token,
 		user_id: user.id,
 		email: trimmed,
 	});
-	await email.sendEmailChangeRevert(trimmed, user.username, newEmail, token, user.locale);
+	await recordIssuedEmailRevertToken(user.id, token);
+	await email.send('email_change_revert', trimmed, {newEmail, token}, user.locale);
+}
+
+const EMAIL_REVERT_CLAIM_KEY_PREFIX = 'auth:email-revert:claimed:';
+const EMAIL_REVERT_ISSUED_KEY_PREFIX = 'auth:email-revert:issued:';
+
+function emailRevertTokenHash(token: string): string {
+	return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function emailRevertClaimKey(tokenHash: string): string {
+	return `${EMAIL_REVERT_CLAIM_KEY_PREFIX}${tokenHash}`;
+}
+
+function emailRevertIssuedKey(userId: UserID): string {
+	return `${EMAIL_REVERT_ISSUED_KEY_PREFIX}${userId}`;
+}
+
+function claimEmailRevertToken(token: string): Promise<boolean> {
+	return getKVClient().setnx(emailRevertClaimKey(emailRevertTokenHash(token)), '1', EMAIL_REVERT_TOKEN_TTL_SECONDS);
+}
+
+async function recordIssuedEmailRevertToken(userId: UserID, token: string): Promise<void> {
+	const kv = getKVClient();
+	const key = emailRevertIssuedKey(userId);
+	await kv.rpush(key, emailRevertTokenHash(token));
+	await kv.expire(key, EMAIL_REVERT_TOKEN_TTL_SECONDS);
+}
+
+async function claimEmailRevertTokensIssuedAfter(userId: UserID, token: string): Promise<void> {
+	const kv = getKVClient();
+	const issued = await kv.lrange(emailRevertIssuedKey(userId), 0, -1);
+	const later = issued.slice(issued.lastIndexOf(emailRevertTokenHash(token)) + 1);
+	await Promise.all(
+		later.map((tokenHash) => kv.setnx(emailRevertClaimKey(tokenHash), '1', EMAIL_REVERT_TOKEN_TTL_SECONDS)),
+	);
+}
+
+async function releaseEmailRevertTokenClaim(token: string): Promise<void> {
+	try {
+		await getKVClient().del(emailRevertClaimKey(emailRevertTokenHash(token)));
+	} catch (error) {
+		Logger.error({error}, 'Could not release the claim of an email revert token whose revert failed');
+	}
 }
 
 export async function revertEmailChange(
@@ -46,7 +97,7 @@ export async function revertEmailChange(
 	user_id: string;
 	token: string;
 }> {
-	const {users, gateway, contactChangeLog, config} = ctx.services;
+	const {users, gateway, contactChangeLog, config, worker} = ctx.services;
 	const {token, password, request} = params;
 	const tokenData = await users.getEmailRevertToken(token);
 	if (!tokenData) {
@@ -57,49 +108,45 @@ export async function revertEmailChange(
 		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_REVERT_TOKEN);
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	await AuthUtility.handleBanStatus(ctx, user);
+	await AuthUtility.assertSignInAllowed(ctx, user);
 	if (await AuthPassword.isPasswordPwned(ctx, password)) {
 		throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 	}
-	const passwordHash = await AuthPassword.hashPassword(ctx, password);
-	const now = new Date();
-	const updatedUser = await users.patchUpsert(
-		user.id,
-		{
-			email: tokenData.email,
-			email_verified: true,
-			totp_secret: null,
-			authenticator_types: null,
-			password_hash: passwordHash,
-			password_last_changed_at: now,
-		},
-		user.toRow(),
-	);
+	if (!(await claimEmailRevertToken(token))) {
+		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_REVERT_TOKEN);
+	}
+	let updatedUser: User;
+	try {
+		const passwordHash = await hashPassword(password);
+		const traits = user.traits;
+		traits.delete(UserTraits.PASSKEY);
+		updatedUser = await users.patchUpsert(
+			user.id,
+			{
+				email: tokenData.email,
+				email_verified: true,
+				email_bounced: false,
+				totp_secret: null,
+				authenticator_types: null,
+				password_hash: passwordHash,
+				password_last_changed_at: new Date(),
+				traits: traits.size > 0 ? traits : null,
+			},
+			user.toRow(),
+		);
+	} catch (error) {
+		await releaseEmailRevertTokenClaim(token);
+		throw error;
+	}
+	await claimEmailRevertTokensIssuedAfter(user.id, token);
+	await users.deleteAllPasswordResetTokens(user.id);
 	await users.deleteEmailRevertToken(token);
 	await users.deleteAllMfaBackupCodes(user.id);
 	await users.deleteAllWebAuthnCredentials(user.id);
 	await users.deleteAllAuthorizedIps(user.id);
-	await AuthSession.terminateAllUserSessions(ctx, user.id);
-	await users.createAuthorizedIp(
-		user.id,
-		requireClientIp(request, {
-			trustClientIpHeader: config.proxy.trust_client_ip_header,
-			clientIpHeaderName: config.proxy.client_ip_header,
-		}),
-	);
-	const userSearchService = getUserSearchService();
-	if (userSearchService && updatedUser && 'updateUser' in userSearchService) {
-		await userSearchService
-			.updateUser(updatedUser)
-			.catch((error) =>
-				Logger.debug({error, userId: updatedUser.id}, 'Failed to update search index after email revert'),
-			);
-	}
-	await gateway.dispatchPresence({
-		userId: updatedUser.id,
-		event: 'USER_UPDATE',
-		data: mapUserToPrivateResponse(updatedUser),
-	});
+	await revokeAllAuthSessions(ctx.services, user.id);
+	await users.createAuthorizedIp(user.id, requireConfiguredClientIp(request, config.proxy));
+	await dispatchUserUpdate(gateway, updatedUser);
 	const [authToken] = await AuthSession.createAuthSession(ctx, {
 		user: updatedUser,
 		origin: AuthSession.resolveSessionOrigin(ctx, request),
@@ -110,5 +157,6 @@ export async function revertEmailChange(
 		reason: 'user_requested',
 		actorUserId: user.id,
 	});
+	await enqueueStripeCustomerEmailSync(worker, user, updatedUser);
 	return {user_id: updatedUser.id.toString(), token: authToken};
 }

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use reqwest::Method;
+
 use crate::api::generated::snowflake;
 
 use super::client::{AdminApiClient, ApiResult};
-use super::types::{ActiveJobsResponse, CancelJobResponse, GetJobResponse, ListJobsResponse};
+use super::types::{CancelJobResponse, GetJobResponse, ListJobsResponse};
 
 pub struct ListJobsParams {
     pub limit: u32,
@@ -24,9 +26,9 @@ impl AdminApiClient {
         let max_lookback_days = params.max_lookback_days.to_string();
         let query_params = [
             ("limit", limit.as_str()),
-            ("cursor_bucket_day", cursor_bucket_day.as_str()),
-            ("cursor_created_at", cursor_created_at.as_str()),
-            ("cursor_job_id", cursor_job_id.as_str()),
+            ("cursor_bucket_day", cursor_bucket_day),
+            ("cursor_created_at", cursor_created_at),
+            ("cursor_job_id", cursor_job_id),
             ("max_lookback_days", max_lookback_days.as_str()),
             ("status", params.status.as_deref().unwrap_or_default()),
             ("task_type", params.task_type.as_deref().unwrap_or_default()),
@@ -52,28 +54,19 @@ impl AdminApiClient {
         job_id: &str,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<CancelJobResponse> {
-        self.put_with_reason(
+        self.send(
+            Method::PUT,
             &format!("/admin/jobs/{}/cancellation", urlencoding::encode(job_id)),
-            None,
+            None::<&serde_json::Value>,
             audit_log_reason,
         )
         .await
     }
-
-    pub async fn list_active_jobs(&self) -> ApiResult<ActiveJobsResponse> {
-        let response = self
-            .generated()
-            .list_admin_active_jobs()
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
-    }
 }
 
-fn cursor_field(cursor: Option<&serde_json::Value>, field: &str) -> String {
+fn cursor_field<'a>(cursor: Option<&'a serde_json::Value>, field: &str) -> &'a str {
     cursor
         .and_then(|cursor| cursor.get(field))
         .and_then(serde_json::Value::as_str)
         .unwrap_or_default()
-        .to_owned()
 }

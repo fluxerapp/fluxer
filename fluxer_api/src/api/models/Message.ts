@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID, RoleID, UserID, WebhookID} from '@app/api/BrandedTypes';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import {Attachment} from '@app/api/models/Attachment';
+import {CallInfo} from '@app/api/models/CallInfo';
+import {Embed} from '@app/api/models/Embed';
+import {MessageRef} from '@app/api/models/MessageRef';
+import {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import {StickerItem} from '@app/api/models/StickerItem';
 import type {MessageTypeValue} from '@fluxer/constants/src/ChannelConstants';
-import type {ChannelID, MessageID, RoleID, UserID, WebhookID} from '../BrandedTypes';
-import type {MessageRow} from '../database/types/MessageTypes';
-import {Attachment} from './Attachment';
-import {CallInfo} from './CallInfo';
-import {Embed} from './Embed';
-import {MessageRef} from './MessageRef';
-import {MessageSnapshot} from './MessageSnapshot';
-import {StickerItem} from './StickerItem';
 
 export class Message {
 	readonly channelId: ChannelID;

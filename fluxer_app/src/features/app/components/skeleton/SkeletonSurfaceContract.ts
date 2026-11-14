@@ -168,11 +168,7 @@ export const SKELETON_SURFACE_TOKENS = [
 
 export type SkeletonSurfaceToken = (typeof SKELETON_SURFACE_TOKENS)[number];
 
-export const SKELETON_SCOPED_TOKENS = ['--layout-user-area-overlay-height', '--outline-radius'] as const;
-
-export type SkeletonScopedToken = (typeof SKELETON_SCOPED_TOKENS)[number];
-
-export const SKELETON_INJECTED_TOKENS = [
+const SKELETON_INJECTED_TOKENS = [
 	'--active-now-participant-outline',
 	'--active-now-participant-overlap',
 	'--active-now-participant-size',

@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import {isSyntheticUserId} from '@app/api/constants/Core';
+import {usesUniqueUsernames} from '@app/api/instance/AccountIdentityModeCache';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {findPersonByLoginHandle, parseLoginHandle} from '@app/api/user/UniqueUsernames';
 import type {LookupUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
-import type {ApiContext} from '../../ApiContext';
-import {createUserID} from '../../BrandedTypes';
-import {isSyntheticUserId} from '../../constants/Core';
-import {Logger} from '../../Logger';
-import {mapUserToAdminResponse} from '../models/UserTypes';
 
 interface AdminUserLookupServiceDeps {
 	apiContext: ApiContext;
@@ -14,13 +17,13 @@ interface AdminUserLookupServiceDeps {
 export class AdminUserLookupService {
 	constructor(private readonly deps: AdminUserLookupServiceDeps) {}
 
-	async lookupUser(data: LookupUserRequest, acls: ReadonlySet<string>) {
+	async lookupUser(data: LookupUserRequest, acls: ReadonlySet<string>, locale?: string) {
 		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
 		if ('user_ids' in data) {
 			const userIds = data.user_ids.map((id) => createUserID(id));
 			const users = await userRepository.listUsers(userIds);
 			return {
-				users: await Promise.all(users.map((user) => mapUserToAdminResponse(user, cacheService, acls))),
+				users: await Promise.all(users.map((user) => mapUserToAdminResponse(user, cacheService, acls, locale))),
 			};
 		}
 		let user = null;
@@ -41,10 +44,17 @@ export class AdminUserLookupService {
 		} else if (query.includes('@')) {
 			user = await userRepository.findByEmail(query);
 		} else {
-			user = await userRepository.findByStripeSubscriptionId(query);
+			user = (await this.findPersonByBareUsername(query)) ?? (await userRepository.findByStripeSubscriptionId(query));
 		}
 		return {
-			users: user ? [await mapUserToAdminResponse(user, cacheService, acls)] : [],
+			users: user ? [await mapUserToAdminResponse(user, cacheService, acls, locale)] : [],
 		};
+	}
+
+	private async findPersonByBareUsername(query: string): Promise<User | null> {
+		if (!usesUniqueUsernames()) return null;
+		const handle = parseLoginHandle(query);
+		if (!handle || handle.discriminator !== null) return null;
+		return await findPersonByLoginHandle(this.deps.apiContext.services.users, handle);
 	}
 }

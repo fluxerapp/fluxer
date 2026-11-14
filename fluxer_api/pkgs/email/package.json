@@ -7,20 +7,31 @@
 		"./*": "./*"
 	},
 	"scripts": {
+		"html:compile": "tsx scripts/CompileEmailHtml.ts",
+		"preview": "tsx scripts/RenderEmailPreviews.ts",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@fluxer/constants": "workspace:*",
 		"@fluxer/i18n": "workspace:*",
 		"@fluxer/logger": "workspace:*",
+		"@fluxer/number_utils": "workspace:*",
+		"@pdf-lib/fontkit": "catalog:",
+		"bidi-js": "catalog:",
+		"harfbuzzjs": "catalog:",
 		"itty-time": "catalog:",
-		"nodemailer": "catalog:"
+		"nodemailer": "catalog:",
+		"pdf-lib": "catalog:"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@types/nodemailer": "catalog:",
-		"@typescript/native-preview": "catalog:",
+		"mjml-core": "catalog:",
+		"mjml-preset-core": "catalog:",
+		"mjml-validator": "catalog:",
+		"tsx": "catalog:",
+		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	}
 }

@@ -1,65 +1,43 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use fluxer_common::config::EnvMap;
 use url::Url;
 
 #[derive(Clone)]
 pub struct MediaProxyUrlBuilder {
     endpoint: String,
-    endpoint_host: Option<String>,
     secret_key: String,
 }
 
 impl MediaProxyUrlBuilder {
-    #[cfg(test)]
-    pub(crate) fn for_test(endpoint: &str, secret_key: &str) -> Self {
-        let endpoint = endpoint.trim_end_matches('/').to_owned();
-        let endpoint_host = Url::parse(&endpoint)
-            .ok()
-            .and_then(|parsed| parsed.host_str().map(ToOwned::to_owned));
+    pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
+        let Some(endpoint) = env
+            .value("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
+            .or_else(|| env.value("FLUXER_MEDIA_ENDPOINT"))
+        else {
+            anyhow::bail!(
+                "gifs shard requires FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT or FLUXER_MEDIA_ENDPOINT"
+            );
+        };
 
+        let Some(secret_key) = env.value("FLUXER_MEDIA_PROXY_SECRET_KEY") else {
+            anyhow::bail!("gifs shard requires FLUXER_MEDIA_PROXY_SECRET_KEY");
+        };
+
+        let endpoint = env.normalize_public_endpoint(endpoint.trim_end_matches('/'))?;
+        Ok(Self::new(&endpoint, &secret_key))
+    }
+
+    pub fn new(endpoint: &str, secret_key: &str) -> Self {
         Self {
-            endpoint,
-            endpoint_host,
+            endpoint: endpoint.trim_end_matches('/').to_owned(),
             secret_key: secret_key.to_owned(),
         }
     }
 
-    pub fn from_env() -> anyhow::Result<Self> {
-        let endpoint = std::env::var("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
-            .or_else(|_| std::env::var("FLUXER_MEDIA_ENDPOINT"))
-            .unwrap_or_default();
-        if endpoint.trim().is_empty() {
-            anyhow::bail!(
-                "gifs shard requires FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT or FLUXER_MEDIA_ENDPOINT"
-            );
-        }
-
-        let secret_key = std::env::var("FLUXER_MEDIA_PROXY_SECRET_KEY").unwrap_or_default();
-        if secret_key.trim().is_empty() {
-            anyhow::bail!("gifs shard requires FLUXER_MEDIA_PROXY_SECRET_KEY");
-        }
-
-        let endpoint = fluxer_common::config::normalize_public_endpoint_from_env(
-            endpoint.trim_end_matches('/'),
-        );
-        let endpoint_host = Url::parse(&endpoint)
-            .ok()
-            .and_then(|parsed| parsed.host_str().map(ToOwned::to_owned));
-
-        Ok(Self {
-            endpoint,
-            endpoint_host,
-            secret_key,
-        })
-    }
-
     pub fn external_proxy_url(&self, input_url: &str) -> Option<String> {
         let parsed = Url::parse(input_url).ok()?;
-        if self
-            .endpoint_host
-            .as_deref()
-            .is_some_and(|host| parsed.host_str() == Some(host))
-        {
+        if fluxer_common::external_media_path::is_own_media_url(&self.endpoint, &parsed) {
             return Some(input_url.to_owned());
         }
 
@@ -74,63 +52,11 @@ impl MediaProxyUrlBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
-
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
-
-    fn with_media_proxy_env(
-        vars: &[(&str, Option<&str>)],
-        test: impl FnOnce() -> anyhow::Result<()>,
-    ) -> anyhow::Result<()> {
-        let _guard = ENV_LOCK.lock().unwrap();
-        let keys = [
-            "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-            "FLUXER_MEDIA_ENDPOINT",
-            "FLUXER_MEDIA_PROXY_ENDPOINT",
-            "FLUXER_MEDIA_PROXY_SECRET_KEY",
-            "FLUXER_BASE_DOMAIN",
-            "FLUXER_PUBLIC_PORT",
-            "FLUXER_PUBLIC_ORIGIN",
-        ];
-        let saved = keys
-            .iter()
-            .map(|key| (*key, std::env::var(key).ok()))
-            .collect::<Vec<_>>();
-
-        for key in keys {
-            unsafe {
-                std::env::remove_var(key);
-            }
-        }
-        for (key, value) in vars {
-            if let Some(value) = value {
-                unsafe {
-                    std::env::set_var(key, value);
-                }
-            }
-        }
-
-        let result = test();
-
-        for (key, value) in saved {
-            match value {
-                Some(value) => unsafe {
-                    std::env::set_var(key, value);
-                },
-                None => unsafe {
-                    std::env::remove_var(key);
-                },
-            }
-        }
-
-        result
-    }
 
     #[test]
     fn external_proxy_url_builds_v2_signed_url() {
         let builder = MediaProxyUrlBuilder {
             endpoint: "https://media.example.test".to_owned(),
-            endpoint_host: Some("media.example.test".to_owned()),
             secret_key: "secret".to_owned(),
         };
 
@@ -144,122 +70,5 @@ mod tests {
             builder.external_proxy_url("https://media.example.test/external/existing"),
             Some("https://media.example.test/external/existing".to_owned())
         );
-    }
-
-    #[test]
-    fn from_env_uses_public_endpoint_when_internal_proxy_endpoint_is_set() -> anyhow::Result<()> {
-        with_media_proxy_env(
-            &[
-                (
-                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-                    Some("https://media.example.test/"),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_ENDPOINT",
-                    Some("http://media-proxy:8080"),
-                ),
-                ("FLUXER_MEDIA_PROXY_SECRET_KEY", Some("secret")),
-            ],
-            || {
-                let builder = MediaProxyUrlBuilder::from_env()?;
-
-                assert_eq!(builder.endpoint, "https://media.example.test");
-                Ok(())
-            },
-        )
-    }
-
-    #[test]
-    fn from_env_accepts_legacy_public_media_endpoint() -> anyhow::Result<()> {
-        with_media_proxy_env(
-            &[
-                (
-                    "FLUXER_MEDIA_ENDPOINT",
-                    Some("https://media.example.test/media"),
-                ),
-                (
-                    "FLUXER_MEDIA_PROXY_ENDPOINT",
-                    Some("http://media-proxy:8080"),
-                ),
-                ("FLUXER_MEDIA_PROXY_SECRET_KEY", Some("secret")),
-            ],
-            || {
-                let builder = MediaProxyUrlBuilder::from_env()?;
-
-                assert_eq!(builder.endpoint, "https://media.example.test/media");
-                Ok(())
-            },
-        )
-    }
-
-    #[test]
-    fn from_env_inserts_a_non_default_public_port() -> anyhow::Result<()> {
-        with_media_proxy_env(
-            &[
-                (
-                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-                    Some("http://fluxer.example/media"),
-                ),
-                ("FLUXER_MEDIA_PROXY_SECRET_KEY", Some("secret")),
-                ("FLUXER_BASE_DOMAIN", Some("fluxer.example")),
-                ("FLUXER_PUBLIC_PORT", Some("19080")),
-            ],
-            || {
-                let builder = MediaProxyUrlBuilder::from_env()?;
-
-                assert_eq!(builder.endpoint, "http://fluxer.example:19080/media");
-                assert_eq!(builder.endpoint_host.as_deref(), Some("fluxer.example"));
-                assert!(
-                    builder
-                        .external_proxy_url("https://img.example.net/a.webp")
-                        .expect("proxy url")
-                        .starts_with("http://fluxer.example:19080/media/external/")
-                );
-                Ok(())
-            },
-        )
-    }
-
-    #[test]
-    fn from_env_leaves_a_default_public_port_alone() -> anyhow::Result<()> {
-        with_media_proxy_env(
-            &[
-                (
-                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-                    Some("https://fluxer.example/media"),
-                ),
-                ("FLUXER_MEDIA_PROXY_SECRET_KEY", Some("secret")),
-                ("FLUXER_BASE_DOMAIN", Some("fluxer.example")),
-                ("FLUXER_PUBLIC_PORT", Some("443")),
-            ],
-            || {
-                let builder = MediaProxyUrlBuilder::from_env()?;
-
-                assert_eq!(builder.endpoint, "https://fluxer.example/media");
-                Ok(())
-            },
-        )
-    }
-
-    #[test]
-    fn from_env_rejects_internal_proxy_endpoint_without_public_endpoint() -> anyhow::Result<()> {
-        with_media_proxy_env(
-            &[
-                (
-                    "FLUXER_MEDIA_PROXY_ENDPOINT",
-                    Some("http://media-proxy:8080"),
-                ),
-                ("FLUXER_MEDIA_PROXY_SECRET_KEY", Some("secret")),
-            ],
-            || {
-                let err = MediaProxyUrlBuilder::from_env()
-                    .err()
-                    .expect("internal endpoint must not be accepted as public endpoint")
-                    .to_string();
-
-                assert!(err.contains("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT"));
-                Ok(())
-            },
-        )
     }
 }

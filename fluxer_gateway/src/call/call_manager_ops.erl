@@ -9,7 +9,6 @@
     do_create_call/3,
     do_handoff_to_topology/2,
     do_lookup_call/2,
-    do_get_or_create_call/3,
     do_start_transferred_call/3,
     do_stop_call/3,
     do_terminate_call/2,
@@ -184,27 +183,6 @@ lookup_via_registry(ChannelId, Calls, State) ->
             {reply, {ok, Pid}, State#{calls := NewCalls}};
         {error, not_found} ->
             {reply, {error, not_found}, State}
-    end.
-
--spec do_get_or_create_call(channel_id(), call_data(), state()) ->
-    {reply, {ok, pid()} | {error, term()}, state()}.
-do_get_or_create_call(ChannelId, CallData, #{calls := Calls} = State) ->
-    case maps:get(ChannelId, Calls, undefined) of
-        {Pid, _Ref} when is_pid(Pid) ->
-            get_or_create_existing(ChannelId, Pid, CallData, Calls, State);
-        undefined ->
-            do_create_call(ChannelId, CallData, State)
-    end.
-
--spec get_or_create_existing(channel_id(), pid(), call_data(), map(), state()) ->
-    {reply, {ok, pid()} | {error, term()}, state()}.
-get_or_create_existing(ChannelId, Pid, CallData, Calls, State) ->
-    case process_liveness:is_alive(Pid) of
-        true ->
-            {reply, {ok, Pid}, State};
-        false ->
-            cleanup_stale(ChannelId),
-            do_create_call(ChannelId, CallData, State#{calls := maps:remove(ChannelId, Calls)})
     end.
 
 -spec do_terminate_call(channel_id(), state()) ->

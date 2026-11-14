@@ -3,23 +3,15 @@
 import Idle from '@app/features/ui/state/Idle';
 import {useCallback, useRef} from 'react';
 
-const DEFAULT_THROTTLE_INTERVAL = 2000;
+const THROTTLE_INTERVAL = 2000;
 
-interface UseActivityRecorderOptions {
-	throttleInterval?: number;
-}
-
-export const useActivityRecorder = (options?: UseActivityRecorderOptions) => {
-	const throttleInterval = options?.throttleInterval ?? DEFAULT_THROTTLE_INTERVAL;
+export const useActivityRecorder = () => {
 	const lastActivityRef = useRef(0);
-	return useCallback(
-		(force = false) => {
-			const now = Date.now();
-			if (force || now - lastActivityRef.current > throttleInterval) {
-				lastActivityRef.current = now;
-				Idle.recordActivity();
-			}
-		},
-		[throttleInterval],
-	);
+	return useCallback((force = false) => {
+		const now = Date.now();
+		if (force || now - lastActivityRef.current > THROTTLE_INTERVAL) {
+			lastActivityRef.current = now;
+			Idle.recordActivity();
+		}
+	}, []);
 };

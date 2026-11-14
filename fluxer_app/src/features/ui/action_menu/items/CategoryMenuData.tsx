@@ -2,12 +2,13 @@
 
 import {showChannelDeleteFailedModal} from '@app/features/app/components/alerts/ChannelDeleteFailedModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {ChannelSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
-import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {DELETE_CATEGORY_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
-import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
+import {CHANNEL_RECORD_DESCRIPTOR, RecordDebugModal} from '@app/features/devtools/components/debug/RecordDebugModal';
+
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import {
 	CHANNEL_DEBUG_DESCRIPTOR,
@@ -99,23 +100,10 @@ export interface CategoryMenuDataOptions {
 
 export interface CategoryMenuData {
 	groups: Array<MenuGroupType>;
-	handlers: CategoryMenuHandlers;
 	state: CategoryMenuState;
 }
 
-export interface CategoryMenuHandlers {
-	handleMarkAsRead: () => void;
-	handleToggleCollapse: () => void;
-	handleToggleCollapseAll: () => void;
-	handleOpenMuteSheet: () => void;
-	handleEditCategory: () => void;
-	handleDeleteCategory: () => void;
-	handleCopyCategoryId: () => Promise<void>;
-	handleDebugChannel: () => void;
-	handleResetMatureContentAgreeState: () => void;
-}
-
-export interface CategoryMenuState {
+interface CategoryMenuState {
 	hasUnread: boolean;
 	isCollapsed: boolean;
 	allCategoriesCollapsed: boolean;
@@ -192,12 +180,15 @@ export function useCategoryMenuData(category: Channel, options: CategoryMenuData
 			handleEditCategory: () => {
 				ModalCommands.pushAfterBottomSheetClose(
 					onClose,
-					modal(() => (
-						<ChannelSettingsModal
-							channelId={category.id}
-							data-flx="ui.action-menu.items.category-menu-data.handle-edit-category.channel-settings-modal"
-						/>
-					)),
+					modal(
+						() => (
+							<ChannelSettingsModal
+								channelId={category.id}
+								data-flx="ui.action-menu.items.category-menu-data.handle-edit-category.channel-settings-modal"
+							/>
+						),
+						'channel-settings',
+					),
 				);
 			},
 			handleDeleteCategory: () => {
@@ -253,9 +244,10 @@ export function useCategoryMenuData(category: Channel, options: CategoryMenuData
 				ModalCommands.pushAfterBottomSheetClose(
 					onClose,
 					modal(() => (
-						<ChannelDebugModal
+						<RecordDebugModal
+							label={i18n._(CHANNEL_RECORD_DESCRIPTOR)}
 							title={i18n._(CHANNEL_DEBUG_DESCRIPTOR)}
-							channel={category}
+							record={category}
 							data-flx="ui.action-menu.items.category-menu-data.handle-debug-channel.channel-debug-modal"
 						/>
 					)),
@@ -348,7 +340,7 @@ export function useCategoryMenuData(category: Channel, options: CategoryMenuData
 	})();
 	return {
 		groups,
-		handlers,
+
 		state,
 	};
 }

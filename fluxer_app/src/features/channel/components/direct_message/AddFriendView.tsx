@@ -4,13 +4,15 @@ import {AddFriendForm} from '@app/features/channel/components/direct_message/Add
 import styles from '@app/features/channel/components/direct_message/AddFriendView.module.css';
 import {ADD_FRIEND_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
 import Users from '@app/features/user/state/Users';
+import {canPerform} from '@app/features/user/utils/AccountGates';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {UserCirclePlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 
 export const AddFriendView = observer(() => {
 	const {i18n} = useLingui();
-	const showVerificationSlateOnly = Users.currentUser?.verified === false;
+	const showVerificationSlateOnly = !canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST).allowed;
 	return (
 		<div
 			className={styles.friendRequestContainer}

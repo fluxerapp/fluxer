@@ -37,8 +37,6 @@
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: var(--text-primary);
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 }
 
 .streamingLabel {
@@ -54,7 +52,7 @@
 	padding: 0;
 	background: transparent;
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 	outline: none;
 }
 

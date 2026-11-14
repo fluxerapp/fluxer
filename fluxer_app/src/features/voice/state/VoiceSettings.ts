@@ -3,25 +3,34 @@
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
+import {getCameraCaptureDimensions} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
 import type {
 	CodecPreference,
-	ScreenShareBackupCodecMode,
 	ScreenShareContentHint,
 	ScreenShareEncoderMode,
 	ScreenShareScalabilityModePreference,
-	ScreenShareSoftwareQuality,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
-import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
+import {
+	isVoiceNoiseSuppressionBackend,
+	type VoiceNoiseSuppressionBackend,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import {capScreenShareResolution, type ScreenShareBitrateBudget} from '@app/features/voice/utils/ScreenShareOptions';
+import {
+	getScreenShareBitrateCeilingBps,
+	getVideoQualityCaps,
+	hasHigherVideoQuality,
+} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {areVoiceBackgroundsAvailable} from '@app/features/voice/utils/VoiceBackgroundAvailability';
 import {
 	DEFAULT_VOICE_PROCESSING_MODE,
 	type VoiceProcessingMode,
 } from '@app/features/voice/utils/VoiceProcessingProfile';
 import {clampVoiceVolumePercent} from '@app/features/voice/utils/VoiceVolumeUtils';
-import type {VoiceNoiseSuppressionBackend} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 import {makeAutoObservable} from 'mobx';
 
-export type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
+type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
 
 export interface BackgroundImage {
 	id: string;
@@ -35,46 +44,34 @@ export const BLUR_BACKGROUND_ID = 'blur';
 export type CameraResolution = 'low' | 'medium' | 'high';
 export type ScreenshareResolution = 'low_240p' | 'low_480p' | 'medium' | 'high' | 'ultra' | 'source';
 export type StreamingMode = 'gaming' | 'screenshare' | 'custom';
-export type LastScreenShareSourceKind = 'app' | 'display' | 'device' | 'game';
-
-export interface LastScreenShareSource {
-	kind: LastScreenShareSourceKind;
-	sourceId: string | null;
-	title: string;
-	updatedAt: number;
-}
-
 const logger = new Logger('VoiceSettings');
 
 const MAX_VOICE_PROCESSING_DEVICE_OVERRIDES = 16;
 const VIDEO_FRAME_RATE_MIN = 15;
 const VIDEO_FRAME_RATE_MAX = 120;
 const VIDEO_FRAME_RATE_DEFAULT = 30;
-const DEFAULT_BROWSER_NOISE_SUPPRESSION = true;
-const DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION = false;
-const FREE_VIDEO_FRAME_RATE_MAX = 30;
 const RETIRED_SCREENSHARE_RESOLUTION_REPLACEMENT: ScreenshareResolution = 'low_480p';
-const PREMIUM_SCREENSHARE_RESOLUTIONS: ReadonlySet<ScreenshareResolution> = new Set(['high', 'ultra', 'source']);
 export const CAMERA_EFFECT_STRENGTH_MIN = 0;
 export const CAMERA_EFFECT_STRENGTH_MAX = 100;
 export const CAMERA_EFFECT_STRENGTH_DEFAULT = 50;
-export const DEFAULT_SCREEN_SHARE_CONTENT_HINT: ScreenShareContentHint = 'text';
-export const DEFAULT_SCREEN_SHARE_ENCODER_MODE: ScreenShareEncoderMode = 'auto';
-export const DEFAULT_SCREEN_SHARE_SOFTWARE_QUALITY: ScreenShareSoftwareQuality = 'balanced';
-export const DEFAULT_SCREEN_SHARE_SCALABILITY_MODE: ScreenShareScalabilityModePreference = 'auto';
-export const DEFAULT_SCREEN_SHARE_BACKUP_CODEC_MODE: ScreenShareBackupCodecMode = 'off';
+const DEFAULT_SCREEN_SHARE_CONTENT_HINT: ScreenShareContentHint = 'text';
+const DEFAULT_SCREEN_SHARE_ENCODER_MODE: ScreenShareEncoderMode = 'auto';
+const DEFAULT_SCREEN_SHARE_SCALABILITY_MODE: ScreenShareScalabilityModePreference = 'auto';
+export const WINDOWS_DEFAULT_PLAYBACK_DEVICE = 'default';
+const DEFAULT_WINDOWS_DESKTOP_AUDIO_DEVICES: ReadonlyArray<string> = [WINDOWS_DEFAULT_PLAYBACK_DEVICE];
+export const MAX_WINDOWS_DESKTOP_AUDIO_DEVICES = 16;
+const MAX_WINDOWS_DESKTOP_AUDIO_DEVICE_ID_LENGTH = 512;
 
-type VoiceSettingsUpdate = Partial<{
+export type VoiceSettingsUpdate = Partial<{
 	inputDeviceId: string;
 	outputDeviceId: string;
 	videoDeviceId: string;
 	inputVolume: number;
 	outputVolume: number;
 	echoCancellation: boolean;
-	noiseSuppression: boolean;
 	autoGainControl: boolean;
-	deepFilterNoiseSuppression: boolean;
-	deepFilterNoiseSuppressionLevel: number;
+	noiseSuppressionBackend: VoiceNoiseSuppressionBackend | null;
+	stereoMicrophone: boolean | null;
 	voiceProcessingMode: VoiceProcessingMode;
 	cameraResolution: CameraResolution;
 	mirrorCamera: boolean;
@@ -87,14 +84,16 @@ type VoiceSettingsUpdate = Partial<{
 	shareDesktopAudio: boolean;
 	shareDeviceAudio: boolean;
 	screenShareAudioDeviceId: string;
+	windowsDesktopAudioAll: boolean;
+	windowsDesktopAudioDevices: Array<string>;
 	backgroundImageId: string;
 	backgroundImages: Array<BackgroundImage>;
 	backgroundBlurStrength: number;
-	showGridView: boolean;
+
 	showMyOwnCamera: boolean;
 	showMyOwnScreenShare: boolean;
 	showNonVideoParticipants: boolean;
-	showParticipantsCarousel: boolean;
+
 	showVoiceConnectionAvatarStack: boolean;
 	showVoiceConnectionId: boolean;
 	showConnectionVolumeControls: boolean;
@@ -106,13 +105,11 @@ type VoiceSettingsUpdate = Partial<{
 	screenShareHevcOptIn: boolean;
 	screenShareContentHint: ScreenShareContentHint;
 	screenShareEncoderMode: ScreenShareEncoderMode;
-	screenShareSoftwareQuality: ScreenShareSoftwareQuality;
 	screenShareScalabilityMode: ScreenShareScalabilityModePreference;
-	screenShareBackupCodecMode: ScreenShareBackupCodecMode;
+	screenShareBitrate: number | null;
 	vadThreshold: number;
 	vadAutoSensitivity: boolean;
-	vadEnhanced: boolean;
-	linuxAudioCaptureWorkaround: boolean;
+
 	linuxAudioCaptureOnlySpeakers: boolean;
 	linuxAudioCaptureOnlyDefaultSpeakers: boolean;
 	linuxAudioCaptureIgnoreInputMedia: boolean;
@@ -124,13 +121,7 @@ type VoiceSettingsUpdate = Partial<{
 	screenShareAudioIncludeSources: Array<Record<string, string>>;
 	screenShareAudioExcludeSources: Array<Record<string, string>>;
 	screenShareDeviceAudioUsesMicrophone: boolean;
-	openH264Enabled: boolean;
-	lastScreenShareSource: LastScreenShareSource | null;
 }>;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function parseVoiceSettingsStorage(raw: string | null): Record<string, unknown> {
 	if (!raw) {
@@ -160,7 +151,6 @@ function clampCameraEffectStrength(value: unknown): number {
 
 function applyLegacyVenmicKeyMigration(parsed: Record<string, unknown>): boolean {
 	const renames: Array<[string, string]> = [
-		['venmicWorkaround', 'linuxAudioCaptureWorkaround'],
 		['venmicOnlySpeakers', 'linuxAudioCaptureOnlySpeakers'],
 		['venmicOnlyDefaultSpeakers', 'linuxAudioCaptureOnlyDefaultSpeakers'],
 		['venmicIgnoreInputMedia', 'linuxAudioCaptureIgnoreInputMedia'],
@@ -237,7 +227,7 @@ function applyScreenShareAudioDefaultOnMigrationV1(parsed: Record<string, unknow
 	return true;
 }
 
-export function applyManualAudioSourcesOptOutResetMigrationV1(parsed: Record<string, unknown>): boolean {
+function applyManualAudioSourcesOptOutResetMigrationV1(parsed: Record<string, unknown>): boolean {
 	if (parsed.manualAudioSourcesOptOutResetMigratedV1 === true) {
 		return false;
 	}
@@ -265,6 +255,17 @@ function applyStreamingModeDefaultMigrationV1(parsed: Record<string, unknown>): 
 		parsed.streamingMode = 'screenshare';
 	}
 	parsed.streamingModeDefaultMigratedV1 = true;
+	return true;
+}
+
+function applyScreenShareFrameRateFloorMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.screenShareFrameRateFloorMigratedV1 === true) {
+		return false;
+	}
+	if (parsed.streamingMode === 'custom' && parsed.videoFrameRate === VIDEO_FRAME_RATE_MIN) {
+		parsed.videoFrameRate = VIDEO_FRAME_RATE_DEFAULT;
+	}
+	parsed.screenShareFrameRateFloorMigratedV1 = true;
 	return true;
 }
 
@@ -312,6 +313,27 @@ function applyScreenShareHevcOptOutMigrationV1(parsed: Record<string, unknown>):
 	return true;
 }
 
+function applyScreenShareSoftwareQualityRetiredMigrationV1(parsed: Record<string, unknown>): boolean {
+	const stored = parsed.screenShareSoftwareQualityPrefV2;
+	delete parsed.screenShareSoftwareQualityPrefV2;
+	if (parsed.screenShareSoftwareQualityRetiredV1 === true) {
+		return stored !== undefined;
+	}
+	if (stored === 'realtime' && validateScreenShareScalabilityMode(parsed.screenShareScalabilityModePrefV2) === 'auto') {
+		parsed.screenShareScalabilityModePrefV2 = 'single_layer';
+	}
+	parsed.screenShareSoftwareQualityRetiredV1 = true;
+	return true;
+}
+
+function applyScreenShareBackupCodecModeRetiredMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.screenShareBackupCodecModePrefV2 === undefined) {
+		return false;
+	}
+	delete parsed.screenShareBackupCodecModePrefV2;
+	return true;
+}
+
 function applyVideoQualityNormalisationMigration(parsed: Record<string, unknown>): boolean {
 	let changed = false;
 	if (parsed.screenshareResolution !== undefined) {
@@ -338,14 +360,46 @@ function applyVideoQualityNormalisationMigration(parsed: Record<string, unknown>
 	return changed;
 }
 
-function applyNoiseSuppressionStandardDefaultMigrationV1(parsed: Record<string, unknown>): boolean {
-	if (parsed.noiseSuppressionStandardDefaultMigratedV1 === true) {
+function applyLegacyNoiseSuppressionNoneMigrationV1(parsed: Record<string, unknown>): boolean {
+	let changed = false;
+	if (
+		parsed.noiseSuppressionBackendPrefV1 == null &&
+		parsed.noiseSuppression === false &&
+		parsed.deepFilterNoiseSuppressionPrefV2 !== true
+	) {
+		parsed.noiseSuppressionBackendPrefV1 = 'none';
+		changed = true;
+	}
+	for (const key of [
+		'noiseSuppression',
+		'deepFilterNoiseSuppressionPrefV2',
+		'deepFilterNoiseSuppressionLevelPrefV2',
+		'noiseSuppressionStandardDefaultMigratedV1',
+	]) {
+		if (!(key in parsed)) continue;
+		delete parsed[key];
+		changed = true;
+	}
+	return changed;
+}
+
+function applyDeepFilterDefaultRetiredMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.deepFilterDefaultRetiredMigratedV1 === true) {
 		return false;
 	}
-	parsed.noiseSuppression = DEFAULT_BROWSER_NOISE_SUPPRESSION;
-	parsed.deepFilterNoiseSuppressionPrefV2 = DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION;
-	parsed.noiseSuppressionStandardDefaultMigratedV1 = true;
+	if (parsed.noiseSuppressionBackendPrefV1 === 'deep_filter') {
+		parsed.noiseSuppressionBackendPrefV1 = null;
+	}
+	parsed.deepFilterDefaultRetiredMigratedV1 = true;
 	return true;
+}
+
+function validateNoiseSuppressionBackend(value: unknown): VoiceNoiseSuppressionBackend | null {
+	return isVoiceNoiseSuppressionBackend(value) ? value : null;
+}
+
+function validateStereoMicrophone(value: unknown): boolean | null {
+	return typeof value === 'boolean' ? value : null;
 }
 
 function validateBackgroundImages(images: unknown): Array<BackgroundImage> {
@@ -374,11 +428,7 @@ class VoiceSettings {
 	inputVolume = 100;
 	outputVolume = 100;
 	echoCancellation = true;
-	noiseSuppression = DEFAULT_BROWSER_NOISE_SUPPRESSION;
 	autoGainControl = true;
-	deepFilterNoiseSuppressionPrefV2 = DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION;
-	deepFilterNoiseSuppressionLevelPrefV2 = 80;
-	noiseSuppressionStandardDefaultMigratedV1 = false;
 	noiseSuppressionBackendPrefV1: VoiceNoiseSuppressionBackend | null = null;
 	stereoMicrophonePrefV1: boolean | null = null;
 	voiceProcessingMode: VoiceProcessingMode = DEFAULT_VOICE_PROCESSING_MODE;
@@ -389,23 +439,26 @@ class VoiceSettings {
 	videoFrameRate = 30;
 	streamingMode: StreamingMode = 'screenshare';
 	streamingModeDefaultMigratedV1 = false;
+	screenShareFrameRateFloorMigratedV1 = false;
 	hideStreamPreview = false;
 	muteStreamAudio = false;
 	shareAppAudio = true;
 	shareDesktopAudio = true;
 	shareDeviceAudio = true;
 	screenShareAudioDeviceId = 'default';
+	windowsDesktopAudioAll = false;
+	windowsDesktopAudioDevices: Array<string> = [...DEFAULT_WINDOWS_DESKTOP_AUDIO_DEVICES];
 	screenShareAudioConsentMigratedV1 = false;
 	screenShareAudioDefaultOnMigratedV1 = false;
 	outputVolumeRecalibratedV1 = false;
 	backgroundImageId = NONE_BACKGROUND_ID;
 	backgroundImages: Array<BackgroundImage> = [];
 	backgroundBlurStrength = CAMERA_EFFECT_STRENGTH_DEFAULT;
-	showGridView = false;
+
 	showMyOwnCamera = true;
 	showMyOwnScreenShare = true;
 	showNonVideoParticipants = true;
-	showParticipantsCarousel = false;
+
 	showVoiceConnectionAvatarStack = true;
 	showVoiceConnectionIdPrefV2 = true;
 	showConnectionVolumeControls = false;
@@ -417,16 +470,16 @@ class VoiceSettings {
 	screenShareHevcOptIn = false;
 	screenShareAv1OptOutMigratedV1 = false;
 	screenShareHevcOptOutMigratedV1 = false;
+	deepFilterDefaultRetiredMigratedV1 = false;
 	screenShareContentHintPrefV2: ScreenShareContentHint = DEFAULT_SCREEN_SHARE_CONTENT_HINT;
 	screenShareContentHintDefaultMigratedV1 = false;
+	screenShareSoftwareQualityRetiredV1 = false;
 	screenShareEncoderModePrefV2: ScreenShareEncoderMode = DEFAULT_SCREEN_SHARE_ENCODER_MODE;
-	screenShareSoftwareQualityPrefV2: ScreenShareSoftwareQuality = DEFAULT_SCREEN_SHARE_SOFTWARE_QUALITY;
 	screenShareScalabilityModePrefV2: ScreenShareScalabilityModePreference = DEFAULT_SCREEN_SHARE_SCALABILITY_MODE;
-	screenShareBackupCodecModePrefV2: ScreenShareBackupCodecMode = DEFAULT_SCREEN_SHARE_BACKUP_CODEC_MODE;
+	screenShareBitrate: number | null = null;
 	vadThreshold = 50;
 	vadAutoSensitivity = true;
-	vadEnhanced = true;
-	linuxAudioCaptureWorkaround = false;
+
 	linuxAudioCaptureOnlySpeakers = true;
 	linuxAudioCaptureOnlyDefaultSpeakers = true;
 	linuxAudioCaptureIgnoreInputMedia = true;
@@ -439,8 +492,7 @@ class VoiceSettings {
 	screenShareAudioIncludeSources: Array<Record<string, string>> = [];
 	screenShareAudioExcludeSources: Array<Record<string, string>> = [];
 	screenShareDeviceAudioUsesMicrophone = false;
-	openH264Enabled = true;
-	lastScreenShareSource: LastScreenShareSource | null = null;
+
 	prioritizeSpeakingParticipants = false;
 	private listeners = new Set<() => void>();
 
@@ -454,11 +506,6 @@ class VoiceSettings {
 				getVideoDeviceId: false,
 				getInputVolume: false,
 				getOutputVolume: false,
-				getEchoCancellation: false,
-				getNoiseSuppression: false,
-				getAutoGainControl: false,
-				getDeepFilterNoiseSuppression: false,
-				getDeepFilterNoiseSuppressionLevel: false,
 				getVoiceProcessingMode: false,
 				getCameraResolution: false,
 				getMirrorCamera: false,
@@ -472,36 +519,24 @@ class VoiceSettings {
 				getShareDeviceAudio: false,
 				getScreenShareAudioDeviceId: false,
 				getEffectiveScreenShareAudioDeviceId: false,
+				getWindowsDesktopAudioAll: false,
+				getWindowsDesktopAudioDevices: false,
 				getBackgroundImageId: false,
 				getBackgroundImages: false,
 				getBackgroundBlurStrength: false,
-				getShowGridView: false,
-				getShowMyOwnCamera: false,
-				getShowMyOwnScreenShare: false,
 				getShowNonVideoParticipants: false,
-				getShowParticipantsCarousel: false,
-				getShowVoiceConnectionAvatarStack: false,
-				getShowVoiceConnectionId: false,
-				getShowConnectionVolumeControls: false,
-				getDisablePictureInPicturePopoutScreenShare: false,
-				getPauseOwnScreenSharePreviewOnUnfocus: false,
 				getPreferredVideoCodec: false,
 				getPreferredScreenShareCodec: false,
 				getScreenShareAv1OptIn: false,
 				getScreenShareHevcOptIn: false,
 				getScreenShareContentHint: false,
-				getScreenShareContentHintOverride: false,
 				getScreenShareEncoderMode: false,
-				getScreenShareSoftwareQuality: false,
-				getScreenShareSoftwareQualityOverride: false,
 				getScreenShareScalabilityMode: false,
 				getScreenShareScalabilityModeOverride: false,
-				getScreenShareBackupCodecMode: false,
-				getScreenShareBackupCodecModeOverride: false,
+				getScreenShareBitrate: false,
+				getScreenShareBitrateBudget: false,
 				getVadThreshold: false,
 				getVadAutoSensitivity: false,
-				getVadEnhanced: false,
-				getLinuxAudioCaptureWorkaround: false,
 				getLinuxAudioCaptureOnlySpeakers: false,
 				getLinuxAudioCaptureOnlyDefaultSpeakers: false,
 				getLinuxAudioCaptureIgnoreInputMedia: false,
@@ -516,9 +551,6 @@ class VoiceSettings {
 				getScreenShareAudioIncludeSources: false,
 				getScreenShareAudioExcludeSources: false,
 				getScreenShareDeviceAudioUsesMicrophone: false,
-				getOpenH264Enabled: false,
-				getLastScreenShareSource: false,
-				getPrioritizeSpeakingParticipants: false,
 				notifyListeners: false,
 			},
 			{autoBind: true},
@@ -540,13 +572,17 @@ class VoiceSettings {
 			changed = applyScreenShareAudioConsentMigrationV1(parsed) || changed;
 			changed = applyScreenShareAudioDefaultOnMigrationV1(parsed) || changed;
 			changed = applyStreamingModeDefaultMigrationV1(parsed) || changed;
+			changed = applyScreenShareFrameRateFloorMigrationV1(parsed) || changed;
 			changed = applyManualAudioSourcesOptOutResetMigrationV1(parsed) || changed;
 			changed = applyScreenShareContentHintDefaultMigrationV1(parsed) || changed;
 			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
-			changed = applyNoiseSuppressionStandardDefaultMigrationV1(parsed) || changed;
 			changed = applyVideoQualityNormalisationMigration(parsed) || changed;
 			changed = applyScreenShareAv1OptOutMigrationV1(parsed) || changed;
 			changed = applyScreenShareHevcOptOutMigrationV1(parsed) || changed;
+			changed = applyScreenShareSoftwareQualityRetiredMigrationV1(parsed) || changed;
+			changed = applyScreenShareBackupCodecModeRetiredMigrationV1(parsed) || changed;
+			changed = applyLegacyNoiseSuppressionNoneMigrationV1(parsed) || changed;
+			changed = applyDeepFilterDefaultRetiredMigrationV1(parsed) || changed;
 			if (changed) {
 				AppStorage.setItem('VoiceSettings', JSON.stringify(parsed));
 			}
@@ -554,88 +590,89 @@ class VoiceSettings {
 			this.screenShareAv1OptOutMigratedV1 = parsed.screenShareAv1OptOutMigratedV1 === true;
 			this.screenShareHevcOptOutMigratedV1 = parsed.screenShareHevcOptOutMigratedV1 === true;
 			this.manualAudioSourcesOptOutResetMigratedV1 = parsed.manualAudioSourcesOptOutResetMigratedV1 === true;
+			this.deepFilterDefaultRetiredMigratedV1 = parsed.deepFilterDefaultRetiredMigratedV1 === true;
 		} catch (error) {
 			logger.warn('Failed to migrate persisted voice settings:', error);
 		}
 	}
 
-	private async initPersistence(): Promise<void> {
+	private initPersistence(): void {
 		this.migratePersistedSettings();
-		await makePersistent(this, 'VoiceSettings', [
-			'inputDeviceId',
-			'outputDeviceId',
-			'videoDeviceId',
-			'inputVolume',
-			'outputVolume',
-			'echoCancellation',
-			'noiseSuppression',
-			'autoGainControl',
-			'deepFilterNoiseSuppressionPrefV2',
-			'deepFilterNoiseSuppressionLevelPrefV2',
-			'noiseSuppressionStandardDefaultMigratedV1',
-			'noiseSuppressionBackendPrefV1',
-			'stereoMicrophonePrefV1',
-			'voiceProcessingMode',
-			'voiceProcessingModeByDeviceLabel',
-			'cameraResolution',
-			'mirrorCamera',
-			'screenshareResolution',
-			'videoFrameRate',
-			'streamingMode',
-			'streamingModeDefaultMigratedV1',
-			'hideStreamPreview',
-			'muteStreamAudio',
-			'shareAppAudio',
-			'shareDesktopAudio',
-			'shareDeviceAudio',
-			'screenShareAudioDeviceId',
-			'screenShareAudioConsentMigratedV1',
-			'screenShareAudioDefaultOnMigratedV1',
-			'outputVolumeRecalibratedV1',
-			'backgroundImageId',
-			'backgroundImages',
-			'backgroundBlurStrength',
-			'showGridView',
-			'showMyOwnCamera',
-			'showMyOwnScreenShare',
-			'showParticipantsCarousel',
-			'showVoiceConnectionAvatarStack',
-			'showVoiceConnectionIdPrefV2',
-			'showConnectionVolumeControls',
-			'pauseOwnScreenSharePreviewOnUnfocusPrefV2',
-			'disablePictureInPicturePopoutScreenShare',
-			'preferredVideoCodec',
-			'preferredScreenShareCodec',
-			'screenShareAv1OptIn',
-			'screenShareHevcOptIn',
-			'screenShareAv1OptOutMigratedV1',
-			'screenShareHevcOptOutMigratedV1',
-			'screenShareContentHintPrefV2',
-			'screenShareContentHintDefaultMigratedV1',
-			'screenShareEncoderModePrefV2',
-			'screenShareSoftwareQualityPrefV2',
-			'screenShareScalabilityModePrefV2',
-			'screenShareBackupCodecModePrefV2',
-			'vadThreshold',
-			'vadAutoSensitivity',
-			'vadEnhanced',
-			'linuxAudioCaptureWorkaround',
-			'linuxAudioCaptureOnlySpeakers',
-			'linuxAudioCaptureOnlyDefaultSpeakers',
-			'linuxAudioCaptureIgnoreInputMedia',
-			'linuxAudioCaptureIgnoreVirtual',
-			'linuxAudioCaptureIgnoreDevices',
-			'linuxAudioCaptureGranularSelect',
-			'linuxAudioCaptureDeviceSelect',
-			'manualAudioSourcesOptOutResetMigratedV1',
-			'screenShareAudioSourceMode',
-			'screenShareAudioIncludeSources',
-			'screenShareAudioExcludeSources',
-			'screenShareDeviceAudioUsesMicrophone',
-			'openH264Enabled',
-			'lastScreenShareSource',
-			'prioritizeSpeakingParticipants',
-		]);
+		initializeStore(this, () =>
+			makePersistent(this, 'VoiceSettings', [
+				'inputDeviceId',
+				'outputDeviceId',
+				'videoDeviceId',
+				'inputVolume',
+				'outputVolume',
+				'echoCancellation',
+				'autoGainControl',
+				'noiseSuppressionBackendPrefV1',
+				'stereoMicrophonePrefV1',
+				'voiceProcessingMode',
+				'voiceProcessingModeByDeviceLabel',
+				'cameraResolution',
+				'mirrorCamera',
+				'screenshareResolution',
+				'videoFrameRate',
+				'streamingMode',
+				'streamingModeDefaultMigratedV1',
+				'screenShareFrameRateFloorMigratedV1',
+				'hideStreamPreview',
+				'muteStreamAudio',
+				'shareAppAudio',
+				'shareDesktopAudio',
+				'shareDeviceAudio',
+				'screenShareAudioDeviceId',
+				'windowsDesktopAudioAll',
+				'windowsDesktopAudioDevices',
+				'screenShareAudioConsentMigratedV1',
+				'screenShareAudioDefaultOnMigratedV1',
+				'outputVolumeRecalibratedV1',
+				'backgroundImageId',
+				'backgroundImages',
+				'backgroundBlurStrength',
+
+				'showMyOwnCamera',
+				'showMyOwnScreenShare',
+
+				'showVoiceConnectionAvatarStack',
+				'showVoiceConnectionIdPrefV2',
+				'showConnectionVolumeControls',
+				'pauseOwnScreenSharePreviewOnUnfocusPrefV2',
+				'disablePictureInPicturePopoutScreenShare',
+				'preferredVideoCodec',
+				'preferredScreenShareCodec',
+				'screenShareAv1OptIn',
+				'screenShareHevcOptIn',
+				'screenShareAv1OptOutMigratedV1',
+				'screenShareHevcOptOutMigratedV1',
+				'deepFilterDefaultRetiredMigratedV1',
+				'screenShareContentHintPrefV2',
+				'screenShareContentHintDefaultMigratedV1',
+				'screenShareSoftwareQualityRetiredV1',
+				'screenShareEncoderModePrefV2',
+				'screenShareScalabilityModePrefV2',
+				'screenShareBitrate',
+				'vadThreshold',
+				'vadAutoSensitivity',
+
+				'linuxAudioCaptureOnlySpeakers',
+				'linuxAudioCaptureOnlyDefaultSpeakers',
+				'linuxAudioCaptureIgnoreInputMedia',
+				'linuxAudioCaptureIgnoreVirtual',
+				'linuxAudioCaptureIgnoreDevices',
+				'linuxAudioCaptureGranularSelect',
+				'linuxAudioCaptureDeviceSelect',
+				'manualAudioSourcesOptOutResetMigratedV1',
+				'screenShareAudioSourceMode',
+				'screenShareAudioIncludeSources',
+				'screenShareAudioExcludeSources',
+				'screenShareDeviceAudioUsesMicrophone',
+
+				'prioritizeSpeakingParticipants',
+			]),
+		);
 	}
 
 	get showVoiceConnectionId(): boolean {
@@ -678,22 +715,6 @@ class VoiceSettings {
 		return this.stereoMicrophonePrefV1;
 	}
 
-	get deepFilterNoiseSuppression(): boolean {
-		return this.deepFilterNoiseSuppressionPrefV2;
-	}
-
-	set deepFilterNoiseSuppression(value: boolean) {
-		this.deepFilterNoiseSuppressionPrefV2 = value;
-	}
-
-	get deepFilterNoiseSuppressionLevel(): number {
-		return this.deepFilterNoiseSuppressionLevelPrefV2;
-	}
-
-	set deepFilterNoiseSuppressionLevel(value: number) {
-		this.deepFilterNoiseSuppressionLevelPrefV2 = Math.max(0, Math.min(100, value));
-	}
-
 	get screenShareContentHint(): ScreenShareContentHint {
 		return this.screenShareContentHintPrefV2;
 	}
@@ -710,28 +731,12 @@ class VoiceSettings {
 		this.screenShareEncoderModePrefV2 = value;
 	}
 
-	get screenShareSoftwareQuality(): ScreenShareSoftwareQuality {
-		return this.screenShareSoftwareQualityPrefV2;
-	}
-
-	set screenShareSoftwareQuality(value: ScreenShareSoftwareQuality) {
-		this.screenShareSoftwareQualityPrefV2 = value;
-	}
-
 	get screenShareScalabilityMode(): ScreenShareScalabilityModePreference {
 		return this.screenShareScalabilityModePrefV2;
 	}
 
 	set screenShareScalabilityMode(value: ScreenShareScalabilityModePreference) {
 		this.screenShareScalabilityModePrefV2 = value;
-	}
-
-	get screenShareBackupCodecMode(): ScreenShareBackupCodecMode {
-		return this.screenShareBackupCodecModePrefV2;
-	}
-
-	set screenShareBackupCodecMode(value: ScreenShareBackupCodecMode) {
-		this.screenShareBackupCodecModePrefV2 = value;
 	}
 
 	getInputDeviceId(): string {
@@ -754,26 +759,6 @@ class VoiceSettings {
 		return this.outputVolume;
 	}
 
-	getEchoCancellation(): boolean {
-		return this.echoCancellation;
-	}
-
-	getNoiseSuppression(): boolean {
-		return this.noiseSuppression;
-	}
-
-	getAutoGainControl(): boolean {
-		return this.autoGainControl;
-	}
-
-	getDeepFilterNoiseSuppression(): boolean {
-		return this.deepFilterNoiseSuppression;
-	}
-
-	getDeepFilterNoiseSuppressionLevel(): number {
-		return this.deepFilterNoiseSuppressionLevel;
-	}
-
 	getVoiceProcessingMode(): VoiceProcessingMode {
 		return this.voiceProcessingMode;
 	}
@@ -783,10 +768,6 @@ class VoiceSettings {
 			return this.voiceProcessingModeByDeviceLabel[label];
 		}
 		return this.voiceProcessingMode;
-	}
-
-	hasVoiceProcessingModeOverrideForDeviceLabel(label: string | null | undefined): boolean {
-		return Boolean(label) && Object.hasOwn(this.voiceProcessingModeByDeviceLabel, label as string);
 	}
 
 	setVoiceProcessingModeForDeviceLabel(label: string, mode: VoiceProcessingMode): void {
@@ -805,19 +786,9 @@ class VoiceSettings {
 		this.notifyListeners();
 	}
 
-	clearVoiceProcessingModeForDeviceLabel(label: string): void {
-		if (!Object.hasOwn(this.voiceProcessingModeByDeviceLabel, label)) return;
-		const next = {...this.voiceProcessingModeByDeviceLabel};
-		delete next[label];
-		this.voiceProcessingModeByDeviceLabel = next;
-		this.notifyListeners();
-	}
-
 	getCameraResolution(): CameraResolution {
-		if (this.cameraResolution === 'high' && !hasHigherVideoQuality()) {
-			return 'medium';
-		}
-		return this.cameraResolution;
+		const allowed = getCameraCaptureDimensions(this.cameraResolution).height <= getVideoQualityCaps().cameraMaxHeight;
+		return allowed ? this.cameraResolution : 'medium';
 	}
 
 	getMirrorCamera(): boolean {
@@ -825,17 +796,11 @@ class VoiceSettings {
 	}
 
 	getScreenshareResolution(): ScreenshareResolution {
-		if (PREMIUM_SCREENSHARE_RESOLUTIONS.has(this.screenshareResolution) && !hasHigherVideoQuality()) {
-			return 'medium';
-		}
-		return this.screenshareResolution;
+		return capScreenShareResolution(getVideoQualityCaps(), this.screenshareResolution);
 	}
 
 	getVideoFrameRate(): number {
-		if (this.videoFrameRate > FREE_VIDEO_FRAME_RATE_MAX && !hasHigherVideoQuality()) {
-			return FREE_VIDEO_FRAME_RATE_MAX;
-		}
-		return this.videoFrameRate;
+		return Math.min(this.videoFrameRate, getVideoQualityCaps().screenShareMaxFrameRate);
 	}
 
 	getStreamingMode(): StreamingMode {
@@ -866,6 +831,14 @@ class VoiceSettings {
 		return this.screenShareAudioDeviceId;
 	}
 
+	getWindowsDesktopAudioAll(): boolean {
+		return this.windowsDesktopAudioAll === true;
+	}
+
+	getWindowsDesktopAudioDevices(): Array<string> {
+		return validateWindowsDesktopAudioDevices(this.windowsDesktopAudioDevices);
+	}
+
 	getEffectiveScreenShareAudioDeviceId(): string {
 		if (this.screenShareAudioDeviceId && this.screenShareAudioDeviceId !== 'default') {
 			return this.screenShareAudioDeviceId;
@@ -886,44 +859,8 @@ class VoiceSettings {
 		return this.backgroundBlurStrength;
 	}
 
-	getShowGridView(): boolean {
-		return this.showGridView;
-	}
-
-	getShowMyOwnCamera(): boolean {
-		return this.showMyOwnCamera;
-	}
-
-	getShowMyOwnScreenShare(): boolean {
-		return this.showMyOwnScreenShare;
-	}
-
 	getShowNonVideoParticipants(): boolean {
 		return this.showNonVideoParticipants;
-	}
-
-	getShowParticipantsCarousel(): boolean {
-		return this.showParticipantsCarousel;
-	}
-
-	getShowVoiceConnectionAvatarStack(): boolean {
-		return this.showVoiceConnectionAvatarStack;
-	}
-
-	getShowVoiceConnectionId(): boolean {
-		return this.showVoiceConnectionId;
-	}
-
-	getShowConnectionVolumeControls(): boolean {
-		return this.showConnectionVolumeControls;
-	}
-
-	getDisablePictureInPicturePopoutScreenShare(): boolean {
-		return this.disablePictureInPicturePopoutScreenShare;
-	}
-
-	getPauseOwnScreenSharePreviewOnUnfocus(): boolean {
-		return this.pauseOwnScreenSharePreviewOnUnfocus;
 	}
 
 	getPreferredVideoCodec(): CodecPreference {
@@ -948,23 +885,8 @@ class VoiceSettings {
 		return this.screenShareContentHint;
 	}
 
-	getScreenShareContentHintOverride(): Exclude<ScreenShareContentHint, 'auto'> | undefined {
-		const hint = this.screenShareContentHint;
-		return hint === 'auto' ? undefined : hint;
-	}
-
 	getScreenShareEncoderMode(): ScreenShareEncoderMode {
 		return this.screenShareEncoderMode;
-	}
-
-	getScreenShareSoftwareQuality(): ScreenShareSoftwareQuality {
-		return this.screenShareSoftwareQuality;
-	}
-
-	getScreenShareSoftwareQualityOverride(): ScreenShareSoftwareQuality | undefined {
-		return this.screenShareSoftwareQuality === DEFAULT_SCREEN_SHARE_SOFTWARE_QUALITY
-			? undefined
-			: this.screenShareSoftwareQuality;
 	}
 
 	getScreenShareScalabilityMode(): ScreenShareScalabilityModePreference {
@@ -976,13 +898,17 @@ class VoiceSettings {
 		return mode === 'auto' ? undefined : mode;
 	}
 
-	getScreenShareBackupCodecMode(): ScreenShareBackupCodecMode {
-		return this.screenShareBackupCodecMode;
+	getScreenShareBitrate(): number | null {
+		return validateScreenShareBitrate(this.screenShareBitrate);
 	}
 
-	getScreenShareBackupCodecModeOverride(): Exclude<ScreenShareBackupCodecMode, 'off'> | undefined {
-		const mode = this.screenShareBackupCodecMode;
-		return mode === 'off' ? undefined : mode;
+	getScreenShareBitrateBudget(): ScreenShareBitrateBudget {
+		const ceilingBps = getScreenShareBitrateCeilingBps();
+		const chosen = this.getScreenShareBitrate();
+		return {
+			ceilingBps,
+			chosenBps: chosen !== null && hasHigherVideoQuality() ? Math.min(chosen, ceilingBps) : null,
+		};
 	}
 
 	getVadThreshold(): number {
@@ -991,14 +917,6 @@ class VoiceSettings {
 
 	getVadAutoSensitivity(): boolean {
 		return this.vadAutoSensitivity;
-	}
-
-	getVadEnhanced(): boolean {
-		return this.vadEnhanced;
-	}
-
-	getLinuxAudioCaptureWorkaround(): boolean {
-		return this.linuxAudioCaptureWorkaround;
 	}
 
 	getLinuxAudioCaptureOnlySpeakers(): boolean {
@@ -1057,25 +975,8 @@ class VoiceSettings {
 		return this.getScreenShareAudioExcludeSources();
 	}
 
-	getOpenH264Enabled(): boolean {
-		return this.openH264Enabled;
-	}
-
-	getLastScreenShareSource(): LastScreenShareSource | null {
-		return this.lastScreenShareSource;
-	}
-
-	getPrioritizeSpeakingParticipants(): boolean {
-		return this.prioritizeSpeakingParticipants;
-	}
-
 	setPrioritizeSpeakingParticipants(enabled: boolean): void {
 		this.prioritizeSpeakingParticipants = enabled;
-		this.notifyListeners();
-	}
-
-	setLastScreenShareSource(source: LastScreenShareSource | null): void {
-		this.lastScreenShareSource = validateLastScreenShareSource(source);
 		this.notifyListeners();
 	}
 
@@ -1087,12 +988,10 @@ class VoiceSettings {
 		if (validated.inputVolume !== undefined) this.inputVolume = validated.inputVolume;
 		if (validated.outputVolume !== undefined) this.outputVolume = validated.outputVolume;
 		if (validated.echoCancellation !== undefined) this.echoCancellation = validated.echoCancellation;
-		if (validated.noiseSuppression !== undefined) this.noiseSuppression = validated.noiseSuppression;
 		if (validated.autoGainControl !== undefined) this.autoGainControl = validated.autoGainControl;
-		if (validated.deepFilterNoiseSuppression !== undefined)
-			this.deepFilterNoiseSuppression = validated.deepFilterNoiseSuppression;
-		if (validated.deepFilterNoiseSuppressionLevel !== undefined)
-			this.deepFilterNoiseSuppressionLevel = validated.deepFilterNoiseSuppressionLevel;
+		if (validated.noiseSuppressionBackend !== undefined)
+			this.noiseSuppressionBackend = validated.noiseSuppressionBackend;
+		if (validated.stereoMicrophone !== undefined) this.stereoMicrophone = validated.stereoMicrophone;
 		if (validated.voiceProcessingMode !== undefined) this.voiceProcessingMode = validated.voiceProcessingMode;
 		if (validated.cameraResolution !== undefined) this.cameraResolution = validated.cameraResolution;
 		if (validated.mirrorCamera !== undefined) this.mirrorCamera = validated.mirrorCamera;
@@ -1106,16 +1005,18 @@ class VoiceSettings {
 		if (validated.shareDeviceAudio !== undefined) this.shareDeviceAudio = validated.shareDeviceAudio;
 		if (validated.screenShareAudioDeviceId !== undefined)
 			this.screenShareAudioDeviceId = validated.screenShareAudioDeviceId;
+		if (validated.windowsDesktopAudioAll !== undefined) this.windowsDesktopAudioAll = validated.windowsDesktopAudioAll;
+		if (validated.windowsDesktopAudioDevices !== undefined)
+			this.windowsDesktopAudioDevices = validated.windowsDesktopAudioDevices;
 		if (validated.backgroundImageId !== undefined) this.backgroundImageId = validated.backgroundImageId;
 		if (validated.backgroundImages !== undefined) this.backgroundImages = validated.backgroundImages;
 		if (validated.backgroundBlurStrength !== undefined) this.backgroundBlurStrength = validated.backgroundBlurStrength;
-		if (validated.showGridView !== undefined) this.showGridView = validated.showGridView;
+
 		if (validated.showMyOwnCamera !== undefined) this.showMyOwnCamera = validated.showMyOwnCamera;
 		if (validated.showMyOwnScreenShare !== undefined) this.showMyOwnScreenShare = validated.showMyOwnScreenShare;
 		if (validated.showNonVideoParticipants !== undefined)
 			this.showNonVideoParticipants = validated.showNonVideoParticipants;
-		if (validated.showParticipantsCarousel !== undefined)
-			this.showParticipantsCarousel = validated.showParticipantsCarousel;
+
 		if (validated.showVoiceConnectionAvatarStack !== undefined)
 			this.showVoiceConnectionAvatarStack = validated.showVoiceConnectionAvatarStack;
 		if (validated.showVoiceConnectionId !== undefined) this.showVoiceConnectionId = validated.showVoiceConnectionId;
@@ -1132,17 +1033,12 @@ class VoiceSettings {
 		if (validated.screenShareHevcOptIn !== undefined) this.screenShareHevcOptIn = validated.screenShareHevcOptIn;
 		if (validated.screenShareContentHint !== undefined) this.screenShareContentHint = validated.screenShareContentHint;
 		if (validated.screenShareEncoderMode !== undefined) this.screenShareEncoderMode = validated.screenShareEncoderMode;
-		if (validated.screenShareSoftwareQuality !== undefined)
-			this.screenShareSoftwareQuality = validated.screenShareSoftwareQuality;
 		if (validated.screenShareScalabilityMode !== undefined)
 			this.screenShareScalabilityMode = validated.screenShareScalabilityMode;
-		if (validated.screenShareBackupCodecMode !== undefined)
-			this.screenShareBackupCodecMode = validated.screenShareBackupCodecMode;
+		if (validated.screenShareBitrate !== undefined) this.screenShareBitrate = validated.screenShareBitrate;
 		if (validated.vadThreshold !== undefined) this.vadThreshold = validated.vadThreshold;
 		if (validated.vadAutoSensitivity !== undefined) this.vadAutoSensitivity = validated.vadAutoSensitivity;
-		if (validated.vadEnhanced !== undefined) this.vadEnhanced = validated.vadEnhanced;
-		if (validated.linuxAudioCaptureWorkaround !== undefined)
-			this.linuxAudioCaptureWorkaround = validated.linuxAudioCaptureWorkaround;
+
 		if (validated.linuxAudioCaptureOnlySpeakers !== undefined)
 			this.linuxAudioCaptureOnlySpeakers = validated.linuxAudioCaptureOnlySpeakers;
 		if (validated.linuxAudioCaptureOnlyDefaultSpeakers !== undefined)
@@ -1165,8 +1061,7 @@ class VoiceSettings {
 			this.screenShareAudioExcludeSources = validated.screenShareAudioExcludeSources;
 		if (validated.screenShareDeviceAudioUsesMicrophone !== undefined)
 			this.screenShareDeviceAudioUsesMicrophone = validated.screenShareDeviceAudioUsesMicrophone;
-		if (validated.openH264Enabled !== undefined) this.openH264Enabled = validated.openH264Enabled;
-		if (validated.lastScreenShareSource !== undefined) this.lastScreenShareSource = validated.lastScreenShareSource;
+
 		this.notifyListeners();
 	}
 
@@ -1200,14 +1095,8 @@ class VoiceSettings {
 		const screenShareEncoderMode = validateScreenShareEncoderMode(
 			data.screenShareEncoderMode ?? this.screenShareEncoderMode,
 		);
-		const screenShareSoftwareQuality = validateScreenShareSoftwareQuality(
-			data.screenShareSoftwareQuality ?? this.screenShareSoftwareQuality,
-		);
 		const screenShareScalabilityMode = validateScreenShareScalabilityMode(
 			data.screenShareScalabilityMode ?? this.screenShareScalabilityMode,
-		);
-		const screenShareBackupCodecMode = validateScreenShareBackupCodecMode(
-			data.screenShareBackupCodecMode ?? this.screenShareBackupCodecMode,
 		);
 		const screenShareAv1OptIn = data.screenShareAv1OptIn ?? this.screenShareAv1OptIn;
 		const screenShareHevcOptIn = data.screenShareHevcOptIn ?? this.screenShareHevcOptIn;
@@ -1224,13 +1113,13 @@ class VoiceSettings {
 			inputVolume: clampVoiceVolumePercent(data.inputVolume ?? this.inputVolume),
 			outputVolume: clampVoiceVolumePercent(data.outputVolume ?? this.outputVolume),
 			echoCancellation: data.echoCancellation ?? this.echoCancellation,
-			noiseSuppression: data.noiseSuppression ?? this.noiseSuppression,
 			autoGainControl: data.autoGainControl ?? this.autoGainControl,
-			deepFilterNoiseSuppression: data.deepFilterNoiseSuppression ?? this.deepFilterNoiseSuppression,
-			deepFilterNoiseSuppressionLevel: Math.max(
-				0,
-				Math.min(100, data.deepFilterNoiseSuppressionLevel ?? this.deepFilterNoiseSuppressionLevel),
-			),
+			noiseSuppressionBackend:
+				data.noiseSuppressionBackend === undefined
+					? this.noiseSuppressionBackend
+					: validateNoiseSuppressionBackend(data.noiseSuppressionBackend),
+			stereoMicrophone:
+				data.stereoMicrophone === undefined ? this.stereoMicrophone : validateStereoMicrophone(data.stereoMicrophone),
 			voiceProcessingMode,
 			cameraResolution,
 			mirrorCamera: data.mirrorCamera ?? this.mirrorCamera,
@@ -1243,14 +1132,19 @@ class VoiceSettings {
 			shareDesktopAudio: data.shareDesktopAudio ?? this.shareDesktopAudio,
 			shareDeviceAudio: data.shareDeviceAudio ?? this.shareDeviceAudio,
 			screenShareAudioDeviceId: data.screenShareAudioDeviceId ?? this.screenShareAudioDeviceId,
+			windowsDesktopAudioAll:
+				data.windowsDesktopAudioAll === undefined ? this.windowsDesktopAudioAll : data.windowsDesktopAudioAll === true,
+			windowsDesktopAudioDevices: validateWindowsDesktopAudioDevices(
+				data.windowsDesktopAudioDevices ?? this.windowsDesktopAudioDevices,
+			),
 			backgroundImageId,
 			backgroundImages,
 			backgroundBlurStrength: clampCameraEffectStrength(data.backgroundBlurStrength ?? this.backgroundBlurStrength),
-			showGridView: data.showGridView ?? this.showGridView,
+
 			showMyOwnCamera: data.showMyOwnCamera ?? this.showMyOwnCamera,
 			showMyOwnScreenShare: data.showMyOwnScreenShare ?? this.showMyOwnScreenShare,
 			showNonVideoParticipants: data.showNonVideoParticipants ?? this.showNonVideoParticipants,
-			showParticipantsCarousel: data.showParticipantsCarousel ?? this.showParticipantsCarousel,
+
 			showVoiceConnectionAvatarStack: data.showVoiceConnectionAvatarStack ?? this.showVoiceConnectionAvatarStack,
 			showVoiceConnectionId: data.showVoiceConnectionId ?? this.showVoiceConnectionId,
 			showConnectionVolumeControls:
@@ -1273,13 +1167,14 @@ class VoiceSettings {
 				data.screenShareContentHint ?? this.screenShareContentHint,
 			),
 			screenShareEncoderMode,
-			screenShareSoftwareQuality,
 			screenShareScalabilityMode,
-			screenShareBackupCodecMode,
+			screenShareBitrate:
+				data.screenShareBitrate === undefined
+					? this.screenShareBitrate
+					: validateScreenShareBitrate(data.screenShareBitrate),
 			vadThreshold: Math.max(0, Math.min(100, data.vadThreshold ?? this.vadThreshold)),
 			vadAutoSensitivity: data.vadAutoSensitivity ?? this.vadAutoSensitivity,
-			vadEnhanced: data.vadEnhanced ?? this.vadEnhanced,
-			linuxAudioCaptureWorkaround: data.linuxAudioCaptureWorkaround ?? this.linuxAudioCaptureWorkaround,
+
 			linuxAudioCaptureOnlySpeakers: data.linuxAudioCaptureOnlySpeakers ?? this.linuxAudioCaptureOnlySpeakers,
 			linuxAudioCaptureOnlyDefaultSpeakers:
 				data.linuxAudioCaptureOnlyDefaultSpeakers ?? this.linuxAudioCaptureOnlyDefaultSpeakers,
@@ -1298,32 +1193,8 @@ class VoiceSettings {
 				validateSourceList(data.screenShareAudioExcludeSources) ?? this.screenShareAudioExcludeSources,
 			screenShareDeviceAudioUsesMicrophone:
 				data.screenShareDeviceAudioUsesMicrophone ?? this.screenShareDeviceAudioUsesMicrophone,
-			openH264Enabled: data.openH264Enabled ?? this.openH264Enabled,
-			lastScreenShareSource:
-				data.lastScreenShareSource === undefined
-					? this.lastScreenShareSource
-					: validateLastScreenShareSource(data.lastScreenShareSource),
 		};
 	}
-}
-
-function validateLastScreenShareSource(value: unknown): LastScreenShareSource | null {
-	if (value === null) return null;
-	if (!isRecord(value)) return null;
-	const kind = value.kind;
-	if (kind !== 'app' && kind !== 'display' && kind !== 'device' && kind !== 'game') return null;
-	const sourceId = value.sourceId;
-	if (sourceId !== null && (typeof sourceId !== 'string' || sourceId.length > 256)) return null;
-	const title = typeof value.title === 'string' ? value.title.trim().slice(0, 256) : '';
-	if (!title) return null;
-	const updatedAt =
-		typeof value.updatedAt === 'number' && Number.isFinite(value.updatedAt) ? value.updatedAt : Date.now();
-	return {
-		kind,
-		sourceId,
-		title,
-		updatedAt,
-	};
 }
 
 function validateCodecPreference(value: unknown, allowAv1: boolean, allowHevc: boolean): CodecPreference {
@@ -1336,20 +1207,14 @@ function validateScreenShareEncoderMode(mode: unknown): ScreenShareEncoderMode {
 	return mode === 'hardware' || mode === 'software' || mode === 'auto' ? mode : DEFAULT_SCREEN_SHARE_ENCODER_MODE;
 }
 
-function validateScreenShareSoftwareQuality(mode: unknown): ScreenShareSoftwareQuality {
-	return mode === 'realtime' || mode === 'quality' || mode === 'balanced'
-		? mode
-		: DEFAULT_SCREEN_SHARE_SOFTWARE_QUALITY;
-}
-
 function validateScreenShareScalabilityMode(mode: unknown): ScreenShareScalabilityModePreference {
-	return mode === 'single_layer' || mode === 'temporal' || mode === 'spatial' || mode === 'auto'
+	return mode === 'single_layer' || mode === 'temporal' || mode === 'auto'
 		? mode
 		: DEFAULT_SCREEN_SHARE_SCALABILITY_MODE;
 }
 
-function validateScreenShareBackupCodecMode(mode: unknown): ScreenShareBackupCodecMode {
-	return mode === 'h264_simulcast' || mode === 'off' ? mode : DEFAULT_SCREEN_SHARE_BACKUP_CODEC_MODE;
+function validateScreenShareBitrate(value: unknown): number | null {
+	return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.round(value) : null;
 }
 
 function validateScreenShareContentHint(hint: unknown): ScreenShareContentHint {
@@ -1375,6 +1240,23 @@ function validateStreamingMode(mode: unknown): StreamingMode {
 
 function validateAudioSourceMode(mode: unknown): 'none' | 'system' | 'specific' {
 	return mode === 'none' || mode === 'system' || mode === 'specific' ? mode : 'system';
+}
+
+function isValidWindowsDesktopAudioDevice(entry: unknown): entry is string {
+	if (entry === WINDOWS_DEFAULT_PLAYBACK_DEVICE) return true;
+	return (
+		typeof entry === 'string' &&
+		entry.length <= MAX_WINDOWS_DESKTOP_AUDIO_DEVICE_ID_LENGTH &&
+		entry.startsWith('{') &&
+		!entry.includes('\0')
+	);
+}
+
+function validateWindowsDesktopAudioDevices(value: unknown): Array<string> {
+	const devices = Array.isArray(value)
+		? [...new Set(value.filter(isValidWindowsDesktopAudioDevice))].slice(0, MAX_WINDOWS_DESKTOP_AUDIO_DEVICES)
+		: [];
+	return devices.length > 0 ? devices : [...DEFAULT_WINDOWS_DESKTOP_AUDIO_DEVICES];
 }
 
 function validateSourceList(value: unknown): Array<Record<string, string>> | undefined {

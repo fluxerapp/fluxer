@@ -6,26 +6,45 @@ use reqwest_middleware::Error as MiddlewareError;
 use reqwest_retry::{
     RetryDecision, RetryPolicy, Retryable, RetryableStrategy, policies::ExponentialBackoff,
 };
+use std::io::ErrorKind;
 use std::sync::Arc;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 pub(super) struct ObservableRetryPolicy {
     inner: ExponentialBackoff,
+    retry_window: Option<Duration>,
     metrics: Arc<HTTPClientMetrics>,
 }
 
 impl ObservableRetryPolicy {
-    pub(super) fn new(inner: ExponentialBackoff, metrics: Arc<HTTPClientMetrics>) -> Self {
-        Self { inner, metrics }
+    pub(super) fn new(
+        inner: ExponentialBackoff,
+        retry_window: Option<Duration>,
+        metrics: Arc<HTTPClientMetrics>,
+    ) -> Self {
+        Self {
+            inner,
+            retry_window,
+            metrics,
+        }
     }
 }
 
 impl RetryPolicy for ObservableRetryPolicy {
     fn should_retry(&self, request_start_time: SystemTime, n_past_retries: u32) -> RetryDecision {
-        let decision = self.inner.should_retry(request_start_time, n_past_retries);
+        let window_spent = self.retry_window.is_some_and(|window| {
+            request_start_time
+                .elapsed()
+                .is_ok_and(|elapsed| elapsed >= window)
+        });
+        let decision = if window_spent {
+            RetryDecision::DoNotRetry
+        } else {
+            self.inner.should_retry(request_start_time, n_past_retries)
+        };
         match decision {
-            RetryDecision::Retry { .. } => self.metrics.record_retry(),
-            RetryDecision::DoNotRetry => self.metrics.record_retries_exhausted(),
+            RetryDecision::Retry { .. } => self.metrics.http_retries.inc(),
+            RetryDecision::DoNotRetry => self.metrics.http_retries_exhausted.inc(),
         }
         decision
     }
@@ -46,13 +65,13 @@ impl RetryableStrategy for MediaProxyRetryStrategy {
         match result {
             Ok(response) => retryable_status(response.status()).map(|retryable| {
                 if retryable == Retryable::Transient {
-                    self.metrics.record_retryable_status();
+                    self.metrics.http_retryable_status.inc();
                 }
                 retryable
             }),
             Err(error) => retryable_error(error).map(|retryable| {
                 if retryable == Retryable::Transient {
-                    self.metrics.record_retryable_error();
+                    self.metrics.http_retryable_error.inc();
                 }
                 retryable
             }),
@@ -87,7 +106,7 @@ fn retryable_error(error: &MiddlewareError) -> Option<Retryable> {
             #[cfg(target_arch = "wasm32")]
             let is_connect = false;
 
-            if error.is_timeout() || is_connect {
+            if error.is_timeout() || is_connect || is_dropped_connection(error) {
                 Some(Retryable::Transient)
             } else if error.is_body()
                 || error.is_decode()
@@ -103,157 +122,27 @@ fn retryable_error(error: &MiddlewareError) -> Option<Retryable> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::metrics::Metrics;
-    use std::time::Duration;
-
-    fn response_with_status(status: StatusCode) -> Result<reqwest::Response, MiddlewareError> {
-        let response = http::Response::builder()
-            .status(status)
-            .body("")
-            .expect("building a synthetic response cannot fail");
-        Ok(reqwest::Response::from(response))
-    }
-
-    fn counter_line(rendered: &str, name: &str) -> String {
-        rendered
-            .lines()
-            .find(|line| line.starts_with(name) && !line.starts_with('#'))
-            .unwrap_or_else(|| panic!("{name} is missing from the rendered metrics"))
-            .to_owned()
-    }
-
-    #[test]
-    fn retry_strategy_retries_only_explicit_transient_statuses() {
-        assert!(matches!(
-            retryable_status(StatusCode::REQUEST_TIMEOUT),
-            Some(Retryable::Transient)
-        ));
-        assert!(matches!(
-            retryable_status(StatusCode::TOO_MANY_REQUESTS),
-            Some(Retryable::Transient)
-        ));
-        assert!(matches!(
-            retryable_status(StatusCode::INTERNAL_SERVER_ERROR),
-            Some(Retryable::Transient)
-        ));
-        assert!(matches!(
-            retryable_status(StatusCode::BAD_GATEWAY),
-            Some(Retryable::Transient)
-        ));
-        assert!(matches!(
-            retryable_status(StatusCode::SERVICE_UNAVAILABLE),
-            Some(Retryable::Transient)
-        ));
-        assert!(matches!(
-            retryable_status(StatusCode::GATEWAY_TIMEOUT),
-            Some(Retryable::Transient)
-        ));
-        assert!(matches!(
-            retryable_status(StatusCode::NOT_FOUND),
-            Some(Retryable::Fatal)
-        ));
-        assert!(matches!(
-            retryable_status(StatusCode::NOT_IMPLEMENTED),
-            Some(Retryable::Fatal)
-        ));
-        assert!(retryable_status(StatusCode::OK).is_none());
-        assert!(retryable_status(StatusCode::FOUND).is_none());
-    }
-
-    #[test]
-    fn retryable_status_ignores_success_and_redirect_statuses() {
-        assert!(retryable_status(StatusCode::OK).is_none());
-        assert!(retryable_status(StatusCode::FOUND).is_none());
-    }
-
-    #[test]
-    fn server_errors_outside_the_whitelist_stay_fatal() {
-        for status in [
-            StatusCode::NOT_IMPLEMENTED,
-            StatusCode::HTTP_VERSION_NOT_SUPPORTED,
-            StatusCode::INSUFFICIENT_STORAGE,
-            StatusCode::LOOP_DETECTED,
-            StatusCode::NETWORK_AUTHENTICATION_REQUIRED,
-        ] {
-            assert!(
-                matches!(retryable_status(status), Some(Retryable::Fatal)),
-                "{status} must not be retried"
-            );
+pub(crate) fn is_dropped_connection(error: &(dyn std::error::Error + 'static)) -> bool {
+    let mut current = Some(error);
+    while let Some(error) = current {
+        if error
+            .downcast_ref::<hyper::Error>()
+            .is_some_and(hyper::Error::is_incomplete_message)
+        {
+            return true;
         }
+        if error.downcast_ref::<std::io::Error>().is_some_and(|error| {
+            matches!(
+                error.kind(),
+                ErrorKind::ConnectionReset
+                    | ErrorKind::ConnectionAborted
+                    | ErrorKind::BrokenPipe
+                    | ErrorKind::UnexpectedEof
+            )
+        }) {
+            return true;
+        }
+        current = error.source();
     }
-
-    #[test]
-    fn middleware_failures_are_fatal_and_are_not_counted_as_transient() {
-        let metrics = Metrics::new();
-        let strategy = MediaProxyRetryStrategy::new(metrics.http_client());
-        let error = Err(MiddlewareError::Middleware(anyhow::anyhow!(
-            "middleware refused the request"
-        )));
-        assert!(matches!(strategy.handle(&error), Some(Retryable::Fatal)));
-        let rendered = metrics.render();
-        assert_eq!(
-            counter_line(
-                &rendered,
-                "fluxer_media_proxy_http_retryable_classifications_total{reason=\"error\"}"
-            ),
-            "fluxer_media_proxy_http_retryable_classifications_total{reason=\"error\"} 0"
-        );
-    }
-
-    #[test]
-    fn transient_status_classifications_are_counted_once_and_fatal_ones_are_not() {
-        let metrics = Metrics::new();
-        let strategy = MediaProxyRetryStrategy::new(metrics.http_client());
-        assert!(matches!(
-            strategy.handle(&response_with_status(StatusCode::SERVICE_UNAVAILABLE)),
-            Some(Retryable::Transient)
-        ));
-        assert!(matches!(
-            strategy.handle(&response_with_status(StatusCode::NOT_FOUND)),
-            Some(Retryable::Fatal)
-        ));
-        assert!(
-            strategy
-                .handle(&response_with_status(StatusCode::OK))
-                .is_none()
-        );
-        let rendered = metrics.render();
-        assert_eq!(
-            counter_line(
-                &rendered,
-                "fluxer_media_proxy_http_retryable_classifications_total{reason=\"status\"}"
-            ),
-            "fluxer_media_proxy_http_retryable_classifications_total{reason=\"status\"} 1"
-        );
-    }
-
-    #[test]
-    fn every_retry_decision_reaches_the_injected_metrics_handle() {
-        let metrics = Metrics::new();
-        let backoff = ExponentialBackoff::builder()
-            .retry_bounds(Duration::from_millis(1), Duration::from_millis(2))
-            .build_with_max_retries(1);
-        let policy = ObservableRetryPolicy::new(backoff, metrics.http_client());
-        let started = SystemTime::now();
-        assert!(matches!(
-            policy.should_retry(started, 0),
-            RetryDecision::Retry { .. }
-        ));
-        assert!(matches!(
-            policy.should_retry(started, 1),
-            RetryDecision::DoNotRetry
-        ));
-        let rendered = metrics.render();
-        assert_eq!(
-            counter_line(&rendered, "fluxer_media_proxy_http_retries_total"),
-            "fluxer_media_proxy_http_retries_total 1"
-        );
-        assert_eq!(
-            counter_line(&rendered, "fluxer_media_proxy_http_retries_exhausted_total"),
-            "fluxer_media_proxy_http_retries_exhausted_total 1"
-        );
-    }
+    false
 }

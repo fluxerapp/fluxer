@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
-import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
-import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import type {GatewayRpcTransport} from '@app/api/infrastructure/GatewayRpcClient';
+import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
+import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
+import {GatewayService} from '@app/api/infrastructure/GatewayService';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {afterEach, describe, expect, it} from 'vitest';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import {GatewayRpcClient} from '../GatewayRpcClient';
-import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '../GatewayRpcError';
-import {GatewayService} from '../GatewayService';
-import type {IGatewayRpcTransport} from '../IGatewayRpcTransport';
 
-function failingTransport(code: string): IGatewayRpcTransport {
+function failingTransport(code: string): GatewayRpcTransport {
 	return {
 		async call(): Promise<unknown> {
 			throw new GatewayRpcMethodError(code);
@@ -30,44 +27,29 @@ describe('GatewayService gateway error mapping', () => {
 		await GatewayRpcClient.resetForTests();
 	});
 
-	it('maps guild_not_found from guild.get_user_permissions to UnknownGuildError', async () => {
-		const service = serviceRaising(GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND);
-		await expect(
-			service.getUserPermissions({guildId: createGuildID(1n), userId: createUserID(2n)}),
-		).rejects.toBeInstanceOf(UnknownGuildError);
-	});
-
-	it('maps guild_not_found from guild.check_permission to UnknownGuildError', async () => {
-		const service = serviceRaising(GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND);
-		await expect(
-			service.checkPermission({guildId: createGuildID(1n), userId: createUserID(2n), permission: 1n}),
-		).rejects.toBeInstanceOf(UnknownGuildError);
-	});
-
-	it('maps an unrecognised gateway error from guild.check_permission to BadGatewayError', async () => {
-		const service = serviceRaising('permission_check_error');
-		await expect(
-			service.checkPermission({guildId: createGuildID(1n), userId: createUserID(2n), permission: 1n}),
-		).rejects.toBeInstanceOf(BadGatewayError);
-	});
-
-	it('maps invalid_params to a 400 instead of an upstream failure', async () => {
-		const service = serviceRaising(GatewayRpcMethodErrorCodes.INVALID_PARAMS);
+	it('returns 503 with Retry-After for an overloaded guild', async () => {
+		const service = serviceRaising(GatewayRpcMethodErrorCodes.GUILD_OVERLOADED);
 		const error = await service
-			.checkPermission({guildId: createGuildID(1n), userId: createUserID(2n), permission: 1n})
+			.getUserPermissions({guildId: createGuildID(1n), userId: createUserID(2n)})
 			.catch((raised: unknown) => raised);
-		expect(error).toBeInstanceOf(BadRequestError);
-		expect((error as BadRequestError).status).toBe(400);
-		expect((error as BadRequestError).code).toBe(APIErrorCodes.INVALID_FORM_BODY);
+		expect(error).toBeInstanceOf(ServiceUnavailableError);
+		const response = (error as ServiceUnavailableError).getResponse();
+		expect(response.status).toBe(503);
+		expect(response.headers.get('Retry-After')).toBe('1');
 	});
 
-	it('maps batch_too_large to a 400 instead of an upstream failure', async () => {
-		const service = serviceRaising(GatewayRpcMethodErrorCodes.BATCH_TOO_LARGE);
-		const error = await service
-			.getUserPermissionsBatch({guildIds: [createGuildID(1n)], userId: createUserID(2n)})
-			.catch((raised: unknown) => raised);
-		expect(error).toBeInstanceOf(BadRequestError);
-		expect((error as BadRequestError).status).toBe(400);
-		expect((error as BadRequestError).code).toBe(APIErrorCodes.INVALID_FORM_BODY);
+	it('does not retry a guild overload response', async () => {
+		let calls = 0;
+		const client = GatewayRpcClient.createForTests({
+			async call(): Promise<unknown> {
+				calls += 1;
+				throw new GatewayRpcMethodError(GatewayRpcMethodErrorCodes.GUILD_OVERLOADED);
+			},
+			async destroy(): Promise<void> {},
+		});
+		await expect(client.call('guild.dispatch', {guild_id: '1'})).rejects.toMatchObject({
+			code: GatewayRpcMethodErrorCodes.GUILD_OVERLOADED,
+		});
+		expect(calls).toBe(1);
 	});
 });

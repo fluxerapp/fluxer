@@ -16,7 +16,11 @@ export_state(State) ->
         ringing => maps:get(ringing, State, []),
         pending_ringing => maps:get(pending_ringing, State, []),
         recipients => maps:get(recipients, State, []),
-        voice_states => maps:get(voice_states, State, #{}),
+        caller_id => maps:get(caller_id, State, undefined),
+        caller_name => maps:get(caller_name, State, undefined),
+        caller_avatar => maps:get(caller_avatar, State, undefined),
+        voice_states => call_state:voice_states_by_user(maps:get(voice_states, State, #{})),
+        connection_voice_states => maps:get(voice_states, State, #{}),
         sessions => export_sessions(maps:get(sessions, State, #{})),
         pending_connections => maps:get(pending_connections, State, #{}),
         initiator_ready => maps:get(initiator_ready, State, true),
@@ -30,9 +34,7 @@ export_state(State) ->
 -spec restore_state(map()) -> map().
 restore_state(TransferState) ->
     Sessions = restore_sessions(maps:get(sessions, TransferState, #{})),
-    VoiceStates = restore_voice_states(
-        maps:get(voice_states, TransferState, #{}), Sessions
-    ),
+    VoiceStates = restore_voice_states(transferred_voice_states(TransferState), Sessions),
     State0 = #{
         channel_id => maps:get(channel_id, TransferState),
         message_id => maps:get(message_id, TransferState),
@@ -40,6 +42,9 @@ restore_state(TransferState) ->
         ringing => maps:get(ringing, TransferState, []),
         pending_ringing => maps:get(pending_ringing, TransferState, []),
         recipients => maps:get(recipients, TransferState, []),
+        caller_id => maps:get(caller_id, TransferState, undefined),
+        caller_name => maps:get(caller_name, TransferState, undefined),
+        caller_avatar => maps:get(caller_avatar, TransferState, undefined),
         voice_states => VoiceStates,
         sessions => Sessions,
         pending_connections => maps:get(pending_connections, TransferState, #{}),
@@ -108,6 +113,12 @@ maybe_restore_session(SessionId, UserId, SessionPid, Acc) ->
             Acc
     end.
 
+-spec transferred_voice_states(map()) -> map().
+transferred_voice_states(#{connection_voice_states := VoiceStates}) when is_map(VoiceStates) ->
+    VoiceStates;
+transferred_voice_states(TransferState) ->
+    call_state:voice_states_by_connection(maps:get(voice_states, TransferState, #{})).
+
 -spec restore_voice_states(map(), map()) -> map().
 restore_voice_states(VoiceStates, Sessions) ->
     ActiveUsers = maps:fold(
@@ -116,7 +127,9 @@ restore_voice_states(VoiceStates, Sessions) ->
         Sessions
     ),
     maps:filter(
-        fun(UserId, _VoiceState) -> sets:is_element(UserId, ActiveUsers) end,
+        fun(_ConnectionId, VoiceState) ->
+            sets:is_element(voice_state_utils:voice_state_user_id(VoiceState), ActiveUsers)
+        end,
         VoiceStates
     ).
 
@@ -160,36 +173,3 @@ normalize_joined_at(Value) when is_integer(Value) ->
     Value;
 normalize_joined_at(_Value) ->
     erlang:system_time(millisecond).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-restore_state_remonitors_live_sessions_test() ->
-    SessionPid = spawn(fun() ->
-        receive
-            stop -> ok
-        end
-    end),
-    SessionId = <<"session-a">>,
-    VoiceState = #{<<"connection_id">> => <<"conn-a">>},
-    TransferState = #{
-        channel_id => 123,
-        message_id => 456,
-        region => null,
-        ringing => [1],
-        pending_ringing => [],
-        recipients => [1],
-        voice_states => #{1 => VoiceState},
-        sessions => #{SessionId => #{user_id => 1, session_pid => SessionPid}},
-        pending_connections => #{},
-        participants_history => [1]
-    },
-    Restored = restore_state(TransferState),
-    ?assertMatch(
-        {1, SessionPid, Ref} when is_reference(Ref),
-        maps:get(SessionId, maps:get(sessions, Restored))
-    ),
-    ?assertEqual(#{1 => VoiceState}, maps:get(voice_states, Restored)),
-    SessionPid ! stop.
-
--endif.

@@ -22,20 +22,15 @@ f:docs:
 f:gateway:
   - changed-files:
     - any-glob-to-any-file: fluxer_gateway/**/*
-f:marketing:
-  - changed-files:
-    - any-glob-to-any-file:
-      - fluxer_marketing
-      - packages/i18n/marketing/**/*
 f:media_proxy:
   - changed-files:
     - any-glob-to-any-file: fluxer_media_proxy/**/*
 f:messages:
   - changed-files:
     - any-glob-to-any-file: fluxer_messages/**/*
-f:recon:
+f:push:
   - changed-files:
-    - any-glob-to-any-file: fluxer_recon/**/*
+    - any-glob-to-any-file: fluxer_push/**/*
 f:snowflakes:
   - changed-files:
     - any-glob-to-any-file: fluxer_snowflakes/**/*
@@ -72,9 +67,6 @@ p:geo-utils:
 p:hono:
   - changed-files:
     - any-glob-to-any-file: packages/hono/**/*
-p:hono-types:
-  - changed-files:
-    - any-glob-to-any-file: packages/hono_types/**/*
 p:i18n:
   - changed-files:
     - any-glob-to-any-file: packages/i18n/**/*
@@ -93,6 +85,9 @@ p:logger:
 p:markdown-parser:
   - changed-files:
     - any-glob-to-any-file: packages/markdown_parser/**/*
+p:number-utils:
+  - changed-files:
+    - any-glob-to-any-file: packages/number_utils/**/*
 p:openapi:
   - changed-files:
     - any-glob-to-any-file: packages/openapi/**/*

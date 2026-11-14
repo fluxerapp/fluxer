@@ -4,12 +4,12 @@ set -euo pipefail
 
 PREFIX="${1:-/usr/local}"
 
-FFMPEG_VERSION=9.0
-FFMPEG_SHA256=7f607a00dd0d28a729d5a4811205812eef01cf6ef6155025febb6f36a9062d52
+FFMPEG_VERSION=9.0.2
+FFMPEG_SHA256=8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e
 FFMPEG_URL="https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz"
 
-LIBHEIF_VERSION=1.23.1
-LIBHEIF_SHA256=0de0327f60fcd47de90d5654c6fe152232738d60d84fe084ec3e0f35e03b166a
+LIBHEIF_VERSION=1.23.7
+LIBHEIF_SHA256=f7483e818503ea6224c8863e4a56ac02c7089021a98472c811c12aa19faf2475
 LIBHEIF_URL="https://github.com/strukturag/libheif/releases/download/v${LIBHEIF_VERSION}/libheif-${LIBHEIF_VERSION}.tar.gz"
 
 LIBAVFILTER_FLOOR=11.0.100
@@ -22,9 +22,10 @@ LIBHEIF_FLOOR_REASON="src/native_shim/heif_pixels.c compiles a different HEIF de
 
 FFMPEG_BUILD_MODULES="zlib dav1d aom"
 LIBHEIF_BUILD_MODULES="libde265 dav1d aom"
-REQUIRED_DECODERS="apng gif h264 hevc vp8 vp9 libdav1d libaom-av1 mjpeg png webp bmp"
+REQUIRED_DECODERS="apng gif h264 hevc vp8 vp9 libdav1d libaom-av1 mjpeg png webp bmp aac mp3float vorbis opus flac alac pcm_s16le"
 REQUIRED_ENCODERS="gif"
-REQUIRED_DEMUXERS="apng bmp_pipe gif"
+REQUIRED_DEMUXERS="apng bmp_pipe gif mov,mp4,m4a,3gp,3g2,mj2 matroska,webm avi flv mpegts mpeg asf mp3 wav flac aac aiff ogg"
+REQUIRED_MUXERS="3gp mp4 mov webm matroska avi flv mpegts mpeg asf mp3 wav flac adts aiff ogg"
 
 log() { printf '==> %s\n' "$*" >&2; }
 
@@ -231,6 +232,8 @@ verify_ffmpeg_codecs() {
     require_listed "$listing" encoder "$REQUIRED_ENCODERS"
     listing="$(ffmpeg_listing "$binary" -demuxers)"
     require_listed "$listing" demuxer "$REQUIRED_DEMUXERS"
+    listing="$(ffmpeg_listing "$binary" -muxers)"
+    require_listed "$listing" muxer "$REQUIRED_MUXERS"
 }
 
 if [ "$(uname -s)" = "Darwin" ]; then

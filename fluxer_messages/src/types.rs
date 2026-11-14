@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub use fluxer_common::user_partial::ApiUserPartial;
+use fluxer_common::user_partial::default_instance_name;
+
 use serde::{Deserialize, Serialize};
 
 fn deserialize_double_option<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
@@ -58,30 +61,19 @@ mod serde_id {
             .map(StringOrI64::into_i64)
             .collect()
     }
+
+    pub fn i32_or_null_as_default<'de, D>(deserializer: D) -> Result<i32, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Option::<i32>::deserialize(deserializer)?.unwrap_or_default())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "op")]
 #[allow(clippy::enum_variant_names, clippy::large_enum_variant)]
 pub enum MessageRequest {
-    GetById {
-        channel_id: i64,
-        message_id: i64,
-    },
-    GetLatest {
-        channel_id: i64,
-        limit: u32,
-    },
-    GetBefore {
-        channel_id: i64,
-        before_id: i64,
-        limit: u32,
-    },
-    GetAfter {
-        channel_id: i64,
-        after_id: i64,
-        limit: u32,
-    },
     GetResponseById {
         channel_id: String,
         message_id: String,
@@ -91,9 +83,20 @@ pub enum MessageRequest {
         can_read_message_history: bool,
         media_endpoint: String,
         media_proxy_secret_key: String,
+        #[serde(default)]
+        attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
+        #[serde(default)]
+        include_hidden: bool,
+        #[serde(default)]
+        threads_mask: bool,
+        #[serde(default = "default_instance_name")]
+        instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     BuildResponse {
         message: Message,
@@ -103,9 +106,20 @@ pub enum MessageRequest {
         can_read_message_history: bool,
         media_endpoint: String,
         media_proxy_secret_key: String,
+        #[serde(default)]
+        attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
+        #[serde(default)]
+        include_hidden: bool,
+        #[serde(default)]
+        threads_mask: bool,
+        #[serde(default = "default_instance_name")]
+        instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     BuildResponses {
         messages: Vec<Message>,
@@ -115,7 +129,18 @@ pub enum MessageRequest {
         can_read_message_history: bool,
         media_endpoint: String,
         media_proxy_secret_key: String,
+        #[serde(default)]
+        attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
+        #[serde(default)]
+        include_hidden: bool,
+        #[serde(default)]
+        threads_mask: bool,
+        #[serde(default = "default_instance_name")]
+        instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     ListResponses {
         channel_id: String,
@@ -129,7 +154,20 @@ pub enum MessageRequest {
         can_read_message_history: bool,
         media_endpoint: String,
         media_proxy_secret_key: String,
+        #[serde(default)]
+        attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        attachment_decay: Option<bool>,
+        #[serde(default)]
+        include_hidden: bool,
+        #[serde(default)]
+        threads_mask: bool,
+        #[serde(default)]
+        exclude_types: Vec<i32>,
+        #[serde(default = "default_instance_name")]
+        instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     ExtractMentions {
         contents: Vec<String>,
@@ -139,8 +177,6 @@ pub enum MessageRequest {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
 pub enum MessageResponse {
-    Found(Message),
-    FoundMany(Vec<Message>),
     FoundApi(ApiMessageResponse),
     FoundApiMany(Vec<ApiMessageResponse>),
     FoundMentions(Vec<ExtractedMentionsResponse>),
@@ -156,7 +192,11 @@ pub struct Message {
     pub bucket: i32,
     #[serde(default, deserialize_with = "serde_id::opt_i64_from_string_or_number")]
     pub author_id: Option<i64>,
-    #[serde(rename = "type")]
+    #[serde(
+        rename = "type",
+        default,
+        deserialize_with = "serde_id::i32_or_null_as_default"
+    )]
     pub message_type: i32,
     #[serde(default, deserialize_with = "serde_id::opt_i64_from_string_or_number")]
     pub webhook_id: Option<i64>,
@@ -183,6 +223,7 @@ pub struct Message {
     )]
     pub mention_channels: Vec<i64>,
     pub has_reaction: Option<bool>,
+    #[serde(default, deserialize_with = "serde_id::i32_or_null_as_default")]
     pub version: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attachments: Option<Vec<MessageAttachment>>,
@@ -196,23 +237,6 @@ pub struct Message {
     pub call: Option<MessageCall>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_snapshots: Option<Vec<MessageSnapshot>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ApiUserPartialResponse {
-    pub id: String,
-    pub username: String,
-    pub discriminator: String,
-    pub global_name: Option<String>,
-    pub avatar: Option<String>,
-    pub avatar_color: Option<i32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bot: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub system: Option<bool>,
-    pub flags: i64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mention_flags: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -363,7 +387,8 @@ pub struct ApiMessageStickerResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiMessageReferenceResponse {
     pub channel_id: String,
-    pub message_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_id: Option<String>,
     #[serde(rename = "type")]
@@ -429,7 +454,7 @@ pub struct ApiMessageCallResponse {
 pub struct ApiMessageResponse {
     pub id: String,
     pub channel_id: String,
-    pub author: ApiUserPartialResponse,
+    pub author: ApiUserPartial,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub webhook_id: Option<String>,
     #[serde(rename = "type")]
@@ -441,12 +466,12 @@ pub struct ApiMessageResponse {
     pub pinned: bool,
     pub mention_everyone: bool,
     pub tts: bool,
-    pub mentions: Vec<ApiUserPartialResponse>,
+    pub mentions: Vec<ApiUserPartial>,
     pub mention_roles: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mention_channels: Option<Vec<ApiChannelMentionResponse>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub users: Option<Vec<ApiUserPartialResponse>>,
+    pub users: Option<Vec<ApiUserPartial>>,
     pub embeds: Vec<ApiMessageEmbedResponse>,
     pub attachments: Vec<ApiMessageAttachmentResponse>,
     pub stickers: Vec<ApiMessageStickerResponse>,
@@ -745,7 +770,7 @@ mod tests {
     fn minimal_api_message(
         referenced: Option<Option<Box<ApiMessageResponse>>>,
     ) -> ApiMessageResponse {
-        let author = ApiUserPartialResponse {
+        let author = ApiUserPartial {
             id: "1".to_string(),
             username: "user".to_string(),
             discriminator: "0001".to_string(),

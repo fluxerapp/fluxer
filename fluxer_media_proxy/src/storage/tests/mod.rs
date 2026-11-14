@@ -1,33 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod keys;
-mod local;
-mod relay;
-mod response_body;
-mod s3;
-mod s3_read_endpoint;
+mod slow_stream;
 
 use crate::{
     config::{
-        BucketStyle, Config, DeploymentMode, MediaServingConfig, StorageBackend, StorageConfig,
-        UploadRelayConfig,
+        AttachmentSignatureConfig, BucketStyle, Config, CorsConfig, DeploymentMode,
+        MediaServingConfig, PolicyMode, StorageBackend, StorageConfig, UploadRelayConfig,
     },
     constants,
-    metrics::{Metrics, http_client::HTTPClientMetrics, storage::StorageMetrics},
-    secret::{SecretBytes, SecretString},
-    storage::Store,
 };
 use axum::response::Response;
 use bytes::Bytes;
 use http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header};
 use parking_lot::Mutex;
-use std::{collections::HashMap, path::Path, sync::Arc, time::Duration};
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 pub(crate) type CapturedRequest = (Method, http::Uri, HeaderMap, Bytes);
 
 fn test_config(root: &Path) -> Config {
     Config {
-        node_env: "test".to_owned(),
         bind_host: "127.0.0.1".to_owned(),
         port: 0,
         secret_key: SecretString::new("secret".to_owned()),
@@ -75,26 +67,15 @@ fn test_config(root: &Path) -> Config {
             spool_chunk_bytes: 64 * 1024,
             spool_max_total_bytes: 1 << 30,
         },
-        bunny_ip_gate_enabled: false,
-        bunny_ip_gate_trusted_proxies: Vec::new(),
-        bunny_ip_gate_refresh_secs: 3_600,
+        cors: CorsConfig {
+            mode: PolicyMode::Off,
+            allowed_origins: Vec::new(),
+        },
+        attachment_signature: AttachmentSignatureConfig {
+            mode: PolicyMode::Off,
+            secrets: Vec::new(),
+        },
     }
-}
-
-fn store(cfg: Config) -> Store {
-    store_with_storage_metrics(cfg, Arc::new(StorageMetrics::new()))
-}
-
-fn store_with_storage_metrics(cfg: Config, metrics: Arc<StorageMetrics>) -> Store {
-    Store::new(cfg, metrics, Arc::new(HTTPClientMetrics::new()))
-}
-
-fn rendered_counter(metrics: &Metrics, name: &str) -> u64 {
-    let rendered = metrics.render();
-    rendered
-        .lines()
-        .find_map(|line| line.strip_prefix(name)?.trim().parse().ok())
-        .expect("counter is rendered")
 }
 
 #[derive(Clone, Default)]
@@ -106,7 +87,6 @@ pub(crate) struct FakeObject {
     pub(crate) last_modified: Option<String>,
     pub(crate) status: Option<u16>,
     pub(crate) read_status: Option<u16>,
-    pub(crate) delay: Option<Duration>,
 }
 
 #[derive(Clone)]
@@ -120,18 +100,6 @@ pub(crate) struct FakeS3 {
 impl FakeS3 {
     pub(crate) fn put_object(&self, path: &str, object: FakeObject) {
         self.objects.lock().insert(path.to_owned(), object);
-    }
-
-    pub(crate) fn set_put_etag(&self, etag: &str) {
-        *self.put_etag.lock() = Some(etag.to_owned());
-    }
-
-    pub(crate) fn endpoint(&self) -> &str {
-        &self.endpoint
-    }
-
-    pub(crate) fn requests(&self) -> Vec<CapturedRequest> {
-        self.requests.lock().clone()
     }
 
     pub(crate) fn last_request(&self) -> CapturedRequest {
@@ -203,9 +171,6 @@ async fn serve_fake_s3(state: FakeS3, request: axum::extract::Request) -> Respon
             b"<Error>NoSuchKey</Error>",
         );
     };
-    if let Some(delay) = object.delay {
-        tokio::time::sleep(delay).await;
-    }
     if let Some(status) = object.status {
         return fake_s3_response(
             StatusCode::from_u16(status).expect("fake status is valid"),
@@ -235,15 +200,6 @@ async fn serve_fake_s3(state: FakeS3, request: axum::extract::Request) -> Respon
     }
     if let Some(last_modified) = object.last_modified.clone() {
         headers.push((header::LAST_MODIFIED, last_modified));
-    }
-    if let Some(requested) = parts.headers.get(header::IF_MATCH)
-        && object.etag.as_deref() != requested.to_str().ok()
-    {
-        return fake_s3_response(
-            StatusCode::PRECONDITION_FAILED,
-            Vec::new(),
-            b"<Error>PreconditionFailed</Error>",
-        );
     }
     if parts.method == Method::HEAD {
         let advertised = vec![0u8; usize::try_from(total_length).expect("fake length fits usize")];
@@ -290,3 +246,5 @@ fn fake_s3_response(
     }
     response
 }
+
+use fluxer_common::secret::{SecretBytes, SecretString};

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Resolver} from 'node:dns/promises';
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
 import {ms} from 'itty-time';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {IEmailDnsValidationService} from './IEmailDnsValidationService';
 
 interface DomainValidationCacheEntry {
 	valid: boolean;
@@ -42,7 +41,7 @@ const DNS_LOOKUP_TRIES = 1;
 const MAX_CACHED_DOMAINS = 10000;
 
 async function isInstanceEmailEnabled(): Promise<boolean> {
-	const {getInstanceConfigRepository} = await import('../middleware/ServiceSingletons');
+	const {getInstanceConfigRepository} = await import('@app/api/middleware/ServiceSingletons');
 	return getInstanceConfigRepository().isEmailEnabled();
 }
 
@@ -52,7 +51,7 @@ function createLookupTimeoutError(): NodeJS.ErrnoException {
 	return error;
 }
 
-export class EmailDnsValidationService implements IEmailDnsValidationService {
+export class EmailDnsValidationService {
 	private readonly resolver: IDnsResolver;
 	private readonly enforceInTestMode: boolean;
 	private readonly positiveTtlMs: number;

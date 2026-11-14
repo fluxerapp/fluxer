@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {CannotShrinkReservedSlotsError} from '@fluxer/errors/src/domains/core/CannotShrinkReservedSlotsError';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import type {VisionarySlotRow} from '../../database/types/PaymentTypes';
-import {VisionarySlot} from '../../models/VisionarySlot';
-import {VisionarySlots} from '../../Tables';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {VisionarySlotRow} from '@app/api/database/types/PaymentTypes';
+import {VisionarySlot} from '@app/api/models/VisionarySlot';
+import {VisionarySlots} from '@app/api/Tables';
+
+export const GIFT_PARKED_SLOT_HOLDER = createUserID(-1n);
 
 const FETCH_ALL_VISIONARY_SLOTS_QUERY = VisionarySlots.selectCql();
 const FETCH_VISIONARY_SLOT_QUERY = VisionarySlots.selectCql({
@@ -17,13 +18,6 @@ export class VisionarySlotRepository {
 	async listVisionarySlots(): Promise<Array<VisionarySlot>> {
 		const slots = await fetchMany<VisionarySlotRow>(FETCH_ALL_VISIONARY_SLOTS_QUERY, {});
 		return slots.map((slot) => new VisionarySlot(slot));
-	}
-
-	async getVisionarySlot(slotIndex: number): Promise<VisionarySlot | null> {
-		const slot = await fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {
-			slot_index: slotIndex,
-		});
-		return slot ? new VisionarySlot(slot) : null;
 	}
 
 	async expandVisionarySlots(byCount: number): Promise<void> {
@@ -42,82 +36,28 @@ export class VisionarySlotRepository {
 		await batch.execute();
 	}
 
-	async shrinkVisionarySlots(toCount: number): Promise<void> {
-		const existingSlots = await this.listVisionarySlots();
-		if (existingSlots.length <= toCount) return;
-		const sortedSlots = existingSlots.sort((a, b) => b.slotIndex - a.slotIndex);
-		const slotsToRemove = sortedSlots.slice(0, existingSlots.length - toCount);
-		const reservedSlots = slotsToRemove.filter((slot) => slot.userId !== null);
-		if (reservedSlots.length > 0) {
-			throw new CannotShrinkReservedSlotsError(reservedSlots.map((s) => s.slotIndex));
-		}
-		const batch = new BatchBuilder();
-		for (const slot of slotsToRemove) {
-			batch.addPrepared(VisionarySlots.deleteByPk({slot_index: slot.slotIndex}));
-		}
-		await batch.execute();
-	}
-
-	async reserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void> {
+	async reserveVisionarySlot(slotIndex: number, userId: UserID): Promise<boolean> {
 		const existingSlot = await fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {
 			slot_index: slotIndex,
 		});
-		if (!existingSlot) {
-			await upsertOne(
-				VisionarySlots.upsertAll({
-					slot_index: slotIndex,
-					user_id: userId,
-				}),
-			);
-		} else {
-			await upsertOne(
-				VisionarySlots.upsertAll({
-					slot_index: slotIndex,
-					user_id: userId,
-				}),
-			);
+		const holder = existingSlot?.user_id ?? null;
+		if (holder !== null && holder !== userId && holder !== GIFT_PARKED_SLOT_HOLDER) {
+			return false;
 		}
-	}
-
-	async swapVisionarySlotReservations(
-		slotIndexA: number,
-		slotIndexB: number,
-	): Promise<{
-		userIdA: UserID | null;
-		userIdB: UserID | null;
-	}> {
-		const [slotA, slotB] = await Promise.all([
-			fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {slot_index: slotIndexA}),
-			fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {slot_index: slotIndexB}),
-		]);
-		const userIdA = slotA?.user_id ?? null;
-		const userIdB = slotB?.user_id ?? null;
-		const batch = new BatchBuilder();
-		batch.addPrepared(
+		await upsertOne(
 			VisionarySlots.upsertAll({
-				slot_index: slotIndexA,
-				user_id: userIdB,
+				slot_index: slotIndex,
+				user_id: userId,
 			}),
 		);
-		batch.addPrepared(
-			VisionarySlots.upsertAll({
-				slot_index: slotIndexB,
-				user_id: userIdA,
-			}),
-		);
-		await batch.execute();
-		return {userIdA, userIdB};
+		return true;
 	}
 
 	async unreserveVisionarySlot(slotIndex: number, userId: UserID): Promise<void> {
 		const existingSlot = await fetchOne<VisionarySlotRow>(FETCH_VISIONARY_SLOT_QUERY, {
 			slot_index: slotIndex,
 		});
-		if (!existingSlot) {
-			return;
-		}
-		const sentinelUserId = createUserID(BigInt(-1));
-		if (userId !== sentinelUserId && existingSlot.user_id !== userId) {
+		if (existingSlot?.user_id !== userId) {
 			return;
 		}
 		await upsertOne(

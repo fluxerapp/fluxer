@@ -1,58 +1,36 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::admin_flags::{DEPRECATED_GUILD_FEATURES, GUILD_FEATURES, PLANNED_JOIN_WAVES};
 use crate::{
     acl,
-    api::types::GuildInfo,
+    api::types::GuildDetailInfo,
     config::AdminConfig,
     templates::components::{
-        form::{checkbox, csrf_input, form_actions, submit_button},
+        form::{
+            Checkbox, FORM_INPUT_CLASS, csrf_input, form_actions, form_field_group, submit_button,
+        },
         page_container::card_with_header,
     },
 };
 use maud::{Markup, html};
 
-const GUILD_FEATURES: &[&str] = &[
-    "ANIMATED_ICON",
-    "ANIMATED_BANNER",
-    "AUDIO_BITRATE_128_KBPS",
-    "AUDIO_BITRATE_256_KBPS",
-    "AUDIO_BITRATE_384_KBPS",
-    "BANNER",
-    "CLONE_EMOJI_DISABLED",
-    "CLONE_EMOJI_ENABLED",
-    "CLONE_STICKER_DISABLED",
-    "CLONE_STICKER_ENABLED",
-    "DETACHED_BANNER",
-    "INVITE_SPLASH",
-    "INVITES_DISABLED",
-    "RAID_DETECTED",
-    "TEXT_CHANNEL_FLEXIBLE_NAMES",
-    "HIDE_OWNER_CROWN",
-    "MORE_EMOJI",
-    "MORE_STICKERS",
-    "UNLIMITED_EMOJI",
-    "UNLIMITED_STICKERS",
-    "EXPRESSION_PURGE_ALLOWED",
-    "VANITY_URL",
-    "DISCOVERABLE",
-    "PARTNERED",
-    "VERIFIED",
-    "VIP_VOICE",
-    "VOICE_E2EE",
-    "UNAVAILABLE_FOR_EVERYONE",
-    "UNAVAILABLE_FOR_EVERYONE_BUT_STAFF",
-    "UNAVAILABLE_HIDDEN",
-    "VISIONARY",
-    "LARGE_GUILD_OVERRIDE",
-    "VERY_LARGE_GUILD",
-];
-
 const HOSTED_ONLY: &[&str] = &["VISIONARY", "VIP_VOICE"];
 
-const DEPRECATED_FEATURES: &[&str] = &["CLONE_EMOJI_DISABLED", "CLONE_STICKER_DISABLED"];
+fn planned_join_waves_end(guild: &GuildDetailInfo) -> Option<String> {
+    if !guild.features.iter().any(|f| f == PLANNED_JOIN_WAVES) {
+        return None;
+    }
+    Some(match guild.planned_join_waves_until.as_deref() {
+        Some(until) => format!(
+            "Planned join waves end on {} UTC.",
+            until.chars().take(16).collect::<String>().replace('T', " ")
+        ),
+        None => "Planned join waves are permanent.".to_owned(),
+    })
+}
 
 fn feature_label(feature: &str) -> String {
-    if DEPRECATED_FEATURES.contains(&feature) {
+    if DEPRECATED_GUILD_FEATURES.contains(&feature) {
         format!("{feature} (deprecated, no longer enforced)")
     } else {
         feature.to_owned()
@@ -61,7 +39,7 @@ fn feature_label(feature: &str) -> String {
 
 pub fn features_tab(
     config: &AdminConfig,
-    guild: &GuildInfo,
+    guild: &GuildDetailInfo,
     csrf_token: &str,
     admin_acls: &[String],
 ) -> Markup {
@@ -86,6 +64,11 @@ pub fn features_tab(
         .filter(|f| !features_list.contains(&f.as_str()))
         .map(String::as_str)
         .collect();
+    let waves_until_value: String = guild
+        .planned_join_waves_until
+        .as_deref()
+        .map(|until| until.chars().take(16).collect())
+        .unwrap_or_default();
     html! {
         div class="space-y-6" {
             (card_with_header("Guild Features", html! {
@@ -97,14 +80,33 @@ pub fn features_tab(
                     (csrf_input(csrf_token))
                     div class="space-y-3" {
                         @for &feature in features_list {
-                            (checkbox(
-                                "features[]",
-                                feature,
-                                &feature_label(feature),
-                                guild.features.iter().any(|f| f == feature),
-                                true,
-                            ))
+                            (Checkbox {
+                                name: "features[]",
+                                value: feature,
+                                label: &feature_label(feature),
+                                checked: guild.features.iter().any(|f| f == feature),
+                                enabled: true,
+                            }.render())
                         }
+                    }
+                    div class="mt-6 border-t border-neutral-200 pt-6 space-y-2" {
+                        @if let Some(end) = planned_join_waves_end(guild) {
+                            p class="text-sm text-neutral-700" { (end) }
+                        }
+                        (form_field_group(
+                            "Planned join waves end (UTC, optional)",
+                            "planned_join_waves_until",
+                            false,
+                            None,
+                            Some("Used only while PLANNED_JOIN_WAVES is selected. Leave it empty to keep the \
+                                  feature on with no end date. When the date passes, the feature is \
+                                  removed automatically."),
+                            html! {
+                                input type="datetime-local" id="planned_join_waves_until"
+                                    name="planned_join_waves_until" value=(waves_until_value)
+                                    class=(FORM_INPUT_CLASS);
+                            },
+                        ))
                     }
                     div class="mt-6 border-t border-neutral-200 pt-6 space-y-2" {
                         label class="block text-sm font-medium text-neutral-700" {
@@ -132,7 +134,7 @@ pub fn features_tab(
     }
 }
 
-fn features_tab_readonly(guild: &GuildInfo, features_list: &[&str]) -> Markup {
+fn features_tab_readonly(guild: &GuildDetailInfo, features_list: &[&str]) -> Markup {
     let enabled: Vec<&str> = features_list
         .iter()
         .filter(|f| guild.features.iter().any(|g| g == **f))
@@ -169,6 +171,9 @@ fn features_tab_readonly(guild: &GuildInfo, features_list: &[&str]) -> Markup {
                         }
                     }
                 }
+                @if let Some(end) = planned_join_waves_end(guild) {
+                    p class="mt-4 text-sm text-neutral-700" { (end) }
+                }
             }))
         }
     }
@@ -180,57 +185,4 @@ fn filtered_features() -> Vec<&'static str> {
         .filter(|f| !HOSTED_ONLY.contains(f))
         .copied()
         .collect()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn guild_with_features(features: &[&str]) -> GuildInfo {
-        serde_json::from_value(serde_json::json!({
-            "id": "1600000000000000001",
-            "name": "Test Guild",
-            "icon": null,
-            "banner": null,
-            "owner_id": "1500000000000000001",
-            "owner_username": null,
-            "owner_global_name": null,
-            "owner_discriminator": null,
-            "features": features,
-            "nsfw_level": null,
-            "nsfw": null,
-            "content_warning_level": null,
-            "content_warning_text": null,
-            "description": null,
-            "vanity_url_code": null,
-        }))
-        .expect("guild fixture")
-    }
-
-    #[test]
-    fn editor_offers_the_opt_in_clone_features() {
-        assert!(GUILD_FEATURES.contains(&"CLONE_EMOJI_ENABLED"));
-        assert!(GUILD_FEATURES.contains(&"CLONE_STICKER_ENABLED"));
-        assert!(!DEPRECATED_FEATURES.contains(&"CLONE_EMOJI_ENABLED"));
-        assert!(!DEPRECATED_FEATURES.contains(&"CLONE_STICKER_ENABLED"));
-    }
-
-    #[test]
-    fn editor_keeps_the_deprecated_clone_features_clearable() {
-        assert!(GUILD_FEATURES.contains(&"CLONE_EMOJI_DISABLED"));
-        assert!(GUILD_FEATURES.contains(&"CLONE_STICKER_DISABLED"));
-        assert_eq!(
-            feature_label("CLONE_EMOJI_DISABLED"),
-            "CLONE_EMOJI_DISABLED (deprecated, no longer enforced)"
-        );
-        assert_eq!(feature_label("CLONE_EMOJI_ENABLED"), "CLONE_EMOJI_ENABLED");
-    }
-
-    #[test]
-    fn readonly_view_marks_a_stale_flag_as_deprecated() {
-        let guild = guild_with_features(&["CLONE_EMOJI_DISABLED", "CLONE_STICKER_ENABLED"]);
-        let markup = features_tab_readonly(&guild, GUILD_FEATURES).into_string();
-        assert!(markup.contains("CLONE_EMOJI_DISABLED (deprecated, no longer enforced)"));
-        assert!(markup.contains("CLONE_STICKER_ENABLED"));
-    }
 }

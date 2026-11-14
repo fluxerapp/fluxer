@@ -1,5 +1,5 @@
+import {allSettledWithConcurrency, mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {describe, expect, it} from 'vitest';
-import {mapWithConcurrency} from '../ConcurrencyUtils';
 
 describe('mapWithConcurrency', () => {
 	it('limits in-flight work and preserves input order when later items finish first', async () => {
@@ -69,38 +69,38 @@ describe('mapWithConcurrency', () => {
 		).resolves.toEqual([]);
 	});
 
-	it.each([
-		0,
-		-1,
-		1.5,
-		Number.NaN,
-		Number.POSITIVE_INFINITY,
-		Number.MAX_SAFE_INTEGER + 1,
-	])('rejects invalid concurrency %j before scheduling work', async (concurrency) => {
-		let calls = 0;
-		const mapper = async () => {
-			calls++;
-			return 1;
-		};
-		await expect(mapWithConcurrency([1], concurrency, mapper)).rejects.toThrow(
-			'Concurrency must be a positive safe integer',
-		);
-		await expect(mapWithConcurrency([], concurrency, mapper)).rejects.toThrow(
-			'Concurrency must be a positive safe integer',
-		);
-		expect(calls).toBe(0);
-	});
+	it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1])(
+		'rejects invalid concurrency %j before scheduling work',
+		async (concurrency) => {
+			let calls = 0;
+			const mapper = async () => {
+				calls++;
+				return 1;
+			};
+			await expect(mapWithConcurrency([1], concurrency, mapper)).rejects.toThrow(
+				'Concurrency must be a positive safe integer',
+			);
+			await expect(mapWithConcurrency([], concurrency, mapper)).rejects.toThrow(
+				'Concurrency must be a positive safe integer',
+			);
+			expect(calls).toBe(0);
+		},
+	);
 
-	it('propagates a mapper rejection without waiting for another in-flight item', async () => {
+	it('waits for in-flight work before propagating a mapper rejection', async () => {
 		const first = Promise.withResolvers<number>();
 		const second = Promise.withResolvers<number>();
 		const failure = new Error('Mapper failed');
+		const completed: Array<unknown> = [];
+		const secondCompleted = second.promise.then((value) => completed.push(value));
 		const result = mapWithConcurrency([first.promise, second.promise], 2, (promise) => promise);
-		const rejected = expect(result).rejects.toBe(failure);
+		const rejected = result.catch((error) => completed.push(error));
 		first.reject(failure);
-		await rejected;
+		await new Promise<void>((resolve) => setImmediate(resolve));
 		second.resolve(2);
-		await second.promise;
+		await Promise.all([rejected, secondCompleted]);
+		expect(completed).toEqual([2, failure]);
+		expect(completed[1]).toBe(failure);
 	});
 
 	it('rejects synchronous mapper failures without starting queued serial work', async () => {
@@ -113,5 +113,45 @@ describe('mapWithConcurrency', () => {
 			}),
 		).rejects.toBe(failure);
 		expect(started).toEqual([1]);
+	});
+});
+
+describe('allSettledWithConcurrency', () => {
+	it('continues queued work after synchronous and asynchronous failures and retains input order', async () => {
+		const syncFailure = new Error('synchronous');
+		const asyncFailure = new Error('asynchronous');
+		const started: Array<number> = [];
+		const results = await allSettledWithConcurrency([0, 1, 2, 3], 1, (item, index) => {
+			started.push(index);
+			if (item === 0) throw syncFailure;
+			if (item === 1) return Promise.reject(asyncFailure);
+			return Promise.resolve(item * 10);
+		});
+		expect(started).toEqual([0, 1, 2, 3]);
+		expect(results).toEqual([
+			{status: 'rejected', reason: syncFailure},
+			{status: 'rejected', reason: asyncFailure},
+			{status: 'fulfilled', value: 20},
+			{status: 'fulfilled', value: 30},
+		]);
+	});
+
+	it('waits for every in-flight result when a later item fails first', async () => {
+		const first = Promise.withResolvers<number>();
+		const second = Promise.withResolvers<number>();
+		const failure = new Error('later failure');
+		let completed = false;
+		const results = allSettledWithConcurrency([first.promise, second.promise], 2, (item) => item).then((value) => {
+			completed = true;
+			return value;
+		});
+		second.reject(failure);
+		await new Promise<void>((resolve) => setImmediate(resolve));
+		expect(completed).toBe(false);
+		first.resolve(10);
+		await expect(results).resolves.toEqual([
+			{status: 'fulfilled', value: 10},
+			{status: 'rejected', reason: failure},
+		]);
 	});
 });

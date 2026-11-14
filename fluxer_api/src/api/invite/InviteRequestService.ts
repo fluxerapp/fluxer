@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
+import {mapChannelToPartialResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import {guildVisitsOffer} from '@app/api/experiment/GuildVisitsGate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {
+	mapInviteToGroupDmInviteMetadataResponse,
+	mapInviteToGroupDmInviteResponse,
+	mapInviteToGuildInviteMetadataResponse,
+	mapInviteToGuildInviteResponse,
+} from '@app/api/invite/InviteModel';
+import type {InviteService} from '@app/api/invite/InviteService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Invite} from '@app/api/models/Invite';
+import type {TierContext} from '@app/api/user/AccountTier';
 import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelPartialResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildPartialResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -8,22 +27,6 @@ import type {
 	InviteMetadataResponseSchema,
 	InviteResponseSchema,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
-import type {ChannelID, GuildID, InviteCode, UserID} from '../BrandedTypes';
-import {mapChannelToPartialResponse} from '../channel/ChannelMappers';
-import type {ChannelService} from '../channel/services/ChannelService';
-import type {GuildService} from '../guild/services/GuildService';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Channel} from '../models/Channel';
-import type {Invite} from '../models/Invite';
-import {
-	mapInviteToGroupDmInviteMetadataResponse,
-	mapInviteToGroupDmInviteResponse,
-	mapInviteToGuildInviteMetadataResponse,
-	mapInviteToGuildInviteResponse,
-} from './InviteModel';
-import type {InviteService} from './InviteService';
 
 interface MappingHelpers {
 	userCacheService: UserCacheService;
@@ -39,6 +42,11 @@ interface MappingHelpers {
 	gatewayService: IGatewayService;
 }
 
+function withVisitsOffer(response: InviteResponseSchema, userId: UserID | null): InviteResponseSchema {
+	if (!('guild' in response)) return response;
+	return {...response, guild: {...response.guild, ...guildVisitsOffer(response.guild.features, userId)}};
+}
+
 export class InviteRequestService {
 	constructor(
 		private readonly inviteService: InviteService,
@@ -48,24 +56,35 @@ export class InviteRequestService {
 		private readonly userCacheService: UserCacheService,
 	) {}
 
-	async getInvite(params: {inviteCode: InviteCode; requestCache: RequestCache}): Promise<InviteResponseSchema> {
+	async getInvite(params: {
+		inviteCode: InviteCode;
+		requestCache: RequestCache;
+		userId?: UserID | null;
+	}): Promise<InviteResponseSchema> {
 		const invite = await this.inviteService.getInvite(params.inviteCode);
-		return this.mapInviteResponse(invite, params.requestCache);
+		return withVisitsOffer(await this.mapInviteResponse(invite, params.requestCache), params.userId ?? null);
 	}
 
 	async acceptInvite(params: {
 		userId: UserID;
 		inviteCode: InviteCode;
 		requestCache: RequestCache;
+		tierContext: TierContext;
+		ip?: string | null;
 	}): Promise<InviteResponseSchema> {
 		const invite = await this.inviteService.acceptInvite(params);
 		return this.mapInviteResponse(invite, params.requestCache);
 	}
 
-	async deleteInvite(params: {userId: UserID; inviteCode: InviteCode; auditLogReason?: string | null}): Promise<void> {
+	async deleteInvite(params: {
+		userId: UserID;
+		viewer: ThreadViewer;
+		inviteCode: InviteCode;
+		auditLogReason?: string | null;
+	}): Promise<void> {
 		const invite = await this.inviteService.getInvite(params.inviteCode);
 		await this.inviteService.deleteInvite(
-			{userId: params.userId, inviteCode: params.inviteCode},
+			{userId: params.userId, viewer: params.viewer, inviteCode: params.inviteCode},
 			params.auditLogReason,
 		);
 		await this.inviteService.dispatchInviteDelete(invite);
@@ -73,6 +92,7 @@ export class InviteRequestService {
 
 	async createChannelInvite(params: {
 		inviterId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		requestCache: RequestCache;
 		data: ChannelInviteCreateRequest;
@@ -81,6 +101,7 @@ export class InviteRequestService {
 		const {invite, isNew} = await this.inviteService.createInvite(
 			{
 				inviterId: params.inviterId,
+				viewer: params.viewer,
 				channelId: params.channelId,
 				maxUses: params.data.max_uses ?? 0,
 				maxAge: params.data.max_age ?? 0,
@@ -98,11 +119,13 @@ export class InviteRequestService {
 
 	async listChannelInvites(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		requestCache: RequestCache;
 	}): Promise<Array<InviteMetadataResponseSchema>> {
-		const invites = await this.inviteService.getChannelInvitesSorted({
+		const invites = await this.inviteService.getChannelInvites({
 			userId: params.userId,
+			viewer: params.viewer,
 			channelId: params.channelId,
 		});
 		return this.mapInviteList(invites, params.requestCache);
@@ -113,7 +136,7 @@ export class InviteRequestService {
 		guildId: GuildID;
 		requestCache: RequestCache;
 	}): Promise<Array<InviteMetadataResponseSchema>> {
-		const invites = await this.inviteService.getGuildInvitesSorted({
+		const invites = await this.inviteService.getGuildInvites({
 			userId: params.userId,
 			guildId: params.guildId,
 		});
@@ -130,7 +153,7 @@ export class InviteRequestService {
 				await this.channelService.channelData.operations.getChannelSystem(channelId),
 			getChannelMemberCount: async (channelId: ChannelID) =>
 				await this.channelService.channelData.operations.getChannelMemberCount(channelId),
-			getGuildResponse: async (guildId: GuildID) => await this.guildService.data.getPublicGuildData(guildId),
+			getGuildResponse: async (guildId: GuildID) => await this.guildService.data.operations.getPublicGuildData(guildId),
 			getGuildCounts: async (guildId: GuildID) => await this.gatewayService.getGuildCounts(guildId),
 			gatewayService: this.gatewayService,
 		};

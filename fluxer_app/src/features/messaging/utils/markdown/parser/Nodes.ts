@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AlertType, NodeType, TableAlignment, TimestampStyle} from './Enums';
+import type {
+	AlertType,
+	NodeType,
+	TableAlignment,
+	TimestampStyle,
+} from '@app/features/messaging/utils/markdown/parser/Enums';
 
 interface BaseNode {
 	type: NodeType;
@@ -131,7 +136,7 @@ export type Node =
 	| TableCellNode
 	| AlertNode
 	| SpoilerNode;
-export type MentionType =
+type MentionType =
 	| {
 			kind: 'User';
 			id: string;
@@ -166,7 +171,7 @@ export type MentionType =
 	| {
 			kind: 'Here';
 	  };
-export type EmojiType =
+type EmojiType =
 	| {
 			kind: 'Standard';
 			raw: string;
@@ -179,8 +184,3 @@ export type EmojiType =
 			id: string;
 			animated: boolean;
 	  };
-
-export interface ParserResult {
-	node: Node;
-	advance: number;
-}

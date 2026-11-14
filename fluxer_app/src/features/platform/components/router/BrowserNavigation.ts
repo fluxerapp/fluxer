@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export interface BrowserNavigationEntry {
+interface BrowserNavigationEntry {
 	id: string;
 	url?: string;
+	index?: number;
 }
 
 export interface BrowserNavigation {
@@ -15,8 +16,12 @@ export interface BrowserNavigation {
 
 function isNavigationEntry(value: unknown): value is BrowserNavigationEntry {
 	if (typeof value !== 'object' || value === null) return false;
-	const entry = value as {id?: unknown; url?: unknown};
-	return typeof entry.id === 'string' && (entry.url === undefined || typeof entry.url === 'string');
+	const entry = value as {id?: unknown; url?: unknown; index?: unknown};
+	return (
+		typeof entry.id === 'string' &&
+		(entry.url === undefined || typeof entry.url === 'string') &&
+		(entry.index === undefined || typeof entry.index === 'number')
+	);
 }
 
 function isBrowserNavigation(value: unknown): value is BrowserNavigation {

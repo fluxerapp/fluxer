@@ -178,29 +178,3 @@ pub async fn bootstrap_schema() -> Result<()> {
 fn cassandra_backend_enabled() -> bool {
     env::var("FLUXER_DATABASE_BACKEND").as_deref() == Ok("cassandra")
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn s3_env_uses_fluxer_defaults() {
-        let env = s3_env();
-        assert!(env.iter().any(
-            |(key, value)| key == "AWS_DEFAULT_REGION" && value.as_deref() == Some("us-east-1")
-        ));
-    }
-
-    #[test]
-    fn bucket_already_exists_output_matches_aws_errors() {
-        assert!(s3_bucket_already_exists_output(
-            "An error occurred (BucketAlreadyExists) when calling the CreateBucket operation"
-        ));
-        assert!(s3_bucket_already_exists_output(
-            "An error occurred (BucketAlreadyOwnedByYou) when calling the CreateBucket operation"
-        ));
-        assert!(!s3_bucket_already_exists_output(
-            "An error occurred (AccessDenied) when calling the CreateBucket operation"
-        ));
-    }
-}

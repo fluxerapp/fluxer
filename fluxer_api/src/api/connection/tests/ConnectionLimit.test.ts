@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
+import {ConnectionService} from '@app/api/connection/ConnectionService';
+import {ConnectionLimitReachedError} from '@app/api/connection/errors/ConnectionLimitReachedError';
+import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {NoopUnfurlerService} from '@app/api/test/mocks/NoopUnfurlerService';
+import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {
 	ConnectionTypes,
@@ -7,15 +16,6 @@ import {
 	MAX_CONNECTIONS_PER_USER,
 } from '@fluxer/constants/src/ConnectionConstants';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import type {IBlueskyOAuthService} from '../../bluesky/IBlueskyOAuthService';
-import {setCassandraQueryExecutorForTesting} from '../../database/CassandraQueryExecution';
-import type {UserConnectionRow} from '../../database/types/ConnectionTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {InMemoryCassandraQueryExecutor} from '../../test/InMemoryCassandraQueryExecutor';
-import {ConnectionRepository} from '../ConnectionRepository';
-import {ConnectionService} from '../ConnectionService';
-import {ConnectionLimitReachedError} from '../errors/ConnectionLimitReachedError';
 
 function connectionRow(userId: UserID, connectionId: string, sortOrder: number): UserConnectionRow {
 	return {
@@ -54,11 +54,7 @@ describe('ConnectionService connection limit', () => {
 		for (let index = 0; index < MAX_CONNECTIONS_PER_USER; index++) {
 			await repository.create(connectionRow(userId, `connection-${index}`, index));
 		}
-		const service = new ConnectionService(
-			repository,
-			{} as unknown as IGatewayService,
-			{} as unknown as IBlueskyOAuthService,
-		);
+		const service = new ConnectionService(repository, new NoopGatewayService(), new NoopUnfurlerService());
 
 		const error = await service.initiateConnection(userId, ConnectionTypes.DOMAIN, 'over-the-limit.example').then(
 			() => null,
@@ -78,11 +74,7 @@ describe('ConnectionService connection limit', () => {
 		for (let index = 0; index < MAX_CONNECTIONS_PER_USER - 1; index++) {
 			await repository.create(connectionRow(userId, `connection-${index}`, index));
 		}
-		const service = new ConnectionService(
-			repository,
-			{} as unknown as IGatewayService,
-			{} as unknown as IBlueskyOAuthService,
-		);
+		const service = new ConnectionService(repository, new NoopGatewayService(), new NoopUnfurlerService());
 
 		await expect(
 			service.initiateConnection(userId, ConnectionTypes.DOMAIN, 'under-the-limit.example'),

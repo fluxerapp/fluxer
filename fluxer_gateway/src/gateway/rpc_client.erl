@@ -4,13 +4,11 @@
 -typing([eqwalizer]).
 
 -export([
-    call/1,
+    call/1, call/2,
     call_with_retry/2,
     handle_http_response/2,
-    rpc_headers/1,
     rpc_url/0,
     rpc_url_meta/0,
-    is_retryable/1,
     backoff_delay/2
 ]).
 
@@ -42,9 +40,13 @@
 
 -spec call(rpc_request()) -> rpc_response().
 call(Request) ->
+    call(Request, request_timeout_ms()).
+
+-spec call(rpc_request(), pos_integer()) -> rpc_response().
+call(Request, Timeout) ->
     Trace = build_request_trace(Request),
     maybe_log_voice_request_start(Trace),
-    Result = do_request(Request),
+    Result = do_request(Request, Timeout),
     maybe_log_voice_request_response(Trace, Result),
     Result.
 
@@ -132,10 +134,9 @@ backoff_delay(Attempt, {_MaxAttempts, BaseMs, MaxMs, JitterMs}) ->
         end,
     trunc(CappedDelay + Jitter).
 
--spec do_request(rpc_request()) -> rpc_response().
-do_request(Request) ->
+-spec do_request(rpc_request(), pos_integer()) -> rpc_response().
+do_request(Request, Timeout) ->
     {Url, HostKey, IsHttps} = rpc_url_meta(),
-    Timeout = request_timeout_ms(),
     Payload = iolist_to_binary(json:encode(Request)),
     Headers = rpc_headers(Request),
     RequestOpts = #{
@@ -345,7 +346,7 @@ normalize_optional_binary(Value) when is_binary(Value) ->
 normalize_optional_binary(Value) when is_integer(Value) ->
     integer_to_binary(Value);
 normalize_optional_binary(Value) when is_list(Value) ->
-    unicode_binary(Value);
+    type_conv:unicode_to_binary(Value);
 normalize_optional_binary(_) ->
     undefined.
 
@@ -365,13 +366,9 @@ ensure_response_map(Response) when is_map(Response) ->
 ensure_response_map(_) ->
     erlang:error(badarg).
 
--spec unicode_binary(term()) -> binary() | undefined.
-unicode_binary(Value) ->
-    type_conv:unicode_to_binary(Value).
-
 -spec unicode_binary_or_default(term(), binary()) -> binary().
 unicode_binary_or_default(Value, Default) ->
-    case unicode_binary(Value) of
+    case type_conv:unicode_to_binary(Value) of
         Binary when is_binary(Binary) -> Binary;
         undefined -> Default
     end.

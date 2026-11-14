@@ -4,7 +4,9 @@ import {DesktopSettingsView} from '@app/features/app/components/dialogs/componen
 import {MobileSettingsView} from '@app/features/app/components/dialogs/components/MobileSettingsView';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {SettingsModalContainer} from '@app/features/app/components/dialogs/shared/SettingsModalLayout';
+import settingsModalStyles from '@app/features/app/components/dialogs/shared/SettingsModalLayout.module.css';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -38,7 +40,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 	({initialTab, initialSubtab, initialGuildId}) => {
 		const {i18n} = useLingui();
 		const isMobileExperience = isMobileExperienceEnabled();
-		const settingsTabs = useMemo(() => getSettingsTabs(i18n), [i18n.locale]);
+		const settingsTabs = getSettingsTabs(i18n);
 		const initialAccountSection =
 			getAccountSectionForNestedTab(initialTab) ?? getAccountSectionForLegacySection(initialSubtab);
 		const normalizedInitialTab = initialAccountSection ? ACCOUNT_SETTINGS_TAB : initialTab;
@@ -108,10 +110,21 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 		}, [currentTab?.type, mobileNav, unsavedChangesState.unsavedChanges]);
 		const handleTabSelect = useCallback(
 			(tabType: string, title: string) => {
+				if (tabType === 'plutonium') {
+					PlutoniumPageCommands.openPlutoniumPage();
+					return;
+				}
 				mobileNav.navigateTo(tabType as UserSettingsTabType, title);
 			},
 			[mobileNav],
 		);
+		const handleDesktopTabSelect = useCallback((tabType: UserSettingsTabType) => {
+			if (tabType === 'plutonium') {
+				PlutoniumPageCommands.openPlutoniumPage();
+				return;
+			}
+			setSelectedTab(tabType);
+		}, []);
 		const handleClose = useCallback(() => {
 			const checkTabId = selectedTab;
 			if (checkTabId && unsavedChangesState.unsavedChanges[checkTabId]) {
@@ -136,6 +149,10 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 		useEffect(() => {
 			const unsubscribe = ComponentBus.subscribe('USER_SETTINGS_TAB_SELECT', (args?: unknown) => {
 				const {tab, section} = (args ?? {}) as {tab?: string; section?: string};
+				if (tab === 'plutonium') {
+					PlutoniumPageCommands.openPlutoniumPage();
+					return;
+				}
 				if (tab && typeof tab === 'string') {
 					const accountSection =
 						getAccountSectionForNestedTab(tab as UserSettingsTabType) ?? getAccountSectionForLegacySection(section);
@@ -159,7 +176,12 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 		}, [isMobile, mobileNav, resolveVisibleTab, visibleSettingsTabs]);
 		return (
 			<SettingsContentKeyProvider data-flx="user.user-settings-modal.settings-content-key-provider">
-				<Modal.Root size="fullscreen" onClose={handleModalClose} data-flx="user.user-settings-modal.modal-root">
+				<Modal.Root
+					size="fullscreen"
+					className={settingsModalStyles.modalRoot}
+					onClose={handleModalClose}
+					data-flx="user.user-settings-modal.modal-root"
+				>
 					<Modal.ScreenReaderLabel
 						text={i18n._(USER_SETTINGS_LABEL_DESCRIPTOR)}
 						data-flx="user.user-settings-modal.modal-screen-reader-label"
@@ -183,7 +205,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 								groupedSettingsTabs={groupedSettingsTabs}
 								currentTab={currentTab}
 								selectedTab={selectedTab}
-								onTabSelect={setSelectedTab}
+								onTabSelect={handleDesktopTabSelect}
 								initialGuildId={initialGuildId}
 								initialSubtab={normalizedInitialSubtab}
 								pendingSection={pendingSection}

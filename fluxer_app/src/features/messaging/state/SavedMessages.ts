@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {SavedMessageEntry, SavedMessageMissingEntry} from '@app/features/messaging/models/SavedMessageEntry';
 import {SAVED_MESSAGES_PAGE_SIZE} from '@fluxer/constants/src/LimitConstants';
@@ -8,7 +9,9 @@ import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/Me
 import {makeAutoObservable} from 'mobx';
 
 function byIdDescending(a: {id: string}, b: {id: string}): number {
-	return b.id > a.id ? 1 : a.id > b.id ? -1 : 0;
+	if (b.id > a.id) return 1;
+	if (a.id > b.id) return -1;
+	return 0;
 }
 
 class SavedMessages {
@@ -29,10 +32,6 @@ class SavedMessages {
 			this.savedMessages.some((message) => message.id === messageId) ||
 			this.missingSavedMessages.some((entry) => entry.id === messageId)
 		);
-	}
-
-	getMissingEntries(): Array<SavedMessageMissingEntry> {
-		return this.missingSavedMessages.slice();
 	}
 
 	getHasMore(): boolean {
@@ -130,7 +129,7 @@ class SavedMessages {
 		this.savedMessages = [new Message(message, {missingReactions: 'preserve'}), ...this.savedMessages];
 	}
 
-	private touchMessage(messageId: string): void {
+	handleMessageReactionChange(messageId: string): void {
 		const index = this.savedMessages.findIndex((m) => m.id === messageId);
 		if (index === -1) return;
 		this.savedMessages = [
@@ -139,22 +138,8 @@ class SavedMessages {
 			...this.savedMessages.slice(index + 1),
 		];
 	}
-
-	handleMessageReactionAdd(messageId: string): void {
-		this.touchMessage(messageId);
-	}
-
-	handleMessageReactionRemove(messageId: string): void {
-		this.touchMessage(messageId);
-	}
-
-	handleMessageReactionRemoveAll(messageId: string): void {
-		this.touchMessage(messageId);
-	}
-
-	handleMessageReactionRemoveEmoji(messageId: string): void {
-		this.touchMessage(messageId);
-	}
 }
 
-export default new SavedMessages();
+const savedMessages = new SavedMessages();
+ResettableStates.register(savedMessages, savedMessages.handleGatewayReady);
+export default savedMessages;

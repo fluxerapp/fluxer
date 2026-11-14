@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import type {MessageCall} from '../database/types/MessageTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {MessageCall} from '@app/api/database/types/MessageTypes';
 
 export class CallInfo {
 	readonly participantIds: Set<UserID>;

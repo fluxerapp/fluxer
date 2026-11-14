@@ -9,6 +9,8 @@ pub struct AuditLogEntry {
     #[serde(default)]
     pub admin_user: Option<AuditLogUserSummary>,
     pub action: String,
+    #[serde(default)]
+    pub access: Option<String>,
     pub target_id: String,
     pub target_type: String,
     #[serde(default)]

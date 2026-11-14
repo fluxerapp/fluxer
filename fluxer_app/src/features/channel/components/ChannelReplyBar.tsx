@@ -52,7 +52,7 @@ const CLICK_TO_ENABLE_PINGING_THE_USER_YOU_RE_DESCRIPTOR = msg({
 	comment: 'Tooltip on the reply bar mention toggle when mention-on-reply is currently off.',
 });
 const MENTION_REPLIED_USER_DESCRIPTOR = msg({
-	message: 'Mention replied user',
+	message: "Mention the user you're replying to",
 	comment: 'Label next to the mention toggle in the reply bar.',
 });
 const ON_DESCRIPTOR = msg({

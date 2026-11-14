@@ -45,41 +45,11 @@
 	align-items: start;
 }
 
-.left {
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
-	min-height: 0;
-	min-width: 0;
-	width: 100%;
-	padding-top: 0.75rem;
-}
-
-@media (min-width: 640px) {
-	.left {
-		padding-top: 1.25rem;
-		padding-right: 0.5rem;
-	}
-}
-
-.leftSticky {
-	position: sticky;
-	top: 0;
-}
-
 .leftTitle {
 	margin-bottom: 0.25rem;
 	font-weight: 600;
 	font-size: 0.75rem;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 	color: var(--text-tertiary);
-}
-
-.leftScroller {
-	display: flex;
-	flex: 1 1 auto;
-	min-height: 0;
 }
 
 .right {
@@ -170,7 +140,7 @@
 	gap: 0.5rem;
 	border-radius: 0.25rem;
 	padding: 0.375rem 0.5rem;
-	text-align: left;
+	text-align: start;
 	cursor: pointer;
 	background: transparent;
 }
@@ -202,14 +172,6 @@
 	font-size: 0.875rem;
 	line-height: 1.2;
 	max-height: 1.2em;
-}
-
-.icon {
-	width: 1rem;
-	height: 1rem;
-	margin-right: 0.375rem;
-	display: inline-flex;
-	align-items: center;
 }
 
 .permSearchRow {
@@ -307,7 +269,7 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 0.875rem;
-	text-align: left;
+	text-align: start;
 	line-height: 1.2;
 	max-height: 1.2em;
 }

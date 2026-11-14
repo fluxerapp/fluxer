@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {getUnreadThreadIds} from '@app/features/threads/utils/ThreadViewUtils';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {HideIcon, MarkAsReadIcon, ViewDetailsIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {
@@ -53,6 +55,8 @@ export const FluxerButtonContextMenu: React.FC<FluxerButtonContextMenuProps> = o
 	const inlineDmsCollapsed = SidebarPreferences.inlineDmsCollapsed;
 	const showCollapsedUnreadDmsBadge = SidebarPreferences.showCollapsedUnreadDmsBadge;
 	const showIncomingFriendRequestBadge = SidebarPreferences.showIncomingFriendRequestBadge;
+	const directMessagesDisabled = RuntimeConfig.directMessagesDisabled;
+	const friendsDisabled = RuntimeConfig.friendsDisabled;
 	const guilds = Guilds.getGuilds();
 	const dmChannels = Channels.dmChannels;
 	const unreadDmIds = dmChannels.filter((channel) => ReadStates.hasUnread(channel.id)).map((channel) => channel.id);
@@ -63,6 +67,7 @@ export const FluxerButtonContextMenu: React.FC<FluxerButtonContextMenuProps> = o
 				unreadGuildChannelIds.push(channel.id);
 			}
 		}
+		unreadGuildChannelIds.push(...getUnreadThreadIds(guild.id));
 	}
 	const handleMarkAllDmsRead = useCallback(() => {
 		if (unreadDmIds.length > 0) {
@@ -89,41 +94,47 @@ export const FluxerButtonContextMenu: React.FC<FluxerButtonContextMenuProps> = o
 	return (
 		<>
 			<MenuGroup data-flx="ui.action-menu.fluxer-button-context-menu.menu-group">
-				<MenuItem
-					icon={<MarkAsReadIcon data-flx="ui.action-menu.fluxer-button-context-menu.mark-as-read-icon" />}
-					onClick={handleMarkAllDmsRead}
-					disabled={unreadDmIds.length === 0}
-					data-flx="ui.action-menu.fluxer-button-context-menu.menu-item.mark-all-dms-read"
-				>
-					{i18n._(MARK_ALL_DMS_AS_READ_DESCRIPTOR)}
-				</MenuItem>
-				<MenuItem
-					icon={
-						inlineDmsCollapsed ? (
-							<ViewDetailsIcon data-flx="ui.action-menu.fluxer-button-context-menu.view-details-icon" />
-						) : (
-							<HideIcon data-flx="ui.action-menu.fluxer-button-context-menu.hide-icon" />
-						)
-					}
-					onClick={handleToggleInlineDms}
-					data-flx="ui.action-menu.fluxer-button-context-menu.menu-item.toggle-inline-dms"
-				>
-					{inlineDmsCollapsed ? i18n._(SHOW_INLINE_DM_LIST_DESCRIPTOR) : i18n._(COLLAPSE_INLINE_DM_LIST_DESCRIPTOR)}
-				</MenuItem>
-				<CheckboxItem
-					checked={showCollapsedUnreadDmsBadge}
-					onCheckedChange={handleToggleCollapsedUnreadDmsBadge}
-					data-flx="ui.action-menu.fluxer-button-context-menu.checkbox-item"
-				>
-					{i18n._(SHOW_UNREAD_DM_COUNT_WHEN_COLLAPSED_DESCRIPTOR)}
-				</CheckboxItem>
-				<CheckboxItem
-					checked={showIncomingFriendRequestBadge}
-					onCheckedChange={handleToggleIncomingFriendRequestBadge}
-					data-flx="ui.action-menu.fluxer-button-context-menu.checkbox-item--2"
-				>
-					{i18n._(SHOW_INCOMING_FRIEND_REQUEST_COUNT_DESCRIPTOR)}
-				</CheckboxItem>
+				{!directMessagesDisabled && (
+					<>
+						<MenuItem
+							icon={<MarkAsReadIcon data-flx="ui.action-menu.fluxer-button-context-menu.mark-as-read-icon" />}
+							onClick={handleMarkAllDmsRead}
+							disabled={unreadDmIds.length === 0}
+							data-flx="ui.action-menu.fluxer-button-context-menu.menu-item.mark-all-dms-read"
+						>
+							{i18n._(MARK_ALL_DMS_AS_READ_DESCRIPTOR)}
+						</MenuItem>
+						<MenuItem
+							icon={
+								inlineDmsCollapsed ? (
+									<ViewDetailsIcon data-flx="ui.action-menu.fluxer-button-context-menu.view-details-icon" />
+								) : (
+									<HideIcon data-flx="ui.action-menu.fluxer-button-context-menu.hide-icon" />
+								)
+							}
+							onClick={handleToggleInlineDms}
+							data-flx="ui.action-menu.fluxer-button-context-menu.menu-item.toggle-inline-dms"
+						>
+							{inlineDmsCollapsed ? i18n._(SHOW_INLINE_DM_LIST_DESCRIPTOR) : i18n._(COLLAPSE_INLINE_DM_LIST_DESCRIPTOR)}
+						</MenuItem>
+						<CheckboxItem
+							checked={showCollapsedUnreadDmsBadge}
+							onCheckedChange={handleToggleCollapsedUnreadDmsBadge}
+							data-flx="ui.action-menu.fluxer-button-context-menu.checkbox-item"
+						>
+							{i18n._(SHOW_UNREAD_DM_COUNT_WHEN_COLLAPSED_DESCRIPTOR)}
+						</CheckboxItem>
+					</>
+				)}
+				{!friendsDisabled && (
+					<CheckboxItem
+						checked={showIncomingFriendRequestBadge}
+						onCheckedChange={handleToggleIncomingFriendRequestBadge}
+						data-flx="ui.action-menu.fluxer-button-context-menu.checkbox-item--2"
+					>
+						{i18n._(SHOW_INCOMING_FRIEND_REQUEST_COUNT_DESCRIPTOR)}
+					</CheckboxItem>
+				)}
 				<MenuItem
 					icon={<MarkAsReadIcon data-flx="ui.action-menu.fluxer-button-context-menu.mark-as-read-icon--2" />}
 					onClick={handleMarkAllCommunitiesRead}
@@ -140,13 +151,15 @@ export const FluxerButtonContextMenu: React.FC<FluxerButtonContextMenuProps> = o
 					data-flx="ui.action-menu.fluxer-button-context-menu.bulk-guild-settings-menu-items"
 				/>
 			</MenuGroup>
-			<MenuGroup data-flx="ui.action-menu.fluxer-button-context-menu.menu-group--3">
-				<BulkDMSettingsMenuItems
-					channels={dmChannels}
-					onClose={onClose}
-					data-flx="ui.action-menu.fluxer-button-context-menu.bulk-dm-settings-menu-items"
-				/>
-			</MenuGroup>
+			{!directMessagesDisabled && (
+				<MenuGroup data-flx="ui.action-menu.fluxer-button-context-menu.menu-group--3">
+					<BulkDMSettingsMenuItems
+						channels={dmChannels}
+						onClose={onClose}
+						data-flx="ui.action-menu.fluxer-button-context-menu.bulk-dm-settings-menu-items"
+					/>
+				</MenuGroup>
+			)}
 		</>
 	);
 });

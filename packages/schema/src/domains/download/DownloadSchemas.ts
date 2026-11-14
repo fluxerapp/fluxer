@@ -14,8 +14,6 @@ export const DesktopChannelEnum = withOpenApiType(
 	'DesktopChannel',
 );
 
-export type DesktopChannel = z.infer<typeof DesktopChannelEnum>;
-
 export const DesktopPlatformEnum = withOpenApiType(
 	createNamedStringLiteralUnion(
 		[
@@ -28,8 +26,6 @@ export const DesktopPlatformEnum = withOpenApiType(
 	'DesktopPlatform',
 );
 
-export type DesktopPlatform = z.infer<typeof DesktopPlatformEnum>;
-
 export const DesktopArchEnum = withOpenApiType(
 	createNamedStringLiteralUnion(
 		[
@@ -40,8 +36,6 @@ export const DesktopArchEnum = withOpenApiType(
 	),
 	'DesktopArch',
 );
-
-export type DesktopArch = z.infer<typeof DesktopArchEnum>;
 
 export const DesktopFormatEnum = withOpenApiType(
 	createNamedStringLiteralUnion(
@@ -60,22 +54,10 @@ export const DesktopFormatEnum = withOpenApiType(
 	'DesktopFormat',
 );
 
-export type DesktopFormat = z.infer<typeof DesktopFormatEnum>;
-
 const VersionString = z
 	.string()
 	.regex(/^\d+\.\d+\.\d+$/u)
 	.describe('Semantic version string');
-const TestBuildFlag = z
-	.string()
-	.optional()
-	.transform((value) => value === '1' || value?.toLowerCase() === 'true')
-	.describe('When set to 1/true, resolve against the desktop-test/ bucket prefix instead of desktop/.');
-export const DesktopTestBuildQuery = z.object({
-	test: TestBuildFlag,
-});
-
-export type DesktopTestBuildQuery = z.infer<typeof DesktopTestBuildQuery>;
 
 export const DesktopVersionsParam = z.object({
 	channel: DesktopChannelEnum,
@@ -115,44 +97,20 @@ export const DesktopVersionedChecksumRedirectParam = DesktopChecksumRedirectPara
 
 export type DesktopVersionedChecksumRedirectParam = z.infer<typeof DesktopVersionedChecksumRedirectParam>;
 
-export const DesktopVersionsQuery = z.object({
-	limit: z.coerce.number().int().min(1).max(100).default(25).describe('Maximum number of versions to return'),
-	before: VersionString.optional().describe('Return versions before this version'),
-	after: VersionString.optional().describe('Return versions after this version'),
-	test: TestBuildFlag,
+const DesktopZsyncFormat = z
+	.templateLiteral([DesktopFormatEnum, '.zsync'])
+	.transform((value) => value.slice(0, -'.zsync'.length))
+	.pipe(z.literal('appimage'))
+	.describe('Package format followed by .zsync, which only appimage publishes');
+
+export const DesktopZsyncRedirectParam = DesktopVersionsParam.extend({
+	format: DesktopZsyncFormat,
 });
 
-export type DesktopVersionsQuery = z.infer<typeof DesktopVersionsQuery>;
+export type DesktopZsyncRedirectParam = z.infer<typeof DesktopZsyncRedirectParam>;
 
-const VersionFileResponse = z.object({
-	url: z.string().describe('Download URL for this file'),
-	sha256: z.string().nullable().describe('SHA-256 hash of the file for verification'),
-	checksum_url: z.string().nullable().describe('Plain text .sha256 checksum file URL for this file'),
+export const DesktopVersionedZsyncRedirectParam = DesktopZsyncRedirectParam.extend({
+	version: VersionString,
 });
 
-export const VersionInfoResponse = z.object({
-	version: z.string().describe('Semantic version string (e.g., 1.0.0)'),
-	pub_date: z.string().describe('ISO 8601 date when this version was published'),
-	minimum_system_version: z
-		.string()
-		.nullable()
-		.optional()
-		.describe('Minimum operating system version required by this release, when applicable'),
-	files: z
-		.partialRecord(DesktopFormatEnum, VersionFileResponse.optional())
-		.describe('Map of package format to download files'),
-});
-
-export type VersionInfoResponse = z.infer<typeof VersionInfoResponse>;
-
-export const DesktopVersionsResponse = z.object({
-	versions: z.array(VersionInfoResponse).describe('Array of available versions'),
-	has_more: z.boolean().describe('Whether more versions are available to fetch'),
-});
-
-export type DesktopVersionsResponse = z.infer<typeof DesktopVersionsResponse>;
-
-export const DownloadFileResponse = z.file().describe('The downloadable release file');
-export const DownloadChecksumResponse = z
-	.string()
-	.describe('The release file checksum in SHA-256 checksum file format');
+export type DesktopVersionedZsyncRedirectParam = z.infer<typeof DesktopVersionedZsyncRedirectParam>;

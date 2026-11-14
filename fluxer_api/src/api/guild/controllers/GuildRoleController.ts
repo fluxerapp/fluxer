@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, createRoleID} from '@app/api/BrandedTypes';
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {jsonAssetBodyLimit, RequestBodyLimit} from '@app/api/middleware/RequestBodyLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {GuildIdParam, GuildIdRoleIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	GuildRoleCreateRequest,
@@ -8,16 +18,6 @@ import {
 	GuildRoleUpdateRequest,
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import {GuildRoleListResponse, GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
-
-import {createGuildID, createRoleID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {requireOAuth2ScopeForBearer} from '../../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {CLIENT_FEATURES_HEADER, parseClientFeaturesHeader} from '../../utils/featureUtils';
-import {Validator} from '../../Validator';
 
 export function GuildRoleController(app: HonoApp) {
 	app.get(
@@ -39,11 +39,12 @@ export function GuildRoleController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
-			return ctx.json(await ctx.get('guildService').roles.listRoles({userId, guildId}));
+			return ctx.json(await ctx.get('guildService').roles.listRoles({userId, guildId, viewer: viewerFromCtx(ctx)}));
 		},
 	);
 	app.post(
 		'/guilds/:guild_id/roles',
+		RequestBodyLimit(jsonAssetBodyLimit({role_icon: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_ROLE_CREATE),
 		LoginRequired,
 		Validator('param', GuildIdParam),
@@ -56,16 +57,18 @@ export function GuildRoleController(app: HonoApp) {
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],
 			description:
-				'Create guild role. Requires manage_roles permission. Creates a new role with specified name, permissions, and color.',
+				'Create guild role. Requires manage_roles permission. Creates a new role with specified name, permissions, colour and an optional icon image or Unicode emoji.',
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const data = ctx.req.valid('json');
-			const clientFeatures = parseClientFeaturesHeader(ctx.req.header(CLIENT_FEATURES_HEADER));
+			const clientFeatures = ctx.get('clientFeatures');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			return ctx.json(
-				await ctx.get('guildService').roles.createRole({userId, guildId, data, clientFeatures}, auditLogReason),
+				await ctx
+					.get('guildService')
+					.roles.createRole({userId, guildId, data, clientFeatures, viewer: viewerFromCtx(ctx)}, auditLogReason),
 			);
 		},
 	);
@@ -126,6 +129,7 @@ export function GuildRoleController(app: HonoApp) {
 	);
 	app.patch(
 		'/guilds/:guild_id/roles/:role_id',
+		RequestBodyLimit(jsonAssetBodyLimit({role_icon: 1})),
 		RateLimitMiddleware(RateLimitConfigs.GUILD_ROLE_UPDATE),
 		LoginRequired,
 		Validator('param', GuildIdRoleIdParam),
@@ -138,7 +142,7 @@ export function GuildRoleController(app: HonoApp) {
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],
 			description:
-				'Update guild role. Requires manage_roles permission. Modifies role name, permissions, color, and other settings.',
+				'Update guild role. Requires manage_roles permission. Modifies role name, permissions, colour, icon and other settings.',
 		}),
 		async (ctx) => {
 			const {guild_id, role_id} = ctx.req.valid('param');
@@ -146,10 +150,15 @@ export function GuildRoleController(app: HonoApp) {
 			const guildId = createGuildID(guild_id);
 			const roleId = createRoleID(role_id);
 			const data = ctx.req.valid('json');
-			const clientFeatures = parseClientFeaturesHeader(ctx.req.header(CLIENT_FEATURES_HEADER));
+			const clientFeatures = ctx.get('clientFeatures');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			return ctx.json(
-				await ctx.get('guildService').roles.updateRole({userId, guildId, roleId, data, clientFeatures}, auditLogReason),
+				await ctx
+					.get('guildService')
+					.roles.updateRole(
+						{userId, guildId, roleId, data, clientFeatures, viewer: viewerFromCtx(ctx)},
+						auditLogReason,
+					),
 			);
 		},
 	);

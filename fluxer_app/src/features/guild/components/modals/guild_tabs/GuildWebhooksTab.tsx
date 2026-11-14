@@ -10,6 +10,7 @@ import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionU
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {formatChannelSettingsPath} from '@app/features/user/components/settings_utils/ChannelSettingsConstants';
 import * as WebhookCommands from '@app/features/webhook/commands/WebhookCommands';
+import {FollowedChannelListItem} from '@app/features/webhook/components/FollowedChannelListItem';
 import {WebhookListItem} from '@app/features/webhook/components/WebhookListItem';
 import {useWebhookUpdates} from '@app/features/webhook/hooks/useWebhookUpdates';
 import type {Webhook} from '@app/features/webhook/models/Webhook';
@@ -70,6 +71,24 @@ const GuildWebhooksTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			return a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'});
 		});
 	}, [webhooks, channelNameMap]);
+	const incomingWebhooks = useMemo(
+		() => sortedWebhooks.filter((webhook) => !webhook.isChannelFollower),
+		[sortedWebhooks],
+	);
+	const followerWebhookGroups = useMemo(() => {
+		const groups = new Map<string, Array<Webhook>>();
+		for (const webhook of sortedWebhooks) {
+			if (!webhook.isChannelFollower) continue;
+			const group = groups.get(webhook.channelId);
+			if (group) group.push(webhook);
+			else groups.set(webhook.channelId, [webhook]);
+		}
+		return Array.from(groups, ([channelId, items]) => ({
+			channelId,
+			channelName: channelNameMap.get(channelId) ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR),
+			items,
+		}));
+	}, [sortedWebhooks, channelNameMap, i18n.locale]);
 	useEffect(() => {
 		if (!canManageWebhooks) return;
 		if (fetchStatus === 'idle') {
@@ -131,9 +150,9 @@ const GuildWebhooksTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					data-flx="guild.guild-tabs.guild-webhooks-tab.status-slate"
 				/>
 			)}
-			{fetchStatus === 'success' && sortedWebhooks.length > 0 && (
+			{fetchStatus === 'success' && incomingWebhooks.length > 0 && (
 				<div className={styles.webhookList} data-flx="guild.guild-tabs.guild-webhooks-tab.webhook-list">
-					{sortedWebhooks.map((webhook: Webhook) => (
+					{incomingWebhooks.map((webhook: Webhook) => (
 						<WebhookListItem
 							key={webhook.id}
 							webhook={webhook}
@@ -150,7 +169,7 @@ const GuildWebhooksTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					))}
 				</div>
 			)}
-			{fetchStatus === 'success' && sortedWebhooks.length === 0 && (
+			{fetchStatus === 'success' && incomingWebhooks.length === 0 && (
 				<StatusSlate
 					Icon={RobotIcon}
 					title={<Trans>No webhooks</Trans>}
@@ -159,9 +178,60 @@ const GuildWebhooksTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 							This community doesn't have any webhooks yet. Go to {channelWebhooksSettingsPath} to create one.
 						</Trans>
 					}
-					fullHeight={true}
+					fullHeight={followerWebhookGroups.length === 0}
 					data-flx="guild.guild-tabs.guild-webhooks-tab.status-slate--2"
 				/>
+			)}
+			{fetchStatus === 'success' && followerWebhookGroups.length > 0 && (
+				<section className={styles.followedSection} data-flx="guild.guild-tabs.guild-webhooks-tab.followed-section">
+					<div data-flx="guild.guild-tabs.guild-webhooks-tab.followed-header">
+						<h3 className={styles.sectionTitle} data-flx="guild.guild-tabs.guild-webhooks-tab.followed-title">
+							<Trans comment="Section heading in the community webhook settings that lists announcement channels followed into this community.">
+								Followed channels
+							</Trans>
+						</h3>
+						<p
+							className={styles.sectionDescription}
+							data-flx="guild.guild-tabs.guild-webhooks-tab.followed-description"
+						>
+							<Trans comment="Description of the followed channels section in the community webhook settings.">
+								Messages published in these announcement channels are copied into your channels.
+							</Trans>
+						</p>
+					</div>
+					{followerWebhookGroups.map((group) => {
+						const targetChannelName = group.channelName;
+						return (
+							<div
+								key={group.channelId}
+								className={styles.followedGroup}
+								data-flx="guild.guild-tabs.guild-webhooks-tab.followed-group"
+							>
+								<h4
+									className={styles.followedGroupTitle}
+									data-flx="guild.guild-tabs.guild-webhooks-tab.followed-group-title"
+								>
+									<Trans comment="Group heading for followed announcement channels that post into one channel. targetChannelName is that channel, without the leading #.">
+										Delivered to #{targetChannelName}
+									</Trans>
+								</h4>
+								<div className={styles.webhookList} data-flx="guild.guild-tabs.guild-webhooks-tab.followed-list">
+									{group.items.map((webhook) => (
+										<FollowedChannelListItem
+											key={webhook.id}
+											webhook={webhook}
+											onUpdate={handleUpdate}
+											isExpanded={expandedIds.has(webhook.id)}
+											onExpandedChange={(open) => setExpanded(webhook.id, open)}
+											formVersion={formVersion}
+											data-flx="guild.guild-tabs.guild-webhooks-tab.followed-channel-list-item"
+										/>
+									))}
+								</div>
+							</div>
+						);
+					})}
+				</section>
 			)}
 		</div>
 	);

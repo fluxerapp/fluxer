@@ -2,7 +2,7 @@
 
 import type {KeybindCommand, KeyCombo} from '@app/features/input/state/InputKeybind';
 
-export function comboModifierSignature(combo: KeyCombo): string {
+function comboModifierSignature(combo: KeyCombo): string {
 	return [
 		combo.ctrlOrMeta ? 'mod' : '',
 		combo.ctrl ? 'ctrl' : '',

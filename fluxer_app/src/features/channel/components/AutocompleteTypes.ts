@@ -9,6 +9,7 @@ import type {GuildSticker} from '@app/features/expressions/models/GuildSticker';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import type {User} from '@app/features/user/models/User';
+import type React from 'react';
 
 export interface AutocompleteMentionMemberOption {
 	type: 'mention';
@@ -83,3 +84,14 @@ export const isCommandChoice = (
 export const isCommandOptionalAdd = (
 	o: AutocompleteOption,
 ): o is {type: 'commandOptionalAdd'; name: string; description: string} => o.type === 'commandOptionalAdd';
+
+export interface AutocompleteListProps {
+	onSelect: (option: AutocompleteOption) => void;
+	keyboardFocusIndex: number;
+	hoverIndex: number;
+	options: Array<AutocompleteOption>;
+	onMouseEnter: (index: number) => void;
+	onMouseLeave: () => void;
+	rowRefs?: React.RefObject<Array<HTMLButtonElement | null>>;
+	getOptionId?: (index: number) => string;
+}

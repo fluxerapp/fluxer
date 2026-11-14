@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentID, MemeID, UserID} from '@app/api/BrandedTypes';
+import {userIdToChannelId} from '@app/api/BrandedTypes';
+import type {FavoriteMemeRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import type {GifMediaFormat} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {AttachmentID, MemeID, UserID} from '../BrandedTypes';
-import {userIdToChannelId} from '../BrandedTypes';
-import type {FavoriteMemeRow} from '../database/types/UserTypes';
-import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
 
 export class FavoriteMeme {
 	readonly id: MemeID;
@@ -27,6 +27,7 @@ export class FavoriteMeme {
 	readonly gifProvider: string | null;
 	readonly mediaFormats: Record<string, GifMediaFormat> | null;
 	readonly placeholder: string | null;
+	readonly nsfw: boolean | null;
 	readonly createdAt: Date;
 	readonly version: number;
 
@@ -57,6 +58,7 @@ export class FavoriteMeme {
 		}
 		this.mediaFormats = parseMediaFormats(row.media_formats);
 		this.placeholder = row.placeholder ?? null;
+		this.nsfw = row.nsfw ?? null;
 		this.createdAt = snowflakeToDate(this.id);
 		this.version = row.version;
 	}
@@ -81,6 +83,7 @@ export class FavoriteMeme {
 			tenor_id_str: this.gifProvider === 'tenor' ? this.gifSlug : null,
 			media_formats: this.mediaFormats ? JSON.stringify(this.mediaFormats) : null,
 			placeholder: this.placeholder,
+			nsfw: this.nsfw,
 			version: this.version,
 		};
 	}

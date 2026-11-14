@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type {DataStream_Chunk, Encryption_Type} from '@livekit/protocol';
-import type {Future} from './utils.ts';
 
 export type SimulationOptions = {
 	publish?: {
@@ -24,6 +23,17 @@ export interface SendTextOptions {
 	attachments?: Array<File>;
 	onProgress?: (progress: number) => void;
 	attributes?: Record<string, string>;
+	compress?: boolean;
+}
+
+export interface SendBytesOptions {
+	topic?: string;
+	destinationIdentities?: Array<string>;
+	attributes?: Record<string, string>;
+	onProgress?: (progress: number) => void;
+	compress?: boolean;
+	name?: string;
+	mimeType?: string;
 }
 
 export interface StreamTextOptions {
@@ -51,6 +61,7 @@ export type StreamBytesOptions = {
 export type SendFileOptions = Pick<StreamBytesOptions, 'topic' | 'mimeType' | 'destinationIdentities'> & {
 	onProgress?: (progress: number) => void;
 	encryptionType?: Encryption_Type.NONE;
+	compress?: boolean;
 };
 
 export type DataPublishOptions = {
@@ -77,7 +88,8 @@ export type SimulationScenario =
 	| 'subscriber-bandwidth'
 	| 'disconnect-signal-on-resume'
 	| 'disconnect-signal-on-resume-no-messages'
-	| 'leave-full-reconnect';
+	| 'leave-full-reconnect'
+	| 'fail-on-v1-path';
 
 export type LoggerOptions = {
 	loggerName?: string;
@@ -109,7 +121,6 @@ export interface StreamController<T extends DataStream_Chunk> {
 	startTime: number;
 	endTime?: number;
 	sendingParticipantIdentity: string;
-	outOfBandFailureRejectingFuture: Future<never, Error>;
 }
 
 export interface BaseStreamInfo {

@@ -171,8 +171,8 @@
 .rdpNav {
 	position: absolute;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline-start: 0;
+	inset-inline-end: 0;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -273,13 +273,13 @@
 .rdpToday .rdpDayButton {
 	font-weight: 700;
 	text-decoration: underline;
-	text-decoration-color: var(--brand-primary);
+	text-decoration-color: var(--brand-primary-foreground);
 	text-underline-offset: 0.1875rem;
 }
 
 .rdpSelected .rdpDayButton {
 	background-color: var(--brand-primary);
-	color: #fff;
+	color: var(--brand-primary-fill);
 	font-weight: 600;
 }
 

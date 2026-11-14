@@ -207,6 +207,7 @@ export function screenCaptureToDisplayMediaStreamOptions(
 	return {
 		audio: audioConstraints,
 		video: videoConstraints,
+		controller: options.controller,
 		selfBrowserSurface: options.selfBrowserSurface,
 		surfaceSwitching: options.surfaceSwitching,
 		systemAudio: options.systemAudio,
@@ -265,7 +266,9 @@ export function getLogContextFromTrack(track: Track | TrackPublication): Record<
 }
 
 export function supportsSynchronizationSources(): boolean {
-	return typeof RTCRtpReceiver !== 'undefined' && 'getSynchronizationSources' in RTCRtpReceiver;
+	return (
+		typeof RTCRtpReceiver !== 'undefined' && typeof RTCRtpReceiver.prototype.getSynchronizationSources === 'function'
+	);
 }
 
 export function diffAttributes(

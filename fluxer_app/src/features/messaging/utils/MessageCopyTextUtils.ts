@@ -1,9 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {embedAllowsMarkdown} from '@app/features/channel/components/embeds/EmbedRenderUtils';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
-import {parseAndRenderToPlaintext} from '@app/features/messaging/utils/markdown/Plaintext';
+import {
+	normaliseUrlForComparison,
+	type PlaintextRenderOptions,
+	parseAndRenderToPlaintext,
+	renderAstToPlaintext,
+} from '@app/features/messaging/utils/markdown/Plaintext';
+import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import {MessageEmbedTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
@@ -31,7 +40,6 @@ interface MessageCopyTextOptions extends MarkdownCopyContext {
 }
 
 interface EmbedCopyTextOptions extends MarkdownCopyContext {
-	includeFields?: boolean;
 	omittedUrls?: ReadonlySet<string>;
 }
 
@@ -67,16 +75,7 @@ function normaliseCopyBlock(value?: string | null): string {
 		.trim();
 }
 
-function normaliseUrlForComparison(value?: string | null): string | null {
-	if (!value) {
-		return null;
-	}
-	try {
-		return new URL(value).href.replace(/\/$/u, '');
-	} catch {
-		return null;
-	}
-}
+const COPY_URL_PATTERN = /\bhttps?:\/\/[^\s<>"'`]+/giu;
 
 function trimUrlCandidate(value: string): string {
 	return value.replace(/[),.;:!?]+$/u, '');
@@ -84,7 +83,7 @@ function trimUrlCandidate(value: string): string {
 
 function extractNormalisedUrls(value?: string | null): Set<string> {
 	const urls = new Set<string>();
-	const matches = value?.matchAll(/\bhttps?:\/\/[^\s<>"'`]+/giu) ?? [];
+	const matches = value?.matchAll(COPY_URL_PATTERN) ?? [];
 	for (const match of matches) {
 		const normalisedUrl = normaliseUrlForComparison(trimUrlCandidate(match[0]));
 		if (normalisedUrl) {
@@ -102,6 +101,17 @@ function buildOmittedEmbedUrls(content?: string | null, renderedContent?: string
 	return urls;
 }
 
+function createPlaintextCopyOptions(context: MarkdownCopyContext): PlaintextRenderOptions {
+	return {
+		channelId: context.channelId,
+		preserveMarkdown: false,
+		includeEmojiNames: true,
+		includeLinkUrls: true,
+		mentionChannels: context.mentionChannels,
+		i18n: context.i18n,
+	};
+}
+
 function renderMarkdownCopyText(
 	content: string | undefined | null,
 	parserFlags: number,
@@ -110,13 +120,34 @@ function renderMarkdownCopyText(
 	if (!content) {
 		return '';
 	}
-	return parseAndRenderToPlaintext(content, parserFlags, {
-		channelId: context.channelId,
-		preserveMarkdown: false,
-		includeEmojiNames: true,
-		includeLinkUrls: true,
-		mentionChannels: context.mentionChannels,
-		i18n: context.i18n,
+	return parseAndRenderToPlaintext(content, parserFlags, createPlaintextCopyOptions(context));
+}
+
+export function buildMessageContentCopyText(nodes: Array<Node>, context: MarkdownCopyContext): string {
+	return normaliseCopyBlock(renderAstToPlaintext(nodes, createPlaintextCopyOptions(context)));
+}
+
+export function freshAttachmentUrlsInText(text: string): string {
+	return text.replace(COPY_URL_PATTERN, (match) => {
+		const url = trimUrlCandidate(match);
+		return `${AttachmentUrlRefresher.fresh(url, {refreshUnsigned: true})}${match.slice(url.length)}`;
+	});
+}
+
+export async function refreshAttachmentUrlsInText(text: string): Promise<string> {
+	const nowMs = Date.now();
+	const urls = new Set(
+		Array.from(text.matchAll(COPY_URL_PATTERN), (match) => trimUrlCandidate(match[0])).filter((url) =>
+			attachmentUrlMayNeedRefresh(url, nowMs),
+		),
+	);
+	if (urls.size === 0) return text;
+	const refreshed = new Map(
+		await Promise.all(Array.from(urls, async (url) => [url, await AttachmentUrlRefresher.refresh(url)] as const)),
+	);
+	return text.replace(COPY_URL_PATTERN, (match) => {
+		const url = trimUrlCandidate(match);
+		return `${refreshed.get(url) ?? url}${match.slice(url.length)}`;
 	});
 }
 
@@ -180,16 +211,21 @@ export function buildMessageEmbedCopyText(embed: MessageEmbed, options: EmbedCop
 	const blocks: Array<string> = [];
 	appendCopyBlock(blocks, embed.provider?.name);
 	appendCopyBlock(blocks, embed.author?.name);
-	appendCopyBlock(blocks, renderMarkdownCopyText(embed.title, EMBED_INLINE_COPY_PARSER_FLAGS, options));
-	appendCopyBlock(blocks, renderMarkdownCopyText(embed.description, EMBED_DESCRIPTION_COPY_PARSER_FLAGS, options));
-	if (options.includeFields !== false && embed.type !== MessageEmbedTypes.BLUESKY) {
+	if (embedAllowsMarkdown(embed)) {
+		appendCopyBlock(blocks, renderMarkdownCopyText(embed.title, EMBED_INLINE_COPY_PARSER_FLAGS, options));
+		appendCopyBlock(blocks, renderMarkdownCopyText(embed.description, EMBED_DESCRIPTION_COPY_PARSER_FLAGS, options));
+	} else {
+		appendCopyBlock(blocks, embed.title);
+		appendCopyBlock(blocks, embed.description);
+	}
+	if (embed.type !== MessageEmbedTypes.BLUESKY) {
 		for (const field of embed.fields ?? []) {
 			const fieldName = renderMarkdownCopyText(field.name, EMBED_INLINE_COPY_PARSER_FLAGS, options);
 			const fieldValue = renderMarkdownCopyText(field.value, EMBED_DESCRIPTION_COPY_PARSER_FLAGS, options);
 			appendCopyBlock(blocks, joinCopyBlocks([fieldName, fieldValue]));
 		}
 	}
-	appendCopyBlock(blocks, renderMarkdownCopyText(embed.footer?.text, EMBED_INLINE_COPY_PARSER_FLAGS, options));
+	appendCopyBlock(blocks, embed.footer?.text);
 	appendCopyBlock(blocks, getFormattedEmbedTimestamp(embed.timestamp));
 	appendCopyBlock(blocks, embed.image?.description);
 	appendCopyBlock(blocks, embed.thumbnail?.description);
@@ -233,10 +269,6 @@ export function buildMessageSnapshotCopyText(snapshot: MessageSnapshot, options:
 		appendCopyBlock(blocks, buildStickerCopyText(sticker));
 	}
 	return joinCopyBlocks(blocks);
-}
-
-export function buildRawMessageContentCopyText(message: Pick<Message, 'content'>): string {
-	return message.content;
 }
 
 export function buildUserMessageCopyText(message: Message, options: MessageCopyTextOptions): string {

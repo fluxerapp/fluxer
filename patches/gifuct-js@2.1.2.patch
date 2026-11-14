@@ -1,0 +1,63 @@
+diff --git a/lib/deinterlace.js b/lib/deinterlace.js
+index c21b8ca02a128d6c53cd19ef91b3c8cb8c0c0807..18a44628dccf67ab25424deccbfb2ae41084c854 100644
+--- a/lib/deinterlace.js
++++ b/lib/deinterlace.js
+@@ -8,13 +8,15 @@ exports.deinterlace = void 0;
+ /**
+  * Deinterlace function from https://github.com/shachaf/jsgif
+  */
++var deinterlaceBuffer = new Uint8Array(0);
++
+ var deinterlace = function deinterlace(pixels, width) {
+-  var newPixels = new Array(pixels.length);
++  if (deinterlaceBuffer.length !== pixels.length) deinterlaceBuffer = new Uint8Array(pixels.length);
++  var newPixels = deinterlaceBuffer;
+   var rows = pixels.length / width;
+ 
+   var cpRow = function cpRow(toRow, fromRow) {
+-    var fromPixels = pixels.slice(fromRow * width, (fromRow + 1) * width);
+-    newPixels.splice.apply(newPixels, [toRow * width, width].concat(fromPixels));
++    newPixels.set(pixels.subarray(fromRow * width, (fromRow + 1) * width), toRow * width);
+   }; // See appendix E.
+ 
+ 
+diff --git a/lib/lzw.js b/lib/lzw.js
+index 70eb11e7661d4b52a9216e7a8a2509c1a6c2e31e..b757b9407bfeae36d05d22c50b879c8e119d5de9 100644
+--- a/lib/lzw.js
++++ b/lib/lzw.js
+@@ -9,12 +9,15 @@ exports.lzw = void 0;
+  * javascript port of java LZW decompression
+  * Original java author url: https://gist.github.com/devunwired/4479231
+  */
++var dstBuffer = new Uint8Array(0);
++
+ var lzw = function lzw(minCodeSize, data, pixelCount) {
+   var MAX_STACK_SIZE = 4096;
+   var nullCode = -1;
+   var npix = pixelCount;
+   var available, clear, code_mask, code_size, end_of_information, in_code, old_code, bits, code, i, datum, data_size, first, top, bi, pi;
+-  var dstPixels = new Array(pixelCount);
++  if (dstBuffer.length !== pixelCount) dstBuffer = new Uint8Array(pixelCount);
++  var dstPixels = dstBuffer;
+   var prefix = new Array(MAX_STACK_SIZE);
+   var suffix = new Array(MAX_STACK_SIZE);
+   var pixelStack = new Array(MAX_STACK_SIZE + 1); // Initialize GIF data stream decoder.
+@@ -39,6 +42,7 @@ var lzw = function lzw(minCodeSize, data, pixelCount) {
+   for (i = 0; i < npix;) {
+     if (top === 0) {
+       if (bits < code_size) {
++        if (bi >= data.length) break;
+         // get the next byte
+         datum += data[bi] << bits;
+         bits += 8;
+@@ -108,9 +112,7 @@ var lzw = function lzw(minCodeSize, data, pixelCount) {
+     i++;
+   }
+ 
+-  for (i = pi; i < npix; i++) {
+-    dstPixels[i] = 0; // clear missing pixels
+-  }
++  if (pi < npix) throw new Error('GIF frame is truncated');
+ 
+   return dstPixels;
+ };

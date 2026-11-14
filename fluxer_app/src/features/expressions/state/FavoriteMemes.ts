@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import {FavoriteMeme, type FavoriteMemeWire} from '@app/features/expressions/models/FavoriteMeme';
 import {makeAutoObservable} from 'mobx';
 
@@ -38,10 +39,10 @@ class FavoriteMemes {
 	getAllMemes(): ReadonlyArray<FavoriteMeme> {
 		return this.memes;
 	}
-
-	getMeme(memeId: string): FavoriteMeme | undefined {
-		return this.memes.find((meme) => meme.id === memeId);
-	}
 }
 
-export default new FavoriteMemes();
+const favoriteMemes = new FavoriteMemes();
+
+ResettableStates.register(favoriteMemes, () => favoriteMemes.reset());
+
+export default favoriteMemes;

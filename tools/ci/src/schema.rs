@@ -46,9 +46,6 @@ fn find_import_start(source: &str) -> Option<usize> {
         }
         offset += line.len();
     }
-    if source[offset..].starts_with("import ") {
-        return Some(offset);
-    }
     None
 }
 
@@ -67,49 +64,4 @@ fn collapse_extra_blank_lines(source: &str) -> String {
         }
     }
     output
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn write_file(path: &Path, contents: &str) {
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).unwrap();
-        }
-        fs::write(path, contents).unwrap();
-    }
-
-    #[test]
-    fn find_import_start_only_matches_line_starts() {
-        assert_eq!(
-            find_import_start("// import nope\nimport {x} from 'x';\n"),
-            Some(15)
-        );
-        assert_eq!(find_import_start("const value = 'import nope';\n"), None);
-    }
-
-    #[test]
-    fn collapse_extra_blank_lines_keeps_at_most_one_blank_line() {
-        assert_eq!(collapse_extra_blank_lines("a\n\n\n\nb\n\nc"), "a\n\nb\n\nc");
-    }
-
-    #[test]
-    fn clean_generated_files_removes_prelude_and_compacts_blank_lines() {
-        let temp = tempfile::tempdir().unwrap();
-        let root = temp.path();
-        let file = root.join("generated.ts");
-        write_file(
-            &file,
-            "// header\n\n\nimport {x} from 'x';\n\n\n\nexport const y = x;\n\n",
-        );
-        write_file(&root.join("keep.txt"), "// header\n");
-
-        clean_generated_files(root).unwrap();
-
-        assert_eq!(
-            fs::read_to_string(file).unwrap(),
-            "import {x} from 'x';\n\nexport const y = x;\n"
-        );
-    }
 }

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {fetchMany, upsertOne} from '../../database/CassandraQueryExecution';
-import type {UserContactChangeLogRow} from '../../database/types/UserTypes';
-import {UserContactChangeLogs} from '../../Tables';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {UserContactChangeLogRow} from '@app/api/database/types/UserTypes';
+import {UserContactChangeLogs} from '@app/api/Tables';
 
 const createListLogsQuery = (limit: number, includeCursor: boolean) =>
 	UserContactChangeLogs.select({

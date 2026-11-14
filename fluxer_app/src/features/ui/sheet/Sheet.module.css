@@ -44,8 +44,8 @@
 	width: 100%;
 	height: calc(var(--sheet-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - var(--sheet-top-gap));
 	max-height: calc(100dvh - var(--sheet-viewport-offset-bottom));
-	border-top-left-radius: 1.5rem;
-	border-top-right-radius: 1.5rem;
+	border-start-start-radius: 1.5rem;
+	border-start-end-radius: 1.5rem;
 	overflow: hidden;
 	color: var(--text-primary);
 	background-color: var(--sheet-surface, var(--background-secondary));
@@ -171,16 +171,12 @@
 
 .headerAlignStart .headerCenter {
 	align-items: flex-start;
-	text-align: left;
+	text-align: start;
 }
 
 .headerAlignEnd .headerCenter {
 	align-items: flex-end;
-	text-align: right;
-}
-
-.headerContent {
-	min-width: 0;
+	text-align: end;
 }
 
 .headerAfter {
@@ -193,12 +189,6 @@
 	font-weight: 600;
 	font-size: 1.125rem;
 	color: var(--text-primary);
-}
-
-.subtitle {
-	margin: 0;
-	font-size: 0.875rem;
-	color: var(--text-secondary);
 }
 
 .content {
@@ -226,39 +216,6 @@
 
 .contentNoPadding .contentInner {
 	padding-bottom: 0;
-}
-
-.contentStatic {
-	overflow: visible;
-}
-
-.section {
-	padding: 1rem;
-	background-color: var(--sheet-surface, var(--background-secondary));
-}
-
-.footer {
-	padding: 1rem;
-	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-	background-color: var(--sheet-surface, var(--background-secondary));
-}
-
-.footerNoBorder {
-	border-top: none;
-}
-
-.actions {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	justify-content: flex-end;
-}
-
-.divider {
-	height: 0.0625rem;
-	width: 100%;
-	background-color: var(--background-header-secondary);
-	opacity: 0.6;
 }
 
 .closeButton {

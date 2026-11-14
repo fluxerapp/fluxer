@@ -29,13 +29,12 @@ export interface ChannelStreamItem {
 	flashKey?: number;
 	jumpTarget?: boolean;
 	hasUnread?: boolean;
-	hasJumpTarget?: boolean;
 	unreadId?: string;
 	contentKey?: string;
 	showUnreadDividerBefore?: boolean;
 }
 
-export const MESSAGE_GROUP_TIMEOUT = 7 * 60 * 1000;
+const MESSAGE_GROUP_TIMEOUT = 7 * 60 * 1000;
 
 export function isNewMessageGroup(
 	_channel: Channel | undefined,
@@ -46,6 +45,9 @@ export function isNewMessageGroup(
 		return true;
 	}
 	if (currentMessage.type === MessageTypes.REPLY) {
+		return true;
+	}
+	if (currentMessage.isCrosspostCopy) {
 		return true;
 	}
 	const currentIsDisplaySystem =
@@ -98,7 +100,7 @@ export function getCollapsedGroupType(
 	message: Message,
 	treatSpam: boolean,
 ): ChannelStreamType | null {
-	if (message.blocked) {
+	if (message.blocked && message.isUserMessage()) {
 		return ChannelStreamType.MESSAGE_GROUP_BLOCKED;
 	}
 	if (
@@ -157,14 +159,18 @@ export function createChannelStream(props: {
 	messages: ChannelMessages;
 	oldestUnreadMessageId: string | null;
 	treatSpam: boolean;
+	hideBlocked: boolean;
 }): Array<ChannelStreamItem> {
-	const {channel, messages, oldestUnreadMessageId, treatSpam} = props;
+	const {channel, messages, oldestUnreadMessageId, treatSpam, hideBlocked} = props;
 	const stream: Array<ChannelStreamItem> = [];
 	let lastDateDividerTimestamp: Date | undefined;
 	let groupId: string | undefined;
 	let lastMessageInGroup: Message | undefined;
 	let unreadTimestamp: number | null = oldestUnreadMessageId ? extractTimestamp(oldestUnreadMessageId) : null;
 	messages.forEach((message): boolean | undefined => {
+		if (hideBlocked && message.blocked && message.isUserMessage() && message.id !== messages.jumpDestinationId) {
+			return undefined;
+		}
 		if (!lastDateDividerTimestamp || !isSameDayBase(lastDateDividerTimestamp, message.timestamp)) {
 			const dateString = DateUtils.getFormattedFullDate(message.timestamp);
 			stream.push({
@@ -252,9 +258,6 @@ export function createChannelStream(props: {
 				collapsedGroupItem.hasUnread = true;
 			}
 			collapsedContentItems.push(messageItem);
-			if (messageItem.jumpTarget) {
-				collapsedGroupItem.hasJumpTarget = true;
-			}
 		} else {
 			stream.push(messageItem);
 		}

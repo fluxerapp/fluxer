@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
 import {createHttpClient} from '@pkgs/http_client/src/HttpClient';
+import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
+import {DEFAULT_MAX_REDIRECTS, normalizeMaxRedirects} from '@pkgs/http_client/src/HttpClientRequestInternals';
 import type {
 	HttpClient,
 	RequestOptions,
@@ -15,7 +18,7 @@ const client: HttpClient = createHttpClient({
 	userAgent: 'fluxer-api',
 	requestUrlPolicy,
 });
-const scopedClients = new Map<RequestUrlPolicy, Map<number, HttpClient>>();
+const scopedClients = new WeakMap<RequestUrlPolicy, Map<number, HttpClient>>();
 
 interface SendRequestOptions {
 	maxRedirects?: number;
@@ -24,8 +27,8 @@ interface SendRequestOptions {
 
 function getHttpClientForRequest(options?: SendRequestOptions): HttpClient {
 	const policy = options?.requestUrlPolicy ?? requestUrlPolicy;
-	const maxRedirects = options?.maxRedirects ?? 0;
-	if (policy === requestUrlPolicy && maxRedirects === 0) {
+	const maxRedirects = normalizeMaxRedirects(options?.maxRedirects);
+	if (policy === requestUrlPolicy && maxRedirects === DEFAULT_MAX_REDIRECTS) {
 		return client;
 	}
 	let clientsForPolicy = scopedClients.get(policy);
@@ -39,7 +42,7 @@ function getHttpClientForRequest(options?: SendRequestOptions): HttpClient {
 	}
 	const scopedClient = createHttpClient({
 		userAgent: 'fluxer-api',
-		...(maxRedirects > 0 ? {maxRedirects} : {}),
+		maxRedirects,
 		requestUrlPolicy: policy,
 	});
 	clientsForPolicy.set(maxRedirects, scopedClient);
@@ -49,6 +52,12 @@ function getHttpClientForRequest(options?: SendRequestOptions): HttpClient {
 export async function sendRequest(opts: RequestOptions, options?: SendRequestOptions): Promise<StreamResponse> {
 	const requestClient = getHttpClientForRequest(options);
 	return requestClient.sendRequest(opts);
+}
+
+export function discardResponseBody(stream: ResponseStream, status: number): void {
+	void stream?.cancel().catch(() => {
+		Logger.warn({status}, 'Failed to cancel discarded HTTP response body');
+	});
 }
 
 export class ResponseBodyTooLargeError extends Error {
@@ -87,7 +96,7 @@ function createResponseBodyTooLargeError(
 	actualBytes: number | null,
 ): ResponseBodyTooLargeError {
 	const description = options.description ?? 'Response body';
-	const source = options.url ? ` from ${options.url}` : '';
+	const source = options.url ? ` from ${formatUrlForDiagnostics(options.url)}` : '';
 	const actual = actualBytes == null ? 'unknown size' : `${actualBytes} bytes`;
 	return new ResponseBodyTooLargeError(
 		`${description}${source} exceeds the ${options.maxBytes}-byte limit (${actual})`,
@@ -100,6 +109,13 @@ export async function streamToBufferWithLimit(
 	stream: ResponseStream,
 	options: ResponseBodyReadOptions,
 ): Promise<Uint8Array> {
+	if (!Number.isSafeInteger(options.maxBytes) || options.maxBytes < 0) {
+		const error = new RangeError('maxBytes must be a nonnegative safe integer');
+		void stream?.cancel(error).catch(() => {
+			Logger.warn('Failed to cancel HTTP response body after invalid maxBytes');
+		});
+		throw error;
+	}
 	if (!stream) {
 		return new Uint8Array(0);
 	}

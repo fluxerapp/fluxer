@@ -7,9 +7,10 @@ import styles from '@app/features/channel/components/MemberListItem.module.css';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
 import Guilds from '@app/features/guild/state/Guilds';
 import {useMemberListCustomStatus} from '@app/features/member/hooks/useMemberListCustomStatus';
+import {useMemberListMobile} from '@app/features/member/hooks/useMemberListMobile';
 import {useMemberListPresence} from '@app/features/member/hooks/useMemberListPresence';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import {GroupDMMemberContextMenu} from '@app/features/ui/action_menu/GroupDMContextMenu';
 import {GuildMemberContextMenu} from '@app/features/ui/action_menu/GuildMemberContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -17,12 +18,12 @@ import {FocusRingWrapper} from '@app/features/ui/components/FocusRingWrapper';
 import {ListStatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getAppRemScale} from '@app/features/ui/utils/AppZoomUtils';
 import type {User} from '@app/features/user/models/User';
 import type {CustomStatus} from '@app/features/user/state/CustomStatus';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {isOfflineStatus} from '@fluxer/constants/src/StatusConstants';
 import {msg} from '@lingui/core/macro';
@@ -51,12 +52,14 @@ interface MemberListItemProps {
 	guildMember?: GuildMember;
 	status?: StatusType;
 	customStatus?: CustomStatus | null;
+	isMobile?: boolean;
 	isOwner?: boolean;
 	roleColor?: string;
 	displayName?: string;
 	disableBackdrop?: boolean;
-	avatarMediaSize?: MediaProxyImageSize;
 }
+
+const MEMBER_AVATAR_SIZE = 32;
 
 export const MemberListItem: React.FC<MemberListItemProps> = observer((props) => {
 	const {i18n} = useLingui();
@@ -67,11 +70,11 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 		guildMember,
 		status: providedStatus,
 		customStatus: providedCustomStatus,
+		isMobile: providedIsMobile,
 		isOwner = false,
 		roleColor,
 		displayName,
 		disableBackdrop = false,
-		avatarMediaSize,
 	} = props;
 	const itemRef = useRef<HTMLButtonElement>(null);
 	const hookStatus = useMemberListPresence({
@@ -91,7 +94,14 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 	const [contextMenuOpen, setContextMenuOpen] = useState(false);
 	const contextMenuTicketRef = useRef(0);
 	const isCurrentUser = user.id === Authentication.currentUserId;
-	const isTyping = TypingIndicator.isMemberListTyping(channelId, user.id, Authentication.currentUserId);
+	const hookIsMobile = useMemberListMobile({
+		guildId: guildId ?? '',
+		channelId,
+		userId: user.id,
+		enabled: guildId !== undefined && providedIsMobile === undefined && !isCurrentUser,
+	});
+	const isMobile = isCurrentUser ? undefined : (providedIsMobile ?? hookIsMobile);
+	const isTyping = RollingTypingStore.isMemberListTyping(channelId, user.id, Authentication.currentUserId);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
 			event.preventDefault();
@@ -153,9 +163,9 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 			memberAvatar: guildMember.avatar,
 			avatarUnset: guildMember.isAvatarUnset(),
 			animated: false,
-			size: avatarMediaSize,
+			size: MEMBER_AVATAR_SIZE * getAppRemScale(),
 		});
-	}, [avatarMediaSize, guildId, guildMember, user]);
+	}, [guildId, guildMember, user]);
 	const memberHoverAvatarUrl = useMemo(() => {
 		if (!guildId || !guildMember) {
 			return undefined;
@@ -166,9 +176,9 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 			memberAvatar: guildMember.avatar,
 			avatarUnset: guildMember.isAvatarUnset(),
 			animated: true,
-			size: avatarMediaSize,
+			size: MEMBER_AVATAR_SIZE * getAppRemScale(),
 		});
-	}, [avatarMediaSize, guildId, guildMember, user]);
+	}, [guildId, guildMember, user]);
 	const nameContent = (
 		<span
 			ref={nameRef}
@@ -200,14 +210,14 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 						<div className={styles.avatarContainer} data-flx="channel.member-list-item.avatar-container">
 							<ListStatusAwareAvatar
 								user={user}
-								size={32}
+								size={MEMBER_AVATAR_SIZE}
 								isTyping={isTyping}
 								showOffline={isCurrentUser || isTyping}
 								guildId={guildId}
 								status={status}
+								isMobile={isMobile}
 								avatarUrl={memberAvatarUrl}
 								hoverAvatarUrl={memberHoverAvatarUrl}
-								mediaSize={avatarMediaSize}
 								data-flx="channel.member-list-item.status-aware-avatar"
 							/>
 						</div>

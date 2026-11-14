@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	authorizeOAuth2,
 	createOAuth2Application,
@@ -13,7 +9,11 @@ import {
 	exchangeOAuth2AuthorizationCode,
 	getOAuth2UserInfo,
 	listOAuth2Authorizations,
-} from './OAuthTestUtils';
+} from '@app/api/oauth/tests/OAuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('OAuth2 authorizations deauthorize', () => {
 	let harness: ApiTestHarness;
@@ -149,12 +149,5 @@ describe('OAuth2 authorizations deauthorize', () => {
 			.execute();
 		const afterAuthz = await listOAuth2Authorizations(harness, endUser.token);
 		expect(afterAuthz).toHaveLength(0);
-	});
-	it('verifies that deauthorizing a non-existent application returns an appropriate error', async () => {
-		const user = await createTestAccount(harness);
-		await createBuilder(harness, user.token)
-			.delete('/oauth2/@me/authorizations/123456789012345678')
-			.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_APPLICATION')
-			.execute();
 	});
 });

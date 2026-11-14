@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::timestamps::format_admin_timestamp;
 use crate::{
     api::types::{CreateAdminApiKeyResponse, FlashMessage, ListAdminApiKeyEntry},
     config::AdminConfig,
@@ -8,7 +9,7 @@ use crate::{
         components::{
             alert::{AlertVariant, alert},
             badge::{BadgeVariant, badge},
-            form::{checkbox, csrf_input, form_actions},
+            form::{Checkbox, csrf_input, form_actions},
             page_container::page_header,
             section_card::section_card,
             table::empty_state,
@@ -95,7 +96,13 @@ fn create_form(base: &str, csrf_token: &str, acls: &[&str]) -> Markup {
                         }
                         div class="grid grid-cols-1 gap-3 md:grid-cols-2" {
                             @for acl in acls {
-                                (checkbox("acls", acl, acl, false, true))
+                                (Checkbox {
+                                    name: "acls",
+                                    value: acl,
+                                    label: acl,
+                                    checked: false,
+                                    enabled: true,
+                                }.render())
                             }
                         }
                     }
@@ -127,14 +134,14 @@ fn api_key_item(base: &str, csrf_token: &str, key: &ListAdminApiKeyEntry) -> Mar
                         "Key ID: " (key_id)
                     }
                     p class="text-sm text-neutral-500" {
-                        "Created: " (created_at)
+                        "Created: " (format_admin_timestamp(created_at))
                     }
                     p class="text-sm text-neutral-500" {
                         "Created by: " (key.created_by_user_id)
                     }
                     @if let Some(ref expires_at) = key.expires_at {
                         p class="text-sm text-neutral-500" {
-                            "Expires: " (expires_at)
+                            "Expires: " (format_admin_timestamp(expires_at))
                         }
                     }
                     @if !key.acls.is_empty() {

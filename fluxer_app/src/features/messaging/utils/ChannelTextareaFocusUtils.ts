@@ -9,3 +9,7 @@ export function focusChannelTextareaAfterNavigation(channelId: string): void {
 	window.requestAnimationFrame(requestFocus);
 	window.setTimeout(requestFocus, 300);
 }
+
+export function focusChannelTextareaFromKeybind(channelId: string): void {
+	ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId, enterKeyboardMode: true});
+}

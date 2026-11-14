@@ -49,3 +49,9 @@ export const INVITES_PAUSED_ACCOUNT_ACTIONS_DESCRIPTOR = msg({
 		'You can still create an account or sign in. If invites are re-enabled later, you can use this same link to join.',
 	comment: 'Invite page subtext shown when community admins pause invites. Explains that account actions still work.',
 });
+export const PREVIEW_COMMUNITY_DESCRIPTOR = msg({
+	message: 'Preview',
+	context: 'invite-preview-button',
+	comment:
+		'Invite button, a verb: starts previewing the community before joining it. Previewing means reading a community before joining. Joining happens from the bar at the top of the community.',
+});

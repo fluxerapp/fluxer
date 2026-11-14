@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Autocomplete} from '@app/features/channel/components/Autocomplete';
-import {
-	type AutocompleteOption,
-	type AutocompleteType,
-	getAutocompleteOptionId,
-} from '@app/features/channel/components/AutocompleteTypes';
+import {getAutocompleteOptionId} from '@app/features/channel/components/AutocompleteTypes';
+import {hasModifier} from '@app/features/lexical/composer/ComposerTypeaheadModifierGuard';
+import type {ComposerTypeaheadPluginProps} from '@app/features/lexical/composer/ComposerTypeaheadPlugin';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {mergeRegister} from '@lexical/utils';
@@ -16,25 +14,9 @@ import {
 	KEY_ENTER_COMMAND,
 	KEY_TAB_COMMAND,
 } from 'lexical';
-import type React from 'react';
 import {useEffect, useLayoutEffect, useRef, useState} from 'react';
 
 const SLASH_SLOT_AUTOCOMPLETE_MAIN_AXIS_OFFSET = 8;
-
-function hasModifier(event: KeyboardEvent | null): boolean {
-	return event != null && (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey);
-}
-
-export interface SlashSlotAutocompletePluginProps {
-	options: Array<AutocompleteOption>;
-	type: AutocompleteType;
-	query: string;
-	referenceElement: HTMLElement | null;
-	listboxId: string;
-	enabled: boolean;
-	onSelect: (option: AutocompleteOption) => void;
-	activeRef: React.RefObject<boolean>;
-}
 
 export const SlashSlotAutocompletePlugin = ({
 	options,
@@ -45,7 +27,7 @@ export const SlashSlotAutocompletePlugin = ({
 	enabled,
 	onSelect,
 	activeRef,
-}: SlashSlotAutocompletePluginProps) => {
+}: ComposerTypeaheadPluginProps) => {
 	const [editor] = useLexicalComposerContext();
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const visible = enabled && options.length > 0;

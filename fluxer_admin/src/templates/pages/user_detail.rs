@@ -10,12 +10,12 @@ use crate::{
             detail_tabs::{build_detail_tabs, detail_tabs},
             empty_state::not_found_state,
             media::{user_avatar_url, user_banner_url},
-            user_profile_badges::user_profile_badges,
+            user_profile_badges::{BadgeSize, user_profile_badges},
         },
         layout::admin_layout,
         pages::user_detail_tabs,
     },
-    utils::bigint::format_discriminator,
+    utils::{bigint::format_discriminator, user_tag::user_tag},
 };
 use maud::{Markup, html};
 
@@ -33,16 +33,7 @@ pub const USER_TABS: &[(&str, &str)] = &[
     ("audit_logs", "Audit Logs"),
 ];
 
-pub fn user_detail_page(
-    config: &AdminConfig,
-    auth: &AuthContext,
-    user: Option<&AdminUser>,
-    user_id: &str,
-    is_htmx: bool,
-) -> Markup {
-    user_detail_with_tab(config, auth, user, user_id, "overview", None, is_htmx)
-}
-
+#[allow(clippy::too_many_arguments)]
 pub fn user_detail_with_tab(
     config: &AdminConfig,
     auth: &AuthContext,
@@ -86,11 +77,7 @@ fn render_user_detail(
         .filter(|n| !n.trim().is_empty())
         .unwrap_or(&user.username);
     let base = &config.base_path;
-    let admin_acls = auth
-        .admin_user
-        .as_ref()
-        .map(|user| user.acls.as_slice())
-        .unwrap_or(&[]);
+    let admin_acls = auth.acls();
     let effective_tab = if user_tab_visible(config, active_tab, admin_acls) {
         active_tab
     } else {
@@ -117,9 +104,9 @@ fn render_user_detail(
         @if let Some(banner) = banner_url {
             div class="mb-4 space-y-2" {
                 a href=(banner) target="_blank" rel="noreferrer noopener"
-                    class="block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" {
+                    class="block max-w-2xl rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2" {
                     img src=(banner) alt={(user.username) "'s banner"}
-                        class="h-32 w-full rounded-lg border border-neutral-200 bg-neutral-50 object-cover sm:h-48"
+                        class="aspect-[17/6] w-full rounded-lg border border-neutral-200 bg-neutral-50 object-cover"
                         loading="lazy";
                 }
                 @if let Some(hash) = &user.banner {
@@ -139,15 +126,12 @@ fn render_user_detail(
                     }
                     (user_profile_badges(
                         &config.static_cdn_endpoint,
-                        user.flags,
-                        user.premium_type,
-                        user.premium_since.as_deref(),
-                        config.self_hosted,
-                        false,
+                        &user.profile_badges,
+                        BadgeSize::Detail,
                     ))
                 }
                 p class="break-words text-sm text-neutral-500" {
-                    (user.username) "#" (format_discriminator(&user.discriminator))
+                    (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                 }
                 p class="break-all text-sm text-neutral-500" {
                     (user.id)

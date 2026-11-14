@@ -19,14 +19,6 @@ const initialThrottleState: ConnectionThrottleState = {
 export class VoiceConnectionThrottle extends Store {
 	throttleState: ConnectionThrottleState = initialThrottleState;
 
-	get connectAttemptId(): number {
-		return this.throttleState.connectAttemptId;
-	}
-
-	get inFlightConnect(): boolean {
-		return this.throttleState.inFlightConnect;
-	}
-
 	shouldThrottle(): boolean {
 		const now = Date.now();
 		const last = this.throttleState.lastConnectRequestAt ?? 0;
@@ -51,15 +43,6 @@ export class VoiceConnectionThrottle extends Store {
 			this.throttleState = {
 				...this.throttleState,
 				lastConnectRequestAt: Date.now(),
-			};
-		});
-	}
-
-	incrementAttemptId(): void {
-		this.update(() => {
-			this.throttleState = {
-				...this.throttleState,
-				connectAttemptId: this.throttleState.connectAttemptId + 1,
 			};
 		});
 	}

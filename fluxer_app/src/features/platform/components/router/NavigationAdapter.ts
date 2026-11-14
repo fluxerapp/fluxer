@@ -1,26 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {derivePathStack, isSyntheticHistoryState} from '@app/app/HistoryBootstrap';
+import {derivePathStack} from '@app/app/HistoryBootstrap';
 import {getBrowserNavigation} from '@app/features/platform/components/router/BrowserNavigation';
 
-export function canGoBack(): boolean {
+function canGoBack(): boolean {
 	const navigation = getBrowserNavigation();
 	if (typeof navigation?.canGoBack === 'boolean') return navigation.canGoBack;
 	if (typeof window === 'undefined') return false;
 	return window.history.length > 1;
-}
-
-export function onCanGoBackChange(listener: () => void): () => void {
-	const navigation = getBrowserNavigation();
-	if (navigation?.removeEventListener) {
-		const handler = () => listener();
-		navigation.addEventListener('currententrychange', handler);
-		return () => navigation.removeEventListener?.('currententrychange', handler);
-	}
-	if (typeof window === 'undefined') return () => {};
-	const handler = () => listener();
-	window.addEventListener('popstate', handler);
-	return () => window.removeEventListener('popstate', handler);
 }
 
 export function goBackOr(fallbackPath: string): void {
@@ -36,9 +23,4 @@ export function goBackOr(fallbackPath: string): void {
 	window.history.replaceState(null, '', target);
 	window.history.pushState(null, '', currentPath);
 	window.history.back();
-}
-
-export function isCurrentEntrySynthetic(): boolean {
-	if (typeof window === 'undefined') return false;
-	return isSyntheticHistoryState(window.history.state);
 }

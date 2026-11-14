@@ -87,7 +87,7 @@ function trackRemScaleForWindow(ownerDocument: Document, ownerWindow: Window): (
 			return;
 		}
 		const nextQuery = ownerWindow.matchMedia(`(resolution: ${ownerWindow.devicePixelRatio}dppx)`);
-		if (!nextQuery.matches) {
+		if (!nextQuery.matches || typeof nextQuery.addEventListener !== 'function') {
 			stopWatchingResolution();
 			return;
 		}

@@ -3,7 +3,7 @@
 import {Avatar} from '@app/features/ui/components/Avatar';
 import styles from '@app/features/user/components/UserIdentityRow.module.css';
 import type {User} from '@app/features/user/models/User';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {flxElementClassName} from '@app/lib/react';
 import {observer} from 'mobx-react-lite';
 
@@ -32,7 +32,7 @@ export const UserIdentityRow = observer(
 						{displayName}
 					</span>
 					<span className={styles.tag} data-flx="user.user-identity-row.tag">
-						{user.tag}
+						{DisplayNameUtils.formatTagForStreamerMode(user.tag)}
 					</span>
 				</flx-user-identity-row-info>
 			</>

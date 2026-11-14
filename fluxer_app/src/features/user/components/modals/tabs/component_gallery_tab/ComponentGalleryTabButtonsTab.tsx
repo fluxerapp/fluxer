@@ -5,12 +5,14 @@ import {
 	SettingsTabContent,
 	SettingsTabSection,
 } from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {PLAY_DESCRIPTOR, SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {MORE_DESCRIPTOR, PLAY_DESCRIPTOR, SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import styles from '@app/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.module.css';
 import {SubsectionTitle} from '@app/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabSubsectionTitle';
+import {DELETE_DESCRIPTOR} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {BOOKMARK_DESCRIPTOR, OPEN_MENU_ICON_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {
@@ -98,10 +100,7 @@ const SETTINGS_2_DESCRIPTOR = msg({
 	message: 'Settings.',
 	comment: 'Short label in the buttons tab. Keep it concise.',
 });
-const BOOKMARK_DESCRIPTOR = msg({
-	message: 'Bookmark',
-	comment: 'Short label in the buttons tab. Keep it concise.',
-});
+
 const BOOKMARKED_DESCRIPTOR = msg({
 	message: 'Bookmarked.',
 	comment: 'Short label in the buttons tab. Keep it concise.',
@@ -114,21 +113,9 @@ const LIKED_DESCRIPTOR = msg({
 	message: 'Liked.',
 	comment: 'Short label in the buttons tab. Keep it concise.',
 });
-const DELETE_DESCRIPTOR = msg({
-	message: 'Delete',
-	comment: 'Button or menu action label in the buttons tab. Keep it concise. Keep the tone plain and specific.',
-});
 const DELETED_DESCRIPTOR = msg({
 	message: 'Deleted.',
 	comment: 'Button or menu action label in the buttons tab. Keep it concise. Keep the tone plain and specific.',
-});
-const MORE_DESCRIPTOR = msg({
-	message: 'More',
-	comment: 'Short label in the buttons tab. Keep it concise.',
-});
-const OPEN_MENU_ICON_DESCRIPTOR = msg({
-	message: 'Open menu icon',
-	comment: 'Button or menu action label in the buttons tab. Keep it concise.',
 });
 
 interface ButtonsTabProps {

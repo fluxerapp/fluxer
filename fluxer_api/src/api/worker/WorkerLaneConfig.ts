@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {APIWorkerLaneName, APIWorkerMode} from '../config/APIConfig';
+import type {APIWorkerLaneName, APIWorkerMode} from '@app/api/config/APIConfig';
 
 interface LaneSettings {
 	readonly consumerName: string;
@@ -35,30 +35,45 @@ const LANE_CONFIG = {
 		consumerName: 'workers_lifecycle',
 		tasks: [
 			'processStripeWebhook',
+			'sendBillingEmail',
+			'closePaymentDisputeAccounts',
 			'sendSystemDm',
+			'notifyRegistrationApprovers',
 			'userProcessPendingDeletion',
 			'userProcessPendingDeletions',
 			'applicationProcessDeletion',
+			'guildProcessDeletion',
 			'bulkDeleteSelfMessagesImmediate',
+			'countBulkMessageDeletionTargets',
 			'bulkDeleteUserMessages',
-			'bulkDeleteUserMessagesScoped',
 			'deleteUserMessagesInGuildByTime',
 			'messageShred',
-			'finalizeNcmecAttachmentReport',
 			'harvestGuildData',
 			'harvestUserData',
 			'batchGuildAuditLogMessageDeletes',
 			'reconcileUserPayments',
-			'revalidateUserConnections',
+			'syncStripeCustomerEmail',
+			'sendOperatorPassWithdrawalReceipt',
+			'recordOperatorPassDelivery',
+			'processAppStoreNotification',
+			'processGooglePlayNotification',
+			'refreshStorePurchase',
 			'bulkUpdateUserFlags',
-			'bulkUpdateSuspiciousActivityFlags',
 			'bulkScheduleUserDeletion',
 			'bulkUpdateGuildFeatures',
 			'bulkAddGuildMembers',
+			'joinSingleCommunityMembers',
 			'bulkBanFileShas',
 			'bulkDeleteMessagesForUsers',
+			'drainActivitySpool',
+			'liftExpiredGuildInvitePauses',
+			'endExpiredPlannedJoinWaves',
+			'restatePlannedJoinWaves',
+			'endGuildVisitsForCode',
+			'pruneGuildVisits',
+			'endUnassignedGuildVisits',
 		] as const,
-		retiredTasks: ['sendScheduledMessage'],
+		retiredTasks: ['sendScheduledMessage', 'finalizeNcmecAttachmentReport'],
 		concurrency: 8,
 		maxAckPending: 50,
 		ackWaitMs: 60000,
@@ -68,26 +83,72 @@ const LANE_CONFIG = {
 		consumerName: 'workers_batch',
 		tasks: [
 			'expireAttachments',
+			'reconcileAttachmentDecay',
+			'expireReportSnapshots',
+			'clearAuthenticatedReporterEmails',
+			'expireStaleJobs',
 			'indexChannelMessages',
 			'indexGuildMembers',
 			'processAssetDeletionQueue',
-			'processBunnyPurgeQueue',
+			'processCachePurgeQueue',
 			'processExpiredPremiumSweep',
 			'processInactivityDeletions',
 			'processPendingBulkMessageDeletions',
 			'processPremiumStateReconciliationQueue',
+			'processStorePurchaseRefreshQueue',
+			'pollGooglePlayVoidedPurchases',
+			'pollAppStoreNotificationHistory',
 			'prunePostgresKvTtl',
+			'sweepFilesystemStorage',
+			'sweepVoiceParticipants',
 			'refreshSearchIndex',
+			'seedThreadPermissions',
+			'archiveInactiveThreads',
+			'repairThreadIndexes',
+			'deleteChannelThreads',
+			'removeThreadMembershipsForGuildMember',
+			'syncThreadSearchDocument',
+			'backfillThreadSearch',
+			'backfillPasskeyTrait',
+			'backfillFavoriteMemeNsfw',
+			'backfillUserAclIndex',
+			'backfillDeletedUsers',
+			'backfillHiddenProfileBadges',
 			'syncDiscoveryIndex',
-			'syncDisposableEmailDomains',
 			'syncUrlBlocklists',
 			'syncFileShaBlocklists',
 			'flushUserActivityBuffer',
+			'operatorPassWaitlistCleanup',
+			'operatorPassRemovalExpiry',
+			'operatorPassOfferCompletion',
+			'operatorPassWallRetention',
+			'scanBillingNotices',
+			'importLegacyBillingDocuments',
+			'operatorPassConsentRetention',
+			'operatorPassFulfilmentSweep',
+			'operatorPassLabsVisionaryRoleSync',
+			'operatorPassLabsGreeting',
+			'operatorPassLabsDelivery',
 		] as const,
-		retiredTasks: [],
+		retiredTasks: ['operatorPassWallAutoApprove', 'operatorPassSaleBroadcast', 'operatorPassVisionaryNotice'],
 		concurrency: 12,
 		maxAckPending: 100,
 		ackWaitMs: 120000,
+		maxDeliver: 25,
+	},
+	crosspost: {
+		consumerName: 'workers_crosspost',
+		tasks: [
+			'crosspostMessage',
+			'crosspostMessageChunk',
+			'syncCrosspostedMessage',
+			'syncCrosspostCopies',
+			'removeChannelFollowers',
+		] as const,
+		retiredTasks: [],
+		concurrency: 8,
+		maxAckPending: 64,
+		ackWaitMs: 60000,
 		maxDeliver: 25,
 	},
 } satisfies Record<APIWorkerLaneName, LaneSettings>;
@@ -110,6 +171,17 @@ interface WorkerLaneRuntimeConfig {
 	laneName?: APIWorkerLaneName;
 	taskName?: WorkerTaskName;
 	laneConcurrencyOverrides: Partial<Record<APIWorkerLaneName, number>>;
+	availableParallelism: number;
+}
+
+const FULL_CONCURRENCY_CORES = 4;
+
+function scaleLaneToCores(lane: WorkerLaneDefinition, cores: number): WorkerLaneDefinition {
+	const concurrency = Math.max(
+		1,
+		Math.min(lane.concurrency, Math.ceil((lane.concurrency * cores) / FULL_CONCURRENCY_CORES)),
+	);
+	return {...lane, concurrency};
 }
 
 function makeLane(name: APIWorkerLaneName): WorkerLaneDefinition {
@@ -131,6 +203,7 @@ const WORKER_LANES: ReadonlyArray<WorkerLaneDefinition> = [
 	makeLane('unfurl'),
 	makeLane('lifecycle'),
 	makeLane('batch'),
+	makeLane('crosspost'),
 ];
 const WORKER_LANE_MAP = buildWorkerLaneMap();
 const WORKER_LANE_NAMES = Object.freeze(WORKER_LANES.map((lane) => lane.name));
@@ -212,11 +285,11 @@ function applyLaneConcurrencyOverride(
 
 function resolveWorkerLanes(config: WorkerLaneRuntimeConfig): Array<WorkerLaneDefinition> {
 	if (config.mode === 'single_task') {
-		return [resolveSingleTaskLane(config.taskName)];
+		return [scaleLaneToCores(resolveSingleTaskLane(config.taskName), config.availableParallelism)];
 	}
 	const laneNames = resolveLaneNames(config);
 	return laneNames.map((laneName) => {
-		const lane = resolveLaneByName(laneName);
+		const lane = scaleLaneToCores(resolveLaneByName(laneName), config.availableParallelism);
 		return applyLaneConcurrencyOverride(lane, config.laneConcurrencyOverrides);
 	});
 }

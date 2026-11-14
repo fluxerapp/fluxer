@@ -2,7 +2,52 @@
 
 import crypto from 'node:crypto';
 import type {Readable} from 'node:stream';
-import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import type {ApiContext} from '@app/api/ApiContext';
+import {type ChannelID, createChannelID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {
+	carriesThreadArtifact,
+	maskThreadArtifacts,
+	maskThreadArtifactsByChannel,
+} from '@app/api/channel/services/message/ThreadMessageResponses';
+import type {PushSubscriptionRow} from '@app/api/database/types/UserTypes';
+import {THREAD_FEATURE_CHANNEL_TYPES, type ThreadViewer, viewerActive} from '@app/api/experiment/ChannelThreadsGate';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import {PushSubscription} from '@app/api/models/PushSubscription';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {verifyHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
+import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
+import {
+	findInstalledLegacyPushSubscriptionIds,
+	findTargetPushSubscriptionIds,
+	getPushOriginReplacement,
+	getPushSessionPredecessor,
+	markInstalledLegacyPushSubscription,
+	markPushOriginReplaced,
+	markTargetPushSubscription,
+	sameUserAgentFamily,
+	type WebPushOriginKind,
+} from '@app/api/user/services/WebPushOriginReplacement';
+import {UserHarvest} from '@app/api/user/UserHarvestModel';
+import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
+import {serializeSelfMessageFilter} from '@app/api/worker/utils/SelfMessageFilterPayload';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {MAX_BOOKMARKS_NON_PREMIUM, MAX_PUSH_SUBSCRIPTIONS_PER_USER} from '@fluxer/constants/src/LimitConstants';
+import {THREAD_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
@@ -14,9 +59,8 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import {HarvestExpiredError} from '@fluxer/errors/src/domains/moderation/HarvestExpiredError';
 import {HarvestFailedError} from '@fluxer/errors/src/domains/moderation/HarvestFailedError';
 import {HarvestNotReadyError} from '@fluxer/errors/src/domains/moderation/HarvestNotReadyError';
-import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
+import {NsfwContentAgeRestrictedError} from '@fluxer/errors/src/domains/moderation/NsfwContentAgeRestrictedError';
 import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {HarvestCreationResponse, HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {
@@ -26,38 +70,11 @@ import type {
 	UnregisterMobileDeviceRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {SavedMessageStatus} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import {compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeComparison';
 import {isPubliclyRoutableUrlShape} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import {type ChannelID, createChannelID, createUserID, type MessageID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import {createMessageResponseDataService} from '../../channel/services/message/MessageResponseDataService';
-import type {PushSubscriptionRow} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {KVBulkMessageDeletionQueueService} from '../../infrastructure/KVBulkMessageDeletionQueueService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Message} from '../../models/Message';
-import type {PushSubscription} from '../../models/PushSubscription';
-import {serializeSelfMessageFilter} from '../../worker/utils/SelfMessageFilterPayload';
-import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserContentRepository} from '../repositories/IUserContentRepository';
-import {UserHarvest} from '../UserHarvestModel';
-import {UserHarvestRepository} from '../UserHarvestRepository';
-import {BaseUserUpdatePropagator} from './BaseUserUpdatePropagator';
-import {verifyHarvestDownloadToken} from './HarvestDownloadToken';
-import {buildHarvestDownloadUrl} from './HarvestDownloadUrl';
 
 export interface SavedMessageEntry {
 	channelId: ChannelID;
@@ -70,6 +87,7 @@ interface RegisterMobileDeviceParams {
 	userId: UserID;
 	authSessionIdHash?: string | null;
 	device: RegisterMobileDeviceRequest;
+	threadChannels?: boolean;
 }
 
 interface UnregisterMobileDeviceParams {
@@ -77,11 +95,31 @@ interface UnregisterMobileDeviceParams {
 	device: UnregisterMobileDeviceRequest;
 }
 
-interface UserContentRepository extends IUserAccountRepository, IUserContentRepository {}
-
 const WEB_PUSH_PLATFORM = 'web_push' as const;
 const DEFAULT_MOBILE_APP_ID = 'stable';
 const DEFAULT_APNS_PROVIDER_ENVIRONMENT = 'production';
+const MAX_HIDDEN_REFILL_PAGES = 3;
+
+function oldestMessageId(entries: ReadonlyArray<{messageId: MessageID}>): MessageID | undefined {
+	let oldest: MessageID | undefined;
+	for (const {messageId} of entries) {
+		if (oldest === undefined || messageId < oldest) {
+			oldest = messageId;
+		}
+	}
+	return oldest;
+}
+
+function savedMessageCreatePayloads(channel: Channel, data: MessageResponse | undefined): Array<unknown> {
+	const guildId = channel.guildId?.toString();
+	if (!data || !guildId) return [data];
+	const inThread = THREAD_CHANNEL_TYPES.has(channel.type);
+	if (!inThread && !carriesThreadArtifact(data)) return [data];
+	const scoped = {...data, __thread_scoped: guildId};
+	if (inThread) return [scoped];
+	const [masked] = maskThreadArtifacts([data]);
+	return masked ? [scoped, {...masked, __thread_unscoped: guildId}] : [scoped];
+}
 
 function createPushSubscriptionId(parts: Array<string>): string {
 	const stableInput = parts.map((part) => `${part.length}:${part}`).join('|');
@@ -96,12 +134,42 @@ function assertPublicPushEndpoint(endpoint: string, fieldName: string): void {
 	let parsedUrl: URL;
 	try {
 		parsedUrl = new URL(endpoint);
-	} catch {
+	} catch (error) {
+		if (!(error instanceof TypeError)) {
+			Logger.warn({error, fieldName}, 'Failed to parse a public push endpoint');
+		}
 		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.INVALID_URL_FORMAT);
 	}
 	if (!isPubliclyRoutableUrlShape(parsedUrl)) {
 		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.URL_NOT_PUBLICLY_ROUTABLE);
 	}
+}
+
+function isPushEndpointUrl(token: string): boolean {
+	const normalized = token.trim().toLowerCase();
+	return normalized.startsWith('https://') || normalized.startsWith('http://');
+}
+
+function resolveMobileWebPushKeys(device: RegisterMobileDeviceRequest): {p256dh: string; auth: string} | null {
+	const p256dh = device.encryption_key;
+	const auth = device.auth_secret;
+	if (p256dh && auth) return {p256dh, auth};
+	if (p256dh || auth) {
+		throw InputValidationError.create(
+			p256dh ? 'auth_secret' : 'encryption_key',
+			'Web Push registrations require encryption_key and auth_secret',
+		);
+	}
+	if (device.platform === 'android_unified_push' || device.platform === 'ios_apns_voip') {
+		throw InputValidationError.create(
+			'encryption_key',
+			'Web Push registrations require encryption_key and auth_secret',
+		);
+	}
+	if (isPushEndpointUrl(device.token)) {
+		throw InputValidationError.create('token', 'Endpoint URL registrations require encryption_key and auth_secret');
+	}
+	return null;
 }
 
 function normalizeMobileAppId(appId: string | undefined): string {
@@ -114,7 +182,7 @@ function normalizeProviderEnvironment(
 	environment: RegisterMobileDeviceRequest['provider_environment'],
 ): string | null {
 	if (environment) return environment;
-	return platform === 'ios_apns' ? DEFAULT_APNS_PROVIDER_ENVIRONMENT : null;
+	return platform === 'ios_apns' || platform === 'ios_apns_voip' ? DEFAULT_APNS_PROVIDER_ENVIRONMENT : null;
 }
 
 const isUnreachableEntityError = (error: unknown): boolean =>
@@ -122,55 +190,67 @@ const isUnreachableEntityError = (error: unknown): boolean =>
 	error instanceof UnknownChannelError ||
 	error instanceof UnknownGuildError ||
 	error instanceof AccessDeniedError ||
-	error instanceof NsfwContentRequiresAgeVerificationError;
-
-export const UserContentServiceTestHooks = {isUnreachableEntityError};
+	error instanceof NsfwContentAgeRestrictedError;
 
 export class UserContentService {
-	private readonly updatePropagator: BaseUserUpdatePropagator;
-	private readonly userRepository: UserContentRepository;
+	private readonly userRepository: UserRepository;
 	private readonly gatewayService: IGatewayService;
 	private readonly workerService: IWorkerService<WorkerTaskName>;
 	private readonly snowflakeService: ISnowflakeService;
+	private readonly kv: IKVProvider;
 
 	constructor(
 		apiContext: ApiContext,
-		userCacheService: UserCacheService,
-		private channelService: ChannelService,
-		private channelRepository: IChannelRepository,
-		private bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
-		private limitConfigService: LimitConfigService,
+
+		private readonly channelService: ChannelService,
+		private readonly channelRepository: ChannelRepository,
+		private readonly bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
+		private readonly limitConfigService: LimitConfigService,
 	) {
-		const {users, gateway, worker, snowflake} = apiContext.services;
+		const {users, gateway, worker, snowflake, kv} = apiContext.services;
 		this.userRepository = users;
 		this.gatewayService = gateway;
 		this.workerService = worker;
 		this.snowflakeService = snowflake;
-		this.updatePropagator = new BaseUserUpdatePropagator({
-			userCacheService,
-			gatewayService: this.gatewayService,
-		});
+		this.kv = kv;
 	}
 
 	async getRecentMentions(params: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		limit: number;
 		everyone: boolean;
 		roles: boolean;
 		guilds: boolean;
 		before?: MessageID;
 	}): Promise<Array<Message>> {
-		const {userId, limit, everyone, roles, guilds, before} = params;
-		const mentions = await this.userRepository.listRecentMentions(userId, everyone, roles, guilds, limit, before);
-		const messagesByChannel = await this.readMessagesByChannel(userId, mentions);
-		const messages = mentions
-			.map((mention) => this.pickMessage(messagesByChannel, mention))
-			.filter((message): message is Message => message != null);
+		const {userId, viewer, limit, everyone, roles, guilds, before} = params;
+		const messages: Array<Message> = [];
+		let cursor = before;
+		let pageLimit = limit;
+		for (let refills = 0; ; refills++) {
+			const mentions = await this.userRepository.listRecentMentions(userId, everyone, roles, guilds, pageLimit, cursor);
+			const messagesByChannel = await this.readMessagesByChannel(userId, viewer, mentions);
+			const hiddenChannelIds = await this.hiddenThreadChannelIds(viewer, messagesByChannel);
+			let hidden = 0;
+			for (const mention of mentions) {
+				if (hiddenChannelIds.has(mention.channelId.toString())) {
+					hidden++;
+					continue;
+				}
+				const message = this.pickMessage(messagesByChannel, mention);
+				if (message) messages.push(message);
+			}
+			if (hidden === 0 || mentions.length < pageLimit || refills === MAX_HIDDEN_REFILL_PAGES) break;
+			cursor = oldestMessageId(mentions);
+			pageLimit = hidden;
+		}
 		return messages.sort((a, b) => (b.id > a.id ? 1 : -1));
 	}
 
 	private async readMessagesByChannel(
 		userId: UserID,
+		viewer: ThreadViewer,
 		entries: ReadonlyArray<{channelId: ChannelID; messageId: MessageID}>,
 	): Promise<Map<string, Map<string, Message> | null>> {
 		const grouped = new Map<string, {channelId: ChannelID; messageIds: Array<MessageID>}>();
@@ -189,6 +269,7 @@ export class UserContentService {
 				try {
 					const messages = await this.channelService.messages.retrieval.getMessagesByIds({
 						userId,
+						viewer,
 						channelId: group.channelId,
 						messageIds: group.messageIds,
 					});
@@ -233,20 +314,45 @@ export class UserContentService {
 
 	async getSavedMessages({
 		userId,
+		viewer,
 		limit,
 		before,
 	}: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		limit: number;
 		before?: MessageID;
 	}): Promise<Array<SavedMessageEntry>> {
-		const savedMessages = await this.userRepository.listSavedMessages(userId, limit, before);
-		const messagesByChannel = await this.readMessagesByChannel(userId, savedMessages);
 		const results: Array<SavedMessageEntry> = [];
+		let cursor = before;
+		let pageLimit = limit;
+		for (let refills = 0; ; refills++) {
+			const savedMessages = await this.userRepository.listSavedMessages(userId, pageLimit, cursor);
+			const hidden = await this.collectSavedMessages(userId, viewer, savedMessages, results);
+			if (hidden === 0 || savedMessages.length < pageLimit || refills === MAX_HIDDEN_REFILL_PAGES) break;
+			cursor = oldestMessageId(savedMessages);
+			pageLimit = hidden;
+		}
+		return results.sort((a, b) => compareSnowflakes(b.messageId, a.messageId));
+	}
+
+	private async collectSavedMessages(
+		userId: UserID,
+		viewer: ThreadViewer,
+		savedMessages: ReadonlyArray<{channelId: ChannelID; messageId: MessageID}>,
+		results: Array<SavedMessageEntry>,
+	): Promise<number> {
+		const messagesByChannel = await this.readMessagesByChannel(userId, viewer, savedMessages);
+		const hiddenChannelIds = await this.hiddenThreadChannelIds(viewer, messagesByChannel);
+		let hidden = 0;
 		const staleMessageIds: Array<MessageID> = [];
 		for (const savedMessage of savedMessages) {
 			const channelMessages = messagesByChannel.get(savedMessage.channelId.toString());
 			if (channelMessages === null) {
+				if (hiddenChannelIds.has(savedMessage.channelId.toString())) {
+					hidden++;
+					continue;
+				}
 				results.push({
 					channelId: savedMessage.channelId,
 					messageId: savedMessage.messageId,
@@ -278,26 +384,41 @@ export class UserContentService {
 			});
 		}
 		await Promise.all(staleMessageIds.map((messageId) => this.userRepository.deleteSavedMessage(userId, messageId)));
-		return results.sort((a, b) => (b.messageId > a.messageId ? 1 : a.messageId > b.messageId ? -1 : 0));
+		return hidden;
+	}
+
+	private async hiddenThreadChannelIds(
+		viewer: ThreadViewer,
+		messagesByChannel: ReadonlyMap<string, Map<string, Message> | null>,
+	): Promise<Set<string>> {
+		const unreachable = Array.from(messagesByChannel)
+			.filter(([, messages]) => messages === null)
+			.map(([channelId]) => createChannelID(BigInt(channelId)));
+		if (unreachable.length === 0) return new Set();
+		const channels = await this.channelRepository.channelData.listChannels(unreachable);
+		return new Set(
+			channels
+				.filter(
+					(channel) =>
+						THREAD_FEATURE_CHANNEL_TYPES.has(channel.type) &&
+						(channel.guildId === null || !viewerActive(viewer, channel.guildId)),
+				)
+				.map((channel) => channel.id.toString()),
+		);
 	}
 
 	async saveMessage({
 		userId,
+		viewer,
 		channelId,
 		messageId,
-		userCacheService,
-		requestCache,
 	}: {
 		userId: UserID;
+		viewer: ThreadViewer;
 		channelId: ChannelID;
 		messageId: MessageID;
-		userCacheService: UserCacheService;
-		requestCache: RequestCache;
 	}): Promise<void> {
-		const user = await this.userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
+		const user = await this.userRepository.findUniqueAssert(userId);
 		const savedMessageCount = await this.userRepository.countSavedMessages(userId);
 		const ctx = createLimitMatchContext({user});
 		const maxBookmarks = resolveLimitSafe(
@@ -309,13 +430,13 @@ export class UserContentService {
 		if (savedMessageCount >= maxBookmarks) {
 			throw new MaxBookmarksError({maxBookmarks});
 		}
-		await this.channelService.channelData.auth.getChannelAuthenticated({userId, channelId});
-		const message = await this.channelService.messages.retrieval.getMessage({userId, channelId, messageId});
+		const {channel} = await this.channelService.channelData.auth.getChannelAuthenticated({userId, channelId, viewer});
+		const message = await this.channelService.messages.retrieval.getMessage({userId, viewer, channelId, messageId});
 		if (!message) {
 			throw new UnknownMessageError();
 		}
 		await this.userRepository.createSavedMessage(userId, channelId, messageId);
-		await this.dispatchSavedMessageCreate({userId, message, userCacheService, requestCache});
+		await this.dispatchSavedMessageCreate({userId, message, channel});
 	}
 
 	async unsaveMessage({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
@@ -332,8 +453,11 @@ export class UserContentService {
 			auth: string;
 		};
 		userAgent?: string;
+		originKind?: WebPushOriginKind | null;
+		installedApp?: boolean;
+		threadChannels?: boolean;
 	}): Promise<PushSubscription> {
-		const {userId, authSessionIdHash, endpoint, keys, userAgent} = params;
+		const {userId, authSessionIdHash, endpoint, keys, userAgent, originKind, installedApp, threadChannels} = params;
 		assertPublicPushEndpoint(endpoint, 'endpoint');
 		const subscriptionId = createWebPushSubscriptionId(endpoint);
 		const data: PushSubscriptionRow = {
@@ -347,10 +471,76 @@ export class UserContentService {
 			platform: WEB_PUSH_PLATFORM,
 			app_id: null,
 			provider_environment: null,
+			...(threadChannels === true ? {thread_channels: true} : {}),
 		};
-		const subscription = await this.userRepository.createPushSubscription(data);
-		await this.gatewayService.invalidatePushSubscriptions({userId});
+		const subscription = await this.storeWebPushSubscription(data, originKind ?? null, installedApp === true);
 		return subscription;
+	}
+
+	private async storeWebPushSubscription(
+		data: PushSubscriptionRow,
+		originKind: WebPushOriginKind | null,
+		installedApp: boolean,
+	): Promise<PushSubscription> {
+		if (originKind === 'legacy' && (await this.isLegacyWebPushReplaced(data, installedApp))) {
+			return new PushSubscription(data);
+		}
+		await this.makeRoomForPushSubscription(data);
+		const subscription = await this.userRepository.createPushSubscription(data);
+		if (originKind === 'legacy' && installedApp) {
+			await this.bestEffortPushOriginWrite(() => markInstalledLegacyPushSubscription(this.kv, data.subscription_id));
+		}
+		if (originKind === 'target') {
+			await this.bestEffortPushOriginWrite(() => this.replaceLegacyWebPushSubscriptions(data, installedApp));
+		}
+		return subscription;
+	}
+
+	private async isLegacyWebPushReplaced(data: PushSubscriptionRow, installedApp: boolean): Promise<boolean> {
+		const sessionIdHash = data.auth_session_id_hash;
+		if (!sessionIdHash) return false;
+		try {
+			const replacement = await getPushOriginReplacement(this.kv, sessionIdHash);
+			return replacement === 'installed' || (replacement === 'browser' && !installedApp);
+		} catch (error) {
+			Logger.warn({error}, 'Failed to read the web push origin replacement');
+			return false;
+		}
+	}
+
+	private async bestEffortPushOriginWrite(write: () => Promise<void>): Promise<void> {
+		try {
+			await write();
+		} catch (error) {
+			Logger.warn({error}, 'Failed to apply the web push origin replacement');
+		}
+	}
+
+	private async replaceLegacyWebPushSubscriptions(data: PushSubscriptionRow, installedApp: boolean): Promise<void> {
+		await markTargetPushSubscription(this.kv, data.subscription_id);
+		const sessionIdHash = data.auth_session_id_hash;
+		if (!sessionIdHash) return;
+		await markPushOriginReplaced(this.kv, sessionIdHash, installedApp ? 'installed' : 'browser');
+		const predecessor = await getPushSessionPredecessor(this.kv, sessionIdHash);
+		const candidates = (await this.userRepository.listPushSubscriptions(data.user_id)).filter(
+			(subscription) =>
+				subscription.platform === WEB_PUSH_PLATFORM &&
+				subscription.endpoint !== data.endpoint &&
+				(subscription.authSessionIdHash === sessionIdHash ||
+					(predecessor !== null &&
+						subscription.authSessionIdHash === predecessor &&
+						sameUserAgentFamily(subscription.userAgent, data.user_agent))),
+		);
+		const candidateIds = candidates.map((subscription) => subscription.subscriptionId);
+		const [targetSubscriptionIds, installedLegacySubscriptionIds] = await Promise.all([
+			findTargetPushSubscriptionIds(this.kv, candidateIds),
+			installedApp ? Promise.resolve(new Set<string>()) : findInstalledLegacyPushSubscriptionIds(this.kv, candidateIds),
+		]);
+		for (const subscription of candidates) {
+			if (targetSubscriptionIds.has(subscription.subscriptionId)) continue;
+			if (installedLegacySubscriptionIds.has(subscription.subscriptionId)) continue;
+			await this.userRepository.deletePushSubscription(data.user_id, subscription.subscriptionId);
+		}
 	}
 
 	async listPushSubscriptions(userId: UserID): Promise<Array<PushSubscription>> {
@@ -360,7 +550,6 @@ export class UserContentService {
 
 	async deletePushSubscription(userId: UserID, subscriptionId: string): Promise<void> {
 		await this.userRepository.deletePushSubscription(userId, subscriptionId);
-		await this.gatewayService.invalidatePushSubscriptions({userId});
 	}
 
 	async rotatePushSubscription(params: {
@@ -373,8 +562,21 @@ export class UserContentService {
 			auth: string;
 		};
 		userAgent?: string;
+		originKind?: WebPushOriginKind | null;
+		installedApp?: boolean;
+		threadChannels?: boolean;
 	}): Promise<PushSubscription> {
-		const {userId, authSessionIdHash, oldEndpoint, endpoint, keys, userAgent} = params;
+		const {
+			userId,
+			authSessionIdHash,
+			oldEndpoint,
+			endpoint,
+			keys,
+			userAgent,
+			originKind,
+			installedApp,
+			threadChannels,
+		} = params;
 		assertPublicPushEndpoint(endpoint, 'endpoint');
 		const oldSubscriptionId = createWebPushSubscriptionId(oldEndpoint);
 		const newSubscriptionId = createWebPushSubscriptionId(endpoint);
@@ -392,15 +594,16 @@ export class UserContentService {
 			platform: WEB_PUSH_PLATFORM,
 			app_id: null,
 			provider_environment: null,
+			...(threadChannels === true ? {thread_channels: true} : {}),
 		};
-		const subscription = await this.userRepository.createPushSubscription(data);
-		await this.gatewayService.invalidatePushSubscriptions({userId});
+		const subscription = await this.storeWebPushSubscription(data, originKind ?? null, installedApp === true);
 		return subscription;
 	}
 
 	async registerMobileDevice(params: RegisterMobileDeviceParams): Promise<PushSubscription> {
-		const {userId, authSessionIdHash, device} = params;
-		if (device.platform === 'android_unified_push') {
+		const {userId, authSessionIdHash, device, threadChannels} = params;
+		const webPushKeys = resolveMobileWebPushKeys(device);
+		if (webPushKeys) {
 			assertPublicPushEndpoint(device.token, 'token');
 		}
 		const appId = normalizeMobileAppId(device.app_id);
@@ -411,16 +614,33 @@ export class UserContentService {
 			subscription_id: subscriptionId,
 			auth_session_id_hash: authSessionIdHash ?? null,
 			endpoint: device.token,
-			p256dh_key: device.platform === 'android_unified_push' ? (device.encryption_key ?? null) : null,
-			auth_key: device.platform === 'android_unified_push' ? (device.auth_secret ?? null) : null,
+			p256dh_key: webPushKeys?.p256dh ?? null,
+			auth_key: webPushKeys?.auth ?? null,
 			user_agent: device.user_agent ?? null,
 			platform: device.platform,
 			app_id: appId,
 			provider_environment: providerEnvironment,
+			...(threadChannels === true ? {thread_channels: true} : {}),
 		};
+		await this.makeRoomForPushSubscription(data);
 		const subscription = await this.userRepository.createPushSubscription(data);
-		await this.gatewayService.invalidatePushSubscriptions({userId});
 		return subscription;
+	}
+
+	private async makeRoomForPushSubscription(data: PushSubscriptionRow): Promise<void> {
+		const others = (await this.userRepository.listPushSubscriptions(data.user_id)).filter(
+			(subscription) => subscription.subscriptionId !== data.subscription_id,
+		);
+		const excess = others.length - (MAX_PUSH_SUBSCRIPTIONS_PER_USER - 1);
+		if (excess <= 0) return;
+		const sessionIdHash = data.auth_session_id_hash;
+		const evictionOrder = [
+			...others.filter((subscription) => sessionIdHash !== null && subscription.authSessionIdHash === sessionIdHash),
+			...others.filter((subscription) => sessionIdHash === null || subscription.authSessionIdHash !== sessionIdHash),
+		];
+		for (const subscription of evictionOrder.slice(0, excess)) {
+			await this.userRepository.deletePushSubscription(data.user_id, subscription.subscriptionId);
+		}
 	}
 
 	async listMobileDevices(userId: UserID): Promise<Array<PushSubscription>> {
@@ -455,8 +675,7 @@ export class UserContentService {
 		userId: UserID,
 		filter: HarvestSelfDataRequest | null,
 	): Promise<HarvestCreationResponse> {
-		const user = await this.userRepository.findUnique(userId);
-		if (!user) throw new UnknownUserError();
+		await this.userRepository.findUniqueAssert(userId);
 		const harvestId = await this.snowflakeService.generate();
 		const harvest = new UserHarvest({
 			user_id: userId,
@@ -474,15 +693,22 @@ export class UserContentService {
 		});
 		const harvestRepository = new UserHarvestRepository();
 		await harvestRepository.create(harvest);
-		await this.workerService.addJob('harvestUserData', {
-			userId: userId.toString(),
-			harvestId: harvestId.toString(),
-			...(filter
-				? {
-						filter: serializeSelfMessageFilter(filter),
-					}
-				: {}),
-		});
+		try {
+			await this.workerService.addJob('harvestUserData', {
+				userId: userId.toString(),
+				harvestId: harvestId.toString(),
+				...(filter
+					? {
+							filter: serializeSelfMessageFilter(filter),
+						}
+					: {}),
+			});
+		} catch (error) {
+			await harvestRepository
+				.markUnqueuedAsTerminallyFailed(harvest, 'Export job could not be queued')
+				.catch((markError) => Logger.error({err: markError, userId, harvestId}, 'Failed to close unqueued harvest'));
+			throw error;
+		}
 		return {
 			harvest_id: harvest.harvestId.toString(),
 			status: harvest.getStatus(),
@@ -565,12 +791,15 @@ export class UserContentService {
 		let userId: UserID;
 		try {
 			userId = createUserID(BigInt(payload.userId));
-		} catch {
+		} catch (error) {
+			if (!(error instanceof SyntaxError)) {
+				Logger.warn({error, harvestId: params.harvestId}, 'Failed to read a harvest download user id');
+			}
 			return null;
 		}
 		const harvestRepository = new UserHarvestRepository();
 		const harvest = await harvestRepository.findByUserAndHarvestId(userId, params.harvestId);
-		if (!harvest || !harvest.completedAt || !harvest.storageKey || harvest.failedAt) {
+		if (!harvest?.completedAt || !harvest.storageKey || harvest.failedAt) {
 			return null;
 		}
 		if (harvest.downloadUrlExpiresAt && harvest.downloadUrlExpiresAt < new Date()) {
@@ -602,27 +831,25 @@ export class UserContentService {
 		const scheduledAt = new Date(Date.now() + delayMs);
 		const user = await this.userRepository.findUniqueAssert(userId);
 		await this.bulkMessageDeletionQueue.removeFromQueue(userId);
-		const counts = await this.countBulkDeletionTargets(userId, scheduledAt.getTime());
 		Logger.debug(
-			{
-				userId: userId.toString(),
-				channelCount: counts.channelCount,
-				messageCount: counts.messageCount,
-				scheduledAt: scheduledAt.toISOString(),
-			},
+			{userId: userId.toString(), scheduledAt: scheduledAt.toISOString()},
 			'Scheduling bulk message deletion',
 		);
 		const updatedUser = await this.userRepository.patchUpsert(
 			userId,
 			{
 				pending_bulk_message_deletion_at: scheduledAt,
-				pending_bulk_message_deletion_channel_count: counts.channelCount,
-				pending_bulk_message_deletion_message_count: counts.messageCount,
+				pending_bulk_message_deletion_channel_count: null,
+				pending_bulk_message_deletion_message_count: null,
 			},
 			user.toRow(),
 		);
 		await this.bulkMessageDeletionQueue.scheduleDeletion(userId, scheduledAt);
-		await this.updatePropagator.dispatchUserUpdate(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
+		await this.workerService.addJob('countBulkMessageDeletionTargets', {
+			userId: userId.toString(),
+			scheduledAt: scheduledAt.getTime(),
+		});
 	}
 
 	async bulkDeleteSelfMessagesImmediate(params: {userId: UserID; filter: BulkDeleteSelfMessagesFilter}): Promise<void> {
@@ -641,6 +868,7 @@ export class UserContentService {
 	async cancelBulkMessageDeletion(userId: UserID): Promise<void> {
 		Logger.debug({userId: userId.toString()}, 'Canceling pending bulk message deletion');
 		const user = await this.userRepository.findUniqueAssert(userId);
+		if ((user.flags & UserFlags.SPAMMER) !== 0n) return;
 		const updatedUser = await this.userRepository.patchUpsert(
 			userId,
 			{
@@ -651,44 +879,16 @@ export class UserContentService {
 			user.toRow(),
 		);
 		await this.bulkMessageDeletionQueue.removeFromQueue(userId);
-		await this.updatePropagator.dispatchUserUpdate(updatedUser);
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
 	}
 
-	private async countBulkDeletionTargets(
-		userId: UserID,
-		cutoffMs: number,
-	): Promise<{
-		channelCount: number;
-		messageCount: number;
-	}> {
-		const CHUNK_SIZE = 200;
-		let lastMessageId: MessageID | undefined;
-		const channels = new Set<string>();
-		let messageCount = 0;
-		while (true) {
-			const messageRefs = await this.channelRepository.listMessagesByAuthor(userId, CHUNK_SIZE, lastMessageId);
-			if (messageRefs.length === 0) {
-				break;
-			}
-			for (const {channelId, messageId} of messageRefs) {
-				if (snowflakeToDate(messageId).getTime() > cutoffMs) {
-					continue;
-				}
-				channels.add(channelId.toString());
-				messageCount++;
-			}
-			lastMessageId = messageRefs[messageRefs.length - 1].messageId;
-			if (messageRefs.length < CHUNK_SIZE) {
-				break;
-			}
-		}
-		return {
-			channelCount: channels.size,
-			messageCount,
-		};
-	}
-
-	async dispatchRecentMentionDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
+	private async dispatchRecentMentionDelete({
+		userId,
+		messageId,
+	}: {
+		userId: UserID;
+		messageId: MessageID;
+	}): Promise<void> {
 		await this.gatewayService
 			.dispatchPresence({
 				userId,
@@ -704,46 +904,62 @@ export class UserContentService {
 			});
 	}
 
-	async dispatchSavedMessageCreate({
+	private async dispatchSavedMessageCreate({
 		userId,
 		message,
+		channel,
 	}: {
 		userId: UserID;
 		message: Message;
-		userCacheService: UserCacheService;
-		requestCache: RequestCache;
+		channel: Channel;
 	}): Promise<void> {
-		const data = (await this.buildMessageResponsesForUser(userId, [message]))[0];
-		await this.gatewayService
-			.dispatchPresence({
-				userId,
-				event: 'SAVED_MESSAGE_CREATE',
-				data,
-			})
-			.catch((error) => {
-				Logger.error(
-					{userId: userId.toString(), messageId: message.id.toString(), error},
-					'Failed to dispatch SAVED_MESSAGE_CREATE',
-				);
-				return null;
-			});
+		const data = (await this.buildUnmaskedResponses(userId, [message])).responses[0];
+		if (!data) return;
+		for (const payload of savedMessageCreatePayloads(channel, data)) {
+			await this.gatewayService
+				.dispatchPresence({
+					userId,
+					event: 'SAVED_MESSAGE_CREATE',
+					data: payload,
+				})
+				.catch((error) => {
+					Logger.error(
+						{userId: userId.toString(), messageId: message.id.toString(), error},
+						'Failed to dispatch SAVED_MESSAGE_CREATE',
+					);
+					return null;
+				});
+		}
 	}
 
-	async buildMessageResponsesForUser(userId: UserID, messages: Array<Message>): Promise<Array<MessageResponse>> {
-		if (messages.length === 0) return [];
+	async buildMessageResponsesForUser(
+		userId: UserID,
+		viewer: ThreadViewer,
+		messages: Array<Message>,
+	): Promise<Array<MessageResponse>> {
+		const {responses, channelById} = await this.buildUnmaskedResponses(userId, messages);
+		return maskThreadArtifactsByChannel(viewer, channelById, responses);
+	}
+
+	private async buildUnmaskedResponses(
+		userId: UserID,
+		messages: Array<Message>,
+	): Promise<{responses: Array<MessageResponse>; channelById: Map<string, Channel>}> {
+		if (messages.length === 0) return {responses: [], channelById: new Map()};
 		const channelIds = Array.from(new Set(messages.map((message) => message.channelId.toString())));
-		const channels = await this.channelRepository.listChannels(
+		const channels = await this.channelRepository.channelData.listChannels(
 			channelIds.map((channelId) => createChannelID(BigInt(channelId))),
 		);
 		const channelById = new Map(channels.map((channel) => [channel.id.toString(), channel] as const));
-		return createMessageResponseDataService().buildMessagesForChannels({
+		const responses = await createMessageResponseDataService().buildMessagesForChannels({
 			userId,
 			messages,
 			channelById,
 		});
+		return {responses, channelById};
 	}
 
-	async dispatchSavedMessageDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
+	private async dispatchSavedMessageDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
 		await this.gatewayService
 			.dispatchPresence({
 				userId,

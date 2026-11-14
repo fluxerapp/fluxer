@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {isElectronPlatform} from '@app/features/platform/types/Platform';
+import Authentication from '@app/features/auth/state/Authentication';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {
+	createVoiceMeshRoom,
+	holdVoiceMeshConversion,
+	isVoiceMeshRoom,
+} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
 import {Store} from '@app/features/voice/engine/Store';
 import {sendVoiceStateDisconnect} from '@app/features/voice/engine/VoiceChannelConnector';
 import {
 	createVoiceConnectionSnapshot,
 	getVoiceConnectionFailedTarget,
-	getVoiceConnectionFailureReason,
 	isLatestVoiceConnectionAttempt,
 	isVoiceConnectionFailed,
 	selectVoiceConnectionServerUpdateDecision,
 	transitionVoiceConnectionSnapshot,
 	type VoiceConnectionEvent,
-	type VoiceConnectionFailureReason,
 	type VoiceConnectionLocalDisconnectReason,
 	type VoiceConnectionSnapshot,
 } from '@app/features/voice/engine/VoiceConnectionStateMachine';
@@ -26,11 +29,13 @@ import {
 	releaseE2EEWorker,
 } from '@app/features/voice/engine/VoiceE2EEKeyProvider';
 import {getSharedVoiceAudioContext} from '@app/features/voice/engine/VoiceSharedAudioContext';
-import {selectLocalMediaPublicationsForConnectionRepublish} from '@app/features/voice/engine/VoiceTrackPublicationUtils';
+import {
+	releaseCaptureWithRepublishedTrack,
+	selectLocalMediaPublicationsForConnectionRepublish,
+} from '@app/features/voice/engine/VoiceTrackPublicationUtils';
 import {
 	assertDisconnectReason,
 	assertNonEmptyString,
-	assertObjectLike,
 	assertOptionalNonEmptyString,
 	assertVoiceServerUpdateShape,
 	hasAnyTerminalTransport,
@@ -42,12 +47,13 @@ import {
 	findVideoPublishCodecPolicyViolation,
 	getRoomVideoPublishDefaults,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
-import {setNoiseSuppressionScopeGuildId} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
-import {SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS} from '@app/features/voice/utils/ScreenShareOptions';
+import {getH264HardwareProfilesSync} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {
+	clearScreenShareDecodeFailures,
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
 } from '@app/features/voice/utils/VideoDecoderCapabilities';
+import {getScreenShareBitrateCeilingBps} from '@app/features/voice/utils/VideoQualityEntitlement';
 import type {
 	ExternalE2EEKeyProvider,
 	LocalTrack,
@@ -56,8 +62,8 @@ import type {
 	RoomOptions,
 	TrackPublishOptions,
 } from 'livekit-client';
-import {Room as LiveKitRoom, RoomEvent, Track} from 'livekit-client';
-import {makeObservable, observable} from 'mobx';
+import {Room as LiveKitRoom, Track} from 'livekit-client';
+import {makeObservable, observableRef} from 'mobx';
 import type {Subscription} from 'rxjs';
 import {timer} from 'rxjs';
 
@@ -72,9 +78,10 @@ export interface VoiceServerUpdateData {
 	guild_id?: string;
 	channel_id?: string;
 	e2ee_key?: string | null;
+	ice_servers?: Array<Pick<RTCIceServer, 'urls'>>;
 }
 
-export interface VoiceConnectionState {
+interface VoiceConnectionState {
 	room: Room | null;
 	guildId: string | null;
 	channelId: string | null;
@@ -85,14 +92,14 @@ export interface VoiceConnectionState {
 	connectionId: string | null;
 }
 
-export interface RegionHotSwapState {
+interface RegionHotSwapState {
 	pendingRoom: Room | null;
 	previousRoom: Room | null;
 	inProgress: boolean;
 }
 
-export type HotSwapQueuedOperation = () => void | Promise<void>;
-export type VoiceConnectFailureHandler = (
+type HotSwapQueuedOperation = () => void | Promise<void>;
+type VoiceConnectFailureHandler = (
 	guildId: string | null,
 	channelId: string,
 	connectionId: string | null,
@@ -118,22 +125,19 @@ const initialHotSwapState: RegionHotSwapState = {
 const REGION_HOT_SWAP_TIMEOUT_MS = 10000;
 
 async function getRoomVideoDecoderExclusions(): Promise<RoomOptions['subscriberVideoCodecExclusions']> {
-	const cached = getVideoDecoderExclusionsSync();
-	if (cached) return cached.length > 0 ? cached : undefined;
 	let timeoutId: NodeJS.Timeout | undefined;
 	const timeout = new Promise<null>((resolve) => {
 		timeoutId = setTimeout(() => resolve(null), VIDEO_DECODER_EXCLUSION_TIMEOUT_MS);
 	});
 	try {
-		const exclusions = await Promise.race([loadVideoDecoderExclusions(), timeout]);
-		if (exclusions && exclusions.length > 0) return exclusions;
-		const latest = getVideoDecoderExclusionsSync();
-		return latest && latest.length > 0 ? latest : undefined;
+		await Promise.race([loadVideoDecoderExclusions(), timeout]);
 	} finally {
 		if (timeoutId !== undefined) {
 			clearTimeout(timeoutId);
 		}
 	}
+	const exclusions = getVideoDecoderExclusionsSync();
+	return exclusions && exclusions.length > 0 ? exclusions : undefined;
 }
 
 function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
@@ -147,7 +151,11 @@ function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
 
 function createRoomPublishDefaults(): RoomOptions['publishDefaults'] {
 	return {
-		screenShareEncoding: {maxBitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS, maxFramerate: 30, priority: 'high'},
+		screenShareEncoding: {
+			maxBitrate: getScreenShareBitrateCeilingBps(),
+			maxFramerate: 30,
+			priority: 'high',
+		},
 		...getRoomVideoPublishDefaults(),
 	};
 }
@@ -166,6 +174,7 @@ function createRoomOptions(
 		webAudioMix: createWebAudioMixOption(),
 		publishDefaults: createRoomPublishDefaults(),
 		subscriberVideoCodecExclusions,
+		h264HardwareProfiles: getH264HardwareProfilesSync()?.profiles,
 	};
 	let e2eeKeyProvider: ExternalE2EEKeyProvider | null = null;
 	let e2eeWorker: Worker | null = null;
@@ -184,23 +193,21 @@ function createRoomOptions(
 	return {roomOptions, e2eeKeyProvider, e2eeWorker};
 }
 
+function requireCurrentUserId(): string {
+	const userId = Authentication.currentUserId;
+	assertNonEmptyString(userId, 'mesh room current user id');
+	return userId;
+}
+
 function createRoomConnectOptions(): RoomConnectOptions {
 	const connectOptions: RoomConnectOptions = {
 		autoSubscribe: false,
 	};
 	assert.equal(connectOptions.autoSubscribe, false, 'LiveKit connect options must not auto-subscribe');
-	if (isElectronPlatform()) {
-		connectOptions.rtcConfig = {iceTransportPolicy: 'relay'};
-		assert.equal(
-			connectOptions.rtcConfig.iceTransportPolicy,
-			'relay',
-			'Electron LiveKit connects must force relay ICE',
-		);
-	}
 	return connectOptions;
 }
 
-export class VoiceEngineV2AppConnectionHostAdapter extends Store {
+class VoiceEngineV2AppConnectionHostAdapter extends Store {
 	connectionState: VoiceConnectionState = initialConnectionState;
 	hotSwapState: RegionHotSwapState = initialHotSwapState;
 	private connectionSnapshot: VoiceConnectionSnapshot = createVoiceConnectionSnapshot();
@@ -214,8 +221,8 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 	constructor() {
 		super();
 		makeObservable(this, {
-			connectionState: observable.ref,
-			hotSwapState: observable.ref,
+			connectionState: observableRef,
+			hotSwapState: observableRef,
 		});
 		this.throttle.subscribe(() => this.emitChange());
 		this.reconnect.subscribe(() => this.emitChange());
@@ -257,10 +264,6 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		return this.reconnect.shouldAutoReconnect;
 	}
 
-	get reconnectAttempts(): number {
-		return this.reconnect.reconnectAttempts;
-	}
-
 	get disconnecting(): boolean {
 		return this.isLocalDisconnecting;
 	}
@@ -273,39 +276,8 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		return isVoiceConnectionFailed(this.connectionSnapshot);
 	}
 
-	get connectFailureReason(): VoiceConnectionFailureReason {
-		return getVoiceConnectionFailureReason(this.connectionSnapshot);
-	}
-
 	get connectFailedTarget(): {guildId: string | null; channelId: string} | null {
 		return getVoiceConnectionFailedTarget(this.connectionSnapshot);
-	}
-
-	get regionHotSwapInProgress(): boolean {
-		return this.hotSwapState.inProgress;
-	}
-
-	enqueueOrRun(operation: HotSwapQueuedOperation): void {
-		assert.equal(typeof operation, 'function', 'enqueueOrRun.operation must be a function');
-		assert.ok(this.hotSwapOperationQueue.length <= 4096, 'enqueueOrRun pre-condition: queue under cap');
-		if (!this.hotSwapState.inProgress) {
-			try {
-				const result = operation();
-				if (result && typeof (result as Promise<void>).catch === 'function') {
-					void (result as Promise<void>).catch((error) => {
-						logger.error('Immediate operation failed', {error});
-					});
-				}
-			} catch (error) {
-				logger.error('Immediate operation failed', {error});
-			}
-			return;
-		}
-		logger.debug('Queueing operation during hot-swap', {queueLength: this.hotSwapOperationQueue.length + 1});
-		this.update(() => {
-			this.transitionConnection({type: 'hotSwap.queueOperation'});
-		});
-		this.hotSwapOperationQueue.push(operation);
 	}
 
 	private async drainHotSwapQueue(): Promise<void> {
@@ -314,7 +286,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.update(() => {
 			this.transitionConnection({type: 'hotSwap.drainQueue'});
 		});
-		logger.info('Draining hot-swap operation queue', {count: ops.length});
+		logger.debug('Draining hot-swap operation queue', {count: ops.length});
 		for (const op of ops) {
 			try {
 				await op();
@@ -326,7 +298,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 
 	private clearHotSwapQueue(): void {
 		if (this.hotSwapOperationQueue.length > 0) {
-			logger.info('Clearing hot-swap operation queue', {discarded: this.hotSwapOperationQueue.length});
+			logger.debug('Clearing hot-swap operation queue', {discarded: this.hotSwapOperationQueue.length});
 		}
 		this.hotSwapOperationQueue.length = 0;
 		this.update(() => {
@@ -355,7 +327,6 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			voiceServerEndpoint: context.voiceServerEndpoint,
 			connectionId: context.connectionId,
 		};
-		setNoiseSuppressionScopeGuildId(context.guildId);
 		this.hotSwapState = {
 			pendingRoom: context.hotSwap.pendingRoom as Room | null,
 			previousRoom: context.hotSwap.previousRoom as Room | null,
@@ -398,7 +369,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.syncThrottleToCurrentAttempt();
 		this.throttle.setInFlightConnect(true);
 		this.scheduleVoiceServerTimeout(guildId, channelId);
-		logger.info('Connection started', {guildId, channelId});
+		logger.debug('Connection started', {guildId, channelId});
 		return true;
 	}
 
@@ -412,7 +383,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.syncThrottleToCurrentAttempt();
 		this.throttle.setInFlightConnect(true);
 		this.scheduleVoiceServerTimeout(guildId, channelId);
-		logger.info('Connection expectation recovered', {guildId, channelId});
+		logger.debug('Connection expectation recovered', {guildId, channelId});
 	}
 
 	handleVoiceServerUpdate(
@@ -492,7 +463,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		const isChannelMove = decision.isChannelMove;
 		if (isChannelMove) {
 			if (connected) {
-				logger.info('VOICE_SERVER_UPDATE: server-initiated channel move', {
+				logger.debug('VOICE_SERVER_UPDATE: server-initiated channel move', {
 					expectedChannelId,
 					incomingChannelId,
 					connectionId,
@@ -500,7 +471,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			}
 		}
 		if (decision.isRegionChange) {
-			logger.info('VOICE_SERVER_UPDATE: region change detected, attempting hot-swap', {
+			logger.debug('VOICE_SERVER_UPDATE: region change detected, attempting hot-swap', {
 				previousEndpoint: currentEndpoint,
 				newEndpoint: endpoint,
 				guildId,
@@ -525,6 +496,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		if (previousRoom) {
 			shouldStopPreviousRoomTracks = isChannelMove || onBeforeReconnect?.(isChannelMove, previousRoom) !== true;
 			previousRoom.removeAllListeners();
+			holdVoiceMeshConversion(previousRoom, true);
 			if (isChannelMove) {
 				this.disconnectPreviousRoom(previousRoom);
 				previousRoom = null;
@@ -542,6 +514,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		});
 		this.throttle.setInFlightConnect(true);
 		const e2eeKey = raw.e2ee_key ?? null;
+		clearScreenShareDecodeFailures();
 		const subscriberVideoCodecExclusions = await getRoomVideoDecoderExclusions();
 		if (
 			!this.isLatestConnectionAttempt(attemptId) ||
@@ -552,7 +525,15 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			return;
 		}
 		const {roomOptions, e2eeKeyProvider, e2eeWorker} = createRoomOptions(e2eeKey, subscriberVideoCodecExclusions);
-		const room = new LiveKitRoom(roomOptions);
+		const room = raw.ice_servers
+			? createVoiceMeshRoom(roomOptions, {
+					iceServers: raw.ice_servers,
+					guildId,
+					channelId: resolvedChannelId,
+					connectionId: raw.connection_id,
+					userId: requireCurrentUserId(),
+				})
+			: new LiveKitRoom(roomOptions);
 		ownE2EEWorker(room, e2eeWorker);
 		let roomClosed = false;
 		const closeRoom = () => {
@@ -583,13 +564,13 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				failConnectBeforeRoomConnect('Missing endpoint or token', {endpoint, hasToken: !!token});
 				return;
 			}
-			logger.info('Attempting to connect to LiveKit', {endpoint, guildId, channelId: resolvedChannelId});
+			logger.debug('Attempting to connect to LiveKit', {endpoint, guildId, channelId: resolvedChannelId});
 			const connectOptions = createRoomConnectOptions();
 			room
 				.connect(endpoint, token, connectOptions)
 				.then(() => {
 					this.disconnectPreviousRoom(previousRoom, shouldStopPreviousRoomTracks);
-					logger.info('LiveKit connection succeeded');
+					logger.debug('LiveKit connection succeeded');
 					const connectionState = this.connectionState;
 					const connectedEventAlreadyApplied = connectionState.connected && connectionState.room == null;
 					if (
@@ -608,7 +589,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 						}
 						return;
 					}
-					logger.info('Initializing voice connection');
+					logger.debug('Initializing voice connection');
 					this.update(() => {
 						this.transitionConnection({type: 'connection.roomReady', room, attemptId});
 					});
@@ -701,6 +682,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.update(() => {
 			this.transitionConnection({type: 'hotSwap.start', pendingRoom: newRoom, previousRoom: existingRoom});
 		});
+		holdVoiceMeshConversion(existingRoom, true);
 		this.clearHotSwapTimeout();
 		this.hotSwapTimeoutSub = timer(REGION_HOT_SWAP_TIMEOUT_MS).subscribe(() => {
 			if (this.hotSwapState.inProgress && this.hotSwapState.pendingRoom === newRoom) {
@@ -709,7 +691,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			}
 		});
 		const connectOptions = createRoomConnectOptions();
-		logger.info('Region hot-swap: connecting to new endpoint', {endpoint, guildId, channelId});
+		logger.debug('Region hot-swap: connecting to new endpoint', {endpoint, guildId, channelId});
 		newRoom
 			.connect(endpoint, token, connectOptions)
 			.then(async () => {
@@ -727,7 +709,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 					}
 					return;
 				}
-				logger.info('Region hot-swap: new room connected, republishing tracks');
+				logger.debug('Region hot-swap: new room connected, republishing tracks');
 				try {
 					await this.republishLocalTracks(existingRoom, newRoom);
 				} catch (error) {
@@ -756,7 +738,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 					}
 					return;
 				}
-				logger.info('Region hot-swap: swapping room pointer');
+				logger.debug('Region hot-swap: swapping room pointer');
 				const previousRoom = existingRoom;
 				onRoomCreated(newRoom, attemptId, guildId, channelId);
 				previousRoom.removeAllListeners();
@@ -772,7 +754,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 					logger.warn('Region hot-swap: failed to disconnect old room', {error});
 				}
 				releaseE2EEWorker(previousRoom);
-				logger.info('Region hot-swap: complete', {
+				logger.debug('Region hot-swap: complete', {
 					previousEndpoint: this.connectionState.voiceServerEndpoint,
 					newEndpoint: endpoint,
 				});
@@ -796,9 +778,10 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				this.update(() => {
 					this.transitionConnection({type: 'hotSwap.reset'});
 				});
+				holdVoiceMeshConversion(existingRoom, false);
 				this.clearHotSwapTimeout();
 				this.clearHotSwapQueue();
-				logger.info('Region hot-swap: keeping old room on previous endpoint');
+				logger.debug('Region hot-swap: keeping old room on previous endpoint');
 			});
 	}
 
@@ -809,8 +792,13 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			logger.warn('Region hot-swap: missing participant for track republishing');
 			return;
 		}
+		const isMeshConversion = isVoiceMeshRoom(oldRoom);
 		const publications = selectLocalMediaPublicationsForConnectionRepublish(
 			Array.from(oldParticipant.trackPublications.values()),
+		).filter(
+			(publication) =>
+				!isMeshConversion ||
+				(publication.source !== Track.Source.ScreenShare && publication.source !== Track.Source.ScreenShareAudio),
 		);
 		const errors: Array<{source: string; error: unknown}> = [];
 		let codecPolicyFailure: Error | null = null;
@@ -834,6 +822,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 					name: publication.trackName,
 				};
 				const republished = await newParticipant.publishTrack(track.mediaStreamTrack, publishOptions);
+				releaseCaptureWithRepublishedTrack(newParticipant, republished, track);
 				const violation = publishOptions.videoCodec
 					? findVideoPublishCodecPolicyViolation(publishOptions.videoCodec, republished.options?.videoCodec)
 					: null;
@@ -873,8 +862,8 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		assert.ok(this.hotSwapOperationQueue.length <= 4096, 'abortHotSwap pre-condition: queue under cap');
 		assert.ok(this.connectionSnapshot !== null, 'abortHotSwap pre-condition: connection snapshot present');
 		if (!this.hotSwapState.inProgress) return;
-		const {pendingRoom} = this.hotSwapState;
-		logger.info('Aborting region hot-swap');
+		const {pendingRoom, previousRoom} = this.hotSwapState;
+		logger.debug('Aborting region hot-swap');
 		if (pendingRoom) {
 			try {
 				pendingRoom.removeAllListeners();
@@ -886,6 +875,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.update(() => {
 			this.transitionConnection({type: 'hotSwap.abort'});
 		});
+		holdVoiceMeshConversion(previousRoom, false);
 		this.clearHotSwapTimeout();
 		this.clearHotSwapQueue();
 	}
@@ -901,7 +891,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.throttle.setInFlightConnect(false);
 		this.reconnect.resetOnConnection();
 		assert.ok(this.connectionState.connected, 'markConnected post-condition: connection state reflects connected');
-		logger.info('Connection established');
+		logger.debug('Connection established');
 	}
 
 	markDisconnected(reason: 'user' | 'error' | 'server' = 'user'): void {
@@ -912,7 +902,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.invalidateThrottleAttempt();
 		this.throttle.setInFlightConnect(false);
 		this.reconnect.setReconnectState(reason);
-		logger.info('Connection terminated', {reason});
+		logger.debug('Connection terminated', {reason});
 	}
 
 	markReconnecting(): void {
@@ -920,7 +910,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.update(() => {
 			this.transitionConnection({type: 'connection.reconnecting'});
 		});
-		logger.info('Connection reconnecting');
+		logger.debug('Connection reconnecting');
 	}
 
 	markReconnected(): void {
@@ -929,7 +919,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			this.transitionConnection({type: 'connection.reconnected'});
 		});
 		this.reconnect.resetOnConnection();
-		logger.info('Connection reconnected');
+		logger.debug('Connection reconnected');
 	}
 
 	disconnectFromVoiceChannel(reason: 'user' | 'error' | 'server' = 'user'): void {
@@ -953,7 +943,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.update(() => {
 			this.isLocalDisconnecting = false;
 		});
-		logger.info('Disconnected from voice channel', {reason});
+		logger.debug('Disconnected from voice channel', {reason});
 	}
 
 	disconnectForChannelMove(): void {
@@ -970,7 +960,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			this.transitionConnection({type: 'connection.disconnectForChannelMove'});
 		});
 		this.invalidateThrottleAttempt();
-		logger.info('Disconnected for channel move (preserving connectionId)');
+		logger.debug('Disconnected for channel move (preserving connectionId)');
 	}
 
 	private disconnectRoomForTerminalUnload(room: Room | null, label: string): void {
@@ -1013,42 +1003,14 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.invalidateThrottleAttempt();
 	}
 
-	scheduleReconnect(callback: () => void): boolean {
-		assert.equal(typeof callback, 'function', 'scheduleReconnect.callback must be a function');
-		return this.reconnect.scheduleReconnect(callback);
-	}
-
 	markReconnectionAttempted(): void {
 		assert.ok(this.reconnect !== null, 'markReconnectionAttempted pre-condition: reconnect policy present');
 		this.reconnect.markAttempted();
 	}
 
-	resetReconnectState(): void {
-		assert.ok(this.reconnect !== null, 'resetReconnectState pre-condition: reconnect policy present');
-		this.reconnect.reset();
-	}
-
 	forgetReconnectChannel(channelId: string): void {
 		assertNonEmptyString(channelId, 'forgetReconnectChannel.channelId');
 		this.reconnect.forgetChannel(channelId);
-	}
-
-	updateChannelId(channelId: string): void {
-		assertNonEmptyString(channelId, 'updateChannelId.channelId');
-		this.update(() => {
-			this.transitionConnection({type: 'connection.updateChannel', channelId});
-		});
-		logger.info('Channel updated', {channelId});
-	}
-
-	acceptServerChannelChange(channelId: string): void {
-		assertNonEmptyString(channelId, 'acceptServerChannelChange.channelId');
-		const previousChannelId = this.connectionState.channelId;
-		this.update(() => {
-			this.transitionConnection({type: 'connection.acceptServerChannelChange', channelId});
-		});
-		this.reconnect.setLastConnectedChannel(this.connectionState.guildId, channelId);
-		logger.info('Accepted server channel change', {previousChannelId, newChannelId: channelId});
 	}
 
 	createGuardedHandler<T extends ReadonlyArray<unknown>>(
@@ -1073,45 +1035,6 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				logger.error('Guarded voice handler failed', {attemptId, error});
 			}
 		};
-	}
-
-	bindConnectionEvents(
-		room: Room,
-		attemptId: number,
-		handlers: {
-			onConnected: () => void;
-			onDisconnected: (reason?: unknown) => void;
-			onReconnecting: () => void;
-			onReconnected: () => void;
-		},
-	): void {
-		assertObjectLike<Room>(room, 'bindConnectionEvents.room');
-		assert.equal(typeof attemptId, 'number', 'bindConnectionEvents.attemptId must be a number');
-		assertObjectLike<typeof handlers>(handlers, 'bindConnectionEvents.handlers');
-		assert.equal(
-			typeof handlers.onConnected,
-			'function',
-			'bindConnectionEvents.handlers.onConnected must be a function',
-		);
-		assert.equal(
-			typeof handlers.onDisconnected,
-			'function',
-			'bindConnectionEvents.handlers.onDisconnected must be a function',
-		);
-		assert.equal(
-			typeof handlers.onReconnecting,
-			'function',
-			'bindConnectionEvents.handlers.onReconnecting must be a function',
-		);
-		assert.equal(
-			typeof handlers.onReconnected,
-			'function',
-			'bindConnectionEvents.handlers.onReconnected must be a function',
-		);
-		room.on(RoomEvent.Connected, this.createGuardedHandler(attemptId, handlers.onConnected));
-		room.on(RoomEvent.Disconnected, this.createGuardedHandler(attemptId, handlers.onDisconnected));
-		room.on(RoomEvent.Reconnecting, this.createGuardedHandler(attemptId, handlers.onReconnecting));
-		room.on(RoomEvent.Reconnected, this.createGuardedHandler(attemptId, handlers.onReconnected));
 	}
 
 	resetConnectionState(): void {
@@ -1140,7 +1063,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		});
 		this.invalidateThrottleAttempt();
 		this.throttle.setInFlightConnect(false);
-		logger.info('Connection aborted due to gateway error');
+		logger.debug('Connection aborted due to gateway error');
 	}
 
 	private scheduleVoiceServerTimeout(guildId: string | null, channelId: string): void {
@@ -1164,7 +1087,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				}
 			});
 			if (didTimeout) {
-				logger.info('Sending voice state disconnect for abandoned voice connection after timeout', {
+				logger.debug('Sending voice state disconnect for abandoned voice connection after timeout', {
 					guildId,
 					channelId,
 					connectionId: abandonedConnectionId,
@@ -1177,12 +1100,10 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 	private disconnectPreviousRoom(previousRoom: Room | null, stopTracks = true): void {
 		if (!previousRoom) return;
 		try {
-			if (previousRoom.state === 'connected') {
-				const tracksToStop = stopTracks ? [] : this.getPreviousRoomNonScreenShareTracks(previousRoom);
-				previousRoom.disconnect(stopTracks);
-				this.stopPreviousRoomTracks(tracksToStop);
-				logger.debug('Previous room disconnected', {stopTracks});
-			}
+			const tracksToStop = stopTracks ? [] : this.getPreviousRoomNonScreenShareTracks(previousRoom);
+			previousRoom.disconnect(stopTracks);
+			this.stopPreviousRoomTracks(tracksToStop);
+			logger.debug('Previous room disconnected', {stopTracks});
 		} catch (error) {
 			logger.warn('Failed to disconnect previous room', error);
 		}
@@ -1240,7 +1161,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		this.throttle.reset();
 		this.invalidateThrottleAttempt();
 		this.reconnect.cleanup();
-		logger.info('Cleanup complete');
+		logger.debug('Cleanup complete');
 	}
 }
 

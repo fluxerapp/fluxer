@@ -6,9 +6,13 @@ import * as EmojiImageUtils from '@app/features/expressions/utils/EmojiUtils';
 import {getSkinTonedSurrogate} from '@app/features/expressions/utils/SkinToneUtils';
 import type {ComposerHandle, ComposerSelectionRange} from '@app/features/lexical/composer/ComposerHandle';
 import type {ComposerInsertPayload, ComposerInsertSpacing} from '@app/features/lexical/composer/composerOffsets';
+import {
+	getReactionShortcodeName,
+	isReactionShorthandPrefix,
+} from '@app/features/messaging/utils/ReactionShorthandUtils';
 import {type MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 
-export interface ComposerReplacementPlan {
+interface ComposerReplacementPlan {
 	start: number;
 	end: number;
 	payload: ComposerInsertPayload;
@@ -22,6 +26,10 @@ export interface ComposerReplacementPlan {
 export interface ComposerReplacementLimit {
 	maxWireLength?: number;
 	onExceedMaxLength?: () => void;
+}
+
+export interface ComposerEmojiInsertOptions extends ComposerReplacementLimit {
+	reactionShorthand?: boolean;
 }
 
 interface ComposerPayloadSegment {
@@ -62,7 +70,7 @@ function getPayloadSegment(payload: ComposerInsertPayload): ComposerPayloadSegme
 	}
 }
 
-export function createComposerReplacementPlan(
+function createComposerReplacementPlan(
 	display: string,
 	segments: ReadonlyArray<MentionSegment>,
 	selection: ComposerSelectionRange | null,
@@ -162,23 +170,27 @@ export function applyComposerReplacement(
 export function insertComposerEmoji(
 	handle: ComposerHandle | null,
 	emoji: FlatEmoji,
-	limit: ComposerReplacementLimit = {},
+	options: ComposerEmojiInsertOptions = {},
 ): boolean {
 	if (handle == null) {
 		return false;
 	}
 	const display = handle.getDisplayValue();
 	const selection = normalizeSelection(display, handle.getSelection());
-	const charBefore = selection.start > 0 ? display[selection.start - 1] : '';
 	const charAfter = selection.end < display.length ? display[selection.end] : '';
+	const payload: ComposerInsertPayload =
+		options.reactionShorthand === true &&
+		isReactionShorthandPrefix(display.slice(0, selection.start), display.slice(selection.end))
+			? {kind: 'text', text: `:${getReactionShortcodeName(emoji)}:`}
+			: createComposerEmojiPayload(emoji);
 	return applyComposerReplacement(
 		handle,
 		selection,
-		createComposerEmojiPayload(emoji),
+		payload,
 		{
-			leading: charBefore !== '' && !/\s/.test(charBefore),
+			leading: false,
 			trailing: charAfter === '' || !/\s/.test(charAfter),
 		},
-		limit,
+		options,
 	);
 }

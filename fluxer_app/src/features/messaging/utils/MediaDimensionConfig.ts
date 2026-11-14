@@ -5,12 +5,12 @@ import type {MediaDimensions} from '@app/lib/branded-types';
 
 interface MediaDimensionConstraints extends MediaDimensions {}
 
-export const ATTACHMENT_MAX_WIDTH = 550;
-export const ATTACHMENT_MAX_HEIGHT = 350;
+const ATTACHMENT_MAX_WIDTH = 550;
+const ATTACHMENT_MAX_HEIGHT = 350;
 export const EMBED_MAX_WIDTH = 400;
 export const EMBED_MAX_HEIGHT = 300;
 export const EMBED_TALL_MAX_HEIGHT = 450;
-export const MIN_USEFUL_MEDIA_SIZE = 40;
+const MIN_USEFUL_MEDIA_SIZE = 40;
 
 const ATTACHMENT_DIMENSIONS: MediaDimensionConstraints = {
 	maxWidth: ATTACHMENT_MAX_WIDTH,

@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {flattenAST} from './AstUtils';
-import {getEmojiParserConfig} from './EmojiParsers';
-import {MARKDOWN_PARSER_WASM_BASE64} from './MarkdownParserWasmBytes';
-import type {Node} from './Nodes';
-import * as StringUtils from './StringUtils';
-import * as URLUtils from './UrlUtils';
+import {convertToCodePoints} from '@app/features/expressions/utils/EmojiCodepointUtils';
+import {flattenAST} from '@app/features/messaging/utils/markdown/parser/AstUtils';
+import {getEmojiParserConfig} from '@app/features/messaging/utils/markdown/parser/EmojiParsers';
+import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
+import * as StringUtils from '@app/features/messaging/utils/markdown/parser/StringUtils';
+import * as URLUtils from '@app/features/messaging/utils/markdown/parser/UrlUtils';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import {LRUMap} from '@app/lib/list/ListLruMap';
+import markdownParserWasmUrl from '@pkgs/markdown_parser/markdown_parser.wasm';
+import {observable, runInAction} from 'mobx';
 
 interface WasmExports {
 	memory: {buffer: ArrayBuffer};
@@ -41,17 +45,19 @@ type CleanableNode = Node & {
 
 const RESULT_HEADER_BYTES = 16;
 const MAX_RETAINED_WASM_MEMORY_BYTES = 64 * 1024 * 1024;
+const LINK_URL_CACHE_CAPACITY = 512;
+const LOAD_RETRY_DELAY_MS = 2000;
+const logger = new Logger('MarkdownParserWasm');
 const textEncoder = new TextEncoder();
 const lenientTextDecoder = new TextDecoder('utf-8', {ignoreBOM: true, fatal: false});
 
 let textDecoder = new TextDecoder('utf-8', {ignoreBOM: true, fatal: true});
 let wasm: WasmExports | null = null;
+let wasmModule: WebAssembly.Module | null = null;
 let cachedMemory: Uint8Array | null = null;
-
-declare const WebAssembly: {
-	Module: new (bytes: Uint8Array) => unknown;
-	Instance: new (module: unknown, imports?: Record<string, unknown>) => {exports: Record<string, unknown>};
-};
+let replacingOversizedInstance = false;
+let loadPromise: Promise<void> | null = null;
+const parserReady = observable.box(false);
 
 function getWasmMemory(exports: Record<string, unknown>): WasmExports['memory'] {
 	const memory = exports.memory;
@@ -81,34 +87,69 @@ function createWasmExports(exports: Record<string, unknown>): WasmExports {
 	};
 }
 
-function decodeBase64(value: string): Uint8Array {
-	if (typeof Buffer !== 'undefined') {
-		return new Uint8Array(Buffer.from(value, 'base64'));
-	}
-	const binary = atob(value);
-	const bytes = new Uint8Array(binary.length);
-	for (let i = 0; i < binary.length; i++) {
-		bytes[i] = binary.charCodeAt(i);
-	}
-	return bytes;
-}
-
-function getWasm(): WasmExports {
-	if (!wasm) {
-		const module = new WebAssembly.Module(decodeBase64(MARKDOWN_PARSER_WASM_BASE64));
-		const instance = new WebAssembly.Instance(module, {});
-		wasm = createWasmExports(instance.exports);
-		cachedMemory = null;
-	}
+function setWasmInstance(instance: WebAssembly.Instance): WasmExports {
+	wasm = createWasmExports(instance.exports);
+	cachedMemory = null;
 	return wasm;
 }
 
+async function compileMarkdownParserWasm(): Promise<WebAssembly.Module> {
+	const response = await fetch(markdownParserWasmUrl);
+	if (!response.ok) {
+		throw new Error(`markdown parser wasm request failed with status ${response.status}`);
+	}
+	if (response.headers.get('content-type')?.split(';')[0]?.trim() === 'application/wasm') {
+		return WebAssembly.compileStreaming(response);
+	}
+	return WebAssembly.compile(await response.arrayBuffer());
+}
+
+async function instantiateMarkdownParserWasm(): Promise<void> {
+	wasmModule ??= await compileMarkdownParserWasm();
+	const instance = await WebAssembly.instantiate(wasmModule, {});
+	setWasmInstance(instance);
+	runInAction(() => {
+		parserReady.set(true);
+	});
+}
+
+export function loadMarkdownParserWasm(): Promise<void> {
+	loadPromise ??= instantiateMarkdownParserWasm().catch((error: unknown) => {
+		logger.warn('Failed to load the markdown parser:', error);
+		setTimeout(() => {
+			loadPromise = null;
+		}, LOAD_RETRY_DELAY_MS);
+	});
+	return loadPromise;
+}
+
+export function isMarkdownParserReady(): boolean {
+	return parserReady.get();
+}
+
+function getWasm(): WasmExports {
+	if (wasm) return wasm;
+	throw new Error('markdown parser wasm is not loaded');
+}
+
 function releaseOversizedWasmMemory(): void {
-	if ((wasm?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_WASM_MEMORY_BYTES) {
+	if (
+		replacingOversizedInstance ||
+		wasmModule == null ||
+		(wasm?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_WASM_MEMORY_BYTES
+	) {
 		return;
 	}
-	wasm = null;
-	cachedMemory = null;
+	const oversized = wasm;
+	replacingOversizedInstance = true;
+	WebAssembly.instantiate(wasmModule, {})
+		.then((instance) => {
+			if (wasm === oversized) setWasmInstance(instance);
+		})
+		.catch(() => {})
+		.finally(() => {
+			replacingOversizedInstance = false;
+		});
 }
 
 function memoryU8(): Uint8Array {
@@ -202,14 +243,6 @@ class Utf8OffsetTracker {
 	}
 }
 
-function defaultCodepoints(emoji: string): string {
-	const containsZwJ = emoji.includes('‍');
-	const processed = containsZwJ ? emoji : emoji.replace(/️/g, '');
-	return Array.from(processed)
-		.map((char) => char.codePointAt(0)?.toString(16).replace(/^0+/, '') || '')
-		.join('-');
-}
-
 const PLAINTEXT_SYMBOLS = new Set(['™', '™️', '©', '©️', '®', '®️']);
 const SPECIAL_SHORTCODES: Record<string, string> = {
 	tm: '™',
@@ -226,29 +259,23 @@ function buildEmojiContext(input: string): string {
 	const provider = config?.emojiProvider;
 	let context = '';
 	if (!provider) return context;
-	const convertToCodePoints = config.convertToCodePoints || defaultCodepoints;
-	const emojiRegex = config.emojiRegex;
-	if (emojiRegex) {
-		const offsetTracker = new Utf8OffsetTracker();
-		emojiRegex.lastIndex = 0;
-		let match: RegExpExecArray | null;
-		while ((match = emojiRegex.exec(input)) !== null) {
-			const candidate = match[0];
-			if (!candidate || PLAINTEXT_SYMBOLS.has(candidate)) continue;
-			const name = provider.getSurrogateName(candidate);
-			if (!name) continue;
-			const candidateBytes = textEncoder.encode(candidate).byteLength;
-			const byteOffset = offsetTracker.offsetFor(input, match.index);
-			context += appendContextLine([
-				'S',
-				String(byteOffset),
-				String(candidateBytes),
-				candidate,
-				name,
-				convertToCodePoints(candidate),
-			]);
-			offsetTracker.advance(candidate.length, candidateBytes);
-		}
+	const offsetTracker = new Utf8OffsetTracker();
+	for (const match of provider.matchEmojiSurrogates(input)) {
+		const candidate = input.slice(match.start, match.end);
+		if (PLAINTEXT_SYMBOLS.has(candidate)) continue;
+		const name = match.name;
+		if (!name) continue;
+		const candidateBytes = textEncoder.encode(candidate).byteLength;
+		const byteOffset = offsetTracker.offsetFor(input, match.start);
+		context += appendContextLine([
+			'S',
+			String(byteOffset),
+			String(candidateBytes),
+			candidate,
+			name,
+			convertToCodePoints(candidate),
+		]);
+		offsetTracker.advance(candidate.length, candidateBytes);
 	}
 	const shortcodeRegex = /:([\p{L}\p{N}_-]+):/gu;
 	const seen = new Set<string>();
@@ -308,6 +335,38 @@ function shouldTreatAsMaskedLink(trimmedLinkText: string, url: string): boolean 
 	}
 }
 
+const linkUrlCache = new LRUMap<string, string | null>(LINK_URL_CACHE_CAPACITY);
+
+function cleanLinkUrl(rawUrl: string, linkText: string): string | null {
+	const key = `${rawUrl.length}:${rawUrl}${linkText}`;
+	const cached = linkUrlCache.get(key);
+	if (cached !== undefined) return cached;
+	const url = resolveLinkUrl(rawUrl, linkText);
+	linkUrlCache.set(key, url);
+	return url;
+}
+
+function resolveLinkUrl(rawUrl: string, linkText: string): string | null {
+	try {
+		const normalizedUrl = URLUtils.normalizeUrl(rawUrl);
+		if (
+			!URLUtils.isValidUrl(normalizedUrl) ||
+			(rawUrl.startsWith('/') && !rawUrl.startsWith('//')) ||
+			(StringUtils.startsWithUrl(linkText.trim()) && shouldTreatAsMaskedLink(linkText, rawUrl))
+		) {
+			return null;
+		}
+		if (normalizedUrl.startsWith('tel:') || normalizedUrl.startsWith('sms:')) {
+			const protocol = normalizedUrl.substring(0, normalizedUrl.indexOf(':') + 1);
+			const phoneNumber = normalizedUrl.substring(normalizedUrl.indexOf(':') + 1);
+			return phoneNumber.startsWith('+') ? protocol + URLUtils.normalizePhoneNumber(phoneNumber) : normalizedUrl;
+		}
+		return URLUtils.convertToAsciiUrl(normalizedUrl);
+	} catch {
+		return null;
+	}
+}
+
 function makeCleanedTextNode(content: string): CleanedTextNode {
 	return {type: 'Text', content, __cleanedLinkText: true};
 }
@@ -323,34 +382,16 @@ function cleanNode(node: CleanableNode): Node {
 	if (node.type === 'Link') {
 		const rawUrl = coerceWasmString(node.rawUrl ?? node.url);
 		const source = coerceWasmString(node.source ?? rawUrl);
-		const linkText = textFromNode(node.text);
-		try {
-			const normalizedUrl = URLUtils.normalizeUrl(rawUrl);
-			if (
-				!URLUtils.isValidUrl(normalizedUrl) ||
-				(rawUrl.startsWith('/') && !rawUrl.startsWith('//')) ||
-				(StringUtils.startsWithUrl(linkText.trim()) && shouldTreatAsMaskedLink(linkText, rawUrl))
-			) {
-				return makeCleanedTextNode(source);
-			}
-			let finalUrl = normalizedUrl;
-			if (finalUrl.startsWith('tel:') || finalUrl.startsWith('sms:')) {
-				const protocol = finalUrl.substring(0, finalUrl.indexOf(':') + 1);
-				const phoneNumber = finalUrl.substring(finalUrl.indexOf(':') + 1);
-				if (phoneNumber.startsWith('+')) finalUrl = protocol + URLUtils.normalizePhoneNumber(phoneNumber);
-			} else {
-				finalUrl = URLUtils.convertToAsciiUrl(finalUrl);
-			}
-			const cleaned: Extract<Node, {type: 'Link'}> = {
-				type: 'Link',
-				url: finalUrl,
-				escaped: Boolean(node.escaped),
-			};
-			cleaned.text = node.text ? cleanNode(node.text) : undefined;
-			return cleaned;
-		} catch {
+		const url = cleanLinkUrl(rawUrl, textFromNode(node.text));
+		if (url == null) {
 			return makeCleanedTextNode(source);
 		}
+		return {
+			type: 'Link',
+			url,
+			escaped: Boolean(node.escaped),
+			text: node.text ? cleanNode(node.text) : undefined,
+		};
 	}
 	if (node.type === 'CodeBlock' && !('language' in node)) {
 		node.language = undefined;
@@ -441,6 +482,10 @@ function mergeCleanedTextNodes(nodes: Array<Node>): void {
 }
 
 export function parseMarkdownAstWithWasm(input: string, parserFlags: number): {nodes: Array<Node>} {
+	if (wasm == null) {
+		void loadMarkdownParserWasm();
+		return {nodes: input ? [{type: 'Text', content: input}] : []};
+	}
 	const inputBytes = passString(input);
 	const emojiContext = passString(buildEmojiContext(input));
 	const outPtr = alloc(RESULT_HEADER_BYTES);

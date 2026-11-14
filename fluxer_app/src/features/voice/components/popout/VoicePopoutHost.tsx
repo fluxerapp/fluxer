@@ -2,7 +2,7 @@
 
 import Channels from '@app/features/channel/state/Channels';
 import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
-import {PopoutWindow} from '@app/features/voice/components/popout/PopoutWindow';
+import {PopoutWindow} from '@app/features/ui/popout_window/PopoutWindow';
 import styles from '@app/features/voice/components/popout/VoicePopoutHost.module.css';
 import {VoicePopoutScopeContext} from '@app/features/voice/components/popout/VoicePopoutScopeContext';
 import {useVoiceEngineConnectionState} from '@app/features/voice/components/useVoiceEngineConnectionState';
@@ -92,6 +92,7 @@ const VoicePopoutWindowRenderer = observer(function VoicePopoutWindowRenderer({
 			onRestore={handleRestore}
 			onClosed={handleClosed}
 			onWindowOpened={handleWindowOpened}
+			existingWindow={PopoutWindowManager.getChildWindow(key)}
 			data-flx="voice.voice-popout-host.popout-window"
 		>
 			<VoicePopoutScopeContext.Provider value={descriptor.kind}>

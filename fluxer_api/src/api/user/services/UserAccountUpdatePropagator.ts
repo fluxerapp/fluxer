@@ -1,29 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {IMediaService} from '../../infrastructure/IMediaService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {UserSettings} from '../../models/UserSettings';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse} from '../UserMappers';
-import {BaseUserUpdatePropagator} from './BaseUserUpdatePropagator';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import {dispatchUserGuildSettingsUpdate} from '@app/api/user/UserGuildSettingsThreadView';
+import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 
 interface UserAccountUpdatePropagatorDeps {
-	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
-	mediaService: IMediaService;
-	userRepository: IUserAccountRepository;
 }
 
-export class UserAccountUpdatePropagator extends BaseUserUpdatePropagator {
-	constructor(private readonly deps: UserAccountUpdatePropagatorDeps) {
-		super({
-			userCacheService: deps.userCacheService,
-			gatewayService: deps.gatewayService,
-		});
-	}
+export class UserAccountUpdatePropagator {
+	constructor(private readonly deps: UserAccountUpdatePropagatorDeps) {}
 
 	async dispatchUserSettingsUpdate({userId, settings}: {userId: UserID; settings: UserSettings}): Promise<void> {
 		await this.deps.gatewayService.dispatchPresence({
@@ -40,19 +29,7 @@ export class UserAccountUpdatePropagator extends BaseUserUpdatePropagator {
 		userId: UserID;
 		settings: UserGuildSettings;
 	}): Promise<void> {
-		const payload = mapUserGuildSettingsToResponse(settings);
-		await this.deps.gatewayService.dispatchPresence({
-			userId,
-			event: 'USER_GUILD_SETTINGS_UPDATE',
-			data: payload,
-		});
-		if (payload.guild_id !== null) {
-			await this.deps.gatewayService.syncPushUserGuildSettings({
-				userId,
-				guildId: settings.guildId,
-				settings: payload,
-			});
-		}
+		await dispatchUserGuildSettingsUpdate(this.deps.gatewayService, userId, settings);
 	}
 
 	async dispatchUserNoteUpdate(params: {userId: UserID; targetId: UserID; note: string}): Promise<void> {

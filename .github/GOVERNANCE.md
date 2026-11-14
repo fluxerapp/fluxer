@@ -16,4 +16,10 @@ Every commit made by a contributor must include the [Developer Certificate of Or
 
 ## Name and marks
 
-The AGPL does not grant permission to use the Fluxer name, logo or other branding. Forks must use a distinct name and branding unless Fluxer Platform AB grants permission otherwise.
+Fluxer and the Fluxer logo are trademarks of Fluxer Platform AB. Neither the AGPL nor the CC BY-SA 4.0 licence on Fluxer artwork grants trademark rights. Fluxer Platform AB grants everyone the following permissions.
+
+- You may distribute unmodified builds of Fluxer, or builds with light patches, under the Fluxer name and logo. Light patches are changes for packaging, portability, security and bug fixes, configuration defaults and translations. Linux distributions, nixpkgs, Flathub and container images are all covered.
+- A self-hosted instance running such a build may show the Fluxer name and logo under the instance's own name and domain, as long as it does not imply affiliation with or endorsement by Fluxer Platform AB.
+- You may refer to Fluxer by name to describe compatibility, for example "works with Fluxer".
+
+Forks with substantive functional changes must use their own name and logo. Any other use needs permission from Fluxer Platform AB. Contact support@fluxer.com.

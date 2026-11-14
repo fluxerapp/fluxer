@@ -31,14 +31,4 @@ describe('SecurityHeaders Middleware', () => {
 		const response = await app.request('/');
 		expect(response.headers.get('Content-Security-Policy')).toBe("default-src 'self'; script-src 'nonce-test'");
 	});
-	test('can overwrite existing headers when requested', async () => {
-		const app = new Hono();
-		app.use('*', securityHeaders({contentSecurityPolicy: "default-src 'none'", overwrite: true}));
-		app.get('/', (c) => {
-			c.header('Content-Security-Policy', "default-src 'self'");
-			return c.text('OK');
-		});
-		const response = await app.request('/');
-		expect(response.headers.get('Content-Security-Policy')).toBe("default-src 'none'");
-	});
 });

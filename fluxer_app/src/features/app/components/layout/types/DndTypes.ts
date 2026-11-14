@@ -12,6 +12,7 @@ export const DragItemType = Object.freeze({
 	CONNECTION: 'connection',
 	FAVORITES_CHANNEL: 'favorites-channel',
 	FAVORITES_CATEGORY: 'favorites-category',
+	ACCOUNT_TILE: 'account-tile',
 } as const);
 
 export type DragItemType = (typeof DragItemType)[keyof typeof DragItemType];
@@ -23,16 +24,7 @@ export const DropPlacement = Object.freeze({
 
 export type DropPlacement = (typeof DropPlacement)[keyof typeof DropPlacement];
 
-export type DropPosition = RelativePosition | typeof DropPlacement.INSIDE;
-
-export const DNDReorderState = Object.freeze({
-	IDLE: 'idle',
-	RESOLVING: 'resolving',
-	TARGETING: 'targeting',
-	BLOCKED: 'blocked',
-} as const);
-
-export type DNDReorderState = (typeof DNDReorderState)[keyof typeof DNDReorderState];
+type DropPosition = RelativePosition | typeof DropPlacement.INSIDE;
 
 export interface DragItem {
 	type: string;
@@ -81,4 +73,9 @@ export interface ConnectionDragItem {
 	type: typeof DragItemType.CONNECTION;
 	id: string;
 	index: number;
+}
+
+export interface AccountTileDragItem {
+	type: typeof DragItemType.ACCOUNT_TILE;
+	accountKey: string;
 }

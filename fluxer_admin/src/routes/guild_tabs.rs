@@ -5,6 +5,7 @@ use crate::{
     api::{
         audit::SearchAuditLogsParams,
         client::{AdminApiClient, ApiResultExt},
+        types::CustomBadgeType,
     },
     config::AdminConfig,
     templates::{
@@ -23,6 +24,8 @@ pub struct GuildTabQuery {
     pub members_page: Option<u32>,
     pub reports_page: Option<u32>,
     pub audit_before: Option<String>,
+    pub badge_query: Option<String>,
+    pub badge_picks: Vec<String>,
 }
 
 pub async fn render(
@@ -39,11 +42,37 @@ pub async fn render(
         .await
         .log_error("load guild tab guild")?;
     match tab {
+        "badges" => {
+            if !acl::has_permission(admin_acls, acl::BADGE_LIST) {
+                return None;
+            }
+            let detail = client
+                .lookup_guild(guild_id)
+                .await
+                .log_error("load guild badges")
+                .flatten()?;
+            let assignment = client
+                .load_badge_assignment(
+                    CustomBadgeType::Guild,
+                    &detail.badge_ids,
+                    query.badge_query.as_deref(),
+                    &query.badge_picks,
+                )
+                .await
+                .log_error("load badges for guild")?;
+            Some(tabs::badges::badges_tab(
+                config,
+                &detail,
+                &assignment,
+                csrf_token,
+                admin_acls,
+            ))
+        }
         "members" => {
             let page = query.members_page.unwrap_or(0);
             let limit: u32 = 50;
             let resp = client
-                .list_guild_members(guild_id, limit, page * limit)
+                .list_guild_members(guild_id, limit, u64::from(page) * u64::from(limit))
                 .await
                 .log_error("load guild members")?;
             Some(tabs::members::members_tab(
@@ -57,7 +86,7 @@ pub async fn render(
             let page = query.reports_page.unwrap_or(0);
             let limit: u32 = 25;
             let resp = client
-                .search_reports_by_guild(guild_id, limit, page * limit)
+                .search_reports_by_guild(guild_id, limit, u64::from(page) * u64::from(limit))
                 .await
                 .log_error("load guild reports")?;
             Some(tabs::reports::reports_tab(
@@ -78,8 +107,12 @@ pub async fn render(
                 .map(|response| response.emojis)
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild emojis"))
                 .unwrap_or_default();
-            Some(tabs::emojis::emojis_tab(
-                config, &guild, &emojis, csrf_token,
+            Some(tabs::emojis::guild_assets_tab(
+                config,
+                &guild,
+                &emojis,
+                csrf_token,
+                tabs::emojis::GuildAssetKind::Emoji,
             ))
         }
         "stickers" => {
@@ -92,8 +125,30 @@ pub async fn render(
                 .map(|response| response.stickers)
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild stickers"))
                 .unwrap_or_default();
-            Some(tabs::stickers::stickers_tab(
-                config, &guild, &stickers, csrf_token,
+            Some(tabs::emojis::guild_assets_tab(
+                config,
+                &guild,
+                &stickers,
+                csrf_token,
+                tabs::emojis::GuildAssetKind::Sticker,
+            ))
+        }
+        "threads" => {
+            if !acl::has_permission(admin_acls, acl::GUILD_LOOKUP) {
+                return None;
+            }
+            let threads = client
+                .list_guild_threads(guild_id)
+                .await
+                .map(|response| response.threads)
+                .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild threads"))
+                .unwrap_or_default();
+            Some(tabs::threads::threads_tab(
+                config,
+                &guild,
+                &threads,
+                acl::has_permission(admin_acls, acl::MESSAGE_DELETE_ALL),
+                csrf_token,
             ))
         }
         "audit_log" | "audit-log" => {
@@ -121,6 +176,7 @@ pub async fn render(
                     admin_user_id: None,
                     target_id: Some(guild_id.to_owned()),
                     target_type: Some("guild".to_owned()),
+                    access: Some("write".to_owned()),
                     sort_by: Some("created_at".to_owned()),
                     sort_order: Some("desc".to_owned()),
                     limit: 50,
@@ -134,7 +190,7 @@ pub async fn render(
                     @if let Some(resp) = resp {
                         @if resp.logs.is_empty() {
                             p class="text-sm text-neutral-500" {
-                                "No admin audit log entries for this guild."
+                                "No admin write actions have been recorded for this guild."
                             }
                         } @else {
                             (table_container(table(maud::html! {
@@ -162,7 +218,14 @@ pub async fn render(
                 .await
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild applications"))
                 .unwrap_or_default();
-            Some(tabs::applications::applications_tab(config, &guild, &apps))
+            Some(
+                crate::templates::pages::user_detail_tabs::applications::applications_tab(
+                    config,
+                    &apps,
+                    "No applications installed",
+                    "This guild does not have any installed applications.",
+                ),
+            )
         }
         "archives" => {
             if !acl::has_any_permission(

@@ -1,16 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createGuildIDSet, createUserIDSet} from '../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import {defineTable} from '../database/CassandraTableDsl';
+import {createGuildIDSet, createUserIDSet} from '@app/api/BrandedTypes';
+import {
+	BatchBuilder,
+	deleteOneOrMany,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
+import {defineTable} from '@app/api/database/CassandraTableDsl';
+import {Db} from '@app/api/database/CassandraTypes';
 import {
 	VOICE_REGION_COLUMNS,
 	VOICE_SERVER_COLUMNS,
 	type VoiceRegionRow,
 	type VoiceServerRow,
-} from '../database/types/VoiceTypes';
-import type {IVoiceRepository} from './IVoiceRepository';
-import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from './VoiceModel';
+} from '@app/api/database/types/VoiceTypes';
+import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+
+export type VoiceServerNodeFields = Partial<
+	Pick<
+		VoiceServerRecord,
+		'endpoint' | 'draining' | 'latitude' | 'longitude' | 'softConnectionLimit' | 'publicIpv4' | 'publicIpv6'
+	>
+>;
 
 function toIterable<T>(value: unknown): Array<T> {
 	if (value === null || value === undefined) return [];
@@ -40,7 +54,7 @@ const GET_SERVER_CQL = VoiceServers.selectCql({
 	where: [VoiceServers.where.eq('region_id'), VoiceServers.where.eq('server_id')],
 });
 
-export class VoiceRepository implements IVoiceRepository {
+export class VoiceRepository {
 	async listRegions(): Promise<Array<VoiceRegionRecord>> {
 		const rows = await fetchMany<VoiceRegionRow>(LIST_REGIONS_CQL, {});
 		return rows.map((row) => this.mapRegionRow(row));
@@ -81,6 +95,7 @@ export class VoiceRepository implements IVoiceRepository {
 			latitude: region.latitude,
 			longitude: region.longitude,
 			is_default: region.isDefault,
+			hidden: region.hidden,
 			vip_only: region.restrictions.vipOnly,
 			required_guild_features: new Set(region.restrictions.requiredGuildFeatures),
 			allowed_guild_ids: new Set(Array.from(region.restrictions.allowedGuildIds).map((id) => BigInt(id))),
@@ -112,7 +127,7 @@ export class VoiceRepository implements IVoiceRepository {
 		return fullRegion;
 	}
 
-	async listServersForRegion(regionId: string): Promise<Array<VoiceServerRecord>> {
+	private async listServersForRegion(regionId: string): Promise<Array<VoiceServerRecord>> {
 		const rows = await fetchMany<VoiceServerRow>(LIST_SERVERS_FOR_REGION_CQL, {region_id: regionId});
 		return rows.map((row) => this.mapServerRow(row));
 	}
@@ -137,8 +152,49 @@ export class VoiceRepository implements IVoiceRepository {
 		return fullServer;
 	}
 
+	async createServerIfAbsent(server: Omit<VoiceServerRecord, 'createdAt' | 'updatedAt'>): Promise<boolean> {
+		const now = new Date();
+		return executeConditional(
+			VoiceServers.insertIfNotExists(this.toServerRow({...server, createdAt: now, updatedAt: now})),
+		);
+	}
+
+	async listAllServers(): Promise<Array<VoiceServerRecord>> {
+		const regions = await this.listRegionsWithServers();
+		return regions.flatMap((region) => region.servers);
+	}
+
 	async upsertServer(server: VoiceServerRecord): Promise<void> {
-		const row: VoiceServerRow = {
+		await upsertOne(VoiceServers.upsertAll(this.toServerRow(server)));
+	}
+
+	async patchServerNodeFields(
+		regionId: string,
+		serverId: string,
+		fields: VoiceServerNodeFields,
+		updatedAt: Date,
+	): Promise<void> {
+		await fetchOne(
+			VoiceServers.patchByPk(
+				{region_id: regionId, server_id: serverId},
+				{
+					...(fields.endpoint !== undefined && {endpoint: Db.set(fields.endpoint)}),
+					...(fields.draining !== undefined && {draining: Db.set(fields.draining)}),
+					...(fields.latitude !== undefined && {latitude: Db.set(fields.latitude)}),
+					...(fields.longitude !== undefined && {longitude: Db.set(fields.longitude)}),
+					...(fields.softConnectionLimit !== undefined && {
+						soft_connection_limit: Db.set(fields.softConnectionLimit),
+					}),
+					...(fields.publicIpv4 !== undefined && {public_ipv4: Db.set(fields.publicIpv4)}),
+					...(fields.publicIpv6 !== undefined && {public_ipv6: Db.set(fields.publicIpv6)}),
+					updated_at: Db.set(updatedAt),
+				},
+			),
+		);
+	}
+
+	private toServerRow(server: VoiceServerRecord): VoiceServerRow {
+		return {
 			region_id: server.regionId,
 			server_id: server.serverId,
 			endpoint: server.endpoint,
@@ -148,14 +204,20 @@ export class VoiceRepository implements IVoiceRepository {
 			longitude: server.longitude ?? null,
 			is_active: server.isActive,
 			soft_connection_limit: server.softConnectionLimit ?? null,
+			notes: server.notes,
 			vip_only: server.restrictions.vipOnly,
 			required_guild_features: new Set(server.restrictions.requiredGuildFeatures),
 			allowed_guild_ids: new Set(Array.from(server.restrictions.allowedGuildIds).map((id) => BigInt(id))),
 			allowed_user_ids: new Set(Array.from(server.restrictions.allowedUserIds).map((id) => BigInt(id))),
+			internal_endpoint: server.internalEndpoint,
+			draining: server.draining,
+			pinned_hostname: server.pinnedHostname,
+			pinned_soft_limit: server.pinnedSoftLimit,
+			public_ipv4: server.publicIpv4,
+			public_ipv6: server.publicIpv6,
 			created_at: server.createdAt ?? new Date(),
 			updated_at: server.updatedAt ?? new Date(),
 		};
-		await upsertOne(VoiceServers.upsertAll(row));
 	}
 
 	async deleteServer(regionId: string, serverId: string): Promise<void> {
@@ -170,6 +232,7 @@ export class VoiceRepository implements IVoiceRepository {
 			latitude: row.latitude,
 			longitude: row.longitude,
 			isDefault: row.is_default ?? false,
+			hidden: row.hidden ?? false,
 			restrictions: {
 				vipOnly: row.vip_only ?? false,
 				requiredGuildFeatures: new Set(toIterable<string>(row.required_guild_features)),
@@ -192,12 +255,19 @@ export class VoiceRepository implements IVoiceRepository {
 			longitude: row.longitude ?? null,
 			isActive: row.is_active ?? true,
 			softConnectionLimit: row.soft_connection_limit ?? null,
+			notes: row.notes ?? null,
 			restrictions: {
 				vipOnly: row.vip_only ?? false,
 				requiredGuildFeatures: new Set(toIterable<string>(row.required_guild_features)),
 				allowedGuildIds: createGuildIDSet(new Set(toIterable<bigint>(row.allowed_guild_ids))),
 				allowedUserIds: createUserIDSet(new Set(toIterable<bigint>(row.allowed_user_ids))),
 			},
+			internalEndpoint: row.internal_endpoint ?? null,
+			draining: row.draining ?? false,
+			pinnedHostname: row.pinned_hostname ?? null,
+			pinnedSoftLimit: row.pinned_soft_limit ?? false,
+			publicIpv4: row.public_ipv4 ?? null,
+			publicIpv6: row.public_ipv6 ?? null,
 			createdAt: row.created_at,
 			updatedAt: row.updated_at,
 		};

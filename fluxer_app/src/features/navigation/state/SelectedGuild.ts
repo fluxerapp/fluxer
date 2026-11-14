@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Navigation from '@app/features/navigation/state/Navigation';
+import {getAppStorageScope} from '@app/features/platform/state/PersistentStorage';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {action, makeAutoObservable, reaction} from 'mobx';
+import {makeAutoObservable, reaction} from 'mobx';
 
 const FAVORITES_ROUTE_ID = '@favorites';
 
@@ -11,14 +13,14 @@ class SelectedGuild {
 	lastSelectedGuildId: string | null = null;
 	selectedGuildId: string | null = null;
 	selectionNonce: number = 0;
+	private selectedGuildScope: string | null = null;
 	private navigationDisposer: (() => void) | null = null;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
-	@action
 	private async initPersistence(): Promise<void> {
 		await makePersistent(this, 'SelectedGuild', ['lastSelectedGuildId']);
 		this.setupNavigationReaction();
@@ -49,24 +51,6 @@ class SelectedGuild {
 		return guildId;
 	}
 
-	@action
-	selectGuild(guildId: string, _forceSync = false): void {
-		if (!guildId) {
-			return;
-		}
-		this.setGuild(guildId, {forceNonce: true});
-	}
-
-	@action
-	syncCurrentGuild(): void {
-		this.bumpNonce();
-	}
-
-	@action
-	deselectGuild(): void {
-		this.clearSelection();
-	}
-
 	private applyNavigationGuild(guildId: string): void {
 		this.setGuild(guildId);
 	}
@@ -79,8 +63,9 @@ class SelectedGuild {
 	): void {
 		const hasChanged = guildId !== this.selectedGuildId;
 		if (hasChanged) {
-			this.lastSelectedGuildId = this.selectedGuildId;
+			this.rememberSelectedGuild();
 			this.selectedGuildId = guildId;
+			this.selectedGuildScope = getAppStorageScope();
 			this.bumpNonce();
 			return;
 		}
@@ -93,9 +78,16 @@ class SelectedGuild {
 		if (this.selectedGuildId == null) {
 			return;
 		}
-		this.lastSelectedGuildId = this.selectedGuildId;
+		this.rememberSelectedGuild();
 		this.selectedGuildId = null;
+		this.selectedGuildScope = null;
 		this.bumpNonce();
+	}
+
+	private rememberSelectedGuild(): void {
+		if (this.selectedGuildScope === getAppStorageScope()) {
+			this.lastSelectedGuildId = this.selectedGuildId;
+		}
 	}
 
 	private bumpNonce(): void {

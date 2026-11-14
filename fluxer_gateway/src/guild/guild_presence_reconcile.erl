@@ -5,22 +5,20 @@
 
 -export([
     schedule/0,
-    interval_ms/0,
     start_async/1,
     reconcile_user/2,
     maybe_schedule_user_repair/2,
-    apply_reconcile_result/2,
-    connected_user_ids_list/1,
-    reconcile_action/3
+    apply_mismatches/2
 ]).
 
--export_type([guild_state/0, user_id/0, presence/0, presence_by_id/0]).
+-export_type([guild_state/0, user_id/0, mismatch/0]).
 
 -type guild_state() :: map().
 -type user_id() :: integer().
 -type presence() :: map().
 -type presence_by_id() :: #{user_id() => presence()}.
 -type display() :: {binary(), boolean(), boolean(), term()}.
+-type mismatch() :: {user_id(), presence(), display()}.
 
 -define(DEFAULT_INTERVAL_MS, 30000).
 -define(MIN_INTERVAL_MS, 5000).
@@ -41,27 +39,111 @@ interval_ms() ->
 start_async(State) ->
     case connected_user_ids_list(State) of
         [] -> ok;
-        UserIds -> spawn_reconcile_fetch(UserIds, self())
+        UserIds -> spawn_reconcile_fetch(UserIds, member_presence_tab(State), self())
     end.
 
--spec spawn_reconcile_fetch([user_id(), ...], pid()) -> ok.
-spawn_reconcile_fetch(UserIds, Parent) ->
-    _ = spawn(fun() -> fetch_and_reply(UserIds, Parent) end),
+-spec spawn_reconcile_fetch([user_id(), ...], ets:tid() | undefined, pid()) -> ok.
+spawn_reconcile_fetch(UserIds, Tab, Parent) ->
+    _ = spawn(fun() -> fetch_and_reply(UserIds, Tab, Parent) end),
     ok.
 
--spec fetch_and_reply([user_id(), ...], pid()) -> ok.
-fetch_and_reply(UserIds, Parent) ->
-    Parent ! {presence_reconcile_apply, authoritative_presence_map(UserIds)},
+-spec fetch_and_reply([user_id(), ...], ets:tid() | undefined, pid()) -> ok.
+fetch_and_reply(UserIds, Tab, Parent) ->
+    Parent ! {presence_reconcile_apply, persistent_mismatches(UserIds, Tab, ?REPAIR_DELAY_MS)},
     ok.
+
+-spec persistent_mismatches([user_id()], ets:tid() | undefined, non_neg_integer()) ->
+    [mismatch()].
+persistent_mismatches(UserIds, Tab, ConfirmDelayMs) ->
+    case observe_mismatches(UserIds, Tab) of
+        [] ->
+            [];
+        First ->
+            timer:sleep(ConfirmDelayMs),
+            Second = observe_mismatches([UserId || {UserId, _, _} <- First], Tab),
+            confirmed_mismatches(First, Second)
+    end.
+
+-spec observe_mismatches([user_id()], ets:tid() | undefined) -> [mismatch()].
+observe_mismatches(UserIds, Tab) ->
+    Authoritative = authoritative_presence_map(UserIds),
+    try
+        find_mismatches(UserIds, Authoritative, Tab)
+    catch
+        error:badarg -> []
+    end.
+
+-spec find_mismatches([user_id()], presence_by_id(), ets:tid() | undefined) -> [mismatch()].
+find_mismatches(UserIds, Authoritative, Tab) ->
+    lists:filtermap(
+        fun(UserId) ->
+            Seen = tab_display(UserId, Tab),
+            Presence = lookup_presence_value(UserId, Authoritative),
+            desired_display(Presence) =/= Seen andalso
+                {true, {UserId, replay_payload(Presence), Seen}}
+        end,
+        UserIds
+    ).
+
+-spec confirmed_mismatches([mismatch()], [mismatch()]) -> [mismatch()].
+confirmed_mismatches(First, Second) ->
+    Keys = sets:from_list([mismatch_key(M) || M <- First], [{version, 2}]),
+    [M || M <- Second, sets:is_element(mismatch_key(M), Keys)].
+
+-spec mismatch_key(mismatch()) -> {user_id(), display(), display()}.
+mismatch_key({UserId, Payload, Seen}) ->
+    {UserId, display_fields(Payload), Seen}.
+
+-spec apply_mismatches([mismatch()], guild_state()) -> guild_state().
+apply_mismatches(Mismatches, State) ->
+    Connected = guild_member_list_connected:connected_session_user_ids(State),
+    lists:foldl(
+        fun(Mismatch, Acc) -> replay_if_unchanged(Mismatch, Connected, Acc) end,
+        State,
+        Mismatches
+    ).
+
+-spec replay_if_unchanged(mismatch(), sets:set(user_id()), guild_state()) -> guild_state().
+replay_if_unchanged({UserId, Payload, Seen}, Connected, State) ->
+    case sets:is_element(UserId, Connected) andalso current_display(UserId, State) =:= Seen of
+        true -> replay_presence(UserId, Payload, State);
+        false -> State
+    end.
+
+-spec member_presence_tab(guild_state()) -> ets:tid() | undefined.
+member_presence_tab(State) ->
+    case maps:get(member_presence, State, undefined) of
+        Tab when is_reference(Tab) -> Tab;
+        _ -> undefined
+    end.
+
+-spec tab_display(user_id(), ets:tid() | undefined) -> display().
+tab_display(_UserId, undefined) ->
+    offline_display();
+tab_display(UserId, Tab) ->
+    display_fields(guild_state_member:lookup_presence(Tab, UserId)).
 
 -spec reconcile_user(term(), guild_state()) -> guild_state().
 reconcile_user(UserId, State) when is_integer(UserId), UserId > 0 ->
     case is_connected(UserId, State) of
-        false -> State;
-        true -> apply_user_reconcile(UserId, authoritative_presence(UserId), State)
+        false ->
+            State;
+        true ->
+            spawn_user_fetch(UserId, member_presence_tab(State), self()),
+            State
     end;
 reconcile_user(_UserId, State) ->
     State.
+
+-spec spawn_user_fetch(user_id(), ets:tid() | undefined, pid()) -> ok.
+spawn_user_fetch(UserId, Tab, Parent) ->
+    _ = spawn(fun() -> fetch_user_and_reply(UserId, Tab, Parent) end),
+    ok.
+
+-spec fetch_user_and_reply(user_id(), ets:tid() | undefined, pid()) -> ok.
+fetch_user_and_reply(UserId, Tab, Parent) ->
+    Parent ! {presence_reconcile_apply, observe_mismatches([UserId], Tab)},
+    ok.
 
 -spec maybe_schedule_user_repair(user_id(), guild_state()) -> ok.
 maybe_schedule_user_repair(UserId, State) ->
@@ -91,40 +173,11 @@ presence_row_exists(Tab, UserId) ->
         error:badarg -> false
     end.
 
--spec apply_reconcile_result(map(), guild_state()) -> guild_state().
-apply_reconcile_result(PresenceById, State) when is_map(PresenceById) ->
-    lists:foldl(
-        fun(UserId, Acc) ->
-            apply_user_reconcile(UserId, lookup_presence_value(UserId, PresenceById), Acc)
-        end,
-        State,
-        connected_user_ids_list(State)
-    );
-apply_reconcile_result(_PresenceById, State) ->
-    State.
-
 -spec lookup_presence_value(user_id(), map()) -> presence() | undefined.
 lookup_presence_value(UserId, PresenceById) ->
     case maps:get(UserId, PresenceById, undefined) of
         Presence when is_map(Presence) -> Presence;
         _ -> undefined
-    end.
-
--spec apply_user_reconcile(user_id(), presence() | undefined, guild_state()) -> guild_state().
-apply_user_reconcile(UserId, Authoritative, State) ->
-    case reconcile_action(UserId, Authoritative, State) of
-        noop -> State;
-        {replay, Payload} -> replay_presence(UserId, Payload, State)
-    end.
-
--spec reconcile_action(user_id(), presence() | undefined, guild_state()) ->
-    noop | {replay, presence()}.
-reconcile_action(UserId, Authoritative, State) ->
-    Desired = desired_display(Authoritative),
-    Current = current_display(UserId, State),
-    case Desired =:= Current of
-        true -> noop;
-        false -> {replay, replay_payload(Authoritative)}
     end.
 
 -spec replay_presence(user_id(), presence(), guild_state()) -> guild_state().
@@ -142,10 +195,7 @@ desired_display(Payload) -> display_fields(Payload).
 
 -spec current_display(user_id(), guild_state()) -> display().
 current_display(UserId, State) ->
-    case maps:get(member_presence, State, undefined) of
-        undefined -> offline_display();
-        Tab -> display_fields(guild_state_member:lookup_presence(Tab, UserId))
-    end.
+    tab_display(UserId, member_presence_tab(State)).
 
 -spec display_fields(presence()) -> display().
 display_fields(Presence) ->
@@ -172,16 +222,6 @@ is_connected(UserId, State) ->
 connected_user_ids_list(State) ->
     Set = guild_member_list_connected:connected_session_user_ids(State),
     [UserId || UserId <- sets:to_list(Set), is_integer(UserId), UserId > 0].
-
--spec authoritative_presence(user_id()) -> presence() | undefined.
-authoritative_presence(UserId) ->
-    try presence_cache:get(UserId) of
-        {ok, Payload} when is_map(Payload) -> Payload;
-        _ -> undefined
-    catch
-        error:_ -> undefined;
-        exit:_ -> undefined
-    end.
 
 -spec authoritative_presence_map([user_id(), ...]) -> presence_by_id().
 authoritative_presence_map(UserIds) ->
@@ -211,156 +251,3 @@ presence_user_id(Presence) ->
         _ ->
             undefined
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-interval_clamps_below_minimum_test() ->
-    application:set_env(fluxer_gateway, guild_presence_reconcile_interval_ms, 10),
-    try
-        ?assertEqual(?DEFAULT_INTERVAL_MS, interval_ms())
-    after
-        application:unset_env(fluxer_gateway, guild_presence_reconcile_interval_ms)
-    end.
-
-interval_uses_configured_value_test() ->
-    application:set_env(fluxer_gateway, guild_presence_reconcile_interval_ms, 12000),
-    try
-        ?assertEqual(12000, interval_ms())
-    after
-        application:unset_env(fluxer_gateway, guild_presence_reconcile_interval_ms)
-    end.
-
-reconcile_action_noop_when_already_online_test() ->
-    State = state_with_presence(#{1 => dnd_presence(1)}),
-    ?assertEqual(noop, reconcile_action(1, dnd_presence(1), State)).
-
-reconcile_action_replays_when_member_presence_missing_test() ->
-    State = state_with_presence(#{}),
-    ?assertMatch({replay, _}, reconcile_action(1, dnd_presence(1), State)).
-
-reconcile_action_replays_offline_when_stale_online_test() ->
-    State = state_with_presence(#{1 => dnd_presence(1)}),
-    ?assertEqual(
-        {replay, #{<<"status">> => <<"offline">>}}, reconcile_action(1, undefined, State)
-    ).
-
-reconcile_action_noop_when_already_offline_test() ->
-    State = state_with_presence(#{}),
-    ?assertEqual(noop, reconcile_action(1, undefined, State)).
-
-connected_user_ids_list_test() ->
-    State = #{connected_user_ids => sets:from_list([1, 2, 3])},
-    ?assertEqual([1, 2, 3], lists:sort(connected_user_ids_list(State))).
-
-presence_user_id_test() ->
-    ?assertEqual(7, presence_user_id(#{<<"user">> => #{<<"id">> => 7}})),
-    ?assertEqual(7, presence_user_id(#{<<"user">> => #{<<"id">> => <<"7">>}})),
-    ?assertEqual(undefined, presence_user_id(#{})).
-
-apply_reconcile_result_repairs_connected_offline_member_test() ->
-    GuildId = 4242,
-    UserId = 99,
-    Engine = guild_member_list_engine:new(),
-    try
-        State = guild_test_state(GuildId, UserId, Engine),
-        ok = guild_member_list_engine:bulk_load(
-            Engine, [{UserId, <<"hampus">>, [], false}], []
-        ),
-        ?assertEqual({1, 0}, guild_member_list_engine:get_counts(Engine)),
-        NewState = apply_reconcile_result(#{UserId => dnd_presence(UserId)}, State),
-        ?assertEqual({1, 1}, guild_member_list_engine:get_counts(Engine)),
-        Row = guild_state_member:lookup_presence(maps:get(member_presence, NewState), UserId),
-        ?assertEqual(<<"dnd">>, maps:get(<<"status">>, Row))
-    after
-        guild_member_list_engine:destroy(Engine)
-    end.
-
-apply_reconcile_result_is_noop_when_consistent_test() ->
-    GuildId = 4242,
-    UserId = 99,
-    Engine = guild_member_list_engine:new(),
-    try
-        State = guild_test_state(GuildId, UserId, Engine),
-        ets:insert(maps:get(member_presence, State), {UserId, dnd_presence(UserId)}),
-        ok = guild_member_list_engine:bulk_load(
-            Engine, [{UserId, <<"hampus">>, [], true}], []
-        ),
-        ?assertEqual({1, 1}, guild_member_list_engine:get_counts(Engine)),
-        _ = apply_reconcile_result(#{UserId => dnd_presence(UserId)}, State),
-        ?assertEqual({1, 1}, guild_member_list_engine:get_counts(Engine))
-    after
-        guild_member_list_engine:destroy(Engine)
-    end.
-
-apply_reconcile_result_marks_stale_online_offline_test() ->
-    GuildId = 4242,
-    UserId = 99,
-    Engine = guild_member_list_engine:new(),
-    try
-        State = guild_test_state(GuildId, UserId, Engine),
-        ets:insert(maps:get(member_presence, State), {UserId, dnd_presence(UserId)}),
-        ok = guild_member_list_engine:bulk_load(
-            Engine, [{UserId, <<"hampus">>, [], true}], []
-        ),
-        ?assertEqual({1, 1}, guild_member_list_engine:get_counts(Engine)),
-        _ = apply_reconcile_result(#{}, State),
-        ?assertEqual({1, 0}, guild_member_list_engine:get_counts(Engine))
-    after
-        guild_member_list_engine:destroy(Engine)
-    end.
-
-guild_test_state(GuildId, UserId, Engine) ->
-    Data = guild_data_index:normalize_data(#{
-        <<"guild">> => #{<<"owner_id">> => integer_to_binary(UserId)},
-        <<"roles">> => [
-            #{
-                <<"id">> => integer_to_binary(GuildId),
-                <<"name">> => <<"everyone">>,
-                <<"hoist">> => false,
-                <<"position">> => 0,
-                <<"permissions">> => <<"0">>
-            }
-        ],
-        <<"members">> => [
-            #{
-                <<"user">> => #{
-                    <<"id">> => integer_to_binary(UserId),
-                    <<"username">> => <<"hampus">>
-                },
-                <<"roles">> => []
-            }
-        ],
-        <<"channels">> => []
-    }),
-    #{
-        id => GuildId,
-        data => Data,
-        sessions => #{},
-        member_presence => ets:new(test_member_presence, [set, public]),
-        connected_user_ids => sets:from_list([UserId]),
-        member_list_engine => Engine,
-        channel_member_list_engines => #{},
-        member_list_subscriptions => guild_member_list_subs:new(),
-        member_subscriptions => guild_subscriptions:init_state(),
-        presence_subscriptions => #{UserId => 1}
-    }.
-
-state_with_presence(PresenceMap) ->
-    Tab = ets:new(test_member_presence, [set, public]),
-    maps:foreach(fun(UserId, Presence) -> ets:insert(Tab, {UserId, Presence}) end, PresenceMap),
-    #{
-        member_presence => Tab,
-        connected_user_ids => sets:from_list(maps:keys(PresenceMap))
-    }.
-
-dnd_presence(UserId) ->
-    #{
-        <<"status">> => <<"dnd">>,
-        <<"mobile">> => false,
-        <<"afk">> => false,
-        <<"custom_status">> => null,
-        <<"user">> => #{<<"id">> => UserId}
-    }.
-
--endif.

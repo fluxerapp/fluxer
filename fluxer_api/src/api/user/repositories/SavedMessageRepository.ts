@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createMessageID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {SavedMessageRow} from '@app/api/database/types/UserTypes';
+import {SavedMessage} from '@app/api/models/SavedMessage';
+import {SavedMessages} from '@app/api/Tables';
 import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
-import {type ChannelID, createMessageID, type MessageID, type UserID} from '../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import type {SavedMessageRow} from '../../database/types/UserTypes';
-import {SavedMessage} from '../../models/SavedMessage';
-import {SavedMessages} from '../../Tables';
 
 const createFetchSavedMessagesQuery = (limit: number) =>
 	SavedMessages.select({
 		where: [SavedMessages.where.eq('user_id'), SavedMessages.where.lt('message_id', 'before_message_id')],
+		orderBy: {col: 'message_id', direction: 'DESC'},
 		limit,
 	});
 

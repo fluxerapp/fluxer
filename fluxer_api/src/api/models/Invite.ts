@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, InviteCode, UserID} from '../BrandedTypes';
-import type {InviteRow} from '../database/types/ChannelTypes';
+import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
+import type {InviteRow} from '@app/api/database/types/ChannelTypes';
 
 export class Invite {
 	readonly code: InviteCode;

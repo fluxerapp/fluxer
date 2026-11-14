@@ -8,8 +8,6 @@ pub mod token;
 use std::sync::atomic::{AtomicU64, Ordering};
 use thiserror::Error;
 
-pub const RELAY_PATH_PREFIX: &str = "/v1/relay/";
-
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum RelayError {
     #[error("missing relay token")]
@@ -53,16 +51,45 @@ pub fn release_buffer_budget(amount: u64) {
     BUFFERED_RETRY_IN_FLIGHT.fetch_sub(amount, Ordering::AcqRel);
 }
 
-pub fn try_reserve_spool_budget(needed: u64, ceiling: u64) -> bool {
-    try_reserve(&SPOOL_IN_FLIGHT_BYTES, needed, ceiling)
+pub struct BufferReservation {
+    bytes: u64,
 }
 
-pub fn release_spool_budget(amount: u64) {
-    SPOOL_IN_FLIGHT_BYTES.fetch_sub(amount, Ordering::AcqRel);
+impl BufferReservation {
+    pub fn try_new(bytes: u64, ceiling: u64) -> Option<Self> {
+        try_reserve_buffer_budget(bytes, ceiling).then(|| Self { bytes })
+    }
 }
 
-pub fn spool_in_flight_bytes() -> u64 {
-    SPOOL_IN_FLIGHT_BYTES.load(Ordering::Relaxed)
+impl Drop for BufferReservation {
+    fn drop(&mut self) {
+        release_buffer_budget(self.bytes);
+    }
+}
+
+#[derive(Debug)]
+pub struct SpoolReservation {
+    bytes: u64,
+}
+
+impl SpoolReservation {
+    pub fn try_new(bytes: u64, ceiling: u64) -> Option<Self> {
+        try_reserve(&SPOOL_IN_FLIGHT_BYTES, bytes, ceiling).then_some(Self { bytes })
+    }
+
+    pub fn try_grow(&mut self, bytes: u64, ceiling: u64) -> bool {
+        if !try_reserve(&SPOOL_IN_FLIGHT_BYTES, bytes, ceiling) {
+            return false;
+        }
+        self.bytes += bytes;
+        true
+    }
+}
+
+impl Drop for SpoolReservation {
+    fn drop(&mut self) {
+        SPOOL_IN_FLIGHT_BYTES.fetch_sub(self.bytes, Ordering::AcqRel);
+    }
 }
 
 fn try_reserve(counter: &AtomicU64, needed: u64, ceiling: u64) -> bool {
@@ -84,8 +111,4 @@ fn try_reserve(counter: &AtomicU64, needed: u64, ceiling: u64) -> bool {
             Err(next) => current = next,
         }
     }
-}
-
-pub fn is_relay_path(path: &str) -> bool {
-    path.starts_with(RELAY_PATH_PREFIX)
 }

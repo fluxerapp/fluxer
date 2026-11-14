@@ -4,54 +4,16 @@
 -typing([eqwalizer]).
 
 -export([is_user_blocked/2]).
--export([check_user_guild_settings/7]).
 -export([check_user_guild_settings/8]).
 -export([prefetch_user_guild_settings/3]).
 -export([should_allow_notification/6]).
 -export([is_user_mentioned/5]).
--export([is_eligible_for_push/8]).
 -export([is_eligible_for_push/9]).
 -export([get_setting/3]).
 
 -define(MESSAGE_NOTIFICATIONS_NO_MESSAGES, 2).
 -define(MESSAGE_NOTIFICATIONS_ONLY_MENTIONS, 1).
 -define(SETTINGS_PREFETCH_CHUNK_SIZE, 200).
-
--spec is_eligible_for_push(
-    integer(), integer(), integer(), integer(), map(), integer(), map(), map()
-) -> boolean().
-is_eligible_for_push(
-    UserId,
-    UserId,
-    _GuildId,
-    _ChannelId,
-    _MessageData,
-    _GuildDefaultNotifications,
-    _UserRoles,
-    _ConnectedUsers
-) ->
-    false;
-is_eligible_for_push(
-    UserId,
-    AuthorId,
-    GuildId,
-    ChannelId,
-    MessageData,
-    GuildDefaultNotifications,
-    UserRolesMap,
-    ConnectedUsers
-) ->
-    is_eligible_for_push(
-        UserId,
-        AuthorId,
-        GuildId,
-        ChannelId,
-        MessageData,
-        GuildDefaultNotifications,
-        UserRolesMap,
-        ConnectedUsers,
-        push_eligibility_checks:get_guild_large_metadata(GuildId)
-    ).
 
 -spec is_eligible_for_push(
     integer(),
@@ -128,59 +90,8 @@ is_user_blocked(UserId, AuthorId) ->
     end.
 
 -spec check_user_guild_settings(
-    integer(), integer(), integer(), map(), integer(), map(), map()
-) -> boolean().
-check_user_guild_settings(
-    _UserId,
-    0,
-    _ChannelId,
-    _MessageData,
-    _GuildDefaultNotifications,
-    _UserRolesMap,
-    _ConnectedUsers
-) ->
-    true;
-check_user_guild_settings(
-    UserId,
-    GuildId,
-    ChannelId,
-    MessageData,
-    GuildDefaultNotifications,
-    UserRolesMap,
-    ConnectedUsers
-) ->
-    Settings = fetch_settings(UserId, GuildId),
-    MobilePush = get_boolean_setting(mobile_push, Settings, true),
-    case MobilePush of
-        false ->
-            false;
-        true ->
-            push_eligibility_checks:check_muted_and_notifications(
-                UserId,
-                ChannelId,
-                MessageData,
-                GuildDefaultNotifications,
-                UserRolesMap,
-                Settings,
-                GuildId,
-                ConnectedUsers
-            )
-    end.
-
--spec check_user_guild_settings(
     integer(), integer(), integer(), map(), integer(), map(), map(), map() | undefined
 ) -> boolean().
-check_user_guild_settings(
-    _UserId,
-    0,
-    _ChannelId,
-    _MessageData,
-    _GuildDefaultNotifications,
-    _UserRolesMap,
-    _ConnectedUsers,
-    _LargeGuildMetadata
-) ->
-    true;
 check_user_guild_settings(
     UserId,
     GuildId,
@@ -192,8 +103,7 @@ check_user_guild_settings(
     LargeGuildMetadata
 ) ->
     Settings = fetch_settings(UserId, GuildId),
-    MobilePush = get_boolean_setting(mobile_push, Settings, true),
-    case MobilePush of
+    case mobile_push_allowed(GuildId, Settings) of
         false ->
             false;
         true ->
@@ -210,6 +120,12 @@ check_user_guild_settings(
             )
     end.
 
+-spec mobile_push_allowed(integer(), map()) -> boolean().
+mobile_push_allowed(0, _Settings) ->
+    true;
+mobile_push_allowed(_GuildId, Settings) ->
+    get_boolean_setting(mobile_push, Settings, true).
+
 -spec fetch_settings(integer(), integer()) -> map().
 fetch_settings(UserId, GuildId) ->
     case push_ets_cache:get_user_guild_settings(UserId, GuildId) of
@@ -219,13 +135,67 @@ fetch_settings(UserId, GuildId) ->
 
 -spec fetch_settings_rpc(integer(), integer()) -> map().
 fetch_settings_rpc(UserId, GuildId) ->
-    try push_subscriptions:fetch_and_cache_user_guild_settings(UserId, GuildId) of
+    try fetch_and_cache_user_guild_settings(UserId, GuildId) of
         S0 when is_map(S0) -> S0;
         _ -> #{}
     catch
         throw:_ -> #{};
         error:_ -> #{};
         exit:_ -> #{}
+    end.
+
+-spec fetch_and_cache_user_guild_settings(integer(), integer()) -> map() | null.
+fetch_and_cache_user_guild_settings(UserId, GuildId) ->
+    Req = #{
+        <<"type">> => <<"get_user_guild_settings">>,
+        <<"user_ids">> => [integer_to_binary(UserId)],
+        <<"guild_id">> => integer_to_binary(GuildId)
+    },
+    logger:debug(
+        "Push: fetching user guild settings via RPC",
+        #{user_id => UserId, guild_id => GuildId}
+    ),
+    Fill = push_ets_cache:reserve_user_guild_settings([UserId], GuildId),
+    try rpc_client:call(Req) of
+        {ok, Data} ->
+            cache_user_guild_settings(UserId, GuildId, Data, Fill);
+        {error, Reason} ->
+            logger:debug(
+                "Push: RPC failed to fetch user guild settings",
+                #{user_id => UserId, guild_id => GuildId, reason => Reason}
+            ),
+            null
+    after
+        push_ets_cache:release(Fill)
+    end.
+
+-spec cache_user_guild_settings(integer(), integer(), map(), push_ets_cache:fill()) -> map().
+cache_user_guild_settings(UserId, GuildId, Data, Fill) ->
+    SettingsData =
+        case maps:get(<<"user_guild_settings">>, Data, [null]) of
+            [First | _] -> First;
+            _ -> null
+        end,
+    case SettingsData of
+        null ->
+            logger:debug(
+                "Push: user guild settings returned null; caching empty sentinel",
+                #{user_id => UserId, guild_id => GuildId}
+            ),
+            push_ets_cache:put_user_guild_settings(UserId, GuildId, #{}, Fill),
+            #{};
+        Settings ->
+            logger:debug(
+                "Push: user guild settings fetched and cached",
+                #{
+                    user_id => UserId,
+                    guild_id => GuildId,
+                    muted => maps:get(muted, Settings, undefined),
+                    mobile_push => maps:get(mobile_push, Settings, undefined)
+                }
+            ),
+            push_ets_cache:put_user_guild_settings(UserId, GuildId, Settings, Fill),
+            Settings
     end.
 
 -spec prefetch_user_guild_settings([integer()], integer(), integer()) -> ok.
@@ -287,15 +257,18 @@ prefetch_settings_chunk_rpc(UserIds, GuildId) ->
         "Push: prefetching user guild settings via RPC",
         #{user_count => length(UserIds), guild_id => GuildId}
     ),
-    case rpc_client:call(Req) of
+    Fill = push_ets_cache:reserve_user_guild_settings(UserIds, GuildId),
+    try rpc_client:call(Req) of
         {ok, Data} ->
-            cache_prefetched_settings(UserIds, GuildId, settings_list(Data));
+            cache_prefetched_settings(UserIds, GuildId, settings_list(Data), Fill);
         {error, Reason} ->
             logger:debug(
                 "Push: RPC failed to prefetch user guild settings",
                 #{user_count => length(UserIds), guild_id => GuildId, reason => Reason}
             ),
             ok
+    after
+        push_ets_cache:release(Fill)
     end.
 
 -spec settings_list(map()) -> [term()].
@@ -305,19 +278,19 @@ settings_list(Data) ->
         _ -> []
     end.
 
--spec cache_prefetched_settings([integer()], integer(), [term()]) -> ok.
-cache_prefetched_settings(UserIds, GuildId, Settings) when
+-spec cache_prefetched_settings([integer()], integer(), [term()], push_ets_cache:fill()) -> ok.
+cache_prefetched_settings(UserIds, GuildId, Settings, Fill) when
     length(UserIds) =:= length(Settings)
 ->
     lists:foreach(
         fun({UserId, UserSettings}) ->
             push_ets_cache:put_user_guild_settings(
-                UserId, GuildId, settings_map(UserSettings)
+                UserId, GuildId, settings_map(UserSettings), Fill
             )
         end,
         lists:zip(UserIds, Settings)
     );
-cache_prefetched_settings(UserIds, GuildId, Settings) ->
+cache_prefetched_settings(UserIds, GuildId, Settings, _Fill) ->
     logger:debug(
         "Push: prefetched user guild settings did not match requested users",
         #{
@@ -391,17 +364,16 @@ extract_mention_flags(UserId, MessageData, Settings, ConnectedUsers) ->
 -spec evaluate_mentions(
     boolean(), boolean(), boolean(), integer(), map(), map()
 ) -> boolean().
-evaluate_mentions(true, false, _SuppressRoles, _UserId, _MessageData, _UserRolesMap) ->
-    true;
-evaluate_mentions(true, true, _SuppressRoles, _UserId, _MessageData, _UserRolesMap) ->
-    false;
-evaluate_mentions(_EvMention, _SuppEv, SuppressRoles, UserId, MessageData, UserRolesMap) ->
+evaluate_mentions(
+    EveryoneMention, SuppressEveryone, SuppressRoles, UserId, MessageData, UserRolesMap
+) ->
     Mentions = maps:get(<<"mentions">>, MessageData, []),
     MentionRoles = maps:get(<<"mention_roles">>, MessageData, []),
     UserRoles = maps:get(UserId, UserRolesMap, []),
-    InMentions = push_eligibility_checks:is_user_in_mentions(UserId, Mentions),
-    HasRole = push_eligibility_checks:has_mentioned_role(UserRoles, MentionRoles),
-    InMentions orelse (not SuppressRoles andalso HasRole).
+    push_eligibility_checks:is_user_in_mentions(UserId, Mentions) orelse
+        (EveryoneMention andalso not SuppressEveryone) orelse
+        (not SuppressRoles andalso
+            push_eligibility_checks:has_mentioned_role(UserRoles, MentionRoles)).
 
 -spec get_setting(atom(), term(), term()) -> term().
 get_setting(Key, Settings, Default) when is_atom(Key), is_map(Settings) ->
@@ -429,49 +401,3 @@ get_setting_binary(Key, Settings, Default) ->
         #{BinKey := V} -> V;
         _ -> Default
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-get_setting_atom_test() ->
-    ?assertEqual(true, get_setting(mobile_push, #{mobile_push => true}, false)).
-
-get_setting_binary_test() ->
-    ?assertEqual(true, get_setting(mobile_push, #{<<"mobile_push">> => true}, false)).
-
-get_setting_default_test() ->
-    ?assertEqual(default, get_setting(mobile_push, #{}, default)),
-    ?assertEqual(default, get_setting(mobile_push, not_a_map, default)).
-
-is_eligible_same_user_test() ->
-    ?assertEqual(false, is_eligible_for_push(123, 123, 0, 0, #{}, 0, #{}, #{})).
-
-is_user_blocked_test() ->
-    push_ets_cache:init(),
-    push_ets_cache:put_blocked_ids(123, [456, 789]),
-    ?assertEqual(true, is_user_blocked(123, 456)),
-    ?assertEqual(false, is_user_blocked(123, 999)),
-    ?assertEqual(false, is_user_blocked(999, 456)),
-    try
-        ets:delete(push_blocked_ids)
-    catch
-        error:badarg -> ok
-    end.
-
-get_setting_json_null_treated_as_missing_test() ->
-    ?assertEqual(true, get_setting(mobile_push, #{<<"mobile_push">> => null}, true)),
-    NullOverrides = #{<<"channel_overrides">> => null},
-    ?assertEqual(default, get_setting(channel_overrides, NullOverrides, default)),
-    ?assertEqual(default, get_setting(mobile_push, #{mobile_push => null}, default)).
-
-mention_here_requires_connected_user_test() ->
-    MessageData = #{<<"mention_everyone">> => true, <<"mention_here">> => true},
-    ?assertEqual(false, is_user_mentioned(123, MessageData, #{}, #{}, #{})),
-    ?assertEqual(true, is_user_mentioned(123, MessageData, #{}, #{}, #{123 => true})).
-
-mention_here_respects_suppress_everyone_test() ->
-    MessageData = #{<<"mention_everyone">> => true, <<"mention_here">> => true},
-    Settings = #{suppress_everyone => true},
-    ?assertEqual(false, is_user_mentioned(123, MessageData, Settings, #{}, #{123 => true})).
-
--endif.

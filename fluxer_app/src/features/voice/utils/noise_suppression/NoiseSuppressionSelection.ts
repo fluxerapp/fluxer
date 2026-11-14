@@ -9,89 +9,33 @@ import {
 	type VoiceNoiseSuppressionBackend,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import type {ResolvedVoiceProcessing} from '@app/features/voice/utils/VoiceProcessingProfile';
-import type {
-	VoiceNoiseSuppressionAssignmentResponse,
-	VoiceNoiseSuppressionResolutionSource,
-} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
-import {resolveVoiceNoiseSuppressionForCall} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 
-export interface EffectiveNoiseSuppression {
-	rolloutApplied: boolean;
-	backend: VoiceNoiseSuppressionBackend | null;
-	requestedBackend: VoiceNoiseSuppressionBackend | null;
-	source: VoiceNoiseSuppressionResolutionSource | null;
-	suppressionStrength: number;
-	stereoEnabled: boolean;
-	configVersion: number;
-}
+const NOISE_SUPPRESSION_SAMPLE_RATE = 48000;
+const DEFAULT_NOISE_SUPPRESSION_BACKEND: VoiceNoiseSuppressionBackend = 'rnnoise';
 
-export const INERT_EFFECTIVE_NOISE_SUPPRESSION: EffectiveNoiseSuppression = {
-	rolloutApplied: false,
-	backend: null,
-	requestedBackend: null,
-	source: null,
-	suppressionStrength: 80,
-	stereoEnabled: false,
-	configVersion: 0,
-};
-
-export function resolveEffectiveNoiseSuppression(
-	assignment: VoiceNoiseSuppressionAssignmentResponse,
-	guildId: string | null,
-	userPreference: unknown,
-	capabilities: NoiseSuppressionRuntimeCapabilities,
-	stereoPreference: boolean | null = null,
-): EffectiveNoiseSuppression {
-	const preference = isVoiceNoiseSuppressionBackend(userPreference) ? userPreference : null;
-	const resolution = resolveVoiceNoiseSuppressionForCall(assignment, guildId, preference);
-	if (resolution == null) return INERT_EFFECTIVE_NOISE_SUPPRESSION;
-	const backend = selectUsableNoiseSuppressionBackend(resolution.backend, capabilities);
+export function readNoiseSuppressionRuntimeCapabilities(): NoiseSuppressionRuntimeCapabilities {
 	return {
-		rolloutApplied: true,
-		backend,
-		requestedBackend: resolution.backend,
-		source: resolution.source,
-		suppressionStrength: resolution.suppressionStrength,
-		stereoEnabled:
-			resolution.stereoEnabled &&
-			stereoPreference !== false &&
-			getNoiseSuppressionBackendDescriptor(backend).preservesInputChannels,
-		configVersion: resolution.configVersion,
-	};
-}
-
-export function readNoiseSuppressionRuntimeCapabilities(sampleRate: number): NoiseSuppressionRuntimeCapabilities {
-	return {
-		sampleRate,
+		sampleRate: NOISE_SUPPRESSION_SAMPLE_RATE,
 		wasmSimd: detectWasmSimdSupport(),
 		audioWorklet: typeof AudioWorkletNode === 'function',
 	};
 }
 
-let activeScopeGuildId: string | null = null;
-
-export function setNoiseSuppressionScopeGuildId(guildId: string | null): void {
-	activeScopeGuildId = guildId;
+export function resolveNoiseSuppressionBackend(preference: unknown): VoiceNoiseSuppressionBackend {
+	return selectUsableNoiseSuppressionBackend(
+		isVoiceNoiseSuppressionBackend(preference) ? preference : DEFAULT_NOISE_SUPPRESSION_BACKEND,
+		readNoiseSuppressionRuntimeCapabilities(),
+	);
 }
 
-export function getNoiseSuppressionScopeGuildId(): string | null {
-	return activeScopeGuildId;
+export function supportsStereoCapture(profile: ResolvedVoiceProcessing): boolean {
+	if (profile.echoCancellation || profile.autoGainControl) return false;
+	if (profile.browserNoiseSuppression || profile.deepFilter) return false;
+	return getNoiseSuppressionBackendDescriptor(profile.noiseSuppressionBackend).preservesInputChannels;
 }
 
-export function applyNoiseSuppressionOverride(
-	profile: ResolvedVoiceProcessing,
-	effective: EffectiveNoiseSuppression,
-): ResolvedVoiceProcessing {
-	if (!effective.rolloutApplied || effective.backend == null) return profile;
-	if (profile.mode === 'studio') return profile;
-	const backend = effective.backend;
-	const descriptor = getNoiseSuppressionBackendDescriptor(backend);
-	return {
-		...profile,
-		browserNoiseSuppression: descriptor.browserNoiseSuppression,
-		deepFilter: backend === 'deep_filter',
-		deepFilterNoiseReductionLevel: backend === 'deep_filter' ? effective.suppressionStrength : 0,
-		noiseSuppressionBackend: backend,
-		stereoCapture: effective.stereoEnabled,
-	};
+export function resolveStereoCapture(profile: ResolvedVoiceProcessing, stereoPreferred: boolean): boolean {
+	if (!supportsStereoCapture(profile)) return false;
+	if (profile.mode === 'voice') return false;
+	return stereoPreferred;
 }

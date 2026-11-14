@@ -10,9 +10,15 @@ import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import styles from '@app/features/ui/tooltip/Tooltip.module.css';
+import {useExclusiveTooltip} from '@app/features/ui/tooltip/TooltipExclusivity';
+import {isTooltipHandoffWarm, markTooltipOpen} from '@app/features/ui/tooltip/TooltipHandoff';
 import {
-	createTooltipSnapshot,
+	getTooltipScrollSuppressRemainingMs,
+	subscribeTooltipScrollHide,
+} from '@app/features/ui/tooltip/TooltipScrollCoordinator';
+import {
 	getTooltipStateValue,
+	initialTooltipSnapshot,
 	selectTooltipModel,
 	type TooltipEnvironment,
 	type TooltipMachineEvent,
@@ -20,6 +26,7 @@ import {
 	transitionTooltipSnapshot,
 } from '@app/features/ui/tooltip/TooltipStateMachine';
 import {appZoomCssPx, appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
+import {toDocumentPlacement} from '@app/features/ui/utils/DocumentPlacement';
 import {getReducedMotionProps, TOOLTIP_MOTION} from '@app/features/ui/utils/ReducedMotionAnimation';
 import {
 	canUseWindowFocusedHoverControls,
@@ -33,14 +40,13 @@ import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import {useExclusiveTooltip} from './TooltipExclusivity';
-import {isTooltipHandoffWarm, markTooltipOpen} from './TooltipHandoff';
-import {getTooltipScrollSuppressRemainingMs, subscribeTooltipScrollHide} from './TooltipScrollCoordinator';
 
 const logger = new Logger('Tooltip');
 
 export type TooltipPosition = 'top' | 'left' | 'right' | 'bottom';
-export type TooltipType = 'normal' | 'error';
+type TooltipType = 'normal' | 'error';
+
+const HOVER_VERIFY_INTERVAL_MS = 100;
 
 const TOOLTIP_AUTO_UPDATE_OPTIONS = {
 	ancestorScroll: false,
@@ -121,6 +127,7 @@ interface TooltipProps {
 	size?: 'default' | 'large';
 	openOnMountHover?: boolean;
 	allowWhenContextMenuOpen?: boolean;
+	ariaHidden?: boolean;
 	children?: React.ReactElement;
 }
 
@@ -220,6 +227,7 @@ export const Tooltip = observer(
 		size = 'default',
 		openOnMountHover = true,
 		allowWhenContextMenuOpen = false,
+		ariaHidden = false,
 		children,
 	}: TooltipProps) => {
 		const tooltipId = useId();
@@ -276,7 +284,7 @@ export const Tooltip = observer(
 				mobileLayout.enabled,
 			],
 		);
-		const [tooltipSnapshot, setTooltipSnapshot] = useState(() => createTooltipSnapshot(tooltipEnvironment));
+		const [tooltipSnapshot, setTooltipSnapshot] = useState(() => initialTooltipSnapshot(tooltipEnvironment));
 		const tooltipModel = selectTooltipModel(tooltipSnapshot);
 		const tooltipStateValue = getTooltipStateValue(tooltipSnapshot);
 		const shouldRenderTooltip = tooltipModel.shouldRender;
@@ -414,7 +422,7 @@ export const Tooltip = observer(
 					...(arrowRef.current ? [arrow({element: arrowRef.current})] : []),
 				];
 				const {x, y, placement, middlewareData} = await computePosition(target, tooltip, {
-					placement: position,
+					placement: toDocumentPlacement(position, target),
 					strategy: 'fixed',
 					middleware,
 				});
@@ -537,7 +545,11 @@ export const Tooltip = observer(
 				longPressTimeoutRef.current = null;
 			}
 		}, []);
+		const mountEnvironmentRef = useRef<TooltipEnvironment | null>(tooltipEnvironment);
 		useEffect(() => {
+			const mountEnvironment = mountEnvironmentRef.current;
+			mountEnvironmentRef.current = null;
+			if (mountEnvironment === tooltipEnvironment) return;
 			sendTooltipEvent({type: 'tooltip.environmentChanged', environment: tooltipEnvironment});
 		}, [sendTooltipEvent, tooltipEnvironment]);
 		useEffect(() => {
@@ -640,7 +652,7 @@ export const Tooltip = observer(
 		useEffect(() => {
 			if (!openOnMountHover || !hasChild || mobileLayout.enabled || isDisabled) return;
 			const target = targetRef.current;
-			if (!target || !target.matches(':hover')) return;
+			if (!target?.matches(':hover')) return;
 			beginVisibilityDriver('hover');
 		}, [beginVisibilityDriver, hasChild, isDisabled, mobileLayout.enabled, openOnMountHover]);
 		useEffect(() => {
@@ -673,21 +685,13 @@ export const Tooltip = observer(
 		useEffect(() => {
 			if (!tooltipModel.hovered || tooltipModel.dismissed || mobileLayout.enabled) return;
 			const ownerWindow = getTooltipOwnerWindow();
-			let frameId: number | null = null;
-			const verifyTargetHover = () => {
-				const target = targetRef.current;
-				if (!target || !target.matches(':hover')) {
+			const intervalId = ownerWindow.setInterval(() => {
+				if (!targetRef.current?.matches(':hover')) {
 					endVisibilityDriver('hover');
-					frameId = null;
-					return;
 				}
-				frameId = ownerWindow.requestAnimationFrame(verifyTargetHover);
-			};
-			frameId = ownerWindow.requestAnimationFrame(verifyTargetHover);
+			}, HOVER_VERIFY_INTERVAL_MS);
 			return () => {
-				if (frameId != null) {
-					ownerWindow.cancelAnimationFrame(frameId);
-				}
+				ownerWindow.clearInterval(intervalId);
 			};
 		}, [
 			endVisibilityDriver,
@@ -697,9 +701,10 @@ export const Tooltip = observer(
 			tooltipModel.hovered,
 		]);
 		if (!child) return null;
-		const describedBy = shouldRenderTooltip
-			? [childProps['aria-describedby'], tooltipId].filter(Boolean).join(' ')
-			: childProps['aria-describedby'];
+		const describedBy =
+			shouldRenderTooltip && !ariaHidden
+				? [childProps['aria-describedby'], tooltipId].filter(Boolean).join(' ')
+				: childProps['aria-describedby'];
 		const shouldUseTooltipAsName =
 			typeof text === 'string' &&
 			!childProps['aria-label'] &&
@@ -801,7 +806,8 @@ export const Tooltip = observer(
 							<motion.div
 								key="tooltip"
 								id={tooltipId}
-								role="tooltip"
+								role={ariaHidden ? undefined : 'tooltip'}
+								aria-hidden={ariaHidden || undefined}
 								ref={(node: HTMLDivElement | null) => {
 									tooltipRef.current = node;
 									if (node && targetRef.current) {

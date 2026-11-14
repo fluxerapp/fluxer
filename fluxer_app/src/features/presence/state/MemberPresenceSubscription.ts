@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
+import Guilds from '@app/features/guild/state/Guilds';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 const MEMBER_SUBSCRIPTION_MAX_SIZE = 100;
@@ -93,45 +95,8 @@ class MemberPresenceSubscription {
 		this.syncToGatewayImmediate(guildId);
 	}
 
-	setActiveGuild(guildId: string): void {
-		if (this.activeGuildId === guildId) {
-			return;
-		}
-		const previous = this.activeGuildId;
-		this.activeGuildId = guildId;
-		if (previous) {
-			this.syncActiveFlagImmediate(previous, false);
-		}
-		this.syncActiveFlagImmediate(guildId, true);
-		this.scheduleSyncToGateway(guildId);
-		this.bumpVersion();
-	}
-
-	getSubscribedMembers(guildId: string): Array<string> {
-		const guildSubs = this.subscriptions.get(guildId);
-		if (!guildSubs) {
-			return [];
-		}
-		return Array.from(guildSubs.keys());
-	}
-
-	clearGuild(guildId: string): void {
-		const hadSubscriptions = this.subscriptions.has(guildId);
-		const wasActiveGuild = this.activeGuildId === guildId;
-		this.subscriptions.delete(guildId);
-		this.syncPruneInterval();
-		if (hadSubscriptions) {
-			this.syncToGatewayImmediate(guildId);
-			this.bumpVersion();
-		}
-		if (wasActiveGuild) {
-			this.activeGuildId = null;
-			this.syncActiveFlagImmediate(guildId, false);
-		}
-	}
-
 	clearAll(): void {
-		const socket = GatewayConnection.socket;
+		const socket = GatewaySessions.foregroundConnection.socket;
 		const guildIds = Array.from(this.subscriptions.keys());
 		const previousActive = this.activeGuildId;
 		if (socket) {
@@ -230,19 +195,9 @@ class MemberPresenceSubscription {
 		}
 	}
 
-	private syncActiveFlagImmediate(guildId: string, active: boolean): void {
-		const socket = GatewayConnection.socket;
-		if (!socket) return;
-		socket.updateGuildSubscriptions({
-			subscriptions: {
-				[guildId]: {active, sync: active ? true : undefined},
-			},
-		});
-	}
-
 	private syncToGatewayImmediate(guildId: string): void {
-		const socket = GatewayConnection.socket;
-		if (!socket) {
+		const socket = GatewaySessions.foregroundConnection.socket;
+		if (!socket || Guilds.getGuild(guildId)?.visiting === true) {
 			return;
 		}
 		const guildSubs = this.subscriptions.get(guildId);
@@ -255,4 +210,8 @@ class MemberPresenceSubscription {
 	}
 }
 
-export default new MemberPresenceSubscription();
+const memberPresenceSubscription = new MemberPresenceSubscription();
+
+AccountScopedWork.registerCancellation(() => memberPresenceSubscription.clearAll());
+
+export default memberPresenceSubscription;

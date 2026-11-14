@@ -14,6 +14,11 @@ import {Edge, type VerticalEdge} from '@app/features/ui/AxisOrientation';
 import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {AnimeButton, AnimePresence} from '@app/features/ui/motion/AnimeElement';
+import {
+	cancelOwnedAnimationFrame,
+	type OwnedAnimationFrame,
+	requireOwnerWindow,
+} from '@app/features/ui/utils/OwnerWindow';
 import {resolveVisibleScrollViewportHeight} from '@app/features/ui/utils/ScrollViewportGeometry';
 import {flxElementClassName} from '@app/lib/react';
 import {clsx} from 'clsx';
@@ -167,14 +172,6 @@ function resolveScrollerNode(scroller: ScrollerHandle | null): HTMLElement | nul
 	return scroller.getViewportElement();
 }
 
-function resolveOwnerWindow(container: HTMLElement): Window & typeof globalThis {
-	const defaultView = container.ownerDocument.defaultView;
-	if (defaultView == null) {
-		throw new Error('Floating unread indicator container has no owner window');
-	}
-	return defaultView;
-}
-
 function observeScrollContentElements(
 	resizeObserver: ResizeObserver,
 	container: HTMLElement,
@@ -193,11 +190,6 @@ function observeScrollContentElements(
 	}
 }
 
-interface OwnedAnimationFrame {
-	readonly id: number;
-	readonly ownerWindow: Window & typeof globalThis;
-}
-
 interface OwnedSettleTimer {
 	readonly id: number;
 	readonly ownerWindow: Window & typeof globalThis;
@@ -208,11 +200,6 @@ interface AlignMountedTargetRequest {
 	readonly direction: VerticalEdge;
 	readonly scroller: ScrollerHandle;
 	readonly targetNode: HTMLElement;
-}
-
-function cancelOwnedAnimationFrame(frame: OwnedAnimationFrame | null): void {
-	if (frame == null) return;
-	frame.ownerWindow.cancelAnimationFrame(frame.id);
 }
 
 function cancelOwnedSettleTimer(timer: OwnedSettleTimer | null): void {
@@ -247,6 +234,7 @@ export const FloatingUnreadIndicators = observer(
 		scrollToTarget,
 	}: FloatingUnreadIndicatorsProps) => {
 		const [edges, setEdges] = useState<FloatingUnreadEdges>(FloatingUnreadEdgeLayout.EMPTY_EDGES);
+		const [measured, setMeasured] = useState(false);
 		const targetsSignature = useMemo(() => buildFloatingUnreadTargetsSignature(targets), [targets]);
 		const targetsRef = useRef(targets);
 		const getTargetNodeRef = useRef(getTargetNode);
@@ -321,7 +309,7 @@ export const FloatingUnreadIndicators = observer(
 					geometrySettleArmedRef.current = false;
 				} else if (!geometrySettleArmedRef.current) {
 					geometrySettleArmedRef.current = true;
-					const settleOwnerWindow = resolveOwnerWindow(container);
+					const settleOwnerWindow = requireOwnerWindow(container, 'Floating unread indicator container');
 					const settleId = settleOwnerWindow.setTimeout(() => {
 						geometrySettleTimerRef.current = null;
 						geometrySettleArmedRef.current = false;
@@ -351,6 +339,7 @@ export const FloatingUnreadIndicators = observer(
 				targetIndex: targetIndexRef.current,
 			});
 			setEdges((current) => FloatingUnreadEdgeLayout.preserveStableEdges({current, next}));
+			setMeasured(true);
 		}, [refreshTargetIndex, scrollerRef]);
 		refreshNowRef.current = refreshNow;
 		const scheduleRefresh = useCallback(
@@ -371,7 +360,7 @@ export const FloatingUnreadIndicators = observer(
 					refreshNow();
 					return;
 				}
-				const ownerWindow = resolveOwnerWindow(container);
+				const ownerWindow = requireOwnerWindow(container, 'Floating unread indicator container');
 				const pendingFrame = rafRef.current;
 				if (pendingFrame != null && pendingFrame.ownerWindow === ownerWindow) return;
 				cancelOwnedAnimationFrame(pendingFrame);
@@ -393,7 +382,7 @@ export const FloatingUnreadIndicators = observer(
 			geometryInvalidatedRef.current = true;
 			targetIndexInvalidatedRef.current = true;
 			refreshNow();
-			const ownerWindow = resolveOwnerWindow(container);
+			const ownerWindow = requireOwnerWindow(container, 'Floating unread indicator container');
 			const handleScroll = () => {
 				pendingScrollTopRef.current = container.scrollTop;
 				scheduleRefresh(FloatingUnreadRefreshScope.SCROLL);
@@ -453,7 +442,7 @@ export const FloatingUnreadIndicators = observer(
 					if (scroller == null) return;
 					const scrollNode = scroller.getViewportElement();
 					if (scrollNode == null) return;
-					const ownerWindow = resolveOwnerWindow(scrollNode);
+					const ownerWindow = requireOwnerWindow(scrollNode, 'Floating unread indicator container');
 					cancelOwnedAnimationFrame(targetAlignmentFrameRef.current);
 					const id = ownerWindow.requestAnimationFrame(() => {
 						targetAlignmentFrameRef.current = null;
@@ -469,7 +458,7 @@ export const FloatingUnreadIndicators = observer(
 				if (scroller == null) return;
 				const scrollNode = scroller.getViewportElement();
 				if (scrollNode == null) return;
-				const ownerWindow = resolveOwnerWindow(scrollNode);
+				const ownerWindow = requireOwnerWindow(scrollNode, 'Floating unread indicator container');
 				cancelOwnedSettleTimer(settleTimerRef.current);
 				const id = ownerWindow.setTimeout(() => {
 					settleTimerRef.current = null;
@@ -509,9 +498,11 @@ export const FloatingUnreadIndicators = observer(
 				className={flxElementClassName(styles.layer)}
 				data-flx="app.floating-unread-indicators.layer"
 			>
-				<AnimePresence enterOnMount={false} data-flx="app.floating-unread-indicators.anime-presence">
-					{visibleEdges.map(renderVisibleEdge)}
-				</AnimePresence>
+				{measured && (
+					<AnimePresence enterOnMount={false} data-flx="app.floating-unread-indicators.anime-presence">
+						{visibleEdges.map(renderVisibleEdge)}
+					</AnimePresence>
+				)}
 			</flx-app-floating-unread-indicators-layer>
 		);
 	},

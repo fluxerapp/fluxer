@@ -7,7 +7,8 @@
     get_current_status/1,
     get_flattened_mobile/1,
     get_flattened_afk/1,
-    collect_sessions_for_replace/1
+    collect_sessions_for_replace/1,
+    effective_sessions/1
 ]).
 
 -export_type([status/0, sessions/0]).
@@ -16,6 +17,19 @@
 -type status() :: online | offline | idle | dnd | invisible.
 -type session_entry() :: #{status := status(), afk := boolean(), mobile := boolean(), _ => _}.
 -type sessions() :: #{session_id() => session_entry()}.
+
+-spec effective_sessions(#{sessions := sessions(), _ => _}) -> sessions().
+effective_sessions(#{sessions := Sessions} = State) ->
+    case maps:get(settings_invisible, State, false) of
+        true -> maps:map(fun(_SessionId, Session) -> force_invisible(Session) end, Sessions);
+        false -> Sessions
+    end.
+
+-spec force_invisible(session_entry()) -> session_entry().
+force_invisible(#{status := offline} = Session) ->
+    Session;
+force_invisible(Session) ->
+    Session#{status => invisible}.
 
 -spec get_current_status(sessions()) -> status().
 get_current_status(Sessions) ->
@@ -100,151 +114,3 @@ collect_sessions_for_replace(Sessions) ->
         Sessions
     ),
     BaseSessions ++ SessionEntries.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-get_current_status_empty_test() ->
-    ?assertEqual(offline, get_current_status(#{})).
-
-get_current_status_online_test() ->
-    Sessions = #{<<"s1">> => #{status => online, afk => false, mobile => false}},
-    ?assertEqual(online, get_current_status(Sessions)).
-
-get_current_status_online_over_idle_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => idle, afk => false, mobile => false},
-        <<"s2">> => #{status => online, afk => false, mobile => false}
-    },
-    ?assertEqual(online, get_current_status(Sessions)).
-
-get_current_status_online_over_afk_idle_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => idle, afk => true, mobile => false},
-        <<"s2">> => #{status => online, afk => false, mobile => false}
-    },
-    ?assertEqual(online, get_current_status(Sessions)).
-
-get_current_status_all_idle_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => idle, afk => true, mobile => false},
-        <<"s2">> => #{status => idle, afk => true, mobile => false}
-    },
-    ?assertEqual(idle, get_current_status(Sessions)).
-
-get_current_status_dnd_over_online_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => dnd, afk => false, mobile => false},
-        <<"s2">> => #{status => online, afk => false, mobile => false}
-    },
-    ?assertEqual(dnd, get_current_status(Sessions)).
-
-get_current_status_dnd_over_idle_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => idle, afk => false, mobile => false},
-        <<"s2">> => #{status => dnd, afk => false, mobile => false}
-    },
-    ?assertEqual(dnd, get_current_status(Sessions)).
-
-get_current_status_visible_over_invisible_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => invisible, afk => false, mobile => false},
-        <<"s2">> => #{status => online, afk => false, mobile => false}
-    },
-    ?assertEqual(online, get_current_status(Sessions)).
-
-get_current_status_invisible_without_visible_session_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => invisible, afk => false, mobile => false},
-        <<"s2">> => #{status => offline, afk => false, mobile => false}
-    },
-    ?assertEqual(invisible, get_current_status(Sessions)).
-
-get_flattened_mobile_true_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => online, afk => false, mobile => true},
-        <<"s2">> => #{status => online, afk => false, mobile => false}
-    },
-    ?assertEqual(true, get_flattened_mobile(Sessions)).
-
-get_flattened_mobile_false_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => online, afk => false, mobile => false}
-    },
-    ?assertEqual(false, get_flattened_mobile(Sessions)),
-    ?assertEqual(
-        false,
-        get_flattened_mobile(#{
-            <<"s1">> => #{status => idle, afk => false, mobile => true}
-        })
-    ),
-    ?assertEqual(
-        false,
-        get_flattened_mobile(#{
-            <<"s1">> => #{status => dnd, afk => false, mobile => true}
-        })
-    ),
-    ?assertEqual(
-        false,
-        get_flattened_mobile(#{
-            <<"s1">> => #{status => invisible, afk => false, mobile => true}
-        })
-    ),
-    ?assertEqual(
-        false,
-        get_flattened_mobile(#{
-            <<"s1">> => #{status => dnd, afk => false, mobile => false},
-            <<"s2">> => #{status => online, afk => false, mobile => true}
-        })
-    ),
-    ?assertEqual(
-        false,
-        get_flattened_mobile(#{
-            <<"s1">> => #{status => online, afk => false, mobile => false},
-            <<"s2">> => #{status => idle, afk => false, mobile => true}
-        })
-    ),
-    ?assertEqual(
-        true,
-        get_flattened_mobile(#{
-            <<"s1">> => #{status => online, afk => false, mobile => true},
-            <<"s2">> => #{status => invisible, afk => false, mobile => false}
-        })
-    ).
-
-get_flattened_mobile_empty_test() ->
-    ?assertEqual(false, get_flattened_mobile(#{})).
-
-get_flattened_afk_all_afk_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => online, afk => true, mobile => false},
-        <<"s2">> => #{status => online, afk => true, mobile => false}
-    },
-    ?assertEqual(true, get_flattened_afk(Sessions)).
-
-get_flattened_afk_some_not_afk_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => online, afk => true, mobile => false},
-        <<"s2">> => #{status => online, afk => false, mobile => false}
-    },
-    ?assertEqual(false, get_flattened_afk(Sessions)).
-
-get_flattened_afk_mobile_overrides_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => online, afk => true, mobile => true}
-    },
-    ?assertEqual(false, get_flattened_afk(Sessions)).
-
-get_flattened_afk_empty_test() ->
-    ?assertEqual(false, get_flattened_afk(#{})).
-
-collect_sessions_for_replace_test() ->
-    Sessions = #{
-        <<"s1">> => #{status => online, afk => false, mobile => false}
-    },
-    Result = collect_sessions_for_replace(Sessions),
-    ?assertEqual(2, length(Result)),
-    [AllSession | Rest] = Result,
-    ?assertEqual(<<"all">>, maps:get(<<"session_id">>, AllSession)),
-    ?assertEqual(1, length(Rest)).
--endif.

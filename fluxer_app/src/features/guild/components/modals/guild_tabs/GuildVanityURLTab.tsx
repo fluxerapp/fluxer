@@ -20,7 +20,7 @@ import {useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {LinkBreakIcon, WarningIcon} from '@phosphor-icons/react';
+import {WarningIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -259,12 +259,9 @@ const GuildVanityURLTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					<div className={styles.actions} data-flx="guild.guild-tabs.guild-vanity-url-tab.actions">
 						<Button
 							type="button"
-							variant="secondary"
+							variant="danger"
 							submitting={isRemoving}
 							disabled={!vanityCode || isSubmitting}
-							leftIcon={
-								<LinkBreakIcon size={remFromPx(16)} data-flx="guild.guild-tabs.guild-vanity-url-tab.link-break-icon" />
-							}
 							onClick={handleRemoveVanityURL}
 							data-flx="guild.guild-tabs.guild-vanity-url-tab.button.remove"
 						>

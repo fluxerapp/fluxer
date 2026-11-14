@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import ChannelPins from '@app/features/channel/state/ChannelPins';
+import Channels from '@app/features/channel/state/Channels';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
+import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import MessageReferences from '@app/features/messaging/state/MessageReferences';
+import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
@@ -19,7 +23,11 @@ export function handleMessageDelete(data: MessageDeletePayload, _context: Gatewa
 	SavedMessages.handleMessageDelete(data.id);
 	ChannelPins.handleMessageDelete(data.channel_id, data.id);
 	Messages.handleMessageDelete({channelId: data.channel_id, id: data.id});
+	Channels.handleThreadMessageDelete(data.channel_id, data.id);
+	ForumPosts.handleMessageDelete(data.channel_id, data.id);
 	MessageReferences.handleMessageDelete(data.channel_id, data.id);
+	MessageReactions.handleMessageDelete(data.id);
+	MessageReply.handleMessageDelete(data.channel_id, data.id);
 	ReadStates.handleMessageDelete({channelId: data.channel_id});
 	MentionFeed.handleMessageDelete(data.id);
 	Notification.handleMessageDelete({channelId: data.channel_id});

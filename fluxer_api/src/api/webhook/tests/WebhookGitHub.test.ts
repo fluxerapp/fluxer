@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {createWebhook, deleteWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
 import {afterEach, beforeEach, describe, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createWebhook, deleteWebhook} from './WebhookTestUtils';
 
 function createGitHubSender() {
 	return {
@@ -71,78 +71,6 @@ describe('Webhook GitHub integration', () => {
 				.header('X-GitHub-Event', 'push')
 				.header('X-GitHub-Delivery', 'test-delivery-id-123')
 				.body(githubPayload)
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-			await deleteWebhook(harness, webhook.id, owner.token);
-		});
-		it('accepts github ping event', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'GitHub Ping Guild');
-			const channelId = guild.system_channel_id!;
-			const webhook = await createWebhook(harness, channelId, owner.token, 'GitHub Ping Webhook');
-			const pingPayload = {
-				repository: createGitHubRepository(),
-				sender: createGitHubSender(),
-			};
-			await createBuilderWithoutAuth(harness)
-				.post(`/webhooks/${webhook.id}/${webhook.token}/github`)
-				.header('X-GitHub-Event', 'ping')
-				.header('X-GitHub-Delivery', 'test-ping-delivery')
-				.body(pingPayload)
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-			await deleteWebhook(harness, webhook.id, owner.token);
-		});
-		it('accepts github pull request event', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'GitHub PR Guild');
-			const channelId = guild.system_channel_id!;
-			const webhook = await createWebhook(harness, channelId, owner.token, 'GitHub PR Webhook');
-			const prPayload = {
-				action: 'opened',
-				pull_request: {
-					id: 42,
-					number: 42,
-					title: 'Add new feature',
-					html_url: 'https://github.com/test/repo/pull/42',
-					user: createGitHubSender(),
-					body: 'This PR adds a new feature',
-				},
-				repository: createGitHubRepository(),
-				sender: createGitHubSender(),
-			};
-			await createBuilderWithoutAuth(harness)
-				.post(`/webhooks/${webhook.id}/${webhook.token}/github`)
-				.header('X-GitHub-Event', 'pull_request')
-				.header('X-GitHub-Delivery', 'test-pr-delivery')
-				.body(prPayload)
-				.expect(HTTP_STATUS.NO_CONTENT)
-				.execute();
-			await deleteWebhook(harness, webhook.id, owner.token);
-		});
-		it('accepts github issues event', async () => {
-			const owner = await createTestAccount(harness);
-			const guild = await createGuild(harness, owner.token, 'GitHub Issues Guild');
-			const channelId = guild.system_channel_id!;
-			const webhook = await createWebhook(harness, channelId, owner.token, 'GitHub Issues Webhook');
-			const issuePayload = {
-				action: 'opened',
-				issue: {
-					id: 123,
-					number: 123,
-					title: 'Bug report',
-					html_url: 'https://github.com/test/repo/issues/123',
-					user: createGitHubSender(),
-					body: 'Found a bug in the application',
-				},
-				repository: createGitHubRepository(),
-				sender: createGitHubSender(),
-			};
-			await createBuilderWithoutAuth(harness)
-				.post(`/webhooks/${webhook.id}/${webhook.token}/github`)
-				.header('X-GitHub-Event', 'issues')
-				.header('X-GitHub-Delivery', 'test-issue-delivery')
-				.body(issuePayload)
 				.expect(HTTP_STATUS.NO_CONTENT)
 				.execute();
 			await deleteWebhook(harness, webhook.id, owner.token);

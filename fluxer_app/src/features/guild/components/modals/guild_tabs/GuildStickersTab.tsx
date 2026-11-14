@@ -3,7 +3,6 @@
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {StickerGridItem} from '@app/features/emoji/components/stickers/StickerGridItem';
 import EmojiStickerLayout from '@app/features/emoji/state/EmojiStickerLayout';
 import * as GuildStickerCommands from '@app/features/expressions/commands/GuildStickerCommands';
@@ -12,7 +11,7 @@ import {
 	seedGuildStickerCache,
 	subscribeToGuildStickerUpdates,
 } from '@app/features/expressions/state/GuildExpressionTabCache';
-import {getAcceptString, getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
+import {getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
 import {isSvgFile} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {CloneAllowedToggle} from '@app/features/guild/components/modals/guild_tabs/CloneAllowedToggle';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildStickersTab.module.css';
@@ -20,7 +19,7 @@ import {resolveEnclosingScrollSurface} from '@app/features/guild/components/moda
 import {UploadDropZone} from '@app/features/guild/components/UploadDropZone';
 import {UploadSlotInfo} from '@app/features/guild/components/UploadSlotInfo';
 import Guilds from '@app/features/guild/state/Guilds';
-import {OKAY_DESCRIPTOR, TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {NearViewportSurfaceContext} from '@app/features/messaging/hooks/useNearViewport';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
@@ -32,9 +31,11 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import Users from '@app/features/user/state/Users';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {canCropFormat} from '@app/features/voice/utils/MediaCapabilities';
+import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_GUILD_STICKERS} from '@fluxer/constants/src/LimitConstants';
+import {MAX_GUILD_STICKERS, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import type {GuildStickerWithUser} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
@@ -63,7 +64,7 @@ const NO_STICKER_SLOTS_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Empty-state text in the guild stickers tab.',
 });
 const STICKER_SLOTS_FULL_DESCRIPTION_DESCRIPTOR = msg({
-	message: "You've reached the maximum number of stickers. Delete some existing stickers to make room.",
+	message: "You can't add more stickers. Delete some existing stickers to make room.",
 	comment:
 		'Sticker upload limit message in community sticker settings. Do not suggest that communities can be upgraded.',
 });
@@ -143,9 +144,6 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 				<ConfirmModal
 					title={i18n._(UNSUPPORTED_STICKER_FILE_DESCRIPTOR)}
 					description={getAssetFormatErrorMessage(i18n, 'sticker', 'unsupported_mime')}
-					primaryText={i18n._(OKAY_DESCRIPTOR)}
-					primaryVariant="primary"
-					onPrimary={() => {}}
 					data-flx="guild.guild-tabs.guild-stickers-tab.unsupported-file-confirm-modal"
 				/>
 			)),
@@ -227,7 +225,7 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 		},
 		[canManageExpressions, canCreateExpressions, currentUserId],
 	);
-	const stickerMaxSizeLabel = formatFileSize(GlobalLimits.getStickerMaxSize());
+	const stickerMaxSizeLabel = formatFileSize(getFormattingLocale(), guild?.maxStickerSize ?? STICKER_MAX_SIZE);
 	return (
 		<div className={styles.container} data-flx="guild.guild-tabs.guild-stickers-tab.container">
 			<CloneAllowedToggle

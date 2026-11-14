@@ -6,7 +6,6 @@ pub mod env;
 pub mod keymap;
 pub mod modifiers;
 pub mod mouse;
-pub mod x11;
 
 #[cfg(target_os = "linux")]
 mod hook;

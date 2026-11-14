@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {createAuthHarness} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createAuthHarness} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../../user/repositories/UserRepository';
 
 const MISSING_USER_ID = createUserID(999999999999999998n);
 const SESSION_TOKEN = 'flx_Zmlzc2lvbmVkc2Vzc2lvbnRva2VuMDAwMDAx';
@@ -40,6 +40,12 @@ describe('Session token whose account row is gone', () => {
 			client_user_agent: null,
 			client_os: null,
 			client_country: null,
+			app_platform: null,
+			app_version: null,
+			app_release_channel: null,
+			app_build_number: null,
+			app_beta_number: null,
+			auth_method: null,
 			version: 1,
 		});
 		const result = await createBuilder<UnauthorizedErrorResponse>(harness, SESSION_TOKEN)

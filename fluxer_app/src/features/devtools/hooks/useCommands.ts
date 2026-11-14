@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {BAN_DELETE_MESSAGE_OPTIONS} from '@app/features/moderation/constants/BanDeleteMessageOptions';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
@@ -115,8 +116,9 @@ export type Command = SimpleCommand | ActionCommand;
 
 export function useCommands(): Array<Command> {
 	const {i18n} = useLingui();
-	return useMemo(
-		(): Array<Command> => [
+	const directMessagesDisabled = RuntimeConfig.directMessagesDisabled;
+	return useMemo(() => {
+		const commands: Array<Command> = [
 			{type: 'simple', name: '/shrug', content: '¯\\_(ツ)_/¯', description: i18n._(APPENDS_TO_YOUR_MESSAGE_DESCRIPTOR)},
 			{
 				type: 'simple',
@@ -322,7 +324,7 @@ export function useCommands(): Array<Command> {
 					},
 				],
 			},
-		],
-		[i18n.locale],
-	);
+		];
+		return directMessagesDisabled ? commands.filter((command) => command.name !== '/msg') : commands;
+	}, [i18n.locale, directMessagesDisabled]);
 }

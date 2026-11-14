@@ -16,7 +16,7 @@ import {
 	type VoiceGatewayVoiceStates,
 } from '@app/features/voice/engine/VoiceGatewayStateMachine';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {makeObservable, observable} from 'mobx';
+import {makeObservable, observable, observableRef} from 'mobx';
 
 const logger = new Logger('VoiceEngineV2AppVoiceStateAdapter');
 
@@ -40,7 +40,7 @@ function filterIgnoredGuildVoiceStates(
 	return {...guild, voice_states: filteredVoiceStates};
 }
 
-export class VoiceEngineV2AppVoiceStateAdapter extends Store {
+class VoiceEngineV2AppVoiceStateAdapter extends Store {
 	private snapshot: VoiceGatewayStateSnapshot = createVoiceGatewayStateSnapshot();
 	private voiceStates: VoiceGatewayVoiceStates = {};
 	private userVoiceStates: VoiceGatewayUserVoiceStates = {};
@@ -53,10 +53,10 @@ export class VoiceEngineV2AppVoiceStateAdapter extends Store {
 	constructor() {
 		super();
 		makeObservable<this, 'snapshot' | 'voiceStates' | 'userVoiceStates' | 'connectionVoiceStates'>(this, {
-			snapshot: observable.ref,
-			voiceStates: observable.ref,
-			userVoiceStates: observable.ref,
-			connectionVoiceStates: observable.ref,
+			snapshot: observableRef,
+			voiceStates: observableRef,
+			userVoiceStates: observableRef,
+			connectionVoiceStates: observableRef,
 		});
 		this.applyVoiceGatewayStateContext(this.snapshot.context);
 	}
@@ -80,10 +80,6 @@ export class VoiceEngineV2AppVoiceStateAdapter extends Store {
 			return;
 		}
 		this.send({type: 'voiceState.update', guildId, voiceState});
-	}
-
-	handleGatewayVoiceStateDelete(guildId: string, userId: string): void {
-		this.send({type: 'voiceState.delete', guildId, userId});
 	}
 
 	removeVoiceStateConnection(connectionId: string): void {

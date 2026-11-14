@@ -51,7 +51,6 @@ struct ff_animation_decode_request {
     const AVInputFormat *forced_format;
     int expected_frames;
     int minimum_frames;
-    int decode_pixels;
 };
 
 struct ff_animation_decode_context {
@@ -188,10 +187,6 @@ static int ff_animation_accept_frame(
         context->request.max_total_pixels / frame_pixels) {
         return FF_APPEND_FRAME_LIMIT;
     }
-    if (context->request.decode_pixels == 0) {
-        context->frames++;
-        return FLUXER_NATIVE_STATUS_OK;
-    }
     status = ff_animation_reserve_frames(context, frame_bytes);
     if (status != FLUXER_NATIVE_STATUS_OK) return status;
 
@@ -250,12 +245,6 @@ static int ff_animation_decode_request_valid(
     }
     if (request->minimum_frames > request->max_frames) {
         return FLUXER_NATIVE_STATUS_WORK_LIMIT_EXCEEDED;
-    }
-    if (request->decode_pixels < 0) {
-        return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    }
-    if (request->decode_pixels > 1) {
-        return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
     }
     return FLUXER_NATIVE_STATUS_OK;
 }
@@ -590,7 +579,6 @@ static int ff_animation_build_image(
     assert(context != NULL);
     assert(out != NULL);
     assert(*out == NULL);
-    assert(context->request.decode_pixels == 1);
     assert(context->pixels != NULL);
     assert(context->delays != NULL);
     int deadline_status = fluxer_native_deadline_status(
@@ -698,17 +686,12 @@ static int ffmpeg_decode_animation_stack(
     const char *allowed_formats,
     const AVInputFormat *forced_format,
     int expected_frames,
-    int minimum_frames,
-    int decode_pixels
+    int minimum_frames
 ) {
     if (out_frame_count == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
     *out_frame_count = 0;
-    if (decode_pixels != 0) {
-        if (out == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-        *out = NULL;
-    } else if (out != NULL) {
-        return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    }
+    if (out == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+    *out = NULL;
     struct ff_animation_decode_request request = {
         .data = media_data,
         .len = media_len,
@@ -721,7 +704,6 @@ static int ffmpeg_decode_animation_stack(
         .forced_format = forced_format,
         .expected_frames = expected_frames,
         .minimum_frames = minimum_frames,
-        .decode_pixels = decode_pixels,
     };
     int status = ff_animation_decode_request_valid(&request);
     if (status != FLUXER_NATIVE_STATUS_OK) return status;
@@ -730,16 +712,10 @@ static int ffmpeg_decode_animation_stack(
     ff_animation_decode_context_init(&context, &request);
     status = ff_animation_decode_execute(&context);
     if (status == FLUXER_NATIVE_STATUS_OK) {
-        if (decode_pixels != 0) {
-            status = ff_animation_build_image(&context, out);
-        }
+        status = ff_animation_build_image(&context, out);
     }
     if (status == FLUXER_NATIVE_STATUS_OK) {
         *out_frame_count = context.frames;
-        if (decode_pixels == 0) {
-            assert(context.pixels == NULL);
-            assert(context.delays == NULL);
-        }
     }
     ff_animation_decode_context_clear(&context);
     if (status != FLUXER_NATIVE_STATUS_OK) {
@@ -779,7 +755,7 @@ int fluxer_ffmpeg_decode_apng(
         apng_data, apng_len, decoder_threads, deadline_monotonic_ms,
         out, &decoded_frames, max_frames, max_total_pixels,
         require_complete, "apng", av_find_input_format("apng"),
-        expected_frames, 1, 1);
+        expected_frames, 1);
     if (status == FLUXER_NATIVE_STATUS_OK) {
         *out_num_plays = num_plays;
     } else {
@@ -805,7 +781,7 @@ int fluxer_ffmpeg_decode_bmp(
     int status = ffmpeg_decode_animation_stack(
         bmp_data, bmp_len, decoder_threads, deadline_monotonic_ms,
         out, &decoded_frames, 1, max_total_pixels, 1,
-        FLUXER_AV_BMP_INPUT_FORMAT, bmp_format, 1, 1, 1);
+        FLUXER_AV_BMP_INPUT_FORMAT, bmp_format, 1, 1);
     if (status == FLUXER_NATIVE_STATUS_OK) {
         assert(*out != NULL);
         assert(decoded_frames == 1);
@@ -815,31 +791,7 @@ int fluxer_ffmpeg_decode_bmp(
     return status;
 }
 
-int fluxer_ffmpeg_count_heif_sequence_frames(
-    const void *heif_data,
-    size_t heif_len,
-    int decoder_threads,
-    long long deadline_monotonic_ms,
-    int max_frames,
-    size_t max_total_pixels,
-    int *out_frame_count
-) {
-    if (out_frame_count == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    *out_frame_count = 0;
-    int validation_status = fluxer_heif_validate(
-        heif_data, heif_len, deadline_monotonic_ms);
-    if (validation_status != FLUXER_NATIVE_STATUS_OK) return validation_status;
-    int status = ffmpeg_decode_animation_stack(
-        heif_data, heif_len, decoder_threads, deadline_monotonic_ms,
-        NULL, out_frame_count, max_frames, max_total_pixels,
-        1, FLUXER_AV_INPUT_FORMATS, NULL, 0, 2, 0);
-    if (status == FLUXER_NATIVE_STATUS_OK) {
-        assert(*out_frame_count >= 2);
-    } else {
-        assert(*out_frame_count == 0);
-    }
-    return status;
-}
+
 
 int fluxer_ffmpeg_decode_heif_sequence(
     const void *heif_data,
@@ -861,7 +813,7 @@ int fluxer_ffmpeg_decode_heif_sequence(
     int status = ffmpeg_decode_animation_stack(
         heif_data, heif_len, decoder_threads, deadline_monotonic_ms,
         out, out_frame_count, max_frames, max_total_pixels,
-        1, FLUXER_AV_INPUT_FORMATS, NULL, 0, 2, 1);
+        1, FLUXER_AV_INPUT_FORMATS, NULL, 0, 2);
     if (status == FLUXER_NATIVE_STATUS_OK) {
         assert(*out != NULL);
         assert(*out_frame_count >= 2);

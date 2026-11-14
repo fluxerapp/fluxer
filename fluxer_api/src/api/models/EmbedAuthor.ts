@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageEmbedAuthor} from '../database/types/MessageTypes';
-import {sanitizeOptionalAbsoluteUrlOrNull} from '../utils/UrlSanitizer';
+import type {MessageEmbedAuthor} from '@app/api/database/types/MessageTypes';
+import {sanitizeOptionalAbsoluteUrlOrNull} from '@app/api/utils/UrlSanitizer';
 
 export class EmbedAuthor {
 	readonly name: string | null;

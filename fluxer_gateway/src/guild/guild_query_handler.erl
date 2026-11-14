@@ -3,38 +3,156 @@
 -module(guild_query_handler).
 -typing([eqwalizer]).
 
--export([handle_call/3]).
+-export([handle_call/3, call/3]).
 -export_type([guild_state/0]).
+
+-define(INLINE_MEMBER_QUERY_MAX_IDS, 100).
+-define(INFERRED_DEADLINE_MARGIN_MS, 1000).
+-define(VIEWER_ONLINE_COUNT_TTL_MS, 5000).
 
 -type guild_state() :: map().
 -type user_id() :: integer().
+-type query_fun() :: fun((map(), map()) -> {reply, term(), term()}).
+
+-spec call(pid(), {atom(), map()}, pos_integer()) -> term().
+call(GuildPid, {Tag, Request}, Timeout) ->
+    Deadline = os:system_time(millisecond) + Timeout,
+    MonotonicDeadline = erlang:monotonic_time(millisecond) + Timeout,
+    gen_server:call(
+        GuildPid,
+        {Tag, Request#{deadline => Deadline, deadline_monotonic => MonotonicDeadline}},
+        Timeout
+    ).
 
 -spec handle_call(term(), gen_server:from(), guild_state()) ->
     {reply, term(), guild_state()}
     | {noreply, guild_state()}.
-handle_call({get_counts}, _From, State) ->
-    handle_get_counts(State);
-handle_call({get_user_counts, UserId}, _From, State) when is_integer(UserId) ->
-    handle_get_user_counts(UserId, State);
-handle_call({get_channel_member_counts, Request}, _From, State) when is_map(Request) ->
-    handle_get_channel_member_counts(Request, State);
-handle_call({get_large_guild_metadata}, _From, State) ->
-    handle_get_large_guild_metadata(State);
 handle_call(Msg, From, State) ->
+    case is_expired(Msg, From) of
+        true -> {noreply, State};
+        false -> handle_query(Msg, From, State)
+    end.
+
+-spec is_expired(term(), gen_server:from()) -> boolean().
+is_expired(Msg, From) ->
+    case deadline_expired(Msg, From) of
+        unknown -> inferred_deadline_expired(Msg);
+        Expired -> Expired
+    end.
+
+-spec deadline_expired(term(), gen_server:from()) -> boolean() | unknown.
+deadline_expired({_Tag, #{deadline_monotonic := Deadline}}, {Caller, _ReplyTag}) when
+    is_integer(Deadline)
+->
+    case gateway_clock_offset:offset(node(Caller)) of
+        undefined -> unknown;
+        Offset -> erlang:monotonic_time(millisecond) > Deadline - Offset
+    end;
+deadline_expired(_Msg, _From) ->
+    unknown.
+
+-spec inferred_deadline_expired(term()) -> boolean().
+inferred_deadline_expired(Msg) when is_tuple(Msg), tuple_size(Msg) > 0 ->
+    case caller_timeout_ms(element(1, Msg)) of
+        undefined -> false;
+        TimeoutMs -> waited_longer_than(TimeoutMs + ?INFERRED_DEADLINE_MARGIN_MS)
+    end;
+inferred_deadline_expired(_Msg) ->
+    false.
+
+-spec waited_longer_than(pos_integer()) -> boolean().
+waited_longer_than(Ms) ->
+    case guild_mailbox_age:min_age_ms() of
+        undefined -> false;
+        Age when Age > Ms -> inferred_deadlines_enabled();
+        _ -> false
+    end.
+
+-spec inferred_deadlines_enabled() -> boolean().
+inferred_deadlines_enabled() ->
+    case application:get_env(fluxer_gateway, guild_query_inferred_deadlines, true) of
+        false -> false;
+        _ -> true
+    end.
+
+-spec caller_timeout_ms(term()) -> pos_integer() | undefined.
+caller_timeout_ms(get_large_guild_metadata) -> 200;
+caller_timeout_ms(get_viewer_counts) -> 2000;
+caller_timeout_ms(get_channel_member_counts) -> 2000;
+caller_timeout_ms(get_forum_unread_scope) -> 2000;
+caller_timeout_ms(check_permission) -> 5000;
+caller_timeout_ms(get_guild_members_batch) -> 5000;
+caller_timeout_ms(list_guild_members) -> 10000;
+caller_timeout_ms(search_guild_members) -> 10000;
+caller_timeout_ms(Tag) -> rpc_caller_timeout_ms(Tag).
+
+-spec rpc_caller_timeout_ms(term()) -> pos_integer() | undefined.
+rpc_caller_timeout_ms(resolve_mention_sources_page) -> 4000;
+rpc_caller_timeout_ms(get_user_permissions) -> 4000;
+rpc_caller_timeout_ms(can_manage_roles) -> 4000;
+rpc_caller_timeout_ms(can_manage_role) -> 4000;
+rpc_caller_timeout_ms(get_guild_data) -> 4000;
+rpc_caller_timeout_ms(get_guild_auth_context) -> 4000;
+rpc_caller_timeout_ms(get_guild_member) -> 4000;
+rpc_caller_timeout_ms(has_member) -> 4000;
+rpc_caller_timeout_ms(get_members_with_role) -> 4000;
+rpc_caller_timeout_ms(check_target_member) -> 4000;
+rpc_caller_timeout_ms(list_guild_members_cursor) -> 4000;
+rpc_caller_timeout_ms(get_viewable_channels) -> 4000;
+rpc_caller_timeout_ms(resolve_channel_mentions) -> 4000;
+rpc_caller_timeout_ms(get_first_viewable_text_channel) -> 4000;
+rpc_caller_timeout_ms(get_category_channel_count) -> 4000;
+rpc_caller_timeout_ms(get_channel_count) -> 4000;
+rpc_caller_timeout_ms(_Tag) -> undefined.
+
+-spec handle_query(term(), gen_server:from(), guild_state()) ->
+    {reply, term(), guild_state()}
+    | {noreply, guild_state()}.
+handle_query({get_counts}, _From, State) ->
+    handle_get_counts(State);
+handle_query({get_viewer_counts, #{user_id := UserId}}, _From, State) when is_integer(UserId) ->
+    handle_get_user_counts(UserId, State);
+handle_query({get_channel_member_counts, Request}, _From, State) when is_map(Request) ->
+    handle_get_channel_member_counts(Request, State);
+handle_query({get_large_guild_metadata}, _From, State) ->
+    handle_get_large_guild_metadata(State);
+handle_query({get_forum_unread_scope, Request}, _From, State) when is_map(Request) ->
+    Session = request_session_data(Request, State),
+    {reply, guild_request_forum_unreads:scope(Session, Request, State), State};
+handle_query(Msg, From, State) ->
     handle_call_dispatch(Msg, From, State).
 
 -spec handle_get_counts(guild_state()) -> {reply, map(), guild_state()}.
 handle_get_counts(State) ->
     MemberCount = maps:get(member_count, State, 0),
     PublicOnlineCount = guild_public_online:compute_count(State),
-    ok = maybe_put_guild_count_cache(State, MemberCount, PublicOnlineCount),
+    ok = guild_maintenance:maybe_put_guild_count_cache(State, MemberCount, PublicOnlineCount),
     {reply, #{member_count => MemberCount, presence_count => PublicOnlineCount}, State}.
 
 -spec handle_get_user_counts(user_id(), guild_state()) -> {reply, map(), guild_state()}.
 handle_get_user_counts(UserId, State) ->
     MemberCount = maps:get(member_count, State, 0),
-    OnlineCount = guild_mutual_online:compute_count(UserId, State),
-    {reply, #{member_count => MemberCount, online_count => OnlineCount}, State}.
+    {OnlineCount, NewState} = viewer_online_count(UserId, State),
+    {reply, #{member_count => MemberCount, online_count => OnlineCount}, NewState}.
+
+-spec viewer_online_count(user_id(), guild_state()) -> {non_neg_integer(), guild_state()}.
+viewer_online_count(UserId, State) ->
+    Now = erlang:monotonic_time(millisecond),
+    Counts = maps:get(viewer_online_counts, State, #{}),
+    case maps:get(UserId, Counts, undefined) of
+        {ExpiresAt, Count} when ExpiresAt > Now ->
+            {Count, State};
+        _ ->
+            store_viewer_online_count(UserId, Now, Counts, State)
+    end.
+
+-spec store_viewer_online_count(user_id(), integer(), map(), guild_state()) ->
+    {non_neg_integer(), guild_state()}.
+store_viewer_online_count(UserId, Now, Counts, State) ->
+    Count = guild_mutual_online:compute_count(UserId, State),
+    Live = maps:filter(fun(_Id, {ExpiresAt, _}) -> ExpiresAt > Now end, Counts),
+    Entry = {Now + ?VIEWER_ONLINE_COUNT_TTL_MS, Count},
+    {Count, State#{viewer_online_counts => Live#{UserId => Entry}}}.
 
 -spec handle_get_channel_member_counts(map(), guild_state()) -> {reply, map(), guild_state()}.
 handle_get_channel_member_counts(Request, State) ->
@@ -91,7 +209,7 @@ channel_member_count_entry(ChannelId, SessionData, State) when
     case
         guild_member_list_connected:session_can_view_channel_members(
             SessionData, ChannelId, State
-        )
+        ) andalso not guild_thread_gate:is_thread_id(ChannelId, State)
     of
         true -> channel_member_count_entry_for_visible_channel(ChannelId, State);
         false -> false
@@ -107,7 +225,7 @@ channel_member_count_entry_for_visible_channel(ChannelId, State) ->
             false;
         ListId ->
             NewState = guild_member_list_channel_engine:ensure(ListId, State),
-            {MemberCount, OnlineCount} = guild_member_list:get_counts(ListId, NewState),
+            {MemberCount, OnlineCount} = guild_member_list_read:get_counts(ListId, NewState),
             {true,
                 #{
                     channel_id => ChannelId,
@@ -127,116 +245,165 @@ handle_get_large_guild_metadata(State) ->
 
 -spec handle_call_dispatch(term(), gen_server:from(), guild_state()) ->
     {reply, term(), guild_state()} | {noreply, guild_state()}.
-handle_call_dispatch({get_users_to_mention_by_roles, Req}, From, State) ->
-    async_member_query(
-        From, State, request_map(Req), fun guild_members:get_users_to_mention_by_roles/2
-    );
-handle_call_dispatch({get_users_to_mention_by_user_ids, Req}, From, State) ->
-    handle_async_member_query({get_users_to_mention_by_user_ids, Req}, From, State);
-handle_call_dispatch({check_permission, Request}, From, State) ->
-    handle_check_permission(request_map(Request), From, State);
-handle_call_dispatch({get_user_permissions, Request}, From, State) ->
-    handle_get_user_permissions(request_map(Request), From, State);
+handle_call_dispatch({check_permission, Request}, _From, State) ->
+    handle_check_permission(request_map(Request), State);
+handle_call_dispatch({get_user_permissions, Request}, _From, State) ->
+    handle_get_user_permissions(request_map(Request), State);
+handle_call_dispatch({search_guild_members, Request}, From, State) ->
+    handle_search_guild_members(request_map(Request), From, State);
 handle_call_dispatch(Msg, From, State) ->
     handle_async_member_query(Msg, From, State).
 
+-spec handle_search_guild_members(map(), gen_server:from(), guild_state()) ->
+    {reply, map(), guild_state()} | {noreply, guild_state()}.
+handle_search_guild_members(Request, From, State) ->
+    case shared_members_table(State) of
+        {ok, Tab} -> search_members_table_async(Request, Tab, From, State);
+        none -> guild_data_members:search_guild_members(Request, State)
+    end.
+
+-spec search_members_table_async(map(), ets:tid(), gen_server:from(), guild_state()) ->
+    {noreply, guild_state()}.
+search_members_table_async(Request, Tab, From, State) ->
+    spawn_async_reply(From, fun() -> guild_data_members:search_members_table(Request, Tab) end),
+    {noreply, State}.
+
+-spec shared_members_table(guild_state()) -> {ok, ets:tid()} | none.
+shared_members_table(#{data := #{members_ets := Tab}}) when is_reference(Tab) ->
+    case guild_members_table_repair:members_table_healthy(Tab) of
+        true -> {ok, Tab};
+        false -> none
+    end;
+shared_members_table(_State) ->
+    none.
+
 -spec handle_async_member_query(term(), gen_server:from(), guild_state()) ->
     {reply, term(), guild_state()} | {noreply, guild_state()}.
-handle_async_member_query({get_users_to_mention_by_user_ids, Req}, From, State) ->
-    async_member_query(
-        From, State, request_map(Req), fun guild_members:get_users_to_mention_by_user_ids/2
-    );
-handle_async_member_query({get_all_users_to_mention, Req}, From, State) ->
-    async_member_query(
-        From, State, request_map(Req), fun guild_members:get_all_users_to_mention/2
-    );
-handle_async_member_query({resolve_all_mentions, Req}, From, State) ->
-    async_member_query(From, State, request_map(Req), fun guild_members:resolve_all_mentions/2);
-handle_async_member_query({resolve_mention_sources, Req}, From, State) ->
-    async_member_query(
-        From, State, request_map(Req), fun guild_members:resolve_mention_sources/2
-    );
-handle_async_member_query({resolve_mention_sources_page, Req}, From, State) ->
-    async_member_query(
-        From, State, request_map(Req), fun guild_members:resolve_mention_sources_page/2
-    );
-handle_async_member_query({resolve_channel_mentions, Req}, From, State) ->
-    async_member_query(
-        From, State, request_map(Req), fun guild_members:resolve_channel_mentions/2
-    );
-handle_async_member_query({get_members_with_role, Req}, From, State) ->
-    async_member_query(
-        From, State, request_map(Req), fun guild_members:get_members_with_role/2
-    );
-handle_async_member_query({get_viewable_channels, Req}, From, State) ->
-    async_member_query(
-        From, State, request_map(Req), fun guild_members:get_viewable_channels/2
-    );
+handle_async_member_query({Tag, Req}, From, State) when is_atom(Tag) ->
+    case member_query_fun(Tag) of
+        undefined -> handle_call_sync({Tag, Req}, State);
+        QueryFun -> member_query(Tag, From, State, request_map(Req), QueryFun)
+    end;
 handle_async_member_query(Msg, _From, State) ->
     handle_call_sync(Msg, State).
 
--spec async_member_query(
-    gen_server:from(), guild_state(), map(), fun((map(), map()) -> {reply, term(), term()})
-) ->
+-spec member_query_fun(atom()) -> query_fun() | undefined.
+member_query_fun(resolve_mention_sources_page) ->
+    fun guild_members_mutation:resolve_mention_sources_page/2;
+member_query_fun(resolve_channel_mentions) ->
+    fun guild_members_mutation:resolve_channel_mentions/2;
+member_query_fun(get_members_with_role) ->
+    fun guild_members_query:get_members_with_role/2;
+member_query_fun(get_viewable_channels) ->
+    fun guild_members_query:get_viewable_channels/2;
+member_query_fun(_Tag) ->
+    undefined.
+
+-spec member_query(atom(), gen_server:from(), guild_state(), map(), query_fun()) ->
+    {reply, term(), guild_state()} | {noreply, guild_state()}.
+member_query(Tag, From, State, Request, QueryFun) ->
+    case bounded_member_query(Tag, Request) of
+        true -> inline_member_query(State, Request, QueryFun);
+        false -> async_member_query(From, State, Request, QueryFun)
+    end.
+
+-spec bounded_member_query(atom(), map()) -> boolean().
+bounded_member_query(resolve_mention_sources_page, Request) ->
+    direct_mentions_only(Request);
+bounded_member_query(resolve_channel_mentions, Request) ->
+    few_ids(maps:get(channel_ids, Request, undefined));
+bounded_member_query(get_viewable_channels, _Request) ->
+    true;
+bounded_member_query(_Tag, _Request) ->
+    false.
+
+-spec direct_mentions_only(map()) -> boolean().
+direct_mentions_only(Request) ->
+    is_false(maps:get(mention_everyone, Request, undefined)) andalso
+        is_false(maps:get(mention_here, Request, undefined)) andalso
+        maps:get(role_ids, Request, undefined) =:= [] andalso
+        few_ids(maps:get(user_ids, Request, undefined)).
+
+-spec is_false(term()) -> boolean().
+is_false(false) -> true;
+is_false(_) -> false.
+
+-spec few_ids(term()) -> boolean().
+few_ids(Ids) when is_list(Ids) ->
+    length(Ids) =< ?INLINE_MEMBER_QUERY_MAX_IDS;
+few_ids(_Ids) ->
+    false.
+
+-spec inline_member_query(guild_state(), map(), query_fun()) -> {reply, term(), guild_state()}.
+inline_member_query(State, Request, QueryFun) ->
+    QS = build_query_snapshot(State),
+    Reply = safe_reply(fun() ->
+        {reply, QueryReply, _} = QueryFun(Request, QS),
+        QueryReply
+    end),
+    {reply, Reply, State}.
+
+-spec async_member_query(gen_server:from(), guild_state(), map(), query_fun()) ->
     {noreply, guild_state()}.
 async_member_query(From, State, Request, QueryFun) ->
-    QS = build_query_snapshot(State),
+    {Aliased, QS} = strip_member_alias(build_query_snapshot(State)),
     spawn_async_reply(From, fun() ->
-        {reply, Reply, _} = QueryFun(Request, QS),
+        {reply, Reply, _} = QueryFun(Request, restore_member_alias(Aliased, QS)),
         Reply
     end),
     {noreply, State}.
 
--spec handle_check_permission(map(), gen_server:from(), guild_state()) ->
-    {noreply, guild_state()}.
-handle_check_permission(Request, From, State) ->
-    QS = build_query_snapshot(State),
-    spawn_async_reply(From, fun() ->
+-spec strip_member_alias(map()) -> {boolean(), map()}.
+strip_member_alias(
+    #{data := #{<<"members">> := Members, members_normalized := Members} = Data} = QS
+) ->
+    {true, QS#{data := maps:remove(members_normalized, Data)}};
+strip_member_alias(QS) ->
+    {false, QS}.
+
+-spec restore_member_alias(boolean(), map()) -> map().
+restore_member_alias(true, #{data := #{<<"members">> := Members} = Data} = QS) ->
+    QS#{data := Data#{members_normalized => Members}};
+restore_member_alias(_Aliased, QS) ->
+    QS.
+
+-spec handle_check_permission(map(), guild_state()) -> {reply, map(), guild_state()}.
+handle_check_permission(Request, State) ->
+    Reply = safe_reply(fun() ->
         #{user_id := UserId, permission := Permission, channel_id := ChannelId} = Request,
         true = is_integer(Permission),
-        HasPermission = check_user_permission(UserId, Permission, ChannelId, QS),
+        HasPermission = check_user_permission(UserId, Permission, ChannelId, State),
         #{has_permission => HasPermission}
     end),
-    {noreply, State}.
+    {reply, Reply, State}.
 
--spec check_user_permission(user_id(), integer(), integer(), map()) -> boolean().
-check_user_permission(UserId, Permission, ChannelId, QS) ->
-    case owner_id(QS) =:= UserId of
+-spec check_user_permission(user_id(), integer(), integer(), guild_state()) -> boolean().
+check_user_permission(UserId, Permission, ChannelId, State) ->
+    case owner_id(State) =:= UserId of
         true ->
             true;
         false ->
-            Perms = guild_permissions:get_member_permissions(UserId, ChannelId, QS),
-            permission_bits:has(Perms, Permission)
+            Perms = guild_permissions:get_member_permissions(UserId, ChannelId, State),
+            bitset:has(Perms, Permission)
     end.
 
--spec handle_get_user_permissions(map(), gen_server:from(), guild_state()) ->
-    {noreply, guild_state()}.
-handle_get_user_permissions(Request, From, State) ->
-    QS = build_query_snapshot(State),
-    spawn_async_reply(From, fun() ->
+-spec handle_get_user_permissions(map(), guild_state()) -> {reply, map(), guild_state()}.
+handle_get_user_permissions(Request, State) ->
+    Reply = safe_reply(fun() ->
         #{user_id := UserId, channel_id := ChannelId} = Request,
-        #{permissions => guild_permissions:get_member_permissions(UserId, ChannelId, QS)}
+        #{permissions => guild_permissions:get_member_permissions(UserId, ChannelId, State)}
     end),
-    {noreply, State}.
+    {reply, Reply, State}.
 
 -spec handle_call_sync(term(), guild_state()) -> {reply, term(), guild_state()}.
 handle_call_sync({can_manage_roles, Req}, State) ->
-    guild_members:can_manage_roles(request_map(Req), State);
+    guild_members_roles:can_manage_roles(request_map(Req), State);
 handle_call_sync({can_manage_role, Req}, State) ->
-    guild_members:can_manage_role(request_map(Req), State);
-handle_call_sync({get_assignable_roles, Req}, State) ->
-    guild_members:get_assignable_roles(request_map(Req), State);
-handle_call_sync({get_user_max_role_position, Req}, State) ->
-    handle_max_role_position(request_map(Req), State);
+    guild_members_roles:can_manage_role(request_map(Req), State);
 handle_call_sync({check_target_member, Req}, State) ->
-    guild_members:check_target_member(request_map(Req), State);
+    guild_members_roles:check_target_member(request_map(Req), State);
 handle_call_sync(Msg, State) ->
     handle_call_data(Msg, State).
-
--spec handle_max_role_position(map(), guild_state()) -> {reply, map(), guild_state()}.
-handle_max_role_position(#{user_id := UserId}, State) ->
-    Position = guild_permissions:get_max_role_position(UserId, State),
-    {reply, #{position => Position}, State}.
 
 -spec handle_call_data(term(), guild_state()) -> {reply, term(), guild_state()}.
 handle_call_data({get_guild_data, Req}, State) ->
@@ -244,19 +411,15 @@ handle_call_data({get_guild_data, Req}, State) ->
 handle_call_data({get_guild_auth_context, Req}, State) ->
     guild_data:get_auth_context(request_map(Req), State);
 handle_call_data({get_guild_member, Req}, State) ->
-    guild_data:get_guild_member(request_map(Req), State);
+    guild_data_members:get_guild_member(request_map(Req), State);
 handle_call_data({get_guild_members_batch, Req}, State) ->
-    guild_data:get_guild_members_batch(request_map(Req), State);
+    guild_data_members:get_guild_members_batch(request_map(Req), State);
 handle_call_data({has_member, Req}, State) ->
-    guild_data:has_member(request_map(Req), State);
+    guild_data_members:has_member(request_map(Req), State);
 handle_call_data({list_guild_members, Req}, State) ->
-    guild_data:list_guild_members(request_map(Req), State);
-handle_call_data({search_guild_members, Req}, State) ->
-    guild_data:search_guild_members(request_map(Req), State);
+    guild_data_members:list_guild_members(request_map(Req), State);
 handle_call_data({list_guild_members_cursor, Req}, State) ->
-    guild_member_list:get_members_cursor(request_map(Req), State);
-handle_call_data({get_vanity_url_channel}, State) ->
-    guild_data:get_vanity_url_channel(State);
+    guild_member_list_read:get_members_cursor(request_map(Req), State);
 handle_call_data({get_first_viewable_text_channel}, State) ->
     guild_data:get_first_viewable_text_channel(State);
 handle_call_data({get_category_channel_count, Req}, State) ->
@@ -324,10 +487,10 @@ spawn_async_reply(From, ReplyFun) ->
 
 -spec send_async_reply(gen_server:from(), fun(() -> term())) -> ok.
 send_async_reply(From, ReplyFun) ->
-    gen_server:reply(From, safe_async_reply(ReplyFun)).
+    gen_server:reply(From, safe_reply(ReplyFun)).
 
--spec safe_async_reply(fun(() -> term())) -> term().
-safe_async_reply(ReplyFun) ->
+-spec safe_reply(fun(() -> Reply)) -> Reply | #{error := async_handler_failed}.
+safe_reply(ReplyFun) ->
     try
         ReplyFun()
     catch
@@ -338,22 +501,6 @@ safe_async_reply(ReplyFun) ->
 -spec build_query_snapshot(guild_state()) -> map().
 build_query_snapshot(State) ->
     maps:with([id, data, sessions, virtual_channel_access], State).
-
--spec maybe_put_guild_count_cache(guild_state(), non_neg_integer(), non_neg_integer()) -> ok.
-maybe_put_guild_count_cache(State, MemberCount, OnlineCount) ->
-    case
-        {
-            maps:get(disable_guild_count_cache_updates, State, false),
-            maps:get(id, State, undefined)
-        }
-    of
-        {true, _} ->
-            ok;
-        {false, GuildId} when is_integer(GuildId) ->
-            guild_counts_cache:update(GuildId, MemberCount, OnlineCount);
-        _ ->
-            ok
-    end.
 
 -spec owner_id(guild_state()) -> user_id() | undefined.
 owner_id(State) ->

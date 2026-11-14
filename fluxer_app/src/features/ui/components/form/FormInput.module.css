@@ -24,11 +24,11 @@
 }
 
 .input.hasRightElement {
-	padding-right: 3rem;
+	padding-inline-end: 3rem;
 }
 
 .input.hasLeftIcon {
-	padding-left: 2.25rem;
+	padding-inline-start: 2.25rem;
 }
 
 .input.focusable:focus-within {
@@ -80,7 +80,7 @@
 .errorText {
 	font-size: 0.875rem;
 	line-height: 1.25rem;
-	color: var(--status-danger);
+	color: color-mix(in srgb, var(--status-danger) 78%, var(--text-primary) 22%);
 }
 
 .inputContainer {
@@ -97,7 +97,7 @@
 .leftIcon {
 	position: absolute;
 	top: 50%;
-	left: 0.75rem;
+	inset-inline-start: 0.75rem;
 	transform: translateY(-50%);
 	pointer-events: none;
 	color: var(--text-tertiary);
@@ -106,7 +106,7 @@
 .leftElement {
 	position: absolute;
 	top: 50%;
-	left: 0.25rem;
+	inset-inline-start: 0.25rem;
 	transform: translateY(-50%);
 	display: flex;
 	align-items: center;
@@ -115,13 +115,13 @@
 }
 
 .input.hasLeftElement {
-	padding-left: 2.5rem;
+	padding-inline-start: 2.5rem;
 }
 
 .rightIcon {
 	position: absolute;
 	top: 50%;
-	right: 0.75rem;
+	inset-inline-end: 0.75rem;
 	transform: translateY(-50%);
 	pointer-events: none;
 	color: var(--text-tertiary);
@@ -130,7 +130,7 @@
 .passwordToggle {
 	position: absolute;
 	top: 50%;
-	right: 0.75rem;
+	inset-inline-end: 0.75rem;
 	transform: translateY(-50%);
 	border-radius: 0.25rem;
 	padding: 0.375rem;
@@ -149,7 +149,7 @@
 .rightElement {
 	position: absolute;
 	top: 50%;
-	right: 0.5rem;
+	inset-inline-end: 0.5rem;
 	transform: translateY(-50%);
 	display: flex;
 	align-items: center;
@@ -173,30 +173,6 @@
 
 .textareaWrapper.error {
 	border-color: var(--status-danger);
-}
-
-.textarea {
-	min-width: 0;
-	max-width: 100%;
-	width: 100%;
-	flex: 1 1 0%;
-	resize: none;
-	overflow-x: hidden;
-	white-space: pre-wrap;
-	overflow-wrap: anywhere;
-	word-break: break-word;
-	appearance: none;
-	border: 0;
-	background-color: transparent;
-	padding: 0.625rem 1rem;
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-	color: var(--text-primary);
-	outline: none;
-}
-
-.textarea::placeholder {
-	color: var(--text-tertiary);
 }
 
 textarea.input {

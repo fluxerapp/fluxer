@@ -1,0 +1,92 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
+import {usesUniqueUsernames} from '@app/features/app/utils/AccountIdentityFeatures';
+import {
+	instanceDomainHost,
+	normalizeInstanceDomain,
+} from '@app/features/auth/flow/instance_selector/InstanceDirectoryStorage';
+import {parseAccountStorageKey} from '@app/features/auth/state/AccountStorageKey';
+import type {Account} from '@app/features/platform/state/AuthSession';
+import {
+	formatNameForStreamerMode,
+	formatTagForStreamerMode,
+	getDisplayName,
+} from '@app/features/user/utils/NicknameUtils';
+import {formatUserTag, shouldShowDiscriminator} from '@app/features/user/utils/UserTagUtils';
+import {msg} from '@lingui/core/macro';
+import {noteText} from '../theme/fonts/ScriptFontLoader';
+
+export const ACCOUNT_DETAILS_UNAVAILABLE_DESCRIPTOR = msg({
+	message: 'Account details unavailable',
+	comment: 'Shown when a saved account record has no cached user profile data.',
+});
+
+export type AccountDisplayLabels =
+	| {
+			readonly available: true;
+			readonly displayLabel: string;
+			readonly usernameLabel: string;
+			readonly tagLabel: string;
+			readonly discriminatorLabel: string | null;
+	  }
+	| {
+			readonly available: false;
+	  };
+
+export function getAccountDisplayLabels(account: Account): AccountDisplayLabels {
+	const userData = account.userData;
+	if (userData == null) {
+		return {available: false};
+	}
+	const displayLabel = getDisplayName(userData);
+	const discriminator = userData.discriminator;
+	const usernameLabel = formatNameForStreamerMode(userData.username);
+	noteText(usernameLabel);
+	const uniqueUsernames = account.instance != null && usesUniqueUsernames(account.instance.features);
+	if (!shouldShowDiscriminator(userData, uniqueUsernames)) {
+		return {available: true, displayLabel, usernameLabel, tagLabel: displayLabel, discriminatorLabel: null};
+	}
+	return {
+		available: true,
+		displayLabel,
+		usernameLabel,
+		tagLabel: formatTagForStreamerMode(formatUserTag(userData, uniqueUsernames)),
+		discriminatorLabel: formatTagForStreamerMode(`#${discriminator}`),
+	};
+}
+
+function resolveSnapshotInstanceKey(snapshot: RuntimeConfigSnapshot | undefined): string | null {
+	if (snapshot == null) {
+		return null;
+	}
+	return runtimeInstanceKey(snapshot);
+}
+
+export function resolveSnapshotInstanceDomain(snapshot: RuntimeConfigSnapshot | undefined): string | null {
+	if (snapshot == null) {
+		return null;
+	}
+	const webAppEndpoint = snapshot.webAppEndpoint;
+	if (typeof webAppEndpoint !== 'string' || webAppEndpoint.length === 0) {
+		return null;
+	}
+	return normalizeInstanceDomain(webAppEndpoint);
+}
+
+function resolveAccountInstanceDomain(account: Account): string | null {
+	return resolveSnapshotInstanceDomain(account.instance);
+}
+
+export function resolveAccountInstanceKey(account: Account): string | null {
+	return (
+		resolveSnapshotInstanceKey(account.instance) ?? parseAccountStorageKey(account.storageKey)?.instanceKey ?? null
+	);
+}
+
+export function resolveAccountInstanceLabel(account: Account): string | null {
+	const instanceKey = resolveAccountInstanceKey(account);
+	const domain =
+		resolveAccountInstanceDomain(account) ?? (instanceKey == null ? null : normalizeInstanceDomain(instanceKey));
+	return domain == null ? null : instanceDomainHost(domain);
+}

@@ -8,9 +8,6 @@
     lookup_session_anywhere/2,
     lookup_or_rehydrate/4,
     lookup_remote_on_nodes/2,
-    remote_lookup_nodes/2,
-    select_remote_session_pid/1,
-    validate_transfer_token/2,
     parse_presence/2,
     parse_guild_ids/1,
     get_presence_custom_status/1,
@@ -30,7 +27,6 @@
 -type session_ref() :: {pid(), reference()}.
 -type state() :: #{
     sessions := #{session_id() => session_ref()},
-    identify_attempts := [integer()],
     pending_identifies := map(),
     identify_workers := map(),
     shard_index := non_neg_integer(),
@@ -327,7 +323,6 @@ extract_stored_status(UserSettings) ->
 select_initial_status(PresenceStatus, StoredStatus) ->
     case {normalize_status(PresenceStatus), StoredStatus} of
         {undefined, Stored} -> Stored;
-        {<<"unknown">>, Stored} -> Stored;
         {<<"online">>, Stored} when Stored =/= <<"online">> -> Stored;
         {Presence, _} -> Presence
     end.
@@ -337,7 +332,12 @@ normalize_status(undefined) ->
     undefined;
 normalize_status(null) ->
     undefined;
-normalize_status(Status) when is_binary(Status) -> Status;
+normalize_status(Status) when is_binary(Status) ->
+    try constants:status_type_atom(Status) of
+        Value when is_atom(Value) -> Status
+    catch
+        error:function_clause -> undefined
+    end;
 normalize_status(Status) when is_atom(Status) ->
     try constants:status_type_atom(Status) of
         Value when is_binary(Value) -> Value

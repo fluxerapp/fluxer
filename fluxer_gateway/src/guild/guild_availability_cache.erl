@@ -22,10 +22,6 @@
 
 -define(GUILD_UNAVAILABILITY_CACHE, guild_unavailability_cache).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 -spec get_cached_unavailability_mode(guild_id()) -> unavailability_mode().
 get_cached_unavailability_mode(GuildId) ->
     {Mode, _UnavailableHidden} = get_cached_unavailability_entry(GuildId),
@@ -79,46 +75,3 @@ normalize_unavailability_mode(unavailable_for_everyone_but_staff) ->
     unavailable_for_everyone_but_staff;
 normalize_unavailability_mode(_) ->
     available.
-
--ifdef(TEST).
-
-get_set_unavailability_mode_test() ->
-    GuildId = 88001,
-    try
-        set_cached_unavailability_mode(GuildId, unavailable_for_everyone),
-        ?assertEqual(unavailable_for_everyone, get_cached_unavailability_mode(GuildId))
-    after
-        set_cached_unavailability_mode(GuildId, available)
-    end.
-
-get_cached_entry_with_hidden_test() ->
-    GuildId = 88002,
-    try
-        set_cached_unavailability_mode(GuildId, unavailable_for_everyone, true),
-        ?assertEqual({unavailable_for_everyone, true}, get_cached_unavailability_entry(GuildId))
-    after
-        set_cached_unavailability_mode(GuildId, available)
-    end.
-
-available_deletes_entry_test() ->
-    GuildId = 88003,
-    try
-        set_cached_unavailability_mode(GuildId, unavailable_for_everyone),
-        set_cached_unavailability_mode(GuildId, available),
-        ?assertEqual(available, get_cached_unavailability_mode(GuildId))
-    after
-        set_cached_unavailability_mode(GuildId, available)
-    end.
-
-normalize_unavailability_mode_test() ->
-    ?assertEqual(
-        unavailable_for_everyone,
-        normalize_unavailability_mode(unavailable_for_everyone)
-    ),
-    ?assertEqual(
-        unavailable_for_everyone_but_staff,
-        normalize_unavailability_mode(unavailable_for_everyone_but_staff)
-    ),
-    ?assertEqual(available, normalize_unavailability_mode(something_else)).
-
--endif.

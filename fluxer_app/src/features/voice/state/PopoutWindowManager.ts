@@ -6,8 +6,8 @@ import {makeAutoObservable, runInAction} from 'mobx';
 
 const logger = new Logger('PopoutWindowManager');
 
-export const VOICE_POPOUT_WINDOW_NAME_PREFIX = 'fluxer-voice-popout:';
-export const VOICE_POPOUTS_MAX = 8;
+const VOICE_POPOUT_WINDOW_NAME_PREFIX = 'fluxer-voice-popout:';
+const VOICE_POPOUTS_MAX = 8;
 export const VOICE_TILE_POPOUT_DEFAULT_WIDTH = 854;
 export const VOICE_TILE_POPOUT_DEFAULT_HEIGHT = 480;
 export const VOICE_CALL_POPOUT_DEFAULT_WIDTH = 960;
@@ -57,12 +57,6 @@ export function isVoicePopoutAlwaysOnTopSupported(): boolean {
 	return typeof getElectronAPI()?.popoutSetAlwaysOnTop === 'function';
 }
 
-interface PopoutChildWindow {
-	closed: boolean;
-	focus: () => void;
-	close: () => void;
-}
-
 interface AlwaysOnTopOperationState {
 	readonly descriptor: VoicePopoutDescriptor;
 	desired: boolean;
@@ -71,7 +65,7 @@ interface AlwaysOnTopOperationState {
 class PopoutWindowManagerStore {
 	popouts: Record<string, VoicePopoutDescriptor> = {};
 	alwaysOnTopKeys: Record<string, true> = {};
-	private readonly childWindows = new Map<string, PopoutChildWindow>();
+	private readonly childWindows = new Map<string, Window>();
 	private readonly alwaysOnTopOperations = new Map<string, AlwaysOnTopOperationState>();
 	private nextPopoutGeneration = 1;
 
@@ -108,6 +102,12 @@ class PopoutWindowManagerStore {
 			if (popout.kind === 'call') return popout;
 		}
 		return null;
+	}
+
+	getChildWindow(key: string): Window | null {
+		const childWindow = this.childWindows.get(key);
+		if (!childWindow || childWindow.closed) return null;
+		return childWindow;
 	}
 
 	isOpen(key: string): boolean {
@@ -148,7 +148,7 @@ class PopoutWindowManagerStore {
 		}
 	}
 
-	attachWindow(key: string, generation: number, childWindow: PopoutChildWindow | null): void {
+	attachWindow(key: string, generation: number, childWindow: Window | null): void {
 		if (!this.isCurrentPopout(key, generation)) return;
 		if (childWindow === null) {
 			this.childWindows.delete(key);
@@ -228,7 +228,7 @@ class PopoutWindowManagerStore {
 		if (!getElectronAPI()) {
 			const width = descriptor.kind === 'call' ? VOICE_CALL_POPOUT_DEFAULT_WIDTH : VOICE_TILE_POPOUT_DEFAULT_WIDTH;
 			const height = descriptor.kind === 'call' ? VOICE_CALL_POPOUT_DEFAULT_HEIGHT : VOICE_TILE_POPOUT_DEFAULT_HEIGHT;
-			const childWindow = window.open('about:blank', descriptor.key, `width=${width},height=${height}`);
+			const childWindow = window.open('', descriptor.key, `popup=yes,width=${width},height=${height}`);
 			if (!childWindow) {
 				logger.warn('Failed to open browser popout window', {key: descriptor.key});
 				return false;

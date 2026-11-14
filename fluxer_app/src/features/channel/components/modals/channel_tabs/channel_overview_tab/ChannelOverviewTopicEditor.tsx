@@ -31,9 +31,20 @@ import {observer} from 'mobx-react-lite';
 import {forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState} from 'react';
 import type {UseFormReturn} from 'react-hook-form';
 
-const TOPIC_DESCRIPTOR = msg({message: 'Topic'});
-const ADD_A_TOPIC_TO_THIS_CHANNEL_DESCRIPTOR = msg({message: 'Add a topic to this channel'});
-const INSERT_EMOJI_DESCRIPTOR = msg({message: 'Insert emoji'});
+const TOPIC_DESCRIPTOR = msg({
+	message: 'Topic',
+	context: 'channel-topic-field',
+	comment:
+		'Label of the input in channel settings where a moderator writes the channel description shown in the channel header. Not an agenda item or a subject line.',
+});
+const ADD_A_TOPIC_TO_THIS_CHANNEL_DESCRIPTOR = msg({
+	message: 'Add a topic to this channel',
+	comment: 'Placeholder inside the empty channel topic input in channel settings.',
+});
+const INSERT_EMOJI_DESCRIPTOR = msg({
+	message: 'Insert emoji',
+	comment: 'Accessible label for the smiley button that opens the emoji picker beside the channel topic input.',
+});
 const TOPIC_MARKDOWN_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.STANDARD_WITHOUT_JUMBO);
 const COMPOSER_SURFACE_INTERACTIVE_SELECTOR =
 	'[data-channel-textarea], button, a, input, textarea, select, [role="button"]';
@@ -146,7 +157,7 @@ export const ChannelOverviewTopicEditor = observer(
 				});
 			}, [actualTopic, form, isTopicInitialized]);
 			const handleTopicChange = useCallback((_display: string, _segments: Array<MentionSegment>, wire: string) => {
-				setActualTopic(dropTrailingEmptyBlockquoteLines(wire));
+				setActualTopic(dropTrailingEmptyBlockquoteLines(wire, TOPIC_MARKDOWN_PARSER_FLAGS));
 			}, []);
 			const handleTopicEmojiSelect = useCallback((emoji: FlatEmoji, shiftKey: boolean) => {
 				const composer = composerRef.current;

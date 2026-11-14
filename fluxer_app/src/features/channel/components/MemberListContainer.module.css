@@ -24,7 +24,7 @@
 	min-height: 0;
 	background-color: var(--background-secondary-lighter);
 	padding-top: var(--member-list-scroller-padding-block-start);
-	padding-left: var(--member-list-scroller-padding-inline);
-	padding-right: var(--member-list-scroller-padding-inline);
+	padding-inline-start: var(--member-list-scroller-padding-inline);
+	padding-inline-end: var(--member-list-scroller-padding-inline);
 	padding-bottom: var(--member-list-scroller-padding-block-end);
 }

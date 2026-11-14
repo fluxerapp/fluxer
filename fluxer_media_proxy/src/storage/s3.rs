@@ -3,14 +3,10 @@
 use super::{
     BufferedObjectReadRequest, BufferedStorageObject, ContentDigestRequest, HeadResult,
     ObjectStreamPlan, StorageError, Store, StreamObject, StreamRange,
-    identity::{RemoteSourceObject, SourceObjectIdentity, remote_source_object_identity},
     relay_body::{RelayBody, RelayPutOptions, SizedFileBody},
-    response_body::{
-        StreamResponseValidation, exact_response_stream, read_response_bytes,
-        validate_stream_response,
-    },
+    response_body::{exact_response_stream, read_response_bytes, read_response_bytes_up_to},
 };
-use crate::{aws_sigv4, byte_budget::BudgetedBytes, config::Config, http_headers, range};
+use crate::{aws_sigv4, config::Config, http_headers, range};
 use axum::body::Body;
 use http::{HeaderMap, HeaderName, StatusCode, header};
 use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
@@ -20,6 +16,8 @@ use std::time::Duration;
 use tokio::io::AsyncSeekExt as _;
 
 pub(super) const UNSIGNED_PAYLOAD: &str = "UNSIGNED-PAYLOAD";
+
+const S3_ERROR_BODY_BYTES_MAX: usize = 2048;
 
 const QUERY_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b' ')
@@ -37,46 +35,15 @@ const QUERY_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b'}');
 
 impl Store {
-    pub(super) async fn ensure_bucket_s3(&self, bucket: &str) -> Result<(), StorageError> {
-        let url = self.s3_bucket_url(bucket)?;
-        let signed = self.sign(Method::PUT, &url, &[], None, &[])?;
-        let response = self
-            .client
-            .put(&url)
-            .headers(signed_headers(&signed, &self.cfg))
-            .send()
-            .await?;
-        if response.status().is_success() || response.status() == StatusCode::CONFLICT {
-            Ok(())
-        } else {
-            Err(StorageError::S3(response.status().to_string()))
-        }
-    }
-
     pub(super) async fn read_s3(
         &self,
         request: BufferedObjectReadRequest<'_>,
     ) -> Result<BufferedStorageObject, StorageError> {
         let url = self.s3_read_url(request.bucket, request.key)?;
-        let if_match = request
-            .expected_identity
-            .and_then(SourceObjectIdentity::etag);
-        let extra = if_match.map(|value| aws_sigv4::Header {
-            name: "If-Match",
-            value,
-        });
-        let mut headers = self.read_headers(request.bucket, Method::GET, &url, extra.as_slice())?;
-        if let Some(value) = if_match {
-            headers.insert(
-                header::IF_MATCH,
-                value.parse().map_err(|_| StorageError::ObjectChanged)?,
-            );
-        }
+        let headers = self.read_headers(request.bucket, Method::GET, &url, &[])?;
         let response = self.client.get(&url).headers(headers).send().await?;
         let status = response.status();
-        if let Some(error) =
-            self.read_status_error(request.bucket, status, request.expected_identity.is_some())
-        {
+        if let Some(error) = self.read_status_error(request.bucket, status) {
             return Err(error);
         }
         if !status.is_success() {
@@ -89,37 +56,13 @@ impl Store {
             return Err(StorageError::StreamTooLong);
         }
         let content_type = response_content_type(response.headers());
-        if let Some(expected) = request.expected_identity
-            && expected.etag().is_none()
-        {
-            let Some(content_length) = content_length else {
-                return Err(StorageError::ObjectChanged);
-            };
-            let identity = remote_source_object_identity(RemoteSourceObject {
-                bucket: request.bucket,
-                key: request.key,
-                content_length,
-                content_type: &content_type,
-                etag: header_str(response.headers(), header::ETAG).as_deref(),
-                last_modified: header_str(response.headers(), header::LAST_MODIFIED).as_deref(),
-            });
-            if identity != *expected {
-                return Err(StorageError::ObjectChanged);
-            }
-        }
         let data = match content_length {
             Some(content_length) => {
                 let expected_length =
                     usize::try_from(content_length).map_err(|_| StorageError::StreamTooLong)?;
                 read_response_bytes(response, expected_length, request.budget).await?
             }
-            None => {
-                let data = response.bytes().await?;
-                if data.len() > request.limit {
-                    return Err(StorageError::StreamTooLong);
-                }
-                BudgetedBytes::unbudgeted(data)
-            }
+            None => read_response_bytes_up_to(response, request.limit, request.budget).await?,
         };
         Ok(BufferedStorageObject {
             content_digest: match request.content_digest {
@@ -135,7 +78,6 @@ impl Store {
         &self,
         bucket: &str,
         key: &str,
-        max_bytes: usize,
     ) -> Result<HeadResult, StorageError> {
         // A HEAD is a read, so it follows the same endpoint and signing policy as a body read.
         // Sending it to the write origin instead would bypass the configured read endpoint and
@@ -144,29 +86,17 @@ impl Store {
         let headers = self.read_headers(bucket, Method::HEAD, &url, &[])?;
         let response = self.client.head(&url).headers(headers).send().await?;
         let status = response.status();
-        if let Some(error) = self.read_status_error(bucket, status, false) {
+        if let Some(error) = self.read_status_error(bucket, status) {
             return Err(error);
         }
         if !status.is_success() {
             return Err(StorageError::S3(s3_error_summary(response).await));
         }
         let content_length = http_headers::parse_content_length(response.headers()).unwrap_or(0);
-        if content_length > max_bytes as u64 {
-            return Err(StorageError::StreamTooLong);
-        }
         let content_type = response_content_type(response.headers());
-        let identity = remote_source_object_identity(RemoteSourceObject {
-            bucket,
-            key,
-            content_length,
-            content_type: &content_type,
-            etag: header_str(response.headers(), header::ETAG).as_deref(),
-            last_modified: header_str(response.headers(), header::LAST_MODIFIED).as_deref(),
-        });
         Ok(HeadResult {
             content_length,
             content_type,
-            identity,
         })
     }
 
@@ -178,25 +108,12 @@ impl Store {
         let range_value = match plan.range {
             StreamRange::Full => None,
             StreamRange::Header(header) => Some(header.to_owned()),
-            StreamRange::Bytes(byte_range) => {
-                Some(format!("bytes={}-{}", byte_range.start, byte_range.end))
-            }
         };
-        let if_match = plan.expected_identity.and_then(SourceObjectIdentity::etag);
-        let mut extra = Vec::new();
-        if let Some(value) = range_value.as_deref() {
-            extra.push(aws_sigv4::Header {
-                name: "Range",
-                value,
-            });
-        }
-        if let Some(value) = if_match {
-            extra.push(aws_sigv4::Header {
-                name: "If-Match",
-                value,
-            });
-        }
-        let mut headers = self.read_headers(plan.bucket, Method::GET, &url, &extra)?;
+        let extra = range_value.as_deref().map(|value| aws_sigv4::Header {
+            name: "Range",
+            value,
+        });
+        let mut headers = self.read_headers(plan.bucket, Method::GET, &url, extra.as_slice())?;
         if let Some(value) = range_value.as_deref() {
             headers.insert(
                 header::RANGE,
@@ -205,17 +122,9 @@ impl Store {
                     .map_err(|_| StorageError::S3("invalid Range header".to_owned()))?,
             );
         }
-        if let Some(value) = if_match {
-            headers.insert(
-                header::IF_MATCH,
-                value.parse().map_err(|_| StorageError::ObjectChanged)?,
-            );
-        }
         let response = self.client.get(&url).headers(headers).send().await?;
         let status = response.status();
-        if let Some(error) =
-            self.read_status_error(plan.bucket, status, plan.expected_identity.is_some())
-        {
+        if let Some(error) = self.read_status_error(plan.bucket, status) {
             return Err(error);
         }
         // An upstream 416 is an answer about the range, not a transport failure. Reporting it as
@@ -237,16 +146,7 @@ impl Store {
         if !status.is_success() {
             return Err(StorageError::S3(s3_error_summary(response).await));
         }
-        if let Some(expected) = plan.expected_identity {
-            return versioned_stream_object(response, plan, expected);
-        }
         let content_length = http_headers::parse_content_length(response.headers());
-        if let Some(content_length) = content_length
-            && matches!(plan.range, StreamRange::Full)
-            && content_length > plan.max_bytes as u64
-        {
-            return Err(StorageError::StreamTooLong);
-        }
         let content_type = response_content_type(response.headers());
         let content_range = header_str(response.headers(), header::CONTENT_RANGE)
             .and_then(|value| range::parse_content_range(Some(&value)));
@@ -272,34 +172,6 @@ impl Store {
             byte_range,
             total_length,
         })
-    }
-
-    pub(super) async fn write_s3(
-        &self,
-        bucket: &str,
-        key: &str,
-        data: &[u8],
-        content_type: &str,
-    ) -> Result<(), StorageError> {
-        let url = self.s3_url(bucket, key)?;
-        let extra = [aws_sigv4::Header {
-            name: "Content-Type",
-            value: content_type,
-        }];
-        let signed = self.sign(Method::PUT, &url, data, None, &extra)?;
-        let mut headers = signed_headers(&signed, &self.cfg);
-        headers.insert(header::CONTENT_TYPE, content_type_header(content_type));
-        let response = self
-            .client
-            .put(&url)
-            .headers(headers)
-            .body(data.to_vec())
-            .send()
-            .await?;
-        if !response.status().is_success() {
-            return Err(StorageError::S3(response.status().to_string()));
-        }
-        Ok(())
     }
 
     pub(super) async fn relay_put_s3(
@@ -339,6 +211,7 @@ impl Store {
                 reqwest::Body::wrap(SizedFileBody::new(file, options.content_length))
             }
             RelayBody::Streamed(chunks) => reqwest::Body::wrap_stream(chunks),
+            RelayBody::Buffered(bytes) => reqwest::Body::from(bytes),
         };
         let response = self
             .raw_client
@@ -375,54 +248,6 @@ impl Store {
         options.session_token = &self.cfg.storage.s3_session_token;
         Ok(aws_sigv4::sign(options)?)
     }
-}
-
-fn versioned_stream_object(
-    response: reqwest::Response,
-    plan: ObjectStreamPlan<'_>,
-    expected: &SourceObjectIdentity,
-) -> Result<StreamObject, StorageError> {
-    let status = response.status();
-    let total_length = expected.content_length();
-    let byte_range = match plan.range {
-        StreamRange::Bytes(byte_range) => Some(byte_range),
-        StreamRange::Full | StreamRange::Header(_) => None,
-    };
-    let expected_length = byte_range.map_or(total_length, |byte_range| {
-        (byte_range.end - byte_range.start + 1) as u64
-    });
-    validate_stream_response(StreamResponseValidation {
-        status,
-        headers: response.headers(),
-        total_length,
-        expected_length,
-        byte_range,
-    })?;
-    if expected.etag().is_none() {
-        let identity = remote_source_object_identity(RemoteSourceObject {
-            bucket: plan.bucket,
-            key: plan.key,
-            content_length: total_length,
-            content_type: &response_content_type(response.headers()),
-            etag: header_str(response.headers(), header::ETAG).as_deref(),
-            last_modified: header_str(response.headers(), header::LAST_MODIFIED).as_deref(),
-        });
-        if identity != *expected {
-            return Err(StorageError::ObjectChanged);
-        }
-    }
-    Ok(StreamObject {
-        body: Body::from_stream(exact_response_stream(response, expected_length)),
-        status: if byte_range.is_some() {
-            StatusCode::PARTIAL_CONTENT
-        } else {
-            StatusCode::OK
-        },
-        content_length: Some(expected_length),
-        content_type: expected.content_type().to_owned(),
-        byte_range,
-        total_length: Some(total_length),
-    })
 }
 
 fn content_type_header(content_type: &str) -> header::HeaderValue {
@@ -479,13 +304,18 @@ pub(super) fn signed_headers(
     headers
 }
 
-pub(super) async fn s3_error_summary(response: reqwest::Response) -> String {
+pub(super) async fn s3_error_summary(mut response: reqwest::Response) -> String {
     let status = response.status();
-    let body = response
-        .bytes()
-        .await
-        .map(|b| b.to_vec())
-        .unwrap_or_default();
+    let mut body = Vec::new();
+    while body.len() < S3_ERROR_BODY_BYTES_MAX {
+        match response.chunk().await {
+            Ok(Some(chunk)) => {
+                let take = chunk.len().min(S3_ERROR_BODY_BYTES_MAX - body.len());
+                body.extend_from_slice(&chunk[..take]);
+            }
+            Ok(None) | Err(_) => break,
+        }
+    }
     let snippet: String = String::from_utf8_lossy(&body)
         .chars()
         .filter(|c| !c.is_control() || *c == ' ')

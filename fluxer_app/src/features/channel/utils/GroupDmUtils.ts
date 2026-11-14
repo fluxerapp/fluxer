@@ -11,26 +11,22 @@ const canonicalizeRecipientIds = (recipientIds: ReadonlyArray<string>): string =
 	return JSON.stringify(sortedRecipients);
 };
 
-export function getMaxGroupDmRecipients(): number {
-	return Limits.getMaxGroupDmRecipients();
-}
-
 export function getMaxGroupDmOtherRecipients(): number {
-	return Math.max(getMaxGroupDmRecipients() - 1, 0);
+	return Math.max(Limits.getMaxGroupDmRecipients() - 1, 0);
 }
 
 export function getGroupDmRemainingSlots(channel?: Channel): number {
 	if (!channel) {
-		return getMaxGroupDmRecipients();
+		return Limits.getMaxGroupDmRecipients();
 	}
-	return Math.max(getMaxGroupDmRecipients() - (channel.recipientIds.length + 1), 0);
+	return Math.max(Limits.getMaxGroupDmRecipients() - (channel.recipientIds.length + 1), 0);
 }
 
 export function isGroupDmFull(channel?: Channel): boolean {
 	if (!channel) {
 		return false;
 	}
-	return channel.recipientIds.length + 1 >= getMaxGroupDmRecipients();
+	return channel.recipientIds.length + 1 >= Limits.getMaxGroupDmRecipients();
 }
 
 export function getDuplicateGroupDMChannels(

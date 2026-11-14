@@ -4,11 +4,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {CHANNEL_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/ChannelSettingsConstants';
 import {msg} from '@lingui/core/macro';
 
-export type {
-	ChannelDetailsBottomSheetProps,
-	ChannelDetailsTab,
-	QuickActionButtonProps,
-} from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheetTypes';
+export type {QuickActionButtonProps} from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheetTypes';
 
 export const logger = new Logger('ChannelDetailsBottomSheet');
 export const DIRECT_MESSAGE_DESCRIPTOR = msg({
@@ -79,16 +75,6 @@ export const FAILED_TO_UNPIN_DM_DESCRIPTOR = msg({
 	comment:
 		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
 });
-export const ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR = msg({
-	message: 'Close your DM with {recipientUsername}? You can reopen it anytime.',
-	comment:
-		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
-});
-export const DM_CLOSED_DESCRIPTOR = msg({
-	message: 'DM closed',
-	comment:
-		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
-});
 export const USER_ID_COPIED_TO_CLIPBOARD_DESCRIPTOR = msg({
 	message: 'User ID copied to clipboard',
 	comment:
@@ -136,11 +122,6 @@ export const MUTE_DESCRIPTOR = msg({
 });
 export const SEARCH_DESCRIPTOR = msg({
 	message: 'Search',
-	comment:
-		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
-});
-export const MORE_DESCRIPTOR = msg({
-	message: 'More',
 	comment:
 		'Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).',
 });

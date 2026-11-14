@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {VideoCodec} from 'livekit-client';
 
@@ -61,47 +62,29 @@ function getVideoDecoderApi(): VideoDecoderLike | null {
 	return null;
 }
 
-function hasRtcReceiverCapability(mimeType: string): boolean {
+export function getRtcReceiverCodecSupport(codec: VideoCodec): boolean | null {
 	const receiver = (globalThis as Record<string, unknown>).RTCRtpReceiver as
 		| {getCapabilities?: (kind: 'video') => RTCRtpCapabilities | null}
 		| undefined;
 	const caps = receiver?.getCapabilities?.('video');
-	if (!caps) return false;
-	const lower = mimeType.toLowerCase();
+	if (!caps) return null;
+	const lower = `video/${codec}`.toLowerCase();
 	return caps.codecs.some((c) => {
 		const candidate = c.mimeType.toLowerCase();
 		return candidate === lower || (lower === 'video/av1' && candidate === 'video/av1x');
 	});
 }
 
-function shouldExcludeByPlatformPolicy(_codec: VideoCodec): boolean {
-	return false;
-}
-
 function isBaselineWebRtcDecodeCodec(codec: VideoCodec): boolean {
 	return codec === 'h264' || codec === 'vp8';
 }
 
-function getPlatformPolicyExclusions(): Array<VideoCodec> | null {
-	if ((globalThis as Record<string, unknown>).RTCRtpReceiver === undefined) return null;
-	const excluded: Array<VideoCodec> = [];
-	for (const probe of CODEC_PROBES) {
-		if (hasRtcReceiverCapability(`video/${probe.codec}`) && shouldExcludeByPlatformPolicy(probe.codec)) {
-			excluded.push(probe.codec);
-		}
-	}
-	return excluded.length > 0 ? excluded : null;
-}
-
 async function probeCodecDecode(probe: CodecProbe): Promise<boolean> {
-	if (!hasRtcReceiverCapability(`video/${probe.codec}`)) {
+	if (getRtcReceiverCodecSupport(probe.codec) !== true) {
 		return true;
 	}
 	if (isBaselineWebRtcDecodeCodec(probe.codec)) {
 		return true;
-	}
-	if (shouldExcludeByPlatformPolicy(probe.codec)) {
-		return false;
 	}
 	const api = getVideoDecoderApi();
 	if (!api) {
@@ -132,7 +115,7 @@ async function probeAllCodecs(): Promise<Array<VideoCodec>> {
 		}
 	}
 	if (excluded.length > 0) {
-		logger.info('Excluding codecs from subscriber decode', {excluded});
+		logger.debug('Excluding codecs from subscriber decode', {excluded});
 	}
 	return excluded;
 }
@@ -156,11 +139,21 @@ export function loadVideoDecoderExclusions(): Promise<Array<VideoCodec>> {
 	return pendingProbe;
 }
 
+export function getProbedVideoDecoderExclusionsSync(): Array<VideoCodec> | null {
+	return cachedExclusions;
+}
+
 export function getVideoDecoderExclusionsSync(): Array<VideoCodec> | null {
-	return cachedExclusions ?? getPlatformPolicyExclusions();
+	const probed = getProbedVideoDecoderExclusionsSync();
+	if (probed === null && screenShareDecodeFailures.size === 0) return null;
+	return [...new Set([...(probed ?? []), ...screenShareDecodeFailures])];
 }
 
 export function markScreenShareDecodeFailure(codec: VideoCodec, reason: string): boolean {
+	if (isBaselineWebRtcDecodeCodec(codec)) {
+		logger.warn('Keeping a baseline codec advertised despite a local screen share decode stall', {codec, reason});
+		return false;
+	}
 	if (screenShareDecodeFailures.has(codec)) return false;
 	if (screenShareDecodeFailures.size >= SCREEN_SHARE_DECODE_FAILURES_MAX) return false;
 	screenShareDecodeFailures.add(codec);
@@ -176,12 +169,6 @@ export function clearScreenShareDecodeFailures(): void {
 	screenShareDecodeFailures.clear();
 }
 
-export function resetVideoDecoderExclusions(): void {
-	cachedExclusions = null;
-	pendingProbe = null;
-	screenShareDecodeFailures.clear();
-}
-
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && !isDesktopLocalAppDocument()) {
 	void loadVideoDecoderExclusions();
 }

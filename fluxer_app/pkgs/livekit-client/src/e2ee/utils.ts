@@ -2,18 +2,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import {type DataPacket, EncryptedPacketPayload} from '@livekit/protocol';
+import type {NonSharedUint8Array} from '../type-polyfills/non-shared-typed-arrays.ts';
 import {ENCRYPTION_ALGORITHM} from './constants.ts';
+import type {KeyProviderOptions} from './types.ts';
 
 export function isE2EESupported() {
 	return isInsertableStreamSupported() || isScriptTransformSupported();
 }
 
 export function isScriptTransformSupported() {
-	return typeof window.RTCRtpScriptTransform !== 'undefined';
+	return typeof window !== 'undefined' && typeof window.RTCRtpScriptTransform !== 'undefined';
 }
 
 export function isInsertableStreamSupported() {
 	return (
+		typeof window !== 'undefined' &&
 		typeof window.RTCRtpSender !== 'undefined' &&
 		typeof window.RTCRtpSender.prototype.createEncodedStreams !== 'undefined'
 	);
@@ -24,14 +27,13 @@ export function isVideoFrame(frame: RTCEncodedAudioFrame | RTCEncodedVideoFrame)
 }
 
 export async function importKey(
-	keyBytes: Uint8Array | ArrayBuffer,
+	keyBytes: NonSharedUint8Array | ArrayBuffer,
 	algorithm: string | {name: string} = {name: ENCRYPTION_ALGORITHM},
 	usage: 'derive' | 'encrypt' = 'encrypt',
 ) {
-	const rawKey = keyBytes instanceof Uint8Array ? new Uint8Array(keyBytes).buffer : keyBytes;
 	return crypto.subtle.importKey(
 		'raw',
-		rawKey,
+		keyBytes,
 		algorithm,
 		false,
 		usage === 'derive' ? ['deriveBits', 'deriveKey'] : ['encrypt', 'decrypt'],
@@ -84,15 +86,15 @@ function getAlgoOptions(algorithmName: string, salt: string) {
 	}
 }
 
-export async function deriveKeys(material: CryptoKey, salt: string) {
-	const algorithmOptions = getAlgoOptions(material.algorithm.name, salt);
+export async function deriveKeys(material: CryptoKey, options: KeyProviderOptions) {
+	const algorithmOptions = getAlgoOptions(material.algorithm.name, options.ratchetSalt);
 
 	const encryptionKey = await crypto.subtle.deriveKey(
 		algorithmOptions,
 		material,
 		{
 			name: ENCRYPTION_ALGORITHM,
-			length: 128,
+			length: options.keySize,
 		},
 		false,
 		['encrypt', 'decrypt'],
@@ -101,7 +103,7 @@ export async function deriveKeys(material: CryptoKey, salt: string) {
 	return {material, encryptionKey};
 }
 
-export function createE2EEKey(): Uint8Array {
+export function createE2EEKey(): NonSharedUint8Array {
 	return window.crypto.getRandomValues(new Uint8Array(32));
 }
 
@@ -111,14 +113,13 @@ export async function ratchet(material: CryptoKey, salt: string): Promise<ArrayB
 	return crypto.subtle.deriveBits(algorithmOptions, material, 256);
 }
 
-export function needsRbspUnescaping(frameData: Uint8Array) {
+export function needsRbspUnescaping(frameData: NonSharedUint8Array) {
 	for (let i = 0; i < frameData.length - 3; i++) {
 		if (frameData[i] === 0 && frameData[i + 1] === 0 && frameData[i + 2] === 3) return true;
 	}
 	return false;
 }
-
-export function parseRbsp(stream: Uint8Array): Uint8Array {
+export function parseRbsp(stream: NonSharedUint8Array): NonSharedUint8Array {
 	const dataOut = new Uint8Array(stream.length);
 	let writePos = 0;
 	const length = stream.length;
@@ -136,8 +137,7 @@ export function parseRbsp(stream: Uint8Array): Uint8Array {
 
 const kZerosInStartSequence = 2;
 const kEmulationByte = 3;
-
-export function writeRbsp(data_in: Uint8Array): Uint8Array {
+export function writeRbsp(data_in: NonSharedUint8Array): NonSharedUint8Array {
 	const dataOut = new Uint8Array(data_in.length * 2);
 	let writePos = 0;
 	let numConsecutiveZeros = 0;

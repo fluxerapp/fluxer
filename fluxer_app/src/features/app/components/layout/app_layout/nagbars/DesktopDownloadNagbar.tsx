@@ -5,7 +5,7 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {DESKTOP_DOWNLOAD_URL, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {DESKTOP_DOWNLOAD_URL} from '@app/features/app/config/I18nDisplayConstants';
 import {DOWNLOAD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -15,8 +15,8 @@ import {AndroidLogoIcon, AppleLogoIcon, WindowsLogoIcon} from '@phosphor-icons/r
 import {observer} from 'mobx-react-lite';
 
 const DESKTOP_APP_DOWNLOAD_MESSAGE_DESCRIPTOR = msg({
-	message: 'Get the {productName} desktop app for system-wide push-to-talk and a few other goodies.',
-	comment: 'Nagbar body encouraging web users to download the desktop app. productName is the app name.',
+	message: 'Get the desktop app for system-wide push-to-talk and a few other goodies.',
+	comment: 'Nagbar body encouraging web users to download the desktop app.',
 });
 export const DesktopDownloadNagbar = observer(({isMobile}: {isMobile: boolean}) => {
 	const {i18n} = useLingui();
@@ -38,7 +38,7 @@ export const DesktopDownloadNagbar = observer(({isMobile}: {isMobile: boolean}) 
 			<NagbarContent
 				isMobile={isMobile}
 				onDismiss={handleDismiss}
-				message={i18n._(DESKTOP_APP_DOWNLOAD_MESSAGE_DESCRIPTOR, {productName: PRODUCT_NAME})}
+				message={i18n._(DESKTOP_APP_DOWNLOAD_MESSAGE_DESCRIPTOR)}
 				actions={
 					<>
 						<span

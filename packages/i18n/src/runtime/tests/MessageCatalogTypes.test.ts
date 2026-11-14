@@ -2,7 +2,7 @@
 
 import type {MessageArgsForTemplate, MessageVariablesForTemplate} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
 import {
-	defineStaticLocaleMessages,
+	extractMessageTemplatePlaceholders,
 	extractMessageTemplateVariables,
 	validateMessageTemplateVariables,
 } from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
@@ -19,6 +19,21 @@ describe('message catalog type helpers', () => {
 		expect([...extractMessageTemplateVariables(template)].sort()).toEqual(['count', 'userName']);
 		expect(validateMessageTemplateVariables(template, {count: 2})).toBe('Missing required i18n variable: userName');
 	});
+	it('extracts placeholder signatures including formats and select cases', () => {
+		const template =
+			'{when, date, full} {when, time,  short }{reason, select, null {} other {{reason}}} {count, plural, one {# {name}} other {#}}';
+		expect(extractMessageTemplatePlaceholders(template)).toEqual([
+			'count,plural',
+			'name',
+			'reason',
+			'reason,select[null,other]',
+			'when,date,full',
+			'when,time,short',
+		]);
+		expect(extractMessageTemplatePlaceholders('{count, plural, one {#} few {#} other {#}}')).toEqual(
+			extractMessageTemplatePlaceholders('{count, plural, one {#} other {#}}'),
+		);
+	});
 	it('types placeholders from literal templates', () => {
 		type Variables =
 			MessageVariablesForTemplate<'Hello {userName}, you have {count, plural, one {one invite} other {# invites}}.'>;
@@ -28,15 +43,13 @@ describe('message catalog type helpers', () => {
 		expectTypeOf<Args>().toEqualTypeOf<[variables: {userName: string | number | boolean | Date}]>();
 		expectTypeOf<NoArgs>().toEqualTypeOf<[variables?: undefined]>();
 	});
-	it('defines locale messages with source placeholders preserved', () => {
-		const defineMessages = defineStaticLocaleMessages<{
-			greeting: 'Hello {userName}.';
-			count: '{count, plural, one {# item} other {# items}}';
+	it('types placeholders nested inside select and plural cases', () => {
+		type Variables =
+			MessageVariablesForTemplate<'{all, select, yes {All gone.} other {{count, plural, =1 {# item} other {# items}} until {ends_at}.}}'>;
+		expectTypeOf<Variables>().toEqualTypeOf<{
+			all: string | number | boolean | Date;
+			count: number;
+			ends_at: string | number | boolean | Date;
 		}>();
-		const messages = defineMessages({
-			greeting: 'Salut {userName}.',
-			count: '{count, plural, one {# element} other {# elements}}',
-		});
-		expect(messages.greeting).toBe('Salut {userName}.');
 	});
 });

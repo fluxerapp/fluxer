@@ -29,29 +29,6 @@ export class GuildSticker {
 		this.user = data.user;
 	}
 
-	withUpdates(updates: Partial<WireGuildSticker>): GuildSticker {
-		return new GuildSticker(this.guildId, {
-			id: updates.id ?? this.id,
-			name: updates.name ?? this.name,
-			description: updates.description ?? this.description,
-			tags: updates.tags ?? [...this.tags],
-			animated: updates.animated ?? this.animated,
-			user: updates.user ?? this.user,
-		});
-	}
-
-	equals(other: GuildSticker): boolean {
-		return (
-			this.id === other.id &&
-			this.guildId === other.guildId &&
-			this.name === other.name &&
-			this.description === other.description &&
-			JSON.stringify(this.tags) === JSON.stringify(other.tags) &&
-			this.animated === other.animated &&
-			this.user?.id === other.user?.id
-		);
-	}
-
 	toJSON(): WireGuildSticker {
 		return {
 			id: this.id,
@@ -61,9 +38,5 @@ export class GuildSticker {
 			animated: this.animated,
 			user: this.user,
 		};
-	}
-
-	static create(guildId: string, data: WireGuildSticker): GuildSticker {
-		return new GuildSticker(guildId, data);
 	}
 }

@@ -93,10 +93,6 @@ export async function createLocalTracks(
 		return await Promise.all(
 			stream.getTracks().map(async (mediaStreamTrack) => {
 				const isAudio = mediaStreamTrack.kind === 'audio';
-				let trackOptions = isAudio ? opts!.audio : opts!.video;
-				if (typeof trackOptions === 'boolean' || !trackOptions) {
-					trackOptions = {};
-				}
 				let trackConstraints: MediaTrackConstraints | undefined;
 				const conOrBool = isAudio ? constraints.audio : constraints.video;
 				if (typeof conOrBool !== 'boolean') {

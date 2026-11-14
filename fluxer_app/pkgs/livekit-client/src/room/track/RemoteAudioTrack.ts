@@ -209,7 +209,7 @@ export default class RemoteAudioTrack extends RemoteTrack<Track.Kind.Audio> {
 	};
 
 	async getReceiverStats(): Promise<AudioReceiverStats | undefined> {
-		if (!this.receiver || !this.receiver.getStats) {
+		if (!this.receiver?.getStats) {
 			return;
 		}
 

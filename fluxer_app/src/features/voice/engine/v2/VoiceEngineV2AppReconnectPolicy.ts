@@ -3,13 +3,11 @@
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Store} from '@app/features/voice/engine/Store';
 import type {Subscription} from 'rxjs';
-import {timer} from 'rxjs';
 
 const logger = new Logger('VoiceEngineV2AppReconnectPolicy');
 const RECONNECT_WINDOW_MS = 30000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_BASE_DELAY_MS = 1000;
-const RECONNECT_MAX_DELAY_MS = 30000;
 
 export interface VoiceEngineV2AppReconnectState {
 	lastConnectedGuildId: string | null;
@@ -43,10 +41,6 @@ export class VoiceEngineV2AppReconnectPolicy extends Store {
 		if (r.lastDisconnectTime && Date.now() - r.lastDisconnectTime > RECONNECT_WINDOW_MS) return false;
 		if (r.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) return false;
 		return true;
-	}
-
-	get reconnectAttempts(): number {
-		return this.reconnectState.reconnectAttempts;
 	}
 
 	get lastConnectedChannel(): {
@@ -86,36 +80,6 @@ export class VoiceEngineV2AppReconnectPolicy extends Store {
 		logger.debug('Reconnect state updated', {reason, shouldReconnect});
 	}
 
-	scheduleReconnect(callback: () => void): boolean {
-		if (!this.shouldAutoReconnect) {
-			logger.debug('Auto-reconnect not allowed');
-			return false;
-		}
-		const delay = this.reconnectState.nextReconnectDelay;
-		logger.info('Scheduling reconnect', {
-			delay,
-			attempt: this.reconnectState.reconnectAttempts + 1,
-			maxAttempts: MAX_RECONNECT_ATTEMPTS,
-		});
-		this.clearReconnectTimer();
-		this.reconnectTimerSub = timer(delay).subscribe(() => {
-			if (!this.shouldAutoReconnect) {
-				logger.debug('Reconnect cancelled');
-				return;
-			}
-			this.update(() => {
-				this.reconnectState = {
-					...this.reconnectState,
-					reconnectAttempts: this.reconnectState.reconnectAttempts + 1,
-					nextReconnectDelay: Math.min(this.reconnectState.nextReconnectDelay * 2, RECONNECT_MAX_DELAY_MS),
-				};
-			});
-			logger.info('Executing reconnect', {attempt: this.reconnectState.reconnectAttempts});
-			callback();
-		});
-		return true;
-	}
-
 	resetOnConnection(): void {
 		this.update(() => {
 			this.reconnectState = {
@@ -134,13 +98,6 @@ export class VoiceEngineV2AppReconnectPolicy extends Store {
 				...this.reconnectState,
 				shouldReconnect: false,
 			};
-		});
-	}
-
-	reset(): void {
-		this.clearReconnectTimer();
-		this.update(() => {
-			this.reconnectState = initialReconnectState;
 		});
 	}
 

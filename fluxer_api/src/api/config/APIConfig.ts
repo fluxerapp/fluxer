@@ -1,44 +1,95 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ResolvedDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
-import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
+import type {
+	OperatorPassPriceTable,
+	OperatorPassReleaseListTable,
+	OperatorPassWithdrawalCountryTable,
+} from '@app/api/operator_pass/OperatorPassPrices';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import type {CachePurgeAdapterName, StoreProductSlotName, VoiceTurnServerConfig} from '@fluxer/config/src/MasterConfig';
+import type {AccountIdentityMode, TagStyle} from '@fluxer/constants/src/AccountIdentityConstants';
+import type {SmtpTlsMode} from '@fluxer/constants/src/SmtpConstants';
+import type {GeoEntry} from '@fluxer/schema/src/domains/geolocation/GeolocationSchemas';
+import type {OperatorPassCurrency} from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 
 export type APIWorkerMode = 'all_lanes' | 'single_lane' | 'single_task';
-export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch';
-export type PushProviderEnvironment = 'production' | 'development';
+export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch' | 'crosspost';
 
-export interface PushProviderAppConfig {
-	appId: string;
-	topic?: string;
-	environment?: PushProviderEnvironment;
-	projectId?: string;
+export interface AppStoreAppConfig {
+	bundleId: string;
+	appAppleId: number;
+}
+
+export interface AgePolicyConfig {
+	restricted: Array<GeoEntry>;
+}
+
+export interface TrustedCallerConfig {
+	name: string;
+	key: string;
+	buckets: Array<string>;
+}
+
+interface SmtpConfig {
+	host: string;
+	port: number;
+	username: string;
+	password: string;
+	tlsMode: SmtpTlsMode | null;
+}
+
+interface APICachePurgeTarget {
+	endpoint: string;
+	token: string;
+	timeoutMs: number;
+}
+
+export interface OperatorPassConfig {
+	priceRisesAt: Date | null;
+	graceMs: number;
+	clockOffsetMs: number;
+	labsGuildId: bigint | null;
+	labsOperatorRoleId: bigint | null;
+	labsVisionaryRoleId: bigint | null;
+	labsOperatorsChannelId: bigint | null;
+	standardPricesMinor: OperatorPassPriceTable | null;
+	releaseLists: OperatorPassReleaseListTable;
+	withdrawalCountries: OperatorPassWithdrawalCountryTable;
+	disabledCurrencies: ReadonlySet<OperatorPassCurrency>;
+	wallTierMinimums: ReadonlyArray<number>;
+	maxQuantity: number;
+}
+
+export interface APICachePurgeConfig {
+	adapter: CachePurgeAdapterName;
+	http: APICachePurgeTarget;
+	controller: APICachePurgeTarget;
 }
 
 interface APIGeoipFilesystemConfig {
 	mode: 'filesystem';
 	maxmindDbPath?: string;
-	maxmindAsnDbPath?: string;
 }
 
 interface APIGeoipS3Config {
 	mode: 's3';
 	maxmindDbPath: string;
-	maxmindAsnDbPath?: string;
 	s3Bucket: string;
 	s3Key: string;
-	s3AsnKey?: string;
 }
 
-export type APIGeoipConfig = APIGeoipFilesystemConfig | APIGeoipS3Config;
+type APIGeoipConfig = APIGeoipFilesystemConfig | APIGeoipS3Config;
 
 export interface APIConfig {
 	nodeEnv: 'development' | 'production';
 	port: number;
+	host?: string;
 	headersTimeoutMs: number;
 	requestTimeoutMs: number;
 	maxInflightRequests: number;
+	maxConcurrentFormUploads: number;
+	automatedMessageDeletionDelayDays: number;
 	ipBanExemptIps: Array<string>;
-	desktopGitHubRedirectCountries: ReadonlySet<string>;
 	cassandra: {
 		hosts: string;
 		port: number;
@@ -64,28 +115,29 @@ export interface APIConfig {
 		backend: 'cassandra' | 'postgres';
 	};
 	kv: {
-		provider: 'redis';
 		url: string;
-		mode: 'standalone' | 'cluster';
-		clusterNodes: Array<{
-			host: string;
-			port: number;
-		}>;
-		clusterNatMap: Record<
-			string,
-			{
-				host: string;
-				port: number;
-			}
-		>;
+		mode: 'standalone' | 'cluster' | 'postgres';
+		postgresMaxConnections: number;
+		postgresMaxBytes: number;
+	};
+	storage: {
+		backend: 's3' | 'filesystem';
+		root: string;
+		uploadsTtlMs: number | null;
+		readOnly: boolean;
 	};
 	nats: {
 		coreUrl: string;
 		jetStreamUrl: string;
 		authToken: string;
 	};
+	storageChangeFeed: {
+		enabled: boolean;
+		stream: string;
+		skipBuckets: Array<string>;
+	};
 	search: {
-		engine: 'elasticsearch' | 'meilisearch';
+		engine: 'elasticsearch' | 'meilisearch' | 'none';
 		url: string;
 		apiKey: string;
 		username: string;
@@ -103,6 +155,9 @@ export interface APIConfig {
 			tokenTtlSecs: number;
 			keepDirectCountries: Array<string>;
 		};
+		attachmentUrls: {
+			secretsBase64: Array<string>;
+		};
 	};
 	geoip: APIGeoipConfig;
 	proxy: {
@@ -111,8 +166,11 @@ export interface APIConfig {
 	};
 	endpoints: {
 		apiPublic: string;
+		apiPublicDiscovery: string;
+		apiTransportDiscovery: string | null;
 		apiClient: string;
 		webApp: string;
+		webAppOrigins: Array<string>;
 		gateway: string;
 		media: string;
 		staticCdn: string;
@@ -122,23 +180,12 @@ export interface APIConfig {
 		gift: string;
 	};
 	internal: {
-		gateway: string;
 		gatewayRpcAuthToken: string;
+		trustedCallers: Array<TrustedCallerConfig>;
 	};
 	hosts: {
-		invite: string;
-		gift: string;
 		marketing: string;
 		unfurlIgnored: Array<string>;
-	};
-	embeds: {
-		oEmbedHtmlEnabled: boolean;
-		oEmbedHtmlAllowUntrustedOnSelfHosted: boolean;
-		oEmbedHtmlAllowedHosts: Array<string>;
-		cacheDefaultTtlSeconds: number;
-		cacheMaxTtlSeconds: number;
-		cacheMinTtlSeconds: number;
-		cacheRespectRemoteTtl: boolean;
 	};
 	s3: {
 		endpoint: string;
@@ -152,64 +199,36 @@ export interface APIConfig {
 			uploads: string;
 			reports: string;
 			harvests: string;
-			downloads: string;
 		};
 	};
-	s3Downloads: ResolvedDownloadsProvider;
 	email: {
 		enabled: boolean;
 		provider: 'smtp' | 'none';
 		webhookSecret?: string;
 		fromEmail: string;
 		fromName: string;
+		replyToEmail: string;
+		supportAlertEmail: string | null;
 		appBaseUrl: string;
-		smtp?: {
-			host: string;
-			port: number;
-			username: string;
-			password: string;
-			secure: boolean;
+		smtp?: SmtpConfig;
+		fallback?: {
+			domains: Array<string>;
+			smtp: SmtpConfig & {headers?: Record<string, string>};
 		};
-	};
-	sms: {
-		enabled: boolean;
-		accountSid?: string;
-		authToken?: string;
-		verifyServiceSid?: string;
-		inboundChallengeNumber?: string;
-		inboundWebhookAuthToken?: string;
-		inboundWebhookPublicUrl?: string;
-	};
-	risk: {
-		enabled: boolean;
-		ipinfoApiKey?: string;
-		accountPolicyDsl?: unknown;
 	};
 	blocklistFeeds: {
 		enabled: boolean;
 	};
-	captcha: {
+	breachedPasswordCheck: {
 		enabled: boolean;
-		provider: 'hcaptcha' | 'turnstile' | 'none';
-		hcaptcha?: {
-			siteKey: string;
-			secretKey: string;
-		};
-		turnstile?: {
-			siteKey: string;
-			secretKey: string;
-		};
-	};
-	contentModeration: {
-		nsfwThreshold: number;
 	};
 	voice: {
 		enabled: boolean;
 		apiKey?: string;
 		apiSecret?: string;
-		webhookUrl?: string;
 		url?: string;
 		internalUrl?: string;
+		bundled: boolean;
 		defaultRegion?: {
 			id: string;
 			name: string;
@@ -217,6 +236,12 @@ export interface APIConfig {
 			latitude: number;
 			longitude: number;
 		};
+		p2pStunUrls?: Array<string>;
+		turnServers: Array<VoiceTurnServerConfig>;
+		joinAllowPrivateEndpoints: boolean;
+		healthIntervalMs: number;
+		participantSweepEnabled: boolean;
+		participantSweepDryRun: boolean;
 	};
 	stripe: {
 		enabled: boolean;
@@ -228,6 +253,7 @@ export interface APIConfig {
 			monthlyBrl?: string;
 			monthlyDkk?: string;
 			monthlyInr?: string;
+			monthlyIsk?: string;
 			monthlyNok?: string;
 			monthlyPln?: string;
 			monthlySek?: string;
@@ -237,6 +263,7 @@ export interface APIConfig {
 			yearlyBrl?: string;
 			yearlyDkk?: string;
 			yearlyInr?: string;
+			yearlyIsk?: string;
 			yearlyNok?: string;
 			yearlyPln?: string;
 			yearlySek?: string;
@@ -249,6 +276,8 @@ export interface APIConfig {
 			gift1YearDkk?: string;
 			gift1MonthNok?: string;
 			gift1YearNok?: string;
+			gift1MonthIsk?: string;
+			gift1YearIsk?: string;
 			gift1MonthBrl?: string;
 			gift1MonthInr?: string;
 			gift1MonthPln?: string;
@@ -262,11 +291,7 @@ export interface APIConfig {
 		};
 		legacyPrices?: Record<string, Array<string> | undefined>;
 	};
-	bunny: {
-		purgeEnabled: boolean;
-		apiKey?: string;
-		pullZoneId?: number;
-	};
+	cachePurge: APICachePurgeConfig;
 	clamav: {
 		enabled: boolean;
 		host: string;
@@ -274,22 +299,21 @@ export interface APIConfig {
 		failOpen: boolean;
 	};
 	admin: {
-		basePath: string;
 		oauthClientSecret?: string;
+		sso: {
+			issuer: string;
+			clientId: string;
+		};
 	};
 	auth: {
 		sudoModeSecret: string;
 		connectionInitiationSecret: string;
+		profilePseudonymSecret: string;
 		ssoAllowPrivateAddresses: boolean;
 		passkeys: {
 			rpName: string;
 			rpId: string;
 			allowedOrigins: Array<string>;
-		};
-		vapid: {
-			publicKey: string;
-			privateKey: string;
-			email?: string;
 		};
 		bluesky: BlueskyOAuthConfig;
 	};
@@ -301,6 +325,7 @@ export interface APIConfig {
 	};
 	instance: {
 		selfHosted: boolean;
+		baseDomain: string;
 		autoJoinInviteCode?: string;
 		visionariesGuildId?: string;
 		visionariesGuildVisionaryRoleId?: string;
@@ -311,31 +336,27 @@ export interface APIConfig {
 			logoUrl?: string;
 			wordmarkUrl?: string;
 			faviconUrl?: string;
+			faviconDarkUrl?: string;
+			signInBackdropUrl?: string;
 			themeColor?: string;
+			statusPageUrl?: string;
+			statusPageIncidentHistoryUrl?: string;
 		};
 		setup: {
 			configured: boolean;
+			token: string | null;
 		};
-	};
-	abusePolicy: {
-		inboundPhoneCountryCodes: Array<string>;
-		phoneVerification: {
-			inboundRequiredPrefixes: Array<string>;
-		};
-		directContactSpam: {
-			enabled: boolean;
-			countryCodes: Array<string>;
-			distinctTargetThreshold: number;
-			targetWindowMs: number;
-			action: 'flag_spammer' | 'suppress_delivery';
-		};
-	};
-	domain: {
-		baseDomain: string;
+		accountIdentity: AccountIdentityMode | null;
+		tagStyle: TagStyle | null;
+		agePolicy: AgePolicyConfig;
 	};
 	discovery: {
 		enabled: boolean;
 		minMemberCount: number;
+	};
+	operatorPass: OperatorPassConfig;
+	paymentDisputes: {
+		closureEffectiveAt: Date | null;
 	};
 	dev: {
 		relaxRegistrationRateLimits: boolean;
@@ -345,51 +366,58 @@ export interface APIConfig {
 		validateResponses: boolean;
 	};
 	presignedAttachmentUploadsEnabled: boolean;
-	presignedDownloadsEnabled: boolean;
 	presignedHarvestDownloadsEnabled: boolean;
 	attachmentDecayEnabled: boolean;
 	deletionGracePeriodHours: number;
+	reportRetention: {
+		days: number;
+		dryRun: boolean;
+	};
 	inactivityDeletionThresholdDays?: number;
 	push: {
 		publicVapidKey?: string;
-		apns: {
-			enabled: boolean;
-			teamId?: string;
-			keyId?: string;
-			privateKey?: string;
-			privateKeyPath?: string;
-			defaultEnvironment: PushProviderEnvironment;
-			apps: Array<PushProviderAppConfig>;
-		};
-		fcm: {
-			enabled: boolean;
-			projectId?: string;
-			clientEmail?: string;
-			privateKey?: string;
-			privateKeyPath?: string;
-			serviceAccountJsonPath?: string;
-			tokenUri: string;
-			apps: Array<PushProviderAppConfig>;
-		};
+	};
+	appStore: {
+		enabled: boolean;
+		issuerId?: string;
+		keyId?: string;
+		privateKey?: string;
+		privateKeyPath?: string;
+		apps: Array<AppStoreAppConfig>;
+		products: Record<string, StoreProductSlotName>;
+	};
+	googlePlay: {
+		enabled: boolean;
+		packages: Array<string>;
+		clientEmail?: string;
+		privateKey?: string;
+		privateKeyPath?: string;
+		serviceAccountJsonPath?: string;
+		tokenUri: string;
+		products: Record<string, StoreProductSlotName>;
+		pushAudience?: string;
+		pushServiceAccountEmail?: string;
+		selfServiceRefunds: boolean;
+	};
+	storeBilling: {
+		sandboxUserIds: Array<string>;
+		sandboxEntitlesAll: boolean;
+		sandboxSubscriptions: boolean;
 	};
 	worker: {
 		mode: APIWorkerMode;
 		laneName?: APIWorkerLaneName;
 		taskName?: WorkerTaskName;
 		enableCronScheduler?: boolean;
+		metricsPort?: number;
+		embedded: boolean;
 		laneConcurrencyOverrides: {
 			realtime?: number;
 			unfurl?: number;
 			lifecycle?: number;
 			batch?: number;
+			crosspost?: number;
 		};
-	};
-	ncmec: {
-		enabled: boolean;
-		baseUrl?: string;
-		username?: string;
-		password?: string;
-		reporterEmail?: string;
 	};
 }
 

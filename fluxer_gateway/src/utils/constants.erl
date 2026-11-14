@@ -26,6 +26,8 @@
     kick_members_permission/0,
     ban_members_permission/0,
     view_channel_members_permission/0,
+    manage_threads_permission/0,
+    send_messages_in_threads_permission/0,
     voice_channel_camera_user_limit/0
 ]).
 
@@ -43,9 +45,11 @@ gateway_opcode(9) -> invalid_session;
 gateway_opcode(10) -> hello;
 gateway_opcode(11) -> heartbeat_ack;
 gateway_opcode(12) -> gateway_error;
+gateway_opcode(13) -> voice_signal;
 gateway_opcode(14) -> lazy_request;
 gateway_opcode(15) -> request_guild_counts;
 gateway_opcode(16) -> request_channel_member_counts;
+gateway_opcode(28) -> request_forum_unreads;
 gateway_opcode(_) -> unknown.
 
 -spec opcode_to_num(atom()) -> integer().
@@ -62,9 +66,11 @@ opcode_to_num(invalid_session) -> 9;
 opcode_to_num(hello) -> 10;
 opcode_to_num(heartbeat_ack) -> 11;
 opcode_to_num(gateway_error) -> 12;
+opcode_to_num(voice_signal) -> 13;
 opcode_to_num(lazy_request) -> 14;
 opcode_to_num(request_guild_counts) -> 15;
-opcode_to_num(request_channel_member_counts) -> 16.
+opcode_to_num(request_channel_member_counts) -> 16;
+opcode_to_num(request_forum_unreads) -> 28.
 
 -spec close_code_to_num(atom()) -> integer().
 close_code_to_num(unknown_error) -> 4000;
@@ -102,7 +108,7 @@ status_type_atom(invisible) -> <<"invisible">>;
 status_type_atom(offline) -> <<"offline">>.
 
 -spec max_payload_size() -> pos_integer().
-max_payload_size() -> 4096.
+max_payload_size() -> 16384.
 
 -spec heartbeat_interval() -> pos_integer().
 heartbeat_interval() -> 41250.
@@ -152,53 +158,11 @@ ban_members_permission() -> 4.
 -spec view_channel_members_permission() -> pos_integer().
 view_channel_members_permission() -> 18014398509481984.
 
+-spec manage_threads_permission() -> pos_integer().
+manage_threads_permission() -> 17179869184.
+
+-spec send_messages_in_threads_permission() -> pos_integer().
+send_messages_in_threads_permission() -> 274877906944.
+
 -spec voice_channel_camera_user_limit() -> pos_integer().
 voice_channel_camera_user_limit() -> 25.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-gateway_opcode_test() ->
-    ?assertEqual(dispatch, gateway_opcode(0)),
-    ?assertEqual(heartbeat, gateway_opcode(1)),
-    ?assertEqual(identify, gateway_opcode(2)),
-    ?assertEqual(unknown, gateway_opcode(999)).
-
-opcode_to_num_test() ->
-    ?assertEqual(0, opcode_to_num(dispatch)),
-    ?assertEqual(1, opcode_to_num(heartbeat)),
-    ?assertEqual(2, opcode_to_num(identify)).
-
-close_code_to_num_test() ->
-    ?assertEqual(4000, close_code_to_num(unknown_error)),
-    ?assertEqual(4004, close_code_to_num(authentication_failed)),
-    ?assertEqual(4008, close_code_to_num(rate_limited)),
-    ?assertEqual(4012, close_code_to_num(invalid_api_version)),
-    ?assertError(function_clause, close_code_to_num(ack_backpressure)).
-
-status_type_atom_binary_to_atom_test() ->
-    ?assertEqual(online, status_type_atom(<<>>)),
-    ?assertEqual(online, status_type_atom(<<"online">>)),
-    ?assertEqual(dnd, status_type_atom(<<"dnd">>)),
-    ?assertEqual(idle, status_type_atom(<<"idle">>)),
-    ?assertEqual(invisible, status_type_atom(<<"invisible">>)),
-    ?assertEqual(offline, status_type_atom(<<"offline">>)).
-
-status_type_atom_atom_to_binary_test() ->
-    ?assertEqual(<<"online">>, status_type_atom(undefined)),
-    ?assertEqual(<<"online">>, status_type_atom(null)),
-    ?assertEqual(<<"online">>, status_type_atom(online)),
-    ?assertEqual(<<"dnd">>, status_type_atom(dnd)),
-    ?assertEqual(<<"idle">>, status_type_atom(idle)).
-
-constants_values_test() ->
-    ?assertEqual(4096, max_payload_size()),
-    ?assertEqual(41250, heartbeat_interval()),
-    ?assertEqual(45000, heartbeat_timeout()),
-    ?assertEqual(60000, resume_timeout()),
-    ?assertEqual(16, random_session_bytes()),
-    ?assertEqual(1024, view_channel_permission()),
-    ?assertEqual(128, view_audit_log_permission()),
-    ?assertEqual(8, administrator_permission()).
-
--endif.

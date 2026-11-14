@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApplicationID, UserID} from '../BrandedTypes';
-import type {OAuth2AuthorizationCodeRow} from '../database/types/OAuth2Types';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import type {OAuth2AuthorizationCodeRow} from '@app/api/database/types/OAuth2Types';
 
 export class OAuth2AuthorizationCode {
 	readonly code: string;
@@ -38,9 +38,5 @@ export class OAuth2AuthorizationCode {
 			code_challenge_method: this.codeChallengeMethod,
 			created_at: this.createdAt,
 		};
-	}
-
-	hasScope(scope: string): boolean {
-		return this.scope.has(scope);
 	}
 }

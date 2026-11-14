@@ -1,0 +1,1457 @@
+[
+	{
+		"name": "owner is a moderator",
+		"fn": "isThreadModerator",
+		"actor": {
+			"perms": [],
+			"isOwner": true
+		},
+		"expect": true
+	},
+	{
+		"name": "administrator is a moderator",
+		"fn": "isThreadModerator",
+		"actor": {
+			"perms": ["ADMINISTRATOR"]
+		},
+		"expect": true
+	},
+	{
+		"name": "manage threads is a moderator",
+		"fn": "isThreadModerator",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"expect": true
+	},
+	{
+		"name": "timed out manage threads is not a moderator",
+		"fn": "isThreadModerator",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"],
+			"timedOut": true
+		},
+		"expect": false
+	},
+	{
+		"name": "timed out administrator stays a moderator",
+		"fn": "isThreadModerator",
+		"actor": {
+			"perms": ["ADMINISTRATOR"],
+			"timedOut": true
+		},
+		"expect": true
+	},
+	{
+		"name": "plain member is not a moderator",
+		"fn": "isThreadModerator",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"expect": false
+	},
+	{
+		"name": "public thread needs parent view",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"]
+		},
+		"expect": null
+	},
+	{
+		"name": "public thread without parent view",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": []
+		},
+		"expect": "MISSING_ACCESS"
+	},
+	{
+		"name": "private thread visible to members",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"],
+			"isMember": true
+		},
+		"thread": {
+			"type": 12
+		},
+		"expect": null
+	},
+	{
+		"name": "private thread hidden from non-members",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"]
+		},
+		"thread": {
+			"type": 12
+		},
+		"expect": "MISSING_ACCESS"
+	},
+	{
+		"name": "private thread visible to moderators",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"type": 12
+		},
+		"expect": null
+	},
+	{
+		"name": "private thread hidden from timed out moderators",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "MANAGE_THREADS"],
+			"timedOut": true
+		},
+		"thread": {
+			"type": 12
+		},
+		"expect": "MISSING_ACCESS"
+	},
+	{
+		"name": "private thread visible to administrators",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": ["ADMINISTRATOR"]
+		},
+		"thread": {
+			"type": 12
+		},
+		"expect": null
+	},
+	{
+		"name": "private thread member without parent view",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": [],
+			"isMember": true
+		},
+		"thread": {
+			"type": 12
+		},
+		"expect": "MISSING_ACCESS"
+	},
+	{
+		"name": "announcement thread visible with parent view",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"]
+		},
+		"thread": {
+			"type": 10
+		},
+		"expect": null
+	},
+	{
+		"name": "announcement thread hidden without parent view",
+		"fn": "canViewThread",
+		"actor": {
+			"perms": []
+		},
+		"thread": {
+			"type": 10
+		},
+		"expect": "MISSING_ACCESS"
+	},
+	{
+		"name": "send in an open thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"args": {
+			"action": "send"
+		},
+		"expect": null
+	},
+	{
+		"name": "send in an archived unlocked thread unarchives",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"action": "send"
+		},
+		"expect": null
+	},
+	{
+		"name": "send in a locked thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"locked": true
+		},
+		"args": {
+			"action": "send"
+		},
+		"expect": "THREAD_LOCKED"
+	},
+	{
+		"name": "send in an archived locked thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"archived": true,
+			"locked": true
+		},
+		"args": {
+			"action": "send"
+		},
+		"expect": "THREAD_LOCKED"
+	},
+	{
+		"name": "moderator sends in a locked thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"archived": true,
+			"locked": true
+		},
+		"args": {
+			"action": "send"
+		},
+		"expect": null
+	},
+	{
+		"name": "timed out send",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"timedOut": true
+		},
+		"args": {
+			"action": "send"
+		},
+		"expect": "COMMUNICATION_DISABLED"
+	},
+	{
+		"name": "timed out owner sends",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": [],
+			"timedOut": true,
+			"isOwner": true
+		},
+		"args": {
+			"action": "send"
+		},
+		"expect": null
+	},
+	{
+		"name": "react in an archived thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"action": "react"
+		},
+		"expect": "THREAD_ARCHIVED"
+	},
+	{
+		"name": "moderator reacts in an archived thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"action": "react"
+		},
+		"expect": "THREAD_ARCHIVED"
+	},
+	{
+		"name": "pin in a locked thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"locked": true
+		},
+		"args": {
+			"action": "pin"
+		},
+		"expect": "THREAD_LOCKED"
+	},
+	{
+		"name": "moderator pins in a locked thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"locked": true
+		},
+		"args": {
+			"action": "pin"
+		},
+		"expect": null
+	},
+	{
+		"name": "edit in an open thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"args": {
+			"action": "edit"
+		},
+		"expect": null
+	},
+	{
+		"name": "edit in an archived thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"action": "edit"
+		},
+		"expect": "THREAD_ARCHIVED"
+	},
+	{
+		"name": "delete in an archived locked thread",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"archived": true,
+			"locked": true
+		},
+		"args": {
+			"action": "delete"
+		},
+		"expect": null
+	},
+	{
+		"name": "timed out delete",
+		"fn": "threadWriteBlock",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"timedOut": true
+		},
+		"args": {
+			"action": "delete"
+		},
+		"expect": null
+	},
+	{
+		"name": "member unarchives an unlocked thread",
+		"fn": "canUnarchive",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"thread": {
+			"archived": true
+		},
+		"expect": null
+	},
+	{
+		"name": "non-member cannot unarchive",
+		"fn": "canUnarchive",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "creator who left unarchives an unlocked thread",
+		"fn": "canUnarchive",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"thread": {
+			"archived": true
+		},
+		"expect": null
+	},
+	{
+		"name": "member without send in threads unarchives an unlocked thread",
+		"fn": "canUnarchive",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"thread": {
+			"archived": true
+		},
+		"expect": null
+	},
+	{
+		"name": "member cannot unarchive a locked thread",
+		"fn": "canUnarchive",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"thread": {
+			"archived": true,
+			"locked": true
+		},
+		"expect": "THREAD_LOCKED"
+	},
+	{
+		"name": "moderator unarchives a locked thread",
+		"fn": "canUnarchive",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"archived": true,
+			"locked": true
+		},
+		"expect": null
+	},
+	{
+		"name": "timed out member cannot unarchive",
+		"fn": "canUnarchive",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true,
+			"timedOut": true
+		},
+		"thread": {
+			"archived": true
+		},
+		"expect": "COMMUNICATION_DISABLED"
+	},
+	{
+		"name": "thread owner renames",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"args": {
+			"patch": {
+				"name": "x"
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "other member cannot rename",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"args": {
+			"patch": {
+				"name": "x"
+			}
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "moderator renames",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"args": {
+			"patch": {
+				"name": "x"
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "thread owner changes auto archive",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"args": {
+			"patch": {
+				"auto_archive_duration": 60
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "thread owner archives",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"args": {
+			"patch": {
+				"archived": true
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "member cannot archive",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"args": {
+			"patch": {
+				"archived": true
+			}
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "member unarchives through patch",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"patch": {
+				"archived": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "non-member cannot unarchive through patch",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"patch": {
+				"archived": false
+			}
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "creator who left unarchives through patch",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"patch": {
+				"archived": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "member without send in threads unarchives through patch",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"patch": {
+				"archived": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "member cannot unarchive a locked thread through patch",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"thread": {
+			"archived": true,
+			"locked": true
+		},
+		"args": {
+			"patch": {
+				"archived": false
+			}
+		},
+		"expect": "THREAD_LOCKED"
+	},
+	{
+		"name": "renaming an archived thread",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"patch": {
+				"name": "x"
+			}
+		},
+		"expect": "THREAD_ARCHIVED"
+	},
+	{
+		"name": "renaming while unarchiving",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"patch": {
+				"name": "x",
+				"archived": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "thread owner locks",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"args": {
+			"patch": {
+				"locked": true
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "thread owner cannot unlock",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"thread": {
+			"locked": true
+		},
+		"args": {
+			"patch": {
+				"locked": false
+			}
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "member cannot lock",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"args": {
+			"patch": {
+				"locked": true
+			}
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "moderator unlocks",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"locked": true
+		},
+		"args": {
+			"patch": {
+				"locked": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "thread owner renames a locked thread",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"thread": {
+			"locked": true
+		},
+		"args": {
+			"patch": {
+				"name": "x"
+			}
+		},
+		"expect": "THREAD_LOCKED"
+	},
+	{
+		"name": "thread owner changes slowmode",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"args": {
+			"patch": {
+				"rate_limit_per_user": 10
+			}
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "moderator changes slowmode",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"args": {
+			"patch": {
+				"rate_limit_per_user": 10
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "thread owner changes invitable",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"thread": {
+			"type": 12
+		},
+		"args": {
+			"patch": {
+				"invitable": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "member cannot change invitable",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"thread": {
+			"type": 12
+		},
+		"args": {
+			"patch": {
+				"invitable": false
+			}
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "thread owner cannot pin",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"args": {
+			"patch": {
+				"flags": 2
+			},
+			"currentFlags": 0
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "unchanged flags need nothing",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"args": {
+			"patch": {
+				"flags": 2
+			},
+			"currentFlags": 2
+		},
+		"expect": null
+	},
+	{
+		"name": "moderator pins",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"args": {
+			"patch": {
+				"flags": 2
+			},
+			"currentFlags": 0
+		},
+		"expect": null
+	},
+	{
+		"name": "timed out thread owner renames",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true,
+			"timedOut": true
+		},
+		"args": {
+			"patch": {
+				"name": "x"
+			}
+		},
+		"expect": "COMMUNICATION_DISABLED"
+	},
+	{
+		"name": "empty patch on an archived thread",
+		"fn": "threadPatchRequirement",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"patch": {}
+		},
+		"expect": null
+	},
+	{
+		"name": "thread owner sets plain tags",
+		"fn": "canSetTags",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"args": {
+			"touchesModeratedTag": false
+		},
+		"expect": null
+	},
+	{
+		"name": "thread owner cannot set moderated tags",
+		"fn": "canSetTags",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"args": {
+			"touchesModeratedTag": true
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "moderator sets moderated tags",
+		"fn": "canSetTags",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"args": {
+			"touchesModeratedTag": true
+		},
+		"expect": null
+	},
+	{
+		"name": "member cannot set tags",
+		"fn": "canSetTags",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"args": {
+			"touchesModeratedTag": false
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "join a public thread",
+		"fn": "canJoinThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"]
+		},
+		"expect": null
+	},
+	{
+		"name": "join an archived thread",
+		"fn": "canJoinThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"expect": "THREAD_ARCHIVED"
+	},
+	{
+		"name": "join a locked thread",
+		"fn": "canJoinThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"]
+		},
+		"thread": {
+			"locked": true
+		},
+		"expect": "THREAD_LOCKED"
+	},
+	{
+		"name": "moderator joins a locked thread",
+		"fn": "canJoinThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"locked": true
+		},
+		"expect": null
+	},
+	{
+		"name": "join without parent view",
+		"fn": "canJoinThread",
+		"actor": {
+			"perms": []
+		},
+		"expect": "MISSING_ACCESS"
+	},
+	{
+		"name": "timed out user joins",
+		"fn": "canJoinThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"],
+			"timedOut": true
+		},
+		"expect": null
+	},
+	{
+		"name": "join an announcement thread",
+		"fn": "canJoinThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"]
+		},
+		"thread": {
+			"type": 10
+		},
+		"expect": null
+	},
+	{
+		"name": "member adds to a public thread",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "add without send in threads",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES"]
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": false
+			}
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "add to an archived thread",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": false
+			}
+		},
+		"expect": "THREAD_ARCHIVED"
+	},
+	{
+		"name": "add to a locked thread",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"locked": true
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": false
+			}
+		},
+		"expect": "THREAD_LOCKED"
+	},
+	{
+		"name": "add to an invitable private thread",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"type": 12,
+			"invitable": true
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "add to a non-invitable private thread",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"type": 12,
+			"invitable": false
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": false
+			}
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "moderator adds to a non-invitable private thread",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"type": 12,
+			"invitable": false
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "add a moderator to a non-invitable private thread",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"type": 12,
+			"invitable": false
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": true
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "add a target without parent view",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"args": {
+			"target": {
+				"canViewParent": false,
+				"isModerator": false
+			}
+		},
+		"expect": "MISSING_ACCESS"
+	},
+	{
+		"name": "timed out add",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"timedOut": true
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": false
+			}
+		},
+		"expect": "COMMUNICATION_DISABLED"
+	},
+	{
+		"name": "add to an announcement thread ignores invitable",
+		"fn": "canAddThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"thread": {
+			"type": 10,
+			"invitable": false
+		},
+		"args": {
+			"target": {
+				"canViewParent": true,
+				"isModerator": false
+			}
+		},
+		"expect": null
+	},
+	{
+		"name": "moderator removes",
+		"fn": "canRemoveThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"expect": null
+	},
+	{
+		"name": "private thread owner removes",
+		"fn": "canRemoveThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"thread": {
+			"type": 12
+		},
+		"expect": null
+	},
+	{
+		"name": "public thread owner cannot remove",
+		"fn": "canRemoveThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "remove from an archived thread",
+		"fn": "canRemoveThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"thread": {
+			"archived": true
+		},
+		"expect": "THREAD_ARCHIVED"
+	},
+	{
+		"name": "timed out moderator removes",
+		"fn": "canRemoveThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"],
+			"timedOut": true
+		},
+		"expect": "COMMUNICATION_DISABLED"
+	},
+	{
+		"name": "announcement thread owner cannot remove",
+		"fn": "canRemoveThreadMember",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"thread": {
+			"type": 10
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "member leaves",
+		"fn": "canLeave",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"expect": null
+	},
+	{
+		"name": "non-member leaves",
+		"fn": "canLeave",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"expect": "UNKNOWN_THREAD_MEMBER"
+	},
+	{
+		"name": "leave an archived thread",
+		"fn": "canLeave",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true
+		},
+		"thread": {
+			"archived": true
+		},
+		"expect": "THREAD_ARCHIVED"
+	},
+	{
+		"name": "timed out member leaves",
+		"fn": "canLeave",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isMember": true,
+			"timedOut": true
+		},
+		"expect": null
+	},
+	{
+		"name": "moderator deletes",
+		"fn": "canDeleteThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"expect": null
+	},
+	{
+		"name": "thread owner cannot delete",
+		"fn": "canDeleteThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY"],
+			"isThreadOwner": true
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "timed out moderator deletes",
+		"fn": "canDeleteThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES_IN_THREADS", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"],
+			"timedOut": true
+		},
+		"expect": "COMMUNICATION_DISABLED"
+	},
+	{
+		"name": "administrator deletes",
+		"fn": "canDeleteThread",
+		"actor": {
+			"perms": ["ADMINISTRATOR"]
+		},
+		"expect": null
+	},
+	{
+		"name": "create from a message",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "CREATE_PUBLIC_THREADS", "READ_MESSAGE_HISTORY"]
+		},
+		"args": {
+			"kind": "from_message"
+		},
+		"expect": null
+	},
+	{
+		"name": "create from a message without history",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "CREATE_PUBLIC_THREADS"]
+		},
+		"args": {
+			"kind": "from_message"
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "create a public thread",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "CREATE_PUBLIC_THREADS"]
+		},
+		"args": {
+			"kind": "public"
+		},
+		"expect": null
+	},
+	{
+		"name": "create a public thread without the bit",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES"]
+		},
+		"args": {
+			"kind": "public"
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "create a private thread",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "CREATE_PRIVATE_THREADS"]
+		},
+		"args": {
+			"kind": "private"
+		},
+		"expect": null
+	},
+	{
+		"name": "create a private thread with only the public bit",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "CREATE_PUBLIC_THREADS"]
+		},
+		"args": {
+			"kind": "private"
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "forum post with send messages",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "SEND_MESSAGES"]
+		},
+		"args": {
+			"kind": "forum_post"
+		},
+		"expect": null
+	},
+	{
+		"name": "forum post ignores create public threads",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "CREATE_PUBLIC_THREADS", "SEND_MESSAGES_IN_THREADS"]
+		},
+		"args": {
+			"kind": "forum_post"
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "timed out create",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "CREATE_PUBLIC_THREADS"],
+			"timedOut": true
+		},
+		"args": {
+			"kind": "public"
+		},
+		"expect": "COMMUNICATION_DISABLED"
+	},
+	{
+		"name": "create without parent view",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["CREATE_PUBLIC_THREADS"]
+		},
+		"args": {
+			"kind": "public"
+		},
+		"expect": "MISSING_ACCESS"
+	},
+	{
+		"name": "administrator creates a private thread",
+		"fn": "canCreateThread",
+		"actor": {
+			"perms": ["ADMINISTRATOR"]
+		},
+		"args": {
+			"kind": "private"
+		},
+		"expect": null
+	},
+	{
+		"name": "public archived list",
+		"fn": "canListArchivedThreads",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "READ_MESSAGE_HISTORY"]
+		},
+		"args": {
+			"privateThreads": false
+		},
+		"expect": null
+	},
+	{
+		"name": "public archived list without history",
+		"fn": "canListArchivedThreads",
+		"actor": {
+			"perms": ["VIEW_CHANNEL"]
+		},
+		"args": {
+			"privateThreads": false
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "private archived list for members",
+		"fn": "canListArchivedThreads",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "READ_MESSAGE_HISTORY"]
+		},
+		"args": {
+			"privateThreads": true
+		},
+		"expect": "MISSING_PERMISSIONS"
+	},
+	{
+		"name": "private archived list for moderators",
+		"fn": "canListArchivedThreads",
+		"actor": {
+			"perms": ["VIEW_CHANNEL", "READ_MESSAGE_HISTORY", "MANAGE_THREADS"]
+		},
+		"args": {
+			"privateThreads": true
+		},
+		"expect": null
+	}
+]

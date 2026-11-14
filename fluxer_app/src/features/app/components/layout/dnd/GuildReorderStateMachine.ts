@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {
-	DNDReorderState,
 	GuildDragItem,
 	GuildDropPosition,
 	GuildDropResult,
@@ -16,16 +15,6 @@ import {
 	type VerticalDropRect,
 } from '@app/features/ui/dnd/DropGeometry';
 import {RelativePosition} from '@app/features/ui/RelativePosition';
-import {
-	assign,
-	initialTransition,
-	type MachineSnapshot,
-	type MetaObject,
-	type NonReducibleUnknown,
-	type StateSchema,
-	setup,
-	transition,
-} from 'xstate';
 
 export const GuildReorderTargetKind = Object.freeze({
 	FOLDER: 'folder',
@@ -59,47 +48,26 @@ export type GuildReorderTarget =
 
 export type GuildFolderReorderIndicator = VerticalEdge | typeof DropPlacement.INSIDE;
 export type GuildItemReorderIndicator = VerticalEdge | typeof DropPlacement.COMBINE;
-export type GuildReorderIndicator = GuildFolderReorderIndicator | GuildItemReorderIndicator;
+type GuildReorderIndicator = GuildFolderReorderIndicator | GuildItemReorderIndicator;
 
-export interface GuildReorderIntent {
+interface GuildReorderIntent {
 	indicator: GuildReorderIndicator;
 	combineSourceGuildId: string | null;
 	result: GuildDropResult;
 }
 
-export const GuildReorderBlockedReason = Object.freeze({
+const GuildReorderBlockedReason = Object.freeze({
 	SAME_SOURCE_AND_TARGET: 'same-source-and-target',
 	FOLDER_INTO_FOLDER_GUILD: 'folder-into-folder-guild',
 	EMPTY_TARGET_RECT: 'empty-target-rect',
 } as const);
 
-export type GuildReorderBlockedReason = (typeof GuildReorderBlockedReason)[keyof typeof GuildReorderBlockedReason];
+type GuildReorderBlockedReason = (typeof GuildReorderBlockedReason)[keyof typeof GuildReorderBlockedReason];
 
-export interface GuildReorderMachineContext {
+interface GuildReorderHoverResolution {
 	intent: GuildReorderIntent | null;
 	blockedReason: GuildReorderBlockedReason | null;
 }
-
-export type GuildReorderEvent =
-	| {
-			type: 'drag.hover';
-			item: GuildDragItem;
-			target: GuildReorderTarget;
-			clientOffset: VerticalDropPoint;
-			targetRect: VerticalDropRect;
-	  }
-	| {type: 'drag.leave'}
-	| {type: 'drag.drop'};
-
-export interface GuildReorderHoverResolution {
-	intent: GuildReorderIntent | null;
-	blockedReason: GuildReorderBlockedReason | null;
-}
-
-const initialGuildReorderMachineContext: GuildReorderMachineContext = {
-	intent: null,
-	blockedReason: null,
-};
 
 interface CreateGuildDropResultRequest {
 	readonly target: GuildReorderTarget;
@@ -140,14 +108,9 @@ interface ResolveTopLevelGuildTargetIntentRequest {
 	readonly targetRect: VerticalDropRect;
 }
 
-export interface GuildReorderHoverRequest extends GuildReorderDropQuery {
+interface GuildReorderHoverRequest extends GuildReorderDropQuery {
 	readonly clientOffset: VerticalDropPoint;
 	readonly targetRect: VerticalDropRect;
-}
-
-interface TransitionGuildReorderSnapshotRequest {
-	readonly snapshot: GuildReorderSnapshot;
-	readonly event: GuildReorderEvent;
 }
 
 function createDropResult({target, position}: CreateGuildDropResultRequest): GuildDropResult {
@@ -294,7 +257,7 @@ function resolveTopLevelGuildTargetIntent({
 	});
 }
 
-export function resolveGuildReorderHover({
+function resolveGuildReorderHover({
 	item,
 	target,
 	clientOffset,
@@ -316,95 +279,7 @@ export function resolveGuildReorderHover({
 	}
 }
 
-const guildReorderStateMachine = setup({
-	types: {} as {
-		context: GuildReorderMachineContext;
-		events: GuildReorderEvent;
-	},
-	guards: {
-		hasIntent: ({context}) => context.intent != null,
-	},
-	actions: {
-		resolveHover: assign(({event}) => {
-			if (event.type !== 'drag.hover') return initialGuildReorderMachineContext;
-			return resolveGuildReorderHover({
-				item: event.item,
-				target: event.target,
-				clientOffset: event.clientOffset,
-				targetRect: event.targetRect,
-			});
-		}),
-		clear: assign(() => initialGuildReorderMachineContext),
-	},
-}).createMachine({
-	id: 'guildReorder',
-	initial: 'idle',
-	context: initialGuildReorderMachineContext,
-	states: {
-		idle: {
-			on: {
-				'drag.hover': {target: 'resolving', actions: 'resolveHover'},
-				'drag.leave': {actions: 'clear'},
-				'drag.drop': {actions: 'clear'},
-			},
-		},
-		resolving: {
-			always: [{target: 'targeting', guard: 'hasIntent'}, {target: 'blocked'}],
-		},
-		targeting: {
-			on: {
-				'drag.hover': {target: 'resolving', actions: 'resolveHover'},
-				'drag.leave': {target: 'idle', actions: 'clear'},
-				'drag.drop': {target: 'idle', actions: 'clear'},
-			},
-		},
-		blocked: {
-			on: {
-				'drag.hover': {target: 'resolving', actions: 'resolveHover'},
-				'drag.leave': {target: 'idle', actions: 'clear'},
-				'drag.drop': {target: 'idle', actions: 'clear'},
-			},
-		},
-	},
-});
-
-export type GuildReorderSnapshot = MachineSnapshot<
-	GuildReorderMachineContext,
-	GuildReorderEvent,
-	Record<string, never>,
-	DNDReorderState,
-	string,
-	NonReducibleUnknown,
-	MetaObject,
-	StateSchema
->;
-
-export function createGuildReorderSnapshot(): GuildReorderSnapshot {
-	return initialTransition(guildReorderStateMachine)[0];
-}
-
-export function transitionGuildReorderSnapshot({
-	snapshot,
-	event,
-}: TransitionGuildReorderSnapshotRequest): GuildReorderSnapshot {
-	return transition(guildReorderStateMachine, snapshot, event)[0];
-}
-
-function selectGuildReorderIntent(request: GuildReorderHoverRequest): GuildReorderIntent | null {
-	const snapshot = transitionGuildReorderSnapshot({
-		snapshot: createGuildReorderSnapshot(),
-		event: {
-			type: 'drag.hover',
-			item: request.item,
-			target: request.target,
-			clientOffset: request.clientOffset,
-			targetRect: request.targetRect,
-		},
-	});
-	return snapshot.context.intent;
-}
-
 export const GuildReorderStateMachine = Object.freeze({
 	canDrop: canGuildDropOnTarget,
-	selectIntent: selectGuildReorderIntent,
+	selectIntent: (request: GuildReorderHoverRequest) => resolveGuildReorderHover(request).intent,
 });

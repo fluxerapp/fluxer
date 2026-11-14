@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createDmChannel, createFriendship} from '../../channel/tests/ChannelTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createDmChannel, createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	acceptFriendRequest,
 	assertRelationshipId,
@@ -16,7 +14,9 @@ import {
 	listRelationships,
 	removeRelationship,
 	sendFriendRequest,
-} from './RelationshipTestUtils';
+} from '@app/api/user/tests/RelationshipTestUtils';
+import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 describe('RelationshipBlocking', () => {
 	let harness: ApiTestHarness;
@@ -44,6 +44,22 @@ describe('RelationshipBlocking', () => {
 		assertRelationshipType(aliceRelsAfterBlock[0]!, RelationshipTypes.BLOCKED);
 		const {json: bobRelsAfterBlock} = await listRelationships(harness, bob.token);
 		expect(bobRelsAfterBlock).toHaveLength(0);
+	});
+	test('unblocking does not turn an old request into a friendship', async () => {
+		const alice = await createTestAccount(harness);
+		const bob = await createTestAccount(harness);
+		await sendFriendRequest(harness, bob.token, alice.userId);
+		await blockUser(harness, alice.token, bob.userId);
+		await removeRelationship(harness, alice.token, bob.userId);
+		const {json: bobRelsAfterUnblock} = await listRelationships(harness, bob.token);
+		expect(bobRelsAfterUnblock).toHaveLength(0);
+		await sendFriendRequest(harness, alice.token, bob.userId);
+		const {json: aliceRels} = await listRelationships(harness, alice.token);
+		const {json: bobRels} = await listRelationships(harness, bob.token);
+		expect(aliceRels).toHaveLength(1);
+		assertRelationshipType(aliceRels[0]!, RelationshipTypes.OUTGOING_REQUEST);
+		expect(bobRels).toHaveLength(1);
+		assertRelationshipType(bobRels[0]!, RelationshipTypes.INCOMING_REQUEST);
 	});
 	test('blocked user cannot send friend request', async () => {
 		const alice = await createTestAccount(harness);
@@ -84,20 +100,6 @@ describe('RelationshipBlocking', () => {
 		expect(aliceRels).toHaveLength(1);
 		assertRelationshipId(aliceRels[0]!, bob.userId);
 		assertRelationshipType(aliceRels[0]!, RelationshipTypes.FRIEND);
-	});
-	test('unblock user works correctly', async () => {
-		const alice = await createTestAccount(harness);
-		const bob = await createTestAccount(harness);
-		const {json: blocked} = await blockUser(harness, alice.token, bob.userId);
-		assertRelationshipType(blocked, RelationshipTypes.BLOCKED);
-		const {json: aliceRelsBeforeUnblock} = await listRelationships(harness, alice.token);
-		expect(aliceRelsBeforeUnblock).toHaveLength(1);
-		assertRelationshipType(aliceRelsBeforeUnblock[0]!, RelationshipTypes.BLOCKED);
-		await removeRelationship(harness, alice.token, bob.userId);
-		const {json: aliceRelsAfterUnblock} = await listRelationships(harness, alice.token);
-		expect(aliceRelsAfterUnblock).toHaveLength(0);
-		const {json: outgoing} = await sendFriendRequest(harness, bob.token, alice.userId);
-		assertRelationshipType(outgoing, RelationshipTypes.OUTGOING_REQUEST);
 	});
 	test('cannot send DM to blocked user', async () => {
 		const alice = await createTestAccount(harness);

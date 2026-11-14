@@ -2,6 +2,7 @@
 
 import {EVERYONE_MENTION, HERE_MENTION, ROLES_MENTION} from '@app/features/app/config/I18nDisplayConstants';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ThreadPermissionFlags} from '@fluxer/constants/src/ThreadPermissionUtils';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -140,7 +141,7 @@ const PIN_MESSAGES_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 		'Permission description in the role/permission editor for the Pin Messages permission at community scope. Covers messages from anyone, not only their own.',
 });
 const EMBED_LINKS_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Show embedded previews for links they send.',
+	message: 'Show embedded previews for links sent.',
 	comment:
 		'Permission description in the role/permission editor for the Embed Links permission at community scope. The preview is the card rendered under a message that contains a link.',
 });
@@ -150,7 +151,7 @@ const ATTACH_FILES_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 });
 const READ_MESSAGE_HISTORY_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		'Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open.',
+		'Read messages sent before opening a channel. Without this permission, members only see messages that arrive while they have the channel open.',
 	comment:
 		'Permission description in the role/permission editor for the Read Message History permission at community scope. Without the permission the member sees only messages that arrive while the channel is open in front of them.',
 });
@@ -164,7 +165,8 @@ const CONNECT_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	comment: 'Permission description in the role/permission editor for the Connect permission at community scope.',
 });
 const SPEAK_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Talk in voice channels. Without it, members stay muted until someone with Mute members unmutes them.',
+	message:
+		'Talk in voice channels. Without this permission, members stay muted until someone with the "Mute members" permission unmutes them.',
 	comment:
 		'Permission description in the role/permission editor for the Speak permission at community scope. "Mute members" is another permission in this same editor, so match the wording used for its name.',
 });
@@ -237,7 +239,7 @@ const PIN_MESSAGES_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 		'Permission description in the channel-scoped permissions editor for the Pin Messages permission. Covers messages from anyone, not only their own.',
 });
 const EMBED_LINKS_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Show embedded previews for links they send in this channel.',
+	message: 'Show embedded previews for links sent in this channel.',
 	comment:
 		'Permission description in the channel-scoped permissions editor for the Embed Links permission. The preview is the card rendered under a message that contains a link.',
 });
@@ -247,7 +249,7 @@ const ATTACH_FILES_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 });
 const READ_MESSAGE_HISTORY_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		'Read messages sent in this channel before they opened it. Without it, they only see messages that arrive while it is open.',
+		'Read messages sent in this channel before opening it. Without this permission, members only see messages that arrive while they have it open.',
 	comment:
 		'Permission description in the channel-scoped permissions editor for the Read Message History permission. Without the permission the member sees only messages that arrive while the channel is open in front of them.',
 });
@@ -283,7 +285,8 @@ const CONNECT_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 		'Permission description in the channel-scoped permissions editor for the Connect permission. "View channel" is another permission in this same editor, so match the wording used for its name. The placeholder renders the literal @everyone role name and must not be translated.',
 });
 const SPEAK_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Talk in this voice channel. Without it, members stay muted until someone with Mute members unmutes them.',
+	message:
+		'Talk in this voice channel. Without this permission, members stay muted until someone with the "Mute members" permission unmutes them.',
 	comment:
 		'Permission description in the channel-scoped permissions editor for the Speak permission. "Mute members" is another permission in this same editor, so match the wording used for its name.',
 });
@@ -516,7 +519,43 @@ const PERMISSION_CATEGORY_DESCRIPTORS: Record<PermissionCategory, MessageDescrip
 	audioVideo: AUDIO_AND_VIDEO_DESCRIPTOR,
 	channelManagement: CHANNEL_MANAGEMENT_DESCRIPTOR,
 };
+const MANAGE_THREADS_DESCRIPTOR = msg({
+	message: 'Manage threads',
+	comment: 'Permission name. Lets members rename, close, lock and delete threads and see private threads.',
+});
+const CREATE_PUBLIC_THREADS_DESCRIPTOR = msg({
+	message: 'Create public threads',
+	comment: 'Permission name. Lets members start threads everyone in the channel can see.',
+});
+const CREATE_PRIVATE_THREADS_DESCRIPTOR = msg({
+	message: 'Create private threads',
+	comment: 'Permission name. Lets members start invite-only threads.',
+});
+const SEND_MESSAGES_IN_THREADS_DESCRIPTOR = msg({
+	message: 'Send messages in threads',
+	comment: 'Permission name. Lets members send messages in threads.',
+});
+const MANAGE_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Allows members to rename, close, lock and delete threads, and to view private threads.',
+	comment: 'Description of the Manage threads permission.',
+});
+const CREATE_PUBLIC_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Allows members to start threads that everyone in the channel can see.',
+	comment: 'Description of the Create public threads permission.',
+});
+const CREATE_PRIVATE_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Allows members to start threads that only invited members and moderators can see.',
+	comment: 'Description of the Create private threads permission.',
+});
+const SEND_MESSAGES_IN_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Allows members to send messages in threads.',
+	comment: 'Description of the Send messages in threads permission.',
+});
 const PERMISSION_TITLE_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
+	[ThreadPermissionFlags.MANAGE_THREADS, MANAGE_THREADS_DESCRIPTOR],
+	[ThreadPermissionFlags.CREATE_PUBLIC_THREADS, CREATE_PUBLIC_THREADS_DESCRIPTOR],
+	[ThreadPermissionFlags.CREATE_PRIVATE_THREADS, CREATE_PRIVATE_THREADS_DESCRIPTOR],
+	[ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS, SEND_MESSAGES_IN_THREADS_DESCRIPTOR],
 	[Permissions.ADMINISTRATOR, ADMINISTRATOR_DESCRIPTOR],
 	[Permissions.VIEW_AUDIT_LOG, VIEW_ACTIVITY_LOG_DESCRIPTOR],
 	[Permissions.MANAGE_GUILD, MANAGE_COMMUNITY_DESCRIPTOR],
@@ -562,6 +601,10 @@ const PERMISSION_TITLE_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
 	[Permissions.UPDATE_RTC_REGION, SET_VOICE_REGION_DESCRIPTOR],
 ]);
 const PERMISSION_DESCRIPTION_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
+	[ThreadPermissionFlags.MANAGE_THREADS, MANAGE_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[ThreadPermissionFlags.CREATE_PUBLIC_THREADS, CREATE_PUBLIC_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[ThreadPermissionFlags.CREATE_PRIVATE_THREADS, CREATE_PRIVATE_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[ThreadPermissionFlags.SEND_MESSAGES_IN_THREADS, SEND_MESSAGES_IN_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.ADMINISTRATOR, ADMINISTRATOR_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.VIEW_AUDIT_LOG, VIEW_ACTIVITY_LOG_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.MANAGE_GUILD, MANAGE_COMMUNITY_PERMISSION_DESCRIPTION_DESCRIPTOR],

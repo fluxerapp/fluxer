@@ -11,18 +11,18 @@ export type VoiceParticipantMenuSurface =
 	| 'participant-avatar-list'
 	| 'stream-spectator-list';
 
-export type VoiceParticipantVisualSource = 'camera' | 'screen-share';
+type VoiceParticipantVisualSource = 'camera' | 'screen-share';
 
-export interface VoiceParticipantMenuParticipantSource {
+interface VoiceParticipantMenuParticipantSource {
 	kind: 'participant';
 	focusSource?: VoiceParticipantVisualSource;
 }
 
-export interface VoiceParticipantMenuCameraSource {
+interface VoiceParticipantMenuCameraSource {
 	kind: 'camera';
 }
 
-export type VoiceParticipantStreamState =
+type VoiceParticipantStreamState =
 	| {
 			kind: 'own';
 	  }

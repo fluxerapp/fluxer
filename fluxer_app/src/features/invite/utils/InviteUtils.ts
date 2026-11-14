@@ -8,6 +8,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import * as CodeLinkUtils from '@app/features/messaging/utils/CodeLinkUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
+import {isSyncExcludedChannelId} from '@app/features/threads/utils/SyncedPreferenceGuard';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {compareChannelOrdering} from '@fluxer/schema/src/domains/channel/GuildChannelOrdering';
 
@@ -16,6 +17,8 @@ const OFFICIAL_INVITE_URL_BASES = Object.freeze([
 	'https://canary.fluxer.app/invite',
 	'https://web.fluxer.app/invite',
 	'https://web.canary.fluxer.app/invite',
+	'https://fluxer.com/invite',
+	'https://canary.fluxer.com/invite',
 	'https://fluxer.gg',
 	'https://fluxer.gg/invite',
 ]);
@@ -29,7 +32,9 @@ const INVITE_CONFIG: CodeLinkUtils.CodeLinkConfig = {
 	},
 };
 const isLayoutTextChannel = (channel: Channel): boolean =>
-	channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_LINK;
+	channel.type === ChannelTypes.GUILD_TEXT ||
+	channel.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+	channel.type === ChannelTypes.GUILD_LINK;
 const isLayoutVoiceChannel = (channel: Channel): boolean => channel.type === ChannelTypes.GUILD_VOICE;
 
 function getChannelsInChannelListGroupOrder(channels: ReadonlyArray<Channel>): Array<Channel> {
@@ -42,6 +47,10 @@ export function findInvites(content: string | null): Array<string> {
 
 export function findInvite(content: string | null): string | null {
 	return CodeLinkUtils.findCode(content, INVITE_CONFIG);
+}
+
+export function findInviteUrl(url: string | null): string | null {
+	return CodeLinkUtils.findCodeAtUrlStart(url, INVITE_CONFIG);
 }
 
 export function findSpoileredInvites(content: string | null): Array<CodeLinkUtils.CodeLinkMatch> {
@@ -79,7 +88,7 @@ function getChannelsInChannelListOrder(channels: ReadonlyArray<Channel>): Array<
 	];
 }
 
-export function getFirstInvitableChannel(guildId: string): string | undefined {
+function getFirstInvitableChannel(guildId: string): string | undefined {
 	const channels = getChannelsInChannelListOrder(Channels.getGuildChannels(guildId));
 	const invitableChannel = channels.find(
 		(channel) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) && canInviteToChannel(channel.id, channel.guildId),
@@ -110,7 +119,7 @@ export function getDefaultCommunityInviteChannelId(guildId: string): string | un
 	return getInvitableChannelId(guildId, {preferSelectedChannel: false});
 }
 
-export function isChannelVisibleToEveryone(channel: Channel, guild: Guild): boolean {
+function isChannelVisibleToEveryone(channel: Channel, guild: Guild): boolean {
 	const everyoneOverwrite = channel.permissionOverwrites[guild.id];
 	if (!everyoneOverwrite) {
 		return true;
@@ -118,14 +127,12 @@ export function isChannelVisibleToEveryone(channel: Channel, guild: Guild): bool
 	return (everyoneOverwrite.deny & Permissions.VIEW_CHANNEL) === 0n;
 }
 
-export interface InviteCapability {
-	canInvite: boolean;
-	useVanityUrl: boolean;
-	vanityUrlCode: string | null;
-}
+export type InviteCapability =
+	| {canInvite: boolean; useVanityUrl: false; vanityUrlCode: null}
+	| {canInvite: true; useVanityUrl: true; vanityUrlCode: string};
 
 export function getInviteCapability(channelId: string | undefined, guildId: string | undefined): InviteCapability {
-	if (!channelId || !guildId) {
+	if (!channelId || !guildId || isSyncExcludedChannelId(channelId)) {
 		return {canInvite: false, useVanityUrl: false, vanityUrlCode: null};
 	}
 	const canCreateInvite = Permission.can(Permissions.CREATE_INSTANT_INVITE, {channelId, guildId});

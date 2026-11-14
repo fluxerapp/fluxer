@@ -8,8 +8,7 @@
     get_local_node_id/0,
     get_local_node_stats/0,
     get_local_memory_stats/1,
-    get_local_voice_state_counts/0,
-    get_local_active_voice_rooms/0
+    get_local_voice_state_counts/0
 ]).
 
 -define(DEFAULT_MEMORY_STATS_LIMIT, 100).
@@ -31,9 +30,6 @@ execute_method(<<"process.node_stats">>, _Params) ->
 execute_method(<<"process.voice_state_counts">>, _Params) ->
     ActiveNodes = voice_state_count_nodes(),
     gateway_rpc_misc_presence:collect_and_aggregate_voice_state_counts(ActiveNodes);
-execute_method(<<"process.active_voice_rooms">>, _Params) ->
-    ActiveNodes = gateway_node_router:active_nodes(),
-    gateway_rpc_misc_push:collect_and_aggregate_active_voice_rooms(ActiveNodes);
 execute_method(Method, _Params) ->
     gateway_rpc_error:raise(<<"Unknown method: ", Method/binary>>).
 
@@ -52,10 +48,6 @@ get_local_memory_stats(Limit) ->
 -spec get_local_voice_state_counts() -> map().
 get_local_voice_state_counts() ->
     gateway_rpc_misc_presence:get_local_voice_state_counts().
-
--spec get_local_active_voice_rooms() -> map().
-get_local_active_voice_rooms() ->
-    gateway_rpc_misc_push:get_local_active_voice_rooms().
 
 -spec parse_memory_stats_limit(map()) -> pos_integer().
 parse_memory_stats_limit(Params) ->

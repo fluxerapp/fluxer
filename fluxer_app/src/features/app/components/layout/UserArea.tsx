@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserAreaPopout} from '@app/features/app/components/floating/UserAreaPopout';
 import styles from '@app/features/app/components/layout/UserArea.module.css';
 import {
 	selectUserAreaMicrophoneState,
@@ -11,15 +10,15 @@ import {reportSkeletonVoicePresence} from '@app/features/app/components/skeleton
 import {getStatusTypeLabel} from '@app/features/app/constants/AppConstants';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import Keybind from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import {getPushToTalkHoldLabel} from '@app/features/input/utils/PushToTalkHint';
+import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
+import NetworkReachability from '@app/features/platform/state/NetworkReachability';
 import Presence from '@app/features/presence/state/Presence';
 import {SettingsContextMenu} from '@app/features/ui/action_menu/SettingsContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {modal} from '@app/features/ui/commands/ModalCommands';
 import {FocusRingWrapper} from '@app/features/ui/components/FocusRingWrapper';
+import {NotificationDot} from '@app/features/ui/components/NotificationDot';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePopout} from '@app/features/ui/hooks/usePopout';
@@ -27,14 +26,18 @@ import {TooltipWithKeybind} from '@app/features/ui/keybind_hint/KeybindHint';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
-import {USER_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/SettingsConstants';
+import {openUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
+import {
+	USER_SETTINGS_LABEL_DESCRIPTOR,
+	USER_SETTINGS_PRIVACY_REVIEW_NEEDED_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/SettingsConstants';
 import type {User} from '@app/features/user/models/User';
+import UserSettings from '@app/features/user/state/UserSettings';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {LazyVoiceAudioSettingsMenu} from '@app/features/voice/components/LazyVoiceComponents';
 import {VoiceConnectionStatus} from '@app/features/voice/components/VoiceConnectionStatus';
-import {VoiceAudioSettingsMenu} from '@app/features/voice/components/VoiceSettingsMenus';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import {
@@ -44,12 +47,18 @@ import {
 	VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR,
 	VOICE_UNDEAFEN_SELF_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {GearIcon, MicrophoneIcon, MicrophoneSlashIcon, SpeakerHighIcon, SpeakerSlashIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useEffect, useRef} from 'react';
+
+const UserAreaPopout = createNamedLoadableComponent<Record<string, never>>({
+	displayName: 'UserAreaPopout',
+	load: async () => (await import('@app/features/app/components/floating/UserAreaPopout')).UserAreaPopout,
+});
 
 const PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR = msg({
 	message: 'Push to talk is on. Hold {pushToTalkHint} to speak.',
@@ -74,7 +83,7 @@ const OPEN_USER_MENU_FOR_DESCRIPTOR = msg({
 });
 const VOICE_CONNECTION_HEIGHT_VARIABLE = '--layout-voice-connection-height';
 
-function getResizeObserverEntryBlockSize(entry: ResizeObserverEntry): number {
+export function getResizeObserverEntryBlockSize(entry: ResizeObserverEntry): number {
 	const borderBoxSize = entry.borderBoxSize;
 	const firstBorderBoxSize = Array.isArray(borderBoxSize) ? borderBoxSize[0] : borderBoxSize;
 	return firstBorderBoxSize?.blockSize ?? entry.contentRect.height;
@@ -102,7 +111,7 @@ const UserAreaInner = observer(
 	}: UserAreaInnerProps) => {
 		const {i18n} = useLingui();
 		const {isOpen, openProps} = usePopout('user-area');
-		const status = Presence.getStatus(user.id);
+		const status = NetworkReachability.online ? Presence.getStatus(user.id) : StatusTypes.OFFLINE;
 		const customStatus = Presence.getCustomStatus(user.id);
 		const {inputDevices, outputDevices} = useMediaDevices();
 		const voiceConnectionRef = useRef<HTMLDivElement | null>(null);
@@ -120,7 +129,7 @@ const UserAreaInner = observer(
 			event.preventDefault();
 			event.stopPropagation();
 			ContextMenuCommands.openFromEvent(event, (props) => (
-				<VoiceAudioSettingsMenu
+				<LazyVoiceAudioSettingsMenu
 					inputDevices={inputDevices}
 					outputDevices={outputDevices}
 					onClose={props.onClose}
@@ -132,7 +141,7 @@ const UserAreaInner = observer(
 			event.preventDefault();
 			event.stopPropagation();
 			ContextMenuCommands.openFromEvent(event, (props) => (
-				<VoiceAudioSettingsMenu
+				<LazyVoiceAudioSettingsMenu
 					inputDevices={inputDevices}
 					outputDevices={outputDevices}
 					onClose={props.onClose}
@@ -140,14 +149,12 @@ const UserAreaInner = observer(
 				/>
 			));
 		};
-		const handleSettingsClick = () => {
-			ModalCommands.push(
-				modal(() => <UserSettingsModal data-flx="app.user-area.handle-settings-click.user-settings-modal" />),
-			);
-		};
-		const storeConnectedChannelId = MediaEngine.channelId;
-		const forceShowVoiceConnection = DeveloperOptions.forceShowVoiceConnection;
-		const hasVoiceConnection = !MobileLayout.enabled && (forceShowVoiceConnection || !!storeConnectedChannelId);
+		const privacySetupPending = UserSettings.isPrivacySetupPending();
+		const settingsLabel = privacySetupPending
+			? i18n._(USER_SETTINGS_PRIVACY_REVIEW_NEEDED_DESCRIPTOR)
+			: i18n._(USER_SETTINGS_LABEL_DESCRIPTOR);
+		const storeConnectedChannelId = VoiceRuntime.channelId;
+		const hasVoiceConnection = !MobileLayout.enabled && !!storeConnectedChannelId;
 		useEffect(() => {
 			const root = document.documentElement;
 			const clearHeight = () => {
@@ -205,9 +212,8 @@ const UserAreaInner = observer(
 			};
 		}, [hasVoiceConnection]);
 		const wrapperClassName = styles.userAreaInnerWrapper;
-		const pushToTalkCombo = Keybind.getByAction('voice_push_to_talk').combo;
-		const pushToTalkHint = formatKeyCombo(pushToTalkCombo);
 		const isPushToTalkEffective = Keybind.isPushToTalkEffective();
+		const isSelfMuted = isMuted || muteReason === 'self';
 		const microphoneState = selectUserAreaMicrophoneState({
 			effectiveAudioMuted: isMuted,
 			effectiveAudioDeafened: isDeafened,
@@ -216,7 +222,6 @@ const UserAreaInner = observer(
 			isPermissionMuted,
 			muteReason,
 			isPushToTalkEffective,
-			isPushToTalkHeld: Keybind.pushToTalkHeld,
 			isPushToMuteEffective: Keybind.isPushToMuteEffective(),
 			isPushToMuteHeld: Keybind.pushToMuteHeld,
 		});
@@ -226,7 +231,8 @@ const UserAreaInner = observer(
 			if (isGuildDeafened) return getVoiceDeafenedByModeratorsStatusLabel(i18n, true);
 			if (isGuildMuted) return i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR);
 			if (isPermissionMuted || muteReason === 'permission') return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
-			if (isPushToTalkEffective) return i18n._(PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR, {pushToTalkHint});
+			if (isPushToTalkEffective && !isSelfMuted)
+				return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
 			if (effectiveMuted) return i18n._(UNMUTE_MICROPHONE_DESCRIPTOR);
 			return i18n._(MUTE_MICROPHONE_DESCRIPTOR);
 		})();
@@ -234,7 +240,8 @@ const UserAreaInner = observer(
 			if (isGuildDeafened) return getVoiceDeafenedByModeratorsStatusLabel(i18n, true);
 			if (isGuildMuted) return i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR);
 			if (isPermissionMuted || muteReason === 'permission') return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
-			if (isPushToTalkEffective) return i18n._(PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR, {pushToTalkHint});
+			if (isPushToTalkEffective && !isSelfMuted)
+				return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
 			if (effectiveMuted) return i18n._(UNMUTE_MICROPHONE_DESCRIPTOR);
 			return i18n._(MUTE_MICROPHONE_DESCRIPTOR);
 		})();
@@ -279,7 +286,12 @@ const UserAreaInner = observer(
 								tabIndex={0}
 								data-flx="app.user-area.user-area-inner.user-info"
 							>
-								<StatusAwareAvatar user={user} size={32} data-flx="app.user-area.user-area-inner.status-aware-avatar" />
+								<StatusAwareAvatar
+									user={user}
+									size={32}
+									status={NetworkReachability.online ? undefined : StatusTypes.OFFLINE}
+									data-flx="app.user-area.user-area-inner.status-aware-avatar"
+								/>
 								<div className={styles.userInfoText} data-flx="app.user-area.user-area-inner.user-info-text">
 									<div className={styles.userName} data-flx="app.user-area.user-area-inner.user-name">
 										{displayName}
@@ -349,7 +361,7 @@ const UserAreaInner = observer(
 										onClick={isMuteToggleLocked ? undefined : () => VoiceStateCommands.toggleSelfMute(null)}
 										onContextMenu={handleMicContextMenu}
 										disabled={isMuteToggleLocked}
-										data-flx="app.user-area.user-area-inner.control-button.undefined"
+										data-flx="app.user-area.user-area-inner.control-button.mute"
 									>
 										{effectiveMuted ? (
 											<MicrophoneSlashIcon
@@ -399,7 +411,7 @@ const UserAreaInner = observer(
 										onClick={isGuildDeafened ? undefined : () => VoiceStateCommands.toggleSelfDeaf(null)}
 										onContextMenu={handleSpeakerContextMenu}
 										disabled={isGuildDeafened}
-										data-flx="app.user-area.user-area-inner.control-button.undefined--2"
+										data-flx="app.user-area.user-area-inner.control-button.deafen"
 									>
 										{isDeafened || isGuildDeafened ? (
 											<SpeakerSlashIcon
@@ -419,7 +431,7 @@ const UserAreaInner = observer(
 						<Tooltip
 							text={() => (
 								<TooltipWithKeybind
-									label={i18n._(USER_SETTINGS_LABEL_DESCRIPTOR)}
+									label={settingsLabel}
 									action="system_toggle_settings"
 									data-flx="app.user-area.user-area-inner.tooltip-with-keybind--3"
 								/>
@@ -430,9 +442,9 @@ const UserAreaInner = observer(
 								<button
 									ref={settingsButtonRef}
 									type="button"
-									aria-label={i18n._(USER_SETTINGS_LABEL_DESCRIPTOR)}
+									aria-label={settingsLabel}
 									className={clsx(styles.controlButton, settingsContextMenuOpen && styles.contextMenuHover)}
-									onClick={handleSettingsClick}
+									onClick={openUserSettingsModal}
 									onContextMenu={(event) => {
 										event.preventDefault();
 										event.stopPropagation();
@@ -445,7 +457,16 @@ const UserAreaInner = observer(
 									}}
 									data-flx="app.user-area.user-area-inner.control-button.settings-click"
 								>
-									<GearIcon className={styles.controlIcon} data-flx="app.user-area.user-area-inner.control-icon--5" />
+									<GearIcon
+										className={clsx(styles.controlIcon, privacySetupPending && styles.controlIconWithDot)}
+										data-flx="app.user-area.user-area-inner.control-icon--5"
+									/>
+									{privacySetupPending && (
+										<NotificationDot
+											className={styles.controlDot}
+											data-flx="app.user-area.user-area-inner.privacy-review-dot"
+										/>
+									)}
 								</button>
 							</FocusRing>
 						</Tooltip>
@@ -456,8 +477,8 @@ const UserAreaInner = observer(
 	},
 );
 export const UserArea = observer(function UserArea({user}: {user: User}) {
-	const connectedGuildId = MediaEngine.guildId;
-	const voiceState = MediaEngine.getVoiceState(connectedGuildId);
+	const connectedGuildId = VoiceRuntime.guildId;
+	const voiceState = VoiceRuntime.getVoiceState(connectedGuildId);
 	const localSelfMute = LocalVoiceState.getSelfMute();
 	const localSelfDeaf = LocalVoiceState.getSelfDeaf();
 	const isMobile = MobileLayout.isMobileLayout();
@@ -466,7 +487,7 @@ export const UserArea = observer(function UserArea({user}: {user: User}) {
 	}
 	const isGuildMuted = voiceState?.mute ?? false;
 	const isGuildDeafened = voiceState?.deaf ?? false;
-	const muteReason = MediaEngine.getMuteReason(voiceState);
+	const muteReason = VoiceRuntime.getMuteReason(voiceState);
 	const isPermissionMuted = muteReason === 'permission';
 	const effectiveAudioState = getEffectiveAudioState({
 		selfMute: localSelfMute,

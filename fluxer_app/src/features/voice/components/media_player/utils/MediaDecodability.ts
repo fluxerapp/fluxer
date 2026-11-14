@@ -1,29 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const HAVE_CURRENT_DATA = 2;
+const HAVE_CURRENT_DATA = 2;
 
-export const DECODABILITY_RECHECK_DELAY_MS = 1500;
+const DECODABILITY_RECHECK_DELAY_MS = 1500;
 
-export const DECODABILITY_MIN_ADVANCE_SECONDS = 0.5;
+const DECODABILITY_MIN_ADVANCE_SECONDS = 0.5;
 
-export interface VideoDecodabilitySample {
+interface VideoDecodabilitySample {
 	videoHeight: number;
 	readyState: number;
 	currentTime: number;
 }
 
-export type VideoDecodability = 'decodable' | 'undecodable' | 'unknown';
+type VideoDecodability = 'decodable' | 'undecodable' | 'unknown';
 
-export type DecodabilityFirstLook = 'decodable' | 'recheck' | 'unknown';
+type DecodabilityFirstLook = 'decodable' | 'recheck' | 'unknown';
 
-export function classifyDecodabilitySample(sample: VideoDecodabilitySample): DecodabilityFirstLook {
+function classifyDecodabilitySample(sample: VideoDecodabilitySample): DecodabilityFirstLook {
 	if (!Number.isFinite(sample.videoHeight) || !Number.isFinite(sample.readyState)) return 'unknown';
 	if (sample.videoHeight > 0) return 'decodable';
 	if (sample.readyState >= HAVE_CURRENT_DATA) return 'recheck';
 	return 'unknown';
 }
 
-export function classifyDecodabilityRecheck(
+function classifyDecodabilityRecheck(
 	first: VideoDecodabilitySample,
 	second: VideoDecodabilitySample,
 ): VideoDecodability {
@@ -34,7 +34,7 @@ export function classifyDecodabilityRecheck(
 	return 'unknown';
 }
 
-export type DecodabilityScheduler = (callback: () => void, delayMs: number) => () => void;
+type DecodabilityScheduler = (callback: () => void, delayMs: number) => () => void;
 
 export interface VideoDecodabilityProbeOptions {
 	readSample: () => VideoDecodabilitySample | null;

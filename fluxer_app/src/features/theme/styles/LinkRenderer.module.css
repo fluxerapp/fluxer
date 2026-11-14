@@ -1,0 +1,12 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.destination:has(> svg) {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.destinationWarningIcon {
+	color: var(--text-warning);
+	flex-shrink: 0;
+}

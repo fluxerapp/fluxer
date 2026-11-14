@@ -14,11 +14,12 @@ import {
 	dismissQuickSwitcher,
 	getQuickSwitcherResultAccessibilityMetadata,
 	getResultKey,
-	getViewContext,
 	handleContextMenu,
+	isOtherAccountResult,
 	PREFIX_HINTS,
 	type QuickSwitcherSection,
 	renderIcon,
+	renderSectionHeaderContent,
 	useQuickSwitcherEscapeIntent,
 	useQuickSwitcherInputFocus,
 	useQuickSwitcherKeyboardHandling,
@@ -60,7 +61,7 @@ const AUTOCOMPLETE_SUGGESTION_DESCRIPTOR = msg({
 	comment: 'Screen-reader announcement for the highlighted autocomplete suggestion, without query echo.',
 });
 const SEARCHING_PEOPLE_DESCRIPTOR = msg({
-	message: 'Searching people...',
+	message: 'Searching for people...',
 	comment:
 		'Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.',
 });
@@ -73,7 +74,7 @@ const MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Screen-reader live region announcement when exactly one quick switcher result is available.',
 });
 const RESULTS_AVAILABLE_DESCRIPTOR = msg({
-	message: '{resultCount} results available',
+	message: '{resultCount, plural, one {# result available} other {# results available}}',
 	comment: 'Screen-reader live region announcement listing the quick switcher result count.',
 });
 const QUICK_SWITCHER_DESCRIPTOR = msg({
@@ -83,6 +84,14 @@ const QUICK_SWITCHER_DESCRIPTOR = msg({
 const SEARCH_FOR_CHANNELS_PEOPLE_OR_COMMUNITIES_DESCRIPTOR = msg({
 	message: 'Search for channels, people, or communities',
 	comment: 'Placeholder text in the desktop quick switcher search input.',
+});
+const SEARCH_OTHER_ACCOUNTS_DESCRIPTOR = msg({
+	message: 'Search other accounts',
+	comment: 'Placeholder text in the desktop quick switcher when it only searches the other signed-in accounts.',
+});
+const NO_OTHER_ACCOUNTS_DESCRIPTOR = msg({
+	message: 'No other accounts are signed in',
+	comment: 'Empty state title in the desktop quick switcher when it only searches other accounts and there are none.',
 });
 const QUICK_SWITCHER_SEARCH_DESCRIPTOR = msg({
 	message: 'Quick switcher search',
@@ -129,7 +138,6 @@ const ResultRow = observer(
 		optionId,
 		positionInSet,
 		setSize,
-		innerRef,
 	}: {
 		result: QuickSwitcherResult;
 		index: number;
@@ -139,17 +147,16 @@ const ResultRow = observer(
 		optionId: string;
 		positionInSet: number;
 		setSize: number;
-		innerRef?: React.Ref<HTMLDivElement>;
 	}) => {
 		const {i18n} = useLingui();
 		if (result.type === QuickSwitcherResultTypes.HEADER) {
 			return (
 				<div
 					key={getResultKey(result)}
-					className={quickStyles.sectionHeader}
+					className={clsx(quickStyles.sectionHeader, result.accountKey != null && quickStyles.sectionHeaderAccount)}
 					data-flx="search.quick-switcher.quick-switcher-modal.result-row.div"
 				>
-					{result.title}
+					{renderSectionHeaderContent(result, quickStyles.sectionHeaderAccountName)}
 				</div>
 			);
 		}
@@ -158,11 +165,14 @@ const ResultRow = observer(
 		const {guildName, isChannel, isUser, label: optionLabel, mentionCount, subtext, unreadCount} = resultMetadata;
 		const hasUnread = unreadCount > 0 || mentionCount > 0;
 		const isActive = isKeyboardSelected;
+		const isOtherAccount = isOtherAccountResult(executableResult);
 		const isHighlight =
 			hasUnread &&
 			(executableResult.type === QuickSwitcherResultTypes.TEXT_CHANNEL ||
 				executableResult.type === QuickSwitcherResultTypes.VOICE_CHANNEL ||
-				executableResult.type === QuickSwitcherResultTypes.GROUP_DM);
+				executableResult.type === QuickSwitcherResultTypes.GROUP_DM ||
+				executableResult.type === QuickSwitcherResultTypes.ACCOUNT_CHANNEL);
+		const showUnreadDot = isOtherAccount && mentionCount === 0 && unreadCount > 0;
 		const handleMouseEnter = () => onHover(index);
 		const handleClick = (event: React.MouseEvent) => {
 			event.preventDefault();
@@ -181,10 +191,21 @@ const ResultRow = observer(
 			quickStyles.optionIcon,
 			quickStyles.optionIconHighlight,
 		);
-		const iconContent: React.ReactElement = iconRendered.content;
-		const key = getViewContext(executableResult)
-			? `${executableResult.type}-${getViewContext(executableResult)}-${executableResult.id}`
-			: `${executableResult.type}-${executableResult.id}`;
+		let iconContent: React.ReactElement = iconRendered.content;
+		const key = `${executableResult.type}-${executableResult.id}`;
+		if (iconRendered.type === 'avatar') {
+			iconContent = (
+				<div className={quickStyles.avatar} data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--3">
+					{iconContent}
+				</div>
+			);
+		} else if (iconRendered.type === 'guild') {
+			iconContent = (
+				<div className={quickStyles.guildIcon} data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--4">
+					{iconContent}
+				</div>
+			);
+		}
 		return (
 			<FocusRing offset={-2} data-flx="search.quick-switcher.quick-switcher-modal.result-row.focus-ring">
 				<div
@@ -195,7 +216,6 @@ const ResultRow = observer(
 					aria-posinset={positionInSet}
 					aria-setsize={setSize}
 					className={clsx(quickStyles.option, isActive && quickStyles.optionActive)}
-					ref={innerRef}
 					onMouseEnter={handleMouseEnter}
 					onMouseDown={(event) => {
 						if (event.button === 0) event.preventDefault();
@@ -211,23 +231,7 @@ const ResultRow = observer(
 						className={quickStyles.optionContent}
 						data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--2"
 					>
-						{iconRendered.type === 'avatar' ? (
-							<div
-								className={quickStyles.avatar}
-								data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--3"
-							>
-								{iconContent}
-							</div>
-						) : iconRendered.type === 'guild' ? (
-							<div
-								className={quickStyles.guildIcon}
-								data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--4"
-							>
-								{iconContent}
-							</div>
-						) : (
-							iconContent
-						)}
+						{iconContent}
 						<div
 							className={clsx(quickStyles.optionText, isHighlight && quickStyles.optionHighlight)}
 							data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--5"
@@ -254,6 +258,13 @@ const ResultRow = observer(
 										/>
 									</span>
 								)}
+								{showUnreadDot && (
+									<span
+										className={quickStyles.optionUnreadDot}
+										aria-hidden="true"
+										data-flx="search.quick-switcher.quick-switcher-modal.result-row.unread-dot"
+									/>
+								)}
 								{subtext && (
 									<div
 										className={clsx(
@@ -270,6 +281,7 @@ const ResultRow = observer(
 							{guildName && (
 								<div
 									className={quickStyles.optionMeta}
+									dir={isOtherAccount ? 'auto' : undefined}
 									data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--9"
 								>
 									{guildName}
@@ -284,11 +296,11 @@ const ResultRow = observer(
 );
 const QuickSwitcherModalComponent: React.FC = observer(() => {
 	const {i18n} = useLingui();
-	const {isOpen, query, results, selectedIndex} = QuickSwitcher;
+	const {isOpen, query, results, scope, selectedIndex} = QuickSwitcher;
+	const isOtherAccountsScope = scope === 'other_accounts';
 	const quickSwitcherId = useId();
 	const inputRef = useRef<HTMLInputElement>(null);
 	const scrollerRef = useRef<ScrollerHandle>(null);
-	const rowRefs = useRef<Array<HTMLDivElement | null>>([]);
 	const previousQueryRef = useRef(query);
 	const [isKeyboardNavigating, setIsKeyboardNavigating] = useState(true);
 	const isMobile = MobileLayout.isMobileLayout();
@@ -297,9 +309,6 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 	const statusId = `${quickSwitcherId}-status`;
 	const suggestionStatusId = `${quickSwitcherId}-suggestion-status`;
 	const hintId = `${quickSwitcherId}-hint`;
-	if (rowRefs.current.length !== results.length) {
-		rowRefs.current = Array(results.length).fill(null);
-	}
 	useQuickSwitcherKeyboardHandling(isOpen, isMobile, inputRef, query);
 	useQuickSwitcherInputFocus(isOpen, isMobile, undefined, inputRef);
 	const escapeIntentRef = useQuickSwitcherEscapeIntent(isOpen && !isMobile);
@@ -311,6 +320,12 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 			return;
 		}
 		setIsKeyboardNavigating(true);
+		if (event.ctrlKey && !event.altKey && !event.metaKey && (event.key === 'n' || event.key === 'p')) {
+			event.preventDefault();
+			event.stopPropagation();
+			QuickSwitcherCommands.moveSelection(event.key === 'n' ? 'down' : 'up');
+			return;
+		}
 		switch (event.key) {
 			case 'ArrowDown':
 			case 'ArrowUp':
@@ -360,11 +375,11 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 		if (!isKeyboardNavigating || selectedIndex < 0) {
 			return;
 		}
-		const node = rowRefs.current[selectedIndex];
+		const node = document.getElementById(getQuickSwitcherOptionId(listboxId, selectedIndex));
 		if (node) {
 			scroller.revealElement({node, padding: SELECTED_ROW_SCROLL_PADDING});
 		}
-	}, [isKeyboardNavigating, query, results, selectedIndex]);
+	}, [isKeyboardNavigating, listboxId, query, results, selectedIndex]);
 	const sections = useMemo(() => createSections(results), [results]);
 	const selectableIndices = useMemo(
 		() =>
@@ -402,15 +417,16 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 			? i18n._(AUTOCOMPLETE_SUGGESTION_OF_DESCRIPTOR, {label, selectedOptionPosition, resultCount})
 			: i18n._(AUTOCOMPLETE_SUGGESTION_DESCRIPTOR, {label});
 	}, [hasSearchIntent, i18n.locale, query, resultCount, results, selectedIndex, selectedOptionPosition]);
-	const resultStatus = QuickSwitcher.isLoadingMemberResults
-		? i18n._(SEARCHING_PEOPLE_DESCRIPTOR)
-		: resultCount === 0
-			? hasSearchIntent
-				? i18n._(NO_MATCHES_FOUND_DESCRIPTOR)
-				: ''
-			: resultCount === 1
-				? i18n._(MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR)
-				: i18n._(RESULTS_AVAILABLE_DESCRIPTOR, {resultCount});
+	let resultStatus = '';
+	if (QuickSwitcher.isLoadingMemberResults) {
+		resultStatus = i18n._(SEARCHING_PEOPLE_DESCRIPTOR);
+	} else if (resultCount === 0) {
+		if (hasSearchIntent) resultStatus = i18n._(NO_MATCHES_FOUND_DESCRIPTOR);
+	} else if (resultCount === 1) {
+		resultStatus = i18n._(MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR);
+	} else {
+		resultStatus = i18n._(RESULTS_AVAILABLE_DESCRIPTOR, {resultCount});
+	}
 	if (!isOpen) {
 		return null;
 	}
@@ -437,9 +453,9 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 				text={i18n._(QUICK_SWITCHER_DESCRIPTOR)}
 				data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.modal-screen-reader-label"
 			/>
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: pointer arbitration surface for the result rows; it carries no affordance of its own. */}
 			<div
 				className={quickStyles.container}
+				role="group"
 				onMouseMove={handlePointerMove}
 				data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div"
 			>
@@ -453,7 +469,11 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 						value={query}
 						onChange={handleChange}
 						onKeyDown={handleKeyDown}
-						placeholder={i18n._(SEARCH_FOR_CHANNELS_PEOPLE_OR_COMMUNITIES_DESCRIPTOR)}
+						placeholder={i18n._(
+							isOtherAccountsScope
+								? SEARCH_OTHER_ACCOUNTS_DESCRIPTOR
+								: SEARCH_FOR_CHANNELS_PEOPLE_OR_COMMUNITIES_DESCRIPTOR,
+						)}
 						spellCheck={false}
 						className={quickStyles.inputBackground}
 						role="combobox"
@@ -498,7 +518,7 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 					>
 						{activeSuggestionStatus}
 					</div>
-					{results.length === 0 && !hasSearchIntent ? null : (
+					{results.length === 0 && !hasSearchIntent && !isOtherAccountsScope ? null : (
 						<Scroller
 							ref={scrollerRef}
 							className={quickStyles.scrollerContainer}
@@ -517,14 +537,20 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 										className={quickStyles.emptyStateTitle}
 										data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--5"
 									>
-										{i18n._(NO_MATCHES_FOUND_DESCRIPTOR)}
+										{i18n._(
+											isOtherAccountsScope && !hasSearchIntent
+												? NO_OTHER_ACCOUNTS_DESCRIPTOR
+												: NO_MATCHES_FOUND_DESCRIPTOR,
+										)}
 									</div>
-									<div
-										className={quickStyles.emptyStateHint}
-										data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--6"
-									>
-										{i18n._(TRY_A_DIFFERENT_NAME_OR_USE_PREFIXES_TO_DESCRIPTOR)}
-									</div>
+									{!isOtherAccountsScope && (
+										<div
+											className={quickStyles.emptyStateHint}
+											data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--6"
+										>
+											{i18n._(TRY_A_DIFFERENT_NAME_OR_USE_PREFIXES_TO_DESCRIPTOR)}
+										</div>
+									)}
 								</div>
 							) : (
 								<div
@@ -548,10 +574,13 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 												{section.header && (
 													<div
 														id={sectionHeaderId}
-														className={quickStyles.sectionHeader}
+														className={clsx(
+															quickStyles.sectionHeader,
+															section.header.accountKey != null && quickStyles.sectionHeaderAccount,
+														)}
 														data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--8"
 													>
-														{section.header.title}
+														{renderSectionHeaderContent(section.header, quickStyles.sectionHeaderAccountName)}
 													</div>
 												)}
 												{section.rows.map(({result, index}: {result: QuickSwitcherExecutableResult; index: number}) => (
@@ -565,9 +594,6 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 														optionId={getQuickSwitcherOptionId(listboxId, index)}
 														positionInSet={selectableIndices.indexOf(index) + 1}
 														setSize={resultCount}
-														innerRef={(node) => {
-															rowRefs.current[index] = node;
-														}}
 														data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.result-row"
 													/>
 												))}
@@ -581,6 +607,7 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 				</div>
 				<div
 					className={quickStyles.footer}
+					hidden={isOtherAccountsScope}
 					data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.div--9"
 				>
 					<Trans>

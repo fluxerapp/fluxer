@@ -11,7 +11,7 @@ import {
 	createVoiceParticipantSortSnapshot,
 	sortVoiceParticipantItemsWithSnapshot,
 } from '@app/features/voice/components/VoiceParticipantSortUtils';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {useVoiceGatewayStateVersion} from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
 import {SpeakerHighIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
@@ -20,7 +20,7 @@ import {useMemo, useRef} from 'react';
 export const CollapsedCategoryVoiceParticipants = observer(
 	({guild, voiceChannels}: {guild: Guild; voiceChannels: Array<Channel>}) => {
 		useVoiceGatewayStateVersion();
-		const allVoiceStates = MediaEngine.getAllVoiceStates();
+		const allVoiceStates = VoiceRuntime.getAllVoiceStates();
 		const userSortSnapshotRef = useRef(createVoiceParticipantSortSnapshot());
 		const voiceUserSummary = useMemo(() => {
 			const userIds: Array<string> = [];
@@ -87,7 +87,7 @@ export const CollapsedCategoryVoiceParticipants = observer(
 );
 export const CollapsedChannelAvatarStack = observer(({guild, channel}: {guild: Guild; channel: Channel}) => {
 	useVoiceGatewayStateVersion();
-	const channelStates = MediaEngine.getAllVoiceStatesInChannel(guild.id, channel.id);
+	const channelStates = VoiceRuntime.getAllVoiceStatesInChannel(guild.id, channel.id);
 	const userSortSnapshotRef = useRef(createVoiceParticipantSortSnapshot());
 	const uniqueUserIds = useMemo(() => {
 		const userIds: Array<string> = [];

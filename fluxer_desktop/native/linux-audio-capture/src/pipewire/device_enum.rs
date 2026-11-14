@@ -2,7 +2,6 @@
 
 #![allow(dead_code)]
 
-use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 
 use pipewire as pw;
@@ -168,8 +167,8 @@ fn handle_global_added_metadata(
     let sink_node_name_owned = ctx.sink_node_name.to_string();
     let listener = metadata
         .add_listener_local()
-        .property(move |_subject, key, _type_, value| {
-            if key == Some("default.audio.sink") {
+        .property(move |subject, key, _type_, value| {
+            if is_default && subject == pw::core::PW_ID_CORE && key == Some("default.audio.sink") {
                 let name = value
                     .map(crate::routing::parse_default_sink_name)
                     .unwrap_or_default();
@@ -330,8 +329,8 @@ fn direct_added_metadata(
     let st = args.state.clone();
     let listener = metadata
         .add_listener_local()
-        .property(move |_subject, key, _type_, value| {
-            if key == Some("default.audio.sink") {
+        .property(move |subject, key, _type_, value| {
+            if is_default && subject == pw::core::PW_ID_CORE && key == Some("default.audio.sink") {
                 let name = value
                     .map(crate::routing::parse_default_sink_name)
                     .unwrap_or_default();
@@ -386,7 +385,6 @@ pub(crate) fn handle_direct_global_removed(
             replace_owned_link_snapshot(&runtime.owned_link_snapshot, Vec::new());
             *runtime.active_stream.borrow_mut() = None;
             *runtime.active_listener.borrow_mut() = None;
-            runtime.running.store(false, Ordering::Relaxed);
             changed = true;
         }
         if st.sink_input_fl == Some(id) {

@@ -1,48 +1,61 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import {mapGuildBansToResponse} from '@app/api/guild/GuildModel';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {assertNotBannedFromGuild} from '@app/api/guild/services/GuildBanChecks';
+import {requireGuildPermission} from '@app/api/guild/services/GuildMfaEnforcement';
+import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
+import {onGuildBanAdded} from '@app/api/guild/visits/GuildVisitLifecycle';
+import type {BanBy} from '@app/api/infrastructure/activity/Contract.generated';
+import {emitGuildMemberBanned, emitGuildMemberUnbanned} from '@app/api/infrastructure/activity/ModerationEvents';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildBan} from '@app/api/models/GuildBan';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
+import {recordOperatorPassLabsDeparture} from '@app/api/operator_pass/OperatorPassLabsRole';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {BannedFromGuildError} from '@fluxer/errors/src/domains/guild/BannedFromGuildError';
-import {IpBannedFromGuildError} from '@fluxer/errors/src/domains/guild/IpBannedFromGuildError';
+import {UnknownGuildBanError} from '@fluxer/errors/src/domains/guild/UnknownGuildBanError';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import {isSameIpDecisionMatch} from '@fluxer/ip_utils/src/IpAddress';
 import type {GuildBanResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {GuildBan} from '../../models/GuildBan';
-import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '../../risk/IpBanCgnatGuard';
-import {isIpBanExempt} from '../../risk/IpBanExemptions';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
-import type {GuildAuditLogService} from '../GuildAuditLogService';
-import type {GuildAuditLogChange} from '../GuildAuditLogTypes';
-import {mapGuildBansToResponse} from '../GuildModel';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
-import {createGuildMfaEnforcer} from './GuildMfaEnforcement';
-import {GuildMemberSearchIndexService} from './member/GuildMemberSearchIndexService';
 
 const SECONDS_PER_DAY = 86_400;
+const GUILD_MODERATION_PERMISSIONS =
+	Permissions.ADMINISTRATOR | Permissions.BAN_MEMBERS | Permissions.KICK_MEMBERS | Permissions.MANAGE_GUILD;
+
+interface GuildBanOptions {
+	deleteMessageDays?: number;
+	deleteMessageSeconds?: number;
+	reason?: string | null;
+	banDurationSeconds?: number;
+}
 
 export class GuildModerationService {
 	private readonly searchIndexService: GuildMemberSearchIndexService;
 
 	constructor(
-		private readonly guildRepository: IGuildRepositoryAggregate,
-		private readonly userRepository: IUserRepository,
+		private readonly guildRepository: GuildRepository,
+		private readonly userRepository: UserRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly userCacheService: UserCacheService,
 		private readonly workerService: IWorkerService<WorkerTaskName>,
 		private readonly guildAuditLogService: GuildAuditLogService,
-		private readonly ipInfoService: IpInfoService,
 	) {
 		this.searchIndexService = new GuildMemberSearchIndexService();
 	}
@@ -52,37 +65,18 @@ export class GuildModerationService {
 		userId: UserID;
 		permission: bigint;
 	}): Promise<void> {
-		const {guildId, userId, permission} = params;
-		const hasPermission = await this.gatewayService.checkPermission({guildId, userId, permission});
-		if (!hasPermission) throw new MissingPermissionsError();
-		const guildData = await this.gatewayService.getGuildData({guildId, userId});
-		const enforceGuildMfa = await createGuildMfaEnforcer({userRepository: this.userRepository, guildData, userId});
-		enforceGuildMfa(permission);
+		await requireGuildPermission(this.gatewayService, this.userRepository, params);
 	}
 
 	async banMember(
-		params: {
+		params: GuildBanOptions & {
 			userId: UserID;
 			targetId: UserID;
 			guildId: GuildID;
-			deleteMessageDays?: number;
-			deleteMessageSeconds?: number;
-			reason?: string | null;
-			banDurationSeconds?: number;
-			skipGuildAuditLog?: boolean;
 		},
 		auditLogReason?: string | null,
 	): Promise<void> {
-		const {
-			userId,
-			guildId,
-			targetId,
-			deleteMessageDays,
-			deleteMessageSeconds,
-			reason,
-			banDurationSeconds,
-			skipGuildAuditLog,
-		} = params;
+		const {userId, guildId, targetId} = params;
 		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
 		if (userId === targetId) throw new UnknownGuildMemberError();
 		const targetUser = await this.userRepository.findUnique(targetId);
@@ -94,6 +88,64 @@ export class GuildModerationService {
 			const canManage = await this.gatewayService.checkTargetMember({guildId, userId, targetUserId: targetId});
 			if (!canManage) throw new MissingPermissionsError();
 		}
+		await this.applyBan({
+			...params,
+			actorId: userId,
+			by: 'moderator',
+			targetUser,
+			targetMember,
+			guild: await this.guildRepository.findUnique(guildId),
+			guildAuditLogReason: auditLogReason ?? (params.reason || null),
+		});
+	}
+
+	async banMemberAsSystem(params: GuildBanOptions & {targetId: UserID; guildId: GuildID}): Promise<void> {
+		const {guildId, targetId} = params;
+		const guild = await this.guildRepository.findUnique(guildId);
+		if (!guild) throw new UnknownGuildError();
+		if (targetId === SYSTEM_USER_ID) throw new UnknownGuildMemberError();
+		if (guild.ownerId === targetId) throw new MissingPermissionsError();
+		const targetUser = await this.userRepository.findUnique(targetId);
+		if (!targetUser) {
+			throw new UnknownUserError();
+		}
+		await this.applyBan({
+			...params,
+			actorId: SYSTEM_USER_ID,
+			by: 'staff',
+			targetUser,
+			targetMember: await this.guildRepository.getMember(guildId, targetId),
+			guild,
+			guildAuditLogReason: params.reason || null,
+		});
+	}
+
+	private async applyBan(
+		params: GuildBanOptions & {
+			targetId: UserID;
+			guildId: GuildID;
+			actorId: UserID;
+			by: BanBy;
+			targetUser: User;
+			targetMember: GuildMember | null;
+			guild: Guild | null;
+			guildAuditLogReason: string | null;
+		},
+	): Promise<void> {
+		const {
+			actorId,
+			guildId,
+			targetId,
+			deleteMessageDays,
+			deleteMessageSeconds,
+			reason,
+			banDurationSeconds,
+			by,
+			targetUser,
+			targetMember,
+			guild: guildBeforeBan,
+			guildAuditLogReason,
+		} = params;
 		const effectiveDeleteMessageSeconds =
 			deleteMessageSeconds ?? (deleteMessageDays !== undefined ? deleteMessageDays * SECONDS_PER_DAY : undefined);
 		if (effectiveDeleteMessageSeconds && effectiveDeleteMessageSeconds > 0) {
@@ -103,35 +155,47 @@ export class GuildModerationService {
 				seconds: effectiveDeleteMessageSeconds,
 			});
 		}
-		const targetIp = isIpBanExempt(targetUser.lastActiveIp) ? null : targetUser.lastActiveIp || null;
+		const targetIp = isIpBanExempt(targetUser.moderationIp) ? null : targetUser.moderationIp || null;
 		const targetEmail = targetUser.email?.toLowerCase() || null;
 		let expiresAt: Date | null = null;
 		if (banDurationSeconds && banDurationSeconds > 0) {
 			expiresAt = new Date(Date.now() + banDurationSeconds * 1000);
 		}
+		const targetModerator = await this.isGuildModerator(guildId, targetId, guildBeforeBan, targetMember !== null);
 		const ban = await this.guildRepository.upsertBan({
 			guild_id: guildId,
 			user_id: targetId,
-			moderator_id: userId,
+			moderator_id: actorId,
 			banned_at: new Date(),
 			expires_at: expiresAt,
 			reason: reason || null,
 			ip: targetIp,
 			email: targetEmail,
 		});
-		if (!skipGuildAuditLog) {
-			const metadata: Record<string, string> | undefined =
-				deleteMessageDays !== undefined ? {delete_member_days: deleteMessageDays.toString()} : undefined;
-			await this.recordAuditLog({
-				guildId,
-				userId,
-				action: AuditLogActionType.MEMBER_BAN_ADD,
-				targetId: targetId,
-				auditLogReason: auditLogReason ?? null,
-				metadata,
-				changes: this.guildAuditLogService.computeChanges(null, this.serializeBanForAudit(ban)),
-			});
-		}
+		await recordOperatorPassLabsDeparture(guildId, targetId, 'banned');
+		const metadata: Record<string, string> | undefined =
+			effectiveDeleteMessageSeconds && effectiveDeleteMessageSeconds > 0
+				? {delete_message_seconds: String(effectiveDeleteMessageSeconds)}
+				: undefined;
+		await this.guildAuditLogService.record({
+			guildId,
+			userId: actorId,
+			action: AuditLogActionType.MEMBER_BAN_ADD,
+			targetId: targetId,
+			auditLogReason: guildAuditLogReason,
+			metadata,
+			changes: this.guildAuditLogService.computeChanges(null, this.serializeBanForAudit(ban)),
+		});
+		await emitGuildMemberBanned({
+			guildId,
+			userId: targetId,
+			moderatorId: actorId,
+			by,
+			memberCount: guildBeforeBan?.memberCount ?? 0,
+			targetModerator,
+			bannedAt: ban.bannedAt,
+			expiresAt: ban.expiresAt,
+		});
 		await this.gatewayService.dispatchGuild({
 			guildId,
 			event: 'GUILD_BAN_ADD',
@@ -140,16 +204,10 @@ export class GuildModerationService {
 				user: {id: targetId.toString()},
 			},
 		});
+		await onGuildBanAdded({guildId, targetUserId: targetId, targetIp, gateway: this.gatewayService});
 		if (targetMember) {
 			await this.guildRepository.deleteMember(guildId, targetId);
-			const guild = await this.guildRepository.findUnique(guildId);
-			if (guild) {
-				await this.guildRepository.upsertPartial(
-					guildId,
-					{member_count: Math.max(0, guild.memberCount - 1)},
-					guild.toRow(),
-				);
-			}
+			await this.guildRepository.syncMemberCount(guildId);
 			await this.dispatchGuildMemberRemove({guildId, userId: targetId});
 			await this.gatewayService.leaveGuild({userId: targetId, guildId});
 			const guildForSearch = await this.guildRepository.findUnique(guildId);
@@ -173,6 +231,21 @@ export class GuildModerationService {
 		return await mapGuildBansToResponse(bans, this.userCacheService, requestCache);
 	}
 
+	async getBan(params: {
+		userId: UserID;
+		guildId: GuildID;
+		targetId: UserID;
+		requestCache: RequestCache;
+	}): Promise<GuildBanResponse> {
+		const {userId, guildId, targetId, requestCache} = params;
+		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
+		const ban = await this.guildRepository.getBan(guildId, targetId);
+		if (!ban) throw new UnknownGuildBanError();
+		const [response] = await mapGuildBansToResponse([ban], this.userCacheService, requestCache);
+		if (!response) throw new UnknownGuildBanError();
+		return response;
+	}
+
 	async unbanMember(
 		params: {
 			userId: UserID;
@@ -183,17 +256,31 @@ export class GuildModerationService {
 	): Promise<void> {
 		const {userId, guildId, targetId} = params;
 		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
+		await this.removeBan({guildId, targetId, actorId: userId, by: 'moderator'}, auditLogReason ?? null);
+	}
+
+	async unbanMemberAsSystem(params: {targetId: UserID; guildId: GuildID}): Promise<void> {
+		const guild = await this.guildRepository.findUnique(params.guildId);
+		if (!guild) throw new UnknownGuildError();
+		await this.removeBan({...params, actorId: SYSTEM_USER_ID, by: 'staff'}, null);
+	}
+
+	private async removeBan(
+		{guildId, targetId, actorId, by}: {guildId: GuildID; targetId: UserID; actorId: UserID; by: BanBy},
+		auditLogReason: string | null,
+	): Promise<void> {
 		const ban = await this.guildRepository.getBan(guildId, targetId);
 		if (!ban) {
 			throw InputValidationError.fromCode('user_id', ValidationErrorCodes.USER_IS_NOT_BANNED);
 		}
 		await this.guildRepository.deleteBan(guildId, targetId);
-		await this.recordAuditLog({
+		await emitGuildMemberUnbanned({guildId, userId: targetId, moderatorId: actorId, by});
+		await this.guildAuditLogService.record({
 			guildId,
-			userId,
+			userId: actorId,
 			action: AuditLogActionType.MEMBER_BAN_REMOVE,
 			targetId: targetId,
-			auditLogReason: auditLogReason ?? null,
+			auditLogReason,
 			changes: this.guildAuditLogService.computeChanges(this.serializeBanForAudit(ban), null),
 		});
 		await this.gatewayService.dispatchGuild({
@@ -206,52 +293,24 @@ export class GuildModerationService {
 		});
 	}
 
-	async checkUserBanStatus(params: {userId: UserID; guildId: GuildID}): Promise<void> {
-		const {userId, guildId} = params;
-		const [bans, user] = await Promise.all([
-			this.guildRepository.listBans(guildId),
-			this.userRepository.findUnique(userId),
-		]);
-		const userIp = user?.lastActiveIp;
-		const userEmail = user?.email?.toLowerCase();
-		for (const ban of bans) {
-			if (ban.userId === userId) throw new BannedFromGuildError();
-			if (isSameIpDecisionMatch(userIp, ban.ipAddress) && (await this.shouldEnforceIpBan(userIp, ban.ipAddress))) {
-				throw new IpBannedFromGuildError();
-			}
-		}
-		if (userEmail) {
-			const emailBan = await this.guildRepository.getBanByEmail(guildId, userEmail);
-			if (emailBan) throw new BannedFromGuildError();
-		}
+	async checkUserBanStatus(params: {userId: UserID; guildId: GuildID; ip?: string | null}): Promise<void> {
+		return assertNotBannedFromGuild(this.guildRepository, this.userRepository, params);
 	}
 
-	private async shouldEnforceIpBan(
-		userIp: string | null | undefined,
-		bannedIp: string | null | undefined,
+	private async isGuildModerator(
+		guildId: GuildID,
+		targetId: UserID,
+		guild: Guild | null,
+		isMember: boolean,
 	): Promise<boolean> {
-		if (isIpBanExempt(userIp)) {
-			return false;
-		}
-		if (!userIp || !bannedIp || !isSingleIpBanCandidate(bannedIp)) {
-			return true;
-		}
+		if (guild?.ownerId === targetId) return true;
+		if (!isMember) return false;
 		try {
-			const {cgnat, sharedAccess} = await getIpBanBlastRadiusVerdict(userIp, this.ipInfoService, {
-				source: 'guild.ip_ban',
-				reason: 'join_cgnat_guard',
-			});
-			const highRisk = cgnat || sharedAccess;
-			if (highRisk) {
-				Logger.warn(
-					{userIp, bannedIp},
-					'Skipping guild IP ban match because IPInfo indicates high shared-network blast-radius risk',
-				);
-			}
-			return !highRisk;
+			const permissions = await this.gatewayService.getUserPermissions({guildId, userId: targetId});
+			return (permissions & GUILD_MODERATION_PERMISSIONS) !== 0n;
 		} catch (error) {
-			Logger.warn({error, userIp, bannedIp}, 'IPInfo blast-radius guard failed while checking guild IP ban');
-			return true;
+			Logger.debug({error, guildId: guildId.toString()}, 'Could not read target permissions for a guild ban');
+			return false;
 		}
 	}
 
@@ -271,50 +330,5 @@ export class GuildModerationService {
 			event: 'GUILD_MEMBER_REMOVE',
 			data: {user: {id: userId.toString()}},
 		});
-	}
-
-	private async recordAuditLog(params: {
-		guildId: GuildID;
-		userId: UserID;
-		action: AuditLogActionType;
-		targetId?: UserID | string | null;
-		auditLogReason?: string | null;
-		metadata?: Map<string, string> | Record<string, string>;
-		changes?: GuildAuditLogChange | null;
-		createdAt?: Date;
-	}): Promise<void> {
-		const targetId =
-			params.targetId === undefined || params.targetId === null
-				? null
-				: typeof params.targetId === 'string'
-					? params.targetId
-					: params.targetId.toString();
-		try {
-			const builder = this.guildAuditLogService
-				.createBuilder(params.guildId, params.userId)
-				.withAction(params.action, targetId)
-				.withReason(params.auditLogReason ?? null);
-			if (params.metadata) {
-				builder.withMetadata(params.metadata);
-			}
-			if (params.changes) {
-				builder.withChanges(params.changes);
-			}
-			if (params.createdAt) {
-				builder.withCreatedAt(params.createdAt);
-			}
-			await builder.commit();
-		} catch (error) {
-			Logger.error(
-				{
-					error,
-					guildId: params.guildId.toString(),
-					userId: params.userId.toString(),
-					action: params.action,
-					targetId,
-				},
-				'Failed to record guild audit log',
-			);
-		}
 	}
 }

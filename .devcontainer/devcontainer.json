@@ -14,7 +14,7 @@
 		"DOCKER_HOST": "unix:///var/run/docker.sock"
 	},
 	"runServices": ["workspace", "postgres", "valkey", "nats", "livekit", "meilisearch", "mailpit"],
-	"forwardPorts": [3000, 8088, 8080, 8771, 8082, 8773, 3010, 3020, 8333],
+	"forwardPorts": [3000, 8088, 8080, 8771, 8082, 8773, 3020, 8333],
 	"portsAttributes": {
 		"8088": {
 			"label": "Fluxer dev proxy",
@@ -33,12 +33,21 @@
 			"label": "Fluxer app proxy"
 		}
 	},
-	"postCreateCommand": "bash /workspaces/fluxer/.devcontainer/fix-docker-socket.sh && bash /workspaces/fluxer/.devcontainer/fix-workspace-permissions.sh && cargo run -p fluxer-dev -- bootstrap",
-	"postStartCommand": "bash /workspaces/fluxer/.devcontainer/fix-docker-socket.sh && bash /workspaces/fluxer/.devcontainer/fix-workspace-permissions.sh && cargo run -p fluxer-dev -- post-start",
+	"postCreateCommand": "bash /workspaces/fluxer/.devcontainer/fix-docker-socket.sh && bash /workspaces/fluxer/.devcontainer/fix-workspace-permissions.sh && bash /workspaces/fluxer/.devcontainer/direnv-allow.sh && cargo run -p fluxer-dev -- bootstrap",
+	"postStartCommand": "bash /workspaces/fluxer/.devcontainer/fix-docker-socket.sh && bash /workspaces/fluxer/.devcontainer/fix-workspace-permissions.sh && bash /workspaces/fluxer/.devcontainer/direnv-allow.sh && cargo run -p fluxer-dev -- post-start",
 	"customizations": {
 		"vscode": {
 			"settings": {
-				"editor.defaultFormatter": "biomejs.biome"
+				"editor.defaultFormatter": "biomejs.biome",
+				"erlang.includePaths": ["."],
+				"search.exclude": {
+					"**/_build/default/lib/fluxer_gateway": true
+				},
+				"json.schemaDownload.trustedDomains": {
+					"http://json-schema.org/draft-07/schema#": true,
+					"https://unpkg.com/knip%406/schema.json": true,
+					"https://json.schemastore.org/tsconfig": true
+				}
 			},
 			"extensions": [
 				"biomejs.biome",
@@ -48,7 +57,8 @@
 				"unifiedjs.vscode-mdx",
 				"pgourlain.erlang",
 				"clinyong.vscode-css-modules",
-				"EditorConfig.EditorConfig"
+				"EditorConfig.EditorConfig",
+				"mkhl.direnv"
 			]
 		}
 	}

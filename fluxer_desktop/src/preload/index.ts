@@ -1,6 +1,14 @@
+import {isRecord} from '@fluxer/record_utils/src/RecordGuards';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {
+	DESKTOP_PREBOOT_THEME_CHANNEL,
+	LOCAL_DEVELOPMENT_INSTANCE_URL,
+	RELEASE_RENDERER_MEMORY_CHANNEL,
+} from '@electron/common/Constants';
+import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
+import {readExactPlainRecord} from '@electron/common/PlainRecord';
 import type {
 	AppMetricsSnapshot,
 	ClipboardWriteFileOptions,
@@ -19,6 +27,10 @@ import type {
 	GlobalKeyEvent,
 	GlobalKeyHookRegisterOptions,
 	GlobalMouseEvent,
+	GlobalShortcutCaptureEvent,
+	GlobalShortcutEvent,
+	GlobalShortcutsStatus,
+	GlobalShortcutsSyncPayload,
 	GpuInfo,
 	InputMonitoringPermissionStatus,
 	LinuxAppearanceSnapshot,
@@ -28,38 +40,58 @@ import type {
 	NativeAudioAvailability,
 	NativeAudioEndMessage,
 	NativeAudioFrameMessage,
-	NativeAudioRoutingGraphResult,
+	NativeAudioPlaybackDevice,
 	NativeAudioStartOptions,
 	NativeAudioStartResult,
-	NativeScreenCaptureAvailability,
-	NativeScreenCaptureDiagnostics,
-	NativeScreenCaptureEndMessage,
 	NativeScreenCaptureLifecycleEventKind,
 	NativeScreenCaptureLifecycleMessage,
 	NativeScreenCaptureLifecycleSource,
-	NativeScreenCaptureSource,
-	NativeScreenCaptureStartOptions,
-	NativeScreenCaptureStartResult,
 	NotificationOptions,
 	NotificationResult,
-	OpenH264Status,
 	SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
+	SetDesktopTroubleshootingDisableModuleUpdatesOptions,
 	SpellcheckBundledDictionary,
 	SpellcheckResolvedEngineInfo,
 	SpellcheckState,
 	StreamerModeCaptureAppStatus,
 	StreamingPriorityDiagnostics,
 	TextareaContextMenuParams,
+	ThemeFolderChange,
+	ThemeLinkedFileChange,
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
 	UpdaterContext,
 	UpdaterEvent,
 	VirtmicAvailability,
-	VirtmicLinkOptions,
 	VirtmicNode,
-	VirtmicRoutingGraphResult,
-	VirtmicSystemLinkOptions,
 } from '@electron/common/Types';
+import {createAccountEnginePreloadAPI} from '@electron/preload/AccountEnginePreload';
+import {installBootFrame} from '@electron/preload/BootFramePreload';
+import {createBootStatePreloadAPI} from '@electron/preload/BootStatePreload';
+import {createBrowserHandoffPreloadAPI} from '@electron/preload/BrowserHandoffPreload';
+import {createDesktopStoragePreloadAPI} from '@electron/preload/DesktopStoragePreload';
+import {createFirstContentPaintSignal} from '@electron/preload/FirstContentPaint';
+import {applyLegacyRawLocalStorage} from '@electron/preload/LegacyRawStorageSeed';
+import {createLocalAppPreloadAPI} from '@electron/preload/LocalAppPreload';
+import {createNativeGatewayPreloadAPI} from '@electron/preload/NativeGatewayPreload';
+import {createOtherPlatformTemplatePreloadAPI} from '@electron/preload/OtherPlatformTemplatePreload';
+import {DESKTOP_API_ATTACHMENT_AUTHORIZATION_CHANNEL} from '@fluxer/desktop_ipc/src/ApiAttachmentAuthorizationContract';
+import type {DesktopCapabilityManifest} from '@fluxer/desktop_ipc/src/CapabilityManifest';
+import {DESKTOP_CAPABILITY_MANIFEST_CHANNEL} from '@fluxer/desktop_ipc/src/CapabilityManifest';
+import {DESKTOP_DIRECT_MESSAGES_AVAILABLE_CHANNEL} from '@fluxer/desktop_ipc/src/DirectMessagesContract';
+import {
+	DESKTOP_INSTANCE_PRODUCT_NAME_CHANNEL,
+	readInstanceProductName,
+} from '@fluxer/desktop_ipc/src/InstanceProductNameContract';
+import {DESKTOP_LAST_ROUTE_CHANNEL} from '@fluxer/desktop_ipc/src/LastRouteContract';
+import {
+	buildNativeTitlebarStartupHtml,
+	NATIVE_TITLEBAR_CLASS,
+	NATIVE_TITLEBAR_CONTROL_ATTR,
+	type NativeTitlebarControlName,
+	type NativeTitlebarLayout,
+} from '@fluxer/desktop_ipc/src/NativeTitlebarShell';
+import {ZOOM_PREBOOT_MIRROR_STORAGE_KEY} from '@fluxer/desktop_ipc/src/StorageContract';
 import {
 	VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL,
 	type VoiceEngineV2BridgeHardwareEncoderApi,
@@ -73,24 +105,24 @@ import type {
 import {contextBridge, ipcRenderer, webFrame} from 'electron';
 
 const ACCESSIBILITY_STORE_STORAGE_KEY = 'AccessibilityStore';
-const ACCESSIBILITY_ZOOM_STORAGE_KEY = 'AccessibilityStore:zoomLevel';
 const ACTIVE_ALLOW_TRANSPARENCY_RENDERER_ARG = '--fluxer-active-allow-transparency=1';
 const ACTIVE_USE_NATIVE_TITLEBAR_RENDERER_ARG = '--fluxer-active-use-native-titlebar=1';
 const CUSTOM_TITLEBAR_HEIGHT = '32px';
 const NATIVE_TITLEBAR_HEIGHT = '0px';
 const STARTUP_NATIVE_TITLEBAR_ID = 'fluxer-startup-native-titlebar';
-const THEME_STUDIO_STANDALONE_PATHNAME = '/theme-studio';
-const ZOOM_LEVEL_MIN = 0.5;
-const ZOOM_LEVEL_MAX = 2.0;
+const SERVED_PRODUCT_NAME_SELECTOR = 'meta[name="apple-mobile-web-app-title"]:not([data-fluxer-branding])';
+const DESKTOP_CAPABILITY_MANIFEST_KEYS = Object.freeze(['appStore', 'gatewaySocket'] as const);
 
-interface AccessibilityStartupSettings {
-	zoomLevel: number;
-	syncReducedMotionWithSystem: boolean;
-	reducedMotionOverride: boolean | null;
+class DesktopCapabilityManifestContractError extends TypeError {
+	public constructor(reason: string, options?: ErrorOptions) {
+		super(`Desktop capability manifest contract violation: ${reason}`, options);
+		this.name = 'DesktopCapabilityManifestContractError';
+	}
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
+interface AccessibilityStartupSettings {
+	syncReducedMotionWithSystem: boolean;
+	reducedMotionOverride: boolean | null;
 }
 
 const NATIVE_SCREEN_CAPTURE_LIFECYCLE_KINDS: ReadonlySet<NativeScreenCaptureLifecycleEventKind> = new Set([
@@ -132,32 +164,6 @@ function validateNativeScreenCaptureLifecycleMessage(value: unknown): NativeScre
 		: {captureId, kind: kind as NativeScreenCaptureLifecycleEventKind, message, source};
 }
 
-function clampZoomLevel(level: number): number {
-	if (!Number.isFinite(level)) return 1;
-	const pct = Math.round(level * 100);
-	const clampedPct = Math.max(Math.round(ZOOM_LEVEL_MIN * 100), Math.min(Math.round(ZOOM_LEVEL_MAX * 100), pct));
-	return clampedPct / 100;
-}
-
-function readLocalZoomLevel(): number | null {
-	let raw: string | null;
-	try {
-		raw = window.localStorage.getItem(ACCESSIBILITY_ZOOM_STORAGE_KEY);
-	} catch {
-		return null;
-	}
-	if (raw === null) {
-		return null;
-	}
-	let parsed: unknown;
-	try {
-		parsed = JSON.parse(raw);
-	} catch {
-		return null;
-	}
-	return typeof parsed === 'number' ? clampZoomLevel(parsed) : null;
-}
-
 function readLegacyAccessibilityStartupSettings(): AccessibilityStartupSettings | null {
 	let raw: string | null;
 	try {
@@ -182,30 +188,32 @@ function readLegacyAccessibilityStartupSettings(): AccessibilityStartupSettings 
 		return null;
 	}
 	return {
-		zoomLevel: typeof parsed.zoomLevel === 'number' ? clampZoomLevel(parsed.zoomLevel) : 1.0,
 		syncReducedMotionWithSystem:
 			typeof parsed.syncReducedMotionWithSystem === 'boolean' ? parsed.syncReducedMotionWithSystem : true,
 		reducedMotionOverride: typeof parsed.reducedMotionOverride === 'boolean' ? parsed.reducedMotionOverride : null,
 	};
 }
 
+function hasPrebootZoomMirror(): boolean {
+	let raw: string | null;
+	try {
+		raw = window.localStorage.getItem(ZOOM_PREBOOT_MIRROR_STORAGE_KEY);
+	} catch {
+		return false;
+	}
+	return raw !== null && Number.isFinite(Number.parseInt(raw, 10));
+}
+
 function readAccessibilityStartupSettings(): AccessibilityStartupSettings | null {
-	const localZoomLevel = readLocalZoomLevel();
+	const hasZoomMirror = hasPrebootZoomMirror();
 	const legacySettings = readLegacyAccessibilityStartupSettings();
-	if (localZoomLevel === null && legacySettings === null) {
+	if (!hasZoomMirror && legacySettings === null) {
 		return null;
 	}
 	return {
-		zoomLevel: localZoomLevel ?? legacySettings?.zoomLevel ?? 1.0,
 		syncReducedMotionWithSystem: legacySettings?.syncReducedMotionWithSystem ?? true,
 		reducedMotionOverride: legacySettings?.reducedMotionOverride ?? null,
 	};
-}
-
-function persistLocalZoomLevel(level: number): void {
-	try {
-		window.localStorage.setItem(ACCESSIBILITY_ZOOM_STORAGE_KEY, JSON.stringify(clampZoomLevel(level)));
-	} catch {}
 }
 
 function getSystemReducedMotionPreference(): boolean {
@@ -260,13 +268,6 @@ function applyReducedMotionClass(reducedMotion: boolean): void {
 	});
 }
 
-function applyCustomZoomProperty(level: number): void {
-	const zoomPercent = Math.round(clampZoomLevel(level) * 100);
-	withDocumentElement((root) => {
-		root.style.setProperty('--custom-zoom', String(zoomPercent));
-	});
-}
-
 function getStartupPlatformClass(): string {
 	switch (process.platform) {
 		case 'darwin':
@@ -280,14 +281,47 @@ function getStartupPlatformClass(): string {
 	}
 }
 
+function getStartupPlatform(): string {
+	return getStartupPlatformClass().replace('platform-', '');
+}
+
+function startupNativeTitlebarLayout(): NativeTitlebarLayout {
+	return process.platform === 'darwin' ? 'macos' : 'controls';
+}
+
+function wireStartupNativeTitlebarControls(titlebar: HTMLElement): void {
+	titlebar.querySelectorAll<HTMLButtonElement>(`[${NATIVE_TITLEBAR_CONTROL_ATTR}]`).forEach((button) => {
+		const control = button.getAttribute(NATIVE_TITLEBAR_CONTROL_ATTR) as NativeTitlebarControlName | null;
+		if (control == null) return;
+		button.addEventListener('click', () => {
+			ipcRenderer.send(`window-${control}`);
+		});
+	});
+}
+
+function readServedProductName(): string | null {
+	const content = document.head?.querySelector<HTMLMetaElement>(SERVED_PRODUCT_NAME_SELECTOR)?.getAttribute('content');
+	return readInstanceProductName(content);
+}
+
 function installStartupNativeTitlebar(activeUseNativeTitleBar: boolean): void {
-	if (activeUseNativeTitleBar || window.location.pathname === THEME_STUDIO_STANDALONE_PATHNAME) return;
+	if (activeUseNativeTitleBar || window.location.protocol === 'data:') {
+		return;
+	}
+	const layout = startupNativeTitlebarLayout();
 	const install = (): void => {
 		if (!document.body || document.getElementById(STARTUP_NATIVE_TITLEBAR_ID)) return;
 		const titlebar = document.createElement('div');
 		titlebar.id = STARTUP_NATIVE_TITLEBAR_ID;
+		titlebar.className = NATIVE_TITLEBAR_CLASS.root;
+		titlebar.setAttribute('role', 'group');
 		titlebar.setAttribute('aria-hidden', 'true');
 		titlebar.setAttribute('data-native-titlebar', '');
+		titlebar.setAttribute('data-platform', getStartupPlatform());
+		titlebar.innerHTML = buildNativeTitlebarStartupHtml(layout, readServedProductName());
+		if (layout === 'controls') {
+			wireStartupNativeTitlebarControls(titlebar);
+		}
 		document.body.prepend(titlebar);
 	};
 	if (document.body) {
@@ -324,25 +358,89 @@ function applyStartupAccessibilitySettings(): void {
 	if (settings === null) {
 		return;
 	}
-	persistLocalZoomLevel(settings.zoomLevel);
 	webFrame.setZoomFactor(1);
-	applyCustomZoomProperty(settings.zoomLevel);
 	applyReducedMotionClass(resolveReducedMotion(settings));
 }
 
+function readDesktopCapabilityManifest(): DesktopCapabilityManifest {
+	let value: unknown;
+	try {
+		value = ipcRenderer.sendSync(DESKTOP_CAPABILITY_MANIFEST_CHANNEL);
+	} catch (error) {
+		throw new DesktopCapabilityManifestContractError('the main process request failed', {cause: error});
+	}
+	const manifest = readExactPlainRecord({value, expectedKeys: DESKTOP_CAPABILITY_MANIFEST_KEYS});
+	if (manifest === null) {
+		throw new DesktopCapabilityManifestContractError(
+			'the main process response must be a plain object with exactly appStore and gatewaySocket',
+		);
+	}
+	if (typeof manifest.appStore !== 'boolean') {
+		throw new DesktopCapabilityManifestContractError('appStore must be a boolean');
+	}
+	if (typeof manifest.gatewaySocket !== 'boolean') {
+		throw new DesktopCapabilityManifestContractError('gatewaySocket must be a boolean');
+	}
+	return {appStore: manifest.appStore, gatewaySocket: manifest.gatewaySocket};
+}
+
+function reportPrebootTheme(renderer: typeof ipcRenderer): void {
+	let theme: string | null = null;
+	try {
+		theme = window.localStorage.getItem('theme');
+	} catch {
+		return;
+	}
+	if (typeof theme === 'string' && theme.length > 0) {
+		renderer.send(DESKTOP_PREBOOT_THEME_CHANNEL, theme);
+	}
+}
+
+const releaseBootFrame = installBootFrame(ipcRenderer, (callback) => window.requestAnimationFrame(callback));
+
 applyStartupDesktopWindowClasses();
+
+applyLegacyRawLocalStorage(ipcRenderer);
+
+reportPrebootTheme(ipcRenderer);
+window.addEventListener('pagehide', () => reportPrebootTheme(ipcRenderer));
+document.addEventListener('visibilitychange', () => {
+	if (document.visibilityState === 'hidden') {
+		reportPrebootTheme(ipcRenderer);
+	}
+});
 
 applyStartupAccessibilitySettings();
 
 const api: ElectronAPI = {
 	platform: process.platform,
 	buildChannel: BUILD_CHANNEL,
+	localDevelopmentInstanceUrl: LOCAL_DEVELOPMENT_INSTANCE_URL,
+	capabilities: readDesktopCapabilityManifest(),
+	offlineBuild: IS_OFFLINE_BUILD,
+	...createDesktopStoragePreloadAPI(ipcRenderer),
+	...createLocalAppPreloadAPI(ipcRenderer),
+	...createBrowserHandoffPreloadAPI(ipcRenderer),
+	...createNativeGatewayPreloadAPI(ipcRenderer),
+	...createAccountEnginePreloadAPI(ipcRenderer),
+	...createOtherPlatformTemplatePreloadAPI(ipcRenderer),
+	...createBootStatePreloadAPI(ipcRenderer),
+	reportLastRoute: (routePath: string): void => {
+		ipcRenderer.send(DESKTOP_LAST_ROUTE_CHANNEL, routePath);
+	},
+	setApiAttachmentAuthorization: (apiEndpoint: string, token: string | null): Promise<boolean> =>
+		ipcRenderer.invoke(DESKTOP_API_ATTACHMENT_AUTHORIZATION_CHANNEL, {apiEndpoint, token}) as Promise<boolean>,
+	reportInstanceProductName: (instanceKey: string, productName: string): void => {
+		ipcRenderer.send(DESKTOP_INSTANCE_PRODUCT_NAME_CHANNEL, {instanceKey, productName});
+	},
+	notifyFirstContentPainted: createFirstContentPaintSignal(
+		ipcRenderer,
+		(callback) => window.requestAnimationFrame(callback),
+		releaseBootFrame,
+	),
 	getDesktopInfo: (): Promise<DesktopInfo> => ipcRenderer.invoke('get-desktop-info'),
 	getGpuInfo: (): Promise<GpuInfo> => ipcRenderer.invoke('get-gpu-info'),
 	getAppMetrics: (): Promise<AppMetricsSnapshot> => ipcRenderer.invoke('get-app-metrics'),
-	getOpenH264Status: (): Promise<OpenH264Status> => ipcRenderer.invoke('get-openh264-status'),
-	setOpenH264Enabled: (enabled: boolean): Promise<OpenH264Status> =>
-		ipcRenderer.invoke('set-openh264-enabled', enabled),
 	getSystemIdleTimeMs: (): Promise<number> => ipcRenderer.invoke('system-idle-time-ms'),
 	getDesktopWindowBehaviorSettings: (): Promise<DesktopWindowBehaviorSettings> =>
 		ipcRenderer.invoke('desktop-window-behavior-get'),
@@ -356,6 +454,22 @@ const api: ElectronAPI = {
 	readThemeLocalFiles: (paths: Array<string>) => ipcRenderer.invoke('theme-local-files-read', paths),
 	clearThemeLocalFiles: () => ipcRenderer.invoke('theme-local-files-clear'),
 	importThemeDirectory: () => ipcRenderer.invoke('theme-directory-import'),
+	pickThemeLinkedFiles: (options?: {multiple?: boolean}) => ipcRenderer.invoke('theme-linked-files-pick', options),
+	watchThemeLinkedFiles: (paths: Array<string>) => ipcRenderer.invoke('theme-linked-files-watch', paths),
+	onThemeLinkedFileChange: (callback: (change: ThemeLinkedFileChange) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, change: ThemeLinkedFileChange) => callback(change);
+		ipcRenderer.on('theme-linked-file-changed', handler);
+		return () => ipcRenderer.removeListener('theme-linked-file-changed', handler);
+	},
+	importThemeFolder: () => ipcRenderer.invoke('theme-folder-import'),
+	watchThemeFolders: (paths: Array<string>) => ipcRenderer.invoke('theme-folders-watch', paths),
+	removeThemeFolder: (path: string) => ipcRenderer.invoke('theme-folder-remove', path),
+	onThemeFolderChange: (callback: (change: ThemeFolderChange) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, change: ThemeFolderChange) => callback(change);
+		ipcRenderer.on('theme-folder-changed', handler);
+		return () => ipcRenderer.removeListener('theme-folder-changed', handler);
+	},
+	themeFolderWatch: true,
 	cacheVoiceBackgroundMedia: (options) => ipcRenderer.invoke('voice-background-media-cache:write', options),
 	readVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:read', id),
 	deleteVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:delete', id),
@@ -365,18 +479,16 @@ const api: ElectronAPI = {
 		options: SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
 	): Promise<DesktopTroubleshootingSettings> =>
 		ipcRenderer.invoke('desktop-troubleshooting-set-disable-hardware-acceleration', options),
-	desktopTroubleshootingReload: (): Promise<void> => ipcRenderer.invoke('desktop-troubleshooting-reload'),
-	desktopTroubleshootingResetAppData: (options?: {confirm?: boolean}): Promise<void> =>
-		ipcRenderer.invoke('desktop-troubleshooting-reset-app-data', options),
-	popupHelpMenu: (): Promise<void> => ipcRenderer.invoke('desktop-troubleshooting-popup-help-menu'),
+	setDesktopDisableModuleUpdates: (
+		options: SetDesktopTroubleshootingDisableModuleUpdatesOptions,
+	): Promise<DesktopTroubleshootingSettings> =>
+		ipcRenderer.invoke('desktop-troubleshooting-set-disable-module-updates', options),
 	onUpdaterEvent: (callback: (event: UpdaterEvent) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, data: UpdaterEvent) => callback(data);
 		ipcRenderer.on('updater-event', handler);
 		return () => ipcRenderer.removeListener('updater-event', handler);
 	},
 	updaterCheck: (context: UpdaterContext): Promise<void> => ipcRenderer.invoke('updater-check', context),
-	updaterDownload: (context: UpdaterContext): Promise<void> => ipcRenderer.invoke('updater-download', context),
-	updaterInstall: () => ipcRenderer.invoke('updater-install'),
 	windowMinimize: (): void => {
 		ipcRenderer.send('window-minimize');
 	},
@@ -387,11 +499,11 @@ const api: ElectronAPI = {
 		ipcRenderer.send('window-close');
 	},
 	windowIsMaximized: (): Promise<boolean> => ipcRenderer.invoke('window-is-maximized'),
-	focusThemeStudioPopout: (): Promise<boolean> => ipcRenderer.invoke('theme-studio-popout-focus'),
-	closeThemeStudioPopout: (): Promise<boolean> => ipcRenderer.invoke('theme-studio-popout-close'),
+
 	popoutSetAlwaysOnTop: (key: string, flag: boolean): Promise<boolean> =>
 		ipcRenderer.invoke('popout:set-always-on-top', key, flag),
 	popoutFocus: (key: string): Promise<boolean> => ipcRenderer.invoke('popout:focus', key),
+	cssEditorWindow: true,
 	openVoiceDebugEventSinkPopout: (entries: Array<DesktopVoiceDebugEventSinkEntry>): Promise<void> =>
 		ipcRenderer.invoke('voice-debug-event-sink:open', entries),
 	appendVoiceDebugEventSinkEntries: (entries: Array<DesktopVoiceDebugEventSinkEntry>): void => {
@@ -399,6 +511,15 @@ const api: ElectronAPI = {
 	},
 	setVoiceDebugEventSinkStatsHtml: (html: string): void => {
 		ipcRenderer.send('voice-debug-event-sink:set-stats-html', html);
+	},
+	onWindowLiveResizeChange: (callback: (resizing: boolean) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, resizing: boolean): void => {
+			callback(resizing);
+		};
+		ipcRenderer.on('window-live-resize-change', handler);
+		return () => {
+			ipcRenderer.removeListener('window-live-resize-change', handler);
+		};
 	},
 	onWindowMaximizeChange: (callback: (maximized: boolean) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, maximized: boolean): void => {
@@ -440,24 +561,21 @@ const api: ElectronAPI = {
 		ipcRenderer.invoke('mac-tcc:status', 'input-monitoring'),
 	requestInputMonitoringPermission: (): Promise<InputMonitoringPermissionStatus> =>
 		ipcRenderer.invoke('mac-tcc:request', 'input-monitoring'),
-	getScreenRecordingPermissionStatus: (): Promise<InputMonitoringPermissionStatus> =>
-		ipcRenderer.invoke('mac-tcc:status', 'screen-recording'),
+	getScreenRecordingPermissionStatus: (liveProbe?: boolean): Promise<InputMonitoringPermissionStatus> =>
+		ipcRenderer.invoke('mac-tcc:status', 'screen-recording', liveProbe === true),
 	requestScreenRecordingPermission: (): Promise<InputMonitoringPermissionStatus> =>
 		ipcRenderer.invoke('mac-tcc:request', 'screen-recording'),
-	downloadFile: (url: string, defaultPath: string): Promise<DownloadFileResult> =>
-		ipcRenderer.invoke('download-file', {url, defaultPath}),
+	downloadFile: (url: string, defaultPath: string, sha256?: string | null): Promise<DownloadFileResult> =>
+		ipcRenderer.invoke('download-file', {url, defaultPath, sha256}),
 	passkeyIsSupported: (): Promise<boolean> => ipcRenderer.invoke('passkey-is-supported'),
 	passkeyAuthenticate: (
 		options: PublicKeyCredentialRequestOptionsJSON,
-		requestContext?: {pin?: string},
+		requestContext?: {pin?: string; instanceKey?: string},
 	): Promise<AuthenticationResponseJSON> => ipcRenderer.invoke('passkey-authenticate', options, requestContext),
 	passkeyRegister: (
 		options: PublicKeyCredentialCreationOptionsJSON,
-		requestContext?: {pin?: string},
+		requestContext?: {pin?: string; instanceKey?: string},
 	): Promise<RegistrationResponseJSON> => ipcRenderer.invoke('passkey-register', options, requestContext),
-	toggleDevTools: (): void => {
-		ipcRenderer.send('toggle-devtools');
-	},
 	getDesktopSources: (
 		types: Array<'screen' | 'window'>,
 		requestId?: string,
@@ -497,9 +615,12 @@ const api: ElectronAPI = {
 	closeNotifications: (ids: Array<string>): void => {
 		ipcRenderer.send('close-notifications', ids);
 	},
-	onNotificationClick: (callback: (id: string, url?: string) => void): (() => void) => {
-		const handler = (_event: Electron.IpcRendererEvent, id: string, url?: string): void => {
-			callback(id, url);
+	onNotificationClick: (
+		callback: (id: string, url: string | null, accountKey: string | null) => void,
+	): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, id: unknown, url: unknown, accountKey: unknown): void => {
+			if (typeof id !== 'string') return;
+			callback(id, typeof url === 'string' ? url : null, typeof accountKey === 'string' ? accountKey : null);
 		};
 		ipcRenderer.on('notification-click', handler);
 		return () => {
@@ -509,7 +630,9 @@ const api: ElectronAPI = {
 	setBadgeCount: (count: number): void => {
 		ipcRenderer.send('set-badge-count', count);
 	},
-	getBadgeCount: (): Promise<number> => ipcRenderer.invoke('get-badge-count'),
+	setUnreadBadge: (badge: number): void => {
+		ipcRenderer.send('set-unread-badge', badge);
+	},
 	setNativeLocale: (locale: string, strings: Record<string, string>): void => {
 		ipcRenderer.send('native-locale-set', {locale, strings});
 	},
@@ -527,23 +650,20 @@ const api: ElectronAPI = {
 		ipcRenderer.on('jump-list-new-dm', handler);
 		return () => ipcRenderer.removeListener('jump-list-new-dm', handler);
 	},
-	bounceDock: (type?: 'critical' | 'informational'): number => {
-		return ipcRenderer.sendSync('bounce-dock', type ?? 'informational');
-	},
-	cancelBounceDock: (id: number): void => {
-		ipcRenderer.send('cancel-bounce-dock', id);
-	},
 	setZoomFactor: (factor: number): void => {
 		ipcRenderer.send('set-zoom-factor', factor);
 	},
-	getZoomFactor: (): Promise<number> => ipcRenderer.invoke('get-zoom-factor'),
 	getAccessibilitySupportEnabled: (): Promise<boolean> => ipcRenderer.invoke('get-accessibility-support-enabled'),
+	getSystemLocale: (): Promise<string> => ipcRenderer.invoke('system-locale-get'),
 	onAccessibilitySupportChanged: (callback: (enabled: boolean) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, enabled: boolean): void => callback(enabled);
 		ipcRenderer.on('accessibility-support-changed', handler);
 		return () => ipcRenderer.removeListener('accessibility-support-changed', handler);
 	},
 	getLinuxAppearance: (): Promise<LinuxAppearanceSnapshot> => ipcRenderer.invoke('linux-appearance-get'),
+	setPrebootTheme: (theme: string): void => {
+		ipcRenderer.send(DESKTOP_PREBOOT_THEME_CHANNEL, theme);
+	},
 	onLinuxAppearanceChanged: (callback: (snapshot: LinuxAppearanceSnapshot) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, snapshot: LinuxAppearanceSnapshot): void => callback(snapshot);
 		ipcRenderer.on('linux-appearance-changed', handler);
@@ -572,14 +692,14 @@ const api: ElectronAPI = {
 	setTrayRuntimeState: (state: Partial<TrayRuntimeStatePayload>): void => {
 		ipcRenderer.send('tray-runtime-state-update', state);
 	},
+	setDirectMessagesAvailable: (available: boolean): void => {
+		ipcRenderer.send(DESKTOP_DIRECT_MESSAGES_AVAILABLE_CHANNEL, available);
+	},
 	acquireStreamingPriority: (): void => {
 		ipcRenderer.send('streaming-priority-acquire');
 	},
 	releaseStreamingPriority: (): void => {
 		ipcRenderer.send('streaming-priority-release');
-	},
-	resetStreamingPriority: (): void => {
-		ipcRenderer.send('streaming-priority-reset');
 	},
 	getStreamingPriorityDiagnostics: (): Promise<StreamingPriorityDiagnostics> =>
 		ipcRenderer.invoke('streaming-priority-get-diagnostics'),
@@ -590,14 +710,13 @@ const api: ElectronAPI = {
 	},
 	globalKeyHookStart: (): Promise<boolean> => ipcRenderer.invoke('global-key-hook-start'),
 	globalKeyHookStop: (): Promise<void> => ipcRenderer.invoke('global-key-hook-stop'),
-	globalKeyHookIsRunning: (): Promise<boolean> => ipcRenderer.invoke('global-key-hook-is-running'),
 	checkInputMonitoringAccess: (): Promise<boolean> => ipcRenderer.invoke('check-input-monitoring-access'),
 	globalKeyHookRegister: (options: GlobalKeyHookRegisterOptions): Promise<void> =>
 		ipcRenderer.invoke('global-key-hook-register', options),
 	globalKeyHookUnregister: (id: string): Promise<void> => ipcRenderer.invoke('global-key-hook-unregister', id),
 	globalKeyHookUnregisterAll: (): Promise<void> => ipcRenderer.invoke('global-key-hook-unregister-all'),
 	linuxEvdevStatus: () => ipcRenderer.invoke('linux-evdev-status'),
-	linuxEvdevGrantAccess: () => ipcRenderer.invoke('linux-evdev-grant-access'),
+
 	onGlobalKeyEvent: (callback: (event: GlobalKeyEvent) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, data: GlobalKeyEvent): void => {
 			callback(data);
@@ -625,14 +744,51 @@ const api: ElectronAPI = {
 			ipcRenderer.removeListener('global-keybind-triggered', handler);
 		};
 	},
-	spellcheckGetState: (): Promise<SpellcheckState> => ipcRenderer.invoke('spellcheck-get-state'),
+	globalShortcuts: {
+		sync: (payload: GlobalShortcutsSyncPayload): Promise<void> => ipcRenderer.invoke('global-shortcuts:sync', payload),
+		setPaused: (paused: boolean): Promise<void> => ipcRenderer.invoke('global-shortcuts:set-paused', paused),
+		getStatus: (): Promise<GlobalShortcutsStatus> => ipcRenderer.invoke('global-shortcuts:get-status'),
+		onStatus: (callback: (status: GlobalShortcutsStatus) => void): (() => void) => {
+			const handler = (_event: Electron.IpcRendererEvent, data: GlobalShortcutsStatus): void => {
+				callback(data);
+			};
+			ipcRenderer.on('global-shortcuts:status', handler);
+			return () => {
+				ipcRenderer.removeListener('global-shortcuts:status', handler);
+			};
+		},
+		onEvent: (callback: (event: GlobalShortcutEvent) => void): (() => void) => {
+			const handler = (_event: Electron.IpcRendererEvent, data: GlobalShortcutEvent): void => {
+				callback(data);
+			};
+			ipcRenderer.on('global-shortcut-event', handler);
+			return () => {
+				ipcRenderer.removeListener('global-shortcut-event', handler);
+			};
+		},
+		setUp: (): Promise<GlobalShortcutsStatus> => ipcRenderer.invoke('global-shortcuts:set-up'),
+		recheck: (): Promise<GlobalShortcutsStatus> => ipcRenderer.invoke('global-shortcuts:recheck'),
+		configure: (): Promise<void> => ipcRenderer.invoke('global-shortcuts:configure'),
+		setDirectInputEnabled: (enabled: boolean): Promise<GlobalShortcutsStatus> =>
+			ipcRenderer.invoke('global-shortcuts:set-direct-input-enabled', enabled),
+		startCapture: (): Promise<number | null> => ipcRenderer.invoke('global-shortcuts:start-capture'),
+		stopCapture: (captureId: number): Promise<void> => ipcRenderer.invoke('global-shortcuts:stop-capture', captureId),
+		onCapture: (callback: (event: GlobalShortcutCaptureEvent) => void): (() => void) => {
+			const handler = (_event: Electron.IpcRendererEvent, data: GlobalShortcutCaptureEvent): void => {
+				callback(data);
+			};
+			ipcRenderer.on('global-shortcuts:capture', handler);
+			return () => {
+				ipcRenderer.removeListener('global-shortcuts:capture', handler);
+			};
+		},
+	},
 	spellcheckSetState: (state: Partial<SpellcheckState>): Promise<SpellcheckState> =>
 		ipcRenderer.invoke('spellcheck-set-state', state),
 	spellcheckGetAvailableLanguages: (): Promise<Array<string>> =>
 		ipcRenderer.invoke('spellcheck-get-available-languages'),
 	spellcheckGetBundledDictionaries: (): Promise<Array<SpellcheckBundledDictionary>> =>
 		ipcRenderer.invoke('spellcheck:get-bundled-dictionaries'),
-	spellcheckSuggest: (word: string): Promise<Array<string>> => ipcRenderer.invoke('spellcheck:suggest', word),
 	onSpellcheckEngineResolved: (callback: (info: SpellcheckResolvedEngineInfo) => void): (() => void) => {
 		const handler = (_event: Electron.IpcRendererEvent, data: SpellcheckResolvedEngineInfo): void => callback(data);
 		ipcRenderer.on('spellcheck-engine-resolved', handler);
@@ -667,13 +823,6 @@ const api: ElectronAPI = {
 			targets?: Array<VirtmicNode>;
 			availability: VirtmicAvailability;
 		}> => ipcRenderer.invoke('virtmic:list', options),
-		getRoutingGraph: (): Promise<VirtmicRoutingGraphResult> => ipcRenderer.invoke('virtmic:get-routing-graph'),
-		startInclude: (include: Array<VirtmicNode>, options?: VirtmicLinkOptions): Promise<boolean> =>
-			ipcRenderer.invoke('virtmic:start-include', include, options),
-		startSystem: (exclude: Array<VirtmicNode>, options?: VirtmicSystemLinkOptions): Promise<boolean> =>
-			ipcRenderer.invoke('virtmic:start-system', exclude, options),
-		resolveWindowPid: (sourceId: string): Promise<number | null> =>
-			ipcRenderer.invoke('virtmic:resolve-window-pid', sourceId),
 		stop: (): Promise<void> => ipcRenderer.invoke('virtmic:stop'),
 	},
 	nativeAudio: {
@@ -686,9 +835,11 @@ const api: ElectronAPI = {
 			ipcRenderer.invoke('native-audio:start', options),
 		setRule: (captureId: string, linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>): Promise<boolean> =>
 			ipcRenderer.invoke('native-audio:set-rule', captureId, linuxRule),
+		listPlaybackDevices: (): Promise<Array<NativeAudioPlaybackDevice>> =>
+			ipcRenderer.invoke('native-audio:list-playback-devices'),
+		setWinEndpoints: (captureId: string, endpoints: Array<string>): Promise<boolean> =>
+			ipcRenderer.invoke('native-audio:set-win-endpoints', captureId, endpoints),
 		stop: (captureId: string): Promise<void> => ipcRenderer.invoke('native-audio:stop', captureId),
-		getRoutingGraph: (captureId?: string): Promise<NativeAudioRoutingGraphResult> =>
-			ipcRenderer.invoke('native-audio:get-routing-graph', captureId),
 		onFrame: (callback: (message: NativeAudioFrameMessage) => void): (() => void) => {
 			const handler = (_event: Electron.IpcRendererEvent, message: NativeAudioFrameMessage): void => {
 				callback(message);
@@ -705,22 +856,6 @@ const api: ElectronAPI = {
 		},
 	},
 	nativeScreenCapture: {
-		getAvailability: (): Promise<NativeScreenCaptureAvailability> =>
-			ipcRenderer.invoke('native-screen-capture:get-availability'),
-		listSources: (): Promise<Array<NativeScreenCaptureSource>> =>
-			ipcRenderer.invoke('native-screen-capture:list-sources'),
-		start: (options: NativeScreenCaptureStartOptions): Promise<NativeScreenCaptureStartResult> =>
-			ipcRenderer.invoke('native-screen-capture:start', options),
-		getDiagnostics: (captureId: string): Promise<NativeScreenCaptureDiagnostics | null> =>
-			ipcRenderer.invoke('native-screen-capture:get-diagnostics', captureId),
-		stop: (captureId: string): Promise<void> => ipcRenderer.invoke('native-screen-capture:stop', captureId),
-		onEnd: (callback: (message: NativeScreenCaptureEndMessage) => void): (() => void) => {
-			const handler = (_event: Electron.IpcRendererEvent, message: NativeScreenCaptureEndMessage): void => {
-				callback(message);
-			};
-			ipcRenderer.on('native-screen-capture:end', handler);
-			return () => ipcRenderer.removeListener('native-screen-capture:end', handler);
-		},
 		onLifecycleEvent: (callback: (message: NativeScreenCaptureLifecycleMessage) => void): (() => void) => {
 			const handler = (_event: Electron.IpcRendererEvent, message: unknown): void => {
 				const validated = validateNativeScreenCaptureLifecycleMessage(message);
@@ -735,16 +870,6 @@ const api: ElectronAPI = {
 		getHardwareEncoderCapabilities: () => ipcRenderer.invoke(VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL),
 	} satisfies VoiceEngineV2BridgeHardwareEncoderApi,
 };
-
-window.addEventListener(
-	'contextmenu',
-	(event) => {
-		const target = event.target as HTMLElement | null;
-		const isTextarea = Boolean(target?.closest?.('textarea'));
-		ipcRenderer.send('spellcheck-context-target', {isTextarea});
-	},
-	true,
-);
 
 let spellcheckAutodetectTimer: NodeJS.Timeout | null = null;
 let spellcheckAutodetectContextSequence = 0;
@@ -827,6 +952,10 @@ ipcRenderer.on('spellcheck-engine-resolved', (_event, info: SpellcheckResolvedEn
 	if (info?.mode === 'hunspell') {
 		installSpellcheckProvider();
 	}
+});
+
+ipcRenderer.on(RELEASE_RENDERER_MEMORY_CHANNEL, () => {
+	webFrame.clearCache();
 });
 
 contextBridge.exposeInMainWorld('electron', api);

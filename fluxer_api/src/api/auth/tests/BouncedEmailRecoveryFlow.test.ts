@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	clearTestEmails,
 	createAuthHarness,
@@ -10,7 +7,13 @@ import {
 	findLastTestEmail,
 	listTestEmails,
 	type TestAccount,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {resetApiServicesForTesting} from '@app/api/CreateApiContext';
+import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {RecordingWorkerService} from '@app/api/test/RecordingWorkerService';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface BouncedEmailRequestNewResponse {
 	ticket: string;
@@ -29,14 +32,12 @@ interface UserPrivateResponse {
 	email: string | null;
 	verified: boolean;
 	email_bounced?: boolean;
-	required_actions: Array<string> | null;
 }
 
 async function markEmailAsBounced(harness: ApiTestHarness, account: TestAccount): Promise<void> {
 	await createBuilderWithoutAuth(harness)
 		.post(`/test/users/${account.userId}/security-flags`)
 		.body({
-			suspicious_activity_flag_names: ['REQUIRE_REVERIFIED_EMAIL'],
 			email_bounced: true,
 			email_verified: false,
 		})
@@ -59,11 +60,20 @@ describe('Bounced email recovery flow', () => {
 	it('allows bounced users to replace email without original-email verification', async () => {
 		const account = await createTestAccount(harness);
 		await markEmailAsBounced(harness, account);
+		await createBuilderWithoutAuth(harness)
+			.post(`/test/users/${account.userId}/premium`)
+			.body({stripe_customer_id: 'cus_bounced_email_sync'})
+			.expect(200)
+			.execute();
+		const worker = new RecordingWorkerService();
+		setInjectedWorkerService(worker);
+		resetApiServicesForTesting();
 		const initialMe = await createBuilder<UserPrivateResponse>(harness, account.token)
 			.get('/users/@me')
 			.expect(200)
 			.execute();
-		expect(initialMe.required_actions).toContain('REQUIRE_REVERIFIED_EMAIL');
+		expect(initialMe.email_bounced).toBe(true);
+		expect(initialMe.verified).toBe(false);
 		const startResponse = await createBuilder<EmailChangeStartResponse>(harness, account.token)
 			.post('/users/@me/email-change/start')
 			.body({})
@@ -92,10 +102,10 @@ describe('Bounced email recovery flow', () => {
 		expect(updatedUser.email).toBe(replacementEmail);
 		expect(updatedUser.verified).toBe(true);
 		expect(updatedUser.email_bounced).toBe(false);
-		expect(updatedUser.required_actions).toEqual([]);
 		const finalMe = await createBuilder<UserPrivateResponse>(harness, account.token).get('/users/@me').execute();
 		expect(finalMe.email).toBe(replacementEmail);
 		expect(finalMe.email_bounced).toBe(false);
+		expect(worker.byTask('syncStripeCustomerEmail').map((job) => job.payload)).toContainEqual({userId: account.userId});
 	});
 	it('rejects bounced-email recovery for accounts that are not marked as bounced', async () => {
 		const account = await createTestAccount(harness);

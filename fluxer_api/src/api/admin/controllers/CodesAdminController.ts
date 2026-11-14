@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {Config} from '@app/api/Config';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {CodesResponse, GenerateGiftCodesRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {Config} from '../../Config';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
+import {GiftCodeParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
 function trimTrailingSlash(value: string): string {
 	return value.endsWith('/') ? value.slice(0, -1) : value;
@@ -25,26 +30,71 @@ export function CodesAdminController(app: HonoApp) {
 			operationId: 'create_admin_gift_codes',
 			summary: 'Issue gift codes',
 			description:
-				'Create one-use Plutonium gift codes with an explicit positive duration and return their complete redemption links. Lifetime gifts are not supported. Not available on self-hosted instances. Requires GIFT_CODES_GENERATE permission.',
+				'Create one-use premium gift codes and return their complete redemption links. Use a positive duration, or on a self-hosted instance the duration type lifetime for premium that never ends. On self-hosted instances the premium mode must be mirror. Requires GIFT_CODES_GENERATE permission.',
 			responseSchema: CodesResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			if (Config.instance.selfHosted) {
+			if (!isPremiumTieringActive()) {
 				throw new FeatureNotAvailableSelfHostedError();
 			}
+			const adminService = ctx.get('adminService');
 			const {count, duration_type, duration_quantity} = ctx.req.valid('json');
-			const codes = await ctx.get('adminService').codeGenerationService.generateGiftCodes({
+			if (duration_type === 'lifetime' && !Config.instance.selfHosted) {
+				throw InputValidationError.create('duration_type', 'Lifetime gift codes are only for self-hosted instances');
+			}
+			const codes = await adminService.codeGenerationService.generateGiftCodes({
 				count,
 				durationType: duration_type,
 				durationQuantity: duration_quantity,
+				createdByUserId: Config.instance.selfHosted ? ctx.get('adminUserId') : SYSTEM_USER_ID,
+			});
+			await recordAdminWrite(ctx, {
+				targetType: 'gift_code',
+				targetId: BigInt(0),
+				action: 'generate_gift_codes',
+				metadata: {
+					count: codes.length.toString(),
+					duration_type: duration_type,
+					duration_quantity: duration_quantity.toString(),
+				},
 			});
 			const baseUrl = trimTrailingSlash(Config.endpoints.gift);
 			return ctx.json({
 				codes: codes.map((code) => `${baseUrl}/${code}`),
 			});
+		},
+	);
+	app.delete(
+		'/admin/gift-codes/:code',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_CODE_GENERATION),
+		requireAdminACL(AdminACLs.GIFT_CODES_GENERATE),
+		Validator('param', GiftCodeParam),
+		OpenAPI({
+			operationId: 'revoke_admin_gift_code',
+			summary: 'Revoke gift code',
+			description:
+				'Revoke a gift code that nobody has redeemed, so it can no longer be redeemed. Pass the code, which is the last part of the redemption link. Returns 404 when the code is unknown or already revoked, and 400 when it was redeemed, in which case Remove user premium ends the premium it gave, or when a customer bought it. Creates audit log entry. Requires GIFT_CODES_GENERATE permission.',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const giftCode = await ctx.get('adminService').codeGenerationService.revokeGiftCode(ctx.req.valid('param').code);
+			await recordAdminWrite(ctx, {
+				targetType: 'gift_code',
+				targetId: BigInt(0),
+				action: 'revoke_gift_code',
+				metadata: {
+					code: giftCode.code,
+					duration_type: giftCode.durationType,
+					duration_quantity: giftCode.durationQuantity.toString(),
+				},
+			});
+			return ctx.body(null, 204);
 		},
 	);
 }

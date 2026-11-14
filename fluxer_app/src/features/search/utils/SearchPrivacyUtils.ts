@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {SearchHistoryEntry} from '@app/features/search/state/SearchHistory';
-import {type SearchHints, tokenize} from '@app/features/search/utils/SearchQueryParser';
+import {
+	isQuoteChar,
+	type SearchHints,
+	splitCSV,
+	tokenize,
+	tryResolveUser,
+} from '@app/features/search/utils/SearchQueryParser';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 
 const USER_FILTER_KEYS = new Set(['from', 'mentions']);
 
@@ -18,25 +25,41 @@ function unquoteTokenValue(value: string): string {
 	return trimmed;
 }
 
-function replaceAllLiteral(value: string, search: string, replacement: string): string {
-	if (search.length === 0 || search === replacement) return value;
-	return value.split(search).join(replacement);
+const UNREDACTED_USER_VALUES = new Set(['@me', 'everyone', 'here', '@everyone', '@here']);
+
+function shouldRedactUserValue(value: string): boolean {
+	return !isProbablyAValidSnowflake(value) && !UNREDACTED_USER_VALUES.has(value.toLowerCase());
+}
+
+function quoteFilterValuePart(part: string): string {
+	if (!/[\s,\\]/.test(part) && !Array.from(part).some(isQuoteChar)) return part;
+	const escaped = Array.from(part)
+		.map((ch) => (ch === '\\' || isQuoteChar(ch) ? `\\${ch}` : ch))
+		.join('');
+	return `"${escaped}"`;
 }
 
 export function formatSearchHistoryEntryForStreamerMode(entry: SearchHistoryEntry): SearchHistoryEntry {
-	const usersByTag = entry.hints?.usersByTag;
-	if (!usersByTag || Object.keys(usersByTag).length === 0) {
-		return entry;
-	}
+	const {tokens} = tokenize(entry.query);
+	const nextUsersByTag: Record<string, string> = {...entry.hints?.usersByTag};
 	let query = entry.query;
-	const nextUsersByTag: Record<string, string> = {...usersByTag};
-	for (const [tag, userId] of Object.entries(usersByTag)) {
-		const formattedTag = NicknameUtils.formatTagForStreamerMode(tag);
-		if (formattedTag === tag) {
-			continue;
-		}
-		query = replaceAllLiteral(query, tag, formattedTag);
-		nextUsersByTag[formattedTag] = userId;
+	for (let index = tokens.length - 1; index >= 0; index--) {
+		const token = tokens[index];
+		const normalizedFilterKey = token.key.startsWith('-') ? token.key.slice(1) : token.key;
+		if (!USER_FILTER_KEYS.has(normalizedFilterKey)) continue;
+		let changed = false;
+		const parts = splitCSV(token.value).map((part) => {
+			if (!shouldRedactUserValue(part)) return part;
+			const formatted = NicknameUtils.formatTagForStreamerMode(part);
+			if (formatted === part) return part;
+			changed = true;
+			const userId = tryResolveUser(part, entry.hints);
+			if (userId) nextUsersByTag[formatted] = userId;
+			return formatted;
+		});
+		if (!changed) continue;
+		const valueStart = token.end - token.value.length;
+		query = query.slice(0, valueStart) + parts.map(quoteFilterValuePart).join(',') + query.slice(token.end);
 	}
 	if (query === entry.query) {
 		return entry;

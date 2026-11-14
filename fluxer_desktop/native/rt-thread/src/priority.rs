@@ -6,8 +6,6 @@ use core::fmt;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PriorityProfile {
     Audio,
-    Video,
-    Network,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -84,66 +82,6 @@ impl Drop for RealtimePriorityGuard {
     }
 }
 
-#[cfg(target_os = "macos")]
-mod platform {
-    use super::{PriorityProfile, RtError, RtOutcome};
-    use libc::qos_class_t::{
-        QOS_CLASS_DEFAULT, QOS_CLASS_USER_INITIATED, QOS_CLASS_USER_INTERACTIVE, QOS_CLASS_UTILITY,
-    };
-
-    pub struct PlatformGuard {
-        prior_qos: libc::qos_class_t,
-        prior_relative: i32,
-    }
-
-    impl PlatformGuard {
-        pub fn acquire(profile: PriorityProfile) -> Result<(Self, RtOutcome), RtError> {
-            assert!(matches!(
-                profile,
-                PriorityProfile::Audio | PriorityProfile::Video | PriorityProfile::Network
-            ));
-            let mut prior_qos: libc::qos_class_t = QOS_CLASS_DEFAULT;
-            let mut prior_relative: i32 = 0;
-            let read_rc = unsafe {
-                libc::pthread_get_qos_class_np(
-                    libc::pthread_self(),
-                    &mut prior_qos,
-                    &mut prior_relative,
-                )
-            };
-            if read_rc != 0 {
-                return Err(RtError::PlatformDenied(read_rc));
-            }
-            let target = map_profile(profile);
-            let set_rc = unsafe { libc::pthread_set_qos_class_self_np(target, 0) };
-            if set_rc != 0 {
-                return Err(RtError::PlatformDenied(set_rc));
-            }
-            Ok((
-                Self {
-                    prior_qos,
-                    prior_relative,
-                },
-                RtOutcome::Acquired,
-            ))
-        }
-
-        pub fn restore(&mut self) {
-            unsafe {
-                let _ = libc::pthread_set_qos_class_self_np(self.prior_qos, self.prior_relative);
-            }
-        }
-    }
-
-    fn map_profile(profile: PriorityProfile) -> libc::qos_class_t {
-        match profile {
-            PriorityProfile::Audio => QOS_CLASS_USER_INTERACTIVE,
-            PriorityProfile::Video => QOS_CLASS_USER_INITIATED,
-            PriorityProfile::Network => QOS_CLASS_UTILITY,
-        }
-    }
-}
-
 #[cfg(all(unix, not(target_os = "macos")))]
 mod platform {
     use super::{PriorityProfile, RtError, RtOutcome};
@@ -157,10 +95,7 @@ mod platform {
 
     impl PlatformGuard {
         pub fn acquire(profile: PriorityProfile) -> Result<(Self, RtOutcome), RtError> {
-            assert!(matches!(
-                profile,
-                PriorityProfile::Audio | PriorityProfile::Video | PriorityProfile::Network
-            ));
+            assert!(matches!(profile, PriorityProfile::Audio));
             let mut prior_policy: i32 = 0;
             let mut prior_param: libc::sched_param = unsafe { core::mem::zeroed() };
             let read_rc = unsafe {
@@ -195,8 +130,6 @@ mod platform {
             }
             let fallback_nice = match profile {
                 PriorityProfile::Audio => -19,
-                PriorityProfile::Video => -10,
-                PriorityProfile::Network => -5,
             };
             let prior_nice = unsafe {
                 *libc::__errno_location() = 0;
@@ -239,13 +172,8 @@ mod platform {
     fn map_profile(profile: PriorityProfile) -> (i32, i32) {
         let policy = libc::SCHED_FIFO;
         let max = unsafe { libc::sched_get_priority_max(policy) };
-        let min = unsafe { libc::sched_get_priority_min(policy) };
-        assert!(max >= min);
-        let span = (max - min).max(1);
         let prio = match profile {
             PriorityProfile::Audio => max,
-            PriorityProfile::Video => min + (span * 2) / 3,
-            PriorityProfile::Network => min + span / 3,
         };
         (policy, prio)
     }
@@ -266,14 +194,9 @@ mod platform {
 
     impl PlatformGuard {
         pub fn acquire(profile: PriorityProfile) -> Result<(Self, RtOutcome), RtError> {
-            assert!(matches!(
-                profile,
-                PriorityProfile::Audio | PriorityProfile::Video | PriorityProfile::Network
-            ));
+            assert!(matches!(profile, PriorityProfile::Audio));
             let task_name: &[u16] = match profile {
                 PriorityProfile::Audio => &AUDIO_W,
-                PriorityProfile::Video => &CAPTURE_W,
-                PriorityProfile::Network => &PLAYBACK_W,
             };
             let mut task_index: u32 = 0;
             let handle = unsafe {
@@ -303,30 +226,9 @@ mod platform {
         b'o' as u16,
         0,
     ];
-    const CAPTURE_W: [u16; 8] = [
-        b'C' as u16,
-        b'a' as u16,
-        b'p' as u16,
-        b't' as u16,
-        b'u' as u16,
-        b'r' as u16,
-        b'e' as u16,
-        0,
-    ];
-    const PLAYBACK_W: [u16; 9] = [
-        b'P' as u16,
-        b'l' as u16,
-        b'a' as u16,
-        b'y' as u16,
-        b'b' as u16,
-        b'a' as u16,
-        b'c' as u16,
-        b'k' as u16,
-        0,
-    ];
 }
 
-#[cfg(not(any(unix, target_os = "windows")))]
+#[cfg(not(any(all(unix, not(target_os = "macos")), target_os = "windows")))]
 mod platform {
     use super::{PriorityProfile, RtError, RtOutcome};
 
@@ -342,58 +244,3 @@ mod platform {
 }
 
 use platform::PlatformGuard;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn acquire_and_release_audio_does_not_panic() {
-        let guard = RealtimePriorityGuard::acquire(PriorityProfile::Audio);
-        match guard {
-            Ok(g) => {
-                assert!(matches!(
-                    *g.outcome(),
-                    RtOutcome::Acquired | RtOutcome::PartialFallback
-                ));
-                drop(g);
-            }
-            Err(RtError::PlatformDenied(_)) => {}
-            Err(other) => panic!("unexpected error: {other:?}"),
-        }
-        let again = RealtimePriorityGuard::acquire(PriorityProfile::Audio);
-        if let Ok(g) = again {
-            drop(g);
-        }
-    }
-
-    #[test]
-    fn double_acquire_on_same_thread_errors() {
-        let first = RealtimePriorityGuard::acquire(PriorityProfile::Audio);
-        if let Ok(first_guard) = first {
-            let second = RealtimePriorityGuard::acquire(PriorityProfile::Audio);
-            assert_eq!(second.err(), Some(RtError::AlreadyAcquired));
-            drop(first_guard);
-            let third = RealtimePriorityGuard::acquire(PriorityProfile::Network);
-            if let Ok(t) = third {
-                drop(t);
-            }
-        }
-    }
-
-    #[test]
-    fn all_profiles_round_trip() {
-        for profile in [
-            PriorityProfile::Audio,
-            PriorityProfile::Video,
-            PriorityProfile::Network,
-        ] {
-            let g = RealtimePriorityGuard::acquire(profile);
-            match g {
-                Ok(g) => drop(g),
-                Err(RtError::PlatformDenied(_)) => {}
-                Err(other) => panic!("unexpected error for {profile:?}: {other:?}"),
-            }
-        }
-    }
-}

@@ -158,6 +158,7 @@ finalize_resume(Pid, Seq, MissedEvents, GwTimings0, State) ->
     ),
     ResumedData = put_resumed_gateway_timings(session_is_staff(Pid), GwTimings),
     SocketPid ! {dispatch, resumed, ResumedData, Seq},
+    gateway_cluster_metrics:record_resume(),
     erlang:garbage_collect(self(), [{type, major}]),
     {ok, State#{
         session_pid => Pid,

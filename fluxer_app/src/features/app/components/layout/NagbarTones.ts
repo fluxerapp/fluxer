@@ -37,7 +37,7 @@ export const NAGBAR_TONES: Readonly<Record<NagbarToneKind, NagbarTone>> = Object
 	}),
 	[NagbarToneKind.DANGER]: Object.freeze({
 		backgroundColor: 'var(--status-danger)',
-		textColor: 'var(--text-on-brand-primary)',
+		textColor: 'var(--text-on-dark)',
 	}),
 	[NagbarToneKind.ALERT]: Object.freeze({backgroundColor: '#ea580c', textColor: '#ffffff'}),
 	[NagbarToneKind.PREMIUM]: Object.freeze({backgroundColor: '#f97316', textColor: '#ffffff'}),

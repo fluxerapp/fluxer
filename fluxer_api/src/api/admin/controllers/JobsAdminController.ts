@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
 	ActiveJobsResponseSchema,
@@ -10,12 +17,6 @@ import {
 	ListJobsResponseSchema,
 } from '@fluxer/schema/src/domains/admin/JobsSchemas';
 import {JobIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 function toListJobsRequest(query: ListJobsQuery): ListJobsRequest {
 	return {
@@ -114,7 +115,15 @@ export function JobsAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.jobAdminService.cancelJob(ctx.req.valid('param').job_id));
+			const {job_id} = ctx.req.valid('param');
+			const result = await adminService.jobAdminService.cancelJob(job_id);
+			await recordAdminWrite(ctx, {
+				targetType: 'bulk_job',
+				targetId: job_id,
+				action: 'cancel_job',
+				metadata: {cancelled: result.cancelled},
+			});
+			return ctx.json(result);
 		},
 	);
 }

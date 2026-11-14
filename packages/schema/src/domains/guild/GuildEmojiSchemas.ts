@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_GUILD_STICKER_TAGS} from '@fluxer/constants/src/LimitConstants';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
@@ -70,6 +71,26 @@ export const GuildEmojiWithUserListResponse = z.array(GuildEmojiWithUserResponse
 export type GuildEmojiWithUserListResponse = z.infer<typeof GuildEmojiWithUserListResponse>;
 
 export const GuildStickerWithUserListResponse = z.array(GuildStickerWithUserResponse);
+
+export const GUILD_EXPRESSION_SOURCE_BADGE_FEATURES = [
+	GuildFeatures.VERIFIED,
+	GuildFeatures.PARTNERED,
+	GuildFeatures.DISCOVERABLE,
+] as const;
+
+export const GuildExpressionSourceGuildResponse = z
+	.object({
+		id: SnowflakeStringType.describe('The ID of the source guild'),
+		name: z.string().describe('The name of the source guild'),
+		icon: z.string().nullable().describe('The hash of the source guild icon'),
+		features: z
+			.array(z.enum(GUILD_EXPRESSION_SOURCE_BADGE_FEATURES))
+			.describe('The badge feature flags of the source guild, limited to VERIFIED, PARTNERED, and DISCOVERABLE'),
+	})
+	.describe('Public presentation of the source guild of an expression');
+
+export type GuildExpressionSourceGuildResponse = z.infer<typeof GuildExpressionSourceGuildResponse>;
+
 export const GuildEmojiMetadataResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this emoji'),
 	guild_id: SnowflakeStringType.describe('The guild this emoji belongs to'),

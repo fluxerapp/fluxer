@@ -1,21 +1,31 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
-import type {
-	DataPacket,
+import {
+	type DataPacket,
 	DataStream_Chunk,
-	DataStream_Header,
-	DataStream_Trailer,
-	Encryption_Type,
+	DataStream_CompressionType,
+	type DataStream_Header,
+	type DataStream_Trailer,
+	type Encryption_Type,
 } from '@livekit/protocol';
 import log from '../../../logger.ts';
+import type {NonSharedUint8Array} from '../../../type-polyfills/non-shared-typed-arrays.ts';
 import {DataStreamError, DataStreamErrorReason} from '../../errors.ts';
 import type {ByteStreamInfo, StreamController, TextStreamInfo} from '../../types.ts';
-import {bigIntToNumber, Future} from '../../utils.ts';
+import {bigIntToNumber, isCompressionStreamSupported, numberToBigInt} from '../../utils.ts';
+import {deflateRawDecompress, inflateRawTransform} from '../compression.ts';
+import {DEFAULT_MAX_PAYLOAD_BYTE_LENGTH, MAX_OPEN_STREAMS_PER_PARTICIPANT} from '../constants.ts';
 import {type ByteStreamHandler, ByteStreamReader, type TextStreamHandler, TextStreamReader} from './StreamReader.ts';
 
 export default class IncomingDataStreamManager {
 	private log = log;
+
+	private maxPayloadByteLength: number;
+
+	constructor(maxPayloadByteLength: number = DEFAULT_MAX_PAYLOAD_BYTE_LENGTH) {
+		this.maxPayloadByteLength = maxPayloadByteLength;
+	}
 
 	private byteStreamControllers = new Map<string, StreamController<DataStream_Chunk>>();
 
@@ -24,6 +34,25 @@ export default class IncomingDataStreamManager {
 	private byteStreamHandlers = new Map<string, ByteStreamHandler>();
 
 	private textStreamHandlers = new Map<string, TextStreamHandler>();
+
+	private isConnected = false;
+
+	private bufferedPackets: Array<{packet: DataPacket; encryptionType: Encryption_Type}> = [];
+
+	setConnected(connected: boolean) {
+		this.isConnected = connected;
+		if (connected) {
+			this.flushBufferedPackets();
+		}
+	}
+
+	private flushBufferedPackets() {
+		const packets = this.bufferedPackets;
+		this.bufferedPackets = [];
+		for (const {packet, encryptionType} of packets) {
+			this.handleDataStreamPacket(packet, encryptionType);
+		}
+	}
 
 	registerTextStreamHandler(topic: string, callback: TextStreamHandler) {
 		if (this.textStreamHandlers.has(topic)) {
@@ -56,6 +85,7 @@ export default class IncomingDataStreamManager {
 	clearControllers() {
 		this.byteStreamControllers.clear();
 		this.textStreamControllers.clear();
+		this.bufferedPackets = [];
 	}
 
 	validateParticipantHasNoActiveDataStreams(participantIdentity: string) {
@@ -75,137 +105,260 @@ export default class IncomingDataStreamManager {
 				DataStreamErrorReason.AbnormalEnd,
 			);
 			for (const [id, controller] of byteStreamsBeingSentByDisconnectingParticipant) {
-				controller.outOfBandFailureRejectingFuture.reject?.(abnormalEndError);
+				controller.controller.error(abnormalEndError);
 				this.byteStreamControllers.delete(id);
 			}
 			for (const [id, controller] of textStreamsBeingSentByDisconnectingParticipant) {
-				controller.outOfBandFailureRejectingFuture.reject?.(abnormalEndError);
+				controller.controller.error(abnormalEndError);
 				this.textStreamControllers.delete(id);
 			}
 		}
 	}
 
-	async handleDataStreamPacket(packet: DataPacket, encryptionType: Encryption_Type) {
+	handleDataStreamPacket(packet: DataPacket, encryptionType: Encryption_Type) {
+		if (!this.isConnected) {
+			this.bufferedPackets.push({packet, encryptionType});
+			return;
+		}
 		switch (packet.value.case) {
 			case 'streamHeader':
 				return this.handleStreamHeader(packet.value.value, packet.participantIdentity, encryptionType);
 			case 'streamChunk':
-				return this.handleStreamChunk(packet.value.value, encryptionType);
+				return this.handleStreamChunk(packet.value.value, packet.participantIdentity, encryptionType);
 			case 'streamTrailer':
-				return this.handleStreamTrailer(packet.value.value, encryptionType);
+				return this.handleStreamTrailer(packet.value.value, packet.participantIdentity, encryptionType);
 			default:
 				throw new Error(`DataPacket of value "${packet.value.case}" is not data stream related!`);
 		}
 	}
 
-	private async handleStreamHeader(
+	private hasReachedOpenStreamLimit(participantIdentity: string, streamId: string) {
+		let openStreams = 0;
+		for (const controller of this.byteStreamControllers.values()) {
+			if (controller.sendingParticipantIdentity === participantIdentity) {
+				openStreams += 1;
+			}
+		}
+		for (const controller of this.textStreamControllers.values()) {
+			if (controller.sendingParticipantIdentity === participantIdentity) {
+				openStreams += 1;
+			}
+		}
+		if (openStreams < MAX_OPEN_STREAMS_PER_PARTICIPANT) {
+			return false;
+		}
+		this.log.warn(
+			`Data stream ${streamId} from ${participantIdentity} dropped, ${MAX_OPEN_STREAMS_PER_PARTICIPANT} streams from this participant are already open`,
+		);
+		return true;
+	}
+
+	private handleStreamHeader(
 		streamHeader: DataStream_Header,
 		participantIdentity: string,
 		encryptionType: Encryption_Type,
 	) {
-		if (streamHeader.contentHeader.case === 'byteHeader') {
-			const streamHandlerCallback = this.byteStreamHandlers.get(streamHeader.topic);
-			if (!streamHandlerCallback) {
-				this.log.debug('ignoring incoming byte stream due to no handler for topic', streamHeader.topic);
+		switch (streamHeader.contentHeader.case) {
+			case 'byteHeader': {
+				const streamHandlerCallback = this.byteStreamHandlers.get(streamHeader.topic);
+				if (!streamHandlerCallback) {
+					this.log.debug('ignoring incoming byte stream due to no handler for topic', streamHeader.topic);
+					return;
+				}
+
+				let streamController: ReadableStreamDefaultController<DataStream_Chunk>;
+
+				const info: ByteStreamInfo = {
+					id: streamHeader.streamId,
+					name: streamHeader.contentHeader.value.name ?? 'unknown',
+					mimeType: streamHeader.mimeType,
+					size: streamHeader.totalLength ? Number(streamHeader.totalLength) : undefined,
+					topic: streamHeader.topic,
+					timestamp: bigIntToNumber(streamHeader.timestamp),
+					attributes: streamHeader.attributes,
+					encryptionType,
+				};
+
+				let compressed: boolean;
+				switch (streamHeader.compression) {
+					case DataStream_CompressionType.DEFLATE_RAW:
+						if (!isCompressionStreamSupported()) {
+							log.warn(
+								`Data stream ${streamHeader.streamId} received with deflate-raw compression, but this browser does not have support for DecompressionStream. Dropping...`,
+							);
+							return;
+						}
+						compressed = true;
+						break;
+					case DataStream_CompressionType.NONE:
+						compressed = false;
+						break;
+					default:
+						log.warn(
+							`Data stream ${streamHeader.streamId} received with unknown compression type ${streamHeader.compression}, dropping...`,
+						);
+						return;
+				}
+
+				const inlineContent = streamHeader.inlineContent as NonSharedUint8Array;
+				if (typeof inlineContent !== 'undefined') {
+					streamHandlerCallback(
+						new ByteStreamReader(
+							info,
+							createInlineStream(
+								streamHeader.streamId,
+								compressed ? deflateRawDecompress(inlineContent, this.maxPayloadByteLength) : inlineContent,
+							),
+							bigIntToNumber(streamHeader.totalLength),
+						),
+						{identity: participantIdentity},
+					);
+					return;
+				}
+
+				if (this.hasReachedOpenStreamLimit(participantIdentity, streamHeader.streamId)) {
+					return;
+				}
+
+				const stream = new ReadableStream<DataStream_Chunk>({
+					start: (controller) => {
+						streamController = controller;
+
+						if (this.byteStreamControllers.has(streamHeader.streamId)) {
+							throw new DataStreamError(
+								`A data stream read is already in progress for a stream with id ${streamHeader.streamId}.`,
+								DataStreamErrorReason.AlreadyOpened,
+							);
+						}
+
+						this.byteStreamControllers.set(streamHeader.streamId, {
+							info,
+							controller: streamController,
+							startTime: Date.now(),
+							sendingParticipantIdentity: participantIdentity,
+						});
+					},
+					cancel: () => {
+						if (this.byteStreamControllers.get(streamHeader.streamId)?.controller === streamController) {
+							this.byteStreamControllers.delete(streamHeader.streamId);
+						}
+					},
+				});
+				streamHandlerCallback(
+					new ByteStreamReader(
+						info,
+						compressed
+							? inflateRawByteChunkStream(stream, streamHeader.streamId, this.maxPayloadByteLength)
+							: stream.pipeThrough(ensureOrderedChunks(streamHeader.streamId)),
+						bigIntToNumber(streamHeader.totalLength),
+					),
+					{
+						identity: participantIdentity,
+					},
+				);
 				return;
 			}
+			case 'textHeader': {
+				const streamHandlerCallback = this.textStreamHandlers.get(streamHeader.topic);
+				if (!streamHandlerCallback) {
+					this.log.debug('ignoring incoming text stream due to no handler for topic', streamHeader.topic);
+					return;
+				}
 
-			let streamController: ReadableStreamDefaultController<DataStream_Chunk>;
-			const outOfBandFailureRejectingFuture = new Future<never, Error>();
-			outOfBandFailureRejectingFuture.promise.catch((err) => {
-				this.log.error(err);
-			});
+				let streamController: ReadableStreamDefaultController<DataStream_Chunk>;
 
-			const info: ByteStreamInfo = {
-				id: streamHeader.streamId,
-				name: streamHeader.contentHeader.value.name ?? 'unknown',
-				mimeType: streamHeader.mimeType,
-				size: streamHeader.totalLength ? Number(streamHeader.totalLength) : undefined,
-				topic: streamHeader.topic,
-				timestamp: bigIntToNumber(streamHeader.timestamp),
-				attributes: streamHeader.attributes,
-				encryptionType,
-			};
-			const stream = new ReadableStream({
-				start: (controller) => {
-					streamController = controller;
+				const info: TextStreamInfo = {
+					id: streamHeader.streamId,
+					mimeType: streamHeader.mimeType,
+					size: streamHeader.totalLength ? Number(streamHeader.totalLength) : undefined,
+					topic: streamHeader.topic,
+					timestamp: Number(streamHeader.timestamp),
+					attributes: streamHeader.attributes,
+					encryptionType,
+					attachedStreamIds: streamHeader.contentHeader.value.attachedStreamIds,
+				};
 
-					if (this.textStreamControllers.has(streamHeader.streamId)) {
-						throw new DataStreamError(
-							`A data stream read is already in progress for a stream with id ${streamHeader.streamId}.`,
-							DataStreamErrorReason.AlreadyOpened,
+				let compressed: boolean;
+				switch (streamHeader.compression) {
+					case DataStream_CompressionType.DEFLATE_RAW:
+						if (!isCompressionStreamSupported()) {
+							log.warn(
+								`Data stream ${streamHeader.streamId} received with deflate-raw compression, but this browser does not have support for DecompressionStream. Dropping...`,
+							);
+							return;
+						}
+						compressed = true;
+						break;
+					case DataStream_CompressionType.NONE:
+						compressed = false;
+						break;
+					default:
+						log.warn(
+							`Data stream ${streamHeader.streamId} received with unknown compression type ${streamHeader.compression}, dropping...`,
 						);
-					}
+						return;
+				}
 
-					this.byteStreamControllers.set(streamHeader.streamId, {
+				const inlineContent = streamHeader.inlineContent as NonSharedUint8Array;
+				if (typeof inlineContent !== 'undefined') {
+					const content = compressed ? deflateRawDecompress(inlineContent, this.maxPayloadByteLength) : inlineContent;
+					streamHandlerCallback(
+						new TextStreamReader(
+							info,
+							createInlineStream(streamHeader.streamId, content),
+							bigIntToNumber(streamHeader.totalLength),
+						),
+						{identity: participantIdentity},
+					);
+					return;
+				}
+
+				if (this.hasReachedOpenStreamLimit(participantIdentity, streamHeader.streamId)) {
+					return;
+				}
+
+				const stream = new ReadableStream<DataStream_Chunk>({
+					start: (controller) => {
+						streamController = controller;
+
+						if (this.textStreamControllers.has(streamHeader.streamId)) {
+							throw new DataStreamError(
+								`A data stream read is already in progress for a stream with id ${streamHeader.streamId}.`,
+								DataStreamErrorReason.AlreadyOpened,
+							);
+						}
+
+						this.textStreamControllers.set(streamHeader.streamId, {
+							info,
+							controller: streamController,
+							startTime: Date.now(),
+							sendingParticipantIdentity: participantIdentity,
+						});
+					},
+					cancel: () => {
+						if (this.textStreamControllers.get(streamHeader.streamId)?.controller === streamController) {
+							this.textStreamControllers.delete(streamHeader.streamId);
+						}
+					},
+				});
+				streamHandlerCallback(
+					new TextStreamReader(
 						info,
-						controller: streamController,
-						startTime: Date.now(),
-						sendingParticipantIdentity: participantIdentity,
-						outOfBandFailureRejectingFuture,
-					});
-				},
-			});
-			streamHandlerCallback(
-				new ByteStreamReader(info, stream, bigIntToNumber(streamHeader.totalLength), outOfBandFailureRejectingFuture),
-				{
-					identity: participantIdentity,
-				},
-			);
-		} else if (streamHeader.contentHeader.case === 'textHeader') {
-			const streamHandlerCallback = this.textStreamHandlers.get(streamHeader.topic);
-			if (!streamHandlerCallback) {
-				this.log.debug('ignoring incoming text stream due to no handler for topic', streamHeader.topic);
+						compressed
+							? inflateRawChunkStream(stream, streamHeader.streamId, this.maxPayloadByteLength)
+							: stream.pipeThrough(ensureOrderedChunks(streamHeader.streamId)),
+						bigIntToNumber(streamHeader.totalLength),
+					),
+					{identity: participantIdentity},
+				);
 				return;
 			}
-
-			let streamController: ReadableStreamDefaultController<DataStream_Chunk>;
-			const outOfBandFailureRejectingFuture = new Future<never, Error>();
-			outOfBandFailureRejectingFuture.promise.catch((err) => {
-				this.log.error(err);
-			});
-
-			const info: TextStreamInfo = {
-				id: streamHeader.streamId,
-				mimeType: streamHeader.mimeType,
-				size: streamHeader.totalLength ? Number(streamHeader.totalLength) : undefined,
-				topic: streamHeader.topic,
-				timestamp: Number(streamHeader.timestamp),
-				attributes: streamHeader.attributes,
-				encryptionType,
-				attachedStreamIds: streamHeader.contentHeader.value.attachedStreamIds,
-			};
-
-			const stream = new ReadableStream<DataStream_Chunk>({
-				start: (controller) => {
-					streamController = controller;
-
-					if (this.textStreamControllers.has(streamHeader.streamId)) {
-						throw new DataStreamError(
-							`A data stream read is already in progress for a stream with id ${streamHeader.streamId}.`,
-							DataStreamErrorReason.AlreadyOpened,
-						);
-					}
-
-					this.textStreamControllers.set(streamHeader.streamId, {
-						info,
-						controller: streamController,
-						startTime: Date.now(),
-						sendingParticipantIdentity: participantIdentity,
-						outOfBandFailureRejectingFuture,
-					});
-				},
-			});
-			streamHandlerCallback(
-				new TextStreamReader(info, stream, bigIntToNumber(streamHeader.totalLength), outOfBandFailureRejectingFuture),
-				{identity: participantIdentity},
-			);
 		}
 	}
 
-	private handleStreamChunk(chunk: DataStream_Chunk, encryptionType: Encryption_Type) {
+	private handleStreamChunk(chunk: DataStream_Chunk, participantIdentity: string, encryptionType: Encryption_Type) {
 		const fileBuffer = this.byteStreamControllers.get(chunk.streamId);
-		if (fileBuffer) {
+		if (fileBuffer && fileBuffer.sendingParticipantIdentity === participantIdentity) {
 			if (fileBuffer.info.encryptionType !== encryptionType) {
 				fileBuffer.controller.error(
 					new DataStreamError(
@@ -214,12 +367,12 @@ export default class IncomingDataStreamManager {
 					),
 				);
 				this.byteStreamControllers.delete(chunk.streamId);
-			} else if (chunk.content.length > 0) {
+			} else {
 				fileBuffer.controller.enqueue(chunk);
 			}
 		}
 		const textBuffer = this.textStreamControllers.get(chunk.streamId);
-		if (textBuffer) {
+		if (textBuffer && textBuffer.sendingParticipantIdentity === participantIdentity) {
 			if (textBuffer.info.encryptionType !== encryptionType) {
 				textBuffer.controller.error(
 					new DataStreamError(
@@ -228,15 +381,19 @@ export default class IncomingDataStreamManager {
 					),
 				);
 				this.textStreamControllers.delete(chunk.streamId);
-			} else if (chunk.content.length > 0) {
+			} else {
 				textBuffer.controller.enqueue(chunk);
 			}
 		}
 	}
 
-	private handleStreamTrailer(trailer: DataStream_Trailer, encryptionType: Encryption_Type) {
+	private handleStreamTrailer(
+		trailer: DataStream_Trailer,
+		participantIdentity: string,
+		encryptionType: Encryption_Type,
+	) {
 		const textBuffer = this.textStreamControllers.get(trailer.streamId);
-		if (textBuffer) {
+		if (textBuffer && textBuffer.sendingParticipantIdentity === participantIdentity) {
 			if (textBuffer.info.encryptionType !== encryptionType) {
 				textBuffer.controller.error(
 					new DataStreamError(
@@ -246,13 +403,22 @@ export default class IncomingDataStreamManager {
 				);
 			} else {
 				textBuffer.info.attributes = {...textBuffer.info.attributes, ...trailer.attributes};
-				textBuffer.controller.close();
-				this.textStreamControllers.delete(trailer.streamId);
+				if (trailer.reason) {
+					textBuffer.controller.error(
+						new DataStreamError(
+							`Data stream ${trailer.streamId} closed abnormally: ${trailer.reason}`,
+							DataStreamErrorReason.AbnormalEnd,
+						),
+					);
+				} else {
+					textBuffer.controller.close();
+				}
 			}
+			this.textStreamControllers.delete(trailer.streamId);
 		}
 
 		const fileBuffer = this.byteStreamControllers.get(trailer.streamId);
-		if (fileBuffer) {
+		if (fileBuffer && fileBuffer.sendingParticipantIdentity === participantIdentity) {
 			if (fileBuffer.info.encryptionType !== encryptionType) {
 				fileBuffer.controller.error(
 					new DataStreamError(
@@ -262,9 +428,171 @@ export default class IncomingDataStreamManager {
 				);
 			} else {
 				fileBuffer.info.attributes = {...fileBuffer.info.attributes, ...trailer.attributes};
-				fileBuffer.controller.close();
+				if (trailer.reason) {
+					fileBuffer.controller.error(
+						new DataStreamError(
+							`Data stream ${trailer.streamId} closed abnormally: ${trailer.reason}`,
+							DataStreamErrorReason.AbnormalEnd,
+						),
+					);
+				} else {
+					fileBuffer.controller.close();
+				}
 			}
 			this.byteStreamControllers.delete(trailer.streamId);
 		}
 	}
+}
+
+function createInlineStream(
+	streamId: string,
+	content: Uint8Array | Promise<Uint8Array>,
+): ReadableStream<DataStream_Chunk> {
+	return new ReadableStream<DataStream_Chunk>({
+		start: async (controller) => {
+			const bytes = await content;
+			controller.enqueue(new DataStream_Chunk({streamId, chunkIndex: BigInt(0), content: bytes}));
+			controller.close();
+		},
+	});
+}
+
+function ensureOrderedChunks(streamId: string): TransformStream<DataStream_Chunk, DataStream_Chunk> {
+	let lastChunkIndex = -1;
+	return new TransformStream({
+		transform: (value, controller) => {
+			const index = bigIntToNumber(value.chunkIndex);
+			if (index <= lastChunkIndex) {
+				log.warn(
+					`ignoring duplicate chunk ${index} ${value.version > 0 ? `(version ${value.version})` : ''} for data stream ${streamId} (last processed: ${lastChunkIndex})`,
+				);
+				return;
+			}
+			if (index > lastChunkIndex + 1) {
+				throw new DataStreamError(
+					`Missing chunk(s) ${lastChunkIndex + 1}..${index - 1} for data stream ${streamId} - cannot reassemble payload`,
+					DataStreamErrorReason.Incomplete,
+				);
+			}
+			lastChunkIndex = index;
+			if (value.content.length === 0) {
+				return;
+			}
+			controller.enqueue(value);
+		},
+	});
+}
+
+function chunksToBytes(): TransformStream<DataStream_Chunk, Uint8Array> {
+	return new TransformStream({
+		transform: (value, controller) => {
+			controller.enqueue(value.content);
+		},
+	});
+}
+
+function bytesToChunks(streamId: string): TransformStream<Uint8Array, DataStream_Chunk> {
+	let outIndex = 0;
+	return new TransformStream({
+		transform: (value, controller) => {
+			if (value.byteLength > 0) {
+				controller.enqueue(
+					new DataStream_Chunk({
+						streamId,
+						chunkIndex: numberToBigInt(outIndex),
+						content: value,
+					}),
+				);
+				outIndex += 1;
+			}
+		},
+	});
+}
+
+function bytesToDecodedUtf8(streamId: string): TransformStream<Uint8Array, DataStream_Chunk> {
+	const decoder = new TextDecoder('utf-8');
+	const encoder = new TextEncoder();
+
+	let outIndex = 0;
+	const decodeOrThrow = (bytes?: Uint8Array): string => {
+		try {
+			return bytes ? decoder.decode(bytes, {stream: true}) : decoder.decode();
+		} catch (err) {
+			throw new DataStreamError(
+				`Cannot decode compressed data stream ${streamId} as text: ${err}`,
+				DataStreamErrorReason.DecodeFailed,
+			);
+		}
+	};
+
+	return new TransformStream({
+		transform: (value, controller) => {
+			const text = decodeOrThrow(value);
+			if (text.length > 0) {
+				controller.enqueue(
+					new DataStream_Chunk({
+						streamId,
+						chunkIndex: numberToBigInt(outIndex),
+						content: encoder.encode(text),
+					}),
+				);
+				outIndex += 1;
+			}
+		},
+		flush: (controller) => {
+			const tail = decodeOrThrow();
+			if (tail.length > 0) {
+				controller.enqueue(
+					new DataStream_Chunk({
+						streamId,
+						chunkIndex: numberToBigInt(outIndex),
+						content: encoder.encode(tail),
+					}),
+				);
+				outIndex += 1;
+			}
+		},
+	});
+}
+
+function inflateRawByteChunkStream(
+	raw: ReadableStream<DataStream_Chunk>,
+	streamId: string,
+	maxPayloadByteLength: number,
+): ReadableStream<DataStream_Chunk> {
+	return raw
+		.pipeThrough(ensureOrderedChunks(streamId))
+		.pipeThrough(chunksToBytes())
+		.pipeThrough(inflateRawTransform())
+		.pipeThrough(maxDecompressedLengthGuard(streamId, maxPayloadByteLength))
+		.pipeThrough(bytesToChunks(streamId));
+}
+
+function inflateRawChunkStream(
+	raw: ReadableStream<DataStream_Chunk>,
+	streamId: string,
+	maxPayloadByteLength: number,
+): ReadableStream<DataStream_Chunk> {
+	return raw
+		.pipeThrough(ensureOrderedChunks(streamId))
+		.pipeThrough(chunksToBytes())
+		.pipeThrough(inflateRawTransform())
+		.pipeThrough(maxDecompressedLengthGuard(streamId, maxPayloadByteLength))
+		.pipeThrough(bytesToDecodedUtf8(streamId));
+}
+
+function maxDecompressedLengthGuard(streamId: string, maxByteLength: number): TransformStream<Uint8Array, Uint8Array> {
+	let total = 0;
+	return new TransformStream({
+		transform: (value, controller) => {
+			total += value.byteLength;
+			if (total > maxByteLength) {
+				throw new DataStreamError(
+					`Data stream ${streamId} exceeds the maximum payload size of ${maxByteLength} bytes`,
+					DataStreamErrorReason.PayloadTooLarge,
+				);
+			}
+			controller.enqueue(value);
+		},
+	});
 }

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
-import {CHANNEL_TEXTAREA_SELECTOR} from '@app/features/app/keybindings/utils/EditableElement';
+import {
+	CHANNEL_TEXTAREA_SELECTOR,
+	isChannelTextareaElement,
+	isEditableElement,
+} from '@app/features/app/keybindings/utils/EditableElement';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
@@ -11,7 +15,7 @@ import {
 	recordPointerActivationFocusTarget,
 } from '@app/features/ui/utils/PointerActivationFocus';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useMemo} from 'react';
+import {useEffect, useLayoutEffect, useMemo} from 'react';
 
 const FOCUS_TRAPPING_OVERLAY_SELECTOR = [
 	'[role="dialog"]',
@@ -29,6 +33,7 @@ const canRedirectTabToComposer = (composer: HTMLTextAreaElement | null): compose
 	if (composer == null || composer.disabled || composer.getAttribute('aria-disabled') === 'true') return false;
 	if (isElementInert(composer)) return false;
 	const active = document.activeElement;
+	if (isEditableElement(active) && !isChannelTextareaElement(active)) return false;
 	return !(active instanceof Element && active.closest(FOCUS_TRAPPING_OVERLAY_SELECTOR) != null);
 };
 
@@ -42,6 +47,7 @@ export const KeyboardModeListener = observer(() => {
 			path.startsWith(Routes.REGISTER) ||
 			path.startsWith(Routes.FORGOT_PASSWORD) ||
 			path.startsWith(Routes.RESET_PASSWORD) ||
+			path.startsWith(Routes.RECOVER_ACCOUNT) ||
 			path.startsWith(Routes.VERIFY_EMAIL) ||
 			path.startsWith(Routes.AUTHORIZE_IP) ||
 			path.startsWith(Routes.OAUTH_AUTHORIZE) ||
@@ -55,18 +61,33 @@ export const KeyboardModeListener = observer(() => {
 		const handleWindowFocused = () => {
 			lastWindowFocusTime = performance.now();
 		};
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Tab') {
-				if (!KeyboardMode.keyboardModeEnabled) {
-					const composer = document.querySelector<HTMLTextAreaElement>(CHANNEL_TEXTAREA_SELECTOR);
-					if (canRedirectTabToComposer(composer)) {
-						event.preventDefault();
-						ComponentBus.dispatch('FOCUS_TEXTAREA', {enterKeyboardMode: true});
-						return;
-					}
+		let pendingComposerTab: KeyboardEvent | null = null;
+		const handleTab = (event: KeyboardEvent) => {
+			if (!KeyboardMode.keyboardModeEnabled) {
+				const composer = document.querySelector<HTMLTextAreaElement>(CHANNEL_TEXTAREA_SELECTOR);
+				if (canRedirectTabToComposer(composer)) {
+					event.preventDefault();
+					ComponentBus.dispatch('FOCUS_TEXTAREA', {enterKeyboardMode: true});
+					return;
 				}
-				KeyboardMode.enterKeyboardMode(!isAuthRoute);
 			}
+			KeyboardMode.enterKeyboardMode(!isAuthRoute);
+		};
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key !== 'Tab') return;
+			pendingComposerTab = null;
+			const active = document.activeElement;
+			if (isEditableElement(active) && isChannelTextareaElement(active)) {
+				pendingComposerTab = event;
+				return;
+			}
+			handleTab(event);
+		};
+		const handleComposerTabAfterDispatch = (event: KeyboardEvent) => {
+			if (event !== pendingComposerTab) return;
+			pendingComposerTab = null;
+			if (event.defaultPrevented) return;
+			handleTab(event);
 		};
 		const handlePointer = (event: MouseEvent | PointerEvent) => {
 			recordPointerActivationFocusTarget(getActivatableFocusTarget(event.target));
@@ -77,16 +98,18 @@ export const KeyboardModeListener = observer(() => {
 		};
 		window.addEventListener('focus', handleWindowFocused);
 		window.addEventListener('keydown', handleKeyDown, true);
+		window.addEventListener('keydown', handleComposerTabAfterDispatch);
 		window.addEventListener('mousedown', handlePointer, true);
 		window.addEventListener('pointerdown', handlePointer, true);
 		return () => {
 			window.removeEventListener('focus', handleWindowFocused);
 			window.removeEventListener('keydown', handleKeyDown, true);
+			window.removeEventListener('keydown', handleComposerTabAfterDispatch);
 			window.removeEventListener('mousedown', handlePointer, true);
 			window.removeEventListener('pointerdown', handlePointer, true);
 		};
 	}, [isAuthRoute]);
-	useEffect(() => {
+	useLayoutEffect(() => {
 		FocusRingManager.setRingsEnabled(keyboardModeEnabled);
 	}, [keyboardModeEnabled]);
 	useEffect(() => {

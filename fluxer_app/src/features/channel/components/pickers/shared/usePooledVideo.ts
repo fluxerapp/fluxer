@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {safePause, safePlay} from '@app/features/channel/components/GifVideoPool';
+import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {useEffect, useRef} from 'react';
 
 const HAVE_METADATA_READY_STATE = 1;
@@ -21,6 +23,7 @@ export function usePooledVideo({
 	enabled = true,
 	preload,
 	playbackStartTime = null,
+	wholeFile = false,
 }: {
 	src: string | null | undefined;
 	containerRef: React.RefObject<HTMLDivElement | null>;
@@ -29,29 +32,42 @@ export function usePooledVideo({
 	enabled?: boolean;
 	preload?: HTMLVideoElement['preload'];
 	playbackStartTime?: number | null;
+	wholeFile?: boolean;
 }) {
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const effectivePreload = preload ?? (autoPlay ? 'auto' : 'metadata');
+	const requestedSrc = enabled && src ? src : undefined;
+	const streamedSrc = useApiAttachmentPlaybackSrc(wholeFile ? undefined : requestedSrc);
+	const wholeFileSrc = useApiAttachmentSrc(
+		wholeFile ? (requestedSrc ?? '') : '',
+		wholeFile && requestedSrc !== undefined,
+	);
+	const playbackSrc = wholeFile ? requestedSrc && wholeFileSrc : streamedSrc;
 	useEffect(() => {
 		if (!enabled) return;
-		if (!src) return;
+		if (!src || !playbackSrc) return;
 		const container = containerRef.current;
 		if (!container) return;
 		const video = videoPool.takeElement();
 		videoRef.current = video;
 		video.autoplay = false;
 		video.preload = effectivePreload;
-		video.src = src;
+		const refreshOnError = () => {
+			void AttachmentUrlRefresher.refresh(src, {force: true});
+		};
+		video.addEventListener('error', refreshOnError, {once: true});
+		video.src = playbackSrc;
 		container.appendChild(video);
 		videoPool.registerActive(video);
 		return () => {
+			video.removeEventListener('error', refreshOnError);
 			videoPool.unregisterActive(video);
 			videoPool.returnElement(video);
 			if (videoRef.current === video) {
 				videoRef.current = null;
 			}
 		};
-	}, [src, enabled, containerRef, videoPool, effectivePreload]);
+	}, [src, playbackSrc, enabled, containerRef, videoPool, effectivePreload]);
 	useEffect(() => {
 		const video = videoRef.current;
 		if (!video) return;

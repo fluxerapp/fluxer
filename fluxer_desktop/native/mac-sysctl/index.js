@@ -59,6 +59,5 @@ if (process.platform === 'darwin') {
 
 module.exports = {
 	sysctlByNameInt: binding ? binding.sysctlByNameInt : null,
-	sysctlByNameString: binding ? binding.sysctlByNameString : null,
 	loadError,
 };

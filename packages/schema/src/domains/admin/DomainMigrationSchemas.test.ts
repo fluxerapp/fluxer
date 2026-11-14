@@ -1,0 +1,280 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {
+	DEFAULT_DOMAIN_MIGRATION_CONFIG,
+	type DomainMigrationConfig,
+	DomainMigrationConfigUpdateRequest,
+	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
+	resolveDomainMigrationAssignment,
+	toDomainMigrationDiscovery,
+} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {type ExperimentTargeting, experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
+import {describe, expect, test} from 'vitest';
+
+const NO_TARGETING: ExperimentTargeting = {memberGuildIds: new Set(), premium: false, countryCode: null};
+
+const TARGETED_USER_ID = '1000000000000000001';
+const OTHER_USER_ID = '1000000000000000002';
+
+function createConfig(overrides: Partial<DomainMigrationConfig> = {}): DomainMigrationConfig {
+	return {
+		...DEFAULT_DOMAIN_MIGRATION_CONFIG,
+		included_user_ids: [],
+		excluded_user_ids: [],
+		...overrides,
+	};
+}
+
+function syntheticUserIds(count: number): Array<string> {
+	const ids: Array<string> = [];
+	for (let index = 0; index < count; index++) {
+		ids.push((1400000000000000000n + BigInt(index)).toString());
+	}
+	return ids;
+}
+
+function targetedUserIds(config: DomainMigrationConfig, userIds: ReadonlyArray<string>): Set<string> {
+	const targeted = new Set<string>();
+	for (const userId of userIds) {
+		if (resolveDomainMigrationAssignment(config, userId, NO_TARGETING).enabled) {
+			targeted.add(userId);
+		}
+	}
+	return targeted;
+}
+
+describe('domain migration configuration', () => {
+	test('does not accept a client-provided configuration version', () => {
+		expect(DomainMigrationConfigUpdateRequest.parse({config_version: 12})).toEqual({});
+	});
+});
+
+describe('resolveDomainMigrationAssignment', () => {
+	test('returns the inert assignment when the master switch is off', () => {
+		const config = createConfig({
+			enabled: false,
+			rollout_basis_points: 10000,
+			included_user_ids: [TARGETED_USER_ID],
+		});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, NO_TARGETING)).toEqual(
+			INERT_DOMAIN_MIGRATION_ASSIGNMENT,
+		);
+	});
+
+	test('returns the inert assignment for the default config', () => {
+		expect(resolveDomainMigrationAssignment(createConfig(), TARGETED_USER_ID, NO_TARGETING)).toEqual(
+			INERT_DOMAIN_MIGRATION_ASSIGNMENT,
+		);
+	});
+
+	test('denylist beats allowlist', () => {
+		const config = createConfig({
+			enabled: true,
+			included_user_ids: [TARGETED_USER_ID],
+			excluded_user_ids: [TARGETED_USER_ID],
+		});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, NO_TARGETING).enabled).toBe(false);
+	});
+
+	test('denylist beats the bucket', () => {
+		const config = createConfig({
+			enabled: true,
+			rollout_basis_points: 10000,
+			excluded_user_ids: [TARGETED_USER_ID],
+		});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, NO_TARGETING).enabled).toBe(false);
+		expect(resolveDomainMigrationAssignment(config, OTHER_USER_ID, NO_TARGETING).enabled).toBe(true);
+	});
+
+	test('allowlist beats the bucket', () => {
+		const config = createConfig({
+			enabled: true,
+			rollout_basis_points: 0,
+			included_user_ids: [TARGETED_USER_ID],
+		});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, NO_TARGETING).enabled).toBe(true);
+		expect(resolveDomainMigrationAssignment(config, OTHER_USER_ID, NO_TARGETING).enabled).toBe(false);
+	});
+
+	test.each([
+		{basisPoints: 0, enabled: false},
+		{basisPoints: 10000, enabled: true},
+	])('a rollout of $basisPoints basis points targets $enabled', ({basisPoints, enabled}) => {
+		const config = createConfig({enabled: true, rollout_basis_points: basisPoints});
+		for (const userId of syntheticUserIds(200)) {
+			expect(resolveDomainMigrationAssignment(config, userId, NO_TARGETING).enabled).toBe(enabled);
+		}
+	});
+
+	test('the bucket boundary is exclusive at the low end and inclusive one point above', () => {
+		const salt = DEFAULT_DOMAIN_MIGRATION_CONFIG.rollout_salt;
+		const bucket = experimentBucket(TARGETED_USER_ID, salt);
+		expect(
+			resolveDomainMigrationAssignment(
+				createConfig({enabled: true, rollout_basis_points: bucket}),
+				TARGETED_USER_ID,
+				NO_TARGETING,
+			).enabled,
+		).toBe(false);
+		expect(
+			resolveDomainMigrationAssignment(
+				createConfig({enabled: true, rollout_basis_points: bucket + 1}),
+				TARGETED_USER_ID,
+				NO_TARGETING,
+			).enabled,
+		).toBe(true);
+	});
+
+	test('raising the rollout basis points only ever adds users', () => {
+		const userIds = syntheticUserIds(2000);
+		const atOneThousand = targetedUserIds(createConfig({enabled: true, rollout_basis_points: 1000}), userIds);
+		const atTwoThousand = targetedUserIds(createConfig({enabled: true, rollout_basis_points: 2000}), userIds);
+		expect(atOneThousand.size).toBeGreaterThan(0);
+		for (const userId of atOneThousand) {
+			expect(atTwoThousand.has(userId)).toBe(true);
+		}
+		expect(atTwoThousand.size).toBeGreaterThan(atOneThousand.size);
+	});
+
+	test('the targeted set follows the salt', () => {
+		const userIds = syntheticUserIds(2000);
+		const first = targetedUserIds(
+			createConfig({enabled: true, rollout_basis_points: 5000, rollout_salt: 'domain-migration-v1'}),
+			userIds,
+		);
+		const second = targetedUserIds(
+			createConfig({enabled: true, rollout_basis_points: 5000, rollout_salt: 'domain-migration-v2'}),
+			userIds,
+		);
+		expect(first).not.toEqual(second);
+	});
+});
+
+describe('toDomainMigrationDiscovery', () => {
+	test('projects only the public fields of the config', () => {
+		const config = createConfig({
+			enabled: true,
+			config_version: 3,
+			rollout_basis_points: 500,
+			rollout_salt: 'domain-migration-v2',
+			anonymous_rollout_basis_points: 250,
+			included_user_ids: [TARGETED_USER_ID],
+			excluded_user_ids: [OTHER_USER_ID],
+			standalone_forwarding: true,
+		});
+		expect(toDomainMigrationDiscovery(config)).toEqual({
+			enabled: true,
+			anonymous_rollout_basis_points: 250,
+			rollout_salt: 'domain-migration-v2',
+			standalone_forwarding: true,
+		});
+	});
+});
+
+describe('resolveDomainMigrationAssignment guild targeting', () => {
+	const INCLUDED_GUILD_ID = '3000000000000000001';
+	const MEMBER_GUILDS: ExperimentTargeting = {
+		memberGuildIds: new Set(['3000000000000000009', INCLUDED_GUILD_ID]),
+		premium: false,
+		countryCode: null,
+	};
+
+	test('serves members of an included guild at zero rollout', () => {
+		const config = createConfig({enabled: true, included_guild_ids: [INCLUDED_GUILD_ID]});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, MEMBER_GUILDS)).toEqual({enabled: true});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, NO_TARGETING)).toEqual({enabled: false});
+	});
+
+	test('keeps user exclusions ahead of guild membership', () => {
+		const config = createConfig({
+			enabled: true,
+			included_guild_ids: [INCLUDED_GUILD_ID],
+			excluded_user_ids: [TARGETED_USER_ID],
+		});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, MEMBER_GUILDS)).toEqual({enabled: false});
+	});
+
+	test('serves no guild members while disabled', () => {
+		const config = createConfig({included_guild_ids: [INCLUDED_GUILD_ID]});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, MEMBER_GUILDS)).toEqual({enabled: false});
+	});
+});
+
+describe('resolveDomainMigrationAssignment premium targeting', () => {
+	const PREMIUM: ExperimentTargeting = {memberGuildIds: new Set(), premium: true, countryCode: null};
+
+	test('serves premium users only when the switch is on', () => {
+		const on = createConfig({enabled: true, include_premium_users: true});
+		expect(resolveDomainMigrationAssignment(on, TARGETED_USER_ID, PREMIUM)).toEqual({enabled: true});
+		expect(resolveDomainMigrationAssignment(on, TARGETED_USER_ID, NO_TARGETING)).toEqual({enabled: false});
+		expect(resolveDomainMigrationAssignment(createConfig({enabled: true}), TARGETED_USER_ID, PREMIUM)).toEqual({
+			enabled: false,
+		});
+	});
+
+	test('keeps user exclusions ahead of the premium switch', () => {
+		const config = createConfig({
+			enabled: true,
+			include_premium_users: true,
+			excluded_user_ids: [TARGETED_USER_ID],
+		});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, PREMIUM)).toEqual({enabled: false});
+	});
+});
+
+describe('resolveDomainMigrationAssignment country targeting', () => {
+	const IN_SWEDEN: ExperimentTargeting = {...NO_TARGETING, countryCode: 'SE'};
+	const IN_BRAZIL: ExperimentTargeting = {...NO_TARGETING, countryCode: 'BR'};
+
+	test('limits the percentage rollout to the listed countries', () => {
+		const config = createConfig({enabled: true, rollout_basis_points: 10000, rollout_country_codes: ['SE', 'NO']});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_SWEDEN)).toEqual({enabled: true});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_BRAZIL)).toEqual({enabled: false});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, NO_TARGETING)).toEqual({enabled: false});
+	});
+
+	test('ignores the country while the list is empty', () => {
+		const config = createConfig({enabled: true, rollout_basis_points: 10000});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_BRAZIL)).toEqual({enabled: true});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, NO_TARGETING)).toEqual({enabled: true});
+	});
+
+	test('still buckets users inside a listed country', () => {
+		const config = createConfig({enabled: true, rollout_basis_points: 2500, rollout_country_codes: ['SE']});
+		for (const userId of syntheticUserIds(200)) {
+			expect(resolveDomainMigrationAssignment(config, userId, IN_SWEDEN).enabled).toBe(
+				experimentBucket(userId, config.rollout_salt) < 2500,
+			);
+		}
+	});
+
+	test('keeps included users, included guilds and premium users outside the listed countries', () => {
+		const guildId = '3000000000000000001';
+		const config = createConfig({
+			enabled: true,
+			rollout_country_codes: ['SE'],
+			included_user_ids: [TARGETED_USER_ID],
+			included_guild_ids: [guildId],
+			include_premium_users: true,
+		});
+		const otherUserId = '1000000000000000007';
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_BRAZIL)).toEqual({enabled: true});
+		expect(
+			resolveDomainMigrationAssignment(config, otherUserId, {...IN_BRAZIL, memberGuildIds: new Set([guildId])}),
+		).toEqual({enabled: true});
+		expect(resolveDomainMigrationAssignment(config, otherUserId, {...IN_BRAZIL, premium: true})).toEqual({
+			enabled: true,
+		});
+		expect(resolveDomainMigrationAssignment(config, otherUserId, IN_BRAZIL)).toEqual({enabled: false});
+	});
+
+	test('keeps exclusions ahead of a listed country', () => {
+		const config = createConfig({
+			enabled: true,
+			rollout_basis_points: 10000,
+			rollout_country_codes: ['SE'],
+			excluded_user_ids: [TARGETED_USER_ID],
+		});
+		expect(resolveDomainMigrationAssignment(config, TARGETED_USER_ID, IN_SWEDEN)).toEqual({enabled: false});
+	});
+});

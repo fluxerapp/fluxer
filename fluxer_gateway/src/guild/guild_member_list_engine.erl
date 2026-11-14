@@ -5,9 +5,9 @@
 
 -export([
     new/0,
+    clone/1,
     destroy/1,
     bulk_load/3,
-    add_member/5,
     remove_member/2,
     update_member/5,
     set_online/3,
@@ -15,13 +15,9 @@
     get_counts/1,
     get_groups/1,
     get_items/3,
-    get_all_item_keys/1,
-    get_sorted_user_ids/1,
-    index_of/2,
-    is_member_online/2
+    is_member_online/2,
+    version/1
 ]).
-
--export([info/1]).
 
 -define(ONLINE_IDX, 16#F0000000).
 -define(OFFLINE_IDX, 16#F0000001).
@@ -42,9 +38,21 @@ new() ->
         {hoisted_role_ids, []},
         {total_count, 0},
         {online_count, 0},
+        {version, 0},
         {{section_count, ?ONLINE_IDX}, 0},
         {{section_count, ?OFFLINE_IDX}, 0}
     ]),
+    Ref.
+
+-spec clone(ets:table()) -> ets:table().
+clone(Source) ->
+    {SourceOSet, SourceITab} = lookup_tabs(Source),
+    Ref = new(),
+    {OSet, ITab} = lookup_tabs(Ref),
+    true = ets:insert(ITab, ets:tab2list(SourceITab)),
+    ok = guild_member_list_oset:from_sorted(OSet, guild_member_list_oset:to_list(SourceOSet)),
+    true = ets:insert(Ref, [Row || Row <- ets:tab2list(Source), element(1, Row) =/= tabs]),
+    ok = bump_version(Ref),
     Ref.
 
 -spec destroy(term()) -> ok.
@@ -86,7 +94,7 @@ bulk_load(Ref, Members, HoistedRoleIds) ->
     guild_member_list_oset:from_sorted(OSet, Keys),
     store_counts(Ref, Total, Online),
     store_section_counts(Ref, SC),
-    ok.
+    bump_version(Ref).
 
 -spec bulk_load_member(
     {integer(), binary(), [integer()], boolean()},
@@ -130,7 +138,7 @@ add_member(Ref, UserId, SortKey, RoleIds, IsOnline) ->
     _ = ets:update_counter(Ref, {section_count, SIdx}, 1),
     _ = ets:update_counter(Ref, total_count, 1),
     ok = adjust_online_counter(Ref, IsOnline, 1),
-    ok.
+    bump_version(Ref).
 
 -spec remove_member(ets:table(), integer()) -> ok.
 remove_member(Ref, UserId) ->
@@ -182,88 +190,12 @@ get_items(Ref, Start, End) ->
     SO = lookup_section_order(Ref),
     lists:reverse(collect_range(OSet, Ref, SO, Start, End, 0, 0, [])).
 
--spec index_of(ets:table(), integer()) -> non_neg_integer() | not_found.
-index_of(Ref, UserId) ->
-    {OSet, ITab} = lookup_tabs(Ref),
-    case ets:lookup(ITab, UserId) of
-        [{UserId, SortKey, SIdx, _RoleIds, _IsOnline}] ->
-            index_of_member(OSet, Ref, SIdx, SortKey, UserId);
-        [] ->
-            not_found
-    end.
-
--spec index_of_member(
-    guild_member_list_oset:oset(), ets:table(), non_neg_integer(), binary(), integer()
-) ->
-    non_neg_integer() | not_found.
-index_of_member(OSet, Ref, SIdx, SortKey, UserId) ->
-    case guild_member_list_oset:rank(OSet, {SIdx, SortKey, UserId}) of
-        not_found -> not_found;
-        MemberRank -> MemberRank + headers_before(Ref, SIdx)
-    end.
-
 -spec is_member_online(ets:table(), integer()) -> boolean() | not_present.
 is_member_online(Ref, UserId) ->
     {_OSet, ITab} = lookup_tabs(Ref),
     case ets:lookup(ITab, UserId) of
         [{UserId, _SortKey, _SIdx, _RoleIds, IsOnline}] -> IsOnline;
         [] -> not_present
-    end.
-
--spec get_all_item_keys(ets:table()) -> [item()].
-get_all_item_keys(Ref) ->
-    {OSet, _ITab} = lookup_tabs(Ref),
-    SO = lookup_section_order(Ref),
-    {_Base, Rev} = lists:foldl(
-        fun(Section, Acc) -> collect_all_section_items(Section, Ref, OSet, Acc) end,
-        {0, []},
-        SO
-    ),
-    lists:reverse(Rev).
-
--spec collect_all_section_items(
-    {non_neg_integer(), binary()},
-    ets:table(),
-    guild_member_list_oset:oset(),
-    {non_neg_integer(), [item()]}
-) ->
-    {non_neg_integer(), [item()]}.
-collect_all_section_items({SIdx, DisplayId}, Ref, OSet, {Base, Acc}) ->
-    case read_section_count(Ref, SIdx) of
-        0 ->
-            {Base, Acc};
-        Count ->
-            Members = section_members(OSet, Base, Count),
-            {Base + Count, prepend_members(Members, [{group, DisplayId, 0} | Acc])}
-    end.
-
--spec get_sorted_user_ids(ets:table()) -> [integer()].
-get_sorted_user_ids(Ref) ->
-    {OSet, _ITab} = lookup_tabs(Ref),
-    [UId || {_SIdx, _SK, UId} <- guild_member_list_oset:to_list(OSet), is_integer(UId)].
-
--spec info(ets:table()) -> map().
-info(Ref) ->
-    {OSet, ITab} = lookup_tabs(Ref),
-    {Total, Online} = get_counts(Ref),
-    WordSize = erlang:system_info(wordsize),
-    MembersMem = guild_member_list_oset:memory_bytes(OSet),
-    IndexMem = ets_mem(ITab) * WordSize,
-    RefMem = ets_mem(Ref) * WordSize,
-    #{
-        total => Total,
-        online => Online,
-        members_table_bytes => MembersMem,
-        index_table_bytes => IndexMem,
-        ref_table_bytes => RefMem,
-        total_bytes => MembersMem + IndexMem + RefMem
-    }.
-
--spec ets_mem(ets:table()) -> non_neg_integer().
-ets_mem(Tab) ->
-    case ets:info(Tab, memory) of
-        N when is_integer(N), N >= 0 -> N;
-        _ -> 0
     end.
 
 -spec do_remove(ets:table(), integer()) -> ok.
@@ -276,7 +208,7 @@ do_remove(Ref, UserId) ->
             _ = ets:update_counter(Ref, {section_count, SIdx}, -1),
             _ = ets:update_counter(Ref, total_count, -1),
             ok = adjust_online_counter(Ref, IsOnline, -1),
-            ok;
+            bump_version(Ref);
         [] ->
             ok
     end.
@@ -326,6 +258,20 @@ move_section(Ref, OSet, ITab, UserId, SortKey, OldSIdx, RoleIds, IsOnline) ->
             false -> -1
         end,
     _ = ets:update_counter(Ref, online_count, OnlineDelta),
+    bump_version(Ref).
+
+-spec version(ets:table()) -> non_neg_integer() | undefined.
+version(Ref) ->
+    try ets:lookup_element(Ref, version, 2) of
+        Version when is_integer(Version) -> Version;
+        _ -> undefined
+    catch
+        error:badarg -> undefined
+    end.
+
+-spec bump_version(ets:table()) -> ok.
+bump_version(Ref) ->
+    _ = ets:update_counter(Ref, version, 1, {version, 0}),
     ok.
 
 -spec adjust_online_counter(ets:table(), boolean(), integer()) -> ok.
@@ -410,7 +356,7 @@ do_set_hoisted_roles(Ref, NewHoistedRoleIds) ->
         {hoisted_role_ids, NewHoistedRoleIds}
     ]),
     store_section_counts(Ref, SC),
-    ok.
+    bump_version(Ref).
 
 -spec rebuild_members_into(
     ets:table(), guild_member_list_oset:oset(), #{integer() => non_neg_integer()}
@@ -502,23 +448,6 @@ read_section_count(Ref, SIdx) ->
         Count -> Count
     catch
         error:badarg -> 0
-    end.
-
--spec headers_before(ets:table(), non_neg_integer()) -> non_neg_integer().
-headers_before(Ref, SIdx) ->
-    headers_before_loop(lookup_section_order(Ref), Ref, SIdx, 1).
-
--spec headers_before_loop(
-    [{non_neg_integer(), binary()}], ets:table(), non_neg_integer(), non_neg_integer()
-) -> non_neg_integer().
-headers_before_loop([], _Ref, _SIdx, Acc) ->
-    Acc;
-headers_before_loop([{Idx, _} | _Rest], _Ref, SIdx, Acc) when Idx >= SIdx ->
-    Acc;
-headers_before_loop([{Idx, _} | Rest], Ref, SIdx, Acc) ->
-    case read_section_count(Ref, Idx) > 0 of
-        true -> headers_before_loop(Rest, Ref, SIdx, Acc + 1);
-        false -> headers_before_loop(Rest, Ref, SIdx, Acc)
     end.
 
 -spec collect_range(

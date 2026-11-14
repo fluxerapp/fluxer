@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {ensureDesktopModule} from '@app/features/platform/utils/DesktopModuleAssets';
 import {
 	collectSettledFailures,
 	throwCollectedFailures,
@@ -19,6 +20,7 @@ import {
 import {createTrackProcessor} from '@app/features/voice/utils/camera-effects/MediaStreamTrackProcessorPolyfill';
 import {detectWebCameraSegmentationCapability} from '@app/features/voice/utils/camera-effects/WebCameraBackgroundSupport';
 import {
+	isValidUpdateRequestId,
 	isWebCameraEffectShutdownReason,
 	validateCameraEffectFrameDimensions,
 	WEB_CAMERA_EFFECT_UPDATE_REQUEST_ID_MAX,
@@ -37,6 +39,7 @@ import {
 	createWebCameraEffectVideoFrameProducer,
 	type WebCameraEffectVideoFrameProducer,
 } from '@app/features/voice/utils/camera-effects/WebCameraEffectVideoFrameSource';
+import {DESKTOP_CAMERA_EFFECTS_MODULE_NAME} from '@fluxer/desktop_ipc/src/ModuleContract';
 
 const VIDEO_TRACK_KIND = 'video';
 
@@ -181,16 +184,6 @@ function parseOptionalErrorDiagnostic(value: unknown): ErrorDiagnostic | null {
 		throw new Error('Camera effect worker emitted an invalid stop diagnostic');
 	}
 	return {errorType: value.errorType, message: value.message, stack: value.stack};
-}
-
-function isValidUpdateRequestId(value: unknown): value is number {
-	if (!Number.isSafeInteger(value)) {
-		return false;
-	}
-	if ((value as number) <= 0) {
-		return false;
-	}
-	return (value as number) <= WEB_CAMERA_EFFECT_UPDATE_REQUEST_ID_MAX;
 }
 
 function createWorkerReportedError(event: ErrorDiagnostic, context: string): Error {
@@ -396,6 +389,9 @@ export class WebCameraEffectPipeline implements WebCameraPipeline {
 		if (!capability.available) {
 			throw new Error(capability.reason);
 		}
+		if (!(await ensureDesktopModule(DESKTOP_CAMERA_EFFECTS_MODULE_NAME))) {
+			throw new Error('The camera effects module has not finished downloading');
+		}
 		const settings = source.getSettings();
 		let configuredFrameRate = settings.frameRate;
 		if (configuredFrameRate == null) {
@@ -485,7 +481,7 @@ export class WebCameraEffectPipeline implements WebCameraPipeline {
 				errorType: initialization.fallbackErrorType,
 			});
 		} else {
-			logger.info('voice.camera_effect_worker.initialized', {backend: initialization.backend});
+			logger.debug('voice.camera_effect_worker.initialized', {backend: initialization.backend});
 		}
 		return pipeline;
 	}

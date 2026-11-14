@@ -1,0 +1,9 @@
+%%?section_[[n]]_title%%<tr>
+	<td dir="[[dir]]" class="x-ink" style="padding:24px 0 0;font-family:[[font]];font-size:16px;line-height:24px;color:#1b1a2e;text-align:[[start]];direction:[[dir]];overflow-wrap:anywhere;word-break:break-word">
+		<h2 class="x-ink" style="margin:0 0 4px;font-size:16px;line-height:24px;font-weight:700;color:#1b1a2e">%%section_[[n]]_title%%</h2>
+		%%?section_[[n]]_body%%<div dir="auto" style="margin:0;text-align:start">%%section_[[n]]_body%%</div>%%/section_[[n]]_body%%
+		%%?section_[[n]]_list%%<ul dir="auto" style="margin:0;padding-[[start]]:20px;text-align:start">%%section_[[n]]_list%%</ul>%%/section_[[n]]_list%%
+		%%?section_[[n]]_note%%<div dir="auto" style="margin:8px 0 0;text-align:start">%%section_[[n]]_note%%</div>%%/section_[[n]]_note%%
+		%%?section_[[n]]_link%%<p dir="auto" style="margin:8px 0 0;text-align:start"><a href="%%section_[[n]]_link_url%%" class="x-link" style="color:#4641d9">%%section_[[n]]_link%%</a></p>%%/section_[[n]]_link%%
+	</td>
+</tr>%%/section_[[n]]_title%%

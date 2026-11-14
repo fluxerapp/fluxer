@@ -40,13 +40,6 @@ export type FreedesktopNotificationEvent =
 	| {kind: 'actionInvoked'; id: number; actionKey: string}
 	| {kind: 'closed'; id: number; reason: number};
 
-export interface ServerInformation {
-	name: string;
-	vendor: string;
-	version: string;
-	specVersion: string;
-}
-
 export declare class FreedesktopNotifications {
 	constructor(onEvent: (event: FreedesktopNotificationEvent) => void);
 
@@ -58,7 +51,5 @@ export declare class FreedesktopNotifications {
 
 	close(): Promise<void>;
 }
-
-export declare function getServerInformation(): Promise<ServerInformation>;
 
 export declare const loadError: Error | null;

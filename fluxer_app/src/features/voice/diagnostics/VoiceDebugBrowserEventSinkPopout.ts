@@ -505,27 +505,12 @@ function ensureMessageListener(): void {
 	messageListenerInstalled = true;
 }
 
-function removeMessageListener(): void {
-	if (!messageListenerInstalled) return;
-	if (typeof window !== 'undefined') {
-		window.removeEventListener('message', handlePopoutMessage);
-	}
-	messageListenerInstalled = false;
-}
-
 function ensureBroadcastChannel(): BroadcastChannel | null {
 	if (eventSinkBroadcastChannel) return eventSinkBroadcastChannel;
 	if (typeof BroadcastChannel !== 'function') return null;
 	eventSinkBroadcastChannel = new BroadcastChannel(VOICE_DEBUG_EVENT_SINK_BROADCAST_CHANNEL_NAME);
 	eventSinkBroadcastChannel.addEventListener('message', handlePopoutMessage);
 	return eventSinkBroadcastChannel;
-}
-
-function closeBroadcastChannel(): void {
-	if (!eventSinkBroadcastChannel) return;
-	eventSinkBroadcastChannel.removeEventListener('message', handlePopoutMessage);
-	eventSinkBroadcastChannel.close();
-	eventSinkBroadcastChannel = null;
 }
 
 function createPopoutUrls(): {scriptUrl: string; htmlUrl: string} {
@@ -633,13 +618,4 @@ export function setBrowserVoiceDebugEventSinkStatsHtml(html: string): void {
 		type: 'setStatsHtml',
 		html: eventSinkStatsHtml,
 	});
-}
-
-export function resetBrowserVoiceDebugEventSinkPopoutForTests(): void {
-	removeMessageListener();
-	closeBroadcastChannel();
-	revokePopoutUrl();
-	eventSinkWindow = null;
-	eventSinkEntries = [];
-	eventSinkStatsHtml = '';
 }

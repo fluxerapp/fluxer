@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
 import argon2 from 'argon2';
-import {Config} from '../Config';
 
-const TEST_ARGON2_OPTIONS: argon2.Options = {
+const TEST_ARGON2_OPTIONS: argon2.HashOptions = {
 	memoryCost: 1024,
 	timeCost: 1,
 	parallelism: 1,

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac, randomBytes, randomUUID} from 'node:crypto';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {TEST_CREDENTIALS, TEST_USER_DATA} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {decode as base32Decode, encode as base32Encode} from 'hi-base32';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {TEST_CREDENTIALS, TEST_USER_DATA} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface RegisterResponse {
 	user_id: string;
@@ -22,20 +22,10 @@ export interface LoginMfaResponse {
 	allowed_methods: Array<string>;
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes: boolean;
 }
 
-type LoginResponse =
-	| {
-			user_id: string;
-			token: string;
-	  }
-	| {
-			mfa: true;
-			ticket: string;
-			allowed_methods: Array<string>;
-			totp: boolean;
-			webauthn: boolean;
-	  };
+type LoginResponse = LoginSuccessResponse | LoginMfaResponse;
 
 export interface UserMeResponse {
 	id: string;
@@ -133,7 +123,6 @@ export async function createTestAccount(
 	if (!params?.skipEmailVerification) {
 		const securityFlagsBuilder = createBuilder(harness, '').post(`/test/users/${reg.user_id}/security-flags`).body({
 			email_verified: true,
-			suspicious_activity_flags: 0,
 		});
 		if (ipAddress) {
 			securityFlagsBuilder.header('x-forwarded-for', ipAddress);
@@ -271,6 +260,31 @@ export function totpCodeNow(secret: string): string {
 	return generateTotpCode(secret, Date.now());
 }
 
+export async function enableTotp(harness: ApiTestHarness, account: TestAccount): Promise<Array<string>> {
+	const secret = createTotpSecret();
+	const enabled = await createBuilder<BackupCodesResponse>(harness, account.token)
+		.post('/users/@me/mfa/totp/enable')
+		.body({secret, code: totpCodeNow(secret), password: account.password})
+		.execute();
+	return enabled.backup_codes.map(({code}) => code);
+}
+
+export async function loginWithTotp(
+	harness: ApiTestHarness,
+	account: TestAccount,
+	secret: string,
+): Promise<TestAccount> {
+	const login = await loginUser(harness, {email: account.email, password: account.password});
+	if (!('mfa' in login)) {
+		throw new Error('Expected MFA login');
+	}
+	const mfaLogin = await createBuilder<{token: string}>(harness, '')
+		.post('/auth/login/mfa/totp')
+		.body({ticket: login.ticket, code: totpCodeNow(secret)})
+		.execute();
+	return {...account, token: mfaLogin.token};
+}
+
 export async function seedMfaTicket(
 	harness: ApiTestHarness,
 	ticket: string,
@@ -300,6 +314,22 @@ export async function setUserACLs(
 	return await loginAccount(harness, account);
 }
 
+export async function createEmailCodeSudoBody(
+	harness: ApiTestHarness,
+	account: {token: string; email: string},
+): Promise<{mfa_method: 'email_code'; email_code_ticket: string; email_code: string}> {
+	const {ticket} = await createBuilder<{ticket: string}>(harness, account.token)
+		.post('/users/@me/sudo/email-code')
+		.body(null)
+		.execute();
+	const email = findLastTestEmail(await listTestEmails(harness, {recipient: account.email}), 'reauth_code');
+	return {mfa_method: 'email_code', email_code_ticket: ticket, email_code: email!.metadata['code']!};
+}
+
+export async function confirmTestEmail(harness: ApiTestHarness, userId: string): Promise<void> {
+	await createBuilder(harness, '').post(`/test/users/${userId}/security-flags`).body({email_verified: true}).execute();
+}
+
 export async function unclaimAccount(harness: ApiTestHarness, userId: string): Promise<void> {
 	await createBuilder(harness, '').post(`/test/users/${userId}/unclaim`).body(null).execute();
 }
@@ -307,6 +337,7 @@ export async function unclaimAccount(harness: ApiTestHarness, userId: string): P
 interface SsoConfig {
 	enabled: boolean;
 	enforced: boolean;
+	issuer?: string;
 	authorization_url: string;
 	token_url: string;
 	client_id: string;
@@ -314,8 +345,12 @@ interface SsoConfig {
 	scope: string;
 	allowed_domains: Array<string>;
 	auto_provision: boolean;
+	username_from_provider?: boolean;
 	redirect_uri: string;
 	display_name?: string;
+	button_label?: string;
+	groups_claim?: string | null;
+	group_role_mappings?: Array<{group: string; role_id: string}>;
 }
 
 export async function enableSso(

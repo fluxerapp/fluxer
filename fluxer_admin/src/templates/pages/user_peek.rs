@@ -2,15 +2,17 @@
 
 use crate::{
     acl,
-    api::types::AdminUser,
+    api::types::{AdminUser, account_tier_label},
     config::AdminConfig,
     templates::components::{
         badge::{BadgeVariant, badge},
         data_field::{data_field_mono, data_field_muted, data_field_text, data_grid},
         media::user_avatar_url,
-        user_profile_badges::user_profile_badges,
+        user_profile_badges::{BadgeSize, user_profile_badges},
     },
-    utils::{bigint::format_discriminator, timestamps::snowflake_creation_date},
+    utils::{
+        bigint::format_discriminator, timestamps::snowflake_creation_date, user_tag::user_tag,
+    },
 };
 use maud::{Markup, html};
 
@@ -58,15 +60,12 @@ pub fn user_peek_fragment(config: &AdminConfig, user: &AdminUser, admin_acls: &[
                         }
                         (user_profile_badges(
                             &config.static_cdn_endpoint,
-                            user.flags,
-                            user.premium_type,
-                            user.premium_since.as_deref(),
-                            config.self_hosted,
-                            true,
+                            &user.profile_badges,
+                            BadgeSize::Dense,
                         ))
                     }
                     p class="break-words text-sm text-neutral-500" {
-                        (user.username) "#" (format_discriminator(&user.discriminator))
+                        (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                     }
                     div class="flex flex-wrap items-center justify-center gap-2 \
                                 sm:justify-start" {
@@ -83,6 +82,9 @@ pub fn user_peek_fragment(config: &AdminConfig, user: &AdminUser, admin_acls: &[
                         (data_field_text("Email", email))
                         (data_field_text("Email status", email_status_label(user)))
                     }
+                }
+                @if let Some(tier) = user.account_tier {
+                    (data_field_text("Account tier", account_tier_label(tier)))
                 }
                 @if let Some(pt) = user.premium_type {
                     (data_field_text("Premium type", premium_type_label(pt)))

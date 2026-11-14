@@ -2,6 +2,7 @@
 
 import type {MessageBehaviorOverrides} from '@app/features/channel/components/ChannelMessage';
 import type {SearchMachineState} from '@app/features/channel/components/SearchResultsUtils';
+import type {SearchMachineEvent} from '@app/features/channel/components/SearchStateMachine';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import type {Guild} from '@app/features/guild/models/Guild';
@@ -9,6 +10,9 @@ import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureConten
 import Guilds from '@app/features/guild/state/Guilds';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {MessageSearchParams, MessageSearchScope} from '@app/features/search/utils/SearchUtils';
+import {isIndexing, type SearchContext, searchMessages} from '@app/features/search/utils/SearchUtils';
+import * as FormUtils from '@app/lib/forms';
+import {MESSAGE_SEARCH_MAX_PAGE} from '@fluxer/constants/src/LimitConstants';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import type {IconProps} from '@phosphor-icons/react';
@@ -24,10 +28,9 @@ import {
 } from '@phosphor-icons/react';
 import type React from 'react';
 
-export type PaginationItem = number | 'ellipsis-left' | 'ellipsis-right';
 export type ChannelSearchSortMode = 'newest' | 'oldest' | 'relevant';
 
-export const DEFAULT_MAX_VISIBLE_PAGES = 7;
+const DEFAULT_MAX_VISIBLE_PAGES = 7;
 export const RESULTS_PER_PAGE = 25;
 export const DETACHED_MESSAGE_BEHAVIOR: MessageBehaviorOverrides = {
 	isEditing: false,
@@ -38,23 +41,32 @@ export const DETACHED_MESSAGE_BEHAVIOR: MessageBehaviorOverrides = {
 } as const;
 export const EMPTY_SEARCH_MESSAGES: Array<Message> = [];
 export const EMPTY_SEARCH_CHANNELS: Array<Channel> = [];
-export const OTHER_DESCRIPTOR = msg({
+export const SEARCH_PAGE_LIMIT_DESCRIPTOR = msg({
+	message: 'Only the first {maxPages} pages of results can be shown. Try a more specific search.',
+	comment:
+		'Notice under the search results pagination when a search has more pages than can be shown. maxPages is a number.',
+});
+export function getSearchPageCount(total: number, hitsPerPage: number): {totalPages: number; capped: boolean} {
+	const pages = Math.max(1, Math.ceil(total / hitsPerPage));
+	return {totalPages: Math.min(pages, MESSAGE_SEARCH_MAX_PAGE), capped: pages > MESSAGE_SEARCH_MAX_PAGE};
+}
+const OTHER_DESCRIPTOR = msg({
 	message: '{total, plural, one {# result} other {# results}}',
 	comment: 'Result count header in the channel search results panel. Plural cases describe the result count.',
 });
-export const INDEXING_DESCRIPTOR = msg({
+const INDEXING_DESCRIPTOR = msg({
 	message: 'Indexing',
 	comment: 'Header status shown while the channel is being indexed for the first time before search is available.',
 });
-export const SEARCHING_DESCRIPTOR = msg({
+const SEARCHING_DESCRIPTOR = msg({
 	message: 'Searching',
 	comment: 'Header status shown while a search request is in flight in the channel search results panel.',
 });
-export const SEARCH_RESULTS_DESCRIPTOR = msg({
+const SEARCH_RESULTS_DESCRIPTOR = msg({
 	message: 'Search results',
 	comment: 'Default header title in the channel search results panel before a query has been submitted.',
 });
-export const AN_ERROR_OCCURRED_WHILE_SEARCHING_DESCRIPTOR = msg({
+const AN_ERROR_OCCURRED_WHILE_SEARCHING_DESCRIPTOR = msg({
 	message: 'An error occurred while searching.',
 	comment: 'Fallback error message shown when the channel search request fails for an unknown reason.',
 });
@@ -88,18 +100,6 @@ export const NO_PART_OF_THIS_QUERY_APPLIED_DESCRIPTOR = msg({
 	comment:
 		'Body copy under the nothing-to-search-for heading. Preserve {query}; it is the text the user submitted and is inserted by code.',
 });
-export const GO_TO_PAGE_DESCRIPTOR = msg({
-	message: 'Go to page {page}',
-	comment: 'Accessible label of each pagination page button. page is the 1-indexed page number.',
-});
-export const GO_TO_PAGE_2_DESCRIPTOR = msg({
-	message: 'Go to page',
-	comment: 'Accessible label of the inline page-number input shown when the user opens the pagination ellipsis.',
-});
-export const JUMP_TO_PAGE_DESCRIPTOR = msg({
-	message: 'Jump to page',
-	comment: 'Accessible label of the ellipsis button in the pagination bar that reveals the page-number input.',
-});
 export const SEARCH_SCOPE_DESCRIPTOR = msg({
 	message: 'Search scope: {label}',
 	comment:
@@ -110,10 +110,10 @@ export const SORT_MODE_DESCRIPTOR = msg({
 	comment:
 		'Status label in the channel search results header announcing the current sort mode. label is the selected sort.',
 });
-export const NEWEST_DESCRIPTOR = msg({message: 'Newest'});
-export const OLDEST_DESCRIPTOR = msg({message: 'Oldest'});
-export const MOST_RELEVANT_DESCRIPTOR = msg({message: 'Most relevant'});
-export const getChannelGuild = (channel: Channel): Guild | null => {
+const NEWEST_DESCRIPTOR = msg({message: 'Newest'});
+const OLDEST_DESCRIPTOR = msg({message: 'Oldest'});
+const MOST_RELEVANT_DESCRIPTOR = msg({message: 'Most relevant'});
+const getChannelGuild = (channel: Channel): Guild | null => {
 	if (!channel.guildId) return null;
 	return Guilds.getGuild(channel.guildId) ?? null;
 };
@@ -121,39 +121,6 @@ export const getAdaptiveVisiblePageCount = (): number => {
 	if (window.innerWidth <= 420) return 3;
 	if (window.innerWidth <= 640) return 5;
 	return DEFAULT_MAX_VISIBLE_PAGES;
-};
-export const buildPaginationRange = (
-	currentPage: number,
-	totalPages: number,
-	maxVisible: number,
-): Array<PaginationItem> => {
-	if (totalPages <= 0) return [];
-	const effectiveMax = Math.max(3, maxVisible);
-	if (totalPages <= effectiveMax) {
-		return Array.from({length: totalPages}, (_, index) => index + 1);
-	}
-	const innerSlots = Math.max(1, effectiveMax - 2);
-	let start = currentPage - Math.floor(innerSlots / 2);
-	let end = currentPage + Math.ceil(innerSlots / 2) - 1;
-	start = Math.max(2, start);
-	end = Math.min(totalPages - 1, end);
-	while (end - start + 1 < innerSlots) {
-		if (start > 2) {
-			start -= 1;
-		} else if (end < totalPages - 1) {
-			end += 1;
-		} else {
-			break;
-		}
-	}
-	const range: Array<PaginationItem> = [1];
-	if (start > 2) range.push('ellipsis-left');
-	for (let page = start; page <= end; page++) {
-		range.push(page);
-	}
-	if (end < totalPages - 1) range.push('ellipsis-right');
-	range.push(totalPages);
-	return range;
 };
 export const getSortModeOptions = (i18n: I18n): Array<{mode: ChannelSearchSortMode; label: string}> => [
 	{mode: 'newest', label: i18n._(NEWEST_DESCRIPTOR)},
@@ -272,3 +239,42 @@ export const getHeaderTitleDescriptor = (machineState: SearchMachineState): Mess
 			return SEARCH_RESULTS_DESCRIPTOR;
 	}
 };
+
+export async function runChannelSearch(
+	i18n: I18n,
+	context: SearchContext,
+	params: MessageSearchParams,
+): Promise<SearchMachineEvent> {
+	if (
+		GuildMatureContentAgree.shouldShowGate({
+			channelId: context.contextChannelId,
+			guildId: context.contextGuildId ?? null,
+		})
+	) {
+		return {
+			type: 'channelSearch.succeeded',
+			channels: [],
+			results: [],
+			total: 0,
+			hitsPerPage: params.hitsPerPage ?? RESULTS_PER_PAGE,
+			page: 1,
+		};
+	}
+	try {
+		const result = await searchMessages(i18n, context, params);
+		if (isIndexing(result)) return {type: 'channelSearch.indexingStarted'};
+		return {
+			type: 'channelSearch.succeeded',
+			channels: result.channels,
+			results: result.messages,
+			total: result.total,
+			hitsPerPage: result.hitsPerPage,
+			page: result.page,
+		};
+	} catch (error) {
+		return {
+			type: 'channelSearch.failed',
+			error: FormUtils.extractErrorMessage(i18n, error) || i18n._(AN_ERROR_OCCURRED_WHILE_SEARCHING_DESCRIPTOR),
+		};
+	}
+}

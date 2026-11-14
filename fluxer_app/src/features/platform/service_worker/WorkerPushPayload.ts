@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
+
 export interface PushPayload {
 	type?: string;
 	action?: string;
@@ -18,8 +21,6 @@ export interface PushNotificationClientState {
 	hasVisibleClient: boolean;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
-
 export const normalizePushPayload = (raw: unknown): PushPayload => {
 	const payload = (raw ?? {}) as PushPayload;
 	if (payload.web_push === 8030 && payload.notification && typeof payload.notification === 'object') {
@@ -30,6 +31,49 @@ export const normalizePushPayload = (raw: unknown): PushPayload => {
 		return {...inner, data};
 	}
 	return payload;
+};
+const PUSH_TITLE_MANIFEST_TIMEOUT_MS = 2000;
+export interface InstanceManifestSources {
+	fetchManifest: (signal: AbortSignal) => Promise<Response>;
+	readCachedManifest: () => Promise<Response | undefined>;
+}
+const readManifestName = async (response: Response | undefined): Promise<string | null> => {
+	if (!response?.ok) return null;
+	const manifest: unknown = await response.json();
+	const name = isRecord(manifest) && typeof manifest.name === 'string' ? manifest.name.trim() : '';
+	return name.length > 0 ? name : null;
+};
+const fetchManifestName = async (sources: InstanceManifestSources, timeoutMs: number): Promise<string | null> => {
+	const controller = new AbortController();
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const timedOut = new Promise<null>((resolve) => {
+		timer = setTimeout(() => {
+			controller.abort();
+			resolve(null);
+		}, timeoutMs);
+	});
+	try {
+		return await Promise.race([sources.fetchManifest(controller.signal).then(readManifestName), timedOut]);
+	} catch {
+		return null;
+	} finally {
+		clearTimeout(timer);
+	}
+};
+const readCachedManifestName = async (sources: InstanceManifestSources): Promise<string | null> => {
+	try {
+		return await readManifestName(await sources.readCachedManifest());
+	} catch {
+		return null;
+	}
+};
+export const resolvePushTitle = async (payload: PushPayload, sources: InstanceManifestSources): Promise<string> => {
+	if (typeof payload.title === 'string' && payload.title.trim()) return payload.title;
+	return (
+		(await fetchManifestName(sources, PUSH_TITLE_MANIFEST_TIMEOUT_MS)) ??
+		(await readCachedManifestName(sources)) ??
+		PRODUCT_NAME
+	);
 };
 export const getBadgeCount = (payload: PushPayload): number | null => {
 	const badgeValue = payload.data?.badge_count;
@@ -53,6 +97,19 @@ export const resolvePushNotificationTag = (payload: PushPayload): string | undef
 	}
 	return undefined;
 };
+export const resolvePushMessageId = (payload: PushPayload): string | undefined => {
+	const messageId = payload.data?.message_id;
+	if (typeof messageId === 'string' && messageId.length > 0) {
+		return messageId;
+	}
+	return undefined;
+};
+export const shouldRenotifyPushNotification = (
+	messageId: string | undefined,
+	shownWithSameTag: ReadonlyArray<{readonly data?: unknown}>,
+): boolean =>
+	messageId === undefined ||
+	!shownWithSameTag.some((notification) => isRecord(notification.data) && notification.data.message_id === messageId);
 export const resolvePushChannelId = (payload: PushPayload): string | undefined => {
 	const channelId = payload.data?.channel_id;
 	if (typeof channelId === 'string' && channelId.length > 0) {
@@ -75,6 +132,20 @@ export const matchesPushChannelNotification = (notification: Notification, chann
 		return true;
 	}
 	return typeof tag === 'string' && tag.startsWith(`${channelTag}:`);
+};
+const SNOWFLAKE_PATTERN = /^[1-9]\d*$/;
+export const isPushNotificationReadThrough = (
+	notification: {readonly data?: unknown},
+	readThroughMessageId: string | undefined,
+): boolean => {
+	if (readThroughMessageId === undefined || !SNOWFLAKE_PATTERN.test(readThroughMessageId)) {
+		return true;
+	}
+	const messageId = isRecord(notification.data) ? notification.data.message_id : undefined;
+	if (typeof messageId !== 'string' || !SNOWFLAKE_PATTERN.test(messageId)) {
+		return true;
+	}
+	return BigInt(messageId) <= BigInt(readThroughMessageId);
 };
 export const getPushNotificationClientState = (
 	clients: ReadonlyArray<{readonly visibilityState?: string}>,

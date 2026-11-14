@@ -20,12 +20,17 @@
 }
 
 .emoji {
+	display: block;
+	flex-shrink: 0;
 	width: 2rem;
 	height: 2rem;
+	min-width: 2rem;
+	min-height: 2rem;
+	object-fit: contain;
 }
 
 .textContainer {
-	margin-left: 0.75rem;
+	margin-inline-start: 0.75rem;
 	font-size: 0.8125rem;
 	line-height: 1.25;
 	color: var(--text-primary);

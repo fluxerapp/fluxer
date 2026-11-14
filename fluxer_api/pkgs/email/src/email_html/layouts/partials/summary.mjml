@@ -1,0 +1,20 @@
+%%?sum_total_label%%<tr>
+	<td style="padding:16px 0 0">
+		<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="[[dir]]" style="width:100%;border-collapse:collapse;direction:[[dir]]">
+			<mj-include path="./partials/summary-row.mjml" n="1" />
+			<mj-include path="./partials/summary-row.mjml" n="2" />
+			<mj-include path="./partials/summary-row.mjml" n="3" />
+			<mj-include path="./partials/summary-row.mjml" n="4" />
+			<mj-include path="./partials/summary-row.mjml" n="5" />
+			<tr>
+				<td dir="[[dir]]" class="x-ink x-rule" style="padding:12px 0 0;padding-[[end]]:16px;border-top:1px solid #e4e3ec;font-family:[[font]];font-size:17px;line-height:24px;font-weight:700;color:#1b1a2e;text-align:[[start]];direction:[[dir]];vertical-align:top">%%sum_total_label%%</td>
+				<td dir="auto" class="x-ink x-rule" style="padding:12px 0 0;border-top:1px solid #e4e3ec;font-family:[[font]];font-size:17px;line-height:24px;font-weight:700;color:#1b1a2e;text-align:[[end]];vertical-align:top;white-space:nowrap">%%sum_total_value%%</td>
+			</tr>
+			%%?sum_tax%%<tr>
+				<td colspan="2" dir="[[dir]]" class="x-muted" style="padding:2px 0 0;font-family:[[font]];font-size:14px;line-height:21px;color:#5b5a70;text-align:[[end]];direction:[[dir]]">%%sum_tax%%</td>
+			</tr>%%/sum_tax%%
+			<mj-include path="./partials/summary-row.mjml" n="6" />
+			<mj-include path="./partials/summary-row.mjml" n="7" />
+		</table>
+	</td>
+</tr>%%/sum_total_label%%

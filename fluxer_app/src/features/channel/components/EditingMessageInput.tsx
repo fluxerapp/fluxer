@@ -86,7 +86,7 @@ export const EditingMessageInput = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const maxMessageLength = Limits.getMaxMessageLength();
-		const premiumMaxLength = Limits.getPremiumValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
+		const premiumMaxLength = Limits.getStockValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
 		const [initial] = useState(() => {
 			let wire = MessageEdit.getEditingContent(channel.id, message.id);
 			if (wire == null) {
@@ -293,6 +293,7 @@ export const EditingMessageInput = observer(
 									markdown={true}
 									singleLine={!mobileLayout.enabled}
 									size="chat"
+									maxWireLength={maxMessageLength}
 									className={editingStyles.editor}
 									autocompleteAnchor={containerRef.current}
 									ariaLabel={i18n._(EDIT_MESSAGE_DESCRIPTOR)}
@@ -336,7 +337,7 @@ export const EditingMessageInput = observer(
 				<div className={editingStyles.footer} data-flx="channel.editing-message-input.footer">
 					<div data-flx="channel.editing-message-input.hints">
 						<Trans>
-							escape to{' '}
+							Escape to{' '}
 							<FocusRing offset={-2} data-flx="channel.editing-message-input.focus-ring--2">
 								<button
 									type="button"
@@ -355,7 +356,7 @@ export const EditingMessageInput = observer(
 							data-flx="channel.editing-message-input.separator"
 						/>
 						<Trans>
-							enter to{' '}
+							Enter to{' '}
 							<FocusRing offset={-2} enabled={!editingDisabled} data-flx="channel.editing-message-input.focus-ring--3">
 								<button
 									type="button"
@@ -378,7 +379,6 @@ export const EditingMessageInput = observer(
 						channelId={channel.id}
 						onEmojiSelect={handleEmojiSelect}
 						visibleTabs={['emojis']}
-						selectedTab="emojis"
 						data-flx="channel.editing-message-input.expression-picker-sheet"
 					/>
 				)}

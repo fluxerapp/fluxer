@@ -10,14 +10,7 @@ import {
 	type EmbedProps,
 	getBorderColor,
 	isValidMedia,
-	LIKE_DESCRIPTOR,
-	LIKES_DESCRIPTOR,
-	QUOTE_DESCRIPTOR,
-	QUOTES_DESCRIPTOR,
-	REPOST_DESCRIPTOR,
-	REPOSTS_DESCRIPTOR,
-	SAVE_DESCRIPTOR,
-	SAVES_DESCRIPTOR,
+	useFreshGalleryImages,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {EmbedMediaRenderer} from '@app/features/channel/components/embeds/channel_embed/EmbedMediaRenderer';
 import {
@@ -35,36 +28,47 @@ import {
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {MessageEmbedTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {EmbedField, EmbedMedia} from '@fluxer/schema/src/domains/message/EmbedSchemas';
-import {useLingui} from '@lingui/react/macro';
+import {Trans} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import type {FC} from 'react';
-import {useCallback, useMemo} from 'react';
+import type {FC, ReactNode} from 'react';
+import {useMemo} from 'react';
+
+interface BlueskyEngagementItem {
+	metric: 'repost' | 'quote' | 'like' | 'save';
+	countLabel: string;
+}
+
+function renderBlueskyEngagementMetric({metric, countLabel}: BlueskyEngagementItem): ReactNode {
+	switch (metric) {
+		case 'repost':
+			return (
+				<Trans>
+					Reposts: <strong data-flx="channel.embeds.embed.bluesky-engagement-row.strong">{countLabel}</strong>
+				</Trans>
+			);
+		case 'quote':
+			return (
+				<Trans>
+					Quotes: <strong data-flx="channel.embeds.embed.bluesky-engagement-row.strong">{countLabel}</strong>
+				</Trans>
+			);
+		case 'like':
+			return (
+				<Trans>
+					Likes: <strong data-flx="channel.embeds.embed.bluesky-engagement-row.strong">{countLabel}</strong>
+				</Trans>
+			);
+		case 'save':
+			return (
+				<Trans>
+					Saves: <strong data-flx="channel.embeds.embed.bluesky-engagement-row.strong">{countLabel}</strong>
+				</Trans>
+			);
+	}
+}
 
 const BlueskyEngagementRow: FC<{fields?: ReadonlyArray<EmbedField>}> = observer(({fields}) => {
-	const {i18n} = useLingui();
-	const isSingularCount = useCallback((count: string): boolean => {
-		const normalised = count.replace(/[\s,]/g, '');
-		if (normalised.length === 0) return false;
-		const parsed = Number(normalised);
-		return Number.isFinite(parsed) && parsed === 1;
-	}, []);
-	const getMetricLabel = useCallback(
-		(metric: 'repost' | 'quote' | 'like' | 'save', count: string): string => {
-			const singular = isSingularCount(count);
-			switch (metric) {
-				case 'repost':
-					return singular ? i18n._(REPOST_DESCRIPTOR) : i18n._(REPOSTS_DESCRIPTOR);
-				case 'quote':
-					return singular ? i18n._(QUOTE_DESCRIPTOR) : i18n._(QUOTES_DESCRIPTOR);
-				case 'like':
-					return singular ? i18n._(LIKE_DESCRIPTOR) : i18n._(LIKES_DESCRIPTOR);
-				case 'save':
-					return singular ? i18n._(SAVE_DESCRIPTOR) : i18n._(SAVES_DESCRIPTOR);
-			}
-		},
-		[isSingularCount, i18n],
-	);
 	const engagementItems = useMemo(() => {
 		const map = new Map<string, string>();
 		for (const field of fields ?? []) {
@@ -76,28 +80,27 @@ const BlueskyEngagementRow: FC<{fields?: ReadonlyArray<EmbedField>}> = observer(
 			if (trimmed.length === 0) return false;
 			return !/^0(?:\.0+)?$/.test(trimmed);
 		};
-		const items: Array<{metric: 'repost' | 'quote' | 'like' | 'save'; count: string}> = [];
+		const items: Array<BlueskyEngagementItem> = [];
 		const repostCount = map.get('repostCount');
 		const quoteCount = map.get('quoteCount');
 		const likeCount = map.get('likeCount');
 		const bookmarkCount = map.get('bookmarkCount') ?? map.get('saveCount');
-		if (shouldRenderCount(repostCount)) items.push({metric: 'repost', count: repostCount});
-		if (shouldRenderCount(quoteCount)) items.push({metric: 'quote', count: quoteCount});
-		if (shouldRenderCount(likeCount)) items.push({metric: 'like', count: likeCount});
-		if (shouldRenderCount(bookmarkCount)) items.push({metric: 'save', count: bookmarkCount});
+		if (shouldRenderCount(repostCount)) items.push({metric: 'repost', countLabel: repostCount});
+		if (shouldRenderCount(quoteCount)) items.push({metric: 'quote', countLabel: quoteCount});
+		if (shouldRenderCount(likeCount)) items.push({metric: 'like', countLabel: likeCount});
+		if (shouldRenderCount(bookmarkCount)) items.push({metric: 'save', countLabel: bookmarkCount});
 		return items;
 	}, [fields]);
 	if (engagementItems.length === 0) return null;
 	return (
 		<div className={styles.blueskyEngagement} data-flx="channel.embeds.embed.bluesky-engagement-row.bluesky-engagement">
-			{engagementItems.map(({metric, count}) => (
+			{engagementItems.map((item) => (
 				<div
-					key={metric}
+					key={item.metric}
 					className={styles.blueskyEngagementItem}
 					data-flx="channel.embeds.embed.bluesky-engagement-row.bluesky-engagement-item"
 				>
-					<strong data-flx="channel.embeds.embed.bluesky-engagement-row.strong">{count}</strong>{' '}
-					{getMetricLabel(metric, count)}
+					{renderBlueskyEngagementMetric(item)}
 				</div>
 			))}
 		</div>
@@ -115,9 +118,10 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 		const hasImage = isValidMedia(embed.image);
 		const hasThumbnail = isValidMedia(embed.thumbnail);
 		const hasAnyMedia = hasVideo || hasImage || hasThumbnail;
-		const galleryImages = useMemo<Array<Required<EmbedMedia>>>(() => {
+		const rawGalleryImages = useMemo<Array<Required<EmbedMedia>>>(() => {
 			return collectGalleryImages({embed, embedIndex, embedList});
 		}, [embed, embedIndex, embedList]);
+		const galleryImages = useFreshGalleryImages(rawGalleryImages);
 		const showGallery = galleryImages.length > 1 || (!hasAnyMedia && galleryImages.length > 0);
 		const galleryAttachments = useMemo(
 			() => (showGallery ? buildGalleryAttachments(galleryImages, embed, embedIndex) : undefined),
@@ -126,7 +130,14 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 		const shouldRenderMedia = hasAnyMedia || showGallery;
 		const blueskyMediaMaxWidth = useMemo(() => {
 			if (showGallery || isNested) return undefined;
-			const primaryMedia = hasVideo ? embed.video : hasImage ? embed.image : hasThumbnail ? embed.thumbnail : undefined;
+			let primaryMedia: EmbedMedia | undefined;
+			if (hasVideo) {
+				primaryMedia = embed.video;
+			} else if (hasImage) {
+				primaryMedia = embed.image;
+			} else if (hasThumbnail) {
+				primaryMedia = embed.thumbnail;
+			}
 			if (!primaryMedia || !isValidMedia(primaryMedia)) return undefined;
 			return calculateMediaDimensions(primaryMedia).width;
 		}, [embed.video, embed.image, embed.thumbnail, hasVideo, hasImage, hasThumbnail, isNested, showGallery]);
@@ -182,7 +193,7 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 					...(isNested
 						? {maxWidth: '100%', width: '100%'}
 						: {
-								borderLeft: `4px solid ${getBorderColor(embed.color)}`,
+								borderInlineStart: `4px solid ${getBorderColor(embed.color)}`,
 								maxWidth: formatResponsiveEmbedWidth(blueskyOuterMaxWidth),
 							}),
 				}}
@@ -193,16 +204,21 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 						<div className={styles.embedContent} data-flx="channel.embeds.embed.bluesky-embed.embed-content">
 							<EmbedProvider
 								provider={embed.provider}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.bluesky-embed.embed-provider"
 							/>
 							<EmbedAuthorComponent
 								author={embed.author}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.bluesky-embed.embed-author-component"
 							/>
 							{!isNested && (
 								<EmbedTitle
 									title={embed.title}
 									url={embed.url}
+									markdown
 									messageId={message.id}
 									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.bluesky-embed.embed-title"
@@ -210,6 +226,7 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 							)}
 							<EmbedDescription
 								description={embed.description}
+								markdown
 								messageId={message.id}
 								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.bluesky-embed.embed-description"
@@ -253,8 +270,6 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 								<EmbedFooterComponent
 									footer={embed.footer}
 									timestamp={embed.timestamp ? new Date(embed.timestamp) : undefined}
-									messageId={message.id}
-									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.bluesky-embed.embed-footer-component"
 								/>
 							)}

@@ -49,18 +49,6 @@ class UnsavedChanges {
 			[tabId]: data,
 		};
 	}
-
-	hasUnsavedChanges(tabId: string): boolean {
-		return this.unsavedChanges[tabId] || false;
-	}
-
-	getFlashTrigger(tabId: string): number {
-		return this.flashTriggers[tabId] || 0;
-	}
-
-	getTabData(tabId: string): TabData {
-		return this.tabData[tabId] || {};
-	}
 }
 
 export default new UnsavedChanges();

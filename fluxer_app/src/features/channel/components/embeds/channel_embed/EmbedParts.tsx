@@ -2,9 +2,11 @@
 
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/channel/components/embeds/ChannelEmbed.module.css';
+import type {LinkComponentProps} from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
 import {EmbedLink} from '@app/features/channel/components/embeds/channel_embed/EmbedLink';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import type {EmbedAuthor, EmbedField, EmbedFooter} from '@fluxer/schema/src/domains/message/EmbedSchemas';
@@ -20,12 +22,18 @@ const resolveEmbedIconSrc = (proxyIconUrl: string | undefined, allowMotion: bool
 	return buildMediaProxyURL(proxyIconUrl, allowMotion ? {} : STILL_EMBED_ICON_OPTIONS);
 };
 
-export const EmbedProvider: FC<{provider?: EmbedAuthor}> = observer(({provider}) => {
+type LinkContext = Pick<LinkComponentProps, 'messageId' | 'channelId'>;
+
+export const EmbedProvider: FC<{provider?: EmbedAuthor} & LinkContext> = observer(({provider, ...context}) => {
 	if (!provider) return null;
 	return (
 		<div className={styles.embedProvider} data-flx="channel.embeds.embed.embed-provider.embed-provider">
 			{provider.url ? (
-				<EmbedLink url={provider.url} data-flx="channel.embeds.channel-embed.embed-parts.embed-provider.embed-link">
+				<EmbedLink
+					url={provider.url}
+					{...context}
+					data-flx="channel.embeds.channel-embed.embed-parts.embed-provider.embed-link"
+				>
 					{provider.name}
 				</EmbedLink>
 			) : (
@@ -34,9 +42,9 @@ export const EmbedProvider: FC<{provider?: EmbedAuthor}> = observer(({provider})
 		</div>
 	);
 });
-export const EmbedAuthorComponent: FC<{author?: EmbedAuthor}> = observer(({author}) => {
+export const EmbedAuthorComponent: FC<{author?: EmbedAuthor} & LinkContext> = observer(({author, ...context}) => {
 	const allowIconMotion = useShouldAnimate({kind: 'gif'});
-	const iconSrc = resolveEmbedIconSrc(author?.proxy_icon_url, allowIconMotion);
+	const iconSrc = useApiAttachmentSrc(resolveEmbedIconSrc(author?.proxy_icon_url, allowIconMotion) ?? '');
 	if (!author) return null;
 	return (
 		<div className={styles.embedAuthor} data-flx="channel.embeds.embed.embed-author-component.embed-author">
@@ -54,6 +62,7 @@ export const EmbedAuthorComponent: FC<{author?: EmbedAuthor}> = observer(({autho
 				<EmbedLink
 					className={clsx(styles.embedAuthorName, styles.embedAuthorNameLink)}
 					url={author.url}
+					{...context}
 					data-flx="channel.embeds.channel-embed.embed-parts.embed-author-component.embed-author-name"
 				>
 					{author.name}
@@ -69,42 +78,63 @@ export const EmbedAuthorComponent: FC<{author?: EmbedAuthor}> = observer(({autho
 		</div>
 	);
 });
-export const EmbedTitle: FC<{title?: string; url?: string; messageId?: string; channelId?: string}> = observer(
-	({title, url, messageId, channelId}) => {
-		if (title == null || title.length === 0) return null;
-		const options = {context: MarkdownContext.RESTRICTED_INLINE_REPLY, messageId, channelId};
-		return (
-			<div className={styles.embedTitle} data-flx="channel.embeds.embed.embed-title.embed-title">
-				{url ? (
-					<EmbedLink url={url} data-flx="channel.embeds.channel-embed.embed-parts.embed-title.embed-link">
-						<SafeMarkdown content={title} options={options} data-flx="channel.embeds.embed.embed-title.safe-markdown" />
-					</EmbedLink>
-				) : (
-					<span data-flx="channel.embeds.embed.embed-title.span">
-						<SafeMarkdown
-							content={title}
-							options={options}
-							data-flx="channel.embeds.embed.embed-title.safe-markdown--2"
-						/>
-					</span>
-				)}
-			</div>
-		);
-	},
-);
+export const EmbedTitle: FC<{
+	title?: string;
+	url?: string;
+	markdown: boolean;
+	messageId?: string;
+	channelId?: string;
+}> = observer(({title, url, markdown, messageId, channelId}) => {
+	if (title == null || title.length === 0) return null;
+	const content = markdown ? (
+		<SafeMarkdown
+			content={title}
+			options={{
+				context: MarkdownContext.RESTRICTED_INLINE_REPLY,
+				messageId,
+				channelId,
+				disableEmojiInteractions: Boolean(url),
+			}}
+			data-flx="channel.embeds.embed.embed-title.safe-markdown"
+		/>
+	) : (
+		title
+	);
+	return (
+		<div className={styles.embedTitle} data-flx="channel.embeds.embed.embed-title.embed-title">
+			{url ? (
+				<EmbedLink
+					url={url}
+					messageId={messageId}
+					channelId={channelId}
+					data-flx="channel.embeds.channel-embed.embed-parts.embed-title.embed-link"
+				>
+					{content}
+				</EmbedLink>
+			) : (
+				<span data-flx="channel.embeds.embed.embed-title.span">{content}</span>
+			)}
+		</div>
+	);
+});
 export const EmbedDescription: FC<{
 	messageId?: string;
 	channelId?: string;
 	description?: string;
-}> = observer(({messageId, channelId, description}) => {
+	markdown: boolean;
+}> = observer(({messageId, channelId, description, markdown}) => {
 	if (!description) return null;
 	return (
 		<div className={styles.embedDescription} data-flx="channel.embeds.embed.embed-description.embed-description">
-			<SafeMarkdown
-				content={description}
-				options={{context: MarkdownContext.RESTRICTED_EMBED_DESCRIPTION, messageId, channelId}}
-				data-flx="channel.embeds.embed.embed-description.safe-markdown"
-			/>
+			{markdown ? (
+				<SafeMarkdown
+					content={description}
+					options={{context: MarkdownContext.RESTRICTED_EMBED_DESCRIPTION, messageId, channelId}}
+					data-flx="channel.embeds.embed.embed-description.safe-markdown"
+				/>
+			) : (
+				description
+			)}
 		</div>
 	);
 });
@@ -142,7 +172,7 @@ export const EmbedFields: FC<{fields?: ReadonlyArray<EmbedField>; messageId?: st
 				{groupedFields.map((group, groupIndex) => {
 					const groupLength = group.length;
 					return group.map(({name, value}, index) => {
-						const span = groupLength === 1 ? 12 : groupLength === 2 ? 6 : 4;
+						const span = 12 / groupLength;
 						const gridColumnStart = index * span + 1;
 						const gridColumnEnd = gridColumnStart + span;
 						return (
@@ -177,13 +207,11 @@ export const EmbedFields: FC<{fields?: ReadonlyArray<EmbedField>; messageId?: st
 export const EmbedFooterComponent: FC<{
 	timestamp?: Date;
 	footer?: EmbedFooter;
-	messageId?: string;
-	channelId?: string;
-}> = observer(({timestamp, footer, messageId, channelId}) => {
+}> = observer(({timestamp, footer}) => {
 	const {i18n} = useLingui();
 	const allowIconMotion = useShouldAnimate({kind: 'gif'});
 	const formattedTimestamp = timestamp ? DateUtils.getRelativeDateString(timestamp, i18n) : undefined;
-	const iconSrc = resolveEmbedIconSrc(footer?.proxy_icon_url, allowIconMotion);
+	const iconSrc = useApiAttachmentSrc(resolveEmbedIconSrc(footer?.proxy_icon_url, allowIconMotion) ?? '');
 	if (!(footer || formattedTimestamp)) return null;
 	return (
 		<div
@@ -201,13 +229,7 @@ export const EmbedFooterComponent: FC<{
 				/>
 			)}
 			<div className={styles.embedFooterText} data-flx="channel.embeds.embed.embed-footer-component.embed-footer-text">
-				{footer?.text && (
-					<SafeMarkdown
-						content={footer.text}
-						options={{context: MarkdownContext.RESTRICTED_INLINE_REPLY, messageId, channelId}}
-						data-flx="channel.embeds.embed.embed-footer-component.safe-markdown"
-					/>
-				)}
+				{footer?.text}
 				{formattedTimestamp && (
 					<>
 						{footer?.text && (

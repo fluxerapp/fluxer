@@ -76,7 +76,8 @@ handle_guild_call_result({error, timeout}, Ctx, _SessionPid) ->
     log_voice_warning("voice_state_update_guild_call_timeout", Ctx);
 handle_guild_call_result({error, noproc}, Ctx, _SessionPid) ->
     log_voice_warning("voice_state_update_guild_call_noproc", Ctx);
-handle_guild_call_result({error, Cat, Err}, Ctx, _SessionPid) ->
+handle_guild_call_result({error, Cat, Err}, Ctx, SessionPid) ->
+    gen_server:cast(SessionPid, {voice_rejected, Err}),
     log_voice_warning_extra(Ctx, " category=~p error=~p", [Cat, Err]);
 handle_guild_call_result({error, Reason}, Ctx, _SessionPid) ->
     log_voice_warning_extra(Ctx, " reason=~p", [Reason]).
@@ -107,6 +108,15 @@ handle_guild_reply_ok(Reply, Ctx, SessionPid) ->
 -spec maybe_dispatch_voice_server_update(
     map(), guild_id(), channel_id() | null, pid()
 ) -> ok.
+maybe_dispatch_voice_server_update(
+    #{p2p := true, ice_servers := IceServers, connection_id := ConnId}, GId, ChId, SessionPid
+) when is_integer(ChId) ->
+    dispatch_to_session(
+        SessionPid,
+        voice_server_update,
+        voice_p2p:voice_server_update(ConnId, ChId, GId, IceServers),
+        GId
+    );
 maybe_dispatch_voice_server_update(Reply, GId, ChId, SessionPid) ->
     Token = maps:get(token, Reply, undefined),
     Endpoint = maps:get(endpoint, Reply, undefined),
@@ -287,132 +297,3 @@ log_voice_warning(Tag, Ctx) ->
 log_voice_warning_extra(Ctx, ExtraFmt, ExtraArgs) ->
     Fmt = voice_log_fmt("voice_state_update_guild_call_error") ++ ExtraFmt,
     logger:warning(Fmt, voice_ctx_fields(Ctx) ++ ExtraArgs).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-dispatch_to_session_converts_wire_payload_test() ->
-    Payload = #{
-        <<"id">> => 123,
-        <<"permissions">> => 8,
-        <<"roles">> => [456]
-    },
-    ok = dispatch_to_session(self(), voice_state_update, Payload, 123),
-    receive
-        {'$gen_cast', {dispatch, voice_state_update, WirePayload}} ->
-            ?assertEqual(
-                #{
-                    <<"id">> => <<"123">>,
-                    <<"permissions">> => <<"8">>,
-                    <<"roles">> => [<<"456">>]
-                },
-                WirePayload
-            )
-    after 1000 ->
-        ?assert(false, dispatch_not_received)
-    end.
-
-test_voice_ctx(ChId) ->
-    #{
-        guild_pid => self(),
-        guild_id => 42,
-        channel_id => ChId,
-        user_id => 7,
-        conn_id => <<"old-conn">>,
-        session_id => <<"sess">>,
-        request => #{},
-        lat => null,
-        lon => null
-    }.
-
-assert_no_dispatch() ->
-    receive
-        {'$gen_cast', {dispatch, Event, Payload}} ->
-            ?assert(false, {unexpected_dispatch, Event, Payload})
-    after 50 ->
-        ok
-    end.
-
-receive_dispatch(ExpectedEvent) ->
-    receive
-        {'$gen_cast', {dispatch, ExpectedEvent, Payload}} ->
-            Payload
-    after 1000 ->
-        ?assert(false, {dispatch_not_received, ExpectedEvent}),
-        #{}
-    end.
-
-in_channel_update_reply_does_not_dispatch_test() ->
-    Reply = #{
-        success => true,
-        voice_state => #{<<"channel_id">> => <<"456">>, <<"self_deaf">> => true}
-    },
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    assert_no_dispatch().
-
-plain_success_reply_does_not_dispatch_test() ->
-    ok = handle_guild_reply_ok(#{success => true}, test_voice_ctx(456), self()),
-    assert_no_dispatch().
-
-join_reply_dispatches_voice_server_update_test() ->
-    Reply = #{
-        success => true,
-        token => <<"tok">>,
-        endpoint => <<"wss://voice">>,
-        connection_id => <<"conn-1">>,
-        voice_state => #{<<"channel_id">> => <<"456">>}
-    },
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    Payload = receive_dispatch(voice_server_update),
-    ?assertEqual(<<"tok">>, maps:get(<<"token">>, Payload)),
-    ?assertEqual(<<"wss://voice">>, maps:get(<<"endpoint">>, Payload)),
-    ?assertEqual(<<"42">>, maps:get(<<"guild_id">>, Payload)),
-    ?assertEqual(<<"456">>, maps:get(<<"channel_id">>, Payload)),
-    ?assertEqual(<<"conn-1">>, maps:get(<<"connection_id">>, Payload)),
-    ?assertNot(maps:is_key(<<"e2ee_key">>, Payload)).
-
-join_reply_attaches_e2ee_key_test() ->
-    Reply = #{
-        success => true,
-        token => <<"tok">>,
-        endpoint => <<"wss://voice">>,
-        connection_id => <<"conn-1">>,
-        e2ee_key => <<"secret">>
-    },
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    Payload = receive_dispatch(voice_server_update),
-    ?assertEqual(<<"secret">>, maps:get(<<"e2ee_key">>, Payload)).
-
-null_channel_falls_back_to_reply_voice_state_test() ->
-    Reply = #{
-        success => true,
-        token => <<"tok">>,
-        endpoint => <<"wss://voice">>,
-        connection_id => <<"conn-2">>,
-        voice_state => #{<<"channel_id">> => <<"789">>}
-    },
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(null), self()),
-    Payload = receive_dispatch(voice_server_update),
-    ?assertEqual(<<"789">>, maps:get(<<"channel_id">>, Payload)).
-
-token_reply_without_resolvable_channel_does_not_dispatch_test() ->
-    Reply = #{
-        success => true,
-        token => <<"tok">>,
-        endpoint => <<"wss://voice">>,
-        connection_id => <<"conn-3">>
-    },
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(null), self()),
-    assert_no_dispatch().
-
-partial_token_reply_does_not_dispatch_test() ->
-    Reply = #{success => true, token => <<"tok">>},
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    assert_no_dispatch().
-
-dm_connect_reply_does_not_dispatch_test() ->
-    Reply = #{success => true, needs_token => false, connection_id => <<"conn-4">>},
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    assert_no_dispatch().
-
--endif.

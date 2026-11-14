@@ -29,10 +29,3 @@ export function isScheduledMaintenanceNagbarDismissed(
 export function dismissScheduledMaintenanceNagbar(maintenanceId: string, status: MaintenanceStatus): void {
 	AppStorage.setItem(getDismissKey(maintenanceId, status), '1');
 }
-
-export function resetScheduledMaintenanceNagbarDismissal(maintenanceId: string, status: MaintenanceStatus): void {
-	AppStorage.removeItem(getDismissKey(maintenanceId, status));
-	if (status === 'scheduled') {
-		AppStorage.removeItem(getLegacyDismissKey(maintenanceId));
-	}
-}

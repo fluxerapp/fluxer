@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::timestamps::format_admin_timestamp;
 use crate::{
     api::types::Archive,
     config::AdminConfig,
@@ -69,7 +70,7 @@ fn archive_table(archives: &[Archive], base: &str) -> Markup {
                         span class="text-sm" { (archive.requested_by) }
                     }))
                     (table_cell(false, html! {
-                        span class="text-sm" { (archive.requested_at) }
+                        span class="text-sm" { (format_admin_timestamp(&archive.requested_at)) }
                     }))
                     (table_cell(false, html! {
                         div class="flex flex-col gap-1" {

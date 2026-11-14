@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isApiAttachmentUrl, withoutAttachmentToken} from '@app/features/messaging/utils/ApiAttachmentUrl';
+import {isAttachmentCdnUrl, stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {inferFormatContentType, PREVIEW_FORMAT_PRIORITY} from '@fluxer/schema/src/domains/gif/GifMediaFormatKeys';
 
 export interface FavoriteGifMediaFormat {
@@ -19,7 +22,7 @@ export interface FavoriteGifEntry {
 	placeholder: string | null;
 }
 
-export const PREVIEW_TILE_CSS_WIDTH = 200;
+const PREVIEW_TILE_CSS_WIDTH = 200;
 
 const PLAYABLE_CLASS = 0;
 const STILL_CLASS = 1;
@@ -58,7 +61,7 @@ function currentDevicePixelRatio(): number {
 	return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
 }
 
-export function previewTileDeviceWidth(tile: PreviewTileBox = {}): number {
+function previewTileDeviceWidth(tile: PreviewTileBox = {}): number {
 	return (tile.cssWidth ?? PREVIEW_TILE_CSS_WIDTH) * (tile.devicePixelRatio ?? currentDevicePixelRatio());
 }
 
@@ -105,18 +108,45 @@ export function pickCanonicalPreviewFormat(
 	return null;
 }
 
-export const STORED_PREVIEW_DEVICE_PIXEL_RATIO = 2;
+const STORED_PREVIEW_DEVICE_PIXEL_RATIO = 2;
+
+export function stripOwnAttachmentSignature(url: string): string {
+	if (isApiAttachmentUrl(url)) return withoutAttachmentToken(url);
+	const mediaEndpoint = RuntimeConfig.getSnapshotOrNull()?.mediaEndpoint;
+	if (mediaEndpoint === undefined) return stripAttachmentSignature(url);
+	return isAttachmentCdnUrl(url, mediaEndpoint) ? stripAttachmentSignature(url) : url;
+}
+
+export function stripFavoriteGifEntrySignatures(entry: FavoriteGifEntry): FavoriteGifEntry {
+	const url = stripOwnAttachmentSignature(entry.url);
+	const proxyUrl = stripOwnAttachmentSignature(entry.proxy_url);
+	const media: Record<string, FavoriteGifMediaFormat> = {};
+	let mediaChanged = false;
+	for (const [key, format] of Object.entries(entry.media)) {
+		const src = stripOwnAttachmentSignature(format.src);
+		const proxySrc = stripOwnAttachmentSignature(format.proxy_src);
+		if (src === format.src && proxySrc === format.proxy_src) {
+			media[key] = format;
+			continue;
+		}
+		mediaChanged = true;
+		media[key] = {...format, src, proxy_src: proxySrc};
+	}
+	if (url === entry.url && proxyUrl === entry.proxy_url && !mediaChanged) return entry;
+	return {...entry, url, proxy_url: proxyUrl, media};
+}
 
 export function slimFavoriteGifEntry(entry: FavoriteGifEntry): FavoriteGifEntry {
-	const best = pickBestPreviewFormat(entry.media, 'any', {
+	const stripped = stripFavoriteGifEntrySignatures(entry);
+	const best = pickBestPreviewFormat(stripped.media, 'any', {
 		cssWidth: PREVIEW_TILE_CSS_WIDTH,
 		devicePixelRatio: STORED_PREVIEW_DEVICE_PIXEL_RATIO,
 	});
 	if (best == null) {
-		return Object.keys(entry.media).length === 0 ? entry : {...entry, media: {}};
+		return Object.keys(stripped.media).length === 0 ? stripped : {...stripped, media: {}};
 	}
 	return {
-		...entry,
+		...stripped,
 		proxy_url: best.format.proxy_src,
 		width: best.format.width,
 		height: best.format.height,

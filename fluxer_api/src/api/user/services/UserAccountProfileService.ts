@@ -1,5 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import {getCustomBadgeCatalog} from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
+import {
+	dropUndefinedCustomBadgeKeys,
+	hiddenCustomBadgeIds,
+	resolveHiddenProfileBadges,
+} from '@app/api/user/profile_badges/HiddenProfileBadges';
+import {applyProfileBadgeSettings} from '@app/api/user/profile_badges/PremiumBadgeMasking';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
+import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
+import * as EmojiUtils from '@app/api/utils/EmojiUtils';
+import {CustomBadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 import {MAX_BIO_LENGTH} from '@fluxer/constants/src/LimitConstants';
 import {PremiumFlags, ProfileFieldPrivacyFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -10,40 +31,20 @@ import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessE
 import type {UserUpdateRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import {ms} from 'itty-time';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {contentModerationService} from '../../infrastructure/ContentModerationService';
-import type {EntityAssetService, PreparedAssetUpload} from '../../infrastructure/EntityAssetService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
-import type {User} from '../../models/User';
-import {deriveDominantAvatarColor} from '../../utils/AvatarColorUtils';
-import * as EmojiUtils from '../../utils/EmojiUtils';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import {canUseProfileTimezone, isProfileSubstringExempt} from '../UserHelpers';
-import type {UserAccountUpdatePropagator} from './UserAccountUpdatePropagator';
-
-interface UserUpdateMetadata {
-	invalidateAuthSessions?: boolean;
-}
 
 type UserFieldUpdates = Partial<UserRow>;
 
 interface ProfileUpdateResult {
 	updates: UserFieldUpdates;
-	metadata: UserUpdateMetadata;
 	preparedAvatarUpload: PreparedAssetUpload | null;
 	preparedBannerUpload: PreparedAssetUpload | null;
 }
 
 interface UserAccountProfileServiceDeps {
-	userAccountRepository: IUserAccountRepository;
-	guildRepository: IGuildRepositoryAggregate;
+	userAccountRepository: UserRepository;
+	guildRepository: GuildRepository;
 	entityAssetService: EntityAssetService;
 	rateLimitService: IRateLimitService;
-	updatePropagator: UserAccountUpdatePropagator;
 	limitConfigService: LimitConfigService;
 }
 
@@ -55,9 +56,7 @@ export class UserAccountProfileService {
 		const updates: UserFieldUpdates = {
 			avatar_hash: user.avatarHash,
 			banner_hash: user.bannerHash,
-			flags: user.flags,
 		};
-		const metadata: UserUpdateMetadata = {};
 		let preparedAvatarUpload: PreparedAssetUpload | null = null;
 		let preparedBannerUpload: PreparedAssetUpload | null = null;
 		if (data.bio !== undefined) {
@@ -83,19 +82,22 @@ export class UserAccountProfileService {
 		if (data.accent_color !== undefined) {
 			await this.processAccentColorUpdate({user, accentColor: data.accent_color, updates});
 		}
-		const canUpdateProfileTimezone = canUseProfileTimezone(user);
-		if (canUpdateProfileTimezone && data.timezone !== undefined) {
+		if (data.timezone !== undefined) {
 			const nextTimezone = this.processTimezoneUpdate({user, timezone: data.timezone, updates});
 			if (nextTimezone !== null && user.timezone === null && data.timezone_privacy_flags === undefined) {
 				updates.timezone_privacy_flags = ProfileFieldPrivacyFlags.EVERYONE;
 			}
 		}
-		if (canUpdateProfileTimezone && data.timezone_privacy_flags !== undefined) {
+		if (data.timezone_privacy_flags !== undefined) {
 			this.processTimezonePrivacyFlagsUpdate({
 				user,
 				privacyFlags: data.timezone_privacy_flags,
 				updates,
 			});
+		}
+		if (!user.isBot) {
+			this.processPremiumBadgeFlags({user, data, updates});
+			await this.processHiddenProfileBadges({user, data, updates});
 		}
 		if (data.avatar !== undefined) {
 			preparedAvatarUpload = await this.processAvatarUpdate({user, avatar: data.avatar, updates});
@@ -111,37 +113,24 @@ export class UserAccountProfileService {
 			}
 		}
 		if (!user.isBot) {
-			this.processPremiumBadgeFlags({user, data, updates});
-			this.processPremiumOnboardingDismissal({user, data, updates});
+			this.processPremiumOnboardingDismissal({data, updates});
 			this.processGiftInventoryRead({user, data, updates});
 		}
 		if (data.mention_flags !== undefined) {
 			updates.mention_flags = data.mention_flags;
 		}
-		return {updates, metadata, preparedAvatarUpload, preparedBannerUpload};
+		return {updates, preparedAvatarUpload, preparedBannerUpload};
 	}
 
 	async commitAssetChanges(result: ProfileUpdateResult): Promise<void> {
-		if (result.preparedAvatarUpload) {
-			await this.deps.entityAssetService.commitAssetChange({
-				prepared: result.preparedAvatarUpload,
-				deferDeletion: true,
-			});
-		}
-		if (result.preparedBannerUpload) {
-			await this.deps.entityAssetService.commitAssetChange({
-				prepared: result.preparedBannerUpload,
-				deferDeletion: true,
-			});
-		}
+		await this.deps.entityAssetService.commitAssetChanges([result.preparedAvatarUpload, result.preparedBannerUpload]);
 	}
 
-	async rollbackAssetChanges(result: ProfileUpdateResult): Promise<void> {
-		if (result.preparedAvatarUpload) {
-			await this.deps.entityAssetService.rollbackAssetUpload(result.preparedAvatarUpload);
-		}
-		if (result.preparedBannerUpload) {
-			await this.deps.entityAssetService.rollbackAssetUpload(result.preparedBannerUpload);
+	async rollbackAssetUploads(result: ProfileUpdateResult): Promise<void> {
+		for (const prepared of [result.preparedAvatarUpload, result.preparedBannerUpload]) {
+			if (prepared) {
+				await this.deps.entityAssetService.rollbackAssetUpload(prepared);
+			}
 		}
 	}
 
@@ -179,6 +168,7 @@ export class UserAccountProfileService {
 					userRepository: this.deps.userAccountRepository,
 					guildRepository: this.deps.guildRepository,
 					limitConfigService: this.deps.limitConfigService,
+					allowCodeBlocks: false,
 				});
 			}
 			if (
@@ -307,6 +297,7 @@ export class UserAccountProfileService {
 			previousHash: user.avatarHash,
 			base64Image: avatar,
 			errorPath: 'avatar',
+			uploader: user,
 		});
 		const ctx = createLimitMatchContext({user});
 		const hasAnimatedAvatar = resolveLimitSafe(
@@ -367,6 +358,7 @@ export class UserAccountProfileService {
 			previousHash: user.bannerHash,
 			base64Image: banner,
 			errorPath: 'banner',
+			uploader: user,
 		});
 		if (prepared.isAnimated && hasAnimatedBanner === 0) {
 			await this.deps.entityAssetService.rollbackAssetUpload(prepared);
@@ -387,66 +379,41 @@ export class UserAccountProfileService {
 
 	private processPremiumBadgeFlags(params: {user: User; data: UserUpdateRequest; updates: UserFieldUpdates}): void {
 		const {user, data, updates} = params;
-		let flagsUpdated = false;
-		let newPremiumFlags = user.premiumFlags;
-		if (data.premium_badge_hidden !== undefined) {
-			if (data.premium_badge_hidden) {
-				newPremiumFlags = newPremiumFlags | PremiumFlags.BADGE_HIDDEN;
-			} else {
-				newPremiumFlags = newPremiumFlags & ~PremiumFlags.BADGE_HIDDEN;
-			}
-			flagsUpdated = true;
+		if (data.premium_enabled_override !== undefined && !(user.flags & UserFlags.STAFF)) {
+			throw new MissingAccessError();
 		}
-		if (data.premium_badge_masked !== undefined) {
-			if (data.premium_badge_masked) {
-				newPremiumFlags = newPremiumFlags | PremiumFlags.BADGE_MASKED;
-			} else {
-				newPremiumFlags = newPremiumFlags & ~PremiumFlags.BADGE_MASKED;
-			}
-			flagsUpdated = true;
-		}
-		if (data.premium_badge_timestamp_hidden !== undefined) {
-			if (data.premium_badge_timestamp_hidden) {
-				newPremiumFlags = newPremiumFlags | PremiumFlags.BADGE_TIMESTAMP_HIDDEN;
-			} else {
-				newPremiumFlags = newPremiumFlags & ~PremiumFlags.BADGE_TIMESTAMP_HIDDEN;
-			}
-			flagsUpdated = true;
-		}
-		if (data.premium_badge_sequence_hidden !== undefined) {
-			if (data.premium_badge_sequence_hidden) {
-				newPremiumFlags = newPremiumFlags | PremiumFlags.BADGE_SEQUENCE_HIDDEN;
-			} else {
-				newPremiumFlags = newPremiumFlags & ~PremiumFlags.BADGE_SEQUENCE_HIDDEN;
-			}
-			flagsUpdated = true;
-		}
+		const current = updates.premium_flags ?? user.premiumFlags;
+		let flags = applyProfileBadgeSettings(current, data);
 		if (data.premium_enabled_override !== undefined) {
-			if (!(user.flags & UserFlags.STAFF)) {
-				throw new MissingAccessError();
-			}
-			if (data.premium_enabled_override) {
-				newPremiumFlags = newPremiumFlags | PremiumFlags.ENABLED_OVERRIDE;
-			} else {
-				newPremiumFlags = newPremiumFlags & ~PremiumFlags.ENABLED_OVERRIDE;
-			}
-			flagsUpdated = true;
+			flags = data.premium_enabled_override
+				? flags | PremiumFlags.ENABLED_OVERRIDE
+				: flags & ~PremiumFlags.ENABLED_OVERRIDE;
 		}
-		if (flagsUpdated) {
-			updates.premium_flags = newPremiumFlags;
+		if (flags !== current) {
+			updates.premium_flags = flags;
 		}
 	}
 
-	private processPremiumOnboardingDismissal(params: {
+	private async processHiddenProfileBadges(params: {
 		user: User;
 		data: UserUpdateRequest;
 		updates: UserFieldUpdates;
-	}): void {
+	}): Promise<void> {
+		const {user, data, updates} = params;
+		const requested = resolveHiddenProfileBadges(user.hiddenProfileBadges, data);
+		if (!requested) return;
+		const known = await getCustomBadgeCatalog().getByIds(hiddenCustomBadgeIds(requested), CustomBadgeTypes.USER);
+		const next = dropUndefinedCustomBadgeKeys(requested, new Set(known.map((badge) => badge.id)));
+		if (next.size === user.hiddenProfileBadges.size && [...next].every((key) => user.hiddenProfileBadges.has(key))) {
+			return;
+		}
+		updates.hidden_profile_badges = next.size > 0 ? next : null;
+	}
+
+	private processPremiumOnboardingDismissal(params: {data: UserUpdateRequest; updates: UserFieldUpdates}): void {
 		const {data, updates} = params;
-		if (data.has_dismissed_premium_onboarding !== undefined) {
-			if (data.has_dismissed_premium_onboarding) {
-				updates.premium_onboarding_dismissed_at = new Date();
-			}
+		if (data.has_dismissed_premium_onboarding) {
+			updates.premium_onboarding_dismissed_at = new Date();
 		}
 	}
 

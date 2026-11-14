@@ -1,16 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import dns from 'node:dns';
 import type {LookupFunction} from 'node:net';
 import {BlockList, isIP} from 'node:net';
-import type {RequestUrlPolicy, RequestUrlValidationContext} from '@pkgs/http_client/src/HttpClientTypes';
-import {HttpError} from '@pkgs/http_client/src/HttpError';
-import {Agent} from 'undici';
+import {ipToBytes} from '@fluxer/ip_utils/src/IpAddress';
+import {isFqdnHostname, isSingleLabelHostname} from '@fluxer/schema/src/primitives/UrlValidators';
+import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
+import type {
+	FetchDispatcher,
+	RequestUrlPolicy,
+	RequestUrlValidationContext,
+} from '@pkgs/http_client/src/HttpClientTypes';
+import {HttpError, type HttpErrorType} from '@pkgs/http_client/src/HttpError';
+import {Agent, Dispatcher1Wrapper} from 'undici';
 
 const DEFAULT_DNS_CACHE_TTL_MS = 60000;
+const DNS_CACHE_MAX_ENTRIES = 10000;
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
-const HOSTNAME_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
-
 interface BlockedSubnet {
 	address: string;
 	prefixLength: number;
@@ -52,6 +59,7 @@ const BLOCKED_IPV6_SUBNETS: Array<BlockedSubnet> = [
 	{address: '2001:db8::', prefixLength: 32, family: 'ipv6'},
 	{address: 'fc00::', prefixLength: 7, family: 'ipv6'},
 	{address: 'fe80::', prefixLength: 10, family: 'ipv6'},
+	{address: 'fec0::', prefixLength: 10, family: 'ipv6'},
 	{address: 'ff00::', prefixLength: 8, family: 'ipv6'},
 ];
 const blockedIpv4List = createBlockList(BLOCKED_IPV4_SUBNETS);
@@ -77,72 +85,9 @@ function normalizeHostname(hostname: string): string {
 	return trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed;
 }
 
-function isFqdnHostname(hostname: string): boolean {
-	if (!hostname || hostname.length > 253 || !hostname.includes('.')) {
-		return false;
-	}
-	const labels = hostname.split('.');
-	for (const label of labels) {
-		if (!label || label.length > 63 || !HOSTNAME_LABEL_REGEX.test(label)) {
-			return false;
-		}
-	}
-	const topLevelDomain = labels[labels.length - 1];
-	return !/^\d+$/.test(topLevelDomain);
-}
-
-function expandIpv6ToBytes(ipv6Address: string): Uint8Array | null {
-	const normalized = stripIpv6Brackets(ipv6Address.trim().toLowerCase());
-	if (isIP(normalized) !== 6) {
-		return null;
-	}
-	let head = normalized;
-	let embeddedIpv4Octets: Array<number> | null = null;
-	const lastColonIndex = head.lastIndexOf(':');
-	const trailing = head.slice(lastColonIndex + 1);
-	if (trailing.includes('.')) {
-		if (isIP(trailing) !== 4) {
-			return null;
-		}
-		embeddedIpv4Octets = trailing.split('.').map((part) => Number.parseInt(part, 10));
-		head = `${head.slice(0, lastColonIndex + 1)}0:0`;
-	}
-	let groups: Array<string>;
-	if (head.indexOf('::') === -1) {
-		groups = head.split(':');
-		if (groups.length !== 8) {
-			return null;
-		}
-	} else {
-		const [beforePart, afterPart] = head.split('::');
-		const before = beforePart.length > 0 ? beforePart.split(':') : [];
-		const after = afterPart.length > 0 ? afterPart.split(':') : [];
-		const missing = 8 - before.length - after.length;
-		if (missing < 1) {
-			return null;
-		}
-		groups = [...before, ...new Array(missing).fill('0'), ...after];
-	}
-	const bytes = new Uint8Array(16);
-	for (let index = 0; index < 8; index += 1) {
-		const value = parseHexGroup(groups[index]);
-		if (value === null) {
-			return null;
-		}
-		bytes[index * 2] = (value >> 8) & 0xff;
-		bytes[index * 2 + 1] = value & 0xff;
-	}
-	if (embeddedIpv4Octets) {
-		bytes[12] = embeddedIpv4Octets[0];
-		bytes[13] = embeddedIpv4Octets[1];
-		bytes[14] = embeddedIpv4Octets[2];
-		bytes[15] = embeddedIpv4Octets[3];
-	}
-	return bytes;
-}
-
 function parseEmbeddedIpv4Address(ipv6Address: string): string | null {
-	const bytes = expandIpv6ToBytes(ipv6Address);
+	const parsed = ipToBytes(ipv6Address);
+	const bytes = parsed?.family === 'ipv6' ? parsed.bytes : null;
 	if (!bytes) {
 		return null;
 	}
@@ -162,13 +107,6 @@ function parseEmbeddedIpv4Address(ipv6Address: string): string | null {
 		return dottedQuadAt(2);
 	}
 	return null;
-}
-
-function parseHexGroup(value: string | undefined): number | null {
-	if (!value || !/^[0-9a-f]{1,4}$/.test(value)) {
-		return null;
-	}
-	return Number.parseInt(value, 16);
 }
 
 function isBlockedIpAddress(address: string): boolean {
@@ -203,15 +141,20 @@ export function isPubliclyRoutableUrlShape(url: URL): boolean {
 
 function getPolicyErrorContext(context: RequestUrlValidationContext): string {
 	if (context.phase === 'redirect') {
-		const previous = context.previousUrl ?? 'unknown';
+		const previous = context.previousUrl === undefined ? 'unknown' : formatUrlForDiagnostics(context.previousUrl);
 		return `redirect #${context.redirectCount} from ${previous}`;
 	}
 	return 'initial request';
 }
 
-function createBlockedRequestError(url: URL, context: RequestUrlValidationContext, reason: string): HttpError {
-	const message = `Blocked outbound ${getPolicyErrorContext(context)} to ${url.href}: ${reason}`;
-	return new HttpError(message, undefined, undefined, true, 'network_error');
+function createBlockedRequestError(
+	url: URL,
+	context: RequestUrlValidationContext,
+	reason: string,
+	errorType: HttpErrorType = 'blocked',
+): HttpError {
+	const message = `Blocked outbound ${getPolicyErrorContext(context)} to ${formatUrlForDiagnostics(url)}: ${reason}`;
+	return new HttpError(message, undefined, undefined, true, errorType);
 }
 
 async function defaultLookupHost(hostname: string): Promise<Array<string>> {
@@ -219,20 +162,7 @@ async function defaultLookupHost(hostname: string): Promise<Array<string>> {
 	return addresses.map((addressEntry) => addressEntry.address);
 }
 
-function deduplicateAddresses(addresses: Array<string>): Array<string> {
-	const seen = new Set<string>();
-	const deduplicated: Array<string> = [];
-	for (const address of addresses) {
-		if (seen.has(address)) {
-			continue;
-		}
-		seen.add(address);
-		deduplicated.push(address);
-	}
-	return deduplicated;
-}
-
-function createBlocklistDispatcher(allowPrivateAddresses: boolean): NonNullable<RequestInit['dispatcher']> {
+function createBlocklistDispatcher(allowPrivateAddresses: boolean): FetchDispatcher {
 	const lookup: LookupFunction = (hostname, options, callback) => {
 		dns.lookup(hostname, {...options, all: true, order: options.order ?? 'verbatim'}, (error, addresses) => {
 			if (error) {
@@ -255,37 +185,53 @@ function createBlocklistDispatcher(allowPrivateAddresses: boolean): NonNullable<
 			callback(null, primary.address, primary.family);
 		});
 	};
-	return new Agent({
-		connect: {
-			lookup,
-		},
-	}) as unknown as NonNullable<RequestInit['dispatcher']>;
+	return new Dispatcher1Wrapper(
+		new Agent({
+			allowH2: false,
+			connect: {
+				lookup,
+			},
+		}),
+	) as unknown as FetchDispatcher;
 }
 
 interface PublicInternetRequestUrlPolicy extends RequestUrlPolicy {
-	dispatcher: NonNullable<RequestInit['dispatcher']>;
+	readonly dispatcher: FetchDispatcher;
 }
 
 export function createPublicInternetRequestUrlPolicy(
 	options?: PublicInternetRequestUrlPolicyOptions,
 ): PublicInternetRequestUrlPolicy {
-	const dnsCacheTtlMs =
-		typeof options?.dnsCacheTtlMs === 'number' && options.dnsCacheTtlMs > 0
-			? options.dnsCacheTtlMs
-			: DEFAULT_DNS_CACHE_TTL_MS;
+	const dnsCacheTtlMs = options?.dnsCacheTtlMs ?? DEFAULT_DNS_CACHE_TTL_MS;
+	if (!Number.isFinite(dnsCacheTtlMs) || dnsCacheTtlMs <= 0) {
+		throw new RangeError('DNS cache TTL must be a positive finite number');
+	}
 	const lookupHost = options?.lookupHost ?? defaultLookupHost;
 	const allowPrivateAddresses = options?.allowPrivateAddresses === true;
 	const dnsCache = new Map<string, CachedLookupResult>();
 	async function resolveHostname(hostname: string): Promise<Array<string>> {
-		const now = Date.now();
+		const now = performance.now();
 		const cached = dnsCache.get(hostname);
+		dnsCache.delete(hostname);
 		if (cached && cached.expiresAt > now) {
+			dnsCache.set(hostname, cached);
 			return cached.addresses;
 		}
-		const resolvedAddresses = deduplicateAddresses(await lookupHost(hostname));
+		const expiresAt = now + dnsCacheTtlMs;
+		const resolvedAddresses = [...new Set(await lookupHost(hostname))];
+		const current = dnsCache.get(hostname);
+		if (expiresAt <= performance.now() || (current && current.expiresAt > expiresAt)) {
+			return resolvedAddresses;
+		}
+		dnsCache.delete(hostname);
+		if (dnsCache.size >= DNS_CACHE_MAX_ENTRIES) {
+			const oldest = dnsCache.keys().next();
+			assert(!oldest.done, 'A full DNS cache must contain an eviction candidate');
+			dnsCache.delete(oldest.value);
+		}
 		dnsCache.set(hostname, {
 			addresses: resolvedAddresses,
-			expiresAt: now + dnsCacheTtlMs,
+			expiresAt,
 		});
 		return resolvedAddresses;
 	}
@@ -303,12 +249,15 @@ export function createPublicInternetRequestUrlPolicy(
 			}
 			return;
 		}
-		if (!isFqdnHostname(normalizedHostname)) {
+		if (!isFqdnHostname(normalizedHostname) && !(allowPrivateAddresses && isSingleLabelHostname(normalizedHostname))) {
 			throw createBlockedRequestError(url, context, 'Hostname is not a valid FQDN');
 		}
-		const resolvedAddresses = await resolveHostname(normalizedHostname);
+		const resolvedAddresses = await resolveHostname(normalizedHostname).catch((error: unknown) => {
+			const reason = error instanceof Error ? error.message : String(error);
+			throw createBlockedRequestError(url, context, `Hostname lookup failed: ${reason}`, 'unresolvable_host');
+		});
 		if (resolvedAddresses.length === 0) {
-			throw createBlockedRequestError(url, context, 'Hostname resolved to no IP addresses');
+			throw createBlockedRequestError(url, context, 'Hostname resolved to no IP addresses', 'unresolvable_host');
 		}
 		if (allowPrivateAddresses) {
 			return;

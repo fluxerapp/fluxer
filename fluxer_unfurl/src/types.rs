@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::external_fetch::FetchedResponse;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -17,10 +18,25 @@ pub enum UnfurlRequest {
         youtube_api_key: Option<String>,
         #[serde(default)]
         klipy_api_key: Option<String>,
+        #[serde(default)]
+        activity_pub_key_id: Option<String>,
     },
-    Invalidate {
+    VerifyDomain {
+        domain: String,
+        token: String,
+    },
+    Fetch {
+        method: String,
         url: String,
+        #[serde(default)]
+        headers: Vec<(String, String)>,
+        #[serde(default)]
+        body: Option<String>,
     },
+    ResolveTxt {
+        name: String,
+    },
+    ActivityPubKey,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -35,13 +51,11 @@ pub enum NsfwMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UnfurlResponse {
     Resolved(Arc<UnfurlResult>),
-    Invalidated(InvalidatedResponse),
+    Verified(bool),
+    Fetched(FetchedResponse),
+    Txt(Vec<String>),
+    ActivityPubKey(Option<String>),
     Failed { message: String },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InvalidatedResponse {
-    pub invalidated: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -129,8 +143,7 @@ pub struct EmbedAuthor {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmbedProvider {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
+    pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 }
@@ -206,6 +219,7 @@ mod tests {
                 cache_only,
                 youtube_api_key,
                 klipy_api_key,
+                activity_pub_key_id,
             } => {
                 assert_eq!(url, "https://fxtwitter.com/example/status/1");
                 assert_eq!(nsfw_mode, Some(NsfwMode::Block));
@@ -213,8 +227,9 @@ mod tests {
                 assert!(!cache_only);
                 assert!(youtube_api_key.is_none());
                 assert!(klipy_api_key.is_none());
+                assert!(activity_pub_key_id.is_none());
             }
-            UnfurlRequest::Invalidate { .. } => panic!("expected unfurl request"),
+            _ => panic!("expected an unfurl request"),
         }
     }
 }

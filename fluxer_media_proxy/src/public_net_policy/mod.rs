@@ -1,21 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-mod ip_tables;
 mod resolver;
 
 #[cfg(test)]
 mod tests;
 
-pub use ip_tables::is_blocked_ip_literal;
+use fluxer_common::public_ip::is_public_ip;
+pub use fluxer_common::public_ip::is_valid_public_hostname;
 pub use resolver::{PinnedDnsResolver, is_pinned_dns_failure};
 
 use std::net::IpAddr;
 use thiserror::Error;
-use url::Url;
+use url::{Host, Url};
 
 const MAX_URL_LEN: usize = 8192;
-const MAX_PUBLIC_HOSTNAME_BYTES: usize = 253;
-const MAX_PUBLIC_HOSTNAME_LABEL_BYTES: usize = 63;
 const ALLOWED_PUBLIC_URL_PORTS: [u16; 2] = [80, 443];
 
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
@@ -127,30 +125,6 @@ fn normalize_host(raw: &str) -> Result<String, Error> {
     Ok(without_dot.to_ascii_lowercase())
 }
 
-pub fn is_valid_public_hostname(host: &str) -> bool {
-    if host.is_empty() || host.len() > MAX_PUBLIC_HOSTNAME_BYTES || !host.contains('.') {
-        return false;
-    }
-    let mut last = "";
-    for label in host.split('.') {
-        if label.is_empty() || label.len() > MAX_PUBLIC_HOSTNAME_LABEL_BYTES {
-            return false;
-        }
-        let bytes = label.as_bytes();
-        if !bytes[0].is_ascii_alphanumeric() || !bytes[bytes.len() - 1].is_ascii_alphanumeric() {
-            return false;
-        }
-        if !bytes
-            .iter()
-            .all(|byte| byte.is_ascii_alphanumeric() || *byte == b'-')
-        {
-            return false;
-        }
-        last = label;
-    }
-    !last.bytes().all(|byte| byte.is_ascii_digit())
-}
-
 pub fn validate_url(url: &str) -> Result<(), Error> {
     let parsed = parse_url(url)?;
     if parsed.fragment.is_some() {
@@ -163,8 +137,18 @@ pub fn validate_url(url: &str) -> Result<(), Error> {
         return Err(Error::BlockedUrl);
     }
     let host = normalize_host(parsed.host)?;
-    if let Ok(address) = host.parse::<IpAddr>() {
-        return if ip_tables::is_public_ip(address) {
+    let canonical = Url::parse(url).map_err(|_| Error::InvalidUrl)?;
+    if canonical.port_or_known_default() != Some(port) {
+        return Err(Error::BlockedUrl);
+    }
+    let address = match canonical.host() {
+        Some(Host::Ipv4(address)) => Some(IpAddr::V4(address)),
+        Some(Host::Ipv6(address)) => Some(IpAddr::V6(address)),
+        Some(Host::Domain(_)) => None,
+        None => return Err(Error::InvalidUrl),
+    };
+    if let Some(address) = address {
+        return if is_public_ip(address) {
             Ok(())
         } else {
             Err(Error::BlockedUrl)

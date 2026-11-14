@@ -5,9 +5,17 @@ import {Trans} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 
+export const SpinnerSize = Object.freeze({
+	SMALL: 'small',
+	MEDIUM: 'medium',
+	LARGE: 'large',
+} as const);
+
+export type SpinnerSize = (typeof SpinnerSize)[keyof typeof SpinnerSize];
+
 interface SpinnerProps {
 	className?: string;
-	size?: 'small' | 'medium' | 'large';
+	size?: SpinnerSize;
 }
 
 export const Spinner = observer(function Spinner({className, size = 'medium'}: SpinnerProps) {

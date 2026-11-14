@@ -1,28 +1,69 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
+import {Logger} from '@app/api/Logger';
+import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {addGiftCodeDuration, type GiftCode} from '@app/api/models/GiftCode';
+import type {User} from '@app/api/models/User';
+import {OPERATOR_PASS_LABS_VISIONARY_ROLE_SYNC_TASK} from '@app/api/operator_pass/OperatorPassLabsRole';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {getStripeClient} from '@app/api/stripe/StripeClient';
+import {
+	getGiftTrialMetadataKey,
+	getGiftTrialPaidUntil,
+	getGiftTrialSeconds,
+} from '@app/api/stripe/StripeGiftTrialMetadata';
+import {mirrorSubscription} from '@app/api/stripe/StripeMirror';
+import {getSubscriptionBillingCycle} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {enqueueBillingEmail} from '@app/api/stripe/services/BillingEmailService';
+import {GIFT_NOTICE_MIN_LEAD_SECONDS} from '@app/api/stripe/services/BillingNoticeSchedule';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {clearPerksSanitizedFlag} from '@app/api/user/UserHelpers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import type {UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {PremiumStateReconciliationQueueService} from '../../infrastructure/PremiumStateReconciliationQueueService';
-import {Logger} from '../../Logger';
-import {addGiftCodeDuration, type GiftCode} from '../../models/GiftCode';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import type {StripePremiumService} from './StripePremiumService';
+import {MS_PER_MINUTE, MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
+import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
+import type {BillingRecurringPlan} from '@pkgs/email/src/IEmailService';
+import Stripe from 'stripe';
 
 interface RemainingGiftEntitlement {
 	hasLifetimeGift: boolean;
 	giftExtensionEndsAt: Date | null;
 }
 
+interface GiftTrialCut {
+	subscriptionId: string;
+	trialEnd: Date | null;
+	cancel: boolean;
+	premiumUntil: Date;
+	plan: BillingRecurringPlan;
+}
+
+interface GiftReversalOutcome {
+	billingResumed: BillingRecurringPlan | null;
+}
+
+const BILLING_UNCHANGED: GiftReversalOutcome = {billingResumed: null};
+
+const MIN_REMAINING_TRIAL_MS = MS_PER_MINUTE;
+
+function trialEndsBeforeNotice(trialEnd: Date): boolean {
+	return trialEnd.getTime() - Date.now() < GIFT_NOTICE_MIN_LEAD_SECONDS * MS_PER_SECOND;
+}
+
+function billingResumesWithoutNotice(cut: GiftTrialCut): boolean {
+	return !cut.cancel && (!cut.trialEnd || trialEndsBeforeNotice(cut.trialEnd));
+}
+
 export class StripeGiftReversalHandler {
 	constructor(
-		private userRepository: IUserRepository,
+		private userRepository: UserRepository,
 		private gatewayService: IGatewayService,
-		private premiumService: StripePremiumService,
 		private premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService,
+		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {}
 
 	async handleGiftPremiumReversal(
@@ -31,41 +72,58 @@ export class StripeGiftReversalHandler {
 			reason: string;
 			chargeId?: string;
 		},
-	): Promise<void> {
+	): Promise<GiftReversalOutcome> {
 		const redeemerId = giftCode.redeemedByUserId;
 		if (!redeemerId) {
-			return;
+			return BILLING_UNCHANGED;
 		}
 		const redeemer = await this.userRepository.findUnique(redeemerId);
 		if (!redeemer) {
 			Logger.warn({giftCode: giftCode.code, redeemerId}, 'Gift redeemer not found for premium reversal');
-			return;
+			return BILLING_UNCHANGED;
 		}
 		if (redeemer.stripeSubscriptionId || redeemer.stripeCustomerId) {
 			const redeemedGifts = await this.userRepository.findGiftCodesByRedeemer(redeemer.id);
-			const remainingEntitlement = this.computeRemainingGiftEntitlement(redeemedGifts, giftCode.code);
 			const currentGiftEnd = redeemer.premiumGiftExtensionEndsAt;
-			const newGiftEnd = remainingEntitlement.giftExtensionEndsAt;
-			const needsAdjustment =
-				(newGiftEnd?.getTime() ?? 0) !== (currentGiftEnd?.getTime() ?? 0) &&
-				(currentGiftEnd == null || newGiftEnd == null || currentGiftEnd.getTime() > newGiftEnd.getTime());
-			if (needsAdjustment) {
-				const patch: Partial<UserRow> = {premium_gift_extension_ends_at: newGiftEnd};
-				const updatedUser = await this.userRepository.patchUpsert(redeemer.id, patch, redeemer.toRow());
-				await this.dispatchUser(updatedUser);
+			let newGiftEnd: Date | null;
+			let needsAdjustment: boolean;
+			let reapplyIfMarked = true;
+			let trialCut: GiftTrialCut | null = null;
+			if (await this.storeEntitlementService?.getActiveStoreEntitlement(redeemer.id)) {
+				const reduced = this.reduceStackedGiftExtension(redeemer, giftCode, redeemedGifts, new Date());
+				newGiftEnd = reduced.giftExtensionEndsAt;
+				needsAdjustment = reduced.changed;
+				reapplyIfMarked = false;
+			} else {
+				newGiftEnd = this.removeGiftKeepingPaidShift(currentGiftEnd, giftCode, redeemedGifts);
+				needsAdjustment =
+					currentGiftEnd != null && (newGiftEnd == null || currentGiftEnd.getTime() > newGiftEnd.getTime());
+				trialCut = await this.planGiftTrialCut(redeemer, giftCode, new Date());
+			}
+			const reversed =
+				(needsAdjustment || trialCut) &&
+				(await this.commitReversal(
+					redeemer,
+					giftCode,
+					needsAdjustment ? {premium_gift_extension_ends_at: newGiftEnd} : {},
+					{reapplyIfMarked, trialCut},
+				));
+			if (reversed) {
 				Logger.info(
 					{
 						giftCode: giftCode.code,
 						redeemerId: redeemer.id,
 						chargeId: context.chargeId,
 						reason: context.reason,
-						adjustedGiftEnd: newGiftEnd?.toISOString() ?? null,
+						adjustedGiftEnd: needsAdjustment ? (newGiftEnd?.toISOString() ?? null) : undefined,
 						previousGiftEnd: currentGiftEnd?.toISOString() ?? null,
+						shortenedTrialEnd: trialCut ? (trialCut.trialEnd?.toISOString() ?? 'now') : undefined,
+						cancelledSubscription: trialCut?.cancel,
 					},
 					'Reduced gift extension after gift reversal for user with Stripe identity',
 				);
 			}
-			await this.enqueuePremiumStateReconciliation(redeemer.id, {
+			await this.premiumStateReconciliationQueueService.enqueueUserBestEffort(redeemer.id, {
 				reason: context.reason,
 				subscriptionId: redeemer.stripeSubscriptionId ?? undefined,
 			});
@@ -78,7 +136,13 @@ export class StripeGiftReversalHandler {
 				},
 				'Enqueued reconciliation after gift reversal for user with Stripe identity',
 			);
-			return;
+			return {
+				billingResumed: reversed && trialCut && billingResumesWithoutNotice(trialCut) ? trialCut.plan : null,
+			};
+		}
+		if (await this.storeEntitlementService?.getActiveStoreEntitlement(redeemer.id)) {
+			await this.reverseGiftForStoreSubscriber(redeemer, giftCode, context);
+			return BILLING_UNCHANGED;
 		}
 		const redeemedGifts = await this.userRepository.findGiftCodesByRedeemer(redeemer.id);
 		const hasGiftInRedeemerIndex = redeemedGifts.some((entry) => entry.code === giftCode.code);
@@ -92,7 +156,7 @@ export class StripeGiftReversalHandler {
 				},
 				'Skipped direct gift premium revocation because redeemer gift history is incomplete',
 			);
-			return;
+			return BILLING_UNCHANGED;
 		}
 		const remainingEntitlement = this.computeRemainingGiftEntitlement(redeemedGifts, giftCode.code);
 		if (remainingEntitlement.hasLifetimeGift) {
@@ -104,7 +168,7 @@ export class StripeGiftReversalHandler {
 				},
 				'Skipped direct gift premium revocation because user has another redeemed lifetime gift',
 			);
-			return;
+			return BILLING_UNCHANGED;
 		}
 		const entitlementUntil = remainingEntitlement.giftExtensionEndsAt;
 		if (entitlementUntil && entitlementUntil.getTime() > Date.now()) {
@@ -122,8 +186,7 @@ export class StripeGiftReversalHandler {
 				patch.premium_will_cancel = false;
 			}
 			if (Object.keys(patch).length > 0) {
-				const updatedUser = await this.userRepository.patchUpsert(redeemer.id, patch, redeemer.toRow());
-				await this.dispatchUser(updatedUser);
+				await this.commitReversal(redeemer, giftCode, patch, {reapplyIfMarked: true});
 			}
 			Logger.info(
 				{
@@ -135,7 +198,7 @@ export class StripeGiftReversalHandler {
 				},
 				'Adjusted gift extension after gift premium reversal',
 			);
-			return;
+			return BILLING_UNCHANGED;
 		}
 		if (redeemer.premiumType === UserPremiumTypes.LIFETIME) {
 			Logger.warn(
@@ -146,9 +209,18 @@ export class StripeGiftReversalHandler {
 				},
 				'Skipped lifetime premium revocation for gift reversal to preserve explicit lifetime overrides',
 			);
-			return;
+			return BILLING_UNCHANGED;
 		}
-		await this.premiumService.revokePremium(redeemer.id);
+		await this.commitReversal(
+			redeemer,
+			giftCode,
+			{
+				premium_type: UserPremiumTypes.NONE,
+				premium_until: null,
+				premium_gift_extension_ends_at: null,
+			},
+			{reapplyIfMarked: true},
+		);
 		Logger.debug(
 			{
 				giftCode: giftCode.code,
@@ -158,11 +230,315 @@ export class StripeGiftReversalHandler {
 			},
 			'Premium revoked after gift premium reversal',
 		);
+		return BILLING_UNCHANGED;
 	}
 
-	computeRemainingGiftEntitlement(redeemedGifts: Array<GiftCode>, excludedCode: string): RemainingGiftEntitlement {
+	private async reverseGiftForStoreSubscriber(
+		redeemer: User,
+		giftCode: GiftCode,
+		context: {
+			reason: string;
+			chargeId?: string;
+		},
+	): Promise<void> {
+		const currentGiftEnd = redeemer.premiumGiftExtensionEndsAt;
+		const newGiftEnd = await this.reverseStackedGift(redeemer, giftCode);
+		await this.storeEntitlementService?.applyStoreEntitlementToUser(redeemer.id);
+		Logger.info(
+			{
+				giftCode: giftCode.code,
+				redeemerId: redeemer.id,
+				chargeId: context.chargeId,
+				reason: context.reason,
+				adjustedGiftEnd: newGiftEnd?.toISOString() ?? null,
+				previousGiftEnd: currentGiftEnd?.toISOString() ?? null,
+			},
+			'Reduced gift extension after gift reversal for user with a store subscription',
+		);
+	}
+
+	async reverseStackedGift(redeemer: User, giftCode: GiftCode): Promise<Date | null> {
+		const redeemedGifts = await this.userRepository.findGiftCodesByRedeemer(redeemer.id);
+		const reduced = this.reduceStackedGiftExtension(redeemer, giftCode, redeemedGifts, new Date());
+		if (
+			!reduced.changed ||
+			!(await this.commitReversal(
+				redeemer,
+				giftCode,
+				{premium_gift_extension_ends_at: reduced.giftExtensionEndsAt},
+				{reapplyIfMarked: false},
+			))
+		) {
+			return redeemer.premiumGiftExtensionEndsAt;
+		}
+		return reduced.giftExtensionEndsAt;
+	}
+
+	private removeGiftKeepingPaidShift(
+		currentGiftEnd: Date | null,
+		giftCode: GiftCode,
+		redeemedGifts: Array<GiftCode>,
+	): Date | null {
+		const remainingEnd = this.computeRemainingGiftEntitlement(redeemedGifts, giftCode.code).giftExtensionEndsAt;
+		if (!currentGiftEnd || !remainingEnd) {
+			return null;
+		}
+		const rebuiltEnd = this.computeRemainingGiftEntitlement(redeemedGifts, null).giftExtensionEndsAt;
+		const paidShiftMs = rebuiltEnd ? Math.max(0, currentGiftEnd.getTime() - rebuiltEnd.getTime()) : 0;
+		return new Date(remainingEnd.getTime() + paidShiftMs);
+	}
+
+	private reduceStackedGiftExtension(
+		redeemer: User,
+		giftCode: GiftCode,
+		redeemedGifts: Array<GiftCode>,
+		now: Date,
+	): {changed: boolean; giftExtensionEndsAt: Date | null} {
+		const currentGiftEnd = redeemer.premiumGiftExtensionEndsAt;
+		const remaining = this.computeRemainingGiftEntitlement(redeemedGifts, giftCode.code);
+		if (!currentGiftEnd || remaining.hasLifetimeGift) {
+			return {changed: false, giftExtensionEndsAt: currentGiftEnd};
+		}
+		const extendedEnd = addGiftCodeDuration(currentGiftEnd, giftCode.durationType, giftCode.durationQuantity);
+		if (!extendedEnd) {
+			const recomputed = remaining.giftExtensionEndsAt;
+			const changed = !recomputed || recomputed.getTime() < currentGiftEnd.getTime();
+			return {changed, giftExtensionEndsAt: changed ? recomputed : currentGiftEnd};
+		}
+		const reducedMs = currentGiftEnd.getTime() - (extendedEnd.getTime() - currentGiftEnd.getTime());
+		const floorMs = Math.max(now.getTime(), redeemer.premiumUntil?.getTime() ?? 0);
+		return {changed: true, giftExtensionEndsAt: reducedMs <= floorMs ? null : new Date(reducedMs)};
+	}
+
+	async restoreReversedGift(giftCode: GiftCode): Promise<void> {
+		const redeemerId = giftCode.redeemedByUserId;
+		if (!redeemerId) {
+			return;
+		}
+		const seconds = (await this.userRepository.findGiftCode(giftCode.code))?.premiumReversedSeconds ?? null;
+		if (seconds === null || !(await this.userRepository.clearGiftPremiumReversed(giftCode.code, seconds))) {
+			return;
+		}
+		const user = seconds > 0 ? await this.userRepository.findUnique(redeemerId) : null;
+		if (!user) {
+			return;
+		}
+		const now = new Date();
+		const anchorMs = Math.max(
+			now.getTime(),
+			user.premiumUntil?.getTime() ?? 0,
+			user.premiumGiftExtensionEndsAt?.getTime() ?? 0,
+		);
+		const patch: Partial<UserRow> = {
+			premium_gift_extension_ends_at: new Date(anchorMs + seconds * MS_PER_SECOND),
+			premium_grace_ends_at: null,
+		};
+		if ((user.premiumType ?? 0) <= 0) {
+			patch.premium_type = UserPremiumTypes.SUBSCRIPTION;
+			patch.premium_flags = clearPerksSanitizedFlag(user.premiumFlags);
+			patch.premium_since = user.premiumSince ?? now;
+		}
+		let updatedUser: User;
+		try {
+			updatedUser = await this.userRepository.patchUpsert(redeemerId, patch, user.toRow());
+		} catch (error) {
+			try {
+				await this.userRepository.markGiftPremiumReversed(giftCode, seconds);
+			} catch (markError) {
+				Logger.error({giftCode: giftCode.code, redeemerId, markError}, 'Failed to restore gift reversal marker');
+			}
+			throw error;
+		}
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
+	}
+
+	private async planGiftTrialCut(redeemer: User, giftCode: GiftCode, now: Date): Promise<GiftTrialCut | null> {
+		const stripe = getStripeClient();
+		if (!stripe || !redeemer.stripeSubscriptionId) {
+			return null;
+		}
+		let subscription: Stripe.Subscription;
+		try {
+			subscription = await stripe.subscriptions.retrieve(redeemer.stripeSubscriptionId);
+		} catch (error) {
+			if (error instanceof Stripe.errors.StripeInvalidRequestError && error.code === 'resource_missing') {
+				return null;
+			}
+			throw error;
+		}
+		if (subscription.status === 'canceled' || subscription.status === 'incomplete_expired') {
+			return null;
+		}
+		if (!subscription.trial_end || subscription.trial_end * MS_PER_SECOND <= now.getTime()) {
+			return null;
+		}
+		const giftSeconds = getGiftTrialSeconds(subscription, giftCode.code);
+		if (giftSeconds === null) {
+			return null;
+		}
+		const cutEndMs = Math.max(
+			subscription.trial_end * MS_PER_SECOND - giftSeconds * MS_PER_SECOND,
+			getGiftTrialPaidUntil(subscription, now.getTime())?.getTime() ?? 0,
+		);
+		const endsNow = cutEndMs <= now.getTime() + MIN_REMAINING_TRIAL_MS;
+		const premiumUntilMs = Math.min(
+			endsNow ? now.getTime() : cutEndMs,
+			redeemer.premiumUntil?.getTime() ?? Number.POSITIVE_INFINITY,
+		);
+		return {
+			subscriptionId: subscription.id,
+			trialEnd: endsNow ? null : new Date(cutEndMs),
+			cancel: endsNow && (subscription.cancel_at_period_end || subscription.cancel_at != null),
+			premiumUntil: new Date(premiumUntilMs),
+			plan: getSubscriptionBillingCycle(subscription) ?? 'monthly',
+		};
+	}
+
+	private async applyGiftTrialCut(redeemer: User, giftCode: GiftCode, cut: GiftTrialCut): Promise<void> {
+		const stripe = getStripeClient();
+		if (!stripe) {
+			throw new StripeError('Stripe client not available for gift trial reversal');
+		}
+		const idempotencyKey = `gift_trial_reverse:${redeemer.id}:${giftCode.code}`;
+		let subscription: Stripe.Subscription;
+		if (cut.cancel) {
+			subscription = await stripe.subscriptions.cancel(
+				cut.subscriptionId,
+				{invoice_now: false, prorate: false, cancellation_details: {comment: 'gift_reversal'}},
+				{idempotencyKey},
+			);
+		} else {
+			subscription = await stripe.subscriptions.update(
+				cut.subscriptionId,
+				{
+					trial_end: cut.trialEnd ? Math.floor(cut.trialEnd.getTime() / MS_PER_SECOND) : 'now',
+					proration_behavior: 'none',
+					metadata: {[getGiftTrialMetadataKey(giftCode.code)]: ''},
+				},
+				{idempotencyKey},
+			);
+		}
+		await mirrorSubscription(
+			subscription,
+			redeemer.id,
+			'Mirror upsert failed after Stripe write; reconciler will heal',
+		);
+		if (cut.trialEnd && !cut.cancel && !trialEndsBeforeNotice(cut.trialEnd)) {
+			await this.queueShortenedTrialNotice(subscription, cut.trialEnd);
+		}
+	}
+
+	private async queueShortenedTrialNotice(subscription: Stripe.Subscription, trialEnd: Date): Promise<void> {
+		try {
+			await enqueueBillingEmail(getWorkerService(), {
+				kind: 'subscription_notice',
+				id: subscription.id,
+				notice: 'gift',
+				chargeAt: Math.floor(trialEnd.getTime() / MS_PER_SECOND),
+			});
+		} catch (error) {
+			Logger.error({error, subscriptionId: subscription.id}, 'Shortened a gift trial but could not queue the notice');
+		}
+	}
+
+	private async commitReversal(
+		redeemer: User,
+		giftCode: GiftCode,
+		patch: Partial<UserRow>,
+		{reapplyIfMarked, trialCut = null}: {reapplyIfMarked: boolean; trialCut?: GiftTrialCut | null},
+	): Promise<boolean> {
+		const fullPatch: Partial<UserRow> = trialCut ? {...patch, premium_until: trialCut.premiumUntil} : patch;
+		const seconds = this.computeRemovedSeconds(redeemer, fullPatch, Date.now());
+		if (!(await this.userRepository.markGiftPremiumReversed(giftCode, seconds))) {
+			if (!reapplyIfMarked || Object.keys(patch).length === 0) {
+				Logger.info(
+					{giftCode: giftCode.code, redeemerId: redeemer.id},
+					'Skipped a gift premium reversal that was already applied',
+				);
+				return false;
+			}
+			await dispatchUserUpdate(
+				this.gatewayService,
+				await this.userRepository.patchUpsert(redeemer.id, patch, redeemer.toRow()),
+			);
+			return true;
+		}
+		if (trialCut) {
+			try {
+				await this.applyGiftTrialCut(redeemer, giftCode, trialCut);
+			} catch (error) {
+				await this.releaseReversalClaim(redeemer, giftCode, seconds);
+				throw error;
+			}
+		}
+		let updatedUser: User;
+		try {
+			updatedUser = await this.userRepository.patchUpsert(redeemer.id, fullPatch, redeemer.toRow());
+		} catch (error) {
+			if (!trialCut) {
+				await this.releaseReversalClaim(redeemer, giftCode, seconds);
+			}
+			throw error;
+		}
+		await dispatchUserUpdate(this.gatewayService, updatedUser);
+		if (redeemer.premiumType === UserPremiumTypes.LIFETIME && updatedUser.premiumType !== UserPremiumTypes.LIFETIME) {
+			await this.queueLabsVisionaryRoleSync(redeemer.id);
+		}
+		return true;
+	}
+
+	private async queueLabsVisionaryRoleSync(userId: UserID): Promise<void> {
+		try {
+			await getWorkerService().addJob(
+				OPERATOR_PASS_LABS_VISIONARY_ROLE_SYNC_TASK,
+				{user_id: userId.toString()},
+				{jobKey: `operator-pass-labs-visionary:${userId}`},
+			);
+		} catch (error) {
+			Logger.error(
+				{userId, error},
+				'Could not queue the Labs Visionary role update after a gift reversal, the daily sync removes it',
+			);
+		}
+	}
+
+	private async releaseReversalClaim(redeemer: User, giftCode: GiftCode, seconds: number): Promise<void> {
+		try {
+			await this.userRepository.clearGiftPremiumReversed(giftCode.code, seconds);
+		} catch (clearError) {
+			Logger.error(
+				{giftCode: giftCode.code, redeemerId: redeemer.id, clearError},
+				'Failed to release gift reversal marker',
+			);
+		}
+	}
+
+	private computeRemovedSeconds(redeemer: User, patch: Partial<UserRow>, nowMs: number): number {
+		const nextUntil = 'premium_until' in patch ? patch.premium_until : redeemer.premiumUntil;
+		const nextGiftEnd =
+			'premium_gift_extension_ends_at' in patch
+				? patch.premium_gift_extension_ends_at
+				: redeemer.premiumGiftExtensionEndsAt;
+		const beforeMs = Math.max(
+			redeemer.premiumUntil?.getTime() ?? 0,
+			redeemer.premiumGiftExtensionEndsAt?.getTime() ?? 0,
+		);
+		const afterMs = Math.max(nowMs, nextUntil?.getTime() ?? 0, nextGiftEnd?.getTime() ?? 0);
+		return Math.max(0, Math.ceil((beforeMs - afterMs) / MS_PER_SECOND));
+	}
+
+	private computeRemainingGiftEntitlement(
+		redeemedGifts: Array<GiftCode>,
+		excludedCode: string | null,
+	): RemainingGiftEntitlement {
 		const sortedGifts = redeemedGifts
-			.filter((giftCode) => giftCode.code !== excludedCode && giftCode.redeemedAt != null)
+			.filter(
+				(giftCode) =>
+					giftCode.code !== excludedCode &&
+					giftCode.redeemedAt != null &&
+					giftCode.premiumReversedSeconds === null &&
+					giftCode.revokedAt === null,
+			)
 			.sort((left, right) => {
 				const leftRedeemedAt = left.redeemedAt?.getTime() ?? 0;
 				const rightRedeemedAt = right.redeemedAt?.getTime() ?? 0;
@@ -193,35 +569,5 @@ export class StripeGiftReversalHandler {
 			hasLifetimeGift,
 			giftExtensionEndsAt,
 		};
-	}
-
-	private async dispatchUser(user: User): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId: user.id,
-			event: 'USER_UPDATE',
-			data: mapUserToPrivateResponse(user),
-		});
-	}
-
-	private async enqueuePremiumStateReconciliation(
-		userId: UserID,
-		context: {
-			reason: string;
-			subscriptionId?: string;
-		},
-	): Promise<void> {
-		try {
-			await this.premiumStateReconciliationQueueService.enqueueUser(userId);
-		} catch (error) {
-			Logger.warn(
-				{
-					error,
-					userId: userId.toString(),
-					reason: context.reason,
-					subscriptionId: context.subscriptionId,
-				},
-				'Failed to enqueue premium reconciliation from Stripe webhook',
-			);
-		}
 	}
 }

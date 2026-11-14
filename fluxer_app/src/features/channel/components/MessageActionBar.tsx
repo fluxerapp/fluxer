@@ -14,8 +14,8 @@ import {REACT_WITH_EMOJI_DESCRIPTOR} from '@app/features/channel/components/Quic
 import type {Channel} from '@app/features/channel/models/Channel';
 import {useQuickReactionEmojis} from '@app/features/channel/state/QuickReactionStore';
 import {MessageDebugModal} from '@app/features/devtools/components/debug/MessageDebugModal';
-import * as EmojiPickerCommands from '@app/features/emoji/commands/EmojiPickerCommands';
 import {EmojiPickerPopout} from '@app/features/emoji/components/popouts/EmojiPickerPopout';
+import EmojiPicker from '@app/features/emoji/state/EmojiPicker';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiImageUrl';
 import {getEmojiDisplayData} from '@app/features/expressions/utils/SkinToneUtils';
@@ -26,6 +26,7 @@ import {
 	DELETE_MESSAGE_DESCRIPTOR,
 	EDIT_MESSAGE_DESCRIPTOR,
 	MARK_AS_UNREAD_DESCRIPTOR,
+	MORE_DESCRIPTOR,
 	PIN_MESSAGE_DESCRIPTOR,
 	REPLY_DESCRIPTOR,
 	TRY_AGAIN_DESCRIPTOR,
@@ -34,11 +35,14 @@ import {
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getEmojiNameWithColons, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
-import messageStyles from '@app/features/theme/styles/Message.module.css';
+import {openCreateThread} from '@app/features/threads/commands/ThreadNavigation';
+import {CREATE_THREAD_DESCRIPTOR} from '@app/features/threads/utils/ThreadMessageDescriptors';
 import {
 	AddReactionIcon,
 	CopyIdIcon,
 	CopyLinkIcon,
+	CreateThreadIcon,
+	CrosspostIcon,
 	DebugMessageIcon,
 	DeleteIcon,
 	EditMessageIcon,
@@ -75,13 +79,19 @@ const MESSAGE_DEBUG_DESCRIPTOR = msg({
 	message: 'Message debug',
 	comment: 'Title of the developer-mode message debug modal opened from the message action bar.',
 });
-const MORE_DESCRIPTOR = msg({
-	message: 'More',
-	comment: 'Tooltip on the overflow button in the inline message hover action bar. Opens the full action menu.',
-});
 const DEBUG_MESSAGE_DESCRIPTOR = msg({
 	message: 'Debug message',
 	comment: 'Developer-mode item in the message action bar overflow menu. Opens the message debug modal.',
+});
+const PUBLISH_DESCRIPTOR = msg({
+	message: 'Publish',
+	comment:
+		'Tooltip on the publish button in the inline message hover action bar. Publishing sends an announcement channel message to every channel that follows it.',
+});
+const PUBLISHED_DESCRIPTOR = msg({
+	message: 'Published',
+	comment:
+		'Tooltip on the disabled publish button in the inline message hover action bar for a message that was already published.',
 });
 const FORWARD_DESCRIPTOR = msg({
 	message: 'Forward',
@@ -96,18 +106,22 @@ interface MessageActionBarButtonProps {
 	danger?: boolean;
 	isActive?: boolean;
 	hidden?: boolean;
+	disabled?: boolean;
 	dataAction?: string;
 }
 
 const MessageActionBarButton = React.forwardRef<HTMLButtonElement, MessageActionBarButtonProps>(
-	({label, icon, onClick, onPointerDownCapture, danger, isActive, hidden, dataAction}, ref) => {
+	({label, icon, onClick, onPointerDownCapture, danger, isActive, hidden, disabled, dataAction}, ref) => {
 		const handleClick = useCallback(
 			(event: React.MouseEvent | React.KeyboardEvent) => {
 				event.preventDefault();
 				event.stopPropagation();
+				if (disabled) {
+					return;
+				}
 				onClick?.(event);
 			},
-			[onClick],
+			[onClick, disabled],
 		);
 		const handlePointerDownCapture = useCallback(
 			(event: React.PointerEvent) => {
@@ -116,8 +130,8 @@ const MessageActionBarButton = React.forwardRef<HTMLButtonElement, MessageAction
 			[onPointerDownCapture],
 		);
 		const buttonClassName = useMemo(
-			() => clsx(styles.button, danger && styles.danger, isActive && styles.active),
-			[danger, isActive],
+			() => clsx(styles.button, danger && styles.danger, isActive && styles.active, disabled && styles.disabled),
+			[danger, isActive, disabled],
 		);
 		return (
 			<Tooltip text={label} data-flx="channel.message-action-bar.message-action-bar-button.tooltip">
@@ -126,6 +140,7 @@ const MessageActionBarButton = React.forwardRef<HTMLButtonElement, MessageAction
 						type="button"
 						ref={ref}
 						aria-label={label}
+						aria-disabled={disabled || undefined}
 						hidden={hidden}
 						onClick={handleClick}
 						onPointerDownCapture={handlePointerDownCapture}
@@ -154,7 +169,7 @@ interface QuickReactionButtonProps {
 	hidden?: boolean;
 }
 
-export const QuickReactionButton = observer(
+const QuickReactionButton = observer(
 	React.forwardRef<HTMLButtonElement, QuickReactionButtonProps>(({emoji, onReact, hidden}, ref) => {
 		const {i18n} = useLingui();
 		const isAnimatedEmoji = emoji.animated === true;
@@ -164,7 +179,7 @@ export const QuickReactionButton = observer(
 			(event: React.MouseEvent | React.KeyboardEvent) => {
 				event.preventDefault();
 				event.stopPropagation();
-				EmojiPickerCommands.trackEmojiUsage(emoji);
+				EmojiPicker.trackEmoji(emoji);
 				onReact(emoji);
 			},
 			[emoji, onReact],
@@ -235,14 +250,17 @@ interface MessageActionBarCoreProps {
 		canDeleteMessage: boolean;
 		canPinMessage: boolean;
 		canForwardMessage: boolean;
+		canCrosspostMessage: boolean;
 		shouldRenderSuppressEmbeds: boolean;
+		canCreateThread?: boolean;
+		isPreviewing?: boolean;
 	};
 	developerMode: boolean;
 	isActive: boolean;
 	onPopoutToggle?: (isOpen: boolean) => void;
 }
 
-export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observer(
+const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observer(
 	({message, handleDelete, permissions, developerMode, isActive, onPopoutToggle}) => {
 		const {i18n} = useLingui();
 		const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
@@ -251,7 +269,6 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 		const actionBarRef = useRef<HTMLDivElement>(null);
 		const keepOpenOnNextMoreMenuCloseRef = useRef(false);
 		const emojiPickerOpenRef = useRef(false);
-		const contextMenuOpen = useContextMenuHoverState(actionBarRef);
 		const moreMenuOpen = useContextMenuHoverState(moreOptionsButtonRef);
 		const showMessageActionBar = Accessibility.showMessageActionBar;
 		const showQuickReactions = Accessibility.showMessageActionBarQuickReactions;
@@ -261,8 +278,15 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 		const shouldListenForShift = showShiftExpand && showMessageActionBar && !onlyMoreButton && !keyboardModeEnabled;
 		const shiftPressed = useShiftKey(shouldListenForShift);
 		const showFullActions = shouldListenForShift && shiftPressed;
-		const {canSendMessages, canAddReactions, canEditMessage, canDeleteMessage, canPinMessage, canForwardMessage} =
-			permissions;
+		const {
+			canSendMessages,
+			canAddReactions,
+			canEditMessage,
+			canDeleteMessage,
+			canPinMessage,
+			canForwardMessage,
+			canCrosspostMessage,
+		} = permissions;
 		const showsEditInTail = message.isUserMessage() && !message.messageSnapshots && canEditMessage;
 		const supportsInteractiveActions = useMemo(() => !isClientSystemMessage(message), [message]);
 		const handlers = useMemo(
@@ -439,12 +463,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 		return (
 			<div
 				ref={actionBarRef}
-				className={clsx(
-					styles.actionBarContainer,
-					messageStyles.buttons,
-					(emojiPickerOpen || contextMenuOpen) && messageStyles.emojiPickerOpen,
-					(emojiPickerOpen || contextMenuOpen || moreMenuOpen) && styles.actionBarPinned,
-				)}
+				className={styles.actionBarContainer}
 				data-flx="channel.message-action-bar.message-action-bar-core.action-bar-container"
 			>
 				<div className={styles.actionBar} data-flx="channel.message-action-bar.message-action-bar-core.action-bar">
@@ -511,17 +530,19 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 												data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.copy-message-link"
 											/>
 										)}
-										<MessageActionBarButton
-											icon={
-												<MarkAsUnreadIcon
-													size={20}
-													data-flx="channel.message-action-bar.message-action-bar-core.mark-as-unread-icon"
-												/>
-											}
-											label={i18n._(MARK_AS_UNREAD_DESCRIPTOR)}
-											onClick={handlers.handleMarkAsUnread}
-											data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.mark-as-unread"
-										/>
+										{!permissions.isPreviewing && (
+											<MessageActionBarButton
+												icon={
+													<MarkAsUnreadIcon
+														size={20}
+														data-flx="channel.message-action-bar.message-action-bar-core.mark-as-unread-icon"
+													/>
+												}
+												label={i18n._(MARK_AS_UNREAD_DESCRIPTOR)}
+												onClick={handlers.handleMarkAsUnread}
+												data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.mark-as-unread"
+											/>
+										)}
 										{message.isUserMessage() && canPinMessage && (
 											<MessageActionBarButton
 												icon={
@@ -614,6 +635,33 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										label={i18n._(FORWARD_DESCRIPTOR)}
 										onClick={handlers.handleForward}
 										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.forward"
+									/>
+								)}
+								{supportsInteractiveActions && canCrosspostMessage && (
+									<MessageActionBarButton
+										icon={
+											<CrosspostIcon
+												size={20}
+												data-flx="channel.message-action-bar.message-action-bar-core.crosspost-icon"
+											/>
+										}
+										label={message.isCrossposted ? i18n._(PUBLISHED_DESCRIPTOR) : i18n._(PUBLISH_DESCRIPTOR)}
+										disabled={message.isCrossposted}
+										onClick={handlers.handleCrosspostMessage}
+										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.crosspost"
+									/>
+								)}
+								{permissions.canCreateThread && (
+									<MessageActionBarButton
+										icon={
+											<CreateThreadIcon
+												size={20}
+												data-flx="channel.message-action-bar.message-action-bar-core.create-thread-icon"
+											/>
+										}
+										label={i18n._(CREATE_THREAD_DESCRIPTOR)}
+										onClick={() => openCreateThread(channel, message.id)}
+										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.create-thread"
 									/>
 								)}
 								{showFullActions && canDeleteMessage && (

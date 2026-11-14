@@ -21,6 +21,9 @@ function successStatusCodes(route: ExtractedRoute): Array<number> {
 	if (route.successStatusCodes.length) return route.successStatusCodes;
 	return [route.hasNoContent ? 204 : 200];
 }
+function isBodyless(route: ExtractedRoute, code: number): boolean {
+	return code === 204 || route.bodylessStatusCodes.includes(code) || (route.hasNoContent && !route.responseSchemaName);
+}
 export class OpenAPIOperationBuilder {
 	private readonly schemaRegistry: SchemaRegistry;
 	private readonly usedOperationIds: Set<string>;
@@ -64,6 +67,9 @@ export class OpenAPIOperationBuilder {
 		if (route.explicitExternalDocs) {
 			operation.externalDocs = route.explicitExternalDocs;
 		}
+		if (route.explicitExperiment) {
+			operation['x-fluxer-experiment'] = route.explicitExperiment;
+		}
 		if (security.length > 0) {
 			operation.security = security;
 		}
@@ -90,7 +96,10 @@ export class OpenAPIOperationBuilder {
 		if (route.path === '/users/@me' || route.path.startsWith('/users/@me/')) {
 			return [{bearerToken: []}, {sessionToken: []}];
 		}
-		if (!route.hasLoginRequired && !route.hasLoginRequiredAllowSuspicious && !route.hasDefaultUserOnly) {
+		if (route.hasBotOnly) {
+			return [{botToken: []}];
+		}
+		if (!route.hasLoginRequired && !route.hasDefaultUserOnly) {
 			return [];
 		}
 		if (route.hasDefaultUserOnly) {
@@ -142,12 +151,17 @@ export class OpenAPIOperationBuilder {
 			const location = validator.target === 'param' ? 'path' : validator.target;
 			const schemaName = validator.schemaName;
 			const schema = this.schemaRegistry.get(schemaName);
-			if (!schema || schema.type !== 'object' || !schema.properties) {
+			if (schema?.type !== 'object' || !schema.properties) {
 				throw new Error(`Parameter schema must be an object: ${schemaName}`);
 			}
 			const required = new Set(schema.required ?? []);
 			for (const [name, property] of Object.entries(schema.properties)) {
-				const propertySchema: OpenAPISchema = typeof property === 'boolean' ? (property ? {} : {not: {}}) : property;
+				let propertySchema: OpenAPISchema;
+				if (typeof property === 'boolean') {
+					propertySchema = property ? {} : {not: {}};
+				} else {
+					propertySchema = property;
+				}
 				const key = `${location}:${name}`;
 				if (parameters.has(key)) throw new Error(`Duplicate parameter ${key} for ${route.method} ${route.path}`);
 				parameters.set(key, {
@@ -202,25 +216,35 @@ export class OpenAPIOperationBuilder {
 				responses['304'] = {description: 'Not Modified'};
 				continue;
 			}
-			if (
-				code === 204 ||
-				route.bodylessStatusCodes.includes(code) ||
-				(route.hasNoContent && !route.responseSchemaName)
-			) {
+			if (code === 202 && route.acceptedResponseSchemaName) {
+				responses['202'] = {
+					description: 'Accepted',
+					content: {
+						'application/json': {schema: this.schemaRegistry.getRef(route.acceptedResponseSchemaName, 'output')},
+					},
+				};
+				continue;
+			}
+			if (isBodyless(route, code)) {
 				responses[String(code)] = {description: code === 204 ? 'No Content' : 'Success'};
 				continue;
 			}
 			if (!route.responseSchemaName) {
 				throw new Error(`Missing response schema for ${route.method.toUpperCase()} ${route.path}`);
 			}
+			const ref = this.schemaRegistry.getRef(route.responseSchemaName, 'output');
 			responses[String(code)] = {
 				description: 'Success',
 				content: {
-					[route.responseContentType]: {schema: this.schemaRegistry.getRef(route.responseSchemaName, 'output')},
+					[route.responseContentType]: {
+						schema: statusCodes.some((other) => other >= 200 && other < 300 && isBodyless(route, other))
+							? this.schemaRegistry.nullable(ref)
+							: ref,
+					},
 				},
 			};
 		}
-		Object.assign(responses, getErrorResponses(requiresAuth));
+		Object.assign(responses, getErrorResponses(requiresAuth, route.errorStatusCodes));
 		return responses;
 	}
 }

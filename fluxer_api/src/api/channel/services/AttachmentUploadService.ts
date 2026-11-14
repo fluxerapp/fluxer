@@ -1,14 +1,49 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {Readable} from 'node:stream';
+import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UploadedAttachment} from '@app/api/channel/AttachmentDTOs';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {
+	AttachmentUploadMode,
+	AttachmentUploadTraceRepository,
+} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {acquireFormUploadSlot, type FormUploadHolder} from '@app/api/channel/services/FormUploadSlots';
+import type {MessageInteractionService} from '@app/api/channel/services/MessageInteractionService';
+import type {MessageService} from '@app/api/channel/services/MessageService';
+import {dispatchMessageUpdateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {
+	assertAttachmentFileSizesWithinLimit,
+	isCrosspostCopy,
+	isMessageEmpty,
+	isOperationDisabled,
+	makeAttachmentCdnKey,
+	makeAttachmentCdnUrl,
+	purgeMessageAttachments as purgeMessageAttachmentsHelper,
+} from '@app/api/channel/services/message/MessageHelpers';
+import {applyUploadRelayDecision, resolveUploadRelayDecision} from '@app/api/channel/services/UploadRelay';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {resolveAttachmentMaxFileSize} from '@app/api/limits/AttachmentFileSizeLimit';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {Permissions, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {
-	ATTACHMENT_MAX_SIZE_BOT,
-	ATTACHMENT_MAX_SIZE_NON_PREMIUM,
 	ATTACHMENT_UPLOAD_CHUNK_THRESHOLD,
 	ATTACHMENT_UPLOAD_MAX_CHUNKS,
 	resolveAttachmentUploadPartSize,
 } from '@fluxer/constants/src/LimitConstants';
+import {THREAD_FEATURE_CHANNEL_TYPES} from '@fluxer/constants/src/ThreadConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {CannotSendMessageToNonTextChannelError} from '@fluxer/errors/src/domains/channel/CannotSendMessageToNonTextChannelError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
@@ -17,8 +52,8 @@ import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/F
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import {ServiceUnavailableError} from '@fluxer/errors/src/HttpErrors';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {
 	CompleteMultipartAttachmentUploadItem,
@@ -26,43 +61,11 @@ import type {
 	PresignedAttachmentUploadRequestItem,
 	PresignedAttachmentUploadResponseItem,
 } from '@fluxer/schema/src/domains/message/AttachmentUploadSchemas';
-import type {AttachmentID, ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import type {IPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Attachment} from '../../models/Attachment';
-import type {Channel} from '../../models/Channel';
-import type {Message} from '../../models/Message';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
-import {assertGuildMemberCanCommunicate} from '../../utils/GuildCommunicationUtils';
-import type {UploadedAttachment} from '../AttachmentDTOs';
-import type {IChannelRepositoryAggregate} from '../repositories/IChannelRepositoryAggregate';
-import type {
-	AttachmentUploadMode,
-	AttachmentUploadTraceRepository,
-} from '../repositories/message/AttachmentUploadTraceRepository';
-import type {MessageInteractionService} from './MessageInteractionService';
-import type {MessageService} from './MessageService';
-import {
-	assertAttachmentFileSizesWithinLimit,
-	getContentType,
-	isMessageEmpty,
-	isOperationDisabled,
-	makeAttachmentCdnKey,
-	makeAttachmentCdnUrl,
-	purgeMessageAttachments as purgeMessageAttachmentsHelper,
-} from './message/MessageHelpers';
-import {applyUploadRelayDecision, resolveUploadRelayDecision} from './UploadRelay';
+import {getContentTypeFromFilename} from '@pkgs/mime_utils/src/ContentTypeUtils';
 
 interface DeleteAttachmentParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 	messageId: MessageID;
 	attachmentId: AttachmentID;
@@ -71,23 +74,38 @@ interface DeleteAttachmentParams {
 
 type UploadActor = 'member' | 'webhook';
 
+interface FormDataUploadTarget {
+	userId: UserID;
+	viewer: ThreadViewer;
+	channelId: ChannelID;
+	actor?: UploadActor;
+}
+
+export interface FormDataUpload {
+	maxFileSize: number;
+	assertCanAttachFiles: () => Promise<void>;
+}
+
+interface StoredFormDataFile {
+	index: number;
+	uploadKey: string;
+	size: number;
+}
+
 interface UploadFormDataAttachmentsParams {
 	userId: UserID;
 	channelId: ChannelID;
 	clientIp: string;
-	files: Array<{
-		file: File;
-		index: number;
-	}>;
+	files: Array<StoredFormDataFile>;
 	attachmentMetadata: Array<{
 		id: number;
 		filename: string;
 	}>;
-	actor?: UploadActor;
 }
 
 interface RequestPresignedAttachmentUploadUrlsParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 	clientIp: string;
 	attachments: Array<PresignedAttachmentUploadRequestItem>;
@@ -95,17 +113,22 @@ interface RequestPresignedAttachmentUploadUrlsParams {
 
 interface CompleteMultipartAttachmentUploadsParams {
 	userId: UserID;
+	viewer: ThreadViewer;
 	channelId: ChannelID;
 	clientIp: string;
 	uploads: Array<CompleteMultipartAttachmentUploadItem>;
 }
 
-const FORM_DATA_UPLOAD_CONCURRENCY = 2;
+interface UploadChannel {
+	channel: Channel;
+	guild: GuildResponse | null;
+	assertCanAttachFiles: () => Promise<void>;
+}
 
 export class AttachmentUploadService {
 	constructor(
-		private channelRepository: IChannelRepositoryAggregate,
-		private userRepository: IUserRepository,
+		private channelRepository: ChannelRepository,
+		private userRepository: UserRepository,
 		private storageService: IStorageService,
 		private attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		private purgeQueue: IPurgeQueue,
@@ -115,70 +138,94 @@ export class AttachmentUploadService {
 		private gatewayService: IGatewayService,
 	) {}
 
+	async storeFormDataFile({
+		body,
+		filename,
+		holder,
+	}: {
+		body: Readable;
+		filename: string;
+		holder: FormUploadHolder;
+	}): Promise<string> {
+		const uploadKey = crypto.randomUUID();
+		const bucket = Config.s3.buckets.uploads;
+		const contentType = getContentTypeFromFilename(filename);
+		const releaseSlot = await acquireFormUploadSlot(holder);
+		try {
+			await runAttachmentStorageOperation(() =>
+				this.storageService.uploadObject({
+					bucket,
+					key: uploadKey,
+					body,
+					contentType,
+				}),
+			);
+		} catch (error) {
+			await this.storageService.deleteObject(bucket, uploadKey).catch(() => undefined);
+			throw body.errored ?? error;
+		} finally {
+			releaseSlot();
+		}
+		return uploadKey;
+	}
+
+	async deleteFormDataFiles(uploadKeys: Array<string>): Promise<void> {
+		await Promise.all(
+			uploadKeys.map((uploadKey) =>
+				this.storageService.deleteObject(Config.s3.buckets.uploads, uploadKey).catch(() => undefined),
+			),
+		);
+	}
+
 	async uploadFormDataAttachments({
 		userId,
 		channelId,
 		clientIp,
 		files,
 		attachmentMetadata,
-		actor = 'member',
 	}: UploadFormDataAttachmentsParams): Promise<Array<UploadedAttachment>> {
-		const {maxFileSize} = await this.getUploadPermissionAndLimit({userId, channelId, actor});
-		assertAttachmentFileSizesWithinLimit(
-			files.map(({file}) => file.size),
-			maxFileSize,
-		);
 		const metadataMap = new Map(attachmentMetadata.map((m) => [m.id, m]));
-		const uploadedAttachments = await mapWithConcurrency(files, FORM_DATA_UPLOAD_CONCURRENCY, async (fileWithIndex) => {
-			const {file, index} = fileWithIndex;
-			const metadata = metadataMap.get(index);
-			if (!metadata) {
-				throw new Error(`Internal error: metadata not found for file index ${index}`);
-			}
-			const filename = metadata.filename;
-			const uploadKey = crypto.randomUUID();
-			const arrayBuffer = await file.arrayBuffer();
-			const body = new Uint8Array(arrayBuffer);
-			const contentType = getContentType(filename);
-			await runAttachmentStorageOperation(() =>
-				this.storageService.uploadObject({
-					bucket: Config.s3.buckets.uploads,
-					key: uploadKey,
-					body,
+		return Promise.all(
+			files.map(async ({index, uploadKey, size}) => {
+				const metadata = metadataMap.get(index);
+				if (!metadata) {
+					throw new Error(`Internal error: metadata not found for file index ${index}`);
+				}
+				const filename = metadata.filename;
+				const contentType = getContentTypeFromFilename(filename);
+				await this.attachmentUploadTraceRepository.recordRequestedUpload({
+					uploadKey,
+					userId,
+					channelId,
+					filename,
 					contentType,
-				}),
-			);
-			await this.attachmentUploadTraceRepository.recordRequestedUpload({
-				uploadKey,
-				userId,
-				channelId,
-				filename,
-				contentType,
-				uploadMode: 'form_data',
-				requestIp: clientIp,
-			});
-			const uploaded: UploadedAttachment = {
-				id: index,
-				upload_filename: uploadKey,
-				filename: filename,
-				file_size: file.size,
-				content_type: contentType,
-			};
-			return uploaded;
-		});
-		return uploadedAttachments;
+					uploadMode: 'form_data',
+					requestIp: clientIp,
+				});
+				const uploaded: UploadedAttachment = {
+					id: index,
+					upload_filename: uploadKey,
+					filename,
+					file_size: size,
+					content_type: contentType,
+				};
+				return uploaded;
+			}),
+		);
 	}
 
 	async requestPresignedAttachmentUploadUrls({
 		userId,
+		viewer,
 		channelId,
 		clientIp,
 		attachments,
 	}: RequestPresignedAttachmentUploadUrlsParams): Promise<Array<PresignedAttachmentUploadResponseItem>> {
-		if (!Config.presignedAttachmentUploadsEnabled) {
+		if (!Config.presignedAttachmentUploadsEnabled || Config.storage.readOnly) {
 			throw new FeatureTemporarilyDisabledError();
 		}
-		const {maxFileSize} = await this.getUploadPermissionAndLimit({userId, channelId, actor: 'member'});
+		const {maxFileSize, assertCanAttachFiles} = await this.prepareFormDataUpload({userId, viewer, channelId});
+		await assertCanAttachFiles();
 		assertAttachmentFileSizesWithinLimit(
 			attachments.map(({file_size}) => file_size),
 			maxFileSize,
@@ -187,7 +234,7 @@ export class AttachmentUploadService {
 		return Promise.all(
 			attachments.map(async (attachment) => {
 				const uploadKey = crypto.randomUUID();
-				const derivedContentType = getContentType(attachment.filename);
+				const derivedContentType = getContentTypeFromFilename(attachment.filename);
 				const bucket = Config.s3.buckets.uploads;
 				const uploadMode: AttachmentUploadMode =
 					attachment.file_size <= ATTACHMENT_UPLOAD_CHUNK_THRESHOLD ? 'presigned_singlepart' : 'presigned_multipart';
@@ -201,14 +248,14 @@ export class AttachmentUploadService {
 					requestIp: clientIp,
 				});
 				if (attachment.file_size <= ATTACHMENT_UPLOAD_CHUNK_THRESHOLD) {
-					const presigned_upload_url = await this.storageService.getPresignedUploadURL({
-						bucket,
-						key: uploadKey,
-						contentType: derivedContentType,
-						contentLength: attachment.file_size,
-					});
-					const upload_url = applyUploadRelayDecision({
-						presignedUrl: presigned_upload_url,
+					const upload_url = await applyUploadRelayDecision({
+						presign: () =>
+							this.storageService.getPresignedUploadURL({
+								bucket,
+								key: uploadKey,
+								contentType: derivedContentType,
+								contentLength: attachment.file_size,
+							}),
 						bucket,
 						key: uploadKey,
 						relayDecision: uploadRelayDecision,
@@ -242,15 +289,15 @@ export class AttachmentUploadService {
 						const partNumber = index + 1;
 						const partContentLength =
 							partNumber < partCount ? partSize : attachment.file_size - partSize * (partCount - 1);
-						const presigned_upload_url = await this.storageService.getPresignedUploadPartURL({
-							bucket,
-							key: uploadKey,
-							uploadId,
-							partNumber,
-							contentLength: partContentLength,
-						});
-						const upload_url = applyUploadRelayDecision({
-							presignedUrl: presigned_upload_url,
+						const upload_url = await applyUploadRelayDecision({
+							presign: () =>
+								this.storageService.getPresignedUploadPartURL({
+									bucket,
+									key: uploadKey,
+									uploadId,
+									partNumber,
+									contentLength: partContentLength,
+								}),
 							bucket,
 							key: uploadKey,
 							relayDecision: uploadRelayDecision,
@@ -278,6 +325,7 @@ export class AttachmentUploadService {
 
 	async completeMultipartAttachmentUploads({
 		userId,
+		viewer,
 		channelId,
 		clientIp,
 		uploads,
@@ -285,7 +333,8 @@ export class AttachmentUploadService {
 		if (!Config.presignedAttachmentUploadsEnabled) {
 			throw new FeatureTemporarilyDisabledError();
 		}
-		const {maxFileSize} = await this.getUploadPermissionAndLimit({userId, channelId, actor: 'member'});
+		const {maxFileSize, assertCanAttachFiles} = await this.prepareFormDataUpload({userId, viewer, channelId});
+		await assertCanAttachFiles();
 		const bucket = Config.s3.buckets.uploads;
 		return Promise.all(
 			uploads.map(async ({upload_filename, upload_id}, index) => {
@@ -348,6 +397,7 @@ export class AttachmentUploadService {
 
 	async deleteAttachment({
 		userId,
+		viewer,
 		channelId,
 		messageId,
 		attachmentId,
@@ -356,6 +406,7 @@ export class AttachmentUploadService {
 		const {channel, guild} = await this.messageInteractionService.authService.getChannelAuthenticated({
 			userId,
 			channelId,
+			viewer,
 		});
 		if (isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
 			throw new FeatureTemporarilyDisabledError();
@@ -379,27 +430,53 @@ export class AttachmentUploadService {
 		if (willBeEmpty) {
 			await this.messageService.deletion.deleteMessage({
 				userId,
+				viewer,
 				channelId,
 				messageId,
 				requestCache,
 			});
 			return;
 		}
-		const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
-		await this.storageService.deleteObject(Config.s3.buckets.cdn, cdnKey);
-		if (Config.bunny.purgeEnabled) {
+		const updatedMessage = await this.messageService.writeLock.withFreshMessage(channelId, messageId, async (fresh) => {
+			if (!fresh || fresh.authorId !== userId) {
+				throw new UnknownMessageError();
+			}
+			const freshAttachment = fresh.attachments.find((a: Attachment) => a.id === attachmentId);
+			if (!freshAttachment) {
+				throw new UnknownMessageError();
+			}
+			const updatedAttachments = fresh.attachments.filter((a: Attachment) => a.id !== attachmentId);
+			if (updatedAttachments.length === 0 && isMessageEmpty(fresh, true)) {
+				return null;
+			}
+			const updatedRowData = {
+				...fresh.toRow(),
+				edited_timestamp: new Date(),
+				attachments:
+					updatedAttachments.length > 0 ? updatedAttachments.map((a: Attachment) => a.toMessageAttachment()) : null,
+			};
+			return this.messageService.crosspostPropagation.withPublishedEditBudget({fresh, actor: 'author'}, () =>
+				this.channelRepository.messages.upsertMessage(updatedRowData, fresh.toRow()),
+			);
+		});
+		if (!updatedMessage) {
+			await this.messageService.deletion.deleteMessage({
+				userId,
+				viewer,
+				channelId,
+				messageId,
+				requestCache,
+			});
+			return;
+		}
+		if (!isCrosspostCopy(updatedMessage)) {
+			const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
+			await this.storageService.deleteObject(Config.s3.buckets.cdn, cdnKey);
 			const cdnUrl = makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
 			await this.purgeQueue.addUrls([cdnUrl]);
 		}
-		const updatedAttachments = message.attachments.filter((a: Attachment) => a.id !== attachmentId);
-		const updatedRowData = {
-			...message.toRow(),
-			edited_timestamp: new Date(),
-			attachments:
-				updatedAttachments.length > 0 ? updatedAttachments.map((a: Attachment) => a.toMessageAttachment()) : null,
-		};
-		const updatedMessage = await this.channelRepository.messages.upsertMessage(updatedRowData, message.toRow());
-		await this.messageInteractionService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+		await dispatchMessageUpdateBroadcast({gatewayService: this.gatewayService, channel, message: updatedMessage});
+		await this.messageService.crosspostPropagation.propagateEdit(updatedMessage);
 	}
 
 	async purgeChannelAttachments(channel: Channel): Promise<void> {
@@ -422,70 +499,68 @@ export class AttachmentUploadService {
 		}
 	}
 
-	private async getUploadPermissionAndLimit({
+	async prepareFormDataUpload({
 		userId,
+		viewer,
 		channelId,
-		actor,
-	}: {
-		userId: UserID;
-		channelId: ChannelID;
-		actor: UploadActor;
-	}): Promise<{
-		maxFileSize: number;
-	}> {
-		const {channel, guild} =
+		actor = 'member',
+	}: FormDataUploadTarget): Promise<FormDataUpload> {
+		const {channel, guild, assertCanAttachFiles} =
 			actor === 'webhook'
 				? await this.getWebhookUploadChannel(channelId)
-				: await this.getMemberUploadChannel({userId, channelId});
-		if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type)) {
+				: await this.getMemberUploadChannel({userId, viewer, channelId});
+		if (!TEXT_BASED_CHANNEL_TYPES.has(channel.type) && !THREAD_FEATURE_CHANNEL_TYPES.has(channel.type)) {
 			throw new CannotSendMessageToNonTextChannelError();
 		}
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const fallbackMaxSize = ATTACHMENT_MAX_SIZE_NON_PREMIUM;
-		const ctx = createLimitMatchContext({user, guildFeatures: guild?.features ?? null});
-		const resolvedMaxFileSize = Math.floor(
-			resolveLimitSafe(this.limitConfigService.getConfigSnapshot(), ctx, 'max_attachment_file_size', fallbackMaxSize),
-		);
-		const maxFileSize = user.isBot ? Math.min(resolvedMaxFileSize, ATTACHMENT_MAX_SIZE_BOT) : resolvedMaxFileSize;
-		return {maxFileSize};
+		const maxFileSize = resolveAttachmentMaxFileSize(this.limitConfigService.getConfigSnapshot(), {
+			user,
+			guildFeatures: guild?.features ?? null,
+		});
+		return {maxFileSize, assertCanAttachFiles};
 	}
 
-	private async getMemberUploadChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<{
-		channel: Channel;
-		guild: GuildResponse | null;
-	}> {
+	private async getMemberUploadChannel({
+		userId,
+		viewer,
+		channelId,
+	}: {
+		userId: UserID;
+		viewer: ThreadViewer;
+		channelId: ChannelID;
+	}): Promise<UploadChannel> {
 		const {channel, guild, checkPermission, member} =
 			await this.messageInteractionService.authService.getChannelAuthenticated({
 				userId,
 				channelId,
+				viewer,
 			});
-		if (guild) {
-			await checkPermission(Permissions.SEND_MESSAGES | Permissions.ATTACH_FILES);
-			assertGuildMemberCanCommunicate(member);
-		}
-		return {channel, guild};
+		const assertCanAttachFiles = async () => {
+			if (guild) {
+				await checkPermission(Permissions.SEND_MESSAGES | Permissions.ATTACH_FILES);
+				assertGuildMemberCanCommunicate(member);
+			}
+		};
+		return {channel, guild, assertCanAttachFiles};
 	}
 
-	private async getWebhookUploadChannel(channelId: ChannelID): Promise<{
-		channel: Channel;
-		guild: GuildResponse | null;
-	}> {
+	private async getWebhookUploadChannel(channelId: ChannelID): Promise<UploadChannel> {
 		const channel = await this.channelRepository.channelData.findUnique(channelId);
 		if (!channel) {
 			throw new UnknownChannelError();
 		}
 		if (!channel.guildId) {
-			return {channel, guild: null};
+			return {channel, guild: null, assertCanAttachFiles: async () => {}};
 		}
 		const guild = await this.gatewayService.getGuildData({
 			guildId: channel.guildId,
 			userId: SYSTEM_USER_ID,
 			skipMembershipCheck: true,
 		});
-		return {channel, guild};
+		return {channel, guild, assertCanAttachFiles: async () => {}};
 	}
 }
 

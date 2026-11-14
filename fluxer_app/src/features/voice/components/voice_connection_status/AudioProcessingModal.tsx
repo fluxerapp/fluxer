@@ -4,8 +4,6 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
-import {RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR, Slider} from '@app/features/ui/components/Slider';
-import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/components/slider/SliderResetIconButton';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
@@ -17,7 +15,10 @@ import {
 	getSelectedNoiseSuppressionChoice,
 	setNoiseSuppressionChoice,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionChoices';
-import {getNoiseSuppressionChoiceLabel} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionLabels';
+import {
+	getNoiseSuppressionChoiceLabel,
+	getNoiseSuppressionFallbackMessage,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionLabels';
 import {
 	VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR,
 	VOICE_DIRECT_INPUT_PROFILE_DESCRIPTOR,
@@ -26,6 +27,7 @@ import {
 	VOICE_NOISE_SUPPRESSION_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {getActiveVoiceProcessingMode, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
+import {CUSTOM_DESCRIPTOR_2 as CUSTOM_DESCRIPTOR} from '@app/features/voice/utils/VoiceSharedMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -38,11 +40,7 @@ const DIRECT_INPUT_OPTION_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Sends raw mic audio with no processing.',
 	comment: 'Description for the studio / direct-input option in the voice processing settings radio group.',
 });
-const CUSTOM_DESCRIPTOR = msg({
-	message: 'Custom',
-	comment: 'Voice input processing profile where the user configures processing manually.',
-	context: 'voice-processing-profile',
-});
+
 const TUNE_THE_PROCESSING_YOURSELF_DESCRIPTOR = msg({
 	message: 'Tune the processing yourself.',
 	comment: 'Description for the custom option in the voice processing settings radio group.',
@@ -63,21 +61,11 @@ const AUTO_GAIN_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Evens out your mic volume so you are not too quiet.',
 	comment: 'Description for the automatic gain control toggle in the voice processing settings.',
 });
-const DEEP_FILTER_STRENGTH_DESCRIPTOR = msg({
-	message: 'Suppression strength',
-	comment: 'Label for the DeepFilterNet3 noise suppression strength slider in the custom voice processing settings.',
-});
-const DEEP_FILTER_STRENGTH_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Higher values remove more noise but can affect speech texture.',
-	comment: 'Description for the DeepFilterNet3 noise suppression strength slider.',
-});
 export const AudioProcessingModal = observer(() => {
 	const {i18n} = useLingui();
 	const mode = getActiveVoiceProcessingMode(VoiceSettings);
-	const deepFilterEnabled = VoiceSettings.deepFilterNoiseSuppression;
-	const deepFilterNoiseReductionLevel = VoiceSettings.deepFilterNoiseSuppressionLevel;
-	const deepFilterDefaultNoiseReductionLevel = 80;
 	const noiseSuppressionChoice = getSelectedNoiseSuppressionChoice();
+	const noiseSuppressionFallbackMessage = getNoiseSuppressionFallbackMessage(i18n);
 	const modeOptions: Array<RadioOption<VoiceProcessingMode>> = [
 		{
 			value: 'voice',
@@ -123,6 +111,9 @@ export const AudioProcessingModal = observer(() => {
 						aria-label={i18n._(VOICE_PROCESSING_DESCRIPTOR)}
 						data-flx="voice.voice-connection-status.audio-processing-modal.radio-group.update"
 					/>
+					{mode === 'voice' && noiseSuppressionFallbackMessage && (
+						<p data-flx="voice.voice-connection-status.audio-processing-modal.p">{noiseSuppressionFallbackMessage}</p>
+					)}
 					{mode === 'custom' && (
 						<div
 							className={styles.nsOptions}
@@ -130,6 +121,7 @@ export const AudioProcessingModal = observer(() => {
 						>
 							<CompactComboboxRow<VoiceNoiseSuppressionBackend>
 								label={i18n._(VOICE_NOISE_SUPPRESSION_DESCRIPTOR)}
+								description={noiseSuppressionFallbackMessage}
 								value={noiseSuppressionChoice}
 								options={noiseSuppressionOptions}
 								onChange={setNoiseSuppressionChoice}
@@ -154,58 +146,6 @@ export const AudioProcessingModal = observer(() => {
 								compact
 								data-flx="voice.voice-connection-status.audio-processing-modal.switch.update--2"
 							/>
-							{deepFilterEnabled && (
-								<div
-									className={styles.nsSliderSection}
-									data-flx="voice.voice-connection-status.audio-processing-modal.ns-slider-section"
-								>
-									<div
-										className={styles.nsSliderTitleRow}
-										data-flx="voice.voice-connection-status.audio-processing-modal.ns-slider-title-row"
-									>
-										<div
-											className={styles.nsSliderLabel}
-											data-flx="voice.voice-connection-status.audio-processing-modal.ns-slider-label"
-										>
-											{i18n._(DEEP_FILTER_STRENGTH_DESCRIPTOR)}
-										</div>
-										<SliderResetIconButton
-											canReset={canResetSliderValue(
-												deepFilterNoiseReductionLevel,
-												deepFilterDefaultNoiseReductionLevel,
-											)}
-											onReset={() =>
-												VoiceSettingsCommands.update({
-													deepFilterNoiseSuppressionLevel: deepFilterDefaultNoiseReductionLevel,
-												})
-											}
-											ariaLabel={i18n._(RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR)}
-											dataFlx="voice.voice-connection-status.audio-processing-modal.reset-button.deep-filter-strength"
-											data-flx="voice.voice-connection-status.audio-processing-modal.slider-reset-icon-button"
-										/>
-									</div>
-									<div
-										className={styles.nsSliderLabel}
-										data-flx="voice.voice-connection-status.audio-processing-modal.ns-slider-description"
-									>
-										{i18n._(DEEP_FILTER_STRENGTH_DESCRIPTION_DESCRIPTOR)}
-									</div>
-									<Slider
-										defaultValue={deepFilterNoiseReductionLevel}
-										factoryDefaultValue={deepFilterDefaultNoiseReductionLevel}
-										value={deepFilterNoiseReductionLevel}
-										minValue={0}
-										maxValue={100}
-										step={1}
-										onValueChange={(value) => {
-											VoiceSettingsCommands.update({deepFilterNoiseSuppressionLevel: value});
-										}}
-										ariaLabel={i18n._(DEEP_FILTER_STRENGTH_DESCRIPTOR)}
-										ariaValueText={`${Math.round(deepFilterNoiseReductionLevel)}%`}
-										data-flx="voice.voice-connection-status.audio-processing-modal.deep-filter-strength-slider"
-									/>
-								</div>
-							)}
 						</div>
 					)}
 				</div>

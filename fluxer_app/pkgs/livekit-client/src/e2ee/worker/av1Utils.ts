@@ -25,10 +25,6 @@ type Av1EncryptionLayoutBase = Omit<Av1EncryptionLayout, 'buildAAD' | 'extractPr
 
 type Av1LayoutParser = (data: Uint8Array) => Av1EncryptionLayoutBase | undefined;
 
-function _sumRanges(ranges: Array<ByteRange>): number {
-	return ranges.reduce((sum, range) => sum + (range.end - range.start), 0);
-}
-
 function isValidRange(range: ByteRange, dataLength: number): boolean {
 	return range.start >= 0 && range.end >= range.start && range.end <= dataLength;
 }
@@ -79,20 +75,6 @@ function readLeb128(data: Uint8Array, offset: number): {value: number; length: n
 	}
 
 	return undefined;
-}
-
-const _leb128Buf = new Uint8Array(5);
-
-function _writeLeb128(value: number): Uint8Array {
-	if (!Number.isFinite(value) || value < 0) throw new Error(`Invalid leb128 value: ${value}`);
-	let v = value >>> 0;
-	let length = 0;
-	while (v >= 0x80) {
-		_leb128Buf[length++] = (v & 0x7f) | 0x80;
-		v >>>= 7;
-	}
-	_leb128Buf[length++] = v & 0x7f;
-	return _leb128Buf.slice(0, length);
 }
 
 function parseObuHeader(byte: number): {

@@ -1,8 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const {existsSync, readdirSync, readFileSync, statSync} = require('node:fs');
+const {
+	existsSync,
+	mkdirSync,
+	readdirSync,
+	readFileSync,
+	renameSync,
+	rmSync,
+	statSync,
+	writeFileSync,
+} = require('node:fs');
 const os = require('node:os');
-const {basename} = require('node:path');
+const {basename, dirname} = require('node:path');
 const {spawnSync} = require('node:child_process');
 const NATIVE_LOAD_ERROR_MARKER = Symbol.for('fluxer.nativeLoadError');
 const MAX_TEXT_LENGTH = 6000;
@@ -10,6 +19,9 @@ const MAX_DIRECTORY_ENTRIES = 80;
 const PREFLIGHT_CHILD_ENV = 'FLUXER_NATIVE_MODULE_PREFLIGHT_CHILD';
 const PROBE_TIMEOUT_ENV = 'FLUXER_NATIVE_PROBE_TIMEOUT_MS';
 const DEFAULT_PROBE_TIMEOUT_MS = 30000;
+const PROBE_CACHE_ENV = 'FLUXER_NATIVE_PROBE_CACHE_FILE';
+const PROBE_CACHE_VERSION = 2;
+const MAX_PROBE_CACHE_ENTRIES = 64;
 const PROBE_REACHED_REQUIRE_MARKER = '__fluxer_native_probe_reached_require__';
 const PROBE_SOURCE = `require('node:fs').writeSync(1, ${JSON.stringify(PROBE_REACHED_REQUIRE_MARKER)});require(process.argv[1]);`;
 
@@ -81,10 +93,16 @@ function formatFileDiagnostic(diagnostic) {
 function directoryDiagnostic(dirPath) {
 	if (!dirPath) return {path: null, ok: false, error: 'not resolved', entries: [], total: 0, omitted: 0};
 	try {
-		const entries = readdirSync(dirPath, {withFileTypes: true}).map((entry) => ({
-			name: entry.name,
-			type: entry.isDirectory() ? 'directory' : entry.isFile() ? 'file' : 'other',
-		}));
+		const entries = readdirSync(dirPath, {withFileTypes: true}).map((entry) => {
+			const name = entry.name;
+			let type = 'other';
+			if (entry.isDirectory()) {
+				type = 'directory';
+			} else if (entry.isFile()) {
+				type = 'file';
+			}
+			return {name, type};
+		});
 		entries.sort((a, b) => a.name.localeCompare(b.name));
 		const visible = entries.slice(0, MAX_DIRECTORY_ENTRIES);
 		return {
@@ -295,13 +313,14 @@ function windowsImportProbe(nativePath) {
 function dependencyProbe(nativePath) {
 	if (!nativePath || !existsSync(nativePath)) return null;
 	if (process.platform === 'win32') return windowsImportProbe(nativePath);
-	const command =
-		process.platform === 'linux'
-			? ['ldd', nativePath]
-			: process.platform === 'darwin'
-				? ['otool', '-L', nativePath]
-				: null;
-	if (!command) return null;
+	let command;
+	if (process.platform === 'linux') {
+		command = ['ldd', nativePath];
+	} else if (process.platform === 'darwin') {
+		command = ['otool', '-L', nativePath];
+	} else {
+		return null;
+	}
 	const [bin, ...args] = command;
 	const result = spawnSync(bin, args, {
 		encoding: 'utf8',
@@ -331,11 +350,14 @@ function dependencyProbe(nativePath) {
 
 function formatDependencyProbe(diagnostic) {
 	if (!diagnostic) return null;
-	const status = diagnostic.error
-		? `error=${diagnostic.error}`
-		: diagnostic.signal
-			? `signal=${diagnostic.signal}`
-			: `status=${diagnostic.status}`;
+	let status;
+	if (diagnostic.error) {
+		status = `error=${diagnostic.error}`;
+	} else if (diagnostic.signal) {
+		status = `signal=${diagnostic.signal}`;
+	} else {
+		status = `status=${diagnostic.status}`;
+	}
 	return [
 		`$ ${diagnostic.command.join(' ')}`,
 		status,
@@ -451,10 +473,10 @@ function createNativeLoadError({
 	return error;
 }
 
-function resolveProbeTimeoutMs(explicitTimeoutMs) {
+function resolveProbeTimeoutMs() {
 	const configured = Number.parseInt(process.env[PROBE_TIMEOUT_ENV] ?? '', 10);
 	if (Number.isFinite(configured) && configured > 0) return configured;
-	return explicitTimeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS;
+	return DEFAULT_PROBE_TIMEOUT_MS;
 }
 
 function probeReachedRequire(result) {
@@ -465,26 +487,123 @@ function stripProbeMarker(value) {
 	return typeof value === 'string' ? value.split(PROBE_REACHED_REQUIRE_MARKER).join('') : value;
 }
 
-function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skipNativeProbeEnv, timeoutMs}) {
+function nativeBinaryIdentity(nativePath) {
+	try {
+		const stat = statSync(nativePath);
+		return {
+			size: stat.size,
+			mtimeMs: stat.mtimeMs,
+			execPath: process.execPath,
+			runtime: process.versions.electron || process.versions.node,
+			arch: process.arch,
+		};
+	} catch {
+		return null;
+	}
+}
+
+function sameNativeBinaryIdentity(left, right) {
+	return (
+		left != null &&
+		right != null &&
+		left.size === right.size &&
+		left.mtimeMs === right.mtimeMs &&
+		left.execPath === right.execPath &&
+		left.runtime === right.runtime &&
+		left.arch === right.arch
+	);
+}
+
+function readProbeCache(cacheFile) {
+	try {
+		const parsed = JSON.parse(readFileSync(cacheFile, 'utf8'));
+		if (
+			parsed &&
+			parsed.version === PROBE_CACHE_VERSION &&
+			parsed.binaries &&
+			typeof parsed.binaries === 'object' &&
+			!Array.isArray(parsed.binaries)
+		) {
+			return parsed.binaries;
+		}
+	} catch {}
+	return {};
+}
+
+function probeCacheKey(nativePath) {
+	return `${process.execPath}\n${nativePath}`;
+}
+
+function probeCacheEntryStillInstalled(key, entry) {
+	const nativePath = key.slice(key.indexOf('\n') + 1);
+	return existsSync(entry.execPath) && existsSync(nativePath);
+}
+
+function hasCachedProbePass(nativePath) {
+	const cacheFile = process.env[PROBE_CACHE_ENV];
+	if (!cacheFile) return false;
+	const identity = nativeBinaryIdentity(nativePath);
+	return identity != null && sameNativeBinaryIdentity(readProbeCache(cacheFile)[probeCacheKey(nativePath)], identity);
+}
+
+function recordProbePass(nativePath) {
+	const cacheFile = process.env[PROBE_CACHE_ENV];
+	if (!cacheFile) return;
+	const identity = nativeBinaryIdentity(nativePath);
+	if (identity == null) return;
+	const key = probeCacheKey(nativePath);
+	const cached = readProbeCache(cacheFile);
+	if (sameNativeBinaryIdentity(cached[key], identity)) return;
+	const kept = Object.entries(cached).filter(
+		([cachedKey, entry]) =>
+			cachedKey !== key &&
+			entry &&
+			entry.runtime === identity.runtime &&
+			probeCacheEntryStillInstalled(cachedKey, entry),
+	);
+	const binaries = Object.fromEntries(kept.slice(-(MAX_PROBE_CACHE_ENTRIES - 1)));
+	binaries[key] = identity;
+	const temporary = `${cacheFile}.${process.pid}.${Date.now()}.tmp`;
+	try {
+		mkdirSync(dirname(cacheFile), {recursive: true});
+		writeFileSync(temporary, JSON.stringify({version: PROBE_CACHE_VERSION, binaries}));
+		renameSync(temporary, cacheFile);
+	} catch {
+		try {
+			rmSync(temporary, {force: true});
+		} catch {}
+	}
+}
+
+function probeNativeBinary({moduleName, nativePath, nativeRoot, packageDir, skipNativeProbeEnv}) {
 	if (!skipNativeProbeEnv || process.env[skipNativeProbeEnv] === '1') {
 		return null;
 	}
 	if (process.env[PREFLIGHT_CHILD_ENV] === '1') {
 		return null;
 	}
+	if (hasCachedProbePass(nativePath)) {
+		return null;
+	}
 	const result = spawnSync(process.execPath, ['-e', PROBE_SOURCE, nativePath], {
 		env: {...process.env, ELECTRON_RUN_AS_NODE: '1', [skipNativeProbeEnv]: '1'},
 		encoding: 'utf8',
 		stdio: ['ignore', 'pipe', 'pipe'],
-		timeout: resolveProbeTimeoutMs(timeoutMs),
+		timeout: resolveProbeTimeoutMs(),
 	});
-	if (result.status === 0) return null;
+	if (result.status === 0) {
+		recordProbePass(nativePath);
+		return null;
+	}
 	if (!probeReachedRequire(result)) return null;
-	const reason = result.error
-		? result.error.message
-		: result.signal
-			? `safety probe terminated by signal ${result.signal}`
-			: `safety probe exited with code ${result.status}`;
+	let reason;
+	if (result.error) {
+		reason = result.error.message;
+	} else if (result.signal) {
+		reason = `safety probe terminated by signal ${result.signal}`;
+	} else {
+		reason = `safety probe exited with code ${result.status}`;
+	}
 	const probeStdout = trimText(stripProbeMarker(result.stdout));
 	return createNativeLoadError({
 		moduleName,
@@ -521,7 +640,9 @@ function loadNativeBinding({moduleName, nativePath, nativeRoot, packageDir, skip
 		return {binding: null, loadError: nativeProbeError};
 	}
 	try {
-		return {binding: require(nativePath), loadError: null};
+		const binding = require(nativePath);
+		recordProbePass(nativePath);
+		return {binding, loadError: null};
 	} catch (error) {
 		return {
 			binding: null,
@@ -538,11 +659,4 @@ function loadNativeBinding({moduleName, nativePath, nativeRoot, packageDir, skip
 	}
 }
 
-module.exports = {
-	collectNativeDiagnostics,
-	createNativeLoadError,
-	formatNativeDiagnostics,
-	isNativeLoadError,
-	loadNativeBinding,
-	probeNativeBinary,
-};
+module.exports = {createNativeLoadError, loadNativeBinding};

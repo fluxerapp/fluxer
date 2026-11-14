@@ -3,11 +3,8 @@
 import errorFallbackStyles from '@app/features/app/components/ErrorFallback.module.css';
 import {NativeTitlebar} from '@app/features/app/components/layout/NativeTitlebar';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
-import AppStorage, {PRESERVED_RESET_STORAGE_KEYS} from '@app/features/platform/state/PersistentStorage';
-import {ensureLatestAssets} from '@app/features/platform/types/Versioning';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
-import {copy as copyText} from '@app/features/ui/commands/TextCopyCommands';
 import {FluxerIcon} from '@app/features/ui/components/icons/FluxerIcon';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
@@ -40,14 +37,24 @@ function getStackTraceText(error: Error | undefined, unknownErrorLabel: string):
 	return `${name}: ${message}`;
 }
 
+async function ensureLatestAssets(): Promise<{updateFound: boolean}> {
+	const {ensureLatestAssets: ensure} = await import('@app/features/platform/types/Versioning');
+	return await ensure({force: true});
+}
+
+async function resetAppDataExceptDrafts(): Promise<void> {
+	const {ResetClientStateReason, resetClientState} = await import('@app/features/platform/state/ResetClientState');
+	await resetClientState({reason: ResetClientStateReason.RESET_APP_DATA, keepDrafts: true});
+}
+
 async function cleanupRuntimeStateOnCrash(): Promise<void> {
 	LayerManager.closeAll();
-	const [{default: GatewayConnection}, {default: MediaEngine}] = await Promise.all([
-		import('@app/features/gateway/transport/GatewayConnection'),
-		import('@app/features/voice/engine/MediaEngineFacade'),
+	const [{default: GatewaySessions}, {default: VoiceRuntime}] = await Promise.all([
+		import('@app/features/gateway/transport/GatewaySessionPool'),
+		import('@app/features/voice/engine/VoiceRuntime'),
 	]);
-	GatewayConnection.logout();
-	MediaEngine.cleanup();
+	GatewaySessions.foregroundConnection.logout();
+	VoiceRuntime.cleanup();
 }
 
 export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
@@ -68,7 +75,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 		let isMounted = true;
 		const run = async () => {
 			try {
-				const {updateFound} = await ensureLatestAssets({force: true});
+				const {updateFound} = await ensureLatestAssets();
 				if (isMounted) {
 					setUpdateAvailable(updateFound);
 				}
@@ -88,7 +95,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 	const handleUpdate = useCallback(async () => {
 		setIsUpdating(true);
 		try {
-			const {updateFound} = await ensureLatestAssets({force: true});
+			const {updateFound} = await ensureLatestAssets();
 			if (!updateFound) {
 				setIsUpdating(false);
 				window.location.reload();
@@ -104,11 +111,22 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 		}
 		setIsCopyingStackTrace(true);
 		try {
-			await copyText(i18n, stackTraceText);
+			const {copy} = await import('@app/features/ui/commands/TextCopyCommands');
+			await copy(i18n, stackTraceText);
+		} catch (error) {
+			logger.error('Failed to copy the stack trace:', error);
 		} finally {
 			setIsCopyingStackTrace(false);
 		}
 	}, [stackTraceText]);
+	let description = <Trans>Something went wrong and the app crashed. Try reloading or resetting the app.</Trans>;
+	if (checkingForUpdates) {
+		description = <Trans>The app has crashed. Checking for updates that might fix this issue…</Trans>;
+	} else if (updateAvailable) {
+		description = (
+			<Trans>Something went wrong and the app crashed. An update is available that may fix this issue.</Trans>
+		);
+	}
 	return (
 		<div className={errorFallbackStyles.errorFallbackContainer} data-flx="app.error-fallback.div">
 			{isNative && !useSystemTitleBar && (
@@ -120,13 +138,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 					<Trans>The app crashed</Trans>
 				</h1>
 				<p className={errorFallbackStyles.errorFallbackDescription} data-flx="app.error-fallback.p">
-					{checkingForUpdates ? (
-						<Trans>The app has crashed. Checking for updates that might fix this issue…</Trans>
-					) : updateAvailable ? (
-						<Trans>Something went wrong and the app crashed. An update is available that may fix this issue.</Trans>
-					) : (
-						<Trans>Something went wrong and the app crashed. Try reloading or resetting the app.</Trans>
-					)}
+					{description}
 				</p>
 			</div>
 			<div className={errorFallbackStyles.errorFallbackActions} data-flx="app.error-fallback.div--3">
@@ -154,8 +166,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 				)}
 				<Button
 					onClick={() => {
-						AppStorage.clearExcept(PRESERVED_RESET_STORAGE_KEYS);
-						location.reload();
+						void resetAppDataExceptDrafts().finally(() => location.reload());
 					}}
 					variant="danger"
 					disabled={checkingForUpdates}

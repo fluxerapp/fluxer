@@ -2,6 +2,16 @@
 
 import type {StaticI18nConfig} from '@fluxer/i18n/src/runtime/CreateStaticI18n';
 
+function hasStaticLocale<TKey extends string, TValue, TVariables>(
+	config: StaticI18nConfig<TKey, TValue, TVariables>,
+	normalizedLocale: string,
+): boolean {
+	return (
+		normalizedLocale === config.defaultLocale ||
+		(Object.hasOwn(config.localeMessages, normalizedLocale) && config.localeMessages[normalizedLocale] !== undefined)
+	);
+}
+
 export function getEffectiveStaticLocale<TKey extends string, TValue, TVariables>(
 	config: StaticI18nConfig<TKey, TValue, TVariables>,
 	locale: string | null | undefined,
@@ -9,11 +19,8 @@ export function getEffectiveStaticLocale<TKey extends string, TValue, TVariables
 	if (!locale) {
 		return config.defaultLocale;
 	}
-	const normalizedLocale = config.normalizeLocale?.(locale) ?? locale;
-	if (normalizedLocale === config.defaultLocale) {
-		return config.defaultLocale;
-	}
-	if (config.localeMessages[normalizedLocale] === undefined) {
+	const normalizedLocale = locale;
+	if (!hasStaticLocale(config, normalizedLocale)) {
 		config.onWarning?.(`Unsupported locale, falling back to ${config.defaultLocale}: ${locale}`);
 		return config.defaultLocale;
 	}

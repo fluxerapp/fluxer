@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
+import {allocateOperation, appendDiagnostic, queueCommand} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
 import type {
 	VoiceEngineV2SourceLifecycleRemovedEvent,
 	VoiceEngineV2SourceLifecycleTransitionedEvent,
-} from '../../protocol/events';
-import type {VoiceEngineV2DiagnosticEntry} from '../../protocol/types';
-import type {SourceFault, SourceLifecycleState} from '../../source_isolation/SourceLifecycleState';
-import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '../state';
-import {allocateOperation, appendDiagnostic, queueCommand} from './_helpers';
+} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {VoiceEngineV2DiagnosticEntry} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {
+	SourceFault,
+	SourceLifecycleState,
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
 
 const SOURCE_LIFECYCLE_DIAGNOSTICS_CODE = 'sourceFailed';
 

@@ -1,0 +1,660 @@
+%% SPDX-License-Identifier: AGPL-3.0-or-later
+
+-module(guild_handoff_freeze).
+-typing([eqwalizer]).
+
+-export([transfer/5, repair/3, is_frozen/1, shard_pid/2, ensure_absent/3]).
+
+-define(SHARD_TABLE, guild_manager_shard_table).
+-define(DRAIN_POLL_MS, 10).
+
+-type guild_id() :: integer().
+-type hook() :: fun(() -> ok | {error, term()}).
+-type started_hook() :: fun((pid()) -> ok | {error, term()}).
+-type opts() :: #{
+    suspend_timeout => pos_integer(),
+    export_timeout => pos_integer(),
+    start_timeout => pos_integer(),
+    stop_timeout => pos_integer(),
+    barrier_timeout => pos_integer(),
+    rpc_timeout => pos_integer(),
+    guard_timeout => pos_integer(),
+    freeze_budget => pos_integer(),
+    commit_timeout => pos_integer(),
+    repair_timeout => pos_integer(),
+    forward_rounds => non_neg_integer(),
+    transfer_sessions => boolean(),
+    max_heap_words => non_neg_integer(),
+    measure => boolean(),
+    before_start => hook(),
+    after_start => started_hook(),
+    on_abort => hook()
+}.
+-type report() :: map().
+-type result() :: {ok, report()} | {error, report()}.
+
+-export_type([guild_id/0, opts/0, report/0, result/0]).
+
+-spec default_opts() -> opts().
+default_opts() ->
+    #{
+        suspend_timeout => 30000,
+        export_timeout => 120000,
+        start_timeout => 120000,
+        stop_timeout => 60000,
+        barrier_timeout => 30000,
+        rpc_timeout => 10000,
+        guard_timeout => 10000,
+        freeze_budget => 90000,
+        commit_timeout => 300000,
+        repair_timeout => 30000,
+        forward_rounds => 3,
+        transfer_sessions => true,
+        max_heap_words => 0,
+        measure => false,
+        before_start => fun() -> ok end,
+        after_start => fun(_Pid) -> ok end,
+        on_abort => fun() -> ok end
+    }.
+
+-spec transfer(guild_id(), pid(), pid(), node(), opts()) -> result().
+transfer(GuildId, SrcPid, SrcShard, TargetNode, Opts0) ->
+    Opts = maps:merge(default_opts(), Opts0),
+    Parent = self(),
+    Tag = make_ref(),
+    Notify = fun(Event) ->
+        Parent ! {Tag, Event},
+        ok
+    end,
+    {Pid, Ref} = spawn_monitor(fun() ->
+        process_flag(trap_exit, true),
+        ok = maybe_limit_heap(maps:get(max_heap_words, Opts)),
+        Parent ! {Tag, run(GuildId, SrcPid, SrcShard, TargetNode, Opts, Notify)}
+    end),
+    await(GuildId, TargetNode, {Pid, Ref, Tag}, false, Opts).
+
+-spec await(guild_id(), node(), {pid(), reference(), reference()}, boolean(), opts()) ->
+    result().
+await(GuildId, TargetNode, {Pid, Ref, Tag} = Run, Committed, Opts) ->
+    receive
+        {Tag, committed} ->
+            await(GuildId, TargetNode, Run, true, Opts);
+        {Tag, Result} ->
+            erlang:demonitor(Ref, [flush]),
+            Result;
+        {'DOWN', Ref, process, Pid, Reason} ->
+            crashed(GuildId, TargetNode, Reason, Committed, Opts)
+    after infinity ->
+        erlang:error(unreachable)
+    end.
+
+-spec crashed(guild_id(), node(), term(), boolean(), opts()) -> result().
+crashed(_GuildId, _TargetNode, Reason, true, _Opts) ->
+    {error, #{phase => crashed, reason => Reason, committed => true}};
+crashed(GuildId, TargetNode, Reason, false, Opts) ->
+    Routes = safe_hook(maps:get(on_abort, Opts)),
+    Target = ensure_absent(GuildId, TargetNode, Opts),
+    {error, #{
+        phase => crashed, reason => Reason, abort => #{routes => Routes, target => Target}
+    }}.
+
+-spec repair(guild_id(), pid(), opts()) -> ok | {error, term()}.
+repair(GuildId, SrcPid, Opts0) ->
+    Opts = maps:merge(default_opts(), Opts0),
+    maybe
+        ok ?= await_thawed(SrcPid, now_ms() + maps:get(guard_timeout, Opts)),
+        {ok, Freeze} ?= guild_handoff_freeze_remote:freeze(SrcPid, Opts),
+        RepairTimeout = maps:get(repair_timeout, Opts),
+        Reload = guild_handoff_freeze_remote:reload_frozen(GuildId, SrcPid, RepairTimeout),
+        repaired(Reload, guild_handoff_freeze_remote:thaw(Freeze, Opts))
+    end.
+
+-spec await_thawed(pid(), integer()) -> ok | {error, term()}.
+await_thawed(SrcPid, Deadline) ->
+    case is_frozen(SrcPid) of
+        false ->
+            ok;
+        true ->
+            retry_thawed(now_ms() < Deadline, SrcPid, Deadline);
+        {error, _} = Error ->
+            Error
+    end.
+
+-spec retry_thawed(boolean(), pid(), integer()) -> ok | {error, term()}.
+retry_thawed(true, SrcPid, Deadline) ->
+    timer:sleep(?DRAIN_POLL_MS),
+    await_thawed(SrcPid, Deadline);
+retry_thawed(false, _SrcPid, _Deadline) ->
+    {error, still_frozen}.
+
+-spec repaired(ok | {error, term()}, ok | {error, term()}) -> ok | {error, term()}.
+repaired(ok, ok) ->
+    ok;
+repaired(Reload, Thaw) ->
+    {error, #{reload => Reload, thaw => Thaw}}.
+
+-spec is_frozen(pid()) -> boolean() | {error, term()}.
+is_frozen(Pid) ->
+    Args = [Pid, current_function],
+    case guild_handoff_freeze_remote:rpc_call(node(Pid), erlang, process_info, Args, 10000) of
+        {ok, {current_function, {sys, _, _}}} -> true;
+        {ok, {current_function, _}} -> false;
+        {ok, undefined} -> {error, noproc};
+        {ok, Other} -> {error, {unexpected, Other}};
+        {error, _} = Error -> Error
+    end.
+
+-spec shard_pid(guild_id(), node()) -> {ok, pid()} | {error, term()}.
+shard_pid(GuildId, Node) ->
+    Args = [?SHARD_TABLE, shard_count],
+    case guild_handoff_freeze_remote:rpc_call(Node, ets, lookup, Args, 10000) of
+        {ok, [{shard_count, Count}]} when is_integer(Count), Count > 0 ->
+            Index = guild_manager_shards:select_shard(GuildId, Count),
+            indexed_shard_pid(Node, Index);
+        {ok, _} ->
+            {error, shard_table_unavailable};
+        {error, _} = Error ->
+            Error
+    end.
+
+-spec ensure_absent(guild_id(), node(), opts()) -> ok | {error, term()}.
+ensure_absent(GuildId, Node, Opts0) ->
+    Opts = maps:merge(default_opts(), Opts0),
+    StopTimeout = maps:get(start_timeout, Opts) + maps:get(stop_timeout, Opts),
+    case shard_pid(GuildId, Node) of
+        {ok, Shard} ->
+            _ = guild_handoff_freeze_remote:safe_call(
+                Shard, {stop_guild, GuildId}, StopTimeout
+            ),
+            RpcTimeout = maps:get(rpc_timeout, Opts),
+            absent(guild_handoff_freeze_remote:safe_call(Shard, {lookup, GuildId}, RpcTimeout));
+        {error, _} = Error ->
+            Error
+    end.
+
+-spec absent(term()) -> ok | {error, term()}.
+absent({error, not_found}) -> ok;
+absent({ok, Pid}) when is_pid(Pid) -> {error, {still_running, Pid}};
+absent(Other) -> {error, {unverified, Other}}.
+
+-spec run(guild_id(), pid(), pid(), node(), opts(), fun((committed) -> ok)) -> result().
+run(GuildId, SrcPid, SrcShard, TargetNode, Opts, Notify) ->
+    Ctx = #{
+        notify => Notify,
+        guild_id => GuildId,
+        src => SrcPid,
+        src_shard => SrcShard,
+        target => TargetNode,
+        opts => Opts,
+        t0 => now_ms(),
+        report => #{source => SrcPid, target_node => TargetNode}
+    },
+    case is_frozen(SrcPid) of
+        false -> run_freeze(Ctx);
+        true -> fail(preflight, already_frozen, Ctx);
+        {error, Reason} -> fail(preflight, Reason, Ctx)
+    end.
+
+-spec run_freeze(map()) -> result().
+run_freeze(#{src := SrcPid, opts := Opts} = Ctx) ->
+    T0 = now_ms(),
+    case guild_handoff_freeze_remote:freeze(SrcPid, Opts) of
+        {ok, Freeze} ->
+            Ctx1 = put_ms(suspend_ms, T0, Ctx#{freeze => Freeze, frozen_at => now_ms()}),
+            run_export(Ctx1);
+        {error, Reason} ->
+            fail(freeze, Reason, Ctx)
+    end.
+
+-spec run_export(map()) -> result().
+run_export(#{src := SrcPid, opts := Opts} = Ctx) ->
+    T0 = now_ms(),
+    case guild_handoff_freeze_remote:export(SrcPid, Opts) of
+        {ok, Export} ->
+            Ctx1 = put_ms(export_ms, T0, Ctx),
+            Ctx2 = put_report(export_measure, measure_export(Export, Opts), Ctx1),
+            run_before_start(Export, Ctx2);
+        {error, Reason} ->
+            abort(export, Reason, Ctx)
+    end.
+
+-spec run_before_start(map(), map()) -> result().
+run_before_start(Export, #{opts := Opts} = Ctx) ->
+    case {within_budget(Ctx), guard_held(Ctx)} of
+        {true, ok} -> run_hook(before_start, maps:get(before_start, Opts), Export, Ctx);
+        {false, _} -> abort(before_start, freeze_budget_exceeded, Ctx);
+        {true, {error, Reason}} -> abort(before_start, Reason, Ctx)
+    end.
+
+-spec run_hook(before_start, hook(), map(), map()) -> result().
+run_hook(Phase, Hook, Export, Ctx) ->
+    case safe_hook(Hook) of
+        ok -> run_start(Export, Ctx#{routed => true});
+        {error, Reason} -> abort(Phase, Reason, Ctx#{routed => true})
+    end.
+
+-spec run_start(map(), map()) -> result().
+run_start(Export, #{guild_id := GuildId, target := Target, opts := Opts} = Ctx) ->
+    T0 = now_ms(),
+    Ctx1 = Ctx#{start_sent => true},
+    case start_on(GuildId, Target, Export, maps:get(start_timeout, Opts)) of
+        {ok, NewPid} ->
+            run_after_start(NewPid, put_ms(start_ms, T0, Ctx1#{new_pid => NewPid}));
+        {error, Reason} ->
+            abort(start, Reason, put_ms(start_ms, T0, Ctx1))
+    end.
+
+-spec run_after_start(pid(), map()) -> result().
+run_after_start(NewPid, #{opts := Opts} = Ctx) ->
+    case guard_held(Ctx) of
+        ok -> run_route(NewPid, maps:get(after_start, Opts), Ctx#{exposed => true});
+        {error, Reason} -> abort(after_start, Reason, Ctx)
+    end.
+
+-spec run_route(pid(), started_hook(), map()) -> result().
+run_route(NewPid, Hook, Ctx) ->
+    T0 = now_ms(),
+    case safe_started_hook(Hook, NewPid) of
+        ok -> run_commit(NewPid, put_ms(route_ms, T0, Ctx));
+        {error, Reason} -> abort(after_start, Reason, put_ms(route_ms, T0, Ctx))
+    end.
+
+-spec run_commit(pid(), map()) -> result().
+run_commit(NewPid, #{src := SrcPid, opts := Opts} = Ctx) ->
+    case forward_rounds(SrcPid, NewPid, maps:get(forward_rounds, Opts), 0, [], Opts) of
+        {ok, Seen, Rounds} ->
+            commit_final(NewPid, Seen, rounds_report(Rounds, Ctx));
+        {error, {capture_failed, noproc}, _Seen, Rounds} ->
+            source_gone(NewPid, rounds_report(Rounds, Ctx));
+        {error, {capture_failed, _} = Reason, Seen, Rounds} ->
+            Ctx1 = put_report(rounds_stopped, Reason, rounds_report(Rounds, Ctx)),
+            commit_final(NewPid, Seen, Ctx1);
+        {error, Reason, _Seen, Rounds} ->
+            abort(forward, Reason, rounds_report(Rounds, Ctx))
+    end.
+
+-spec rounds_report([map()], map()) -> map().
+rounds_report(Rounds, Ctx) ->
+    Forwarded = lists:foldl(fun(Round, Acc) -> Acc + forwarded_count(Round) end, 0, Rounds),
+    add_forwarded(Forwarded, put_report(rounds, lists:reverse(Rounds), Ctx)).
+
+-spec add_forwarded(non_neg_integer(), map()) -> map().
+add_forwarded(Count, Ctx) ->
+    Ctx#{forwarded => maps:get(forwarded, Ctx, 0) + Count}.
+
+-spec forwarded_count(map()) -> non_neg_integer().
+forwarded_count(Stats) ->
+    lists:foldl(
+        fun(Kind, Acc) -> add_count(maps:get(Kind, Stats, 0), Acc) end,
+        0,
+        [call, cast, presence_repair, voice_cleanup]
+    ).
+
+-spec add_count(term(), non_neg_integer()) -> non_neg_integer().
+add_count(Count, Acc) when is_integer(Count), Count > 0 -> Acc + Count;
+add_count(_Count, Acc) -> Acc.
+
+-spec commit_final(pid(), non_neg_integer(), map()) -> result().
+commit_final(NewPid, Seen, #{src := SrcPid} = Ctx) ->
+    case {target_exit(NewPid), guard_held(Ctx), is_frozen(SrcPid)} of
+        {{exited, Reason}, _, _} ->
+            abort(target_died, Reason, Ctx);
+        {alive, {error, Reason}, _} ->
+            abort(final_capture, Reason, Ctx);
+        {alive, ok, true} ->
+            stop_and_drain(NewPid, Seen, Ctx);
+        {alive, ok, {error, noproc}} ->
+            source_gone(NewPid, Ctx);
+        {alive, ok, Frozen} ->
+            abort(final_capture, {not_frozen, Frozen}, Ctx)
+    end.
+
+-spec guard_held(map()) -> ok | {error, term()}.
+guard_held(#{freeze := #{guard := Guard, guard_ref := Ref}}) ->
+    receive
+        {'DOWN', Ref, process, Guard, Reason} -> {error, {guard_lost, Reason}}
+    after 0 -> ok
+    end.
+
+-spec target_exit(pid()) -> alive | {exited, term()}.
+target_exit(NewPid) ->
+    receive
+        {'EXIT', NewPid, Reason} -> {exited, Reason}
+    after 0 -> alive
+    end.
+
+-spec source_gone(pid(), map()) -> result().
+source_gone(NewPid, #{src := SrcPid, opts := Opts} = Ctx) ->
+    case {target_exit(NewPid), guild_handoff_freeze_remote:source_alive(SrcPid, Opts)} of
+        {alive, false} -> finish(NewPid, put_report(source_gone, true, Ctx));
+        Other -> abort(source_gone, {source_state, Other}, Ctx)
+    end.
+
+-spec stop_and_drain(pid(), non_neg_integer(), map()) -> result().
+stop_and_drain(NewPid, Seen, #{src := SrcPid, opts := Opts} = Ctx) ->
+    case guild_handoff_freeze_remote:capture(SrcPid, Seen, Opts) of
+        {ok, _Len, New} ->
+            start_drain(NewPid, Seen, New, Ctx);
+        {error, noproc} ->
+            source_gone(NewPid, Ctx);
+        {error, Reason} ->
+            abort(final_capture, Reason, Ctx)
+    end.
+
+-spec start_drain(pid(), non_neg_integer(), [term()], map()) -> result().
+start_drain(NewPid, Seen, New, Ctx) ->
+    Stats = forward(New, NewPid, final),
+    ok = commit(NewPid, Ctx),
+    Parent = self(),
+    Tag = make_ref(),
+    {Pid, Ref} = spawn_monitor(fun() -> Parent ! {Tag, stop_source(Ctx)} end),
+    Drain = #{
+        stopper => {Pid, Ref, Tag},
+        stop => pending,
+        stats => Stats,
+        captures => 1,
+        t0 => now_ms()
+    },
+    drain(NewPid, Seen + length(New), Drain, Ctx).
+
+-spec commit(pid(), map()) -> ok.
+commit(NewPid, #{freeze := Freeze, notify := Notify}) ->
+    guild_handoff_freeze_remote:release_guard(Freeze),
+    unlink(NewPid),
+    receive
+        {'EXIT', NewPid, _Reason} -> ok
+    after 0 -> ok
+    end,
+    Notify(committed).
+
+-spec drain(pid(), non_neg_integer(), map(), map()) -> result().
+drain(NewPid, Seen, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
+    case guild_handoff_freeze_remote:capture(SrcPid, Seen, Opts) of
+        {ok, _Len, New} ->
+            Stats = merge_counts(maps:get(stats, Drain), forward(New, NewPid, final)),
+            Drain1 = Drain#{stats => Stats, captures => maps:get(captures, Drain) + 1},
+            drain_alive(NewPid, Seen + length(New), poll_stopper(Drain1, ?DRAIN_POLL_MS), Ctx);
+        {error, noproc} ->
+            drained(NewPid, poll_stopper(Drain, maps:get(stop_timeout, Opts)), Ctx);
+        {error, Reason} ->
+            Polled = poll_stopper(Drain, maps:get(stop_timeout, Opts)),
+            drain_unknown(NewPid, Seen, Reason, Polled, Ctx)
+    end.
+
+-spec drain_alive(pid(), non_neg_integer(), map(), map()) -> result().
+drain_alive(NewPid, Seen, #{stop := pending} = Drain, Ctx) ->
+    drain(NewPid, Seen, Drain, Ctx);
+drain_alive(NewPid, Seen, #{stop := ok} = Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
+    case now_ms() - maps:get(t0, Drain) > maps:get(stop_timeout, Opts) of
+        true -> exit(SrcPid, kill);
+        false -> timer:sleep(?DRAIN_POLL_MS)
+    end,
+    drain(NewPid, Seen, Drain, Ctx);
+drain_alive(NewPid, Seen, #{stop := Reason} = Drain, Ctx) ->
+    await_source(NewPid, Seen, Reason, Drain, Ctx).
+
+-spec drain_unknown(pid(), non_neg_integer(), term(), map(), map()) -> result().
+drain_unknown(NewPid, Seen, Reason, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
+    case guild_handoff_freeze_remote:source_alive(SrcPid, Opts) of
+        false ->
+            drained(NewPid, Drain, Ctx);
+        _ ->
+            await_source(
+                NewPid, Seen, {capture_failed, Reason, maps:get(stop, Drain)}, Drain, Ctx
+            )
+    end.
+
+-spec await_source(pid(), non_neg_integer(), term(), map(), map()) -> result().
+await_source(NewPid, Seen, Reason, Drain, #{opts := Opts} = Ctx) ->
+    case now_ms() - maps:get(t0, Drain) > maps:get(commit_timeout, Opts) of
+        true ->
+            stuck(NewPid, Reason, Drain, Ctx);
+        false ->
+            timer:sleep(?DRAIN_POLL_MS),
+            drain(NewPid, Seen, Drain, Ctx)
+    end.
+
+-spec stuck(pid(), term(), map(), map()) -> result().
+stuck(NewPid, Reason, Drain, Ctx) ->
+    Forwarded = maps:get(forwarded, Ctx, 0) + forwarded_count(maps:get(stats, Drain)),
+    Report = maps:get(report, Ctx),
+    {error, Report#{
+        phase => stop,
+        reason => Reason,
+        committed => true,
+        new_pid => NewPid,
+        forwarded => Forwarded,
+        total_ms => now_ms() - maps:get(t0, Ctx)
+    }}.
+
+-spec drained(pid(), map(), map()) -> result().
+drained(NewPid, Drain, Ctx) ->
+    Final = (maps:get(stats, Drain))#{
+        captures => maps:get(captures, Drain),
+        stop => maps:get(stop, Drain)
+    },
+    Ctx1 = put_report(stop_ms, now_ms() - maps:get(t0, Drain), Ctx),
+    finish(NewPid, put_report(final, Final, Ctx1)).
+
+-spec poll_stopper(map(), non_neg_integer()) -> map().
+poll_stopper(#{stop := pending, stopper := {Pid, Ref, Tag}} = Drain, Timeout) ->
+    receive
+        {Tag, Result} ->
+            erlang:demonitor(Ref, [flush]),
+            Drain#{stop => Result};
+        {'DOWN', Ref, process, Pid, Reason} ->
+            Drain#{stop => {error, {stopper_crashed, Reason}}}
+    after Timeout ->
+        Drain
+    end;
+poll_stopper(Drain, _Timeout) ->
+    Drain.
+
+-spec merge_counts(map(), map()) -> map().
+merge_counts(Left, Right) ->
+    maps:merge_with(fun(_Key, A, B) -> A + B end, Left, Right).
+
+-spec finish(pid(), map()) -> result().
+finish(NewPid, #{freeze := Freeze, frozen_at := FrozenAt} = Ctx) ->
+    guild_handoff_freeze_remote:release_guard(Freeze),
+    unlink(NewPid),
+    Report = maps:get(report, Ctx),
+    {ok, Report#{
+        new_pid => NewPid,
+        frozen_ms => now_ms() - FrozenAt,
+        total_ms => now_ms() - maps:get(t0, Ctx)
+    }}.
+
+-spec fail(atom(), term(), map()) -> result().
+fail(Phase, Reason, Ctx) ->
+    Report = maps:get(report, Ctx),
+    {error, Report#{phase => Phase, reason => Reason, total_ms => now_ms() - maps:get(t0, Ctx)}}.
+
+-spec abort(atom(), term(), map()) -> result().
+abort(Phase, Reason, #{opts := Opts} = Ctx) ->
+    Routes = abort_routes(Ctx, maps:get(on_abort, Opts)),
+    Target = abort_target(Ctx),
+    Thaw = guild_handoff_freeze_remote:thaw(maps:get(freeze, Ctx), Opts),
+    Report = maps:get(report, Ctx),
+    {error, Report#{
+        phase => Phase,
+        reason => Reason,
+        abort => #{
+            routes => Routes,
+            target => Target,
+            thaw => Thaw,
+            exposed => maps:get(exposed, Ctx, false),
+            forwarded => maps:get(forwarded, Ctx, 0)
+        },
+        total_ms => now_ms() - maps:get(t0, Ctx)
+    }}.
+
+-spec abort_routes(map(), hook()) -> ok | {error, term()} | skipped.
+abort_routes(#{routed := true}, Hook) ->
+    safe_hook(Hook);
+abort_routes(_Ctx, _Hook) ->
+    skipped.
+
+-spec abort_target(map()) -> ok | {error, term()} | skipped.
+abort_target(#{start_sent := true, guild_id := GuildId, target := Target, opts := Opts} = Ctx) ->
+    Result = ensure_absent(GuildId, Target, Opts),
+    case maps:get(new_pid, Ctx, undefined) of
+        Pid when is_pid(Pid) -> unlink_and_kill_if(Result, Pid);
+        _ -> Result
+    end;
+abort_target(_Ctx) ->
+    skipped.
+
+-spec unlink_and_kill_if(ok | {error, term()}, pid()) -> ok | {error, term()}.
+unlink_and_kill_if(ok, Pid) ->
+    unlink(Pid),
+    ok;
+unlink_and_kill_if({error, _} = Error, Pid) ->
+    unlink(Pid),
+    exit(Pid, kill),
+    Error.
+
+-spec measure_export(map(), opts()) -> map() | skipped.
+measure_export(Export, #{measure := true}) ->
+    T0 = now_ms(),
+    Bytes = erlang:external_size(Export),
+    #{external_bytes => Bytes, measure_ms => now_ms() - T0};
+measure_export(_Export, _Opts) ->
+    skipped.
+
+-spec start_on(guild_id(), node(), map(), pos_integer()) -> {ok, pid()} | {error, term()}.
+start_on(GuildId, Target, Export, Timeout) ->
+    case shard_pid(GuildId, Target) of
+        {ok, Shard} ->
+            Request = {start_transferred, GuildId, Export},
+            started(guild_handoff_freeze_remote:safe_call(Shard, Request, Timeout));
+        {error, _} = Error ->
+            Error
+    end.
+
+-spec started(term()) -> {ok, pid()} | {error, term()}.
+started({ok, NewPid}) when is_pid(NewPid) ->
+    link(NewPid),
+    {ok, NewPid};
+started({error, Reason}) ->
+    {error, Reason};
+started(Other) ->
+    {error, {unexpected_start_reply, Other}}.
+
+-spec forward_rounds(pid(), pid(), non_neg_integer(), non_neg_integer(), [map()], opts()) ->
+    {ok, non_neg_integer(), [map()]} | {error, term(), non_neg_integer(), [map()]}.
+forward_rounds(_SrcPid, _NewPid, 0, Seen, Rounds, _Opts) ->
+    {ok, Seen, Rounds};
+forward_rounds(SrcPid, NewPid, Left, Seen, Rounds, Opts) ->
+    case guild_handoff_freeze_remote:capture(SrcPid, Seen, Opts) of
+        {ok, Len, _New} when Len < Seen ->
+            {error, mailbox_shrank, Seen, Rounds};
+        {ok, _Len, []} ->
+            {ok, Seen, Rounds};
+        {ok, _Len, New} ->
+            Stats = forward(New, NewPid, rounds),
+            T0 = now_ms(),
+            Barrier = guild_handoff_freeze_remote:barrier(
+                NewPid, maps:get(barrier_timeout, Opts)
+            ),
+            Round = Stats#{
+                captured => length(New), barrier => Barrier, barrier_ms => now_ms() - T0
+            },
+            forward_rounds(
+                SrcPid, NewPid, Left - 1, Seen + length(New), [Round | Rounds], Opts
+            );
+        {error, Reason} ->
+            {error, {capture_failed, Reason}, Seen, Rounds}
+    end.
+
+-spec forward([term()], pid(), rounds | final) -> map().
+forward(Msgs, NewPid, Phase) ->
+    lists:foldl(
+        fun(Msg, Acc) ->
+            Kind = forward_msg(Msg, NewPid, Phase),
+            Acc#{Kind => maps:get(Kind, Acc, 0) + 1}
+        end,
+        #{},
+        Msgs
+    ).
+
+-spec forward_msg(term(), pid(), rounds | final) -> atom().
+forward_msg({'$gen_call', _From, _Request} = Msg, NewPid, rounds) ->
+    NewPid ! Msg,
+    call;
+forward_msg({'$gen_call', _From, _Request}, _NewPid, final) ->
+    dropped_call;
+forward_msg({'$gen_cast', {session_connect_worker_done, _, _, _, _}}, _NewPid, _Phase) ->
+    dropped_worker_result;
+forward_msg({'$gen_cast', {session_connect_worker_batch_done, _}}, _NewPid, _Phase) ->
+    dropped_worker_result;
+forward_msg({'$gen_cast', _Request} = Msg, NewPid, _Phase) ->
+    NewPid ! Msg,
+    cast;
+forward_msg({presence, UserId, _Payload}, NewPid, _Phase) ->
+    NewPid ! {reconcile_user_presence, UserId},
+    presence_repair;
+forward_msg({reconcile_user_presence, _UserId} = Msg, NewPid, _Phase) ->
+    NewPid ! Msg,
+    presence_repair;
+forward_msg({clear_stale_cached_voice_states, _Ids} = Msg, NewPid, _Phase) ->
+    NewPid ! Msg,
+    voice_cleanup.
+
+-spec stop_source(map()) -> ok | {error, term()}.
+stop_source(#{guild_id := GuildId, src_shard := Shard, opts := Opts}) ->
+    Request = {stop_guild, GuildId, {shutdown, handoff}},
+    case guild_handoff_freeze_remote:safe_call(Shard, Request, maps:get(stop_timeout, Opts)) of
+        ok -> ok;
+        Other -> {error, Other}
+    end.
+
+-spec within_budget(map()) -> boolean().
+within_budget(#{frozen_at := FrozenAt, opts := Opts}) ->
+    now_ms() - FrozenAt =< maps:get(freeze_budget, Opts).
+
+-spec indexed_shard_pid(node(), non_neg_integer()) -> {ok, pid()} | {error, term()}.
+indexed_shard_pid(Node, Index) ->
+    Args = [?SHARD_TABLE, {shard_pid, Index}],
+    case guild_handoff_freeze_remote:rpc_call(Node, ets, lookup, Args, 10000) of
+        {ok, [{{shard_pid, Index}, Pid}]} when is_pid(Pid) -> {ok, Pid};
+        {ok, _} -> {error, shard_unavailable};
+        {error, _} = Error -> Error
+    end.
+
+-spec safe_hook(hook()) -> ok | {error, term()}.
+safe_hook(Hook) ->
+    try Hook() of
+        ok -> ok;
+        {error, _} = Error -> Error
+    catch
+        Class:Reason -> {error, {hook_crashed, Class, Reason}}
+    end.
+
+-spec safe_started_hook(started_hook(), pid()) -> ok | {error, term()}.
+safe_started_hook(Hook, NewPid) ->
+    try Hook(NewPid) of
+        ok -> ok;
+        {error, _} = Error -> Error
+    catch
+        Class:Reason -> {error, {hook_crashed, Class, Reason}}
+    end.
+
+-spec maybe_limit_heap(non_neg_integer()) -> ok.
+maybe_limit_heap(0) ->
+    ok;
+maybe_limit_heap(Words) ->
+    _ = process_flag(max_heap_size, #{size => Words, kill => true, error_logger => true}),
+    ok.
+
+-spec put_ms(atom(), integer(), map()) -> map().
+put_ms(Key, T0, Ctx) ->
+    put_report(Key, now_ms() - T0, Ctx).
+
+-spec put_report(atom(), term(), map()) -> map().
+put_report(Key, Value, #{report := Report} = Ctx) ->
+    Ctx#{report => Report#{Key => Value}}.
+
+-spec now_ms() -> integer().
+now_ms() ->
+    erlang:monotonic_time(millisecond).

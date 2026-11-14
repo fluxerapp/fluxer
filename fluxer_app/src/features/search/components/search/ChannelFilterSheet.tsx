@@ -4,7 +4,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
-import styles from '@app/features/search/components/search/ChannelFilterSheet.module.css';
+import styles from '@app/features/search/components/search/FilterSheet.module.css';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Button} from '@app/features/ui/button/Button';
@@ -128,20 +128,17 @@ export const ChannelFilterSheet: React.FC<ChannelFilterSheetProps> = observer(
 											key={channelOption.id}
 											type="button"
 											aria-pressed={isSelected}
-											className={clsx(styles.channelItem, isSelected && styles.channelItemSelected)}
+											className={clsx(styles.item, isSelected && styles.itemSelected)}
 											onClick={() => toggleChannel(channelOption.id)}
 											data-flx="search.search.channel-filter-sheet.channel-item.toggle-channel.button"
 										>
 											{ChannelUtils.getIcon(channelOption, {className: styles.channelIcon})}
-											<div className={styles.channelInfo} data-flx="search.search.channel-filter-sheet.channel-info">
-												<span className={styles.channelName} data-flx="search.search.channel-filter-sheet.channel-name">
+											<div className={styles.info} data-flx="search.search.channel-filter-sheet.channel-info">
+												<span className={styles.name} data-flx="search.search.channel-filter-sheet.channel-name">
 													{channelOption.name || <Trans>Unnamed channel</Trans>}
 												</span>
 												{parent?.name && (
-													<span
-														className={styles.categoryName}
-														data-flx="search.search.channel-filter-sheet.category-name"
-													>
+													<span className={styles.subtitle} data-flx="search.search.channel-filter-sheet.category-name">
 														{parent.name}
 													</span>
 												)}

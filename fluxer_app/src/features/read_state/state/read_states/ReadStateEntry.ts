@@ -14,6 +14,7 @@ import {
 	snowflakeTimestamp,
 } from '@app/features/read_state/state/read_states/shared';
 import Relationships from '@app/features/relationship/state/Relationships';
+import ThreadMemberships from '@app/features/threads/state/ThreadMemberships';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -38,14 +39,6 @@ export class ReadStateEntry {
 	private storedMentionCount = 0;
 	inFlightAckMessageId: string | null = null;
 	serverVersion: string | null = null;
-	snapshot?: {
-		unread: boolean;
-		mentionCount: number;
-		guildUnread: boolean | null;
-		guildMentionCount: number | null;
-		takenAt: number;
-	};
-
 	constructor(channelId: string) {
 		this.channelId = channelId;
 	}
@@ -62,10 +55,6 @@ export class ReadStateEntry {
 	set lastMessageId(messageId: string | null) {
 		this.storedLastMessageId = messageId;
 		this.storedLastMessageTimestamp = snowflakeTimestamp(messageId);
-	}
-
-	get lastMessageTimestamp(): number {
-		return this.storedLastMessageTimestamp;
 	}
 
 	get ackMessageId(): string | null {
@@ -118,10 +107,6 @@ export class ReadStateEntry {
 		this.storedMentionCount = normalizeCount(count);
 	}
 
-	get oldestUnreadMessageTimestamp(): number {
-		return snowflakeTimestamp(this.oldestUnreadMessageId);
-	}
-
 	get ackTimestamp(): number {
 		if (this.storedAckMessageTimestamp !== 0 && !Number.isNaN(this.storedAckMessageTimestamp)) {
 			return this.storedAckMessageTimestamp;
@@ -153,7 +138,10 @@ export class ReadStateEntry {
 	}
 
 	supportsUnreadTracking(): boolean {
-		return Channels.getChannel(this.channelId) != null || this.storedGuildId != null;
+		const channel = Channels.getChannel(this.channelId);
+		const guildId = channel?.guildId ?? this.storedGuildId;
+		if (guildId != null && Guilds.getGuild(guildId)?.visiting === true) return false;
+		return channel != null || this.storedGuildId != null;
 	}
 
 	private get statusModel() {
@@ -197,31 +185,6 @@ export class ReadStateEntry {
 		return this.statusModel.isUnreadOrMentioned;
 	}
 
-	computeGuildChannelBadge(
-		channel: {
-			isPrivate(): boolean;
-			guildId?: string;
-		},
-		_isOptInEnabled: boolean,
-		isChannelMuted: boolean,
-		isGuildMuted: boolean,
-	): {
-		mentionCount: number;
-		unread: boolean;
-	} {
-		if (!channel.isPrivate() && !this.supportsUnreadTracking()) {
-			return {mentionCount: 0, unread: false};
-		}
-		const mentionCount = this.supportsMentions() ? this.mentionCount : 0;
-		if (isChannelMuted || isGuildMuted) {
-			return {mentionCount, unread: false};
-		}
-		return {
-			mentionCount,
-			unread: this.hasUnread(),
-		};
-	}
-
 	rebuild(
 		ackMessageId?: string | null,
 		{
@@ -250,7 +213,7 @@ export class ReadStateEntry {
 		if (currentUser == null) {
 			return;
 		}
-		const messages = Messages.getMessages(this.channelId);
+		const messages = Messages.getMessagesIncludingDeferred(this.channelId) ?? Messages.getMessages(this.channelId);
 		const isPrivate = this.isPrivate;
 		const userId = currentUser.id;
 		const guildId = this.guildId;
@@ -277,7 +240,7 @@ export class ReadStateEntry {
 					const mentionEveryone = message.mentionEveryone;
 					const mentionRoles = message.mentionRoles;
 					const hasUserMention = mentions?.some((m) => m.id === userId) ?? false;
-					const hasEveryoneMention = !suppressEveryone && !!mentionEveryone;
+					const hasEveryoneMention = !suppressEveryone && !!mentionEveryone && !this.isNonMemberThread();
 					const hasRoleMention = !suppressRoles && hasMatchingRoleMention(mentionRoles, memberRoles);
 					const mention = resolveReadStateMention({
 						authorBlocked: false,
@@ -313,7 +276,7 @@ export class ReadStateEntry {
 		if (!this.isPrivate) {
 			return null;
 		}
-		const messages = Messages.getMessages(this.channelId);
+		const messages = Messages.getMessagesIncludingDeferred(this.channelId) ?? Messages.getMessages(this.channelId);
 		if (!messages.hasNewestMessages()) {
 			return null;
 		}
@@ -345,7 +308,7 @@ export class ReadStateEntry {
 		const mentionEveryone = 'mentionEveryone' in message ? message.mentionEveryone : message.mention_everyone;
 		const mentionRoles = 'mentionRoles' in message ? message.mentionRoles : message.mention_roles;
 		const hasUserMention = mentions?.some((m) => m.id === userId) ?? false;
-		const hasEveryoneMention = !suppressEveryone && !!mentionEveryone;
+		const hasEveryoneMention = !suppressEveryone && !!mentionEveryone && !this.isNonMemberThread();
 		const hasRoleMention = !suppressRoles && this.hasMatchingMemberRoleMention(userId, mentionRoles);
 		const isMuted = UserGuildSettings.isGuildOrChannelMuted(this.guildId, this.channelId);
 		return resolveReadStateMention({
@@ -356,6 +319,10 @@ export class ReadStateEntry {
 			isPrivate,
 			isMuted,
 		}).shouldMention;
+	}
+
+	private isNonMemberThread(): boolean {
+		return Channels.getChannel(this.channelId)?.isThread() === true && !ThreadMemberships.isMember(this.channelId);
 	}
 
 	private hasMatchingMemberRoleMention(userId: string, mentionRoles?: ReadonlyArray<string> | null): boolean {
@@ -374,7 +341,7 @@ export class ReadStateEntry {
 		if (ackTimestamp === 0 || Number.isNaN(ackTimestamp)) {
 			return 0;
 		}
-		const messages = Messages.getMessages(this.channelId);
+		const messages = Messages.getMessagesIncludingDeferred(this.channelId) ?? Messages.getMessages(this.channelId);
 		const isPrivate = this.isPrivate;
 		let mentionCount = 0;
 		messages.forEachBuffered((message) => {

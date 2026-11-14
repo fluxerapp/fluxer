@@ -41,7 +41,7 @@ buffer_reaction(Data, State) ->
 
 -spec maybe_cancel_buffered_reaction(event(), map() | list(), session_state()) ->
     {cancelled, session_state()} | not_applicable.
-maybe_cancel_buffered_reaction(message_reaction_remove, Data, State) ->
+maybe_cancel_buffered_reaction(message_reaction_remove, Data, State) when is_map(Data) ->
     BufferQ = ensure_queue(maps:get(reaction_buffer, State, [])),
     case queue:is_empty(BufferQ) of
         true ->
@@ -204,50 +204,3 @@ trim_queue(Q, MaxLen) ->
         true -> trim_queue(queue:drop(Q), MaxLen);
         false -> Q
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-reaction_entry(ChannelId, MessageId, UserId) ->
-    #{
-        <<"channel_id">> => ChannelId,
-        <<"message_id">> => MessageId,
-        <<"user_id">> => UserId,
-        <<"emoji">> => #{<<"id">> => null, <<"name">> => <<"thumbsup">>}
-    }.
-
-record_reaction_dispatch(Event, Data, State) ->
-    {noreply, State#{dispatched => [{Event, Data} | maps:get(dispatched, State, [])]}}.
-
-summarize_reaction_dispatch({message_reaction_add_many, Data}) ->
-    {message_reaction_add_many, maps:get(<<"message_id">>, Data), [
-        maps:get(<<"user_id">>, Reaction)
-     || Reaction <- maps:get(<<"reactions">>, Data)
-    ]};
-summarize_reaction_dispatch({Event, Data}) ->
-    {Event, maps:get(<<"message_id">>, Data), [maps:get(<<"user_id">>, Data)]}.
-
-flush_reaction_buffer_groups_by_message_test() ->
-    Buffer = [
-        reaction_entry(<<"10">>, <<"100">>, <<"1">>),
-        reaction_entry(<<"10">>, <<"200">>, <<"2">>),
-        reaction_entry(<<"10">>, <<"100">>, <<"3">>)
-    ],
-    State = #{reaction_buffer => queue:from_list(Buffer), reaction_buffer_timer => undefined},
-    Final = flush_reaction_buffer(fun record_reaction_dispatch/3, State),
-    Dispatched = lists:reverse(maps:get(dispatched, Final, [])),
-    ?assertEqual(
-        [
-            {message_reaction_add_many, <<"100">>, [<<"1">>, <<"3">>]},
-            {message_reaction_add, <<"200">>, [<<"2">>]}
-        ],
-        [summarize_reaction_dispatch(Entry) || Entry <- Dispatched]
-    ).
-
-flush_reaction_buffer_single_entry_dispatches_add_test() ->
-    Entry = reaction_entry(<<"10">>, <<"100">>, <<"1">>),
-    State = #{reaction_buffer => queue:from_list([Entry]), reaction_buffer_timer => undefined},
-    Final = flush_reaction_buffer(fun record_reaction_dispatch/3, State),
-    ?assertEqual([{message_reaction_add, Entry}], maps:get(dispatched, Final, [])).
-
--endif.

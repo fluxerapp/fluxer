@@ -1,16 +1,44 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import type {IStorageService} from './IStorageService';
-import {StorageService} from './StorageService';
+import {Config} from '@app/api/Config';
+import {ChangeFeedStorageService} from '@app/api/infrastructure/ChangeFeedStorageService';
+import {FilesystemStorageService} from '@app/api/infrastructure/FilesystemStorageService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {JetStreamStorageChangeSink, StorageChangeFeed} from '@app/api/infrastructure/StorageChangeFeed';
+import {StorageService} from '@app/api/infrastructure/StorageService';
+import {Logger} from '@app/api/Logger';
 
-export function createStorageService(): IStorageService {
-	return new StorageService();
+const CHANGE_FEED_SHUTDOWN_TIMEOUT_MS = 5000;
+
+let changeFeed: StorageChangeFeed | null = null;
+
+function withChangeFeed(service: IStorageService): IStorageService {
+	const {enabled, stream, skipBuckets} = Config.storageChangeFeed;
+	if (!enabled) {
+		return service;
+	}
+	changeFeed ??= new StorageChangeFeed(
+		new JetStreamStorageChangeSink({url: Config.nats.jetStreamUrl, token: Config.nats.authToken, stream}),
+	);
+	return new ChangeFeedStorageService(service, changeFeed, skipBuckets);
 }
 
-export function createDownloadsStorageService(): IStorageService | null {
-	if (!Config.s3Downloads.isOverridden) {
-		return null;
+export function createStorageService(): IStorageService {
+	if (Config.storage.backend === 'filesystem') {
+		return withChangeFeed(
+			new FilesystemStorageService({
+				root: Config.storage.root,
+				buckets: Config.s3.buckets,
+				readOnly: Config.storage.readOnly,
+				logger: Logger,
+			}),
+		);
 	}
-	return new StorageService(Config.s3Downloads.settings);
+	return withChangeFeed(new StorageService());
+}
+
+export async function shutdownStorageChangeFeed(): Promise<void> {
+	const feed = changeFeed;
+	changeFeed = null;
+	await feed?.close(CHANGE_FEED_SHUTDOWN_TIMEOUT_MS);
 }

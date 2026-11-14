@@ -1,41 +1,68 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomInt} from 'node:crypto';
-import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {AdminRepository} from '@app/api/admin/AdminRepository';
+import {deleteRecoveryKit} from '@app/api/auth/AuthRecoveryKit';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
+import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
+import {createMessageID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {BillingDocumentRepository} from '@app/api/billing_documents/BillingDocumentRepository';
+import {Config} from '@app/api/Config';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
+import type {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
+import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
+import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
+import {guildVisitRepository} from '@app/api/guild/visits/GuildVisitorAccess';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {REGISTRATION_PENDING_APPROVAL_TRAIT} from '@app/api/instance/InstanceConfigRepository';
+import {Logger} from '@app/api/Logger';
+import type {OperatorPassServices} from '@app/api/middleware/OperatorPassServiceFactory';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {getEnforcementDecisionRepository, getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import {endOperatorPassesForDeletion} from '@app/api/operator_pass/OperatorPassHoldingService';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {isMissingOrCancelledSubscriptionError} from '@app/api/stripe/StripeUtils';
+import {deleteAllAppAttestKeys} from '@app/api/user/AgeRange';
+import {EntranceSoundRepository} from '@app/api/user/entrance_sound/EntranceSoundRepository';
+import {entranceSoundStorageKey} from '@app/api/user/entrance_sound/EntranceSoundService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
 import {
-	DELETED_USER_DISCRIMINATOR,
-	DELETED_USER_GLOBAL_NAME,
-	DELETED_USER_USERNAME,
-	ProfileFieldPrivacyFlags,
-	UserFlags,
-} from '@fluxer/constants/src/UserConstants';
+	deletedUserIdentity,
+	isEnforcementDeletion,
+	isSsoLinkedUser,
+	personalFieldsToClear,
+} from '@app/api/user/UserHelpers';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
+import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 import type Stripe from 'stripe';
-import {createMessageID, createUserID, type MessageID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {mapChannelToResponse} from '../../channel/ChannelMappers';
-import type {ChannelRepository} from '../../channel/ChannelRepository';
-import type {FavoriteMemeRepository} from '../../favorite_meme/FavoriteMemeRepository';
-import type {GuildRepository} from '../../guild/repositories/GuildRepository';
-import type {IPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import type {DiscriminatorService} from '../../infrastructure/DiscriminatorService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {ApplicationRepository} from '../../oauth/repositories/ApplicationRepository';
-import type {OAuth2TokenRepository} from '../../oauth/repositories/OAuth2TokenRepository';
-import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
-import type {UserRepository} from '../repositories/UserRepository';
 
 const CHUNK_SIZE = 100;
+const ssoIdentityRepository = new SsoIdentityRepository();
+const entranceSoundRepository = new EntranceSoundRepository();
 
 interface UserDeletionDependencies {
+	operatorPassServices: Pick<OperatorPassServices, 'repository' | 'wallService' | 'holdingService'>;
 	userRepository: UserRepository;
 	guildRepository: GuildRepository;
 	channelRepository: ChannelRepository;
@@ -46,14 +73,70 @@ interface UserDeletionDependencies {
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 	snowflakeService: ISnowflakeService;
-	discriminatorService: DiscriminatorService;
+
 	stripe: Stripe | null;
 	applicationRepository: ApplicationRepository;
 	workerService: IWorkerService<WorkerTaskName>;
+	connectionRepository: ConnectionRepository;
+	storeEntitlementService: StoreEntitlementService;
+	adminRepository: AdminRepository;
+	cacheService: ICacheService;
+	emailService: IEmailService;
+}
+
+async function hasSubscriptionEnded(stripe: Stripe, subscriptionId: string): Promise<boolean> {
+	try {
+		const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+		return subscription.status === 'canceled' || subscription.status === 'incomplete_expired';
+	} catch (error) {
+		return isMissingOrCancelledSubscriptionError(error);
+	}
+}
+
+async function releaseSsoIdentitiesOf(user: User, deletionReasonCode: number): Promise<void> {
+	if (!isSsoLinkedUser(user)) return;
+	if (isEnforcementDeletion({enforcementDecisionId: user.enforcementDecisionId, deletionReasonCode})) return;
+	const released = await ssoIdentityRepository.releaseIdentitiesForUser(user.id);
+	if (released > 0) {
+		Logger.debug({userId: user.id, released}, 'Released SSO identities');
+	}
+}
+
+async function withdrawPendingRegistrationOf(user: User): Promise<void> {
+	if (!user.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) return;
+	await getInstanceConfigRepository().removePendingRegistration(user.id.toString());
+}
+
+async function removeNetworkBlocksOf(userId: UserID, deps: UserDeletionDependencies): Promise<void> {
+	const decisions = await getEnforcementDecisionRepository().listAllBySubject('user', userId);
+	if (decisions.length === 0) return;
+	const removed = await deps.adminRepository.removeDecisionIpBans(decisions.map((decision) => decision.decision_id));
+	if (removed.length > 0) {
+		await deps.cacheService.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
+	}
+}
+
+async function createDeletedUserPlaceholder(
+	userRepository: UserRepository,
+	snowflakeService: ISnowflakeService,
+	userId: UserID,
+): Promise<UserID> {
+	const deletedUserId = createUserID(await snowflakeService.generate());
+	Logger.debug({userId, deletedUserId}, 'Creating dedicated deleted user record');
+	await userRepository.create({
+		...EMPTY_USER_ROW,
+		...deletedUserIdentity(),
+		user_id: deletedUserId,
+		bot: false,
+		system: false,
+	});
+	await userRepository.deleteUserSecondaryIndices(deletedUserId);
+	return deletedUserId;
 }
 
 export async function processUserDeletion(
 	userId: UserID,
+	pendingDeletionAt: Date,
 	deletionReasonCode: number,
 	deps: UserDeletionDependencies,
 ): Promise<void> {
@@ -71,29 +154,36 @@ export async function processUserDeletion(
 		stripe,
 		applicationRepository,
 		workerService,
+		connectionRepository,
+		storeEntitlementService,
 	} = deps;
 	Logger.debug({userId, deletionReasonCode}, 'Starting user account deletion');
-	const user = await userRepository.findUnique(userId);
-	if (!user) {
-		Logger.warn({userId}, 'User not found, skipping deletion');
+	const scheduledUser = await userRepository.findUnique(userId);
+	if (
+		!scheduledUser ||
+		scheduledUser.pendingDeletionAt?.getTime() !== pendingDeletionAt.getTime() ||
+		(!scheduledUser.deletionStartedAt &&
+			(pendingDeletionAt.getTime() > Date.now() || isPendingDeletionBlocked(scheduledUser)))
+	) {
+		Logger.info({userId, pendingDeletionAt}, 'Account deletion schedule is no longer eligible');
 		return;
 	}
-	if (user.stripeSubscriptionId && stripe) {
+	if (scheduledUser.stripeSubscriptionId && stripe) {
 		const MAX_RETRIES = 3;
 		let lastError: unknown = null;
 		for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
 			try {
 				Logger.debug(
-					{userId, subscriptionId: user.stripeSubscriptionId, attempt},
+					{userId, subscriptionId: scheduledUser.stripeSubscriptionId, attempt},
 					'Canceling active Stripe subscription',
 				);
-				const canceledSubscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId, {
+				const canceledSubscription = await stripe.subscriptions.cancel(scheduledUser.stripeSubscriptionId, {
 					invoice_now: false,
 					prorate: false,
 				});
 				try {
 					await getBillingRepository().subscriptions.upsertFromStripe(canceledSubscription, {
-						knownUserId: user.id,
+						knownUserId: scheduledUser.id,
 						snapshotCapturedAt: new Date(),
 					});
 				} catch (mirrorErr) {
@@ -102,17 +192,28 @@ export async function processUserDeletion(
 						'Mirror upsert failed after Stripe write; reconciler will heal',
 					);
 				}
-				Logger.debug({userId, subscriptionId: user.stripeSubscriptionId}, 'Stripe subscription cancelled successfully');
+				Logger.debug(
+					{userId, subscriptionId: scheduledUser.stripeSubscriptionId},
+					'Stripe subscription cancelled successfully',
+				);
 				lastError = null;
 				break;
 			} catch (error) {
+				if (await hasSubscriptionEnded(stripe, scheduledUser.stripeSubscriptionId)) {
+					Logger.info(
+						{userId, subscriptionId: scheduledUser.stripeSubscriptionId},
+						'Stripe subscription already ended, continuing account deletion',
+					);
+					lastError = null;
+					break;
+				}
 				lastError = error;
 				const isLastAttempt = attempt === MAX_RETRIES - 1;
 				Logger.error(
 					{
 						error,
 						userId,
-						subscriptionId: user.stripeSubscriptionId,
+						subscriptionId: scheduledUser.stripeSubscriptionId,
 						attempt: attempt + 1,
 						maxRetries: MAX_RETRIES,
 						willRetry: !isLastAttempt,
@@ -129,75 +230,26 @@ export async function processUserDeletion(
 		}
 		if (lastError) {
 			const error = new Error(
-				`Failed to cancel Stripe subscription ${user.stripeSubscriptionId} for user ${userId} after ${MAX_RETRIES} attempts. User deletion halted to prevent billing issues.`,
+				`Failed to cancel Stripe subscription ${scheduledUser.stripeSubscriptionId} for user ${userId} after ${MAX_RETRIES} attempts. User deletion halted to prevent billing issues.`,
 				{cause: lastError},
 			);
 			throw error;
 		}
 	}
-	const deletedUserId = createUserID(await snowflakeService.generate());
-	Logger.debug({userId, deletedUserId}, 'Creating dedicated deleted user record');
-	await userRepository.create({
-		user_id: deletedUserId,
-		username: DELETED_USER_USERNAME,
-		discriminator: DELETED_USER_DISCRIMINATOR,
-		global_name: DELETED_USER_GLOBAL_NAME,
-		bot: false,
-		system: false,
-		email: null,
-		email_verified: null,
-		email_bounced: null,
-		password_hash: null,
-		password_last_changed_at: null,
-		totp_secret: null,
-		authenticator_types: null,
-		avatar_hash: null,
-		avatar_color: null,
-		banner_hash: null,
-		banner_color: null,
-		bio: null,
-		pronouns: null,
-		accent_color: null,
-		timezone: null,
-		timezone_privacy_flags: ProfileFieldPrivacyFlags.EVERYONE,
-		date_of_birth: null,
-		locale: null,
-		flags: UserFlags.DELETED,
-		premium_type: null,
-		premium_since: null,
-		premium_until: null,
-		premium_gift_extension_ends_at: null,
-		premium_will_cancel: null,
-		premium_billing_cycle: null,
-		premium_lifetime_sequence: null,
-		premium_grace_ends_at: null,
-		stripe_subscription_id: null,
-		stripe_customer_id: null,
-		has_ever_purchased: null,
-		suspicious_activity_flags: null,
-		terms_agreed_at: null,
-		privacy_agreed_at: null,
-		last_active_at: null,
-		last_active_ip: null,
-		temp_banned_until: null,
-		pending_deletion_at: null,
-		pending_bulk_message_deletion_at: null,
-		pending_bulk_message_deletion_channel_count: null,
-		pending_bulk_message_deletion_message_count: null,
-		deletion_reason_code: null,
-		deletion_public_reason: null,
-		deletion_audit_log_reason: null,
-		acls: null,
-		traits: null,
-		first_refund_at: null,
-		gift_inventory_server_seq: null,
-		gift_inventory_client_seq: null,
-		premium_onboarding_dismissed_at: null,
-		mention_flags: null,
-		last_voice_activity_sharing_change_at: null,
-		version: 1,
-	});
-	await userRepository.deleteUserSecondaryIndices(deletedUserId);
+	const user = await userRepository.startDeletion(userId, pendingDeletionAt);
+	if (!user) {
+		Logger.info({userId, pendingDeletionAt}, 'Account deletion schedule is no longer eligible');
+		return;
+	}
+	const completionNotice =
+		deletionReasonCode === DeletionReasons.USER_REQUESTED && user.email
+			? {email: user.email, locale: user.locale}
+			: null;
+	await removeNetworkBlocksOf(userId, deps);
+	await releaseSsoIdentitiesOf(user, deletionReasonCode);
+	await withdrawPendingRegistrationOf(user);
+	await storeEntitlementService.stopBillingForDeletedUser(userId);
+	await connectionRepository.sealAndDeleteForUser(userId);
 	Logger.debug({userId}, 'Leaving all guilds');
 	const guildIds = await userRepository.getUserGuildIds(userId);
 	for (const guildId of guildIds) {
@@ -231,14 +283,8 @@ export async function processUserDeletion(
 					}
 				}
 				await guildRepository.deleteMember(guildId, userId);
-				const guild = await guildRepository.findUnique(guildId);
-				if (guild) {
-					await guildRepository.upsertPartial(
-						guildId,
-						{member_count: Math.max(0, guild.memberCount - 1)},
-						guild.toRow(),
-					);
-				}
+				await new GuildMemberSearchIndexService().deleteMember(guildId, userId);
+				await guildRepository.syncMemberCount(guildId);
 				await gatewayService.dispatchGuild({
 					guildId,
 					event: 'GUILD_MEMBER_REMOVE',
@@ -258,8 +304,13 @@ export async function processUserDeletion(
 	Logger.debug({userId}, 'Leaving all group DMs');
 	const allPrivateChannels = await userRepository.listPrivateChannels(userId);
 	const groupDmChannels = allPrivateChannels.filter((channel) => channel.type === ChannelTypes.GROUP_DM);
-	for (const channel of groupDmChannels) {
+	for (const privateChannel of groupDmChannels) {
 		try {
+			const channel = await channelRepository.channelData.findUnique(privateChannel.id);
+			if (!channel?.recipientIds.has(userId)) {
+				await userRepository.closeDmForUser(userId, privateChannel.id);
+				continue;
+			}
 			const updatedRecipientIds = new Set<UserID>(channel.recipientIds);
 			updatedRecipientIds.delete(userId);
 			let newOwnerId = channel.ownerId;
@@ -267,7 +318,7 @@ export async function processUserDeletion(
 				newOwnerId = Array.from(updatedRecipientIds)[0];
 			}
 			if (updatedRecipientIds.size === 0) {
-				await channelRepository.delete(channel.id);
+				await channelRepository.channelData.delete(channel.id);
 				await userRepository.closeDmForUser(userId, channel.id);
 				const channelResponse = await mapChannelToResponse({
 					channel,
@@ -285,15 +336,18 @@ export async function processUserDeletion(
 			}
 			const updatedNicknames = new Map(channel.nicknames);
 			updatedNicknames.delete(userId.toString());
-			await channelRepository.upsert({
-				...channel.toRow(),
-				owner_id: newOwnerId,
-				recipient_ids: updatedRecipientIds,
-				nicks: updatedNicknames.size > 0 ? updatedNicknames : null,
-			});
+			await channelRepository.channelData.upsert(
+				{
+					...channel.toRow(),
+					owner_id: newOwnerId,
+					recipient_ids: updatedRecipientIds,
+					nicks: updatedNicknames.size > 0 ? updatedNicknames : null,
+				},
+				channel.toRow(),
+			);
 			await userRepository.closeDmForUser(userId, channel.id);
 			const messageId = createMessageID(await snowflakeService.generateForChannel(channel.id));
-			await channelRepository.upsertMessage({
+			await channelRepository.messages.upsertMessage({
 				channel_id: channel.id,
 				bucket: BucketUtils.makeBucket(messageId),
 				message_id: messageId,
@@ -343,19 +397,44 @@ export async function processUserDeletion(
 			});
 			Logger.debug({userId, channelId: channel.id}, 'Left group DM successfully');
 		} catch (error) {
-			Logger.error({error, userId, channelId: channel.id}, 'Failed to leave group DM');
+			Logger.error({error, userId, channelId: privateChannel.id}, 'Failed to leave group DM');
 		}
+	}
+	if (user.pendingBulkMessageDeletionAt) {
+		const deleted = await new UserMessageDeletionService({
+			channelRepository,
+			gatewayService,
+			storageService,
+			purgeQueue,
+			workerService,
+		}).deleteUserMessagesBulk(userId);
+		await userRepository.patchUpsert(
+			userId,
+			{
+				pending_bulk_message_deletion_at: null,
+				pending_bulk_message_deletion_channel_count: null,
+				pending_bulk_message_deletion_message_count: null,
+			},
+			user.toRow(),
+		);
+		Logger.debug({userId, deleted}, 'Deleted messages scheduled for deletion before anonymizing the rest');
 	}
 	Logger.debug({userId}, 'Anonymizing user messages');
 	let lastMessageId: MessageID | undefined;
 	let processedCount = 0;
+	let deletedUserId: UserID | null = null;
 	while (true) {
-		const messagesToAnonymize = await channelRepository.listMessagesByAuthor(userId, CHUNK_SIZE, lastMessageId);
+		const messagesToAnonymize = await channelRepository.messages.listMessagesByAuthor(
+			userId,
+			CHUNK_SIZE,
+			lastMessageId,
+		);
 		if (messagesToAnonymize.length === 0) {
 			break;
 		}
+		deletedUserId ??= await createDeletedUserPlaceholder(userRepository, snowflakeService, userId);
 		for (const {channelId, messageId} of messagesToAnonymize) {
-			await channelRepository.anonymizeMessage(channelId, messageId, deletedUserId);
+			await channelRepository.messages.anonymizeMessage(channelId, messageId, deletedUserId);
 		}
 		processedCount += messagesToAnonymize.length;
 		lastMessageId = messagesToAnonymize[messagesToAnonymize.length - 1].messageId;
@@ -394,6 +473,19 @@ export async function processUserDeletion(
 		}
 	}
 	await favoriteMemeRepository.deleteAllByUserId(userId);
+	const entranceSoundKeys = new Set(
+		(await entranceSoundRepository.listSounds(userId)).map((sound) =>
+			entranceSoundStorageKey(userId, sound.hash, sound.extension),
+		),
+	);
+	for (const key of entranceSoundKeys) {
+		try {
+			await storageService.deleteObject(Config.s3.buckets.cdn, key);
+		} catch (error) {
+			Logger.error({error, userId}, 'Failed to delete entrance sound');
+		}
+	}
+	await entranceSoundRepository.deleteAllForUser(userId);
 	Logger.debug({userId}, 'Deleting OAuth tokens');
 	await Promise.all([
 		oauth2TokenRepository.deleteAllAccessTokensForUser(userId),
@@ -412,55 +504,51 @@ export async function processUserDeletion(
 		Logger.error({error, userId}, 'Failed to schedule application deletions');
 	}
 	Logger.debug({userId}, 'Deleting user data');
+	const operatorPassRepository = deps.operatorPassServices.repository;
 	await Promise.all([
 		guildRepository.deleteAllBansForUser(userId),
+		guildVisitRepository().deleteAllForUser(userId),
 		userRepository.deleteUserSettings(userId),
 		userRepository.deleteAllUserGuildSettings(userId),
 		userRepository.deleteAllRelationships(userId),
 		userRepository.deleteAllNotes(userId),
 		userRepository.deleteAllReadStates(userId),
 		userRepository.deleteAllSavedMessages(userId),
-		userRepository.deleteAllAuthSessions(userId),
+		revokeAllAuthSessions({users: userRepository, gateway: gatewayService}, userId),
 		userRepository.deleteAllMfaBackupCodes(userId),
 		userRepository.deleteAllWebAuthnCredentials(userId),
+		deleteAllAppAttestKeys(userId),
+		deleteRecoveryKit(userId),
 		userRepository.deleteAllPushSubscriptions(userId),
 		userRepository.deleteAllRecentMentions(userId),
 		userRepository.deleteAllAuthorizedIps(userId),
 		userRepository.deletePinnedDmsByUserId(userId),
+		endOperatorPassesForDeletion(operatorPassRepository, deps.cacheService, userId).then(async (buyers) => {
+			await operatorPassRepository.deleteOperatorPass(userId);
+			for (const buyer of buyers) {
+				await deps.operatorPassServices.holdingService.syncHolding(buyer);
+			}
+		}),
+		deps.operatorPassServices.wallService.forgetForDeletion(userId),
+		new BillingDocumentRepository().removeUserIndex(userId),
 	]);
 	await userRepository.deleteUserSecondaryIndices(userId);
 	const userForAnonymization = await userRepository.findUniqueAssert(userId);
 	Logger.debug({userId}, 'Anonymizing user record');
-	const anonymisedUser = await userRepository.patchUpsert(
-		userId,
-		{
-			username: DELETED_USER_USERNAME,
-			discriminator: DELETED_USER_DISCRIMINATOR,
-			global_name: DELETED_USER_GLOBAL_NAME,
-			email: null,
-			email_verified: false,
-			password_hash: null,
-			totp_secret: null,
-			avatar_hash: null,
-			banner_hash: null,
-			bio: null,
-			pronouns: null,
-			accent_color: null,
-			timezone: null,
-			timezone_privacy_flags: ProfileFieldPrivacyFlags.EVERYONE,
-			date_of_birth: null,
-			flags: UserFlags.DELETED,
-			premium_type: null,
-			premium_since: null,
-			premium_until: null,
-			premium_gift_extension_ends_at: null,
-			stripe_customer_id: null,
-			stripe_subscription_id: null,
-			pending_deletion_at: null,
-			authenticator_types: new Set(),
-		},
-		userForAnonymization.toRow(),
-	);
+	const anonymisedUser = await userRepository.anonymizeForDeletion(userForAnonymization, {
+		...deletedUserIdentity(),
+		...personalFieldsToClear(userForAnonymization.toRow()),
+	});
+
 	await userCacheService.setUserPartialResponseFromUser(anonymisedUser);
+	await userRepository.completeDeletion(anonymisedUser);
+	if (completionNotice) {
+		await deps.emailService
+			.send('account_deletion_completed', completionNotice.email, {}, completionNotice.locale)
+			.catch((error: unknown) => {
+				Logger.error({userId, error}, 'Failed to send the account deletion confirmation email');
+			});
+	}
+	await emitActivity('account_deleted', userId.toString(), {user_id: userId.toString()}, null, userId.toString());
 	Logger.debug({userId, deletionReasonCode}, 'User account anonymization completed successfully');
 }

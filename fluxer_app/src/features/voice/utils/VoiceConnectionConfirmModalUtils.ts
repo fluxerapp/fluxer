@@ -6,7 +6,7 @@ import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {useCallback, useMemo} from 'react';
 
-export interface VoiceConnectionConfirmModalCallbacks {
+interface VoiceConnectionConfirmModalCallbacks {
 	onSwitchDevice: () => void | Promise<void>;
 	onJustJoin: () => void;
 	onCancel: () => void;

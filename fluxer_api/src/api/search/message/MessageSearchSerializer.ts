@@ -1,16 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {Embed} from '@app/api/models/Embed';
+import type {Message} from '@app/api/models/Message';
+import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import type {SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {UserID} from '../../BrandedTypes';
-import type {Attachment} from '../../models/Attachment';
-import type {Embed} from '../../models/Embed';
-import type {Message} from '../../models/Message';
-import type {MessageSnapshot} from '../../models/MessageSnapshot';
 
 const LINK_URL_MATCHER = /https?:\/\/[^\s<>"']+/gi;
 const HAS_LINK_REGEX = /https?:\/\/[^\s/]+/i;
-const TRAILING_URL_PUNCTUATION = /[.,;:!?)\]}\x22'\u00bb\u201c\u201d]+$/;
+const TRAILING_URL_PUNCTUATION = new Set([
+	'.',
+	',',
+	';',
+	':',
+	'!',
+	'?',
+	')',
+	']',
+	'}',
+	'"',
+	"'",
+	'\u00bb',
+	'\u201c',
+	'\u201d',
+]);
+
+function stripTrailingUrlPunctuation(url: string): string {
+	let end = url.length;
+	while (end > 0 && TRAILING_URL_PUNCTUATION.has(url[end - 1]!)) {
+		end--;
+	}
+	return url.slice(0, end);
+}
 
 function getAuthorType(message: Message, authorIsBot?: boolean): 'user' | 'bot' | 'webhook' {
 	if (message.webhookId) {
@@ -48,7 +71,7 @@ function extractTextLinkHostnames(content: string | null, sink: Array<string>): 
 	}
 	const matches = content.matchAll(LINK_URL_MATCHER);
 	for (const match of matches) {
-		const rawUrl = match[0]?.replace(TRAILING_URL_PUNCTUATION, '');
+		const rawUrl = stripTrailingUrlPunctuation(match[0]);
 		if (!rawUrl) continue;
 		try {
 			const {hostname} = new URL(rawUrl);

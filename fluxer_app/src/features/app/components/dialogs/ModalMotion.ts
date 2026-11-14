@@ -1,22 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ModalTransitionPreset} from '@app/features/ui/utils/ModalUtils';
+import type {ModalBackdropTone, ModalTransitionPreset} from '@app/features/ui/utils/ModalUtils';
 
 export interface ModalMotionInput {
 	transitionPreset: ModalTransitionPreset;
 	prefersReducedMotion: boolean;
 	isFullscreenOnMobile: boolean;
+	isRtl: boolean;
 }
 
 export interface ModalBackdropMotionInput {
 	transitionPreset: ModalTransitionPreset;
 	prefersReducedMotion: boolean;
 	isMobile: boolean;
+	backdropTone: ModalBackdropTone;
 }
 
 const SETTLED_SURFACE = {opacity: 1, scale: 1} as const;
 
-const BACKDROP_RESTING_OPACITY = 0.85;
+const BACKDROP_RESTING_OPACITY: Record<ModalBackdropTone, number> = {
+	default: 0.85,
+	strong: 0.92,
+};
 
 const BACKDROP_DISMISS_SPRING = {type: 'spring', stiffness: 1000, damping: 48, mass: 1} as const;
 
@@ -28,6 +33,7 @@ export function resolveModalMotionSpec({
 	transitionPreset,
 	prefersReducedMotion,
 	isFullscreenOnMobile,
+	isRtl,
 }: ModalMotionInput) {
 	if (transitionPreset === 'instant') {
 		return {
@@ -62,10 +68,11 @@ export function resolveModalMotionSpec({
 		};
 	}
 	if (transitionPreset === 'profile-slide') {
+		const slideOffset = isRtl ? -14 : 14;
 		return {
-			initial: {opacity: 0, x: 14},
+			initial: {opacity: 0, x: slideOffset},
 			animate: {opacity: 1, x: 0},
-			exit: {opacity: 0, x: 14},
+			exit: {opacity: 0, x: slideOffset},
 			transition: {duration: 0.14, ease: 'easeOut'},
 		};
 	}
@@ -81,11 +88,13 @@ export function resolveModalBackdropMotionSpec({
 	transitionPreset,
 	prefersReducedMotion,
 	isMobile,
+	backdropTone,
 }: ModalBackdropMotionInput) {
 	const mountsAtRest = (isMobile && !prefersReducedMotion) || transitionPreset === 'instant';
+	const restingOpacity = BACKDROP_RESTING_OPACITY[backdropTone];
 	const surface = {
-		initial: {opacity: mountsAtRest ? BACKDROP_RESTING_OPACITY : 0},
-		animate: {opacity: BACKDROP_RESTING_OPACITY},
+		initial: {opacity: mountsAtRest ? restingOpacity : 0},
+		animate: {opacity: restingOpacity},
 		exit: {opacity: 0},
 	};
 	if (prefersReducedMotion) {

@@ -13,7 +13,7 @@ import {
 	measureSkeletonWidthPx,
 	useSkeletonLayoutReport,
 } from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
-import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {ChannelDetailsBottomSheet} from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheet';
 import {ChannelSearchBottomSheet} from '@app/features/channel/components/bottomsheets/ChannelSearchBottomSheet';
 import styles from '@app/features/channel/components/ChannelHeader.module.css';
@@ -21,7 +21,6 @@ import {CHANNEL_HEADER_DM_AVATAR_SIZE_PX} from '@app/features/channel/components
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
 import {
 	ADD_FRIENDS_TO_GROUP_DESCRIPTOR,
-	BACK_DESCRIPTOR,
 	CHANNEL_ACTIONS_DESCRIPTOR,
 	CREATE_GROUP_DM_DESCRIPTOR,
 	EDIT_GROUP_DETAILS_DESCRIPTOR,
@@ -39,6 +38,7 @@ import {
 } from '@app/features/channel/components/channel_header/shared';
 import {useChannelHeaderData} from '@app/features/channel/components/channel_header/useChannelHeaderData';
 import {CallButtons} from '@app/features/channel/components/channel_header_components/CallButtons';
+import {ChannelFollowButton} from '@app/features/channel/components/channel_header_components/ChannelFollowButton';
 import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header_components/ChannelHeaderIcon';
 import {ChannelNotificationSettingsButton} from '@app/features/channel/components/channel_header_components/ChannelNotificationSettingsButton';
 import {ChannelPinsButton} from '@app/features/channel/components/channel_header_components/ChannelPinsButton';
@@ -59,8 +59,10 @@ import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupM
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {isGroupDmFull} from '@app/features/channel/utils/GroupDmUtils';
+import Guilds from '@app/features/guild/state/Guilds';
 import {
 	ADD_TO_FAVORITES_DESCRIPTOR,
+	BACK_DESCRIPTOR,
 	CHANNEL_ADDED_TO_FAVORITES_DESCRIPTOR,
 	CHANNEL_REMOVED_FROM_FAVORITES_DESCRIPTOR,
 	HIDE_FAVORITES_DESCRIPTOR,
@@ -83,6 +85,10 @@ import {AddFriendsToGroupModal} from '@app/features/relationship/components/moda
 import Relationships from '@app/features/relationship/state/Relationships';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
+import {ThreadContextMenu} from '@app/features/threads/components/ThreadContextMenu';
+import {ThreadNotificationSettingsButton, ThreadsButton} from '@app/features/threads/components/ThreadHeaderButtons';
+import {ThreadParentCrumb} from '@app/features/threads/components/ThreadParentCrumb';
+import {useThreadPanelState} from '@app/features/threads/components/ThreadSidePanel';
 import {ChannelContextMenu} from '@app/features/ui/action_menu/ChannelContextMenu';
 import {DMContextMenu} from '@app/features/ui/action_menu/DMContextMenu';
 import {GroupDMContextMenu} from '@app/features/ui/action_menu/GroupDMContextMenu';
@@ -95,13 +101,15 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
+import {ArrowLeftIcon, CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import ContextMenuState, {isContextMenuNodeTarget} from '@app/features/ui/state/ContextMenu';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import PopoutState from '@app/features/ui/state/Popout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import * as CallCommands from '@app/features/voice/commands/CallCommands';
-import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import CallState from '@app/features/voice/state/CallState';
 import {computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
 import * as CallUtils from '@app/features/voice/utils/CallUtils';
@@ -111,8 +119,6 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {useLingui} from '@lingui/react/macro';
 import {
-	ArrowLeftIcon,
-	CaretRightIcon,
 	EyeSlashIcon,
 	ListIcon,
 	MagnifyingGlassIcon,
@@ -165,7 +171,7 @@ export const ChannelHeader = observer(
 		const headerRef = useRef<HTMLElement>(null);
 		const {isMembersOpen} = MemberList;
 		const isMobile = MobileLayout.isMobileLayout();
-		const isCallChannelConnected = Boolean(MediaEngine.connected && MediaEngine.channelId === channel?.id);
+		const isCallChannelConnected = Boolean(VoiceRuntime.connected && VoiceRuntime.channelId === channel?.id);
 		const channelIsE2EEEncrypted =
 			isCallChannelConnected && channel
 				? computeChannelE2EEStatus(channel.guildId ?? null, channel.id) === 'encrypted'
@@ -234,19 +240,22 @@ export const ChannelHeader = observer(
 		const dmNameRef = useRef<HTMLSpanElement>(null);
 		const groupDMNameRef = useRef<HTMLSpanElement>(null);
 		const guildChannelNameRef = useRef<HTMLSpanElement>(null);
-		const isDMNameOverflowing = useTextOverflow(dmNameRef);
-		const isGroupDMNameOverflowing = useTextOverflow(groupDMNameRef);
-		const isGuildChannelNameOverflowing = useTextOverflow(guildChannelNameRef);
 		const {isDM, isGroupDM, isPersonalNotes, isGuildChannel, recipient, directMessageName, groupDMName, channelName} =
 			useChannelHeaderData(channel);
+		const isDMNameOverflowing = useTextOverflow(dmNameRef, {content: directMessageName});
+		const isGroupDMNameOverflowing = useTextOverflow(groupDMNameRef, {content: groupDMName});
+		const isGuildChannelNameOverflowing = useTextOverflow(guildChannelNameRef, {content: channelName});
 		const isBotDMRecipient = isDM && (recipient?.bot || recipient?.system);
 		const isFavorited = channel && !isPersonalNotes ? !!Favorites.getChannel(channel.id) : false;
-		const channelDetailsLabel =
-			isDM && directMessageName
-				? i18n._(OPEN_DIRECT_MESSAGE_DETAILS_FOR_DESCRIPTOR, {directMessageName})
-				: isGroupDM && groupDMName
-					? i18n._(OPEN_GROUP_DETAILS_FOR_DESCRIPTOR, {groupDMName})
-					: i18n._(OPEN_CHANNEL_DETAILS_FOR_DESCRIPTOR, {channelName});
+		const isVisitingGuild = channel?.guildId != null && Guilds.getGuild(channel.guildId)?.visiting === true;
+		let channelDetailsLabel: string;
+		if (isDM && directMessageName) {
+			channelDetailsLabel = i18n._(OPEN_DIRECT_MESSAGE_DETAILS_FOR_DESCRIPTOR, {directMessageName});
+		} else if (isGroupDM && groupDMName) {
+			channelDetailsLabel = i18n._(OPEN_GROUP_DETAILS_FOR_DESCRIPTOR, {groupDMName});
+		} else {
+			channelDetailsLabel = i18n._(OPEN_CHANNEL_DETAILS_FOR_DESCRIPTOR, {channelName});
+		}
 		const userProfileLabel = directMessageName
 			? i18n._(OPEN_PROFILE_FOR_DESCRIPTOR, {directMessageName})
 			: i18n._(OPEN_DIRECT_MESSAGE_PROFILE_DESCRIPTOR);
@@ -380,6 +389,8 @@ export const ChannelHeader = observer(
 				RouterUtils.transitionTo(Routes.ME);
 			} else if (Routes.isFavoritesRoute(location.pathname)) {
 				RouterUtils.transitionTo(Routes.FAVORITES);
+			} else if (channel?.isThread() && channel.guildId && channel.parentId) {
+				NavigationCommands.selectChannel(channel.guildId, channel.parentId);
 			} else if (isGuildChannel && channel?.guildId) {
 				NavigationCommands.selectChannel(channel.guildId);
 			} else {
@@ -401,6 +412,18 @@ export const ChannelHeader = observer(
 		};
 		const handleContextMenu = useCallback(
 			(event: React.MouseEvent) => {
+				if (channel?.isThread()) {
+					event.preventDefault();
+					event.stopPropagation();
+					ContextMenuCommands.openFromEvent(event, ({onClose}) => (
+						<ThreadContextMenu
+							thread={channel}
+							onClose={onClose}
+							data-flx="channel.channel-header.handle-context-menu.thread-context-menu"
+						/>
+					));
+					return;
+				}
 				if (channel && isGuildChannel) {
 					event.preventDefault();
 					event.stopPropagation();
@@ -444,8 +467,8 @@ export const ChannelHeader = observer(
 		const handleMobileVoiceCall = useCallback(
 			async (event: React.MouseEvent) => {
 				if (!channel) return;
-				const isConnected = MediaEngine.connected;
-				const connectedChannelId = MediaEngine.channelId;
+				const isConnected = VoiceRuntime.connected;
+				const connectedChannelId = VoiceRuntime.channelId;
 				const isInCall = isConnected && connectedChannelId === channel.id;
 				if (isInCall) {
 					void CallCommands.leaveCall(channel.id);
@@ -464,8 +487,8 @@ export const ChannelHeader = observer(
 		const handleMobileVideoCall = useCallback(
 			async (event: React.MouseEvent) => {
 				if (!channel) return;
-				const isConnected = MediaEngine.connected;
-				const connectedChannelId = MediaEngine.channelId;
+				const isConnected = VoiceRuntime.connected;
+				const connectedChannelId = VoiceRuntime.channelId;
 				const isInCall = isConnected && connectedChannelId === channel.id;
 				if (isInCall) {
 					void CallCommands.leaveCall(channel.id);
@@ -519,8 +542,11 @@ export const ChannelHeader = observer(
 			recipient &&
 			!isBotDMRecipient &&
 			Relationships.getRelationship(recipient.id)?.type === RelationshipTypes.FRIEND;
-		const shouldShowCreateGroupButton = !!channel && !isMobile && !isPersonalNotes && isFriendDM && !isGroupDM;
-		const shouldShowAddFriendsButton = !!channel && !isMobile && !isPersonalNotes && isGroupDM && !isGroupDMFull;
+		const dmPickerAvailable = RuntimeConfig.dmPickerAvailable;
+		const shouldShowCreateGroupButton =
+			dmPickerAvailable && !!channel && !isMobile && !isPersonalNotes && isFriendDM && !isGroupDM;
+		const shouldShowAddFriendsButton =
+			dmPickerAvailable && !!channel && !isMobile && !isPersonalNotes && isGroupDM && !isGroupDMFull;
 		const hasChannel = Boolean(channel) && !isPersonalNotes;
 		const hasCallableRecipients = hasChannel && (isDM || isGroupDM);
 		let desktopLeadingActionCount = 0;
@@ -530,7 +556,7 @@ export const ChannelHeader = observer(
 		if (hasCallableRecipients && !(isDM && isBotDMRecipient)) {
 			desktopLeadingActionCount += 2;
 		}
-		if (showPins && Boolean(channel)) {
+		if (showPins && channel) {
 			desktopLeadingActionCount += 1;
 		}
 		if (hasChannel && isFriendDM && !isGroupDM) {
@@ -556,6 +582,8 @@ export const ChannelHeader = observer(
 			mobileActionCount += 1;
 		}
 		const searchPanelOpen = Boolean(isSearchResultsVisible);
+		const threadPanelState = useThreadPanelState(channel);
+		const isThreadPanelOpen = threadPanelState.thread !== undefined || threadPanelState.createMessageId !== undefined;
 		useSkeletonLayoutReport(
 			() => {
 				if (channelId == null || channelType == null) {
@@ -574,6 +602,329 @@ export const ChannelHeader = observer(
 			},
 			`${channelId}|${channelType ?? ''}|${channelHasTopic}|${channel?.topic ?? ''}|${channelName}|${directMessageName}|${groupDMName}|${desktopLeadingActionCount}|${mobileActionCount}|${searchPanelOpen}|${isMembersToggleOpen}|${Accessibility.fontSize}|${Accessibility.zoomLevel}`,
 		);
+		const backButton = isMobile ? (
+			<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring">
+				<button
+					type="button"
+					className={styles.backButton}
+					aria-label={i18n._(BACK_DESCRIPTOR)}
+					onClick={handleBackClick}
+					data-flx="channel.channel-header.back-button.back-click"
+				>
+					<ArrowLeftIcon
+						className={styles.backIconBold}
+						weight="bold"
+						data-flx="channel.channel-header.back-icon-bold"
+					/>
+				</button>
+			</FocusRing>
+		) : (
+			<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--2">
+				<button
+					type="button"
+					className={styles.backButtonDesktop}
+					aria-label={i18n._(SHOW_CHANNEL_LIST_DESCRIPTOR)}
+					onClick={handleBackClick}
+					data-flx="channel.channel-header.back-button-desktop.back-click"
+				>
+					<ListIcon className={styles.backIcon} data-flx="channel.channel-header.back-icon" />
+				</button>
+			</FocusRing>
+		);
+		let headerTitle: React.ReactNode = null;
+		if (leftContent) {
+			headerTitle = leftContent;
+		} else if (channel) {
+			if (isMobile) {
+				let mobileTitle: React.ReactNode;
+				if (isDM && recipient) {
+					mobileTitle = (
+						<>
+							<StatusAwareAvatar
+								user={recipient}
+								size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
+								showOffline={true}
+								data-flx="channel.channel-header.status-aware-avatar"
+							/>
+							<span className={styles.dmNameWrapper} data-flx="channel.channel-header.dm-name-wrapper">
+								<Tooltip
+									text={isDMNameOverflowing && directMessageName ? directMessageName : ''}
+									data-flx="channel.channel-header.tooltip"
+								>
+									<span ref={dmNameRef} className={styles.channelName} data-flx="channel.channel-header.channel-name">
+										{directMessageName}
+									</span>
+								</Tooltip>
+								{isBotDMRecipient && (
+									<UserTag
+										className={styles.userTag}
+										system={recipient.system}
+										data-flx="channel.channel-header.user-tag"
+									/>
+								)}
+							</span>
+							<CaretRightIcon
+								className={styles.caretRight}
+								weight="bold"
+								data-flx="channel.channel-header.caret-right"
+							/>
+						</>
+					);
+				} else if (isGroupDM) {
+					mobileTitle = (
+						<>
+							<GroupDMAvatar
+								channel={channel}
+								size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
+								data-flx="channel.channel-header.group-dm-avatar"
+							/>
+							<Tooltip
+								text={isGroupDMNameOverflowing && groupDMName ? groupDMName : ''}
+								data-flx="channel.channel-header.tooltip--2"
+							>
+								<span
+									ref={groupDMNameRef}
+									className={styles.channelName}
+									data-flx="channel.channel-header.channel-name--2"
+								>
+									{groupDMName}
+								</span>
+							</Tooltip>
+							<CaretRightIcon
+								className={styles.caretRight}
+								weight="bold"
+								data-flx="channel.channel-header.caret-right--2"
+							/>
+						</>
+					);
+				} else {
+					mobileTitle = (
+						<>
+							{ChannelUtils.getIcon(channel, {className: styles.channelIcon}, e2eeIconOptions)}
+							<Tooltip
+								text={isGuildChannelNameOverflowing && channelName ? channelName : ''}
+								data-flx="channel.channel-header.tooltip--3"
+							>
+								<span
+									ref={guildChannelNameRef}
+									className={styles.channelName}
+									data-flx="channel.channel-header.channel-name--3"
+								>
+									{channelName}
+								</span>
+							</Tooltip>
+							<CaretRightIcon
+								className={styles.caretRight}
+								weight="bold"
+								data-flx="channel.channel-header.caret-right--3"
+							/>
+						</>
+					);
+				}
+				headerTitle = (
+					<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--3">
+						<button
+							type="button"
+							className={styles.mobileButton}
+							aria-label={channelDetailsLabel}
+							aria-haspopup="dialog"
+							onClick={handleChannelDetailsClick}
+							data-flx="channel.channel-header.mobile-button.channel-details-click"
+						>
+							{mobileTitle}
+						</button>
+					</FocusRing>
+				);
+			} else if (isDM && recipient) {
+				headerTitle = (
+					<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--4">
+						<button
+							type="button"
+							className={styles.desktopButton}
+							aria-label={userProfileLabel}
+							onClick={handleOpenUserProfile}
+							onContextMenu={handleUserContextMenu}
+							data-flx="channel.channel-header.desktop-button.open-user-profile"
+						>
+							<StatusAwareAvatar
+								user={recipient}
+								size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
+								showOffline={true}
+								data-flx="channel.channel-header.status-aware-avatar--2"
+							/>
+							<span className={styles.dmNameWrapper} data-flx="channel.channel-header.dm-name-wrapper--2">
+								<Tooltip
+									text={isDMNameOverflowing ? directMessageName : ''}
+									data-flx="channel.channel-header.tooltip--4"
+								>
+									<span
+										ref={dmNameRef}
+										className={styles.channelName}
+										data-flx="channel.channel-header.channel-name--4"
+									>
+										{directMessageName}
+									</span>
+								</Tooltip>
+								{isBotDMRecipient && (
+									<UserTag
+										className={styles.userTag}
+										system={recipient.system}
+										data-flx="channel.channel-header.user-tag--2"
+									/>
+								)}
+							</span>
+						</button>
+					</FocusRing>
+				);
+			} else if (isGroupDM) {
+				headerTitle = (
+					<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--5">
+						<div
+							className={styles.groupDmHeaderTrigger}
+							role="button"
+							aria-label={i18n._(EDIT_GROUP_DETAILS_DESCRIPTOR)}
+							tabIndex={0}
+							onClick={handleOpenEditGroup}
+							onContextMenu={handleUserContextMenu}
+							onKeyDown={(event) => {
+								if (isKeyboardActivationKey(event.key)) {
+									event.preventDefault();
+									handleOpenEditGroup();
+								}
+							}}
+							data-flx="channel.channel-header.group-dm-header-trigger.open-edit-group"
+						>
+							<div className={styles.groupDmHeaderInner} data-flx="channel.channel-header.group-dm-header-inner">
+								<GroupDMAvatar
+									channel={channel}
+									size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
+									data-flx="channel.channel-header.group-dm-avatar--3"
+								/>
+								<div className={styles.dmNameWrapper} data-flx="channel.channel-header.dm-name-wrapper--3">
+									<Tooltip
+										text={isGroupDMNameOverflowing && groupDMName ? groupDMName : ''}
+										data-flx="channel.channel-header.tooltip--6"
+									>
+										<span
+											ref={groupDMNameRef}
+											className={clsx(styles.channelName, styles.groupDmChannelName)}
+											data-flx="channel.channel-header.channel-name--6"
+										>
+											{groupDMName}
+										</span>
+									</Tooltip>
+								</div>
+							</div>
+							<PencilIcon
+								className={styles.groupDmEditIcon}
+								size={16}
+								weight="bold"
+								data-flx="channel.channel-header.group-dm-edit-icon"
+							/>
+						</div>
+					</FocusRing>
+				);
+			} else if (isPersonalNotes) {
+				headerTitle = (
+					<div className={styles.avatarWrapper} data-flx="channel.channel-header.avatar-wrapper--2">
+						{ChannelUtils.getIcon(channel, {className: styles.channelIcon}, e2eeIconOptions)}
+						<Tooltip
+							text={isGuildChannelNameOverflowing && channelName ? channelName : ''}
+							data-flx="channel.channel-header.tooltip--7"
+						>
+							<span
+								ref={guildChannelNameRef}
+								className={styles.channelName}
+								data-flx="channel.channel-header.channel-name--7"
+							>
+								{channelName}
+							</span>
+						</Tooltip>
+					</div>
+				);
+			} else {
+				headerTitle = (
+					<div
+						role="group"
+						className={styles.channelInfoContainer}
+						onContextMenu={handleContextMenu}
+						data-flx="channel.channel-header.channel-info-container.context-menu"
+					>
+						{channel.isThread() && (
+							<ThreadParentCrumb
+								thread={channel}
+								iconClassName={styles.channelIcon}
+								data-flx="channel.channel-header.thread-parent-crumb"
+							/>
+						)}
+						{ChannelUtils.getIcon(channel, {className: styles.channelIcon}, e2eeIconOptions)}
+						<Tooltip
+							text={isGuildChannelNameOverflowing && channelName ? channelName : ''}
+							data-flx="channel.channel-header.tooltip--8"
+						>
+							<span
+								ref={guildChannelNameRef}
+								className={styles.channelName}
+								data-flx="channel.channel-header.channel-name--8"
+							>
+								{channelName}
+							</span>
+						</Tooltip>
+						{!isMobile && (
+							<ChannelFollowButton
+								channel={channel}
+								className={styles.followButton}
+								data-flx="channel.channel-header.channel-follow-button"
+							/>
+						)}
+						{channel.topic && (
+							<>
+								<span className={styles.topicDivider} data-flx="channel.channel-header.topic-divider">
+									•
+								</span>
+								<div className={styles.topicContainer} data-flx="channel.channel-header.topic-container">
+									<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--6">
+										<div
+											role="button"
+											ref={topicButtonRef}
+											className={clsx(
+												markupStyles.markup,
+												styles.topicButton,
+												isTopicOverflowing && styles.topicButtonOverflow,
+											)}
+											onClick={handleOpenChannelTopic}
+											onKeyDown={(e) => {
+												if (!isKeyboardActivationKey(e.key)) return;
+												e.preventDefault();
+												handleOpenChannelTopic();
+											}}
+											tabIndex={0}
+											data-flx="channel.channel-header.topic-button.push"
+										>
+											<SafeMarkdown
+												content={channel.topic}
+												options={{
+													context: MarkdownContext.RESTRICTED_INLINE_REPLY,
+													disableInteractions: true,
+													channelId: channel.id,
+												}}
+												data-flx="channel.channel-header.safe-markdown"
+											/>
+										</div>
+									</FocusRing>
+								</div>
+							</>
+						)}
+					</div>
+				);
+			}
+		}
+		let memberListDescriptor = SHOW_MEMBERS_DESCRIPTOR;
+		if (!canFitMemberList) {
+			memberListDescriptor = MEMBERS_LIST_UNAVAILABLE_AT_THIS_SCREEN_WIDTH_DESCRIPTOR;
+		} else if (isMembersToggleOpen) {
+			memberListDescriptor = HIDE_MEMBERS_DESCRIPTOR;
+		}
 		return (
 			<>
 				<header
@@ -583,324 +934,17 @@ export const ChannelHeader = observer(
 					data-flx="channel.channel-header.header-wrapper"
 				>
 					<NativeDragRegion
-						className={clsx(styles.headerContainer, isVoiceHeaderActive && styles.headerContainerCallActive)}
+						className={clsx(
+							styles.headerContainer,
+							isVoiceHeaderActive && styles.headerContainerCallActive,
+							isThreadPanelOpen && styles.headerContainerThreadPanelOpen,
+						)}
 						data-flx="channel.channel-header.header-container"
 					>
 						<div className={styles.headerLeftSection} data-flx="channel.channel-header.header-left-section">
-							{isMobile ? (
-								<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring">
-									<button
-										type="button"
-										className={styles.backButton}
-										aria-label={i18n._(BACK_DESCRIPTOR)}
-										onClick={handleBackClick}
-										data-flx="channel.channel-header.back-button.back-click"
-									>
-										<ArrowLeftIcon
-											className={styles.backIconBold}
-											weight="bold"
-											data-flx="channel.channel-header.back-icon-bold"
-										/>
-									</button>
-								</FocusRing>
-							) : (
-								<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--2">
-									<button
-										type="button"
-										className={styles.backButtonDesktop}
-										aria-label={i18n._(SHOW_CHANNEL_LIST_DESCRIPTOR)}
-										onClick={handleBackClick}
-										data-flx="channel.channel-header.back-button-desktop.back-click"
-									>
-										<ListIcon className={styles.backIcon} data-flx="channel.channel-header.back-icon" />
-									</button>
-								</FocusRing>
-							)}
+							{backButton}
 							<div className={styles.leftContentContainer} data-flx="channel.channel-header.left-content-container">
-								{leftContent ? (
-									leftContent
-								) : channel ? (
-									isMobile ? (
-										<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--3">
-											<button
-												type="button"
-												className={styles.mobileButton}
-												aria-label={channelDetailsLabel}
-												aria-haspopup="dialog"
-												onClick={handleChannelDetailsClick}
-												data-flx="channel.channel-header.mobile-button.channel-details-click"
-											>
-												{isDM && recipient ? (
-													<>
-														<StatusAwareAvatar
-															user={recipient}
-															size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
-															showOffline={true}
-															data-flx="channel.channel-header.status-aware-avatar"
-														/>
-														<span className={styles.dmNameWrapper} data-flx="channel.channel-header.dm-name-wrapper">
-															<Tooltip
-																text={isDMNameOverflowing && directMessageName ? directMessageName : ''}
-																data-flx="channel.channel-header.tooltip"
-															>
-																<span
-																	ref={dmNameRef}
-																	className={styles.channelName}
-																	data-flx="channel.channel-header.channel-name"
-																>
-																	{directMessageName}
-																</span>
-															</Tooltip>
-															{isBotDMRecipient && (
-																<UserTag
-																	className={styles.userTag}
-																	system={recipient.system}
-																	data-flx="channel.channel-header.user-tag"
-																/>
-															)}
-														</span>
-														<CaretRightIcon
-															className={styles.caretRight}
-															weight="bold"
-															data-flx="channel.channel-header.caret-right"
-														/>
-													</>
-												) : isGroupDM ? (
-													<>
-														<GroupDMAvatar
-															channel={channel}
-															size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
-															data-flx="channel.channel-header.group-dm-avatar"
-														/>
-														<Tooltip
-															text={isGroupDMNameOverflowing && groupDMName ? groupDMName : ''}
-															data-flx="channel.channel-header.tooltip--2"
-														>
-															<span
-																ref={groupDMNameRef}
-																className={styles.channelName}
-																data-flx="channel.channel-header.channel-name--2"
-															>
-																{groupDMName}
-															</span>
-														</Tooltip>
-														<CaretRightIcon
-															className={styles.caretRight}
-															weight="bold"
-															data-flx="channel.channel-header.caret-right--2"
-														/>
-													</>
-												) : (
-													<>
-														{ChannelUtils.getIcon(channel, {className: styles.channelIcon}, e2eeIconOptions)}
-														<Tooltip
-															text={isGuildChannelNameOverflowing && channelName ? channelName : ''}
-															data-flx="channel.channel-header.tooltip--3"
-														>
-															<span
-																ref={guildChannelNameRef}
-																className={styles.channelName}
-																data-flx="channel.channel-header.channel-name--3"
-															>
-																{channelName}
-															</span>
-														</Tooltip>
-														<CaretRightIcon
-															className={styles.caretRight}
-															weight="bold"
-															data-flx="channel.channel-header.caret-right--3"
-														/>
-													</>
-												)}
-											</button>
-										</FocusRing>
-									) : isDM && recipient ? (
-										<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--4">
-											<button
-												type="button"
-												className={styles.desktopButton}
-												aria-label={userProfileLabel}
-												onClick={handleOpenUserProfile}
-												onContextMenu={handleUserContextMenu}
-												data-flx="channel.channel-header.desktop-button.open-user-profile"
-											>
-												<StatusAwareAvatar
-													user={recipient}
-													size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
-													showOffline={true}
-													data-flx="channel.channel-header.status-aware-avatar--2"
-												/>
-												<span className={styles.dmNameWrapper} data-flx="channel.channel-header.dm-name-wrapper--2">
-													<Tooltip
-														text={isDMNameOverflowing ? directMessageName : ''}
-														data-flx="channel.channel-header.tooltip--4"
-													>
-														<span
-															ref={dmNameRef}
-															className={styles.channelName}
-															data-flx="channel.channel-header.channel-name--4"
-														>
-															{directMessageName}
-														</span>
-													</Tooltip>
-													{isBotDMRecipient && (
-														<UserTag
-															className={styles.userTag}
-															system={recipient.system}
-															data-flx="channel.channel-header.user-tag--2"
-														/>
-													)}
-												</span>
-											</button>
-										</FocusRing>
-									) : isGroupDM ? (
-										isMobile ? (
-											<div className={styles.avatarWrapper} data-flx="channel.channel-header.avatar-wrapper">
-												<GroupDMAvatar
-													channel={channel}
-													size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
-													data-flx="channel.channel-header.group-dm-avatar--2"
-												/>
-												<Tooltip
-													text={isGroupDMNameOverflowing && groupDMName ? groupDMName : ''}
-													data-flx="channel.channel-header.tooltip--5"
-												>
-													<span
-														ref={groupDMNameRef}
-														className={styles.channelName}
-														data-flx="channel.channel-header.channel-name--5"
-													>
-														{groupDMName}
-													</span>
-												</Tooltip>
-											</div>
-										) : (
-											<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--5">
-												<div
-													className={styles.groupDmHeaderTrigger}
-													role="button"
-													aria-label={i18n._(EDIT_GROUP_DETAILS_DESCRIPTOR)}
-													tabIndex={0}
-													onClick={handleOpenEditGroup}
-													onContextMenu={handleUserContextMenu}
-													onKeyDown={(event) => {
-														if (isKeyboardActivationKey(event.key)) {
-															event.preventDefault();
-															handleOpenEditGroup();
-														}
-													}}
-													data-flx="channel.channel-header.group-dm-header-trigger.open-edit-group"
-												>
-													<div
-														className={styles.groupDmHeaderInner}
-														data-flx="channel.channel-header.group-dm-header-inner"
-													>
-														<GroupDMAvatar
-															channel={channel}
-															size={CHANNEL_HEADER_DM_AVATAR_SIZE_PX}
-															data-flx="channel.channel-header.group-dm-avatar--3"
-														/>
-														<div className={styles.dmNameWrapper} data-flx="channel.channel-header.dm-name-wrapper--3">
-															<Tooltip
-																text={isGroupDMNameOverflowing && groupDMName ? groupDMName : ''}
-																data-flx="channel.channel-header.tooltip--6"
-															>
-																<span
-																	ref={groupDMNameRef}
-																	className={clsx(styles.channelName, styles.groupDmChannelName)}
-																	data-flx="channel.channel-header.channel-name--6"
-																>
-																	{groupDMName}
-																</span>
-															</Tooltip>
-														</div>
-													</div>
-													<PencilIcon
-														className={styles.groupDmEditIcon}
-														size={16}
-														weight="bold"
-														data-flx="channel.channel-header.group-dm-edit-icon"
-													/>
-												</div>
-											</FocusRing>
-										)
-									) : isPersonalNotes ? (
-										<div className={styles.avatarWrapper} data-flx="channel.channel-header.avatar-wrapper--2">
-											{ChannelUtils.getIcon(channel, {className: styles.channelIcon}, e2eeIconOptions)}
-											<Tooltip
-												text={isGuildChannelNameOverflowing && channelName ? channelName : ''}
-												data-flx="channel.channel-header.tooltip--7"
-											>
-												<span
-													ref={guildChannelNameRef}
-													className={styles.channelName}
-													data-flx="channel.channel-header.channel-name--7"
-												>
-													{channelName}
-												</span>
-											</Tooltip>
-										</div>
-									) : (
-										<div
-											role="group"
-											className={styles.channelInfoContainer}
-											onContextMenu={handleContextMenu}
-											data-flx="channel.channel-header.channel-info-container.context-menu"
-										>
-											{ChannelUtils.getIcon(channel, {className: styles.channelIcon}, e2eeIconOptions)}
-											<Tooltip
-												text={isGuildChannelNameOverflowing && channelName ? channelName : ''}
-												data-flx="channel.channel-header.tooltip--8"
-											>
-												<span
-													ref={guildChannelNameRef}
-													className={styles.channelName}
-													data-flx="channel.channel-header.channel-name--8"
-												>
-													{channelName}
-												</span>
-											</Tooltip>
-											{channel.topic && (
-												<>
-													<span className={styles.topicDivider} data-flx="channel.channel-header.topic-divider">
-														•
-													</span>
-													<div className={styles.topicContainer} data-flx="channel.channel-header.topic-container">
-														<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--6">
-															<div
-																role="button"
-																ref={topicButtonRef}
-																className={clsx(
-																	markupStyles.markup,
-																	styles.topicButton,
-																	isTopicOverflowing && styles.topicButtonOverflow,
-																)}
-																onClick={handleOpenChannelTopic}
-																onKeyDown={(e) => {
-																	if (!isKeyboardActivationKey(e.key)) return;
-																	e.preventDefault();
-																	handleOpenChannelTopic();
-																}}
-																tabIndex={0}
-																data-flx="channel.channel-header.topic-button.push"
-															>
-																<SafeMarkdown
-																	content={channel.topic}
-																	options={{
-																		context: MarkdownContext.RESTRICTED_INLINE_REPLY,
-																		disableInteractions: true,
-																		channelId: channel.id,
-																	}}
-																	data-flx="channel.channel-header.safe-markdown"
-																/>
-															</div>
-														</FocusRing>
-													</div>
-												</>
-											)}
-										</div>
-									)
-								) : null}
+								{headerTitle}
 							</div>
 						</div>
 						<div
@@ -917,27 +961,32 @@ export const ChannelHeader = observer(
 									{voiceCallHeaderSupplement}
 								</div>
 							)}
-							{isMobile && channel && !isPersonalNotes && Accessibility.showFavorites && (
-								<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--7">
-									<button
-										type="button"
-										className={styles.iconButtonMobile}
-										aria-label={
-											isFavorited ? i18n._(REMOVE_FROM_FAVORITES_DESCRIPTOR) : i18n._(ADD_TO_FAVORITES_DESCRIPTOR)
-										}
-										aria-pressed={isFavorited}
-										onClick={handleToggleFavorite}
-										onContextMenu={handleFavoriteContextMenu}
-										data-flx="channel.channel-header.icon-button-mobile.toggle-favorite"
-									>
-										<StarIcon
-											className={styles.buttonIconMobile}
-											weight={isFavorited ? 'fill' : 'bold'}
-											data-flx="channel.channel-header.button-icon-mobile"
-										/>
-									</button>
-								</FocusRing>
-							)}
+							{isMobile &&
+								channel &&
+								!isPersonalNotes &&
+								!channel.isThread() &&
+								!channel.isThreadOnly() &&
+								Accessibility.showFavorites && (
+									<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--7">
+										<button
+											type="button"
+											className={styles.iconButtonMobile}
+											aria-label={
+												isFavorited ? i18n._(REMOVE_FROM_FAVORITES_DESCRIPTOR) : i18n._(ADD_TO_FAVORITES_DESCRIPTOR)
+											}
+											aria-pressed={isFavorited}
+											onClick={handleToggleFavorite}
+											onContextMenu={handleFavoriteContextMenu}
+											data-flx="channel.channel-header.icon-button-mobile.toggle-favorite"
+										>
+											<StarIcon
+												className={styles.buttonIconMobile}
+												weight={isFavorited ? 'fill' : 'bold'}
+												data-flx="channel.channel-header.button-icon-mobile"
+											/>
+										</button>
+									</FocusRing>
+								)}
 							{isMobile && (isDM || isGroupDM) && !isPersonalNotes && (
 								<>
 									<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--8">
@@ -970,6 +1019,9 @@ export const ChannelHeader = observer(
 									</FocusRing>
 								</>
 							)}
+							{isMobile && channel && (
+								<ThreadsButton channel={channel} data-flx="channel.channel-header.threads-button--mobile" />
+							)}
 							{isMobile && isGuildChannel && (
 								<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--10">
 									<button
@@ -987,11 +1039,25 @@ export const ChannelHeader = observer(
 									</button>
 								</FocusRing>
 							)}
-							{channel && isGuildChannel && !isMobile && !isPersonalNotes && (
-								<ChannelNotificationSettingsButton
-									channel={channel}
-									data-flx="channel.channel-header.channel-notification-settings-button"
+							{channel &&
+								isGuildChannel &&
+								!isMobile &&
+								!isPersonalNotes &&
+								!channel.isThread() &&
+								!isVisitingGuild && (
+									<ChannelNotificationSettingsButton
+										channel={channel}
+										data-flx="channel.channel-header.channel-notification-settings-button"
+									/>
+								)}
+							{channel && !isMobile && channel.isThread() && !isVisitingGuild && (
+								<ThreadNotificationSettingsButton
+									thread={channel}
+									data-flx="channel.channel-header.thread-notification-settings-button"
 								/>
+							)}
+							{channel && !isMobile && (
+								<ThreadsButton channel={channel} data-flx="channel.channel-header.threads-button" />
 							)}
 							{(isDM || isGroupDM) && channel && !isMobile && !(isDM && isBotDMRecipient) && (
 								<>
@@ -1018,44 +1084,43 @@ export const ChannelHeader = observer(
 									data-flx="channel.channel-header.channel-header-icon.open-add-friends-to-group"
 								/>
 							)}
-							{channel && !isMobile && !isPersonalNotes && Accessibility.showFavorites && (
-								<Tooltip
-									text={isFavorited ? i18n._(REMOVE_FROM_FAVORITES_DESCRIPTOR) : i18n._(ADD_TO_FAVORITES_DESCRIPTOR)}
-									position="bottom"
-									data-flx="channel.channel-header.tooltip--9"
-								>
-									<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--11">
-										<button
-											type="button"
-											className={isFavorited ? styles.iconButtonSelected : styles.iconButtonDefault}
-											aria-label={
-												isFavorited ? i18n._(REMOVE_FROM_FAVORITES_DESCRIPTOR) : i18n._(ADD_TO_FAVORITES_DESCRIPTOR)
-											}
-											aria-pressed={isFavorited}
-											onClick={handleToggleFavorite}
-											onContextMenu={handleFavoriteContextMenu}
-											data-flx="channel.channel-header.icon-button.toggle-favorite"
-										>
-											<StarIcon
-												className={styles.buttonIcon}
-												weight={isFavorited ? 'fill' : 'bold'}
-												data-flx="channel.channel-header.button-icon"
-											/>
-										</button>
-									</FocusRing>
-								</Tooltip>
-							)}
+							{channel &&
+								!isMobile &&
+								!isPersonalNotes &&
+								!channel.isThread() &&
+								!channel.isThreadOnly() &&
+								Accessibility.showFavorites && (
+									<Tooltip
+										text={isFavorited ? i18n._(REMOVE_FROM_FAVORITES_DESCRIPTOR) : i18n._(ADD_TO_FAVORITES_DESCRIPTOR)}
+										position="bottom"
+										data-flx="channel.channel-header.tooltip--9"
+									>
+										<FocusRing offset={-2} data-flx="channel.channel-header.focus-ring--11">
+											<button
+												type="button"
+												className={isFavorited ? styles.iconButtonSelected : styles.iconButtonDefault}
+												aria-label={
+													isFavorited ? i18n._(REMOVE_FROM_FAVORITES_DESCRIPTOR) : i18n._(ADD_TO_FAVORITES_DESCRIPTOR)
+												}
+												aria-pressed={isFavorited}
+												onClick={handleToggleFavorite}
+												onContextMenu={handleFavoriteContextMenu}
+												data-flx="channel.channel-header.icon-button.toggle-favorite"
+											>
+												<StarIcon
+													className={styles.buttonIcon}
+													weight={isFavorited ? 'fill' : 'bold'}
+													data-flx="channel.channel-header.button-icon"
+												/>
+											</button>
+										</FocusRing>
+									</Tooltip>
+								)}
 							{showMembersToggle && !isMobile && (
 								<ChannelHeaderIcon
 									icon={UsersIcon}
 									isSelected={isMembersToggleOpen}
-									label={
-										!canFitMemberList
-											? i18n._(MEMBERS_LIST_UNAVAILABLE_AT_THIS_SCREEN_WIDTH_DESCRIPTOR)
-											: isMembersToggleOpen
-												? i18n._(HIDE_MEMBERS_DESCRIPTOR)
-												: i18n._(SHOW_MEMBERS_DESCRIPTOR)
-									}
+									label={i18n._(memberListDescriptor)}
 									onClick={handleToggleMembers}
 									disabled={!canFitMemberList}
 									aria-pressed={isMembersToggleOpen}
@@ -1063,7 +1128,7 @@ export const ChannelHeader = observer(
 									data-flx="channel.channel-header.channel-header-icon.toggle-members"
 								/>
 							)}
-							{!isMobile && channel && !isPersonalNotes && (
+							{!isMobile && channel && !channel.isThreadOnly() && !isVisitingGuild && (
 								<FocusRing offset={-2} within data-flx="channel.channel-header.focus-ring--12">
 									<div
 										className={styles.messageSearchFocusWrapper}

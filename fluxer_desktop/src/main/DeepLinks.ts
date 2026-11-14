@@ -1,17 +1,66 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APP_PROTOCOL} from '@electron/common/Constants';
-import {parseJumpListTaskFromArgv} from '@electron/main/JumpList';
-import {ensureLinuxProtocolDesktopEntry} from '@electron/main/LinuxDesktopEntry';
-import {recordRecentDeepLink} from '@electron/main/RecentDocuments';
-import {getMainWindow, showWindow} from '@electron/main/Window';
+import {requestAccountSwitcher} from '@electron/main/DesktopTray';
+import {updateFromCommandLine} from '@electron/main/DesktopUpdatePrompt';
+import {type JumpListTaskId, parseJumpListTaskFromArgv} from '@electron/main/JumpList';
+import {isDesktopUpdateRequested} from '@electron/main/LaunchOptions';
+import {getMainWindow, isTrustedOrigin, showWindow} from '@electron/main/Window';
 import {app, ipcMain} from 'electron';
+import log from 'electron-log';
 
 let initialDeepLink: string | null = null;
+let handoffReturnLinkSink: ((url: URL) => void) | null = null;
 
 const DUPLICATE_URL_SUPPRESS_MS = 1500;
 const APP_PROTOCOL_SCHEME = `${APP_PROTOCOL}:`;
+const HANDOFF_RETURN_HOST = 'handoff';
 const DEEP_LINK_RENDERER_PAYLOAD_BLOCKLIST = /["'<>\\|\t\r\n]/;
+const INSTANCE_DESIGNATING_KEYS = new Set([
+	'api',
+	'apibase',
+	'apiendpoint',
+	'domain',
+	'endpoint',
+	'gateway',
+	'host',
+	'instance',
+	'instancekey',
+	'origin',
+]);
+
+function designationKey(name: string): string {
+	return name.toLowerCase().replace(/[^a-z0-9]/gu, '');
+}
+
+function findInstanceDesignation(url: URL): string | null {
+	if (INSTANCE_DESIGNATING_KEYS.has(designationKey(url.hostname))) {
+		return url.hostname;
+	}
+	for (const name of url.searchParams.keys()) {
+		if (INSTANCE_DESIGNATING_KEYS.has(designationKey(name))) {
+			return name;
+		}
+	}
+	return null;
+}
+
+function findRawInstanceDesignation(rawUrl: string): string | null {
+	for (const match of rawUrl.matchAll(/[?&]([^=&#]+)=/gu)) {
+		const name = match[1];
+		if (INSTANCE_DESIGNATING_KEYS.has(designationKey(name))) {
+			return name;
+		}
+	}
+	return null;
+}
+
+function rejectInstanceDesignation(designation: string): null {
+	log.warn(
+		`[DeepLinks] Rejected a deep link that tries to designate an instance through "${designation}" because deep links resolve against the foreground account only`,
+	);
+	return null;
+}
 
 let lastDispatchedUrl: string | null = null;
 let lastDispatchedAt = 0;
@@ -46,32 +95,54 @@ function extractDeepLinkFromArgv(argv: ReadonlyArray<string>): string | null {
 	return argv.find(isAppProtocolUrl) ?? null;
 }
 
+export function setHandoffReturnLinkSink(sink: ((url: URL) => void) | null): void {
+	handoffReturnLinkSink = sink;
+}
+
+function parseHandoffReturnLink(rawUrl: string): URL | null {
+	try {
+		const parsed = new URL(rawUrl);
+		if (
+			parsed.protocol.toLowerCase() !== APP_PROTOCOL_SCHEME ||
+			parsed.hostname.toLowerCase() !== HANDOFF_RETURN_HOST
+		) {
+			return null;
+		}
+		return parsed;
+	} catch {
+		return null;
+	}
+}
+
 function normalizeDeepLinkForRenderer(rawUrl: string): string | null {
 	try {
 		const parsed = new URL(rawUrl);
 		if (parsed.protocol.toLowerCase() !== APP_PROTOCOL_SCHEME) {
 			return null;
 		}
+		const designation = findInstanceDesignation(parsed);
+		if (designation !== null) {
+			return rejectInstanceDesignation(designation);
+		}
 		const host = parsed.hostname;
 		const path = host && host !== '-' ? `/${host}${parsed.pathname}` : parsed.pathname || '/';
 		const payload = `${path.startsWith('/') ? path : `/${path}`}${parsed.search}${parsed.hash}`;
 		return DEEP_LINK_RENDERER_PAYLOAD_BLOCKLIST.test(payload) ? null : payload;
 	} catch {
+		const designation = findRawInstanceDesignation(rawUrl);
+		if (designation !== null) {
+			return rejectInstanceDesignation(designation);
+		}
 		return isAppProtocolUrl(rawUrl) && !DEEP_LINK_RENDERER_PAYLOAD_BLOCKLIST.test(rawUrl) ? rawUrl : null;
 	}
 }
 
 export function initializeDeepLinks(): void {
-	ensureLinuxProtocolDesktopEntry();
 	if (process.platform === 'linux') {
 		registerInitialDeepLinkHandler();
 		return;
 	}
-	if (process.defaultApp) {
-		if (process.argv.length >= 2) {
-			app.setAsDefaultProtocolClient(APP_PROTOCOL, process.execPath, [process.argv[1]]);
-		}
-	} else {
+	if (app.isPackaged) {
 		app.setAsDefaultProtocolClient(APP_PROTOCOL);
 	}
 	registerInitialDeepLinkHandler();
@@ -79,7 +150,7 @@ export function initializeDeepLinks(): void {
 
 function registerInitialDeepLinkHandler(): void {
 	const deepLinkArg = extractDeepLinkFromArgv(process.argv);
-	if (deepLinkArg) {
+	if (deepLinkArg && parseHandoffReturnLink(deepLinkArg) == null) {
 		const normalized = normalizeDeepLinkForRenderer(deepLinkArg);
 		if (normalized) {
 			initialDeepLink = normalized;
@@ -94,27 +165,43 @@ function registerInitialDeepLinkHandler(): void {
 }
 
 function dispatchDeepLink(url: string): void {
+	const handoffReturnLink = parseHandoffReturnLink(url);
+	if (handoffReturnLink != null) {
+		handoffReturnLinkSink?.(handoffReturnLink);
+		showWindow();
+		return;
+	}
 	const normalized = normalizeDeepLinkForRenderer(url);
 	if (!normalized || shouldSuppressAsDuplicate(normalized)) return;
 	recordRecentDeepLink(url);
 	const mainWindow = getMainWindow();
-	if (mainWindow && !mainWindow.isDestroyed()) {
+	if (
+		mainWindow &&
+		!mainWindow.isDestroyed() &&
+		isTrustedOrigin(mainWindow.webContents.getURL()) &&
+		!mainWindow.webContents.isLoadingMainFrame()
+	) {
 		mainWindow.webContents.send('deep-link', normalized);
-		showWindow();
 	} else {
 		initialDeepLink = normalized;
 	}
+	showWindow();
 }
 
-function dispatchJumpListTask(taskId: 'open-settings' | 'new-dm'): void {
+function dispatchJumpListTask(taskId: JumpListTaskId): void {
+	if (taskId === 'open-account-switcher') {
+		requestAccountSwitcher();
+		return;
+	}
 	const mainWindow = getMainWindow();
 	if (!mainWindow || mainWindow.isDestroyed()) return;
 	showWindow();
-	if (taskId === 'open-settings') {
-		mainWindow.webContents.send('open-settings');
-	} else {
-		mainWindow.webContents.send('jump-list-new-dm');
-	}
+	const sendTask = (): void => {
+		if (mainWindow.isDestroyed()) return;
+		mainWindow.webContents.send(taskId === 'open-settings' ? 'open-settings' : 'jump-list-new-dm');
+	};
+	if (isTrustedOrigin(mainWindow.webContents.getURL()) && !mainWindow.webContents.isLoadingMainFrame()) sendTask();
+	else mainWindow.webContents.once('did-finish-load', sendTask);
 }
 
 export function handleOpenUrl(url: string): void {
@@ -126,6 +213,10 @@ function isSquirrelOrSyntheticArg(arg: string): boolean {
 }
 
 export function handleSecondInstance(argv: Array<string>): void {
+	if (isDesktopUpdateRequested(argv)) {
+		void updateFromCommandLine();
+		return;
+	}
 	const task = parseJumpListTaskFromArgv(argv);
 	if (task) {
 		dispatchJumpListTask(task);
@@ -143,5 +234,19 @@ export function handleSecondInstance(argv: Array<string>): void {
 }
 
 export function consumeInitialJumpListTask(): 'open-settings' | 'new-dm' | null {
-	return parseJumpListTaskFromArgv(process.argv);
+	const task = parseJumpListTaskFromArgv(process.argv);
+	if (task === 'open-account-switcher') {
+		requestAccountSwitcher();
+		return null;
+	}
+	return task;
+}
+
+function recordRecentDeepLink(url: string): void {
+	if (process.platform !== 'win32' && process.platform !== 'darwin') return;
+	try {
+		app.addRecentDocument(url);
+	} catch (error) {
+		log.debug('addRecentDocument failed', {error});
+	}
 }

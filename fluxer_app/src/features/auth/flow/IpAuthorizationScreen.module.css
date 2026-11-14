@@ -36,12 +36,6 @@
 	line-height: 1.5;
 }
 
-.retryingText {
-	font-size: 0.875rem;
-	color: var(--text-primary-muted);
-	margin: 0;
-}
-
 .actions {
 	display: flex;
 	gap: 0.5rem;

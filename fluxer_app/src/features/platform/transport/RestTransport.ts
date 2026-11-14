@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {accountRestrictionFromBody} from '@app/features/auth/state/AccountRestriction';
+import {isDesktopLocalAppDocument, isDesktopLocalAppOrigin} from '@app/features/platform/DesktopLocalAppRuntime';
+import {
+	AccountScopedWork,
+	type AccountScopedWorkSuspension,
+	type AccountScopedWorkTicket,
+	accountScopedWorkAbortError,
+} from '@app/features/platform/state/AccountScopedWork';
+import {ClientInstallationId} from '@app/features/platform/state/ClientInstallationId';
 import {HttpError, type HttpErrorDetail} from '@app/features/platform/types/EndpointError';
 import type {
 	HttpMethod,
-	MultipartBody,
 	RestAuthMode,
 	RestClientHooks,
 	RestInterceptor,
@@ -13,9 +21,24 @@ import type {
 	RestResponseFormat,
 	SudoBindings,
 } from '@app/features/platform/types/TransportTypes';
+import {resolveDocumentURLFromRoot} from '@app/features/platform/URLOriginUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Headers} from '@fluxer/constants/src/Headers';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
+import {MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
+import type {DesktopLocalAppUploadProgress} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
+import {
+	DESKTOP_LOCAL_APP_HOST,
+	LOCAL_APP_API_PATH_PREFIX,
+	LOCAL_APP_UPLOAD_ID_HEADER,
+} from '@fluxer/desktop_ipc/src/LocalAppRouteContract';
+import {isObjectLike as isRecord} from '@fluxer/record_utils/src/RecordGuards';
+import {i18n} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 
+const TOO_MANY_REQUESTS_DESCRIPTOR = msg({message: 'Too many requests. Try again later.'});
 const log = new Logger('RestClient');
 const RETRY_BACKOFF_BASE_MS = 1000;
 const RETRY_BACKOFF_CAP_MS = 30_000;
@@ -23,6 +46,7 @@ const RETRY_BACKOFF_FACTOR = 2;
 const RETRY_BACKOFF_JITTER = 0.25;
 const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([502, 504, 507, 522, 523, 524, 598, 599]);
 const SUDO_HEADER = 'x-fluxer-sudo-mode-jwt';
+const UNPACED_PATH_PREFIX = '/reports/';
 const SUDO_VERIFICATION_ERROR_FIELDS: ReadonlySet<string> = new Set([
 	'password',
 	'mfa_method',
@@ -30,8 +54,14 @@ const SUDO_VERIFICATION_ERROR_FIELDS: ReadonlySet<string> = new Set([
 	'webauthn_response',
 	'webauthn_challenge',
 ]);
+const SUDO_EMAIL_CODE_ERROR_CODES: ReadonlySet<string> = new Set([
+	APIErrorCodes.INVALID_SIGN_IN_CODE,
+	APIErrorCodes.SIGN_IN_CODE_EXPIRED,
+	APIErrorCodes.UNKNOWN_SIGN_IN_TICKET,
+]);
 
 type RestMode = NonNullable<RestRequestOptions['mode']>;
+type PlanOptions = RestRequestOptions & {skipIntercept?: boolean};
 type BodyShape =
 	| {tag: 'empty'}
 	| {tag: 'json'; payload: string}
@@ -39,23 +69,48 @@ type BodyShape =
 	| {tag: 'form'; payload: FormData}
 	| {tag: 'opaque'; payload: XMLHttpRequestBodyInit};
 
+interface PacingEntry {
+	until: number;
+	note?: string;
+	code?: string;
+}
+
+class UnscopedDesktopLocalApiEndpointError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'UnscopedDesktopLocalApiEndpointError';
+	}
+}
+
 interface RuntimeState {
-	baseUrl: string;
-	apiVersion: number;
+	routing: RestRuntimeRouting | null;
 	defaultTimeoutMs: number;
 	defaultRetries: number;
 	authProvider: () => string | null;
 	sudo: SudoBindings | null;
-	prepare?: RestClientHooks['prepareRequest'];
 	globalIntercept?: RestInterceptor;
-	pacing: Map<string, {until: number; note?: string}>;
+	pacing: Map<string, PacingEntry>;
+}
+
+interface RestRuntimeRouting {
+	readonly baseUrl: string;
+	readonly canonicalBaseUrl: string;
+	readonly apiVersion: number;
+}
+
+class RestRuntimeUnavailableError extends Error {
+	constructor() {
+		super('A relative REST request requires an active instance runtime');
+		this.name = 'RestRuntimeUnavailableError';
+	}
 }
 
 interface Plan {
 	method: HttpMethod;
 	path: string;
+	routing: RestRuntimeRouting | null;
 	url: string;
-	rateLimitKey: string;
+	rateLimitKey: string | null;
 	body: BodyShape;
 	headers: Record<string, string>;
 	parse: RestResponseFormat;
@@ -66,7 +121,7 @@ interface Plan {
 	sudoApplied: boolean;
 	signal?: AbortSignal;
 	onProgress?: (event: ProgressEvent) => void;
-	options: RestRequestOptions;
+	options: PlanOptions;
 }
 
 type TransportOutcome =
@@ -137,10 +192,13 @@ function waitUntilOnline(signal?: AbortSignal): Promise<void> {
 	});
 }
 
+export function withoutTrailingSlashes(value: string): string {
+	return value.replace(/\/+$/u, '');
+}
+
 export class RestClient {
 	private readonly state: RuntimeState = {
-		baseUrl: '/api',
-		apiVersion: 1,
+		routing: null,
 		defaultTimeoutMs: 0,
 		defaultRetries: 0,
 		authProvider: () => null,
@@ -148,12 +206,25 @@ export class RestClient {
 		pacing: new Map(),
 	};
 
-	configure(options: {baseUrl?: string; apiVersion?: number; timeoutMs?: number; retries?: number}): void {
-		const s = this.state;
-		if (options.baseUrl !== undefined) s.baseUrl = options.baseUrl;
-		if (options.apiVersion !== undefined) s.apiVersion = options.apiVersion;
-		if (options.timeoutMs !== undefined) s.defaultTimeoutMs = options.timeoutMs;
-		if (options.retries !== undefined) s.defaultRetries = options.retries;
+	configure(options: {baseUrl: string; canonicalBaseUrl?: string; apiVersion: number}): void {
+		this.state.routing = {
+			baseUrl: options.baseUrl,
+			canonicalBaseUrl: options.canonicalBaseUrl ?? options.baseUrl,
+			apiVersion: options.apiVersion,
+		};
+	}
+
+	clearRuntime(): void {
+		this.state.routing = null;
+	}
+
+	matchesConfiguredRouting(baseUrl: string, apiVersion: number): boolean {
+		const routing = this.state.routing;
+		return (
+			routing !== null &&
+			routing.apiVersion === apiVersion &&
+			withoutTrailingSlashes(routing.canonicalBaseUrl) === withoutTrailingSlashes(baseUrl)
+		);
 	}
 
 	installAuth(provider: () => string | null): void {
@@ -165,16 +236,53 @@ export class RestClient {
 	}
 
 	installHooks(hooks: RestClientHooks): void {
-		this.state.prepare = hooks.prepareRequest;
 		this.state.globalIntercept = hooks.intercept;
 	}
 
-	carriesAuthorization(): boolean {
-		return !isOffOrigin(resolveUrl(this.state, '/', undefined));
+	hasAuthorization(): boolean {
+		const routing = this.state.routing;
+		if (routing === null) return false;
+		return !isOffOrigin(resolveUrl(routing, '/', undefined));
 	}
 
 	dispatch<T = unknown>(method: HttpMethod, path: string, options: RestRequestOptions = {}): Promise<RestResponse<T>> {
-		return runWithSudoEscalation<T>(this.state, method, path, options, 'fresh');
+		return this.dispatchAccountScoped(method, path, options, () => AccountScopedWork.begin());
+	}
+
+	dispatchWithinAccountTransition<T = unknown>(
+		suspension: AccountScopedWorkSuspension,
+		method: HttpMethod,
+		path: string,
+		options: RestRequestOptions = {},
+	): Promise<RestResponse<T>> {
+		return this.dispatchAccountScoped(method, path, options, () => AccountScopedWork.beginWithinSuspension(suspension));
+	}
+
+	private dispatchAccountScoped<T>(
+		method: HttpMethod,
+		path: string,
+		options: RestRequestOptions,
+		beginTicket: () => AccountScopedWorkTicket,
+	): Promise<RestResponse<T>> {
+		const routing = this.state.routing;
+		if (!looksAbsolute(path) && routing === null) {
+			return Promise.reject(new RestRuntimeUnavailableError());
+		}
+		let ticket: AccountScopedWorkTicket;
+		try {
+			ticket = beginTicket();
+		} catch (error) {
+			return Promise.reject(error);
+		}
+		return runWithSudoEscalation<T>(this.state, routing, ticket, method, path, options, 'fresh')
+			.catch((error: unknown) => {
+				throw toAccountScopedFailure(ticket, error);
+			})
+			.finally(() => ticket.dispose());
+	}
+
+	clearPacing(): void {
+		this.state.pacing.clear();
 	}
 
 	get<T = unknown>(path: string, options?: RestRequestOptions): Promise<RestResponse<T>> {
@@ -202,6 +310,8 @@ type SudoPhase = 'fresh' | 'reissued' | 'reissued-twice';
 
 async function runWithSudoEscalation<T>(
 	state: RuntimeState,
+	routing: RestRuntimeRouting | null,
+	ticket: AccountScopedWorkTicket,
 	method: HttpMethod,
 	path: string,
 	options: RestRequestOptions,
@@ -211,36 +321,44 @@ async function runWithSudoEscalation<T>(
 	const effective = overrideOptions ?? options;
 	const sudoApplied = phase !== 'fresh';
 	try {
-		return await runRetryLoop<T>(state, method, path, effective, sudoApplied, 0);
+		return await runRetryLoop<T>(state, routing, ticket, method, path, effective, sudoApplied, 0);
 	} catch (err) {
 		const sudo = state.sudo;
 		const sudoRequired = isSudoRequiredFailure(err);
-		const sudoVerificationFailed = sudoApplied && isSudoVerificationFailure(err);
+		const sudoVerificationFailed = sudoApplied && isSudoVerificationFailure(err, effective.body);
 		if (!sudo || (!sudoRequired && !sudoVerificationFailed)) {
-			if (sudoApplied) sudo?.onFailure(err);
+			if (sudoApplied) sudo?.onSettled();
 			throw err;
 		}
+		const reprompt = async (nextPhase: SudoPhase): Promise<RestResponse<T>> => {
+			const merged = await awaitAccountScopedInteraction(ticket, sudo.prompt(method, path, err));
+			if (!merged) throw err;
+			return runWithSudoEscalation<T>(
+				state,
+				routing,
+				ticket,
+				method,
+				path,
+				options,
+				nextPhase,
+				mergeBody(options, merged),
+			);
+		};
 		if (sudoVerificationFailed) {
 			sudo.onFailure(err);
-			const merged = await sudo.prompt(method, path, err);
-			if (!merged) throw err;
-			return runWithSudoEscalation<T>(state, method, path, options, 'reissued', mergeBody(options, merged));
+			return reprompt('reissued');
 		}
 		switch (phase) {
 			case 'fresh': {
 				sudo.invalidate();
-				const merged = await sudo.prompt(method, path, err);
-				if (!merged) throw err;
-				return runWithSudoEscalation<T>(state, method, path, options, 'reissued', mergeBody(options, merged));
+				return reprompt('reissued');
 			}
 			case 'reissued': {
 				sudo.onFailure(err);
-				const second = await sudo.prompt(method, path, err);
-				if (!second) throw err;
-				return runWithSudoEscalation<T>(state, method, path, options, 'reissued-twice', mergeBody(options, second));
+				return reprompt('reissued-twice');
 			}
 			case 'reissued-twice': {
-				sudo.onFailure(err);
+				sudo.onSettled();
 				throw err;
 			}
 		}
@@ -248,82 +366,97 @@ async function runWithSudoEscalation<T>(
 }
 
 function isSudoRequiredFailure(err: unknown): boolean {
-	if (!(err instanceof HttpError) || err.status !== 403) return false;
+	if (!(err instanceof HttpError) || err.status !== HttpStatus.FORBIDDEN) return false;
 	const body = err.body;
-	return typeof body === 'object' && body !== null && (body as Record<string, unknown>).code === 'SUDO_MODE_REQUIRED';
+	return isRecord(body) && body.code === APIErrorCodes.SUDO_MODE_REQUIRED;
 }
 
-function isSudoVerificationFailure(err: unknown): boolean {
-	if (!(err instanceof HttpError) || err.status !== 400) return false;
+function isSudoVerificationFailure(err: unknown, sentBody: unknown): boolean {
+	if (!(err instanceof HttpError) || err.status !== HttpStatus.BAD_REQUEST) return false;
 	const body = err.body;
-	if (!isRecord(body) || body.code !== APIErrorCodes.INVALID_FORM_BODY) return false;
+	if (!isRecord(body)) return false;
+	if (typeof body.code === 'string' && SUDO_EMAIL_CODE_ERROR_CODES.has(body.code)) {
+		return isRecord(sentBody) && sentBody.mfa_method === 'email_code';
+	}
+	if (body.code !== APIErrorCodes.INVALID_FORM_BODY) return false;
 	const errors = body.errors;
 	if (!Array.isArray(errors)) return false;
 	return errors.some((error) => {
 		if (!isRecord(error)) return false;
-		const path = typeof error.path === 'string' ? error.path : typeof error.field === 'string' ? error.field : null;
+		let path: string | null = null;
+		if (typeof error.path === 'string') {
+			path = error.path;
+		} else if (typeof error.field === 'string') {
+			path = error.field;
+		}
 		return path !== null && SUDO_VERIFICATION_ERROR_FIELDS.has(path);
 	});
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
-}
-
 async function runRetryLoop<T>(
 	state: RuntimeState,
+	routing: RestRuntimeRouting | null,
+	ticket: AccountScopedWorkTicket,
 	method: HttpMethod,
 	path: string,
-	options: RestRequestOptions,
+	options: PlanOptions,
 	sudoApplied: boolean,
 	attempt: number,
 ): Promise<RestResponse<T>> {
-	const plan = composePlan(state, method, path, options, sudoApplied);
-	if (plan.retries > 0) await waitUntilOnline(plan.signal);
-	const pacingHit = consultPacing(state.pacing, plan.rateLimitKey);
-	if (pacingHit) {
-		if (plan.mode === 'auto-retry') {
-			await sleepUntil(pacingHit.until, plan.signal);
-		} else {
-			const synthesized = synthesizePacingReply<T>(plan, pacingHit);
-			if (plan.mode === 'silent') {
-				return synthesized;
-			}
-			throw new HttpError(failureDetail(plan, synthesized));
-		}
-	}
-	const handle = createHandle(plan.signal);
-	state.prepare?.(handle);
-	const outcome = await performTransport(plan, handle);
-	const decision = await reactToOutcome(state, plan, outcome);
-	switch (decision.next) {
-		case 'deliver':
-			return decision.reply as RestResponse<T>;
-		case 'retry-after': {
-			if (attempt >= plan.retries) {
-				return finalizeAfterRetriesExhausted<T>(state, plan, outcome);
-			}
-			const wait = decision.mode === 'backoff' ? computeBackoffMs(attempt) : decision.delayMs;
-			if (outcome.status === 'transport-error' && !navigator.onLine) {
-				await waitUntilOnline(plan.signal);
+	ticket.assertCurrent();
+	const plan = composePlan(state, routing, method, path, options, sudoApplied);
+	const {handle, unlink} = createHandle(plan.signal, ticket.signal);
+	try {
+		if (plan.retries > 0) await waitUntilOnline(handle.abortController.signal);
+		const pacingHit = consultPacing(state.pacing, plan.rateLimitKey);
+		if (pacingHit) {
+			if (plan.mode === 'auto-retry') {
+				await sleepUntil(pacingHit.until, handle.abortController.signal);
 			} else {
-				await delay(wait, plan.signal);
+				const synthesized = synthesizePacingReply<T>(plan, pacingHit);
+				if (plan.mode === 'silent') {
+					return synthesized;
+				}
+				throw new HttpError(failureDetail(plan, synthesized));
 			}
-			return runRetryLoop<T>(state, method, path, options, sudoApplied, attempt + 1);
+			ticket.assertCurrent();
 		}
-		case 'fail':
-			throw decision.error;
+		const outcome = await performTransport(plan, handle);
+		ticket.assertCurrent();
+		const decision = await reactToOutcome(state, ticket, plan, outcome);
+		ticket.assertCurrent();
+		switch (decision.next) {
+			case 'deliver':
+				return decision.reply as RestResponse<T>;
+			case 'retry-after': {
+				if (attempt >= plan.retries) {
+					return finalizeAfterRetriesExhausted<T>(state, plan, outcome);
+				}
+				const wait = decision.mode === 'backoff' ? computeBackoffMs(attempt) : decision.delayMs;
+				if (outcome.status === 'transport-error' && !navigator.onLine) {
+					await waitUntilOnline(handle.abortController.signal);
+				} else {
+					await delay(wait, handle.abortController.signal);
+				}
+				return runRetryLoop<T>(state, routing, ticket, method, path, options, sudoApplied, attempt + 1);
+			}
+			case 'fail':
+				throw decision.error;
+		}
+	} finally {
+		unlink();
 	}
 }
 
 function composePlan(
 	state: RuntimeState,
+	routing: RestRuntimeRouting | null,
 	method: HttpMethod,
 	path: string,
-	options: RestRequestOptions,
+	options: PlanOptions,
 	sudoApplied: boolean,
 ): Plan {
-	const url = resolveUrl(state, path, options.query);
+	const url = resolveUrl(routing, path, options.query);
 	const body = encodeBody(options);
 	const targetsApiBase = !looksAbsolute(path);
 	const apiOrigin = targetsApiBase ? originOf(url) : null;
@@ -342,8 +475,9 @@ function composePlan(
 	return {
 		method,
 		path,
+		routing,
 		url,
-		rateLimitKey: path,
+		rateLimitKey: isUnpacedPath(path) ? null : `${method} ${path}`,
 		body,
 		headers,
 		parse: options.parse ?? 'auto',
@@ -358,9 +492,18 @@ function composePlan(
 	};
 }
 
-function resolveUrl(state: RuntimeState, path: string, query: RestRequestOptions['query']): string {
-	const seed = looksAbsolute(path) ? path : `${state.baseUrl}/v${state.apiVersion}${path}`;
-	const url = new URL(seed, window.location.origin);
+function resolveUrl(routing: RestRuntimeRouting | null, path: string, query: RestRequestOptions['query']): string {
+	let seed: string;
+	if (looksAbsolute(path)) {
+		seed = path;
+	} else {
+		if (routing === null) {
+			throw new RestRuntimeUnavailableError();
+		}
+		assertScopedDesktopLocalApiBase(routing.baseUrl);
+		seed = `${routing.baseUrl}/v${routing.apiVersion}${path}`;
+	}
+	const url = resolveDocumentURLFromRoot(seed);
 	if (query instanceof URLSearchParams) {
 		query.forEach((value, key) => url.searchParams.set(key, value));
 	} else if (query) {
@@ -370,6 +513,24 @@ function resolveUrl(state: RuntimeState, path: string, query: RestRequestOptions
 		}
 	}
 	return url.toString();
+}
+
+function assertScopedDesktopLocalApiBase(baseUrl: string): void {
+	if (!isDesktopLocalAppDocument()) return;
+	if (!isUnscopedDesktopLocalApiBase(baseUrl)) return;
+	throw new UnscopedDesktopLocalApiEndpointError('Desktop local REST requests require a scoped runtime API endpoint');
+}
+
+function isUnscopedDesktopLocalApiBase(baseUrl: string): boolean {
+	let parsedUrl: URL;
+	try {
+		parsedUrl = resolveDocumentURLFromRoot(baseUrl);
+	} catch {
+		return false;
+	}
+	if (!isDesktopLocalAppOrigin(parsedUrl.protocol, parsedUrl.hostname)) return false;
+	if (parsedUrl.host !== DESKTOP_LOCAL_APP_HOST) return false;
+	return !parsedUrl.pathname.startsWith(`${LOCAL_APP_API_PATH_PREFIX}/`);
 }
 
 function looksAbsolute(path: string): boolean {
@@ -397,9 +558,6 @@ function reportStrippedAuthorization(state: RuntimeState, apiOrigin: string, aut
 }
 
 function encodeBody(options: RestRequestOptions): BodyShape {
-	if (options.multipart) {
-		return {tag: 'form', payload: buildFormData(options.multipart)};
-	}
 	if (options.raw !== undefined) return classifyOpaque(options.raw);
 	const raw = options.body;
 	if (raw === undefined || raw === null) return {tag: 'empty'};
@@ -433,19 +591,6 @@ function copyArrayBufferView(raw: ArrayBufferView): ArrayBuffer {
 	return buffer;
 }
 
-function buildFormData(payload: MultipartBody): FormData {
-	const form = new FormData();
-	const fields = payload.fields ?? {};
-	for (const [name, value] of Object.entries(fields)) {
-		form.append(name, value);
-	}
-	const files = payload.files ?? [];
-	for (const part of files) {
-		form.append(part.name, part.file, part.filename);
-	}
-	return form;
-}
-
 interface AssembleHeadersInput {
 	state: RuntimeState;
 	callerHeaders: Record<string, string> | undefined;
@@ -458,14 +603,16 @@ interface AssembleHeadersInput {
 function assembleHeaders(input: AssembleHeadersInput): Record<string, string> {
 	const accumulator: Record<string, string> = {};
 	if (input.sameOrigin) {
-		accumulator['X-Fluxer-Features'] = 'view_channel_members_permission';
+		accumulator[Headers.X_FLUXER_FEATURES] = 'view_channel_members_permission,channel_threads';
+		accumulator[Headers.X_FLUXER_CAPABILITIES] = 'guild_visits';
+		accumulator[Headers.X_FLUXER_CLIENT_INSTALLATION_ID] = ClientInstallationId.get();
 	}
 	const contentType = inferContentType(input.body);
-	if (contentType) accumulator['Content-Type'] = contentType;
-	if (input.reason) accumulator['X-Audit-Log-Reason'] = encodeURIComponent(input.reason);
+	if (contentType) accumulator[Headers.CONTENT_TYPE] = contentType;
+	if (input.reason) accumulator[Headers.X_AUDIT_LOG_REASON] = encodeURIComponent(input.reason);
 	if (input.auth !== 'none' && input.sameOrigin) {
 		const token = input.state.authProvider();
-		if (token) accumulator['Authorization'] = token;
+		if (token) accumulator[Headers.AUTHORIZATION] = token;
 	}
 	const sudoToken = input.state.sudo?.tokenProvider() ?? null;
 	if (sudoToken && input.sameOrigin) accumulator[SUDO_HEADER] = sudoToken;
@@ -490,10 +637,12 @@ function inferContentType(body: BodyShape): string | null {
 	}
 }
 
-function consultPacing(
-	pacing: Map<string, {until: number; note?: string}>,
-	key: string,
-): {until: number; note?: string} | null {
+function isUnpacedPath(path: string): boolean {
+	return path.startsWith(UNPACED_PATH_PREFIX);
+}
+
+function consultPacing(pacing: Map<string, PacingEntry>, key: string | null): PacingEntry | null {
+	if (key === null) return null;
 	const entry = pacing.get(key);
 	if (!entry) return null;
 	if (entry.until <= Date.now()) {
@@ -504,32 +653,33 @@ function consultPacing(
 }
 
 function recordPacing(
-	pacing: Map<string, {until: number; note?: string}>,
+	pacing: Map<string, PacingEntry>,
 	key: string,
 	retryAfterSeconds: number | null,
 	headerMs: number | null,
 	note?: string,
+	code?: string,
 ): void {
-	const fallbackMs = 1000;
-	const ms =
-		headerMs !== null && headerMs > 0
-			? headerMs
-			: retryAfterSeconds !== null && retryAfterSeconds > 0
-				? retryAfterSeconds * 1000
-				: fallbackMs;
-	pacing.set(key, {until: Date.now() + ms, note});
+	let ms = MS_PER_SECOND;
+	if (headerMs !== null && headerMs > 0) {
+		ms = headerMs;
+	} else if (retryAfterSeconds !== null && retryAfterSeconds > 0) {
+		ms = retryAfterSeconds * MS_PER_SECOND;
+	}
+	pacing.set(key, {until: Date.now() + ms, note, code});
 }
 
-function synthesizePacingReply<T>(_plan: Plan, hit: {until: number; note?: string}): RestResponse<T> {
+function synthesizePacingReply<T>(_plan: Plan, hit: PacingEntry): RestResponse<T> {
 	const remaining = Math.max(0, hit.until - Date.now());
 	const headers: Record<string, string> = {
 		'retry-after': String(Math.ceil(remaining / 1000)),
 		'content-type': 'application/json',
 	};
 	const payload = {
-		message: hit.note ?? 'You are being rate limited.',
+		message: hit.note ?? i18n._(TOO_MANY_REQUESTS_DESCRIPTOR),
 		retry_after: remaining / 1000,
 		global: false,
+		...(hit.code !== undefined ? {code: hit.code} : {}),
 	};
 	return {
 		ok: false,
@@ -541,6 +691,55 @@ function synthesizePacingReply<T>(_plan: Plan, hit: {until: number; note?: strin
 	};
 }
 
+const UPLOAD_ID_RANDOM_BYTES = 16;
+
+function newLocalUploadId(): string {
+	const bytes = new Uint8Array(UPLOAD_ID_RANDOM_BYTES);
+	globalThis.crypto.getRandomValues(bytes);
+	return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function isDesktopLocalAppRequest(url: string): boolean {
+	if (!isDesktopLocalAppDocument()) return false;
+	let parsedUrl: URL;
+	try {
+		parsedUrl = resolveDocumentURLFromRoot(url);
+	} catch {
+		return false;
+	}
+	return isDesktopLocalAppOrigin(parsedUrl.protocol, parsedUrl.hostname);
+}
+
+function attachLocalUploadProgress(
+	xhr: XMLHttpRequest,
+	url: string,
+	onProgress: (event: ProgressEvent) => void,
+): boolean {
+	if (!isDesktopLocalAppRequest(url)) {
+		return false;
+	}
+	const subscribe = getElectronAPI()?.localAppUpload?.subscribe;
+	if (subscribe == null) {
+		return false;
+	}
+	const uploadId = newLocalUploadId();
+	xhr.setRequestHeader(LOCAL_APP_UPLOAD_ID_HEADER, uploadId);
+	const unsubscribe = subscribe((progress: DesktopLocalAppUploadProgress) => {
+		if (progress.uploadId !== uploadId || progress.failed) {
+			return;
+		}
+		onProgress(
+			new ProgressEvent('progress', {
+				lengthComputable: progress.total !== null,
+				loaded: progress.loaded,
+				total: progress.total ?? 0,
+			}),
+		);
+	});
+	xhr.addEventListener('loadend', unsubscribe, {once: true});
+	return true;
+}
+
 function performTransport(plan: Plan, handle: RestRequestHandle): Promise<TransportOutcome> {
 	return new Promise<TransportOutcome>((resolve) => {
 		const xhr = new XMLHttpRequest();
@@ -548,7 +747,12 @@ function performTransport(plan: Plan, handle: RestRequestHandle): Promise<Transp
 			const headers = parseHeaderBlock(xhr.getAllResponseHeaders());
 			const reply = decodeReply(xhr, plan.parse, headers);
 			const sudoToken = headers[SUDO_HEADER];
-			const receivedSudoToken = sudoToken !== undefined ? sudoToken : plan.sudoApplied ? null : undefined;
+			let receivedSudoToken: string | null | undefined;
+			if (sudoToken !== undefined) {
+				receivedSudoToken = sudoToken;
+			} else if (plan.sudoApplied) {
+				receivedSudoToken = null;
+			}
 			resolve({status: 'reply', reply, receivedSudoToken});
 		};
 		xhr.open(plan.method, plan.url);
@@ -568,7 +772,9 @@ function performTransport(plan: Plan, handle: RestRequestHandle): Promise<Transp
 			externalSignal.removeEventListener('abort', onExternalAbort);
 		});
 		if (plan.onProgress) {
-			xhr.upload.addEventListener('progress', plan.onProgress);
+			if (!attachLocalUploadProgress(xhr, plan.url, plan.onProgress)) {
+				xhr.upload.addEventListener('progress', plan.onProgress);
+			}
 		}
 		xhr.addEventListener('load', finishWithReply);
 		xhr.addEventListener('error', () => {
@@ -641,7 +847,12 @@ function parseHeaderBlock(raw: string | null): Record<string, string> {
 	return out;
 }
 
-async function reactToOutcome(state: RuntimeState, plan: Plan, outcome: TransportOutcome): Promise<AttemptDecision> {
+async function reactToOutcome(
+	state: RuntimeState,
+	ticket: AccountScopedWorkTicket,
+	plan: Plan,
+	outcome: TransportOutcome,
+): Promise<AttemptDecision> {
 	if (outcome.status === 'aborted') {
 		return {next: 'fail', error: outcome.error};
 	}
@@ -652,12 +863,10 @@ async function reactToOutcome(state: RuntimeState, plan: Plan, outcome: Transpor
 	if (reply.status === 429) {
 		return reactToRateLimit(state, plan, reply);
 	}
-	const interceptor = plan.options.intercept ?? state.globalIntercept;
+	const interceptor = plan.options.skipIntercept ? undefined : state.globalIntercept;
 	if (interceptor) {
-		const intercepted = await invokeInterceptor(state, plan, interceptor, reply);
-		if (intercepted.next !== 'passthrough') {
-			return intercepted.decision;
-		}
+		const intercepted = await invokeInterceptor(state, ticket, plan, interceptor, reply);
+		if (intercepted) return intercepted;
 	}
 	if (RETRYABLE_STATUSES.has(reply.status)) {
 		return {next: 'retry-after', delayMs: 0, mode: 'backoff'};
@@ -668,6 +877,15 @@ async function reactToOutcome(state: RuntimeState, plan: Plan, outcome: Transpor
 	}
 	if (reply.status === 403 && hasContentBlockedCode(reply.body) && !plan.suppressContentBlockedModal) {
 		void import('@app/features/auth/components/ContentBlockedHandler').then((m) => m.showContentBlockedModal());
+	}
+	const restriction =
+		reply.status === 403 && plan.headers[Headers.AUTHORIZATION] !== undefined
+			? accountRestrictionFromBody(reply.body)
+			: null;
+	if (restriction?.type === 'network_blocked') {
+		void import('@app/features/auth/components/NetworkBlockedHandler').then((m) =>
+			m.showNetworkBlockedModal(restriction.block),
+		);
 	}
 	if (plan.mode === 'silent') {
 		propagateSudoToken(state, receivedSudoToken);
@@ -683,14 +901,17 @@ function reactToRateLimit(state: RuntimeState, plan: Plan, reply: RestResponse):
 	const retryAfterSeconds = readRetryAfter(reply.headers['retry-after']);
 	const headerMs = readNumericHeader(reply.headers['x-ratelimit-reset-after']);
 	const note = extractMessage(reply.body);
-	recordPacing(state.pacing, plan.rateLimitKey, retryAfterSeconds, headerMs, note);
+	const code = extractCode(reply.body);
+	if (plan.rateLimitKey !== null) {
+		recordPacing(state.pacing, plan.rateLimitKey, retryAfterSeconds, headerMs, note, code);
+	}
 	if (plan.mode === 'silent') {
 		return {next: 'deliver', reply};
 	}
 	if (plan.mode === 'strict') {
 		return {next: 'fail', error: new HttpError(failureDetail(plan, reply))};
 	}
-	const entry = state.pacing.get(plan.rateLimitKey);
+	const entry = plan.rateLimitKey !== null ? state.pacing.get(plan.rateLimitKey) : undefined;
 	const delayMs = entry ? Math.max(0, entry.until - Date.now()) : (retryAfterSeconds ?? 1) * 1000;
 	return {next: 'retry-after', delayMs, mode: 'fixed'};
 }
@@ -710,67 +931,66 @@ function readNumericHeader(raw: string | undefined): number | null {
 	return Number.isFinite(value) ? value * 1000 : null;
 }
 
+function extractCode(body: unknown): string | undefined {
+	if (typeof body !== 'object' || body === null) return undefined;
+	const c = (body as Record<string, unknown>).code;
+	return typeof c === 'string' ? c : undefined;
+}
+
 function extractMessage(body: unknown): string | undefined {
 	if (typeof body !== 'object' || body === null) return undefined;
 	const m = (body as Record<string, unknown>).message;
 	return typeof m === 'string' ? m : undefined;
 }
 
-type InterceptorFold = {next: 'passthrough'} | {next: 'used'; decision: AttemptDecision};
-
 async function invokeInterceptor(
 	state: RuntimeState,
+	ticket: AccountScopedWorkTicket,
 	plan: Plan,
 	interceptor: RestInterceptor,
 	reply: RestResponse,
-): Promise<InterceptorFold> {
-	let captured: Error | null = null;
-	let chained: Promise<RestResponse> | null = null;
-	const retry = (extra: Record<string, string>): Promise<RestResponse> => {
-		const augmented: RestRequestOptions = {
-			...plan.options,
-			headers: {...(plan.options.headers ?? {}), ...extra},
-		};
-		chained = runRetryLoop(state, plan.method, plan.path, augmented, plan.sudoApplied, 0);
-		return chained;
-	};
-	const reject = (err: Error) => {
-		captured = err;
-	};
-	let result: boolean | undefined | Promise<RestResponse | undefined>;
+): Promise<AttemptDecision | null> {
+	const retry = (extra: Record<string, string>): Promise<RestResponse> =>
+		runRetryLoop(
+			state,
+			plan.routing,
+			ticket,
+			plan.method,
+			plan.path,
+			{...plan.options, headers: {...(plan.options.headers ?? {}), ...extra}, skipIntercept: true},
+			plan.sudoApplied,
+			0,
+		);
 	try {
-		result = interceptor(reply, retry, reject);
+		const finalReply = await awaitAccountScopedInteraction(ticket, Promise.resolve(interceptor(reply, retry)));
+		return finalReply === undefined ? null : {next: 'deliver', reply: finalReply};
 	} catch (err) {
-		return {next: 'used', decision: {next: 'fail', error: err}};
+		return {next: 'fail', error: err};
 	}
-	if (captured) {
-		return {next: 'used', decision: {next: 'fail', error: captured}};
+}
+
+function toAccountScopedFailure(ticket: AccountScopedWorkTicket, error: unknown): unknown {
+	if (ticket.isStale && error instanceof DOMException && error.name === 'AbortError') {
+		return accountScopedWorkAbortError();
 	}
-	if (result instanceof Promise) {
-		try {
-			const finalReply = await result;
-			if (captured) {
-				return {next: 'used', decision: {next: 'fail', error: captured}};
-			}
-			if (finalReply === undefined && chained) {
-				return {next: 'used', decision: {next: 'deliver', reply: await chained}};
-			}
-			if (finalReply === undefined) {
-				return {next: 'passthrough'};
-			}
-			return {next: 'used', decision: {next: 'deliver', reply: finalReply}};
-		} catch (err) {
-			return {next: 'used', decision: {next: 'fail', error: err}};
-		}
+	return error;
+}
+
+function awaitAccountScopedInteraction<T>(ticket: AccountScopedWorkTicket, operation: Promise<T>): Promise<T> {
+	ticket.assertCurrent();
+	const signal = ticket.signal;
+	if (signal.aborted) {
+		return Promise.reject(signal.reason);
 	}
-	if (result === true && chained) {
-		try {
-			return {next: 'used', decision: {next: 'deliver', reply: await chained}};
-		} catch (err) {
-			return {next: 'used', decision: {next: 'fail', error: err}};
-		}
-	}
-	return {next: 'passthrough'};
+	return new Promise<T>((resolve, reject) => {
+		const handleAbort = (): void => {
+			reject(signal.reason);
+		};
+		signal.addEventListener('abort', handleAbort, {once: true});
+		operation.then(resolve, reject).finally(() => {
+			signal.removeEventListener('abort', handleAbort);
+		});
+	});
 }
 
 function hasContentBlockedCode(body: unknown): boolean {
@@ -847,23 +1067,39 @@ function sleepUntil(deadlineMs: number, signal?: AbortSignal): Promise<void> {
 	return delay(Math.max(0, deadlineMs - Date.now()), signal);
 }
 
-function createHandle(external?: AbortSignal): RestRequestHandle {
+function createHandle(
+	external: AbortSignal | undefined,
+	accountScoped: AbortSignal,
+): {handle: RestRequestHandle; unlink: () => void} {
 	const controller = new AbortController();
-	if (external) {
-		if (external.aborted) controller.abort();
-		else external.addEventListener('abort', () => controller.abort(), {once: true});
+	const forward = () => controller.abort();
+	const linked: Array<AbortSignal> = [];
+	for (const signal of external === undefined ? [accountScoped] : [accountScoped, external]) {
+		if (signal.aborted) {
+			controller.abort();
+			continue;
+		}
+		signal.addEventListener('abort', forward, {once: true});
+		linked.push(signal);
 	}
 	return {
-		abortController: controller,
-		abort: () => controller.abort(),
+		handle: {
+			abortController: controller,
+			abort: forward,
+		},
+		unlink: () => {
+			for (const signal of linked) {
+				signal.removeEventListener('abort', forward);
+			}
+		},
 	};
 }
 
 function mergeBody(options: RestRequestOptions, augmentation: Record<string, unknown>): RestRequestOptions {
-	if (options.multipart !== undefined || options.raw !== undefined) {
-		throw new Error('RestClient: cannot fold sudo payload into a multipart or raw body');
+	if (options.raw !== undefined) {
+		throw new Error('RestClient: cannot fold sudo payload into a raw body');
 	}
-	const {body: existing, multipart: _m, raw: _r, ...rest} = options;
+	const {body: existing, raw: _r, ...rest} = options;
 	if (existing === undefined || existing === null) {
 		return {...rest, body: augmentation};
 	}
@@ -880,3 +1116,5 @@ function mergeBody(options: RestRequestOptions, augmentation: Record<string, unk
 }
 
 export const http = new RestClient();
+
+AccountScopedWork.registerCancellation(() => http.clearPacing());

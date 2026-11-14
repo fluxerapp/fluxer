@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {registerRequestBodySchema} from '@app/api/middleware/RequestBodyBinaryFields';
+import {requireRequestJsonBody} from '@app/api/utils/RequestJsonBody';
+import {initializeFluxerErrorMap} from '@app/api/ZodErrorMap';
 import type {ValidationErrorCode} from '@fluxer/constants/src/ValidationErrorCodes';
 import {isValidationErrorCode, ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
@@ -9,12 +12,21 @@ import {
 import type {ValidationError} from '@fluxer/errors/src/domains/core/ValidationError';
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import type {Context, Env, Input, MiddlewareHandler, TypedResponse, ValidationTargets} from 'hono';
-import {getCookie} from 'hono/cookie';
-import {type core, type input, type output, ZodObject, ZodOptional, type ZodSafeParseResult, type ZodType} from 'zod';
-import {requireRequestJsonBody} from './utils/RequestJsonBody';
-import {initializeFluxerErrorMap} from './ZodErrorMap';
+import {
+	type core,
+	type input,
+	type output,
+	ZodArray,
+	ZodNullable,
+	ZodObject,
+	ZodOptional,
+	type ZodSafeParseResult,
+	type ZodType,
+} from 'zod';
 
 initializeFluxerErrorMap();
+
+const MAX_REPORTED_VALIDATION_ISSUES = 100;
 
 function isEmptyObject(obj: object): boolean {
 	return Object.keys(obj).length === 0;
@@ -46,10 +58,14 @@ function extractVariablesFromIssue(issue: core.$ZodIssue): Record<string, unknow
 }
 
 function convertEmptyValuesToNull(obj: unknown, schema?: core.$ZodType, isRoot = true): unknown {
-	while (schema instanceof ZodOptional) schema = schema.unwrap();
-	if (schema && schemaMetadata.get(schema)?.preserveEmptyValues) return obj;
+	while (schema instanceof ZodOptional || schema instanceof ZodNullable) schema = schema.unwrap();
+	const metadata = schema ? schemaMetadata.get(schema) : undefined;
+	if (metadata?.preserveEmptyValues) return obj;
 	if (typeof obj === 'string' && obj === '') return null;
-	if (Array.isArray(obj)) return obj.map((item) => convertEmptyValuesToNull(item, undefined, false));
+	if (Array.isArray(obj)) {
+		const element = schema instanceof ZodArray ? schema.element : undefined;
+		return obj.map((item) => convertEmptyValuesToNull(item, element, false));
+	}
 	if (obj !== null && typeof obj === 'object') {
 		if (isEmptyObject(obj) && !isRoot) return null;
 		const shape = schema instanceof ZodObject ? schema.shape : undefined;
@@ -59,18 +75,21 @@ function convertEmptyValuesToNull(obj: unknown, schema?: core.$ZodType, isRoot =
 				convertEmptyValuesToNull(value, shape && Object.hasOwn(shape, key) ? shape[key] : undefined, false),
 			]),
 		);
-		if (!isRoot && Object.values(processed).every((value) => value === null)) return null;
+		if (!isRoot && !metadata?.preserveNullFields && Object.values(processed).every((value) => value === null)) {
+			return null;
+		}
 		return processed;
 	}
 	return obj;
 }
 
 type HasUndefined<T> = undefined extends T ? true : false;
+type ValidatorTarget = 'json' | 'form' | 'query' | 'param';
 type Hook<
 	T extends ZodType,
 	E extends Env,
 	P extends string,
-	Target extends keyof ValidationTargets = keyof ValidationTargets,
+	Target extends ValidatorTarget = ValidatorTarget,
 	V extends Input = Input,
 	O = Record<string, unknown>,
 > = (
@@ -79,19 +98,23 @@ type Hook<
 	},
 	c: Context<E, P, V>,
 ) => Response | undefined | TypedResponse<O> | Promise<Response | undefined | TypedResponse<O>>;
-type PreHook<E extends Env, P extends string, Target extends keyof ValidationTargets, V extends Input> = (
+type PreHook<E extends Env, P extends string, Target extends ValidatorTarget, V extends Input> = (
 	value: unknown,
 	c: Context<E, P, V>,
 	target: Target,
 ) => unknown | Promise<unknown>;
+type SchemaSelector<T extends ZodType, E extends Env, P extends string, V extends Input> = (
+	c: Context<E, P, V>,
+) => ZodType<output<T>> | null | Promise<ZodType<output<T>> | null>;
 type ValidatorOptions<
 	T extends ZodType,
 	E extends Env,
 	P extends string,
-	Target extends keyof ValidationTargets,
+	Target extends ValidatorTarget,
 	V extends Input,
 > = {
 	pre?: PreHook<E, P, Target, V>;
+	schemaFor?: SchemaSelector<T, E, P, V>;
 	post?: Hook<T, E, P, Target, V>;
 };
 
@@ -99,7 +122,7 @@ export function inputValidationErrorFromZodIssues(issues: Array<core.$ZodIssue>)
 	const errors: Array<ValidationError> = [];
 	const localizedErrors: Array<LocalizedValidationError> = [];
 	const seen = new Set<string>();
-	for (const issue of issues) {
+	for (const issue of issues.slice(0, MAX_REPORTED_VALIDATION_ISSUES)) {
 		const path = issue.path.length > 0 ? issue.path.map(String).join('.') : 'root';
 		const code = getValidationErrorCode(issue.message);
 		const key = `${path}|${code}`;
@@ -114,7 +137,7 @@ export function inputValidationErrorFromZodIssues(issues: Array<core.$ZodIssue>)
 
 export const Validator = <
 	T extends ZodType,
-	Target extends keyof ValidationTargets,
+	Target extends ValidatorTarget,
 	E extends Env,
 	P extends string,
 	In = input<T>,
@@ -147,6 +170,9 @@ export const Validator = <
 ): MiddlewareHandler<E, P, V> => {
 	const options: ValidatorOptions<T, E, P, Target, V> =
 		typeof hookOrOptions === 'function' ? {post: hookOrOptions} : (hookOrOptions ?? {});
+	if (target === 'json') {
+		registerRequestBodySchema(schema);
+	}
 	return async (c, next): Promise<Response | undefined> => {
 		let value: unknown;
 		switch (target) {
@@ -161,11 +187,14 @@ export const Validator = <
 				formData.forEach((formValue, key) => {
 					const existingValue = form[key];
 					if (key.endsWith('[]')) {
-						const list = Array.isArray(existingValue)
-							? existingValue
-							: existingValue !== undefined
-								? [existingValue]
-								: [];
+						let list: Array<FormDataEntry>;
+						if (Array.isArray(existingValue)) {
+							list = existingValue;
+						} else if (existingValue !== undefined) {
+							list = [existingValue];
+						} else {
+							list = [];
+						}
 						list.push(formValue);
 						form[key] = list;
 					} else if (Array.isArray(existingValue)) {
@@ -187,20 +216,13 @@ export const Validator = <
 			case 'param':
 				value = c.req.param();
 				break;
-			case 'header':
-				value = c.req.header();
-				break;
-			case 'cookie':
-				value = getCookie(c);
-				break;
-			default:
-				value = {};
 		}
 		if (options.pre) {
 			value = await options.pre(value, c, target);
 		}
-		const transformedValue = convertEmptyValuesToNull(value, schema);
-		const result = await schema.safeParseAsync(transformedValue);
+		const activeSchema = (await options.schemaFor?.(c)) ?? (schema as ZodType<output<T>>);
+		const transformedValue = convertEmptyValuesToNull(value, activeSchema);
+		const result = await activeSchema.safeParseAsync(transformedValue);
 		if (options.post) {
 			const hookResult = await options.post({...result, target}, c);
 			if (hookResult) {

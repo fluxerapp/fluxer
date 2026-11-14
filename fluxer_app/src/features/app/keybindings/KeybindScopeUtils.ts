@@ -5,6 +5,7 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 
 const VOICE_CALL_FULLSCREEN_ALLOWED_ACTIONS = new Set<KeybindCommand>([
 	'system_open_theme_studio_popout',
+	'system_toggle_custom_css',
 	'voice_toggle_mute',
 	'voice_toggle_deafen',
 	'voice_push_to_talk',
@@ -20,6 +21,10 @@ export const isKeybindAllowedDuringVoiceCallFullscreen = (action: KeybindCommand
 
 const COMPACT_CALL_TEXTAREA_ACTIONS = new Set<KeybindCommand>([
 	'message_focus_textarea',
+	'message_reply_prev',
+	'message_reply_next',
+	'message_edit_prev',
+	'message_edit_next',
 	'chat_focus_textarea',
 	'chat_upload',
 	'chat_toggle_emoji',

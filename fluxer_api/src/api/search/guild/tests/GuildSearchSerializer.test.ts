@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
+import {Guild} from '@app/api/models/Guild';
+import {convertToSearchableGuild} from '@app/api/search/guild/GuildSearchSerializer';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {describe, expect, it} from 'vitest';
-import {createChannelID, createGuildID, createUserID} from '../../../BrandedTypes';
-import type {GuildRow} from '../../../database/types/GuildTypes';
-import {Guild} from '../../../models/Guild';
-import {convertToSearchableGuild} from '../GuildSearchSerializer';
 
-function guildRow(features: Set<string>): GuildRow {
+const adultDiscovery = {
+	description: 'Adults only.',
+	categoryId: 8,
+	primaryLanguage: 'en-US',
+	tags: ['adults'],
+};
+
+function guildRow(features: Set<string>, nsfw = false): GuildRow {
 	return {
 		guild_id: createGuildID(1472623911696138261n),
 		owner_id: createUserID(1472623911696138262n),
@@ -28,7 +36,7 @@ function guildRow(features: Set<string>): GuildRow {
 		verification_level: 0,
 		mfa_level: 0,
 		nsfw_level: 0,
-		nsfw: false,
+		nsfw,
 		content_warning_level: 0,
 		content_warning_text: null,
 		explicit_content_filter: 0,
@@ -43,6 +51,8 @@ function guildRow(features: Set<string>): GuildRow {
 		audit_logs_indexed_at: null,
 		members_indexed_at: null,
 		message_history_cutoff: null,
+		invites_paused_until: null,
+		planned_join_waves_until: null,
 		version: 1,
 	};
 }
@@ -77,5 +87,29 @@ describe('GuildSearchSerializer', () => {
 		expect(result.isDiscoverable).toBe(false);
 		expect(result.discoveryDescription).toBeNull();
 		expect(result.discoveryTags).toEqual([]);
+	});
+	it('an 18+ guild with DISCOVERABLE is not discoverable on fluxer.com', () => {
+		const original = Config.instance.selfHosted;
+		Config.instance.selfHosted = false;
+		try {
+			const guild = new Guild(guildRow(new Set([GuildFeatures.DISCOVERABLE]), true));
+			const result = convertToSearchableGuild(guild, adultDiscovery);
+			expect(result.isDiscoverable).toBe(false);
+			expect(result.discoveryDescription).toBeNull();
+		} finally {
+			Config.instance.selfHosted = original;
+		}
+	});
+	it('an 18+ guild with DISCOVERABLE is discoverable on a self-hosted instance', () => {
+		const original = Config.instance.selfHosted;
+		Config.instance.selfHosted = true;
+		try {
+			const guild = new Guild(guildRow(new Set([GuildFeatures.DISCOVERABLE]), true));
+			const result = convertToSearchableGuild(guild, adultDiscovery);
+			expect(result.isDiscoverable).toBe(true);
+			expect(result.discoveryDescription).toBe('Adults only.');
+		} finally {
+			Config.instance.selfHosted = original;
+		}
 	});
 });

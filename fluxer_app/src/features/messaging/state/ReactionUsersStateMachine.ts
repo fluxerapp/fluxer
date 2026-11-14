@@ -235,7 +235,7 @@ function removeUser(context: ReactionUsersContext, userId: string): ReactionUser
 	};
 }
 
-export const reactionUsersStateMachine = setup({
+const reactionUsersStateMachine = setup({
 	types: {} as {
 		context: ReactionUsersContext;
 		events: ReactionUsersMachineEvent;

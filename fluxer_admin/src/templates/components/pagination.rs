@@ -1,33 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use maud::{Markup, PreEscaped, html};
+use maud::{Markup, html};
 
-pub fn pagination(base_url: &str, current_page: u32, has_more: bool, extra_params: &str) -> Markup {
-    let sep = if base_url.contains('?') { "&" } else { "?" };
-    let has_previous = current_page > 1;
+pub fn pager(prev: Option<String>, label: Option<String>, next: Option<String>) -> Markup {
+    pager_with_missing(prev, label, next, false)
+}
+
+pub fn pager_with_missing(
+    prev: Option<String>,
+    label: Option<String>,
+    next: Option<String>,
+    omit_missing: bool,
+) -> Markup {
     html! {
-        div class="mt-4 flex items-center justify-between" {
-            @if has_previous {
-                p class="text-sm font-normal text-neutral-500" {
-                    a href={
-                        (base_url) (sep) "page=" (current_page - 1) (extra_params)
-                    } class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500 hover:text-neutral-900" {
-                        (PreEscaped("&larr; Previous"))
-                    }
-                }
-            } @else {
-                span {}
+        div class="mt-4 flex items-center justify-between gap-3" {
+            @if let Some(url) = prev {
+                a href=(url) class="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50" { "← Previous" }
+            } @else if !omit_missing {
+                span class="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-400" { "← Previous" }
             }
-            @if has_more {
-                p class="text-sm font-normal text-neutral-500" {
-                    a href={
-                        (base_url) (sep) "page=" (current_page + 1) (extra_params)
-                    } class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500 hover:text-neutral-900" {
-                        (PreEscaped("Next &rarr;"))
-                    }
-                }
-            } @else {
-                span {}
+            @if let Some(text) = label { span class="text-sm text-neutral-500" { (text) } }
+            @if let Some(url) = next {
+                a href=(url) class="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50" { "Next →" }
+            } @else if !omit_missing {
+                span class="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-400" { "Next →" }
             }
         }
     }

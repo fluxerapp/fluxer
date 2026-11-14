@@ -2,8 +2,7 @@
 
 import {createReadStream} from 'node:fs';
 import {createConnection} from 'node:net';
-import {Readable} from 'node:stream';
-import type {IVirusScanProvider} from '@pkgs/virus_scan/src/IVirusScanProvider';
+import type {Readable} from 'node:stream';
 import type {VirusScanProviderResult} from '@pkgs/virus_scan/src/VirusScanProviderResult';
 
 interface ClamAVConfig {
@@ -12,7 +11,10 @@ interface ClamAVConfig {
 	streamChunkBytes?: number;
 }
 
-export class ClamAVProvider implements IVirusScanProvider {
+const CLAMAV_CONNECT_TIMEOUT_MS = 5_000;
+const CLAMAV_IDLE_TIMEOUT_MS = 120_000;
+
+export class ClamAVProvider {
 	private readonly streamChunkBytes: number;
 
 	constructor(private config: ClamAVConfig) {
@@ -23,17 +25,18 @@ export class ClamAVProvider implements IVirusScanProvider {
 		return this.scanReadable(createReadStream(filePath, {highWaterMark: this.streamChunkBytes}));
 	}
 
-	async scanBuffer(buffer: Buffer): Promise<VirusScanProviderResult> {
-		return this.scanReadable(Readable.from(buffer));
-	}
-
 	private scanReadable(source: Readable): Promise<VirusScanProviderResult> {
 		const chunkSize = this.streamChunkBytes;
 		return new Promise((resolve, reject) => {
 			const socket = createConnection(this.config.port, this.config.host);
+			socket.setTimeout(CLAMAV_IDLE_TIMEOUT_MS);
 			let response = '';
 			let settled = false;
+			const connectTimer = setTimeout(() => {
+				doReject(new Error('ClamAV connection timed out'));
+			}, CLAMAV_CONNECT_TIMEOUT_MS);
 			const cleanup = (): void => {
+				clearTimeout(connectTimer);
 				if (!socket.destroyed) {
 					socket.destroy();
 				}
@@ -54,6 +57,7 @@ export class ClamAVProvider implements IVirusScanProvider {
 				resolve(result);
 			};
 			socket.on('connect', () => {
+				clearTimeout(connectTimer);
 				socket.write('zINSTREAM\0');
 				let pendingTail: Buffer | null = null;
 				const writeSized = (slice: Buffer): boolean => {
@@ -121,6 +125,9 @@ export class ClamAVProvider implements IVirusScanProvider {
 				} else {
 					doReject(new Error(`Unexpected ClamAV response: ${trimmedResponse}`));
 				}
+			});
+			socket.on('timeout', () => {
+				doReject(new Error('ClamAV connection timed out'));
 			});
 			socket.on('error', (error) => {
 				doReject(new Error(`ClamAV connection failed: ${error.message}`));

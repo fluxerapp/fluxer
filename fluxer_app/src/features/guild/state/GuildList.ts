@@ -6,7 +6,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import UserSettings, {type GuildFolder} from '@app/features/user/state/UserSettings';
 import {UNCATEGORIZED_FOLDER_ID} from '@fluxer/constants/src/UserConstants';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {action, makeAutoObservable} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 
 export type OrganizedItem =
 	| {
@@ -26,7 +26,6 @@ class GuildList {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	@action
 	handleGatewayReady(guilds: ReadonlyArray<GuildReadyData>): void {
 		const availableGuilds: Array<Guild> = [];
 		for (const guild of guilds) {
@@ -36,13 +35,17 @@ class GuildList {
 		}
 		if (availableGuilds.length > 0) {
 			this.sortGuildArrayInPlace(availableGuilds);
-			this.guilds = availableGuilds;
-		} else {
+			if (
+				this.guilds.length !== availableGuilds.length ||
+				this.guilds.some((guild, index) => guild !== availableGuilds[index])
+			) {
+				this.guilds = availableGuilds;
+			}
+		} else if (this.guilds.length > 0) {
 			this.guilds = [];
 		}
 	}
 
-	@action
 	handleGuild(guild: Guild | GuildReadyData | WireGuild): void {
 		if (guild.unavailable) {
 			return;
@@ -66,7 +69,6 @@ class GuildList {
 		this.guilds = next;
 	}
 
-	@action
 	handleGuildDelete(guildId: string, unavailable?: boolean): void {
 		const index = this.guilds.findIndex((s) => s.id === guildId);
 		if (index === -1) {
@@ -85,7 +87,6 @@ class GuildList {
 		this.guilds = next;
 	}
 
-	@action
 	sortGuilds(): void {
 		const next = this.guilds.slice();
 		this.sortGuildArrayInPlace(next);
@@ -96,13 +97,18 @@ class GuildList {
 		return this.computeOrganizedGuildList();
 	}
 
+	get visitingGuilds(): Array<Guild> {
+		return this.guilds.filter((guild) => guild.visiting && !guild.unavailable);
+	}
+
 	getOrganizedGuildList(): Array<OrganizedItem> {
 		return this.organizedGuildList;
 	}
 
 	private computeOrganizedGuildList(): Array<OrganizedItem> {
 		const guildFolders = UserSettings.guildFolders;
-		const guildMap = new Map(this.guilds.map((guild) => [guild.id, guild]));
+		const memberGuilds = this.guilds.filter((guild) => !guild.visiting);
+		const guildMap = new Map(memberGuilds.map((guild) => [guild.id, guild]));
 		const result: Array<OrganizedItem> = [];
 		const placedGuildIds = new Set<string>();
 		const emittedFolderIds = new Set<number | null>();
@@ -130,7 +136,7 @@ class GuildList {
 				result.push({type: 'folder', folder, guilds: folderGuilds});
 			}
 		}
-		const unplacedGuilds = this.guilds.filter((guild) => !placedGuildIds.has(guild.id) && !guild.unavailable);
+		const unplacedGuilds = memberGuilds.filter((guild) => !placedGuildIds.has(guild.id) && !guild.unavailable);
 		if (unplacedGuilds.length > 0) {
 			const prefix: Array<OrganizedItem> = new Array(unplacedGuilds.length);
 			for (let i = 0; i < unplacedGuilds.length; i++) {

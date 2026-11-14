@@ -31,15 +31,19 @@ export function shouldShowCategoryWhenHidingMutedChannels({
 }
 
 export interface CollapsedCategoryChannelVisibilityInput {
+	isCategoryMuted: boolean;
 	isSelected: boolean;
 	isConnected: boolean;
 	hasVisibleUnread: boolean;
+	hasMentions: boolean;
 }
 
 export function shouldShowChannelInCollapsedCategory({
+	isCategoryMuted,
 	isSelected,
 	isConnected,
 	hasVisibleUnread,
+	hasMentions,
 }: CollapsedCategoryChannelVisibilityInput): boolean {
-	return isSelected || isConnected || hasVisibleUnread;
+	return isSelected || isConnected || (isCategoryMuted ? hasMentions : hasVisibleUnread);
 }

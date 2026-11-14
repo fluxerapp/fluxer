@@ -17,7 +17,7 @@ export function mediaGainFromVolumeSetting(setting: number): number {
 	return setting ** VOLUME_CURVE_EXPONENT;
 }
 
-export function volumeSettingFromMediaGain(gain: number): number {
+function volumeSettingFromMediaGain(gain: number): number {
 	if (!Number.isFinite(gain) || gain <= 0) return 0;
 	if (gain >= 1) return 1;
 	return gain ** (1 / VOLUME_CURVE_EXPONENT);
@@ -25,11 +25,8 @@ export function volumeSettingFromMediaGain(gain: number): number {
 
 interface UseMediaVolumeOptions {
 	mediaRef: React.RefObject<HTMLMediaElement | null>;
-	initialVolume?: number;
-	initialMuted?: boolean;
 	persist?: boolean;
 	onVolumeChange?: (volume: number) => void;
-	onMuteChange?: (muted: boolean) => void;
 }
 
 export interface UseMediaVolumeReturn {
@@ -109,40 +106,30 @@ function publishStoredVolumeSetting(next: StoredVolumeSetting): void {
 	}
 }
 
-export function resetStoredVolumeSettingForTests(): void {
-	storedVolumeSetting = null;
-	storedVolumeListeners.clear();
-}
-
 export function useMediaVolume(options: UseMediaVolumeOptions): UseMediaVolumeReturn {
-	const {mediaRef, initialVolume, initialMuted, persist = true, onVolumeChange, onMuteChange} = options;
-	const tracksSharedSetting = persist && initialVolume === undefined && initialMuted === undefined;
+	const {mediaRef, persist = true, onVolumeChange} = options;
 	const sharedSetting = useSyncExternalStore(
 		subscribeStoredVolumeSetting,
 		readStoredVolumeSetting,
 		readStoredVolumeSetting,
 	);
-	const [ownVolume, setOwnVolume] = useState(() => initialVolume ?? (persist ? getStoredVolume() : DEFAULT_VOLUME));
-	const [ownMuted, setOwnMuted] = useState(() => initialMuted ?? (persist ? getStoredMuted() : false));
-	const volume = tracksSharedSetting ? sharedSetting.volume : ownVolume;
-	const isMuted = tracksSharedSetting ? sharedSetting.muted : ownMuted;
+	const [ownVolume, setOwnVolume] = useState(() => (persist ? getStoredVolume() : DEFAULT_VOLUME));
+	const [ownMuted, setOwnMuted] = useState(() => (persist ? getStoredMuted() : false));
+	const volume = persist ? sharedSetting.volume : ownVolume;
+	const isMuted = persist ? sharedSetting.muted : ownMuted;
 	const previousVolumeRef = useRef(volume > 0 ? volume : DEFAULT_VOLUME);
 	const settingRef = useRef({volume, isMuted});
 	settingRef.current = {volume, isMuted};
 	const commitSetting = useCallback(
 		(nextVolume: number, nextMuted: boolean) => {
-			if (tracksSharedSetting) {
+			if (persist) {
 				publishStoredVolumeSetting({volume: nextVolume, muted: nextMuted});
 				return;
 			}
 			setOwnVolume(nextVolume);
 			setOwnMuted(nextMuted);
-			if (persist) {
-				storeVolume(nextVolume);
-				storeMuted(nextMuted);
-			}
 		},
-		[persist, tracksSharedSetting],
+		[persist],
 	);
 	useEffect(() => {
 		const media = mediaRef.current;
@@ -177,9 +164,8 @@ export function useMediaVolume(options: UseMediaVolumeOptions): UseMediaVolumeRe
 				media.volume = mediaGainFromVolumeSetting(nextVolume);
 			}
 			commitSetting(nextVolume, muted);
-			onMuteChange?.(muted);
 		},
-		[mediaRef, commitSetting, onMuteChange],
+		[mediaRef, commitSetting],
 	);
 	const setVolume = useCallback(
 		(newVolume: number) => {

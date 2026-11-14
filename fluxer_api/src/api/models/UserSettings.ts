@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserSettingsRow} from '@app/api/database/types/UserTypes';
+import {UserCustomStatus} from '@app/api/models/UserCustomStatus';
+import {UserGuildFolder} from '@app/api/models/UserGuildFolder';
 import type {LocaleCode} from '@fluxer/constants/src/Locales';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
@@ -17,15 +22,11 @@ import {
 	type ThemeType,
 	ThemeTypes,
 	type TimeFormatType,
+	type TimestampFormatType,
 	UNCATEGORIZED_FOLDER_ID,
 	UserExplicitContentFilterTypes,
 } from '@fluxer/constants/src/UserConstants';
 import {decodeSyncedPreferences} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
-import type {GuildID, UserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {UserSettingsRow} from '../database/types/UserTypes';
-import {UserCustomStatus} from './UserCustomStatus';
-import {UserGuildFolder} from './UserGuildFolder';
 
 export class UserSettings {
 	readonly userId: UserID;
@@ -57,17 +58,22 @@ export class UserSettings {
 	readonly guildFolders: Array<UserGuildFolder>;
 	readonly afkTimeout: number;
 	readonly timeFormat: TimeFormatType;
+	readonly regionalFormat: string | null;
+	readonly timestampFormat: TimestampFormatType;
 	readonly trustedDomains: Set<string>;
 	readonly defaultHideMutedChannels: boolean;
 	readonly sensitiveContentFriendDmFilter: SensitiveMediaFilterLevelValue;
 	readonly sensitiveContentNonFriendDmFilter: SensitiveMediaFilterLevelValue;
 	readonly sensitiveContentGuildFilter: SensitiveMediaFilterLevelValue;
+	readonly allowMatureContentOnIos: boolean;
 	readonly suppressUnprivilegedSelfMentions: boolean;
 	readonly suppressUnprivilegedSelfMentionBypassUserIds: Set<UserID>;
 	readonly staffDmAccessUserIds: Set<UserID>;
 	readonly syncedPreferences: string;
 	readonly profilePrivacy: ProfilePrivacyLevel;
 	readonly defaultShareVoiceActivity: boolean;
+	readonly privacySetupVersion: number;
+	readonly privacySetupCompletedAt: Date | null;
 	readonly version: number;
 
 	constructor(row: UserSettingsRow) {
@@ -100,6 +106,8 @@ export class UserSettings {
 		this.guildFolders = (row.guild_folders ?? []).map((folder) => new UserGuildFolder(folder));
 		this.afkTimeout = row.afk_timeout ?? 600;
 		this.timeFormat = (row.time_format ?? 0) as TimeFormatType;
+		this.regionalFormat = row.regional_format ?? null;
+		this.timestampFormat = (row.timestamp_format ?? 0) as TimestampFormatType;
 		this.trustedDomains = row.trusted_domains ?? new Set();
 		this.defaultHideMutedChannels = row.default_hide_muted_channels ?? false;
 		this.sensitiveContentFriendDmFilter = (row.sensitive_content_friend_dm_filter ??
@@ -108,6 +116,7 @@ export class UserSettings {
 			SensitiveMediaFilterLevel.SHOW) as SensitiveMediaFilterLevelValue;
 		this.sensitiveContentGuildFilter = (row.sensitive_content_guild_filter ??
 			SensitiveMediaFilterLevel.SHOW) as SensitiveMediaFilterLevelValue;
+		this.allowMatureContentOnIos = row.allow_mature_content_on_ios ?? false;
 		this.suppressUnprivilegedSelfMentions = row.suppress_unprivileged_self_mentions ?? false;
 		this.suppressUnprivilegedSelfMentionBypassUserIds =
 			row.suppress_unprivileged_self_mentions_bypass_user_ids ?? new Set<UserID>();
@@ -115,15 +124,9 @@ export class UserSettings {
 		this.syncedPreferences = normalizeStoredSyncedPreferences(row.synced_preferences);
 		this.profilePrivacy = (row.profile_privacy ?? ProfilePrivacyLevels.ALL_GUILDS) as ProfilePrivacyLevel;
 		this.defaultShareVoiceActivity = row.default_share_voice_activity ?? true;
+		this.privacySetupVersion = row.privacy_setup_version ?? 0;
+		this.privacySetupCompletedAt = row.privacy_setup_completed_at ?? null;
 		this.version = row.version;
-	}
-
-	getUncategorizedFolder(): UserGuildFolder | null {
-		return this.guildFolders.find((folder) => folder.folderId === UNCATEGORIZED_FOLDER_ID) ?? null;
-	}
-
-	getOrderedGuildIds(): Array<GuildID> {
-		return this.guildFolders.flatMap((folder) => folder.guildIds);
 	}
 
 	toRow(): UserSettingsRow {
@@ -157,11 +160,14 @@ export class UserSettings {
 			guild_folders: this.guildFolders.length > 0 ? this.guildFolders.map((folder) => folder.toGuildFolder()) : null,
 			afk_timeout: this.afkTimeout,
 			time_format: this.timeFormat,
+			regional_format: this.regionalFormat,
+			timestamp_format: this.timestampFormat,
 			trusted_domains: this.trustedDomains.size > 0 ? this.trustedDomains : null,
 			default_hide_muted_channels: this.defaultHideMutedChannels,
 			sensitive_content_friend_dm_filter: this.sensitiveContentFriendDmFilter,
 			sensitive_content_non_friend_dm_filter: this.sensitiveContentNonFriendDmFilter,
 			sensitive_content_guild_filter: this.sensitiveContentGuildFilter,
+			allow_mature_content_on_ios: this.allowMatureContentOnIos,
 			suppress_unprivileged_self_mentions: this.suppressUnprivilegedSelfMentions,
 			suppress_unprivileged_self_mentions_bypass_user_ids:
 				this.suppressUnprivilegedSelfMentionBypassUserIds.size > 0
@@ -171,6 +177,8 @@ export class UserSettings {
 			synced_preferences: this.syncedPreferences === '' ? null : this.syncedPreferences,
 			profile_privacy: this.profilePrivacy,
 			default_share_voice_activity: this.defaultShareVoiceActivity,
+			privacy_setup_version: this.privacySetupVersion,
+			privacy_setup_completed_at: this.privacySetupCompletedAt,
 			version: this.version,
 		};
 	}
@@ -216,7 +224,7 @@ export class UserSettings {
 			friend_source_flags: friendSourceFlags,
 			incoming_call_flags: IncomingCallFlags.FRIENDS_ONLY,
 			group_dm_add_permission_flags: GroupDmAddPermissionFlags.FRIENDS_ONLY,
-			default_guilds_restricted: false,
+			default_guilds_restricted: !isAdult,
 			bot_default_guilds_restricted: false,
 			restricted_guilds: new Set(),
 			bot_restricted_guilds: new Set(),
@@ -233,17 +241,22 @@ export class UserSettings {
 			],
 			afk_timeout: 600,
 			time_format: 0,
+			regional_format: null,
+			timestamp_format: 0,
 			trusted_domains: new Set(),
 			default_hide_muted_channels: false,
 			sensitive_content_friend_dm_filter: isAdult ? SensitiveMediaFilterLevel.SHOW : SensitiveMediaFilterLevel.BLUR,
 			sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.BLOCK,
 			sensitive_content_guild_filter: SensitiveMediaFilterLevel.BLUR,
+			allow_mature_content_on_ios: false,
 			suppress_unprivileged_self_mentions: false,
 			suppress_unprivileged_self_mentions_bypass_user_ids: null,
 			staff_dm_access_user_ids: null,
 			synced_preferences: null,
 			profile_privacy: ProfilePrivacyLevels.ALL_GUILDS,
 			default_share_voice_activity: true,
+			privacy_setup_version: 0,
+			privacy_setup_completed_at: null,
 			version: 1,
 		};
 	}

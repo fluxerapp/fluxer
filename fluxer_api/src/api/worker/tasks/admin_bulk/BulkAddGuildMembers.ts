@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
+import {createUserID} from '@app/api/BrandedTypes';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {runAdminBulkJob} from '@app/api/worker/tasks/admin_bulk/AdminBulkJob';
+import {createAdminBulkServices} from '@app/api/worker/tasks/admin_bulk/AdminBulkServices';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AdminAuditService} from '../../../admin/services/AdminAuditService';
-import {createGuildID, createUserID} from '../../../BrandedTypes';
-import {createRequestCache} from '../../../middleware/RequestCacheMiddleware';
-import {getWorkerDependencies} from '../../WorkerContext';
 
 interface Payload {
 	guild_id: string;
@@ -22,57 +21,37 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 		admin_user_id: rawPayload.admin_user_id as string,
 		audit_log_reason: (rawPayload.audit_log_reason as string | null) ?? null,
 	};
-	const deps = getWorkerDependencies();
-	const auditService = new AdminAuditService(deps.adminRepository, deps.snowflakeService);
+	const {auditService, guildService} = createAdminBulkServices(getWorkerDependencies());
 	const adminUserId = createUserID(BigInt(payload.admin_user_id));
-	const guildId = createGuildID(BigInt(payload.guild_id));
-	const userIds = payload.user_ids.map((id) => BigInt(id));
-	const total = userIds.length;
-	const successful: Array<string> = [];
-	const failed: Array<{
-		id: string;
-		error: string;
-	}> = [];
+	const guildId = BigInt(payload.guild_id);
+	const total = payload.user_ids.length;
 	await helpers.setContextLink(`/guilds/${guildId}`);
 	await helpers.reportProgress(0, total, `Adding ${total} members to guild ${guildId}`);
-	for (let i = 0; i < userIds.length; i++) {
-		if (await helpers.shouldCancel()) throw new JobCancelledError();
-		const userIdBigInt = userIds[i]!;
-		const userId = createUserID(userIdBigInt);
-		try {
-			await deps.guildService.members.addUserToGuild({
-				skipRiskGate: true,
-				userId,
-				guildId,
-				sendJoinMessage: false,
-				skipBanCheck: true,
-				joinSourceType: JoinSourceTypes.ADMIN_FORCE_ADD,
+	return await runAdminBulkJob({
+		helpers,
+		ids: payload.user_ids,
+		progressEvery: 25,
+		apply: async (id) => {
+			await guildService.membershipService.forceAddUserToGuild({
+				data: {guild_id: guildId, user_id: BigInt(id)},
 				requestCache: createRequestCache(),
-				initiatorId: adminUserId,
+				adminUserId,
+				auditLogReason: payload.audit_log_reason,
+				sendJoinMessage: false,
 			});
-			successful.push(userId.toString());
-		} catch (err) {
-			failed.push({id: userIdBigInt.toString(), error: err instanceof Error ? err.message : String(err)});
-		}
-		if ((i + 1) % 25 === 0) {
-			await helpers.reportProgress(i + 1, total, null);
-		}
-	}
-	await auditService.createAuditLog({
-		adminUserId,
-		targetType: 'guild',
-		targetId: BigInt(guildId),
-		action: 'bulk_add_guild_members',
-		auditLogReason: payload.audit_log_reason,
-		metadata: new Map([
-			['guild_id', guildId.toString()],
-			['user_count', total.toString()],
-			['successful', successful.length.toString()],
-			['failed', failed.length.toString()],
-		]),
+		},
+		summary: {
+			auditService,
+			adminUserId,
+			action: 'bulk_add_guild_members',
+			auditLogReason: payload.audit_log_reason,
+			target: {type: 'guild', id: guildId},
+			metadata: [
+				['guild_id', guildId.toString()],
+				['user_count', total.toString()],
+			],
+		},
 	});
-	await helpers.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-	helpers.logger.info({successful: successful.length, failed: failed.length}, 'bulkAddGuildMembers complete');
 };
 
 export default handler;

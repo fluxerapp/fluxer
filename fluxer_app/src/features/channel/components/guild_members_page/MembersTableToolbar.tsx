@@ -23,6 +23,11 @@ const SORT_DESCRIPTOR = msg({
 	message: 'Sort',
 	comment: 'Accessible label for the sort-mode select on the community members page.',
 });
+const SHOWING_OF_TOTAL_MEMBERS_DESCRIPTOR = msg({
+	message: 'Showing {displayedCount, number} of {totalCount, plural, one {# total member} other {# total members}}',
+	comment:
+		'Subtitle under the community members page heading. displayedCount is how many rows the table currently shows; totalCount is how many members the community has.',
+});
 
 export interface MembersTableToolbarProps {
 	displayedCount: number;
@@ -66,9 +71,7 @@ export function MembersTableToolbar({
 						className={styles.toolbarSubtitle}
 						data-flx="channel.guild-members-page.members-table-view.toolbar-subtitle"
 					>
-						<Trans>
-							Showing {displayedCount} of {totalCount} total members
-						</Trans>
+						{i18n._(SHOWING_OF_TOTAL_MEMBERS_DESCRIPTOR, {displayedCount, totalCount})}
 					</span>
 				)}
 			</div>

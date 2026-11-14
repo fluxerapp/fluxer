@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::utils::plural::count_noun;
 use crate::{
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -25,13 +26,13 @@ fn filter_bar(base: &str, p: &JobsListParams) -> Markup {
                 div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" {
                     (select_input("status", "Status", &[
                         ("", "Any"), ("queued", "Queued"), ("running", "Running"),
-                        ("succeeded", "Succeeded"), ("cancelled", "Cancelled"),
+                        ("succeeded", "Succeeded"), ("cancelled", "Canceled"),
                         ("deadletter", "Dead-letter"),
                     ], p.status_filter))
                     div class="flex flex-col gap-2" {
                         label for="task_type" class=(FORM_LABEL_CLASS) { "Task type" }
                         input type="text" id="task_type" name="task_type"
-                            value=(p.task_type_filter) placeholder="syncDisposableEmailDomains"
+                            value=(p.task_type_filter) placeholder="syncUrlBlocklists"
                             class=(FORM_INPUT_CLASS);
                     }
                     div class="flex flex-col gap-2" {
@@ -69,8 +70,8 @@ pub struct JobsListParams<'a> {
 pub fn jobs_list_page(config: &AdminConfig, auth: &AuthContext, params: &JobsListParams) -> Markup {
     let base = &config.base_path;
     let count_label = format!(
-        "{} jobs{}",
-        params.jobs.len(),
+        "{}{}",
+        count_noun(params.jobs.len() as u64, "job", "jobs"),
         if params.next_cursor.is_some() {
             " (more available)"
         } else {

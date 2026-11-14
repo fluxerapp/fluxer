@@ -4,24 +4,22 @@
 -typing([eqwalizer]).
 
 -export([
-    build_content_preview/1,
     build_content_preview/2,
+    preview_fields/2,
     build_markdown_context/4,
     resolve_author_name/3,
-    extract_image_url/1,
-    maybe_image_fields/1,
-    build_url/3
+    resolve_author_avatar_url/1,
+    build_url/3,
+    truncate_bytes/2
 ]).
 
 -define(MAX_MENTIONS_FOR_PUSH, 50).
+-define(MAX_PREVIEW_BYTES, 100).
 -define(CHANNEL_TYPE_GUILD_TEXT, 0).
 -define(CHANNEL_TYPE_GUILD_VOICE, 2).
 -define(CHANNEL_TYPE_GUILD_CATEGORY, 4).
+-define(CHANNEL_TYPE_GUILD_ANNOUNCEMENT, 5).
 -define(CHANNEL_TYPE_GUILD_LINK, 998).
-
--spec build_content_preview(map()) -> binary().
-build_content_preview(MessageData) ->
-    build_content_preview(MessageData, #{}).
 
 -spec build_content_preview(map(), map()) -> binary().
 build_content_preview(MessageData, MarkdownContext) ->
@@ -29,10 +27,51 @@ build_content_preview(MessageData, MarkdownContext) ->
     Preview = push_markdown_plaintext:render_push_preview(Content, MarkdownContext),
     case Preview of
         <<>> ->
-            truncate_preview(build_content_fallback_preview(MessageData));
+            truncate_preview(build_content_fallback_preview(MessageData, MarkdownContext));
         _ ->
             truncate_preview(Preview)
     end.
+
+-spec preview_fields(map(), map()) -> map().
+preview_fields(MessageData, MarkdownContext) ->
+    Content = push_utils:normalize_binary(maps:get(<<"content">>, MessageData, <<>>), <<>>),
+    case push_markdown_plaintext:render_push_preview(Content, MarkdownContext) of
+        <<>> -> fallback_preview_fields(MessageData);
+        _ -> #{}
+    end.
+
+-spec fallback_preview_fields(map()) -> map().
+fallback_preview_fields(MessageData) ->
+    case
+        {
+            maps:get(<<"stickers">>, MessageData, []),
+            maps:get(<<"attachments">>, MessageData, [])
+        }
+    of
+        {[Sticker], _} when is_map(Sticker) ->
+            with_arg(
+                <<"sticker">>, push_utils:normalize_binary(maps:get(<<"name">>, Sticker, <<>>))
+            );
+        {[_, _ | _] = Stickers, _} ->
+            with_arg(<<"stickers">>, name_lines(sticker_names(Stickers)));
+        {_, [Attachment | _]} when is_map(Attachment) ->
+            with_arg(
+                <<"attachment">>,
+                push_utils:normalize_binary(maps:get(<<"filename">>, Attachment, undefined))
+            );
+        _ ->
+            #{}
+    end.
+
+-spec with_arg(binary(), term()) -> map().
+with_arg(Kind, Arg) when is_binary(Arg), byte_size(Arg) > 0 ->
+    #{<<"preview_kind">> => Kind, <<"preview_arg">> => truncate_preview(Arg)};
+with_arg(Kind, _Arg) ->
+    #{<<"preview_kind">> => Kind}.
+
+-spec name_lines([binary()]) -> binary().
+name_lines([]) -> <<>>;
+name_lines([_ | _] = Names) -> join_binary(Names, <<"\n">>).
 
 -spec build_markdown_context(map(), non_neg_integer(), map(), map()) -> map().
 build_markdown_context(MessageData, GuildId, RoleNames, GuildData) ->
@@ -46,7 +85,7 @@ build_markdown_context(MessageData, GuildId, RoleNames, GuildData) ->
         ),
         <<"user_nicknames">> => UserNicknames,
         <<"roles">> => role_names_for_context(GuildId, RoleNames),
-        <<"channels">> => channel_names_for_context(MessageData, GuildData)
+        <<"channels">> => channel_names_for_context(MessageData, GuildId, GuildData)
     }.
 
 -spec mention_user_names(term()) -> map().
@@ -112,6 +151,32 @@ user_nicknames_from_context_or_message(MessageData, MarkdownContext) when
 user_nicknames_from_context_or_message(MessageData, _MarkdownContext) ->
     group_dm_user_nicknames(MessageData).
 
+-spec resolve_author_avatar_url(map()) -> binary().
+resolve_author_avatar_url(AuthorData) ->
+    resolve_avatar_url(AuthorData, maps:get(<<"avatar">>, AuthorData, null)).
+
+-spec resolve_avatar_url(map(), binary() | null) -> binary().
+resolve_avatar_url(AuthorData, null) ->
+    default_avatar_url(author_id_binary(AuthorData));
+resolve_avatar_url(AuthorData, Hash) ->
+    case author_id_binary(AuthorData) of
+        undefined -> default_avatar_url(undefined);
+        UserId -> push_utils:construct_avatar_url(UserId, Hash)
+    end.
+
+-spec author_id_binary(map()) -> binary() | undefined.
+author_id_binary(AuthorData) ->
+    case snowflake_id:parse_optional(maps:get(<<"id">>, AuthorData, undefined)) of
+        undefined -> undefined;
+        UserId -> integer_to_binary(UserId)
+    end.
+
+-spec default_avatar_url(binary() | undefined) -> binary().
+default_avatar_url(undefined) ->
+    push_utils:get_default_avatar_url(<<>>);
+default_avatar_url(UserId) ->
+    push_utils:get_default_avatar_url(UserId).
+
 -spec user_nicknames(map(), non_neg_integer(), map()) -> map().
 user_nicknames(MessageData, 0, _GuildData) ->
     group_dm_user_nicknames(MessageData);
@@ -120,7 +185,7 @@ user_nicknames(_MessageData, _GuildId, GuildData) ->
 
 -spec guild_user_nicknames(map()) -> map().
 guild_user_nicknames(GuildData) when is_map(GuildData) ->
-    maps:fold(fun put_member_nickname/3, #{}, guild_data_index:member_map(GuildData));
+    maps:fold(fun put_member_nickname/3, #{}, guild_data_index_members:member_map(GuildData));
 guild_user_nicknames(_GuildData) ->
     #{}.
 
@@ -197,12 +262,12 @@ role_id_binary(RoleId) when is_integer(RoleId), RoleId > 0 ->
 role_id_binary(RoleId) ->
     push_utils:normalize_binary(RoleId).
 
--spec channel_names_for_context(map(), map()) -> map().
-channel_names_for_context(MessageData, GuildData) ->
+-spec channel_names_for_context(map(), non_neg_integer(), map()) -> map().
+channel_names_for_context(MessageData, GuildId, GuildData) ->
     FromMentions = mention_channel_names(maps:get(<<"mention_channels">>, MessageData, [])),
     Content = push_utils:normalize_binary(maps:get(<<"content">>, MessageData, <<"">>), <<>>),
     MentionedIds = channel_mention_ids(Content),
-    maps:merge(channel_names_from_guild_data(MentionedIds, GuildData), FromMentions).
+    maps:merge(channel_names_from_guild_data(MentionedIds, GuildId, GuildData), FromMentions).
 
 -spec mention_channel_names(term()) -> map().
 mention_channel_names(MentionChannels) when is_list(MentionChannels) ->
@@ -255,40 +320,21 @@ maybe_prepend_snowflake(IdBin, Acc) ->
         _ -> Acc
     end.
 
--spec channel_names_from_guild_data([integer()], map()) -> map().
-channel_names_from_guild_data([], _GuildData) ->
+-spec channel_names_from_guild_data([integer()], non_neg_integer(), map()) -> map().
+channel_names_from_guild_data([], _GuildId, _GuildData) ->
     #{};
-channel_names_from_guild_data(ChannelIds, GuildData) when is_map(GuildData) ->
-    ChannelIndex = guild_data_index:channel_index(GuildData),
-    lists:foldl(
-        fun(ChannelId, Acc) -> put_index_channel_name(ChannelId, ChannelIndex, Acc) end,
-        #{},
-        ChannelIds
-    ).
+channel_names_from_guild_data(ChannelIds, GuildId, GuildData) ->
+    Channels = guild_members_mutation:resolve_channel_mentions_for_guild(
+        ChannelIds, GuildId, GuildData
+    ),
+    lists:foldl(fun put_visible_channel_name/2, #{}, Channels).
 
--spec put_index_channel_name(integer(), map(), map()) -> map().
-put_index_channel_name(ChannelId, ChannelIndex, Acc) ->
-    Channel = maps:get(ChannelId, ChannelIndex, undefined),
-    put_index_channel_name_from_channel(ChannelId, Channel, Acc).
-
--spec put_index_channel_name_from_channel(integer(), term(), map()) -> map().
-put_index_channel_name_from_channel(ChannelId, Channel, Acc) when is_map(Channel) ->
-    maybe_put_copyable_index_channel_name(
-        is_copyable_channel_mention(Channel), ChannelId, Channel, Acc
-    );
-put_index_channel_name_from_channel(_ChannelId, _Channel, Acc) ->
-    Acc.
-
--spec maybe_put_copyable_index_channel_name(boolean(), integer(), map(), map()) -> map().
-maybe_put_copyable_index_channel_name(true, ChannelId, Channel, Acc) ->
-    put_copyable_index_channel_name(ChannelId, Channel, Acc);
-maybe_put_copyable_index_channel_name(false, _ChannelId, _Channel, Acc) ->
-    Acc.
-
--spec put_copyable_index_channel_name(integer(), map(), map()) -> map().
-put_copyable_index_channel_name(ChannelId, Channel, Acc) ->
-    Name = push_utils:normalize_binary(maps:get(<<"name">>, Channel, undefined)),
-    maybe_put_name(integer_to_binary(ChannelId), Name, Acc).
+-spec put_visible_channel_name(map(), map()) -> map().
+put_visible_channel_name(#{id := Id, name := Name, type := Type}, Acc) ->
+    case is_copyable_channel_type(Type) of
+        true -> maybe_put_name(integer_to_binary(Id), push_utils:normalize_binary(Name), Acc);
+        false -> Acc
+    end.
 
 -spec is_copyable_channel_mention(map()) -> boolean().
 is_copyable_channel_mention(Channel) ->
@@ -303,6 +349,8 @@ is_copyable_channel_type(?CHANNEL_TYPE_GUILD_TEXT) ->
 is_copyable_channel_type(?CHANNEL_TYPE_GUILD_VOICE) ->
     true;
 is_copyable_channel_type(?CHANNEL_TYPE_GUILD_CATEGORY) ->
+    true;
+is_copyable_channel_type(?CHANNEL_TYPE_GUILD_ANNOUNCEMENT) ->
     true;
 is_copyable_channel_type(?CHANNEL_TYPE_GUILD_LINK) ->
     true;
@@ -325,9 +373,13 @@ first_nonempty_binary([Value | Rest]) ->
     end.
 
 -spec truncate_preview(binary()) -> binary().
-truncate_preview(Content) when byte_size(Content) > 100 ->
-    valid_utf8_prefix(binary:part(Content, 0, 100));
 truncate_preview(Content) ->
+    truncate_bytes(Content, ?MAX_PREVIEW_BYTES).
+
+-spec truncate_bytes(binary(), non_neg_integer()) -> binary().
+truncate_bytes(Content, MaxBytes) when byte_size(Content) > MaxBytes ->
+    valid_utf8_prefix(binary:part(Content, 0, MaxBytes));
+truncate_bytes(Content, _MaxBytes) ->
     valid_utf8_prefix(Content).
 
 -spec valid_utf8_prefix(binary()) -> binary().
@@ -338,13 +390,37 @@ valid_utf8_prefix(Content) ->
         {error, Valid, _Rest} -> Valid
     end.
 
--spec build_content_fallback_preview(map()) -> binary().
-build_content_fallback_preview(MessageData) ->
+-spec build_content_fallback_preview(map(), map()) -> binary().
+build_content_fallback_preview(MessageData, MarkdownContext) ->
     case
         first_nonempty_binary([
             build_sticker_preview(maps:get(<<"stickers">>, MessageData, [])),
             build_attachment_preview(maps:get(<<"attachments">>, MessageData, [])),
-            build_embed_preview(maps:get(<<"embeds">>, MessageData, []))
+            build_embed_preview(maps:get(<<"embeds">>, MessageData, [])),
+            build_snapshot_preview(
+                maps:get(<<"message_snapshots">>, MessageData, []), MarkdownContext
+            )
+        ])
+    of
+        Preview when is_binary(Preview) -> Preview;
+        undefined -> <<>>
+    end.
+
+-spec build_snapshot_preview(term(), map()) -> binary().
+build_snapshot_preview([Snapshot | _Rest], MarkdownContext) when is_map(Snapshot) ->
+    snapshot_preview(Snapshot, MarkdownContext);
+build_snapshot_preview(_Snapshots, _MarkdownContext) ->
+    <<>>.
+
+-spec snapshot_preview(map(), map()) -> binary().
+snapshot_preview(Snapshot, MarkdownContext) ->
+    Content = push_utils:normalize_binary(maps:get(<<"content">>, Snapshot, <<>>), <<>>),
+    case
+        first_nonempty_binary([
+            push_markdown_plaintext:render_push_preview(Content, MarkdownContext),
+            build_sticker_preview(maps:get(<<"stickers">>, Snapshot, [])),
+            build_attachment_preview(maps:get(<<"attachments">>, Snapshot, [])),
+            build_embed_preview(maps:get(<<"embeds">>, Snapshot, []))
         ])
     of
         Preview when is_binary(Preview) -> Preview;
@@ -452,106 +528,6 @@ format_name_list(Names) ->
     Prefix = join_binary(lists:reverse(ReversedRest), <<", ">>),
     iolist_to_binary([Prefix, <<", and ">>, Last]).
 
--spec extract_image_url(map()) -> binary() | undefined.
-extract_image_url(MessageData) ->
-    case extract_attachment_image_url(maps:get(<<"attachments">>, MessageData, [])) of
-        undefined -> extract_embed_image_url(maps:get(<<"embeds">>, MessageData, []));
-        ImageUrl -> ImageUrl
-    end.
-
--spec extract_attachment_image_url(term()) -> binary() | undefined.
-extract_attachment_image_url([Attachment | Rest]) when is_map(Attachment) ->
-    case check_media_safe_url(Attachment) of
-        {ok, Url} -> Url;
-        unsafe -> extract_attachment_image_url(Rest)
-    end;
-extract_attachment_image_url([_ | Rest]) ->
-    extract_attachment_image_url(Rest);
-extract_attachment_image_url(_) ->
-    undefined.
-
--spec extract_embed_image_url(term()) -> binary() | undefined.
-extract_embed_image_url([Embed | Rest]) when is_map(Embed) ->
-    case first_embed_media_url(Embed) of
-        undefined -> extract_embed_image_url(Rest);
-        Url -> Url
-    end;
-extract_embed_image_url([_ | Rest]) ->
-    extract_embed_image_url(Rest);
-extract_embed_image_url(_) ->
-    undefined.
-
--spec first_embed_media_url(map()) -> binary() | undefined.
-first_embed_media_url(Embed) ->
-    Candidates = [
-        maps:get(<<"image">>, Embed, undefined),
-        maps:get(<<"thumbnail">>, Embed, undefined)
-    ],
-    first_embed_media_url_from_candidates(Candidates).
-
--spec first_embed_media_url_from_candidates(list()) -> binary() | undefined.
-first_embed_media_url_from_candidates([Media | Rest]) when is_map(Media) ->
-    case check_media_safe_url(Media) of
-        {ok, Url} -> Url;
-        unsafe -> first_embed_media_url_from_candidates(Rest)
-    end;
-first_embed_media_url_from_candidates([_ | Rest]) ->
-    first_embed_media_url_from_candidates(Rest);
-first_embed_media_url_from_candidates([]) ->
-    undefined.
-
--spec check_media_safe_url(map()) -> {ok, binary()} | unsafe.
-check_media_safe_url(Media) ->
-    ProxyUrl = maps:get(<<"proxy_url">>, Media, undefined),
-    FallbackUrl = maps:get(<<"url">>, Media, undefined),
-    Url = push_utils:normalize_binary(
-        case ProxyUrl of
-            undefined -> FallbackUrl;
-            _ -> ProxyUrl
-        end
-    ),
-    DefaultCT = maps:get(<<"content_type">>, Media, <<>>),
-    ContentType = push_utils:normalize_binary(DefaultCT),
-    Flags = bitset:parse_maybe(
-        maps:get(<<"flags">>, Media, 0)
-    ),
-    Nsfw = maps:get(<<"nsfw">>, Media, false),
-    case is_safe_media_url(Url, ContentType, Flags, Nsfw) of
-        true when is_binary(Url) -> {ok, Url};
-        _ -> unsafe
-    end.
-
--spec is_safe_media_url(
-    binary() | undefined,
-    binary() | undefined,
-    integer() | undefined,
-    term()
-) ->
-    boolean().
-is_safe_media_url(undefined, _ContentType, _Flags, _Nsfw) ->
-    false;
-is_safe_media_url(_Url, undefined, _Flags, _Nsfw) ->
-    false;
-is_safe_media_url(_Url, _ContentType, undefined, _Nsfw) ->
-    false;
-is_safe_media_url(Url, ContentType, Flags, Nsfw) when is_binary(Url), is_binary(ContentType) ->
-    IsImage = binary:match(lowercase_binary(ContentType), <<"image/">>) =/= nomatch,
-    IsSensitive = is_sensitive_media(Nsfw, Flags),
-    IsHttps = binary:match(lowercase_binary(Url), <<"https://">>) =:= {0, 8},
-    IsImage andalso not IsSensitive andalso IsHttps.
-
--spec is_sensitive_media(term(), integer()) -> boolean().
-is_sensitive_media(true, _Flags) ->
-    true;
-is_sensitive_media(_Nsfw, Flags) ->
-    bitset:any(Flags, 16#18).
-
--spec maybe_image_fields(binary() | undefined) -> map().
-maybe_image_fields(undefined) ->
-    #{};
-maybe_image_fields(ImageUrl) when is_binary(ImageUrl) ->
-    #{<<"image_url">> => ImageUrl, <<"image">> => ImageUrl}.
-
 -spec build_url(integer(), integer(), integer()) -> binary().
 build_url(0, ChannelId, MessageId) ->
     build_url_parts([<<"@me">>, integer_to_binary(ChannelId), integer_to_binary(MessageId)]);
@@ -568,47 +544,3 @@ build_url_parts(Parts) ->
         <<"/channels/">>,
         join_binary(Parts, <<"/">>)
     ]).
-
--spec lowercase_binary(binary()) -> binary().
-lowercase_binary(Value) ->
-    iolist_to_binary(string:lowercase(Value)).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-truncate_preview_never_splits_a_utf8_character_test() ->
-    Emoji = <<"\xF0\x9F\x98\x80">>,
-    Content = <<(binary:copy(<<"a">>, 98))/binary, Emoji/binary>>,
-    ?assert(byte_size(Content) > 100),
-    Truncated = truncate_preview(Content),
-    ?assert(byte_size(Truncated) =< 100),
-    ?assertMatch(Bin when is_binary(Bin), unicode:characters_to_binary(Truncated, utf8, utf8)),
-    ?assertEqual(binary:copy(<<"a">>, 98), Truncated).
-
-truncate_preview_is_unchanged_for_valid_ascii_test() ->
-    Content = binary:copy(<<"a">>, 150),
-    ?assertEqual(binary:copy(<<"a">>, 100), truncate_preview(Content)).
-
-truncate_preview_keeps_short_valid_content_identical_test() ->
-    Content = <<"hello \xC3\xA9 world">>,
-    ?assertEqual(Content, truncate_preview(Content)).
-
-build_url_dm_test() ->
-    ?assertEqual(<<"/channels/@me/456/789">>, build_url(0, 456, 789)).
-
-build_url_guild_test() ->
-    ?assertEqual(<<"/channels/123/456/789">>, build_url(123, 456, 789)).
-
-extract_image_url_rejects_malformed_flags_test() ->
-    MessageData = #{
-        <<"attachments">> => [
-            #{
-                <<"content_type">> => <<"image/png">>,
-                <<"proxy_url">> => <<"https://cdn.example/image.png">>,
-                <<"flags">> => <<"not-an-int">>
-            }
-        ]
-    },
-    ?assertEqual(undefined, extract_image_url(MessageData)).
-
--endif.

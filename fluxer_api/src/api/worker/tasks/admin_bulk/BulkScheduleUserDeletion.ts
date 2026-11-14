@@ -1,129 +1,57 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {resolveDeletionDays} from '@app/api/admin/services/AdminUserDeletionService';
+import {createUserID} from '@app/api/BrandedTypes';
+import {runAdminBulkJob} from '@app/api/worker/tasks/admin_bulk/AdminBulkJob';
+import {createAdminBulkServices} from '@app/api/worker/tasks/admin_bulk/AdminBulkServices';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {BulkModerationBasis} from '@fluxer/schema/src/domains/admin/EnforcementSchemas';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AdminAuditService} from '../../../admin/services/AdminAuditService';
-import {AdminUserUpdatePropagator} from '../../../admin/services/AdminUserUpdatePropagator';
-import {createUserID} from '../../../BrandedTypes';
-import {reschedulePendingDeletion} from '../../../user/services/PendingDeletionCoordinator';
-import {getWorkerDependencies} from '../../WorkerContext';
+import {z} from 'zod';
 
-interface Payload {
-	user_ids: Array<string>;
-	reason_code: number;
-	days_until_deletion: number;
-	public_reason: string | null;
-	admin_user_id: string;
-	audit_log_reason: string | null;
-}
+const BulkScheduleUserDeletionPayload = z.object({
+	user_ids: z.array(z.string()),
+	days_until_deletion: z.number().int(),
+	basis: BulkModerationBasis,
+	admin_user_id: z.string(),
+	audit_log_reason: z.string().nullable(),
+});
 
-const MIN_USER_REQUESTED_DAYS = 14;
-const MIN_STANDARD_DAYS = 60;
 const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
-	const payload: Payload = {
-		user_ids: rawPayload.user_ids as Array<string>,
-		reason_code: rawPayload.reason_code as number,
-		days_until_deletion: rawPayload.days_until_deletion as number,
-		public_reason: (rawPayload.public_reason as string | null) ?? null,
-		admin_user_id: rawPayload.admin_user_id as string,
-		audit_log_reason: (rawPayload.audit_log_reason as string | null) ?? null,
-	};
-	const deps = getWorkerDependencies();
-	const auditService = new AdminAuditService(deps.adminRepository, deps.snowflakeService);
-	const propagator = new AdminUserUpdatePropagator({
-		userCacheService: deps.userCacheService,
-		userRepository: deps.userRepository,
-		guildRepository: deps.guildRepository,
-		gatewayService: deps.gatewayService,
-	});
+	const payload = BulkScheduleUserDeletionPayload.parse(rawPayload);
+	const {auditService, userService} = createAdminBulkServices(getWorkerDependencies());
 	const adminUserId = createUserID(BigInt(payload.admin_user_id));
-	const userIds = payload.user_ids.map((id) => BigInt(id));
-	const minDays = payload.reason_code === DeletionReasons.USER_REQUESTED ? MIN_USER_REQUESTED_DAYS : MIN_STANDARD_DAYS;
-	const daysUntilDeletion = Math.max(payload.days_until_deletion, minDays);
-	const total = userIds.length;
-	const successful: Array<string> = [];
-	const failed: Array<{
-		id: string;
-		error: string;
-	}> = [];
-	await helpers.setContextLink(`/users?ids=${userIds.slice(0, 50).join(',')}`);
+	const actor = {adminUserId, acls: new Set<string>(), internalNote: payload.audit_log_reason};
+	const total = payload.user_ids.length;
+	const daysUntilDeletion = resolveDeletionDays(payload.basis.type, payload.days_until_deletion);
+	await helpers.setContextLink(`/users?ids=${payload.user_ids.slice(0, 50).join(',')}`);
 	await helpers.reportProgress(0, total, `Scheduling deletion of ${total} users in ${daysUntilDeletion} days`);
-	for (let i = 0; i < userIds.length; i++) {
-		if (await helpers.shouldCancel()) throw new JobCancelledError();
-		const userIdBigInt = userIds[i]!;
-		const userId = createUserID(userIdBigInt);
-		try {
-			const user = await deps.userRepository.findUnique(userId);
-			if (!user) throw new Error('user_not_found');
-			const pendingDeletionAt = new Date();
-			pendingDeletionAt.setDate(pendingDeletionAt.getDate() + daysUntilDeletion);
-			const updatedUser = await deps.userRepository.patchUpsert(
-				userId,
-				{
-					flags: user.flags | UserFlags.DELETED,
-					pending_deletion_at: pendingDeletionAt,
-					deletion_reason_code: payload.reason_code,
-					deletion_public_reason: payload.public_reason ?? null,
-					deletion_audit_log_reason: payload.audit_log_reason ?? null,
-				},
-				user.toRow(),
+	return await runAdminBulkJob({
+		helpers,
+		ids: payload.user_ids,
+		progressEvery: 10,
+		apply: async (userId) => {
+			await userService.deletionService.applyScheduledDeletion(
+				createUserID(BigInt(userId)),
+				{days_until_deletion: payload.days_until_deletion, basis: payload.basis},
+				actor,
 			);
-			await reschedulePendingDeletion({
-				userId,
-				currentPendingDeletionAt: user.pendingDeletionAt,
-				nextPendingDeletionAt: pendingDeletionAt,
-				deletionReasonCode: payload.reason_code,
-				userRepository: deps.userRepository,
-				deletionQueue: deps.deletionQueueService,
-			});
-			await propagator.propagateUserUpdate({userId, oldUser: user, updatedUser});
-			if (user.email) {
-				try {
-					await deps.emailService.sendAccountScheduledForDeletionEmail(
-						user.email,
-						user.username,
-						payload.public_reason ?? null,
-						pendingDeletionAt,
-						user.locale,
-					);
-				} catch (emailErr) {
-					helpers.logger.warn({err: emailErr, userId: userId.toString()}, 'Failed to send deletion email');
-				}
-			}
-			await auditService.createAuditLog({
-				adminUserId,
-				targetType: 'user',
-				targetId: BigInt(userId),
-				action: 'schedule_deletion',
-				auditLogReason: null,
-				metadata: new Map([['days', daysUntilDeletion.toString()]]),
-			});
-			successful.push(userId.toString());
-		} catch (err) {
-			failed.push({id: userIdBigInt.toString(), error: err instanceof Error ? err.message : String(err)});
-		}
-		if ((i + 1) % 10 === 0) {
-			await helpers.reportProgress(i + 1, total, null);
-		}
-	}
-	await auditService.createAuditLog({
-		adminUserId,
-		targetType: 'user',
-		targetId: BigInt(0),
-		action: 'bulk_schedule_deletion',
-		auditLogReason: payload.audit_log_reason,
-		metadata: new Map([
-			['user_count', total.toString()],
-			['reason_code', payload.reason_code.toString()],
-			['days', daysUntilDeletion.toString()],
-			['successful', successful.length.toString()],
-			['failed', failed.length.toString()],
-		]),
+		},
+		summary: {
+			auditService,
+			adminUserId,
+			action: 'bulk_schedule_deletion',
+			auditLogReason: payload.audit_log_reason,
+			metadata: [
+				['user_count', total.toString()],
+				['basis', payload.basis.type],
+				...(payload.basis.type === 'enforcement'
+					? ([['reason_code', payload.basis.decision.reason_code.toString()]] as Array<[string, string]>)
+					: []),
+				['days', daysUntilDeletion.toString()],
+			],
+		},
 	});
-	await helpers.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-	helpers.logger.info({successful: successful.length, failed: failed.length}, 'bulkScheduleUserDeletion complete');
 };
 
 export default handler;

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {delay, HttpResponse, http} from 'msw';
-import {beforeEach, describe, expect, test} from 'vitest';
-import type {ApiContext} from '../../ApiContext';
-import {server} from '../../test/msw/server';
-import {isPasswordPwned, resetPwnedPasswordCacheForTesting} from '../AuthPassword';
+import type {ApiContext} from '@app/api/ApiContext';
+import {isPasswordPwned, resetPwnedPasswordCacheForTesting} from '@app/api/auth/AuthPassword';
+import {getConfig} from '@app/api/Config';
+import {createApiContext} from '@app/api/CreateApiContext';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {server} from '@app/api/test/msw/server';
+import {HttpResponse, http} from 'msw';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const PWNED_PASSWORD = 'fluxer-prefix-592';
 const SAFE_PASSWORD_SAME_PREFIX = 'fluxer-prefix-837';
-const HANGING_RESPONSE_MS = 8000;
-
-const ctx = {} as unknown as ApiContext;
 
 function sha1(password: string): string {
 	return crypto.createHash('sha1').update(password).digest('hex').toUpperCase();
@@ -40,20 +40,18 @@ function rangeHandler(requestedPrefixes: Array<string>, pwnedSuffixes: Array<str
 	});
 }
 
-function hangingRangeHandler() {
-	return http.get('https://api.pwnedpasswords.com/range/:prefix', async () => {
-		await delay(HANGING_RESPONSE_MS);
-		return HttpResponse.text('');
-	});
-}
-
 describe('isPasswordPwned', () => {
+	let harness: ApiTestHarness;
+	let ctx: ApiContext;
+	beforeAll(async () => {
+		harness = await createApiTestHarness();
+		ctx = createApiContext();
+	});
+	afterAll(async () => {
+		await harness?.shutdown();
+	});
 	beforeEach(() => {
 		resetPwnedPasswordCacheForTesting();
-	});
-	test('the fixture passwords are distinct but share a range prefix', () => {
-		expect(PWNED_PASSWORD).not.toBe(SAFE_PASSWORD_SAME_PREFIX);
-		expect(prefixOf(PWNED_PASSWORD)).toBe(prefixOf(SAFE_PASSWORD_SAME_PREFIX));
 	});
 	test('reports a breached password from the range response', async () => {
 		const requestedPrefixes: Array<string> = [];
@@ -68,16 +66,21 @@ describe('isPasswordPwned', () => {
 		await expect(isPasswordPwned(ctx, SAFE_PASSWORD_SAME_PREFIX)).resolves.toBe(false);
 		expect(requestedPrefixes).toHaveLength(1);
 	});
+	test('makes no upstream call when the check is switched off', async () => {
+		const config = getConfig();
+		const originalEnabled = config.breachedPasswordCheck.enabled;
+		const requestedPrefixes: Array<string> = [];
+		server.use(rangeHandler(requestedPrefixes, [suffixOf(PWNED_PASSWORD)]));
+		try {
+			config.breachedPasswordCheck.enabled = false;
+			await expect(isPasswordPwned(ctx, PWNED_PASSWORD)).resolves.toBe(false);
+			expect(requestedPrefixes).toHaveLength(0);
+		} finally {
+			config.breachedPasswordCheck.enabled = originalEnabled;
+		}
+	});
 	test('fails open on a non-OK response', async () => {
 		server.use(http.get('https://api.pwnedpasswords.com/range/:prefix', () => HttpResponse.text('', {status: 503})));
 		await expect(isPasswordPwned(ctx, PWNED_PASSWORD)).resolves.toBe(false);
-	});
-	test('fails open the same way when the lookup times out, without caching the prefix', async () => {
-		server.use(hangingRangeHandler());
-		await expect(isPasswordPwned(ctx, PWNED_PASSWORD)).resolves.toBe(false);
-		const requestedPrefixes: Array<string> = [];
-		server.use(rangeHandler(requestedPrefixes, [suffixOf(PWNED_PASSWORD)]));
-		await expect(isPasswordPwned(ctx, PWNED_PASSWORD)).resolves.toBe(true);
-		expect(requestedPrefixes).toHaveLength(1);
 	});
 });

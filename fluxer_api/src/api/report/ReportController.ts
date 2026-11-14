@@ -1,8 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {viewerFromCtx} from '@app/api/experiment/ChannelThreadsGate';
+import {RequireEmailAccountIdentity} from '@app/api/middleware/AccountIdentityMiddleware';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {urgentFlowSubmissionRequest, urgentLegacyReportRequest} from '@app/api/report/ReportUrgency';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
+import {
+	ReportFlowGuildSubmissionRequest,
+	ReportFlowMessageSubmissionRequest,
+	ReportFlowPathParams,
+	ReportFlowQuery,
+	ReportFlowResponse,
+	ReportFlowUserSubmissionRequest,
+} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 import {
 	DsaReportEmailSendRequest,
 	DsaReportEmailVerifyRequest,
+	DsaReportFlowRequest,
 	DsaReportRequest,
 	OkResponse,
 	ReportGuildRequest,
@@ -11,17 +29,120 @@ import {
 	ReportUserRequest,
 	TicketResponse,
 } from '@fluxer/schema/src/domains/report/ReportSchemas';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function ReportController(app: HonoApp) {
+	app.get(
+		'/reports/flows/:target_type',
+		RateLimitMiddleware(RateLimitConfigs.REPORT_LIST),
+		OpenAPI({
+			operationId: 'get_report_flow',
+			summary: 'Get report flow',
+			description:
+				'Returns every screen of the report flow for a target type, rendered in the requested locale. Message, user and community flows are available in the app and on the DSA form.',
+			responseSchema: ReportFlowResponse,
+			statusCode: 200,
+			security: [],
+			tags: 'Reports',
+		}),
+		Validator('param', ReportFlowPathParams),
+		Validator('query', ReportFlowQuery),
+		async (ctx) => {
+			const {target_type} = ctx.req.valid('param');
+			const {surface, locale} = ctx.req.valid('query');
+			const flow = ctx.get('reportRequestService').getReportFlow({
+				target: target_type,
+				surface,
+				locale: locale ?? ctx.get('requestLocale') ?? null,
+			});
+			ctx.header('Cache-Control', 'private, no-cache');
+			ctx.header('Vary', 'Accept-Language');
+			return ctx.json(flow);
+		},
+	);
+	app.post(
+		'/reports/flows/message/submissions',
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentFlowSubmissionRequest('message')}),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'submit_message_report_flow',
+			summary: 'Submit message report flow',
+			description:
+				'Files a report about a message from the answers given in the in-app message report flow. The reporter must be able to access the channel and target message.',
+			responseSchema: ReportResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: 'Reports',
+		}),
+		Validator('json', ReportFlowMessageSubmissionRequest),
+		async (ctx) => {
+			return ctx.json(
+				await ctx.get('reportRequestService').submitMessageReportFlow({
+					user: ctx.get('user'),
+					request: ctx.req.raw,
+					viewer: viewerFromCtx(ctx),
+					data: ctx.req.valid('json'),
+					locale: ctx.get('requestLocale') ?? null,
+				}),
+			);
+		},
+	);
+	app.post(
+		'/reports/flows/user/submissions',
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentFlowSubmissionRequest('user')}),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'submit_user_report_flow',
+			summary: 'Submit user report flow',
+			description: 'Files a report about a user profile from the answers given in the in-app user profile report flow.',
+			responseSchema: ReportResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: 'Reports',
+		}),
+		Validator('json', ReportFlowUserSubmissionRequest),
+		async (ctx) => {
+			return ctx.json(
+				await ctx.get('reportRequestService').submitUserReportFlow({
+					user: ctx.get('user'),
+					request: ctx.req.raw,
+					data: ctx.req.valid('json'),
+					locale: ctx.get('requestLocale') ?? null,
+				}),
+			);
+		},
+	);
+	app.post(
+		'/reports/flows/guild/submissions',
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentFlowSubmissionRequest('guild')}),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'submit_guild_report_flow',
+			summary: 'Submit community report flow',
+			description:
+				'Files a report about a community from the answers given in the in-app community report flow. The reporter must be a member, the community must be discoverable, or the request must include an invite code.',
+			responseSchema: ReportResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: 'Reports',
+		}),
+		Validator('json', ReportFlowGuildSubmissionRequest),
+		async (ctx) => {
+			return ctx.json(
+				await ctx.get('reportRequestService').submitGuildReportFlow({
+					user: ctx.get('user'),
+					request: ctx.req.raw,
+					data: ctx.req.valid('json'),
+					locale: ctx.get('requestLocale') ?? null,
+				}),
+			);
+		},
+	);
 	app.post(
 		'/reports/message',
-		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentLegacyReportRequest('message')}),
 		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
@@ -39,6 +160,8 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').reportMessage({
 					user: ctx.get('user'),
+					request: ctx.req.raw,
+					viewer: viewerFromCtx(ctx),
 					data: ctx.req.valid('json'),
 				}),
 			);
@@ -46,7 +169,7 @@ export function ReportController(app: HonoApp) {
 	);
 	app.post(
 		'/reports/user',
-		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentLegacyReportRequest('user')}),
 		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
@@ -63,6 +186,7 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').reportUser({
 					user: ctx.get('user'),
+					request: ctx.req.raw,
 					data: ctx.req.valid('json'),
 				}),
 			);
@@ -70,7 +194,7 @@ export function ReportController(app: HonoApp) {
 	);
 	app.post(
 		'/reports/guild',
-		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.REPORT_CREATE, {skipRouteLimit: urgentLegacyReportRequest('guild')}),
 		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
@@ -87,6 +211,7 @@ export function ReportController(app: HonoApp) {
 			return ctx.json(
 				await ctx.get('reportRequestService').reportGuild({
 					user: ctx.get('user'),
+					request: ctx.req.raw,
 					data: ctx.req.valid('json'),
 				}),
 			);
@@ -95,24 +220,31 @@ export function ReportController(app: HonoApp) {
 	app.post(
 		'/reports/dsa/email/send',
 		RateLimitMiddleware(RateLimitConfigs.DSA_REPORT_EMAIL_SEND),
+		RequireEmailAccountIdentity,
 		OpenAPI({
 			operationId: 'send_dsa_report_email',
 			summary: 'Send DSA report email',
-			description: 'Initiates DSA (Digital Services Act) report submission by sending verification email to reporter.',
+			description:
+				'Initiates DSA (Digital Services Act) report submission by sending verification email to reporter. Responds with 503 when the email could not be sent.',
 			responseSchema: OkResponse,
 			statusCode: 200,
+			errorStatusCodes: [503],
 			security: [],
 			tags: 'Reports',
 		}),
 		Validator('json', DsaReportEmailSendRequest),
 		async (ctx) => {
-			await ctx.get('reportRequestService').sendDsaReportVerificationEmail({data: ctx.req.valid('json')});
+			await ctx.get('reportRequestService').sendDsaReportVerificationEmail({
+				data: ctx.req.valid('json'),
+				locale: ctx.get('requestLocale') ?? null,
+			});
 			return ctx.json({ok: true});
 		},
 	);
 	app.post(
 		'/reports/dsa/email/verify',
 		RateLimitMiddleware(RateLimitConfigs.DSA_REPORT_EMAIL_VERIFY),
+		RequireEmailAccountIdentity,
 		OpenAPI({
 			operationId: 'verify_dsa_report_email',
 			summary: 'Verify DSA report email',
@@ -133,15 +265,22 @@ export function ReportController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'create_dsa_report',
 			summary: 'Create DSA report',
-			description: 'Creates a DSA complaint report with verified email for Digital Services Act compliance.',
+			description:
+				'Creates a DSA complaint report with verified email for Digital Services Act compliance. The reason comes from the answers given in the DSA report flow.',
 			responseSchema: ReportResponse,
+			requestSchema: DsaReportFlowRequest,
 			statusCode: 200,
 			security: [],
 			tags: 'Reports',
 		}),
 		Validator('json', DsaReportRequest),
 		async (ctx) => {
-			return ctx.json(await ctx.get('reportRequestService').createDsaReport({data: ctx.req.valid('json')}));
+			return ctx.json(
+				await ctx.get('reportRequestService').createDsaReport({
+					data: ctx.req.valid('json'),
+					locale: ctx.get('requestLocale') ?? null,
+				}),
+			);
 		},
 	);
 }

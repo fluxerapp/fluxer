@@ -16,12 +16,14 @@ import {
 	resolveVideoLayout,
 } from '@app/features/channel/components/embeds/media/VideoDimensionUtils';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
+import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {buildMediaProxyURL, mediaDevicePixelRatio} from '@app/features/messaging/utils/MediaProxyUtils';
@@ -37,6 +39,7 @@ import {
 	VideoPlayer,
 	type VideoPlayerMetadata,
 } from '@app/features/voice/components/media_player/components/VideoPlayer';
+import {useMediaSourceResume} from '@app/features/voice/components/media_player/hooks/useMediaSourceResume';
 import {useInAppMediaSoundCapture} from '@app/features/voice/hooks/useInAppMediaSoundCapture';
 import VideoVolume from '@app/features/voice/state/VideoVolume';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -67,10 +70,12 @@ const PLAY_VIDEO_DESCRIPTOR = msg({
 });
 const UNMUTE_DESCRIPTOR = msg({
 	message: 'Unmute',
+	context: 'playback-control-action',
 	comment: 'Button or menu action label in the channel and chat embed video. Keep it concise.',
 });
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'playback-control-action',
 	comment: 'Button or menu action label in the channel and chat embed video. Keep it concise.',
 });
 
@@ -215,15 +220,18 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		const messageViewContext = useMaybeMessageViewContext();
 		const effectiveSrc = buildMediaProxyURL(src);
 		const isBlob = src.startsWith('blob:');
+		const handleVideoError = useAttachmentRefreshOnError(src);
 		const declaredLayout = resolveVideoLayout(getEffectiveVideoLayoutDimensions({width, height}, null), {
 			maxWidth,
 			maxHeight,
 		});
 		const posterRequestWidth = Math.max(1, Math.round(declaredLayout.renderDimensions.width * mediaDevicePixelRatio()));
-		const posterSrc = isBlob ? null : buildMediaProxyURL(src, {format: 'webp', width: posterRequestWidth});
+		const requestedPosterSrc = isBlob ? null : buildMediaProxyURL(src, {format: 'webp', width: posterRequestWidth});
 		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({
-			rememberKey: posterSrc ?? effectiveSrc,
+			rememberKey: requestedPosterSrc ?? effectiveSrc,
 		});
+		const posterDisplaySrc = useApiAttachmentSrc(requestedPosterSrc ?? '', isNearViewport);
+		const posterSrc = requestedPosterSrc === null ? null : (posterDisplaySrc ?? null);
 		const [posterCacheAtMount] = useState<PosterCacheAtMount>(() => ({
 			src: posterSrc,
 			cached: posterSrc ? ImageCacheUtils.hasImage(posterSrc) : false,
@@ -241,6 +249,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		const [metadataProbeArmed, setMetadataProbeArmed] = useState(false);
 		const inlineVideoRef = useRef<HTMLVideoElement>(null);
 		useInAppMediaSoundCapture(inlineVideoRef);
+		useMediaSourceResume(inlineVideoRef, isPlayingInline);
 		useLayoutEffect(() => {
 			if (!isPlayingInline) return;
 			const inlineVideo = inlineVideoRef.current;
@@ -248,8 +257,17 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 				detachMediaElementSource(inlineVideo);
 			};
 		}, [isPlayingInline]);
-		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
+		const {
+			shouldBlur,
+			shouldBlock,
+			gateReason,
+			canReveal,
+			reveal: revealSensitiveMedia,
+		} = useMatureMedia(nsfw, channelId);
 		const shouldLoadMedia = isNearViewport && !shouldBlur;
+		const playbackSrc = useApiAttachmentPlaybackSrc(
+			(metadataProbeArmed && shouldLoadMedia) || isPlayingInline ? effectiveSrc : undefined,
+		);
 		const defaultName =
 			title || deriveDefaultNameFromMessage({message, attachmentId, embedIndex, url: embedUrl || src, proxyUrl: src});
 		const {
@@ -364,9 +382,6 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		useEffect(() => {
 			if (!shouldLoadMedia) return;
 			if (!posterSrc) return;
-			if (DeveloperOptions.forceRenderPlaceholders || DeveloperOptions.forceMediaLoading) {
-				return;
-			}
 			if (loadedPosterSrc === posterSrc) return;
 			let active = true;
 			const cleanup = ImageCacheUtils.loadImage(
@@ -380,6 +395,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					}
 				},
 				() => {
+					handleVideoError();
 					if (active) setLoadedPosterSrc((currentSource) => (currentSource === posterSrc ? null : currentSource));
 				},
 			);
@@ -387,7 +403,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 				active = false;
 				cleanup();
 			};
-		}, [loadedPosterSrc, posterSrc, shouldLoadMedia]);
+		}, [handleVideoError, loadedPosterSrc, posterSrc, shouldLoadMedia]);
 		const handleMobileTap = useCallback(() => {
 			const videoItems = attachmentsToViewerItems(mediaAttachments, {filterType: 'video'});
 			if (videoItems.length > 0) {
@@ -508,22 +524,13 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		const handleMediaPointerEnter = useCallback(() => {
 			setMetadataProbeArmed(true);
 		}, []);
-		const containerStyles: React.CSSProperties = isMobile
-			? {
-					aspectRatio,
-					width: remFromPx(dimensions.width),
-					maxWidth: '100%',
-				}
-			: fillContainer
-				? {
-						width: '100%',
-						height: '100%',
-					}
-				: {
-						width: remFromPx(dimensions.width),
-						maxWidth: '100%',
-						aspectRatio,
-					};
+		let containerStyles: React.CSSProperties = {aspectRatio, width: remFromPx(dimensions.width), maxWidth: '100%'};
+		if (!isMobile && fillContainer) {
+			containerStyles = {width: '100%', height: '100%'};
+		}
+		if (shouldBlock) {
+			return null;
+		}
 		if (shouldBlur) {
 			return (
 				<div
@@ -573,9 +580,10 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					muted
 					playsInline
 					preload="metadata"
-					src={effectiveSrc}
+					src={resolveDesktopCrossOriginMediaURL(playbackSrc)}
 					tabIndex={-1}
 					onLoadedMetadata={handleMetadataProbeLoaded}
+					onError={handleVideoError}
 					data-flx="channel.embeds.media.embed-video.metadata-probe"
 				>
 					<track kind="captions" data-flx="channel.embeds.media.embed-video.track" />
@@ -607,7 +615,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 								<video
 									ref={inlineVideoRef}
 									className={styles.inlineVideo}
-									src={effectiveSrc}
+									src={resolveDesktopCrossOriginMediaURL(playbackSrc)}
 									poster={presentedPosterSrc ?? undefined}
 									autoPlay
 									playsInline
@@ -616,6 +624,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 									onClick={handleInlineVideoTap}
 									onEnded={handleInlineVideoEnded}
 									onLoadedMetadata={handleMetadataProbeLoaded}
+									onError={handleVideoError}
 									data-flx="channel.embeds.media.embed-video.inline-video"
 								/>
 								<button

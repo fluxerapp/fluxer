@@ -1,20 +1,19 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(gateway_handler_dispatch).
+-export([handle_dispatch/4]).
 -typing([eqwalizer]).
 
 -export([
     handle_opcode/3,
-    handle_dispatch/4,
+    handle_gateway_error/2,
     handle_session_down/1,
     handle_session_reconnect/1,
     handle_presence_update/3,
-    handle_request_guild_members/3,
     handle_request_guild_members_worker_down/1,
     handle_request_worker_down/4,
     handle_request_worker_timeout/3,
     cleanup_request_workers/1,
-    handle_request_guild_counts/3,
     handle_request_channel_member_counts/3,
     handle_lazy_request/3,
     validate_presence_data/1,
@@ -30,7 +29,11 @@
 -define(MAX_REQUEST_WORKERS, 4).
 
 -type request_worker_type() ::
-    request_guild_members | request_guild_counts | request_channel_member_counts | lazy_request.
+    request_guild_members
+    | request_guild_counts
+    | request_channel_member_counts
+    | request_forum_unreads
+    | lazy_request.
 
 -spec handle_opcode(atom(), map(), state()) -> ws_result().
 handle_opcode(heartbeat, #{<<"d">> := Seq}, State) ->
@@ -67,6 +70,13 @@ handle_authenticated_opcode(voice_state_update, _Data, State) ->
     gateway_handler_encode:close_with_reason(
         decode_error, <<"Invalid voice payload">>, State
     );
+handle_authenticated_opcode(voice_signal, Data, #{session_pid := Pid} = State) when
+    is_pid(Pid), is_map(Data)
+->
+    gen_server:cast(Pid, {voice_signal, Data}),
+    {ok, State};
+handle_authenticated_opcode(voice_signal, _Data, State) ->
+    {ok, State};
 handle_authenticated_opcode(request_guild_members, Data, #{session_pid := Pid} = State) when
     is_pid(Pid)
 ->
@@ -85,6 +95,10 @@ handle_authenticated_opcode(
     is_pid(Pid)
 ->
     handle_request_channel_member_counts(Data, Pid, State);
+handle_authenticated_opcode(request_forum_unreads, Data, #{session_pid := Pid} = State) when
+    is_pid(Pid)
+->
+    handle_request_forum_unreads(Data, Pid, State);
 handle_authenticated_opcode(_, _, State) ->
     gateway_handler_encode:close_with_reason(unknown_opcode, <<"Unknown opcode">>, State).
 
@@ -92,29 +106,37 @@ handle_authenticated_opcode(_, _, State) ->
 handle_rate_limited_resume(Data, State) ->
     case session_abuse_protection:check_identify_rate(peer_ip(State)) of
         {error, identify_rate_limited} ->
-            logger:debug("Holding gateway resume: reason=rate_limited"),
-            {ok, State};
+            gateway_handler_encode:close_with_reason(
+                rate_limited, <<"Resume rate limited">>, State
+            );
         ok ->
             gateway_handler_identify:handle_resume(Data, State)
     end.
 
 -spec handle_dispatch(
     atom() | binary(), map() | list() | null | {pre_encoded, binary()}, integer(), state()
-) -> ws_result().
-handle_dispatch(Event, Data, Seq, State) ->
-    case gateway_event_pause:is_frozen() of
-        true -> {ok, State};
-        false -> do_dispatch(Event, Data, Seq, State)
-    end.
-
--spec do_dispatch(
-    atom() | binary(), map() | list() | null | {pre_encoded, binary()}, integer(), state()
 ) ->
     ws_result().
-do_dispatch(Event, {pre_encoded, EncodedData}, Seq, State) ->
+handle_dispatch(Event, {pre_encoded, EncodedData}, Seq, State) ->
     dispatch_pre_encoded(Event, EncodedData, Seq, State);
-do_dispatch(Event, Data, Seq, State) ->
+handle_dispatch(Event, Data, Seq, State) ->
     dispatch_standard(Event, Data, Seq, State).
+
+-spec handle_gateway_error(atom(), state()) -> ws_result().
+handle_gateway_error(ErrorAtom, State) ->
+    {Code, ErrorMessage, _Category} = gateway_errors:voice_error_info(ErrorAtom),
+    Message = #{
+        <<"op">> => constants:opcode_to_num(gateway_error),
+        <<"d">> => #{<<"code">> => Code, <<"message">> => ErrorMessage}
+    },
+    encode_frame(Message, State).
+
+-spec encode_frame(map(), state()) -> ws_result().
+encode_frame(Message, State) ->
+    case gateway_handler_encode:encode_and_compress(Message, State) of
+        {ok, Frame, NewState} -> {[Frame], NewState};
+        {error, _} -> {ok, State}
+    end.
 
 -spec peer_ip(state()) -> binary().
 peer_ip(#{peer_ip := PeerIP}) when is_binary(PeerIP) ->
@@ -138,8 +160,10 @@ dispatch_pre_encoded(Event, EncodedData, Seq, #{compress_ctx := CompressCtx} = S
     case gateway_compress:compress(JsonFrame, Ctx) of
         {ok, Compressed, NewCompressCtx} ->
             Frame = gateway_handler_encode:make_frame(Compressed, text, NewCompressCtx),
+            gateway_cluster_metrics:record_dispatch(),
             {[Frame], State#{compress_ctx => NewCompressCtx}};
         {error, _Reason} ->
+            gateway_cluster_metrics:record_dispatch_drop(),
             {ok, State}
     end.
 
@@ -156,9 +180,11 @@ dispatch_standard(Event, Data, Seq, State) ->
     },
     case gateway_handler_encode:encode_and_compress(Message, State) of
         {ok, Frame, NewState} ->
+            gateway_cluster_metrics:record_dispatch(),
             trigger_gc_after_large_dispatch(Data),
             {[Frame], NewState};
         {error, _Reason} ->
+            gateway_cluster_metrics:record_dispatch_drop(),
             {ok, State}
     end.
 
@@ -184,10 +210,7 @@ handle_session_down(State) ->
         request_guild_members_pid => undefined,
         request_guild_members_pending => undefined
     },
-    case gateway_handler_encode:encode_and_compress(Message, NewState) of
-        {ok, Frame, NewState2} -> {[Frame], NewState2};
-        {error, _} -> {ok, NewState}
-    end.
+    encode_frame(Message, NewState).
 
 -spec handle_session_reconnect(state()) -> ws_result().
 handle_session_reconnect(State) ->
@@ -439,6 +462,67 @@ do_request_channel_member_counts_inner(Data, SocketPid, SessionPid) ->
             );
         _ ->
             ok
+    end.
+
+-spec handle_request_forum_unreads(term(), pid(), state()) -> ws_result().
+handle_request_forum_unreads(Data, Pid, State) when is_map(Data) ->
+    case channel_threads_config:enabled() orelse not channel_threads_config:loaded() of
+        true ->
+            start_forum_unreads(Data, Pid, State);
+        false ->
+            gateway_handler_encode:close_with_reason(
+                unknown_opcode, <<"Unknown opcode">>, State
+            )
+    end;
+handle_request_forum_unreads(_Data, _Pid, State) ->
+    gateway_handler_encode:close_with_reason(unknown_opcode, <<"Unknown opcode">>, State).
+
+-spec start_forum_unreads(map(), pid(), state()) -> ws_result().
+start_forum_unreads(Data, Pid, State) ->
+    SocketPid = self(),
+    Fun = fun() -> do_request_forum_unreads(Data, SocketPid, Pid) end,
+    case start_request_worker(request_forum_unreads, Fun, State) of
+        {ok, _WorkerPid, WorkerState} ->
+            {ok, WorkerState};
+        dropped ->
+            spawn_empty_forum_unreads(SocketPid, Pid),
+            {ok, State}
+    end.
+
+-spec spawn_empty_forum_unreads(pid(), pid()) -> ok.
+spawn_empty_forum_unreads(SocketPid, Pid) ->
+    _ = spawn(fun() -> do_request_forum_unreads(#{}, SocketPid, Pid) end),
+    ok.
+
+-spec do_request_forum_unreads(map(), pid(), pid()) -> ok.
+do_request_forum_unreads(Data, SocketPid, SessionPid) ->
+    case forum_unreads_session_state(SessionPid) of
+        {ok, SessionState} ->
+            handle_forum_unreads(Data, SocketPid, SessionState#{session_pid => SessionPid});
+        error ->
+            SocketPid ! forum_unreads_unknown_opcode,
+            ok
+    end.
+
+-spec handle_forum_unreads(map(), pid(), map()) -> ok.
+handle_forum_unreads(Data, SocketPid, SessionState) ->
+    try guild_request_forum_unreads:handle_request(Data, SocketPid, SessionState) of
+        ok -> ok
+    catch
+        error:_Reason -> ok;
+        exit:_Reason -> ok;
+        throw:_Reason -> ok
+    end.
+
+-spec forum_unreads_session_state(pid()) -> {ok, map()} | error.
+forum_unreads_session_state(SessionPid) ->
+    try gen_server:call(SessionPid, {get_state}, 5000) of
+        SessionState when is_map(SessionState) -> {ok, SessionState};
+        _ -> error
+    catch
+        error:_Reason -> error;
+        exit:_Reason -> error;
+        throw:_Reason -> error
     end.
 
 -spec handle_lazy_request(map(), pid(), state()) -> ws_result().

@@ -1,28 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
 import styles from '@app/features/input/components/modals/KeyboardShortcutsCheatsheetModal.module.css';
-import Keybind, {type KeybindConfig, type KeybindSection, type KeyCombo} from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import Keybind, {type KeybindConfig, type KeybindSection} from '@app/features/input/state/InputKeybind';
+import {getSuppressedBuiltinActions} from '@app/features/input/state/KeybindResolution';
+import {formatKeyComboParts} from '@app/features/input/utils/KeybindUtils';
+import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {
 	chipsForDefaultEntry,
 	DEFAULT_KEYBIND_SECTIONS,
 	sortBySectionDisplayOrder,
 } from '@app/features/user/components/modals/tabs/keybinds_tab/shared';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
+import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo, useRef} from 'react';
 
 const KEYBOARD_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Keyboard shortcuts',
+	message: 'Keybinds',
 	comment: 'Modal title for the keyboard shortcuts cheatsheet.',
 });
 const DEFAULT_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Default shortcuts',
+	message: 'Default keybinds',
 	comment: 'Short heading in the keyboard shortcuts cheatsheet.',
 });
 const MESSAGES_DESCRIPTOR = msg({
@@ -45,6 +47,10 @@ const VOICE_AND_VIDEO_DESCRIPTOR = msg({
 	message: 'Voice and video',
 	comment: 'Short heading in the keyboard shortcuts cheatsheet.',
 });
+const ACCOUNTS_DESCRIPTOR = msg({
+	message: 'Accounts',
+	comment: 'Short heading in the keyboard shortcuts cheatsheet for shortcuts that switch between signed-in accounts.',
+});
 const MISCELLANEOUS_DESCRIPTOR = msg({
 	message: 'Miscellaneous',
 	comment: 'Short heading in the keyboard shortcuts cheatsheet.',
@@ -56,24 +62,19 @@ interface CheatsheetShortcut {
 	chipGroups: Array<Array<string>>;
 }
 
-function chipsForCombo(combo: KeyCombo): Array<string> {
-	const formatted = formatKeyCombo(combo);
-	return formatted ? formatted.split(' + ') : [];
-}
-
-function getShortcutChipGroups(entry: KeybindConfig, hasCustomBinding: boolean): Array<Array<string>> {
+function getShortcutChipGroups(i18n: I18n, entry: KeybindConfig, hasCustomBinding: boolean): Array<Array<string>> {
 	if (!hasCustomBinding) {
-		const chips = chipsForDefaultEntry(entry);
+		const chips = chipsForDefaultEntry(i18n, entry);
 		return chips.length > 0 ? [chips] : [];
 	}
 	return Keybind.getActiveCombosForAction(entry.action)
-		.map(chipsForCombo)
+		.map((combo) => formatKeyComboParts(i18n, combo))
 		.filter((chips) => chips.length > 0);
 }
 
 const ShortcutLabel: React.FC<{label: string}> = ({label}) => {
 	const labelRef = useRef<HTMLSpanElement>(null);
-	const isLabelOverflowing = useTextOverflow(labelRef);
+	const isLabelOverflowing = useTextOverflow(labelRef, {content: label});
 	return (
 		<Tooltip text={isLabelOverflowing ? label : ''} data-flx="input.keyboard-shortcuts-cheatsheet-modal.tooltip">
 			<span ref={labelRef} className={styles.shortcutLabel} data-flx="input.keyboard-shortcuts-cheatsheet-modal.label">
@@ -97,7 +98,7 @@ const ShortcutChipGroups: React.FC<{groups: Array<Array<string>>}> = ({groups}) 
 						key={`${chipIndex}-${chip}`}
 						data-flx="input.keyboard-shortcuts-cheatsheet-modal.chip"
 					>
-						{chip === 'ANY KEY' ? <Trans>Any key</Trans> : chip}
+						{chip}
 					</kbd>
 				))}
 			</div>
@@ -109,13 +110,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 	const {i18n} = useLingui();
 	const defaults = Keybind.getDefaults();
 	const customKeybinds = Keybind.getCustomKeybinds();
-	const customActions = useMemo(() => {
-		const result = new Set<string>();
-		for (const entry of customKeybinds) {
-			if (entry.action) result.add(entry.action);
-		}
-		return result;
-	}, [customKeybinds]);
+	const suppressedActions = useMemo(() => getSuppressedBuiltinActions(customKeybinds), [customKeybinds]);
 	const sectionLabels: Record<KeybindSection, string> = {
 		defaults: i18n._(DEFAULT_SHORTCUTS_DESCRIPTOR),
 		messages: i18n._(MESSAGES_DESCRIPTOR),
@@ -123,6 +118,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 		drag_and_drop: i18n._(DRAG_AND_DROP_DESCRIPTOR),
 		chat: i18n._(CHAT_DESCRIPTOR),
 		voice_and_video: i18n._(VOICE_AND_VIDEO_DESCRIPTOR),
+		accounts: i18n._(ACCOUNTS_DESCRIPTOR),
 		misc: i18n._(MISCELLANEOUS_DESCRIPTOR),
 	};
 	const sections = useMemo(() => {
@@ -133,12 +129,13 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 			drag_and_drop: [],
 			chat: [],
 			voice_and_video: [],
+			accounts: [],
 			misc: [],
 		};
 		for (const sectionId of DEFAULT_KEYBIND_SECTIONS) {
 			const entries = defaults.filter((entry) => entry.section === sectionId && !entry.hideFromDefaults);
 			for (const entry of sortBySectionDisplayOrder(sectionId, entries)) {
-				const chipGroups = getShortcutChipGroups(entry, customActions.has(entry.action));
+				const chipGroups = getShortcutChipGroups(i18n, entry, suppressedActions.has(entry.action));
 				if (chipGroups.length === 0) continue;
 				result[sectionId].push({
 					action: entry.action,
@@ -148,7 +145,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 			}
 		}
 		return result;
-	}, [customActions, defaults]);
+	}, [suppressedActions, defaults, i18n, i18n.locale]);
 	return (
 		<Modal.Root size="xlarge" data-flx="input.keyboard-shortcuts-cheatsheet-modal.modal-root">
 			<Modal.ScreenReaderLabel

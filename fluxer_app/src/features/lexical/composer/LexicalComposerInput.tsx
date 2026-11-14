@@ -12,6 +12,10 @@ import {registerComposerEnter} from '@app/features/lexical/composer/ComposerEnte
 import type {ComposerHandle, ComposerSelectionRange} from '@app/features/lexical/composer/ComposerHandle';
 import {resetComposerHistory} from '@app/features/lexical/composer/ComposerHistory';
 import {registerComposerIMECommandGuard} from '@app/features/lexical/composer/ComposerIME';
+import {
+	moveSelectionToLineBoundary,
+	registerComposerLineStartInsertion,
+} from '@app/features/lexical/composer/ComposerLineBoundary';
 import {registerComposerMarkdownHighlight} from '@app/features/lexical/composer/ComposerMarkdownHighlight';
 import {registerComposerMarkdownShortcuts} from '@app/features/lexical/composer/ComposerMarkdownShortcuts';
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
@@ -133,6 +137,7 @@ export interface LexicalComposerInputProps {
 	slotResolvers?: SlashSlotResolvers;
 	markdown?: boolean;
 	markdownParserFlags?: number;
+	maxWireLength?: number;
 	silentMessagePrefix?: boolean;
 	emojiShortcodeResolver?: ComposerEmojiResolver;
 	specialMentionsAllowed: boolean;
@@ -160,27 +165,11 @@ export interface LexicalComposerInputProps {
 	onChange: (display: string, segments: Array<MentionSegment>, wire: string) => void;
 	onCursorMove: () => void;
 	onEnter?: () => void;
-	onArrowUp: () => void;
+	onArrowUp: () => boolean;
 	onKeyDown?: (event: React.KeyboardEvent<HTMLElement>) => void;
 	onFocus?: () => void;
 	onBlur?: () => void;
 	onSlashCommandStateChange?: (state: SlashCommandComposerState) => void;
-}
-
-function moveSelectionToLineBoundary(event: React.KeyboardEvent<HTMLElement>): boolean {
-	if (event.key !== 'Home' && event.key !== 'End') {
-		return false;
-	}
-	if (event.ctrlKey || event.metaKey || event.altKey) {
-		return false;
-	}
-	const selection = event.currentTarget.ownerDocument.defaultView?.getSelection();
-	if (selection == null || selection.rangeCount === 0) {
-		return false;
-	}
-	selection.modify(event.shiftKey ? 'extend' : 'move', event.key === 'Home' ? 'backward' : 'forward', 'lineboundary');
-	event.preventDefault();
-	return true;
 }
 
 export const LexicalComposerInput = observer((props: LexicalComposerInputProps) => {
@@ -242,6 +231,7 @@ const ComposerInner = ({
 	slotResolvers,
 	markdown = true,
 	markdownParserFlags,
+	maxWireLength,
 	silentMessagePrefix = false,
 	emojiShortcodeResolver,
 	specialMentionsAllowed,
@@ -362,6 +352,7 @@ const ComposerInner = ({
 				);
 				return segments;
 			},
+			getMarkdownParserFlags: () => markdownParserFlagsRef.current,
 			getTextUpToCursor: () => {
 				let text = '';
 				editor.getEditorState().read(
@@ -523,8 +514,10 @@ const ComposerInner = ({
 			cleanups.push(registerSlashSlotPlugin(editor, () => slotResolversRef.current, typeaheadActiveState));
 			cleanups.push(registerSlashSlotFocus(editor, () => onSlashCommandStateChangeRef.current));
 			if (markdown) {
-				cleanups.push(registerComposerMarkdownHighlight(editor, markdownParserFlags, silentMessagePrefix));
-				cleanups.push(registerComposerBlockquote(editor));
+				cleanups.push(
+					registerComposerMarkdownHighlight(editor, markdownParserFlags, silentMessagePrefix, maxWireLength),
+				);
+				cleanups.push(registerComposerBlockquote(editor, markdownParserFlags));
 			}
 			cleanups.push(
 				registerComposerEmojiShortcode(editor, (shortcodeName) => {
@@ -558,7 +551,7 @@ const ComposerInner = ({
 			{discrete: true, tag: HISTORY_MERGE_TAG},
 		);
 		return mergeRegister(...cleanups);
-	}, [editor, markdown, markdownParserFlags, plainText, silentMessagePrefix]);
+	}, [editor, markdown, markdownParserFlags, maxWireLength, plainText, silentMessagePrefix]);
 
 	useLayoutEffect(
 		() => registerComposerSpecialMention(editor, specialMentionsAllowed, plainText),
@@ -570,6 +563,7 @@ const ComposerInner = ({
 			registerContextMenuUndoRedo(editor),
 			registerComposerIMECommandGuard(editor),
 			registerComposerSoftWrapDeletion(editor),
+			registerComposerLineStartInsertion(editor),
 			registerComposerTypeaheadModifierGuard(editor, typeaheadActiveState),
 			registerComposerMarkdownShortcuts(editor),
 			registerComposerCodeIndent(editor, typeaheadActiveState),
@@ -583,7 +577,12 @@ const ComposerInner = ({
 					if (disabledRef.current) {
 						return false;
 					}
-					selectLastSelectionOrEnd();
+					const selection = $getSelection();
+					if ($isRangeSelection(selection)) {
+						$setSelection(selection.clone());
+					} else {
+						selectLastSelectionOrEnd();
+					}
 					return false;
 				},
 				COMMAND_PRIORITY_LOW,
@@ -603,13 +602,14 @@ const ComposerInner = ({
 			}),
 			editor.registerCommand(
 				KEY_ARROW_UP_COMMAND,
-				(event: KeyboardEvent | null) => {
+				(event: KeyboardEvent) => {
 					if (typeaheadActiveState.current) {
 						return false;
 					}
 					if (event != null && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-						if ($isComposerEmpty()) {
-							cb.current.onArrowUp();
+						if ($isComposerEmpty() && cb.current.onArrowUp()) {
+							event.preventDefault();
+							return true;
 						}
 					}
 					return false;
@@ -640,7 +640,7 @@ const ComposerInner = ({
 	const handleEditableKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLElement>) => {
 			if (!event.defaultPrevented && !isIMEComposing(event)) {
-				if (moveSelectionToLineBoundary(event)) {
+				if (moveSelectionToLineBoundary(event, editor)) {
 					return;
 				}
 				if (onKeyDown != null) {
@@ -648,7 +648,7 @@ const ComposerInner = ({
 				}
 			}
 		},
-		[onKeyDown],
+		[editor, onKeyDown],
 	);
 	const handleEditablePointerDown = useCallback(
 		(event: React.PointerEvent<HTMLElement>) => {
@@ -656,7 +656,7 @@ const ComposerInner = ({
 			const target = event.target instanceof Element ? event.target : null;
 			const root = editor.getRootElement();
 			const slotHost = target == null ? null : target.closest<HTMLElement>('[data-lexical-composer-slot]');
-			if (slotHost != null && root != null && root.contains(slotHost)) {
+			if (slotHost && root?.contains(slotHost)) {
 				let emptySlot = false;
 				editor.getEditorState().read(
 					() => {
@@ -757,7 +757,7 @@ const ComposerInner = ({
 							onContextMenu={handleEditableContextMenu}
 							onFocus={onFocus}
 							onBlur={onBlur}
-							aria-label={ariaLabelledBy == null ? (ariaLabel == null ? placeholder : ariaLabel) : undefined}
+							aria-label={ariaLabelledBy == null ? (ariaLabel ?? placeholder) : undefined}
 							aria-labelledby={ariaLabelledBy}
 							aria-describedby={ariaDescribedBy}
 							aria-errormessage={ariaErrorMessage}

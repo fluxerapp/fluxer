@@ -2,9 +2,11 @@
 
 import type {ChannelMoveOperation} from '@app/features/app/components/layout/utils/ChannelMoveOperation';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import type {ChannelWire} from '@app/features/channel/models/Channel';
 import Guilds from '@app/features/guild/state/Guilds';
 import {createRoleHoistOrderPayload, createRoleOrderPayload} from '@app/features/guild/utils/GuildRoleOrderUtils';
 import Invites from '@app/features/invite/state/Invites';
+import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -31,13 +33,13 @@ export interface GuildAuditLogFetchParams {
 	actionType?: AuditLogActionType;
 	limit?: number;
 	beforeLogId?: string;
-	afterLogId?: string;
 }
 
 interface GuildAuditLogFetchResponse {
 	audit_log_entries: Array<GuildAuditLogEntryResponse>;
 	users: Array<UserPartial>;
 	webhooks: Array<AuditLogWebhookResponse>;
+	threads?: Array<ChannelWire>;
 }
 
 type GuildCreateParams = Pick<Guild, 'name'> & {
@@ -64,6 +66,7 @@ export interface GuildBan {
 		tag: string;
 		discriminator: string;
 		avatar: string | null;
+		bot?: boolean;
 	};
 	reason: string | null;
 	moderator_id: string;
@@ -140,7 +143,6 @@ function auditLogQuery(params: GuildAuditLogFetchParams): Record<string, string 
 	const query: Record<string, string | number> = {};
 	if (params.limit !== undefined) query.limit = params.limit;
 	if (params.beforeLogId !== undefined) query.before = params.beforeLogId;
-	if (params.afterLogId !== undefined) query.after = params.afterLogId;
 	if (params.userId) query.user_id = params.userId;
 	if (params.actionType !== undefined) query.action_type = params.actionType;
 	return query;
@@ -257,12 +259,13 @@ export async function updateVanityURL(guildId: string, code: string | null): Pro
 export async function createRole(
 	guildId: string,
 	name: string,
-	options?: {color?: number; permissions?: bigint},
+	options?: {color?: number; permissions?: bigint; iconSourceRoleId?: string},
 ): Promise<GuildRole> {
 	try {
-		const body: {name: string; color?: number; permissions?: string} = {name};
+		const body: {name: string; color?: number; permissions?: string; icon_source_role_id?: string} = {name};
 		if (options?.color !== undefined) body.color = options.color;
 		if (options?.permissions !== undefined) body.permissions = options.permissions.toString();
+		if (options?.iconSourceRoleId !== undefined) body.icon_source_role_id = options.iconSourceRoleId;
 		const response = await http.post<GuildRole>(Endpoints.GUILD_ROLES(guildId), {body});
 		logger.debug(`Created role "${name}" in guild ${guildId}`);
 		return response.body;
@@ -359,7 +362,7 @@ export async function fetchGuildInvites(guildId: string): Promise<Array<Invite>>
 		Invites.handleGuildInvitesFetchPending(guildId);
 		const response = await http.get<Array<Invite>>(Endpoints.GUILD_INVITES(guildId));
 		const invites = response.body;
-		Invites.handleGuildInvitesFetchSuccess(guildId, invites);
+		Invites.handleGuildInvitesFetchSuccess(guildId, invites, currentInstanceTarget());
 		return invites;
 	} catch (error) {
 		logger.error(`Failed to fetch invites for guild ${guildId}:`, error);

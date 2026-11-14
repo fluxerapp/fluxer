@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type LatencySignalTone = 'green' | 'yellow' | 'orange' | 'red';
+type LatencySignalTone = 'green' | 'yellow' | 'orange' | 'red';
 
 export interface LatencySignalSample {
 	latency: number;
 }
 
-export interface LatencySignalLoadingState {
+interface LatencySignalLoadingState {
 	kind: 'loading';
 }
 
-export interface LatencySignalValueState {
+interface LatencySignalValueState {
 	kind: 'value';
 	baselineLatency: number;
 	excessLatency: number;
@@ -41,7 +41,7 @@ function getMedian(values: ReadonlyArray<number>): number | null {
 	return Math.round((lower + upper) / 2);
 }
 
-export function getLatencySignalBaseline(latencyHistory: ReadonlyArray<LatencySignalSample>): number | null {
+function getLatencySignalBaseline(latencyHistory: ReadonlyArray<LatencySignalSample>): number | null {
 	const startIndex = Math.max(0, latencyHistory.length - LATENCY_SIGNAL_BASELINE_SAMPLE_COUNT);
 	const values: Array<number> = [];
 	for (let i = startIndex; i < latencyHistory.length; i += 1) {

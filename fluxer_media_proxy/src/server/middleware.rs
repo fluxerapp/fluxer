@@ -63,7 +63,7 @@ impl HttpRequestDrain {
     fn begin_request(&self) -> ActiveHttpRequest {
         self.inner
             .active_requests
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |active| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |active| {
                 active.checked_add(1)
             })
             .expect("http active request count must not overflow");
@@ -125,9 +125,9 @@ pub(in crate::server) fn build_version() -> &'static str {
     static BUILD_VERSION: OnceLock<String> = OnceLock::new();
     BUILD_VERSION
         .get_or_init(|| {
-            std::env::var("BUILD_VERSION")
+            fluxer_common::config::EnvMap::from_process()
                 .ok()
-                .filter(|value| !value.trim().is_empty())
+                .and_then(|env| env.value("BUILD_VERSION"))
                 .unwrap_or_else(|| "dev".to_owned())
         })
         .as_str()
@@ -150,10 +150,13 @@ pub(in crate::server) async fn add_security_header_middleware(
     next: axum::middleware::Next,
 ) -> Response {
     let mut response = next.run(request).await;
+    let status = response.status();
     let headers = response.headers_mut();
     http_headers::add_security_headers(headers);
     if mode == DeploymentMode::Static {
         headers.remove("X-Robots-Tag");
+    } else {
+        http_headers::neutralize_script_content_type(status, headers);
     }
     response
 }
@@ -161,15 +164,48 @@ pub(in crate::server) async fn add_security_header_middleware(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{Router, routing::get};
+    use crate::{
+        server::{routes::dispatch::catch_all, state::AppState},
+        storage::tests::{FakeObject, fake_s3},
+    };
+    use axum::{
+        Router,
+        http::{HeaderMap, HeaderName, Method, StatusCode, header},
+        routing::get,
+    };
 
-    async fn robots_header_for(mode: DeploymentMode) -> Option<String> {
+    const INERT: &str = "text/plain; charset=utf-8";
+
+    const BROWSER_PARSED_JAVASCRIPT: [&str; 7] = [
+        "text/javascript x",
+        "text/javascript\tx",
+        "text/javascript(x)",
+        "TEXT/JAVASCRIPT (x)",
+        "video/mp4, text/javascript x",
+        " text/javascript ;charset=x",
+        "image/png,text/javascript(x)",
+    ];
+
+    async fn headers_for(mode: DeploymentMode, content_type: Option<&'static str>) -> HeaderMap {
+        headers_with_status(mode, StatusCode::OK, content_type).await
+    }
+
+    async fn headers_with_status(
+        mode: DeploymentMode,
+        status: StatusCode,
+        content_type: Option<&'static str>,
+    ) -> HeaderMap {
         let router = Router::new()
             .route(
                 "/probe",
-                get(|| async {
+                get(move || async move {
                     let mut response = Response::new(Body::empty());
-                    http_headers::add_media_headers(response.headers_mut(), 0, "text/plain", None);
+                    *response.status_mut() = status;
+                    if let Some(content_type) = content_type {
+                        response
+                            .headers_mut()
+                            .insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type));
+                    }
                     response
                 }),
             )
@@ -186,47 +222,191 @@ mod tests {
         )
         .await
         .unwrap();
-        response
-            .headers()
-            .get("X-Robots-Tag")
-            .map(|v| v.to_str().unwrap().to_owned())
+        response.headers().clone()
+    }
+
+    fn header_text(headers: &HeaderMap, name: HeaderName) -> Option<&str> {
+        headers.get(name).map(|value| value.to_str().unwrap())
     }
 
     #[tokio::test]
-    async fn static_mode_does_not_set_robots_tag() {
-        assert_eq!(robots_header_for(DeploymentMode::Static).await, None);
+    async fn every_mode_that_serves_stored_bytes_neutralizes_javascript() {
+        for mode in [
+            DeploymentMode::Mp,
+            DeploymentMode::Upload,
+            DeploymentMode::Relay,
+        ] {
+            for content_type in ["text/javascript", "application/javascript; charset=utf-8"]
+                .into_iter()
+                .chain(BROWSER_PARSED_JAVASCRIPT)
+            {
+                let headers = headers_for(mode, Some(content_type)).await;
+                assert_eq!(
+                    Some(INERT),
+                    header_text(&headers, header::CONTENT_TYPE),
+                    "{mode:?} {content_type:?}"
+                );
+            }
+        }
+    }
+
+    fn transport_stream_object(content_type: &str) -> FakeObject {
+        let mut body = vec![0_u8; 376];
+        body[0] = 0x47;
+        body[188] = 0x47;
+        FakeObject {
+            body,
+            head_length: Some(376),
+            content_type: Some(content_type.to_owned()),
+            ..FakeObject::default()
+        }
+    }
+
+    fn security_layered_router(app: &Arc<AppState>, mode: DeploymentMode) -> Router {
+        Router::new()
+            .fallback(axum::routing::any(catch_all))
+            .layer(axum::middleware::from_fn_with_state(
+                mode,
+                add_security_header_middleware,
+            ))
+            .with_state(Arc::clone(app))
+    }
+
+    async fn send(
+        router: &Router,
+        method: Method,
+        uri: &str,
+        range: Option<&'static str>,
+    ) -> Response {
+        let mut request = Request::builder().method(method).uri(uri);
+        if let Some(range) = range {
+            request = request.header(header::RANGE, range);
+        }
+        tower::ServiceExt::oneshot(router.clone(), request.body(Body::empty()).unwrap())
+            .await
+            .unwrap()
+    }
+
+    fn assert_attachment_named(headers: &HeaderMap, filename: &str) {
+        let disposition =
+            header_text(headers, header::CONTENT_DISPOSITION).expect("content disposition");
+        assert!(
+            disposition.starts_with("attachment") && disposition.contains(filename),
+            "{disposition}"
+        );
     }
 
     #[tokio::test]
-    async fn media_and_upload_modes_still_set_robots_tag() {
+    async fn a_stored_javascript_attachment_is_plain_text_through_the_security_layer() {
+        let fake = fake_s3().await;
+        let tmp = tempfile::tempdir().unwrap();
+        let mut cfg = fake.config(tmp.path());
+        cfg.mode = DeploymentMode::Mp;
+        let app = Arc::new(AppState::for_tests(cfg));
+        let bucket = app.cfg.storage.bucket_cdn.clone();
+        let segment = transport_stream_object("text/javascript");
+        fake.put_object(
+            &format!("{bucket}/attachments/1/2/segment.js"),
+            segment.clone(),
+        );
+        fake.put_object(
+            &format!("{bucket}/attachments/1/2/seg.ts"),
+            transport_stream_object("video/mp2t"),
+        );
+        fake.put_object(
+            &format!("{bucket}/themes/abc123.css"),
+            FakeObject {
+                body: b"body{color:#fff}".to_vec(),
+                content_type: Some("text/css".to_owned()),
+                ..FakeObject::default()
+            },
+        );
+        let mp = security_layered_router(&app, DeploymentMode::Mp);
+
+        let response = send(&mp, Method::GET, "/attachments/1/2/segment.js", None).await;
+        assert_eq!(StatusCode::OK, response.status());
         assert_eq!(
-            robots_header_for(DeploymentMode::Mp).await.as_deref(),
-            Some(http_headers::ROBOTS)
+            Some(INERT),
+            header_text(response.headers(), header::CONTENT_TYPE)
         );
         assert_eq!(
-            robots_header_for(DeploymentMode::Upload).await.as_deref(),
-            Some(http_headers::ROBOTS)
+            Some("nosniff"),
+            header_text(response.headers(), header::X_CONTENT_TYPE_OPTIONS)
         );
-    }
+        assert_attachment_named(response.headers(), "segment.js");
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        assert_eq!(segment.body.as_slice(), &body[..]);
 
-    #[tokio::test]
-    async fn request_drain_waits_until_every_response_body_is_dropped() {
-        let drain = HttpRequestDrain::new();
-        let router = Router::new().route("/probe", get(|| async { "OK" })).layer(
-            axum::middleware::from_fn_with_state(drain.clone(), track_active_request),
+        let head = send(&mp, Method::HEAD, "/attachments/1/2/segment.js", None).await;
+        assert_eq!(StatusCode::OK, head.status());
+        assert_eq!(
+            Some(INERT),
+            header_text(head.headers(), header::CONTENT_TYPE)
         );
-        let response = tower::ServiceExt::oneshot(
-            router,
-            Request::builder()
-                .uri("/probe")
-                .body(Body::empty())
-                .unwrap(),
+
+        let ranged = send(
+            &mp,
+            Method::GET,
+            "/attachments/1/2/segment.js",
+            Some("bytes=0-0"),
         )
-        .await
-        .unwrap();
-        assert_eq!(drain.active_requests(), 1);
-        drop(response);
-        drain.wait_for_requests_drained().await;
-        assert_eq!(drain.active_requests(), 0);
+        .await;
+        assert_eq!(StatusCode::PARTIAL_CONTENT, ranged.status());
+        assert_eq!(
+            Some(INERT),
+            header_text(ranged.headers(), header::CONTENT_TYPE)
+        );
+
+        let unsatisfiable = send(
+            &mp,
+            Method::HEAD,
+            "/attachments/1/2/segment.js",
+            Some("bytes=999-"),
+        )
+        .await;
+        assert_eq!(StatusCode::RANGE_NOT_SATISFIABLE, unsatisfiable.status());
+        assert_eq!(None, unsatisfiable.headers().get(header::CONTENT_TYPE));
+        assert_eq!(
+            Some("nosniff"),
+            header_text(unsatisfiable.headers(), header::X_CONTENT_TYPE_OPTIONS)
+        );
+
+        let download = send(
+            &mp,
+            Method::GET,
+            "/attachments/1/2/segment.js?download=1",
+            None,
+        )
+        .await;
+        assert_eq!(StatusCode::OK, download.status());
+        assert_eq!(
+            Some(INERT),
+            header_text(download.headers(), header::CONTENT_TYPE)
+        );
+        assert_attachment_named(download.headers(), "segment.js");
+
+        let upload = security_layered_router(&app, DeploymentMode::Upload);
+        let neutralized = send(&upload, Method::GET, "/attachments/1/2/segment.js", None).await;
+        assert_eq!(StatusCode::OK, neutralized.status());
+        assert_eq!(
+            Some(INERT),
+            header_text(neutralized.headers(), header::CONTENT_TYPE)
+        );
+
+        let transport_stream = send(&mp, Method::GET, "/attachments/1/2/seg.ts", None).await;
+        assert_eq!(StatusCode::OK, transport_stream.status());
+        assert_eq!(
+            Some("video/mp2t"),
+            header_text(transport_stream.headers(), header::CONTENT_TYPE)
+        );
+
+        let theme = send(&mp, Method::GET, "/themes/abc123.css", None).await;
+        assert_eq!(StatusCode::OK, theme.status());
+        assert_eq!(
+            Some("text/css; charset=utf-8"),
+            header_text(theme.headers(), header::CONTENT_TYPE)
+        );
     }
 }

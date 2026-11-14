@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import ChannelPins from '@app/features/channel/state/ChannelPins';
+import ForumPosts from '@app/features/forum/state/ForumPosts';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MessageReferences from '@app/features/messaging/state/MessageReferences';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
+import ChannelThreads from '@app/features/threads/state/ChannelThreads';
 import CallState from '@app/features/voice/state/CallState';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {Message} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -34,7 +36,11 @@ export function handleMessageUpdate(data: MessageUpdatePayload, _context: Gatewa
 			}
 		}
 	}
+	if (message.thread !== undefined) {
+		ChannelThreads.ingestMessageThreads([message]);
+	}
 	SavedMessages.handleMessageUpdate(message);
+	ForumPosts.handleMessageUpdate(message);
 	ChannelPins.handleMessageUpdate(message);
 	Messages.handleMessageUpdate({message});
 	MessageReferences.handleMessageUpdate(message);

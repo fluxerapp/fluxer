@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import Authentication from '@app/features/auth/state/Authentication';
 import type {InviteCandidate} from '@app/features/channel/components/direct_message/DMListHelpers';
 import type {DMListItemHandlers} from '@app/features/channel/components/direct_message/useDMListItemHandlers';
 import {getMuteDurationOptions} from '@app/features/channel/components/MuteOptions';
@@ -12,12 +11,14 @@ import {
 	INVITE_TO_COMMUNITY_DESCRIPTOR,
 	LEAVE_GROUP_DESCRIPTOR,
 	PIN_DM_DESCRIPTOR,
-	PIN_GROUP_DM_DESCRIPTOR,
 	UNPIN_DM_DESCRIPTOR,
-	UNPIN_GROUP_DM_DESCRIPTOR,
 } from '@app/features/channel/utils/ChannelMessageDescriptors';
-import {ChannelDebugModal} from '@app/features/devtools/components/debug/ChannelDebugModal';
-import {UserDebugModal} from '@app/features/devtools/components/debug/UserDebugModal';
+import {
+	CHANNEL_RECORD_DESCRIPTOR,
+	RecordDebugModal,
+	USER_RECORD_DESCRIPTOR,
+} from '@app/features/devtools/components/debug/RecordDebugModal';
+
 import {
 	ADD_NOTE_DESCRIPTOR,
 	CHANGE_FRIEND_NICKNAME_DESCRIPTOR,
@@ -26,8 +27,6 @@ import {
 	COPY_USER_ID_DESCRIPTOR,
 	DEBUG_CHANNEL_DESCRIPTOR,
 	DEBUG_USER_DESCRIPTOR,
-	EDIT_GROUP_DESCRIPTOR,
-	INVITES_DESCRIPTOR,
 	MARK_AS_READ_DESCRIPTOR,
 	START_VOICE_CALL_DESCRIPTOR,
 	UNCATEGORIZED_DESCRIPTOR,
@@ -54,10 +53,8 @@ import {
 	CopyIdIcon,
 	DebugIcon,
 	DeleteIcon,
-	EditGroupIcon,
 	EditIcon,
 	FavoriteIcon,
-	GroupInvitesIcon,
 	IgnoreFriendRequestIcon,
 	InviteToCommunityIcon,
 	LeaveIcon,
@@ -77,8 +74,10 @@ import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import {canPerform} from '@app/features/user/utils/AccountGates';
 import {hasActiveDirectCallWithUser} from '@app/features/voice/utils/PrivateCallMenuUtils';
 import {getMutedText} from '@app/lib/overlay/OverlayContextMenu';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {PublicUserFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -191,160 +190,6 @@ function buildMuteGroups(i18n: I18n, handlers: DMListItemHandlers): Array<MenuGr
 			})),
 		},
 	];
-}
-
-export function buildDesktopMenuGroups({
-	channel,
-	isGroupDM,
-	handlers,
-	i18n,
-}: Pick<BuildMenuGroupsParams, 'channel' | 'handlers' | 'i18n'> & {isGroupDM: boolean}): Array<MenuGroupType> {
-	const menuGroups: Array<MenuGroupType> = [];
-	if (isGroupDM) {
-		menuGroups.push({
-			items: [
-				{
-					icon: (
-						<EditGroupIcon
-							size={20}
-							data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.edit-group-icon"
-						/>
-					),
-					label: i18n._(EDIT_GROUP_DESCRIPTOR),
-					onClick: handlers.handleEditGroup,
-				},
-				channel.isPinned
-					? {
-							icon: (
-								<PinIcon
-									size={20}
-									data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.pin-icon"
-								/>
-							),
-							label: i18n._(UNPIN_GROUP_DM_DESCRIPTOR),
-							onClick: handlers.handleUnpinChannel,
-						}
-					: {
-							icon: (
-								<PinIcon
-									size={20}
-									data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.pin-icon--2"
-								/>
-							),
-							label: i18n._(PIN_GROUP_DM_DESCRIPTOR),
-							onClick: handlers.handlePinChannel,
-						},
-			],
-		});
-		const isOwner = channel.ownerId === Authentication.currentUserId;
-		if (isOwner) {
-			menuGroups[0].items.push({
-				icon: (
-					<GroupInvitesIcon
-						size={20}
-						data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.group-invites-icon"
-					/>
-				),
-				label: i18n._(INVITES_DESCRIPTOR),
-				onClick: handlers.handleShowInvites,
-			});
-		}
-		menuGroups.push({
-			items: [
-				{
-					icon: (
-						<DeleteIcon
-							size={20}
-							data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.delete-icon"
-						/>
-					),
-					label: i18n._(DELETE_MY_MESSAGES_DESCRIPTOR),
-					onClick: handlers.handleDeleteMyMessagesInChannel,
-					danger: true,
-				},
-				{
-					icon: (
-						<LeaveIcon
-							size={20}
-							data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.leave-icon"
-						/>
-					),
-					label: i18n._(LEAVE_GROUP_DESCRIPTOR),
-					onClick: handlers.handleLeaveGroup,
-					danger: true,
-				},
-				{
-					icon: (
-						<CopyIdIcon
-							size={20}
-							data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.copy-id-icon"
-						/>
-					),
-					label: i18n._(COPY_CHANNEL_ID_DESCRIPTOR),
-					onClick: handlers.handleCopyChannelId,
-				},
-			],
-		});
-	} else {
-		menuGroups.push({
-			items: [
-				channel.isPinned
-					? {
-							icon: (
-								<PinIcon
-									size={20}
-									data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.pin-icon--3"
-								/>
-							),
-							label: i18n._(UNPIN_DM_DESCRIPTOR),
-							onClick: handlers.handleUnpinChannel,
-						}
-					: {
-							icon: (
-								<PinIcon
-									size={20}
-									data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.pin-icon--4"
-								/>
-							),
-							label: i18n._(PIN_DM_DESCRIPTOR),
-							onClick: handlers.handlePinChannel,
-						},
-				{
-					icon: (
-						<DeleteIcon
-							size={20}
-							data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.delete-icon--2"
-						/>
-					),
-					label: i18n._(DELETE_MY_MESSAGES_DESCRIPTOR),
-					onClick: handlers.handleDeleteMyMessagesInChannel,
-					danger: true,
-				},
-				{
-					icon: (
-						<CloseDMIcon
-							size={20}
-							data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.close-dm-icon"
-						/>
-					),
-					label: i18n._(CLOSE_DM_DESCRIPTOR),
-					onClick: () => handlers.handleRemoveChannel(),
-					danger: true,
-				},
-				{
-					icon: (
-						<CopyIdIcon
-							size={20}
-							data-flx="channel.direct-message.dm-list-item-menu-groups.build-desktop-menu-groups.copy-id-icon--2"
-						/>
-					),
-					label: i18n._(COPY_CHANNEL_ID_DESCRIPTOR),
-					onClick: handlers.handleCopyChannelId,
-				},
-			],
-		});
-	}
-	return menuGroups;
 }
 
 export function buildMobileMenuGroups({
@@ -613,7 +458,7 @@ export function buildMobileMenuGroups({
 					onClick: () => undefined,
 					disabled: true,
 				});
-			} else if (Users.currentUser?.verified !== false) {
+			} else if (canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST).allowed) {
 				relationshipItems.push({
 					icon: (
 						<SendFriendRequestIcon
@@ -677,7 +522,7 @@ export function buildMobileMenuGroups({
 					});
 					break;
 				default:
-					if (Users.currentUser?.verified !== false) {
+					if (canPerform(Users.currentUser, TierGatedActions.FRIEND_REQUEST).allowed) {
 						relationshipItems.push({
 							icon: (
 								<SendFriendRequestIcon
@@ -769,9 +614,10 @@ export function buildMobileMenuGroups({
 					ModalCommands.pushAfterBottomSheetClose(
 						closeAllSheets,
 						modal(() => (
-							<UserDebugModal
+							<RecordDebugModal
+								label={i18n._(USER_RECORD_DESCRIPTOR)}
 								title={i18n._(USER_DEBUG_DESCRIPTOR)}
-								user={recipient}
+								record={recipient}
 								data-flx="channel.direct-message.dm-list-item-menu-groups.on-click.user-debug-modal"
 							/>
 						)),
@@ -791,9 +637,10 @@ export function buildMobileMenuGroups({
 				ModalCommands.pushAfterBottomSheetClose(
 					closeAllSheets,
 					modal(() => (
-						<ChannelDebugModal
+						<RecordDebugModal
+							label={i18n._(CHANNEL_RECORD_DESCRIPTOR)}
 							title={i18n._(CHANNEL_DEBUG_DESCRIPTOR)}
-							channel={channel}
+							record={channel}
 							data-flx="channel.direct-message.dm-list-item-menu-groups.on-click.channel-debug-modal"
 						/>
 					)),

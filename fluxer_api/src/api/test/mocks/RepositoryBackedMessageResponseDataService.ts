@@ -1,5 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import {AttachmentDecayService, resolveDefaultAttachmentDecayConfig} from '@app/api/attachment/AttachmentDecayService';
+import {apiFormOfMediaUrl, makeApiAttachmentUrl, parseApiAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
+import {makeSignedAttachmentCdnUrl, signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {
+	attachmentStorageChannelId,
+	EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
+	isCrosspostCopy,
+	isOwnedEmbedAttachment,
+} from '@app/api/channel/services/message/MessageHelpers';
+import {
+	type MessageResponseAccessContext,
+	MessageResponseDataService,
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import {isApiProxiedAttachments} from '@app/api/instance/AttachmentAccessMode';
+import {getChannelRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {CallInfo} from '@app/api/models/CallInfo';
+import type {Embed} from '@app/api/models/Embed';
+import type {EmbedAuthor} from '@app/api/models/EmbedAuthor';
+import type {EmbedField} from '@app/api/models/EmbedField';
+import type {EmbedFooter} from '@app/api/models/EmbedFooter';
+import type {EmbedMedia} from '@app/api/models/EmbedMedia';
+import type {EmbedProvider} from '@app/api/models/EmbedProvider';
+import type {Message} from '@app/api/models/Message';
+import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import type {StickerItem} from '@app/api/models/StickerItem';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {assertSafeByteSize} from '@app/api/utils/ByteSizeUtils';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {
 	DELETED_USER_DISCRIMINATOR,
@@ -17,32 +47,8 @@ import type {
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import type {NatsConnection} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import type {NatsConnection} from 'nats';
-import {AttachmentDecayRepository} from '../../attachment/AttachmentDecayRepository';
-import {AttachmentDecayService} from '../../attachment/AttachmentDecayService';
-import type {ChannelID, GuildID, MessageID, UserID} from '../../BrandedTypes';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {
-	type MessageResponseAccessContext,
-	MessageResponseDataService,
-	messageResponseAccessForChannel,
-} from '../../channel/services/message/MessageResponseDataService';
-import {getChannelRepository, getUserRepository} from '../../middleware/ServiceSingletons';
-import type {Attachment} from '../../models/Attachment';
-import type {CallInfo} from '../../models/CallInfo';
-import type {Embed} from '../../models/Embed';
-import type {EmbedAuthor} from '../../models/EmbedAuthor';
-import type {EmbedField} from '../../models/EmbedField';
-import type {EmbedFooter} from '../../models/EmbedFooter';
-import type {EmbedMedia} from '../../models/EmbedMedia';
-import type {EmbedProvider} from '../../models/EmbedProvider';
-import type {Message} from '../../models/Message';
-import type {MessageSnapshot} from '../../models/MessageSnapshot';
-import type {StickerItem} from '../../models/StickerItem';
-import {mapUserToPartialResponse} from '../../user/UserMappers';
-import {assertSafeByteSize} from '../../utils/ByteSizeUtils';
 
 class NoopNatsConnectionManager implements INatsConnectionManager {
 	async connect(): Promise<void> {}
@@ -56,6 +62,32 @@ class NoopNatsConnectionManager implements INatsConnectionManager {
 	getConnection(): NatsConnection {
 		throw new Error('RepositoryBackedMessageResponseDataService does not use NATS');
 	}
+}
+
+function withoutMediaToken(url: string): string {
+	if (parseApiAttachmentUrl(url) === null) return url;
+	const parsed = new URL(url);
+	parsed.searchParams.delete('mt');
+	return parsed.toString();
+}
+
+function apiOwnMediaUrl(url: string, message: Message, owned: boolean): string {
+	const owner = owned
+		? {channelId: message.channelId, messageId: message.id, storageChannelId: attachmentStorageChannelId(message)}
+		: null;
+	return apiFormOfMediaUrl(url, owner) ?? withoutMediaToken(url);
+}
+
+function signOwnUrl(url: string | null | undefined, message: Message, owned = false): string | null {
+	if (url == null) return null;
+	if (isApiProxiedAttachments()) return apiOwnMediaUrl(url, message, owned);
+	return signAttachmentUrl(url);
+}
+
+function mediaProxyUrl(url: string | null | undefined, message: Message, owned = false): string | null {
+	if (!url?.startsWith('http')) return null;
+	if (isApiProxiedAttachments()) return apiOwnMediaUrl(url, message, owned);
+	return signAttachmentUrl(url);
 }
 
 export class RepositoryBackedMessageResponseDataService extends MessageResponseDataService {
@@ -100,8 +132,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		channelId: ChannelID;
 		messageId: MessageID;
 		access: MessageResponseAccessContext;
-		nonce?: string;
-		tts?: boolean;
 	}): Promise<MessageResponse | null> {
 		const message = await getChannelRepository().messages.getMessage(params.channelId, params.messageId);
 		if (!message || this.filterByAccess([message], params.access).length === 0) {
@@ -111,8 +141,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			userId: params.userId,
 			message,
 			access: params.access,
-			nonce: params.nonce,
-			tts: params.tts,
 		});
 	}
 
@@ -130,22 +158,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			tts: params.tts,
 			includeReactions: params.includeReactions ?? true,
 			depth: 0,
-		});
-	}
-
-	override async buildMessageForChannel(params: {
-		channel: {guildId: GuildID | null};
-		message: Message;
-		userId?: UserID;
-		nonce?: string;
-		tts?: boolean;
-	}): Promise<MessageResponse> {
-		return this.buildMessage({
-			userId: params.userId ?? params.message.authorId ?? createUserID(0n),
-			message: params.message,
-			access: messageResponseAccessForChannel(params.channel),
-			nonce: params.nonce,
-			tts: params.tts,
 		});
 	}
 
@@ -187,13 +199,12 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		userId: UserID;
 		messages: Array<Message>;
 		channelById: ReadonlyMap<string, {guildId: GuildID | null}>;
-		includeReactions?: boolean;
 	}): Promise<Array<MessageResponse>> {
 		return Promise.all(
 			params.messages.map((message) =>
 				this.mapMessage(message, {
 					currentUserId: params.userId,
-					includeReactions: params.includeReactions ?? true,
+					includeReactions: true,
 					depth: 0,
 				}),
 			),
@@ -206,7 +217,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		const [before, current, after] = await Promise.all([
 			getChannelRepository().messages.listMessages(channelId, around, beforeLimit),
 			getChannelRepository().messages.getMessage(channelId, around),
-			getChannelRepository().messages.listMessages(channelId, undefined, afterLimit, around, {immediateAfter: true}),
+			getChannelRepository().messages.listMessages(channelId, undefined, afterLimit, around),
 		]);
 		return [...before, ...(current ? [current] : []), ...after];
 	}
@@ -236,7 +247,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			options.includeReactions ? this.mapReactions(message, options.currentUserId) : Promise.resolve(null),
 			this.resolveReferencedMessage(message, options),
 		]);
-		return {
+		const responseFields = {
 			id: message.id.toString(),
 			channel_id: message.channelId.toString(),
 			author,
@@ -256,14 +267,19 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			attachments: await this.mapAttachments(message.attachments, message),
 			stickers: this.mapStickers(message.stickers),
 			reactions,
-			message_reference: message.reference
-				? {
-						channel_id: message.reference.channelId.toString(),
-						message_id: message.reference.messageId.toString(),
-						guild_id: message.reference.guildId?.toString() ?? null,
-						type: message.reference.type,
-					}
-				: null,
+		};
+		let messageReference: MessageResponse['message_reference'] = null;
+		if (message.reference) {
+			messageReference = {
+				channel_id: message.reference.channelId.toString(),
+				...(message.reference.messageId ? {message_id: message.reference.messageId.toString()} : {}),
+				guild_id: message.reference.guildId?.toString() ?? null,
+				type: message.reference.type,
+			};
+		}
+		return {
+			...responseFields,
+			message_reference: messageReference,
 			message_snapshots: await this.mapSnapshots(message.messageSnapshots, message),
 			nonce: options.nonce ?? null,
 			call: this.mapCall(message.call),
@@ -282,6 +298,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			global_name: message.webhookName ?? DELETED_USER_GLOBAL_NAME,
 			avatar: message.webhookAvatarHash,
 			avatar_color: null,
+			...(message.webhookId ? {bot: true} : {}),
 			flags: 0,
 		};
 	}
@@ -307,7 +324,9 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	}
 
 	private async resolveMentionChannels(channelIds: Array<ChannelID>): Promise<Array<MessageChannelMentionResponse>> {
-		const channels = await Promise.all(channelIds.map((channelId) => getChannelRepository().findUnique(channelId)));
+		const channels = await Promise.all(
+			channelIds.map((channelId) => getChannelRepository().channelData.findUnique(channelId)),
+		);
 		return channels.flatMap((channel) =>
 			channel?.name
 				? [
@@ -325,7 +344,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		message: Message,
 		options: {currentUserId?: UserID; includeReactions: boolean; depth: number},
 	): Promise<MessageResponse | null | undefined> {
-		if (!message.reference || options.depth > 0) {
+		if (!message.reference?.messageId || (message.flags & MessageFlags.IS_CROSSPOST) !== 0 || options.depth > 0) {
 			return undefined;
 		}
 		const referenced = await getChannelRepository().messages.getMessage(
@@ -343,8 +362,10 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	}
 
 	private mapAttachmentUrl(message: Message, attachment: Attachment): string {
-		const filename = encodeURIComponent(attachment.filename);
-		return `${Config.endpoints.media}/attachments/${message.channelId.toString()}/${message.id.toString()}/${attachment.id.toString()}/${filename}`;
+		if (isApiProxiedAttachments()) {
+			return makeApiAttachmentUrl(message.channelId, attachment.id, attachment.filename, message.id);
+		}
+		return makeSignedAttachmentCdnUrl(attachmentStorageChannelId(message), attachment.id, attachment.filename);
 	}
 
 	private async mapAttachments(
@@ -352,19 +373,21 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		message: Message,
 	): Promise<Array<MessageAttachmentResponse> | null> {
 		if (attachments.length === 0) return null;
+		const ownerMessageId = isCrosspostCopy(message) ? (message.reference?.messageId ?? message.id) : message.id;
 		await this.attachmentDecayService.extendForAttachments(
 			attachments.map((attachment) => ({
 				attachmentId: attachment.id,
-				channelId: message.channelId,
-				messageId: message.id,
+				channelId: attachmentStorageChannelId(message),
+				messageId: ownerMessageId,
 				filename: attachment.filename,
 				sizeBytes: attachment.size,
-				uploadedAt: snowflakeToDate(message.id),
+				uploadedAt: snowflakeToDate(ownerMessageId),
 			})),
 		);
+		const decayEnabled = (await resolveDefaultAttachmentDecayConfig()).enabled;
 		return Promise.all(
 			attachments.map(async (attachment) => {
-				const decay = await this.attachmentDecayRepository.fetchById(attachment.id);
+				const decay = decayEnabled ? await this.attachmentDecayRepository.fetchById(attachment.id) : null;
 				const url = this.mapAttachmentUrl(message, attachment);
 				return {
 					id: attachment.id.toString(),
@@ -399,17 +422,17 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	private mapEmbed(embed: Embed, message: Message): MessageEmbedResponse {
 		return {
 			type: embed.type ?? 'rich',
-			url: embed.url,
+			url: signOwnUrl(embed.url, message),
 			title: embed.title,
 			color: embed.color,
 			timestamp: embed.timestamp?.toISOString() ?? null,
 			description: embed.description,
-			author: this.mapEmbedAuthor(embed.author),
+			author: this.mapEmbedAuthor(embed.author, message),
 			image: this.mapEmbedMedia(embed.image, message),
 			thumbnail: this.mapEmbedMedia(embed.thumbnail, message),
-			footer: this.mapEmbedFooter(embed.footer),
+			footer: this.mapEmbedFooter(embed.footer, message),
 			fields: embed.fields.length > 0 ? embed.fields.map((field) => this.mapEmbedField(field)) : null,
-			provider: this.mapEmbedAuthor(embed.provider),
+			provider: this.mapEmbedProvider(embed.provider, message),
 			video: this.mapEmbedMedia(embed.video, message),
 			audio: this.mapEmbedMedia(embed.audio, message),
 			html: embed.html,
@@ -420,23 +443,30 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		};
 	}
 
-	private mapEmbedAuthor(author: EmbedAuthor | EmbedProvider | null) {
+	private mapEmbedAuthor(author: EmbedAuthor | null, message: Message) {
 		if (!author?.name) return null;
-		const iconUrl = 'iconUrl' in author ? author.iconUrl : null;
 		return {
 			name: author.name,
-			url: author.url,
-			icon_url: iconUrl,
-			proxy_icon_url: iconUrl,
+			url: signOwnUrl(author.url, message),
+			icon_url: signOwnUrl(author.iconUrl, message),
+			proxy_icon_url: mediaProxyUrl(author.iconUrl, message),
 		};
 	}
 
-	private mapEmbedFooter(footer: EmbedFooter | null) {
+	private mapEmbedProvider(provider: EmbedProvider | null, message: Message) {
+		if (!provider?.name) return null;
+		return {
+			name: provider.name,
+			url: signOwnUrl(provider.url, message),
+		};
+	}
+
+	private mapEmbedFooter(footer: EmbedFooter | null, message: Message) {
 		if (!footer?.text) return null;
 		return {
 			text: footer.text,
-			icon_url: footer.iconUrl,
-			proxy_icon_url: footer.iconUrl,
+			icon_url: signOwnUrl(footer.iconUrl, message),
+			proxy_icon_url: mediaProxyUrl(footer.iconUrl, message),
 		};
 	}
 
@@ -450,10 +480,11 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 
 	private mapEmbedMedia(media: EmbedMedia | null, message: Message) {
 		if (!media?.url) return null;
-		const url = this.resolveAttachmentUrl(media.url, message);
+		const resolved = this.resolveAttachmentUrl(media.url, message);
+		const owned = isOwnedEmbedAttachment(media);
 		return {
-			url,
-			proxy_url: url.startsWith('http') ? url : null,
+			url: signOwnUrl(resolved, message, owned) ?? resolved,
+			proxy_url: mediaProxyUrl(resolved, message, owned),
 			content_type: media.contentType,
 			content_hash: media.contentHash,
 			width: media.width,
@@ -461,7 +492,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			description: media.description,
 			placeholder: media.placeholder,
 			duration: media.duration,
-			flags: media.flags,
+			flags: media.flags & ~EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
 		};
 	}
 
@@ -534,7 +565,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		>();
 		for (const reaction of reactions) {
 			const emojiId = reaction.emojiId.toString() === '0' ? null : reaction.emojiId.toString();
-			const key = `${emojiId ?? ''}:${reaction.emojiName}`;
+			const key = emojiId ? `custom_${emojiId}` : `unicode_${reaction.emojiName}`;
 			const entry = byEmoji.get(key) ?? {
 				id: emojiId,
 				name: reaction.emojiName,

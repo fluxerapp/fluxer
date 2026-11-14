@@ -8,13 +8,18 @@ use super::types::SendSystemDmResponse;
 impl AdminApiClient {
     pub async fn send_system_dm(
         &self,
-        user_ids: &[String],
+        user_ids: Option<&[String]>,
         content: &str,
     ) -> ApiResult<SendSystemDmResponse> {
         let body = generated_types::SendSystemDmRequest {
             content: generated_types::SendSystemDmRequestContent::try_from(content)
                 .map_err(|e| ApiError::Parse(e.to_string()))?,
-            user_ids: user_ids.iter().map(|id| snowflake(id)).collect(),
+            user_ids: user_ids
+                .unwrap_or_default()
+                .iter()
+                .map(|id| snowflake(id))
+                .collect(),
+            all_users: user_ids.is_none().then_some(true),
         };
         let response = self
             .generated()

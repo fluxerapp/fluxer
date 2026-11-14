@@ -1,28 +1,32 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Locales
-description: The supported locale registry and how Fluxer resolves a response locale.
+description: The supported locales and how the API picks one for a request.
 ---
 
-A locale tells Fluxer which language to write human-readable text in. Each one is a BCP 47 tag from the registry below, either a bare language subtag such as `de`, or one joined to a region or numeric subtag by a hyphen, such as `en-GB`, `pt-BR`, and `es-419`.
+A locale is a BCP 47 tag that sets the language of human-readable text, such as the `message` in an [error response](/http-api/#error-response). Everything else in a response is the same in every locale.
 
 ## Supported locales
 
-The registry below is the complete set for every Fluxer surface. Wherever Fluxer stores a locale, such as in [user settings](/http-api/users/settings/), it requires an exact value from this table.
+A `locale` field in a request, such as the one in [user settings](/http-api/users/settings/), has to be one of these values exactly, with the same case.
 
 | Value | Description |
 | --- | --- |
 | ar | Arabic |
+| be | Belarusian |
 | bg | Bulgarian |
+| bn | Bangla |
+| ca | Catalan |
 | cs | Czech |
 | da | Danish |
 | de | German |
 | el | Greek |
 | en-GB | English (United Kingdom) |
-| en-US<sup>1</sup> | English (United States) |
+| en-US | English (United States) |
 | es-ES | Spanish (Spain) |
 | es-419 | Spanish (Latin America) |
 | fi | Finnish |
+| fil | Filipino |
 | fr | French |
 | he | Hebrew |
 | hi | Hindi |
@@ -33,52 +37,38 @@ The registry below is the complete set for every Fluxer surface. Wherever Fluxer
 | ja | Japanese |
 | ko | Korean |
 | lt | Lithuanian |
+| lv | Latvian |
 | nl | Dutch |
 | no | Norwegian |
 | pl | Polish |
 | pt-BR | Portuguese (Brazil) |
+| pt-PT | Portuguese (Portugal) |
 | ro | Romanian |
 | ru | Russian |
-| sv-SE<sup>2</sup> | Swedish |
+| sk | Slovak |
+| sl | Slovenian |
+| sq | Albanian |
+| sv-SE | Swedish |
 | th | Thai |
+| tok | Toki Pona |
 | tr | Turkish |
 | uk | Ukrainian |
 | vi | Vietnamese |
 | zh-CN | Chinese (Simplified) |
 | zh-TW | Chinese (Traditional) |
 
-<sup>1</sup> [Negotiation](#negotiation) resolves to this value whenever it selects no other registry value. The bare tag `en` is a registered alias for it during negotiation and is not itself a storable value
-
-<sup>2</sup> The bare tag `sv` is a registered alias for it during negotiation and is not itself a storable value
-
 ## Negotiation
 
-Fluxer resolves the response locale once for each request. When a request resolves an authenticated user with a stored locale, Fluxer takes that locale. Every other request negotiates the `Accept-Language` header against the [supported locale registry](#supported-locales), and `en-US` is the result whenever negotiation selects no registry value.
+When you're signed in and your account has a saved locale, the API uses it. Otherwise the API picks a locale from the `Accept-Language` header and uses `en-US` when the header is missing or nothing in it matches.
 
-An account created by password registration stores the locale negotiated from its own registration request, so the `Accept-Language` header on that request sets the stored value. An account created through single sign-on stores no account locale. Its [user settings](/http-api/users/settings/) locale reads `en-US`, and its requests negotiate `Accept-Language` until the locale setting is changed.
+The API sorts the `Accept-Language` tags by `q` weight and makes two passes over them. Matching ignores case and accepts `_` in place of `-`.
 
-Fluxer splits the header on commas. It trims each member and then splits it on semicolons. The text before the first semicolon is the language range, and Fluxer reads a `q=` weight from only the first parameter after it. A member with no readable `q=` value has weight 1. Fluxer orders the members by descending weight, and members of equal weight keep their header order.
+1. The first tag that is a supported locale wins. `sv` counts as `sv-SE`, `tl` counts as `fil`, and `nb` and `nn` count as `no`.
+2. If no tag matched, the first tag whose language subtag has a locale wins, and `fr-CA` picks `fr`. A Chinese tag with `Hant`, `TW`, `HK` or `MO` picks `zh-TW`. A Portuguese tag with a region other than `BR`, such as `pt-AO`, picks `pt-PT`. The language subtags below pick a set locale.
 
-Fluxer then runs the passes below over that ordered list.
-
-The first pass takes the earliest member whose range names a registry value exactly. Fluxer trims the range, replaces every underscore with a hyphen, and lowercases it before comparing, so `EN-GB` and `en_gb` both name `en-GB`. The bare tags `en` and `sv` are registered aliases for `en-US` and `sv-SE` and match in this pass.
-
-The second pass runs only when the first selects nothing. It reduces each member in the same order to its language subtag. A language subtag with a declared preference selects that value. The declared preferences are:
-
-| Language subtag | Selected locale |
+| Language subtag | Locale |
 | --- | --- |
 | `en` | `en-US` |
 | `es` | `es-ES` |
 | `pt` | `pt-BR` |
 | `zh` | `zh-CN` |
-| `sv` | `sv-SE` |
-
-Under those preferences, `en-AU` selects `en-US` and `pt-PT` selects `pt-BR`. A language subtag without a declared preference selects the first registry value whose tag begins with that subtag and a hyphen.
-
-Every registry tag with a hyphen begins with one of those subtags, so `de-AT` and `xx-YY` both select nothing. A weight of 0 orders a member last, and that member can still be selected. A range of `*` matches no registry value.
-
-The resolved locale selects the localised `message` in an [error response](/http-api/#error-response) and in each element of a validation `errors` array.
-
-:::note[Locale selection changes human-readable text only]
-A field name, an enumeration value, an error `code`, a [snowflake](/snowflakes/), and a timestamp representation are identical under every locale.
-:::

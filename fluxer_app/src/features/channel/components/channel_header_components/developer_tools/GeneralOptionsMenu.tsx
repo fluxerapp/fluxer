@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {translateDescriptor} from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {updateOption} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import {getToggleGroups, type ToggleGroup} from '@app/features/devtools/components/DeveloperOptionsToggleGroups';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
-import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
+import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
+
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
@@ -13,7 +14,6 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {updateOption} from './ResetOptions';
 
 const MENTION_CONTROLS_DESCRIPTOR = msg({
 	message: 'Mention controls',
@@ -42,7 +42,7 @@ const ToggleGroupSubmenu: React.FC<{group: ToggleGroup}> = observer(({group}) =>
 								data-flx="channel.channel-header-components.developer-tools-context-menu.toggle-group-submenu.checkbox-item"
 							>
 								{description ? (
-									// biome-ignore lint/a11y/useAriaPropsSupportedByRole: project policy forbids the native title attribute, so aria-label carries the description on the developer-options row
+									// biome-ignore lint/a11y/useAriaPropsSupportedByRole: project policy forbids the native title attribute, so aria-label holds the description on the developer-options row
 									<span
 										aria-label={translateDescriptor(i18n, description)}
 										data-flx="channel.channel-header-components.developer-tools-context-menu.toggle-group-submenu.span"
@@ -66,7 +66,7 @@ export const GeneralDeveloperOptionsMenu: React.FC = observer(() => {
 	const toggleGroups = getToggleGroups();
 	const currentUser = Users.currentUser;
 	const canConfigureMentionSuppression = currentUser?.isStaff() ?? false;
-	const suppressUnprivilegedSelfMentions = UserSettings.getSuppressUnprivilegedSelfMentions();
+	const suppressUnprivilegedSelfMentions = UserSettings.suppressUnprivilegedSelfMentions;
 	return (
 		<>
 			{toggleGroups.map((group, index) => (

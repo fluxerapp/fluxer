@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {wasShownBeforeRestart} from '@app/features/boot_state/BootViewport';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {observeIntersection} from '@app/features/platform/utils/SharedIntersectionObserver';
 import {LRUCache} from 'lru-cache';
-import {createContext, useCallback, useContext, useEffect, useState} from 'react';
+import {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react';
 
 const DEFAULT_ROOT_MARGIN = '300px';
 const REMEMBERED_VIEWPORT_KEY_LIMIT = 1000;
@@ -23,6 +26,11 @@ export function resolveObserverRoot(resolve: ScrollSurfaceResolver, element: Ele
 	return surface;
 }
 
+function resolveViewportKey(rememberKey: string | null | undefined): string | null {
+	if (!rememberKey) return null;
+	return stripAttachmentSignature(rememberKey);
+}
+
 interface UseNearViewportOptions {
 	disabled?: boolean;
 	rememberKey?: string | null;
@@ -37,8 +45,12 @@ export function useNearViewport<T extends Element>({
 	threshold = 0,
 }: UseNearViewportOptions = {}): {ref: (node: T | null) => void; isNearViewport: boolean} {
 	const resolveScrollSurface = useContext(NearViewportSurfaceContext);
+	const viewportKey = resolveViewportKey(rememberKey);
 	const loadImmediately = disabled || typeof IntersectionObserver === 'undefined';
-	const wasRemembered = rememberKey ? rememberedViewportKeys.has(rememberKey) : false;
+	const wasRemembered =
+		rememberKey != null &&
+		viewportKey !== null &&
+		(rememberedViewportKeys.has(viewportKey) || wasShownBeforeRestart(rememberKey));
 	const [element, setElement] = useState<T | null>(null);
 	const [isNearViewport, setIsNearViewport] = useState(loadImmediately || wasRemembered);
 	const ref = useCallback((node: T | null) => {
@@ -50,13 +62,13 @@ export function useNearViewport<T extends Element>({
 		}
 	}, [disabled]);
 	useEffect(() => {
-		if (!isNearViewport || !rememberKey) return;
+		if (!isNearViewport || !viewportKey) return;
 		if (disabled || typeof IntersectionObserver === 'undefined') return;
-		rememberedViewportKeys.set(rememberKey, true);
-	}, [disabled, isNearViewport, rememberKey]);
+		rememberedViewportKeys.set(viewportKey, true);
+	}, [disabled, isNearViewport, viewportKey]);
 	useEffect(() => {
 		if (disabled || isNearViewport || !element) return undefined;
-		if (rememberKey && rememberedViewportKeys.has(rememberKey)) {
+		if (viewportKey && rememberedViewportKeys.has(viewportKey)) {
 			setIsNearViewport(true);
 			return undefined;
 		}
@@ -70,14 +82,19 @@ export function useNearViewport<T extends Element>({
 			(entry) => {
 				if (!entry.isIntersecting && entry.intersectionRatio <= 0) return;
 				stopObserving();
-				if (rememberKey) {
-					rememberedViewportKeys.set(rememberKey, true);
+				if (viewportKey) {
+					rememberedViewportKeys.set(viewportKey, true);
 				}
 				setIsNearViewport(true);
 			},
 			{root: resolveObserverRoot(resolveScrollSurface, element), rootMargin, threshold},
 		);
 		return stopObserving;
-	}, [disabled, element, isNearViewport, rememberKey, resolveScrollSurface, rootMargin, threshold]);
-	return {ref, isNearViewport};
+	}, [disabled, element, isNearViewport, viewportKey, resolveScrollSurface, rootMargin, threshold]);
+	const loadStartedRef = useRef(false);
+	const waitingForUrl =
+		!loadStartedRef.current && !!rememberKey && AttachmentUrlRefresher.freshWhenReady(rememberKey) === null;
+	const readyToLoad = isNearViewport && !waitingForUrl;
+	if (readyToLoad) loadStartedRef.current = true;
+	return {ref, isNearViewport: readyToLoad};
 }

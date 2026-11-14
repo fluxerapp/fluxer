@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {readBlobAsDataUrl} from '@app/features/platform/utils/BlobDataUrl';
+import {type AssetKind, getPolicy, isExtensionAllowed} from '@fluxer/constants/src/AssetFormatPolicy';
+
 export interface ImageUploadFileLike {
 	readonly type?: string | null;
 	readonly name?: string | null;
@@ -19,25 +22,12 @@ export function isSvgFile(file: ImageUploadFileLike): boolean {
 	return (file.name ?? '').toLowerCase().endsWith('.svg');
 }
 
-export function getImageUploadMimeType(file: ImageUploadFileLike): string {
-	if (isSvgFile(file)) return 'image/svg+xml';
-	const type = normalizeImageMimeType(file.type);
-	if (type.startsWith('image/')) return type;
-	return 'image/png';
-}
-
-function readBlobAsDataUrl(blob: Blob): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => resolve(String(reader.result));
-		reader.onerror = () => reject(new Error('Failed to read file'));
-		reader.readAsDataURL(blob);
-	});
-}
-
-export async function readBlobAsBase64NoPrefix(blob: Blob): Promise<string> {
-	const dataUrl = await readBlobAsDataUrl(blob);
-	return dataUrl.split(',')[1] ?? '';
+export function isAssetUploadFileAllowed(kind: AssetKind, file: ImageUploadFileLike): boolean {
+	const name = (file.name ?? '').toLowerCase();
+	const dot = name.lastIndexOf('.');
+	if (dot !== -1 && isExtensionAllowed(kind, name.slice(dot + 1))) return true;
+	const mime = normalizeImageMimeType(file.type);
+	return mime !== '' && Object.values(getPolicy(kind).mimes).includes(mime);
 }
 
 export async function readImageFileAsUploadDataUrl(file: File): Promise<string> {

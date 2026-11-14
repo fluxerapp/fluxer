@@ -11,6 +11,7 @@ import {AutocompleteGif} from '@app/features/channel/components/AutocompleteGif'
 import {AutocompleteMeme} from '@app/features/channel/components/AutocompleteMeme';
 import {AutocompleteMention} from '@app/features/channel/components/AutocompleteMention';
 import {AutocompleteSticker} from '@app/features/channel/components/AutocompleteSticker';
+import type {AutocompleteListProps} from '@app/features/channel/components/AutocompleteTypes';
 import {
 	type AutocompleteOption,
 	type AutocompleteType,
@@ -29,12 +30,14 @@ import {
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
+import ModalState from '@app/features/ui/state/Modal';
 import {autoUpdate, FloatingPortal, flip, offset, size, useFloating} from '@floating-ui/react';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import type {ComponentType} from 'react';
 import {useCallback, useEffect, useId, useRef, useState} from 'react';
 
 const SUGGESTIONS_DESCRIPTOR = msg({
@@ -139,31 +142,13 @@ function resolvePortalRoot(portalHost: HTMLElement | null): HTMLElement | undefi
 	return portalHost;
 }
 
-function resolveZIndex(zIndex: number | undefined): number | undefined {
-	if (zIndex === undefined) {
-		return undefined;
-	}
-	return zIndex;
+function isCoveredByModal(reference: HTMLElement): boolean {
+	const ownerDocument = reference.ownerDocument;
+	if (!ModalState.hasModalOpen(ownerDocument)) return false;
+	const dialogs = ownerDocument.querySelectorAll('[role="dialog"][aria-modal="true"]');
+	const topDialog = dialogs.item(dialogs.length - 1);
+	return topDialog == null || !topDialog.contains(reference);
 }
-
-type ScrollerWithScrollableElement = ScrollerHandle & {
-	getScrollableElement?: () => HTMLElement | null;
-};
-
-export type {AutocompleteOption, AutocompleteType} from '@app/features/channel/components/AutocompleteTypes';
-export {
-	getAutocompleteOptionId,
-	isChannel,
-	isCommand,
-	isEmoji,
-	isGif,
-	isMeme,
-	isMentionMember,
-	isMentionRole,
-	isMentionUser,
-	isSpecialMention,
-	isSticker,
-} from '@app/features/channel/components/AutocompleteTypes';
 
 const ATTACHED_AUTOCOMPLETE_GAP = 4;
 
@@ -175,7 +160,6 @@ export const Autocomplete = observer(
 		options,
 		setSelectedIndex: externalSetSelectedIndex,
 		referenceElement,
-		zIndex,
 		attached = false,
 		listboxId,
 		mainAxisOffset,
@@ -186,7 +170,6 @@ export const Autocomplete = observer(
 		options: Array<AutocompleteOption>;
 		setSelectedIndex?: React.Dispatch<React.SetStateAction<number>>;
 		referenceElement?: HTMLElement | null;
-		zIndex?: number;
 		query?: string;
 		attached?: boolean;
 		listboxId?: string;
@@ -209,7 +192,6 @@ export const Autocomplete = observer(
 		} = useListNavigation({
 			itemCount: options.length,
 			initialIndex: 0,
-			loop: true,
 		});
 		const keyboardFocusIndex = resolveKeyboardFocusIndex(externalSelectedIndex, internalKeyboardFocusIndex);
 		const [referenceState, setReferenceState] = useState<HTMLElement | null>(resolveReferenceElement(referenceElement));
@@ -307,15 +289,13 @@ export const Autocomplete = observer(
 		);
 		const scrollChildIntoView = useCallback((node: HTMLElement | null, margin = 32) => {
 			if (!node) return;
-			const scroller = scrollerRef.current as ScrollerWithScrollableElement | null;
+			const scroller = scrollerRef.current as ScrollerHandle | null;
 			if (scroller && typeof scroller.revealElement === 'function') {
 				scroller.revealElement({node, padding: margin});
 				return;
 			}
 			let scrollerEl: HTMLElement | null = null;
-			if (scroller != null && typeof scroller.getScrollableElement === 'function') {
-				scrollerEl = scroller.getScrollableElement();
-			}
+
 			if (scrollerEl == null) {
 				scrollerEl = node.closest('[data-scrollable], .overflow-y-auto, .overflow-y-scroll');
 			}
@@ -342,11 +322,23 @@ export const Autocomplete = observer(
 			const raf = requestAnimationFrame(() => scrollChildIntoView(node, 32));
 			return () => cancelAnimationFrame(raf);
 		}, [keyboardFocusIndex, options.length, scrollChildIntoView]);
+		const AutocompleteList = LIST_BY_TYPE[type];
+		const listProps: AutocompleteListProps = {
+			onSelect,
+			keyboardFocusIndex,
+			hoverIndex: hoverIndexForRender,
+			options,
+			onMouseEnter: handleMouseEnter,
+			onMouseLeave: handleMouseLeave,
+			rowRefs,
+			getOptionId,
+		};
+		if (referenceState != null && isCoveredByModal(referenceState)) return null;
 		return (
 			<FloatingPortal root={resolvePortalRoot(portalHost)} data-flx="channel.autocomplete.floating-portal">
 				<div
 					ref={refs.setFloating}
-					style={{...floatingStyles, zIndex: resolveZIndex(zIndex)}}
+					style={{...floatingStyles}}
 					className={`${styles.container} ${attached ? styles.containerAttached : styles.containerDetached}`}
 					onKeyDown={handleKeyDown}
 					role="listbox"
@@ -355,17 +347,7 @@ export const Autocomplete = observer(
 					data-flx="channel.autocomplete.container.key-down"
 				>
 					{type === 'gif' ? (
-						<AutocompleteGif
-							onSelect={onSelect}
-							keyboardFocusIndex={keyboardFocusIndex}
-							hoverIndex={hoverIndexForRender}
-							options={options}
-							onMouseEnter={handleMouseEnter}
-							onMouseLeave={handleMouseLeave}
-							rowRefs={rowRefs}
-							getOptionId={getOptionId}
-							data-flx="channel.autocomplete.autocomplete-gif.select"
-						/>
+						<AutocompleteList {...listProps} data-flx="channel.autocomplete.autocomplete-gif.select" />
 					) : (
 						<Scroller
 							ref={scrollerRef}
@@ -374,103 +356,7 @@ export const Autocomplete = observer(
 							data-flx="channel.autocomplete.scroller"
 						>
 							{renderAutocompleteHeading(heading)}
-							{type === 'mention' ? (
-								<AutocompleteMention
-									onSelect={onSelect}
-									keyboardFocusIndex={keyboardFocusIndex}
-									hoverIndex={hoverIndexForRender}
-									options={options}
-									onMouseEnter={handleMouseEnter}
-									onMouseLeave={handleMouseLeave}
-									rowRefs={rowRefs}
-									getOptionId={getOptionId}
-									data-flx="channel.autocomplete.autocomplete-mention.select"
-								/>
-							) : type === 'channel' ? (
-								<AutocompleteChannel
-									onSelect={onSelect}
-									keyboardFocusIndex={keyboardFocusIndex}
-									hoverIndex={hoverIndexForRender}
-									options={options}
-									onMouseEnter={handleMouseEnter}
-									onMouseLeave={handleMouseLeave}
-									rowRefs={rowRefs}
-									getOptionId={getOptionId}
-									data-flx="channel.autocomplete.autocomplete-channel.select"
-								/>
-							) : type === 'command' ? (
-								<AutocompleteCommand
-									onSelect={onSelect}
-									keyboardFocusIndex={keyboardFocusIndex}
-									hoverIndex={hoverIndexForRender}
-									options={options}
-									onMouseEnter={handleMouseEnter}
-									onMouseLeave={handleMouseLeave}
-									rowRefs={rowRefs}
-									getOptionId={getOptionId}
-									data-flx="channel.autocomplete.autocomplete-command.select"
-								/>
-							) : type === 'commandChoice' ? (
-								<AutocompleteCommandChoice
-									onSelect={onSelect}
-									keyboardFocusIndex={keyboardFocusIndex}
-									hoverIndex={hoverIndexForRender}
-									options={options}
-									onMouseEnter={handleMouseEnter}
-									onMouseLeave={handleMouseLeave}
-									rowRefs={rowRefs}
-									getOptionId={getOptionId}
-									data-flx="channel.autocomplete.autocomplete-command-choice.select"
-								/>
-							) : type === 'commandOptionalAdd' ? (
-								<AutocompleteCommandOptionalAdd
-									onSelect={onSelect}
-									keyboardFocusIndex={keyboardFocusIndex}
-									hoverIndex={hoverIndexForRender}
-									options={options}
-									onMouseEnter={handleMouseEnter}
-									onMouseLeave={handleMouseLeave}
-									rowRefs={rowRefs}
-									getOptionId={getOptionId}
-									data-flx="channel.autocomplete.autocomplete-command-optional-add.select"
-								/>
-							) : type === 'meme' ? (
-								<AutocompleteMeme
-									onSelect={onSelect}
-									keyboardFocusIndex={keyboardFocusIndex}
-									hoverIndex={hoverIndexForRender}
-									options={options}
-									onMouseEnter={handleMouseEnter}
-									onMouseLeave={handleMouseLeave}
-									rowRefs={rowRefs}
-									getOptionId={getOptionId}
-									data-flx="channel.autocomplete.autocomplete-meme.select"
-								/>
-							) : type === 'sticker' ? (
-								<AutocompleteSticker
-									onSelect={onSelect}
-									keyboardFocusIndex={keyboardFocusIndex}
-									hoverIndex={hoverIndexForRender}
-									options={options}
-									onMouseEnter={handleMouseEnter}
-									onMouseLeave={handleMouseLeave}
-									rowRefs={rowRefs}
-									getOptionId={getOptionId}
-									data-flx="channel.autocomplete.autocomplete-sticker.select"
-								/>
-							) : (
-								<AutocompleteEmoji
-									onSelect={onSelect}
-									keyboardFocusIndex={keyboardFocusIndex}
-									hoverIndex={hoverIndexForRender}
-									options={options}
-									onMouseEnter={handleMouseEnter}
-									onMouseLeave={handleMouseLeave}
-									rowRefs={rowRefs}
-									getOptionId={getOptionId}
-									data-flx="channel.autocomplete.autocomplete-emoji.select"
-								/>
-							)}
+							{<AutocompleteList {...listProps} data-flx="channel.autocomplete.autocomplete-list.select" />}
 						</Scroller>
 					)}
 				</div>
@@ -478,3 +364,15 @@ export const Autocomplete = observer(
 		);
 	},
 );
+
+const LIST_BY_TYPE: Record<AutocompleteType, ComponentType<AutocompleteListProps>> = {
+	channel: AutocompleteChannel,
+	command: AutocompleteCommand,
+	commandChoice: AutocompleteCommandChoice,
+	commandOptionalAdd: AutocompleteCommandOptionalAdd,
+	emoji: AutocompleteEmoji,
+	gif: AutocompleteGif,
+	meme: AutocompleteMeme,
+	mention: AutocompleteMention,
+	sticker: AutocompleteSticker,
+};

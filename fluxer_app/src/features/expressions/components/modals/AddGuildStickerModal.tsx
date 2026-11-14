@@ -4,12 +4,12 @@ import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErro
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
-import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import * as GuildStickerCommands from '@app/features/expressions/commands/GuildStickerCommands';
 import styles from '@app/features/expressions/components/modals/AddGuildStickerModal.module.css';
 import {StickerFormFields} from '@app/features/expressions/components/modals/sticker_form/StickerFormFields';
 import {StickerPreview} from '@app/features/expressions/components/modals/sticker_form/StickerPreview';
 import * as ImageCropUtils from '@app/features/expressions/utils/ImageCropUtils';
+import Guilds from '@app/features/guild/state/Guilds';
 import {CREATE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {HttpError} from '@app/features/platform/types/EndpointError';
@@ -18,8 +18,10 @@ import {failureCode, failureValidationErrors} from '@app/features/platform/utils
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as FormUtils from '@app/lib/forms';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -143,7 +145,7 @@ export const AddGuildStickerModal = observer(function AddGuildStickerModal({
 	}, [file]);
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {
-			const maxStickerSize = GlobalLimits.getStickerMaxSize();
+			const maxStickerSize = Guilds.getGuild(guildId)?.maxStickerSize ?? STICKER_MAX_SIZE;
 			setIsProcessing(true);
 			try {
 				const base64Image = await ImageCropUtils.optimizeStickerImage(file, maxStickerSize, 320);
@@ -160,9 +162,9 @@ export const AddGuildStickerModal = observer(function AddGuildStickerModal({
 				if (error instanceof ImageCropUtils.ImageOptimizationSizeError || isStickerSizeValidationError(error)) {
 					const fileSize =
 						error instanceof ImageCropUtils.ImageOptimizationSizeError
-							? formatFileSize(error.actualSizeBytes)
-							: formatFileSize(file.size);
-					const maxSize = formatFileSize(maxStickerSize);
+							? formatFileSize(getFormattingLocale(), error.actualSizeBytes)
+							: formatFileSize(getFormattingLocale(), file.size);
+					const maxSize = formatFileSize(getFormattingLocale(), maxStickerSize);
 					const message =
 						error instanceof ImageCropUtils.ImageOptimizationSizeError
 							? i18n._(
@@ -181,9 +183,7 @@ export const AddGuildStickerModal = observer(function AddGuildStickerModal({
 							<ConfirmModal
 								title={title}
 								description={renderStickerSizeErrorDescription(message, file.name, i18n)}
-								primaryText={i18n._(BACK_TO_STICKER_DESCRIPTOR)}
-								onPrimary={() => {}}
-								secondaryText={false}
+								secondaryText={i18n._(BACK_TO_STICKER_DESCRIPTOR)}
 								data-flx="expressions.add-guild-sticker-modal.create.size-error-modal"
 							/>
 						)),

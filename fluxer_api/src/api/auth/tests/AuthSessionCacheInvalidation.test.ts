@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
-import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
 import {
 	createAuthHarness,
 	createFakeAuthToken,
@@ -12,7 +8,12 @@ import {
 	loginAccount,
 	setUserACLs,
 	type TestAccount,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {decisionBody} from '@app/api/enforcement/tests/EnforcementTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 function authSessionCacheKey(token: string): string {
 	return `auth:session:${createHash('sha256').update(token).digest('base64url')}`;
@@ -96,7 +97,11 @@ describe('Auth session cache invalidation', () => {
 		}
 		await createBuilder(harness, admin.token)
 			.put(`/admin/users/${target.userId}/ban`)
-			.body({duration_hours: 24, reason: 'cache invalidation coverage'})
+			.header('X-Audit-Log-Reason', 'cache invalidation coverage')
+			.body({
+				duration_hours: 24,
+				decision: decisionBody(),
+			})
 			.execute();
 		for (const token of [target.token, targetSecond.token]) {
 			expect(await readCachedSession(harness, token)).toBeNull();

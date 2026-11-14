@@ -25,7 +25,7 @@ import type React from 'react';
 import {useCallback, useMemo, useRef} from 'react';
 
 const YOU_VE_REACHED_THE_END_DESCRIPTOR = msg({
-	message: "You've reached the end",
+	message: "You're at the end",
 	comment: 'Label in the message list page.',
 });
 
@@ -37,7 +37,6 @@ interface MessageListPageProps {
 	emptyStateDescription: string;
 	endStateDescription: string;
 	renderActionButtons: (message: Message) => React.ReactNode;
-	renderMissingMessage?: (message: Message) => React.ReactNode;
 	hasMore?: boolean;
 	isLoadingMore?: boolean;
 	onLoadMore?: () => void;
@@ -52,7 +51,6 @@ export const MessageListPage = observer(
 		emptyStateDescription,
 		endStateDescription,
 		renderActionButtons,
-		renderMissingMessage,
 		hasMore = false,
 		isLoadingMore = false,
 		onLoadMore,
@@ -105,9 +103,6 @@ export const MessageListPage = observer(
 								{messages.map((message) => {
 									const channel = Channels.getChannel(message.channelId);
 									if (!channel) {
-										if (renderMissingMessage) {
-											return renderMissingMessage(message);
-										}
 										return null;
 									}
 									return (

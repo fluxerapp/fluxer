@@ -157,17 +157,31 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: 'Reference',
-					items: [{label: 'Introduction', link: '/'}, 'authentication', 'snowflakes', 'conventions'],
+					items: [{label: 'Introduction', link: '/'}, 'authentication', 'snowflakes'],
 				},
 				{
 					label: 'Self-hosting',
-					items: ['operator/get-started', 'operator/configuration', 'operator/reverse-proxy', 'operator/upgrading'],
+					items: [
+						'operator',
+						'operator/running',
+						'operator/voice-servers',
+						'operator/reverse-proxy',
+						'operator/upload-limits',
+						'operator/sign-in',
+						'operator/kubernetes',
+						'operator/docker-compose',
+						'operator/build-from-source',
+						'operator/voice-compose',
+						'operator/environment',
+						'operator/rexctl',
+					],
 				},
 				{
 					label: 'Topics',
 					items: [
 						'http-api/errors',
 						'topics/rate-limits',
+						'topics/announcement-channels',
 						'http-api/permissions',
 						'topics/captcha',
 						'topics/uploads',
@@ -196,10 +210,10 @@ export default defineConfig({
 						'http-api/users/settings-protobuf',
 						'http-api/users/email-and-password',
 						'http-api/users/mfa',
-						'http-api/users/phone-verification',
 						'http-api/users/relationships',
 						'http-api/users/notes',
 						'http-api/users/private-channels',
+						'http-api/users/push-notifications',
 						'http-api/users/content',
 						'http-api/users/gifts',
 						'http-api/users/data-harvest',
@@ -210,6 +224,9 @@ export default defineConfig({
 					items: [
 						'http-api/channels',
 						'http-api/messages',
+						'http-api/threads',
+						'http-api/thread-members',
+						'http-api/forums',
 						'http-api/read-states',
 						'http-api/memes',
 						'http-api/gifs',
@@ -236,11 +253,11 @@ export default defineConfig({
 				},
 				{
 					label: 'Commerce',
-					items: ['http-api/billing', 'http-api/premium', 'http-api/gifts', 'http-api/donations'],
+					items: ['http-api/billing', 'http-api/premium', 'http-api/gifts'],
 				},
 				{
 					label: 'Client surfaces',
-					items: ['http-api/experiments', 'http-api/themes', 'http-api/downloads'],
+					items: ['http-api/experiments', 'http-api/themes'],
 				},
 				{
 					label: 'Safety',
@@ -253,9 +270,14 @@ export default defineConfig({
 						'gateway/commands',
 						'gateway/events',
 						'gateway/event-filtering',
+						'gateway/threads',
 						'gateway/limits-and-rate-limits',
 						'gateway/opcodes-and-close-codes',
 					],
+				},
+				{
+					label: 'Downloads',
+					items: ['downloads/overview', 'downloads/desktop', 'downloads/linux-repositories'],
 				},
 				{
 					label: 'Media proxy',
@@ -269,7 +291,13 @@ export default defineConfig({
 				},
 				{
 					label: 'Voice',
-					items: ['voice', 'http-api/calls', 'http-api/streams', 'http-api/entrance-sounds'],
+					items: [
+						'voice',
+						'http-api/calls',
+						'http-api/peer-to-peer-voice',
+						'http-api/streams',
+						'http-api/entrance-sounds',
+					],
 				},
 				{
 					label: 'Admin API',
@@ -278,8 +306,11 @@ export default defineConfig({
 						'admin-api/api-keys',
 						'admin-api/users',
 						'admin-api/guilds',
+						'admin-api/badges',
+						'admin-api/threads',
 						'admin-api/applications',
 						'admin-api/reports',
+						'admin-api/enforcement',
 						'admin-api/messages',
 						'admin-api/blocklists',
 						'admin-api/discovery',
@@ -308,11 +339,26 @@ export default defineConfig({
 		mdx(),
 	],
 	markdown: {
+		smartypants: false,
 		processor: unified({
 			rehypePlugins: [rehypeRootRelativeLinkPrefix(basePath), rehypeTableColumnWidths()],
 		}),
 	},
 	output: 'server',
+	redirects: {
+		'/admin-api/operator-pass': '/admin-api/',
+		'/admin-api/payment-disputes': '/admin-api/',
+		'/api-reference': '/http-api/',
+		'/api-reference/[...path]': '/http-api/',
+		'/http-api/donations': '/http-api/billing/',
+		'/http-api/in-app-purchases': '/http-api/premium/',
+		'/http-api/operator-pass': '/http-api/premium/',
+		'/http-api/operator-pass-waitlist': '/http-api/premium/',
+		'/operator/configuration': '/operator/running/',
+		'/operator/get-started': '/operator/',
+		'/operator/operator-pass': '/operator/',
+		'/operator/upgrading': '/operator/running/',
+	},
 	publicDir: path.join(staticDirectory, 'web'),
 	site: docsEndpoint.origin,
 	server: {

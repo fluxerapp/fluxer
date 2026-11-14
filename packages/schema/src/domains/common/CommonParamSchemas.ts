@@ -50,6 +50,10 @@ export const GuildIdUserIdParam = GuildIdParam.extend(UserIdParam.shape);
 
 export type GuildIdUserIdParam = z.infer<typeof GuildIdUserIdParam>;
 
+export const GuildIdChannelIdParam = GuildIdParam.extend(ChannelIdParam.shape);
+
+export type GuildIdChannelIdParam = z.infer<typeof GuildIdChannelIdParam>;
+
 export const GuildIdRoleIdParam = GuildIdParam.extend({
 	role_id: SnowflakeType.describe('The ID of the role'),
 });

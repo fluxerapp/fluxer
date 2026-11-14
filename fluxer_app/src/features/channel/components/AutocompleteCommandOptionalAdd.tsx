@@ -1,19 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AutocompleteItem} from '@app/features/channel/components/AutocompleteItem';
-import {type AutocompleteOption, isCommandOptionalAdd} from '@app/features/channel/components/AutocompleteTypes';
+import type {AutocompleteListProps} from '@app/features/channel/components/AutocompleteTypes';
+import {isCommandOptionalAdd} from '@app/features/channel/components/AutocompleteTypes';
 import type React from 'react';
-
-interface AutocompleteCommandOptionalAddProps {
-	onSelect: (option: AutocompleteOption) => void;
-	keyboardFocusIndex: number;
-	hoverIndex: number;
-	options: Array<AutocompleteOption>;
-	onMouseEnter: (index: number) => void;
-	onMouseLeave: () => void;
-	rowRefs?: React.RefObject<Array<HTMLButtonElement | null>>;
-	getOptionId?: (index: number) => string;
-}
 
 export function AutocompleteCommandOptionalAdd({
 	onSelect,
@@ -24,7 +14,7 @@ export function AutocompleteCommandOptionalAdd({
 	onMouseLeave,
 	rowRefs,
 	getOptionId,
-}: AutocompleteCommandOptionalAddProps): React.ReactNode {
+}: AutocompleteListProps): React.ReactNode {
 	const additions = options.filter(isCommandOptionalAdd);
 	return additions.map((option, index) => (
 		<AutocompleteItem

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import {createUserID, type UserID} from '../BrandedTypes';
 
 export const SYSTEM_USER_ID = createUserID(0n);
 

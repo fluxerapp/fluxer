@@ -1,182 +1,146 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {getCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
+import type {User} from '@app/api/models/User';
+import {isAccountLimited} from '@app/api/user/AccountLimit';
+import {isEnforcementReasonCode} from '@fluxer/constants/src/EnforcementReasons';
 import {
-	DEFERRABLE_PHONE_FLAGS,
-	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
+	DELETED_USER_DISCRIMINATOR,
+	DELETED_USER_GLOBAL_NAME,
+	DELETED_USER_USERNAME,
+	PREMIUM_GRACE_PERIOD_DAYS,
+	PREMIUM_PAYMENT_RECOVERY_GRACE_DAYS,
 	PremiumFlags,
-	SuspiciousActivityFlags,
+	ProfileFieldPrivacyFlags,
 	UserFlags,
+	type UserPremiumType,
+	UserPremiumTypes,
 } from '@fluxer/constants/src/UserConstants';
-import type {RequiredAction} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {ms} from 'itty-time';
-import {Config} from '../Config';
-import type {UserRow} from '../database/types/UserTypes';
-import {getCachedInstancePremiumMode} from '../limits/InstancePremiumModeCache';
-import type {User} from '../models/User';
-import {accountPolicyContactHasCapability} from '../risk/AccountPolicyService';
-import {getCachedDeferredPhoneGateEnabled} from '../risk/DeferredPhoneGateCache';
+import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
-type ClauseAction = Exclude<RequiredAction, 'REQUIRE_INBOUND_PHONE_VERIFICATION'>;
-type VerificationChannel = 'email' | 'phone';
-
-interface VerificationOption {
-	readonly channel: VerificationChannel;
-	readonly reverify: boolean;
+export function isSsoUserWithoutPassword(user: Pick<User, 'traits' | 'passwordHash'>): boolean {
+	return user.passwordHash === null && user.traits.has('sso');
 }
 
-interface RequiredActionClauseDefinition {
-	readonly action: ClauseAction;
-	readonly flag: number;
-	readonly options: ReadonlyArray<VerificationOption>;
+export function isSsoLinkedUser(user: Pick<User, 'traits'>): boolean {
+	return user.traits.has('sso');
 }
 
-const REQUIRED_ACTION_CLAUSE_DEFINITIONS: ReadonlyArray<RequiredActionClauseDefinition> = [
-	{
-		action: 'REQUIRE_VERIFIED_EMAIL',
-		flag: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL,
-		options: [{channel: 'email', reverify: false}],
-	},
-	{
-		action: 'REQUIRE_REVERIFIED_EMAIL',
-		flag: SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL,
-		options: [{channel: 'email', reverify: true}],
-	},
-	{
-		action: 'REQUIRE_VERIFIED_PHONE',
-		flag: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE,
-		options: [{channel: 'phone', reverify: false}],
-	},
-	{
-		action: 'REQUIRE_REVERIFIED_PHONE',
-		flag: SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE,
-		options: [{channel: 'phone', reverify: true}],
-	},
-	{
-		action: 'REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE',
-		flag: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE,
-		options: [
-			{channel: 'email', reverify: false},
-			{channel: 'phone', reverify: false},
-		],
-	},
-	{
-		action: 'REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE',
-		flag: SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE,
-		options: [
-			{channel: 'email', reverify: true},
-			{channel: 'phone', reverify: false},
-		],
-	},
-	{
-		action: 'REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE',
-		flag: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE,
-		options: [
-			{channel: 'email', reverify: false},
-			{channel: 'phone', reverify: true},
-		],
-	},
-	{
-		action: 'REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE',
-		flag: SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE,
-		options: [
-			{channel: 'email', reverify: true},
-			{channel: 'phone', reverify: true},
-		],
-	},
-];
-const REQUIRED_ACTION_ORDER: ReadonlyArray<RequiredAction> = [
-	...REQUIRED_ACTION_CLAUSE_DEFINITIONS.map((definition) => definition.action),
-	'REQUIRE_INBOUND_PHONE_VERIFICATION',
-];
-const INBOUND_PHONE_VERIFICATION_FLAG = SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
-
-function optionImplies(option: VerificationOption, other: VerificationOption): boolean {
-	if (option.channel !== other.channel) {
-		return false;
-	}
-	return option.reverify === other.reverify || (option.reverify && !other.reverify);
+export function isEnforcementDeletion(user: Pick<User, 'enforcementDecisionId' | 'deletionReasonCode'>): boolean {
+	return user.enforcementDecisionId !== null || isEnforcementReasonCode(user.deletionReasonCode);
 }
 
-function clauseImplies(clause: RequiredActionClauseDefinition, other: RequiredActionClauseDefinition): boolean {
-	return clause.options.every((option) => other.options.some((candidate) => optionImplies(option, candidate)));
+export function isAccountClosed(user: Pick<User, 'flags' | 'deletionStartedAt'>): boolean {
+	return (user.flags & UserFlags.DELETED) !== 0n || user.deletionStartedAt != null;
 }
 
-function isOptionSatisfiedAtRuntime(user: User, option: VerificationOption): boolean {
-	if (option.reverify) {
-		return false;
-	}
-	if (option.channel === 'email') {
-		return !!user.email && !!user.emailVerified;
-	}
-	if (option.channel === 'phone') {
-		return !!user.hasVerifiedPhone;
-	}
-	return false;
+export function isDeletionComplete(user: Pick<User, 'flags' | 'pendingDeletionAt'>): boolean {
+	return (user.flags & UserFlags.DELETED) !== 0n && user.pendingDeletionAt === null;
 }
 
-function buildRequiredActionClauses(flags: number): Array<RequiredActionClauseDefinition> {
-	const clauses = REQUIRED_ACTION_CLAUSE_DEFINITIONS.filter((definition) => (flags & definition.flag) !== 0);
-	if (
-		(flags & INBOUND_PHONE_VERIFICATION_FLAG) !== 0 &&
-		!clauses.some((clause) => clause.options.some((option) => option.channel === 'phone'))
-	) {
-		clauses.push(REQUIRED_ACTION_CLAUSE_DEFINITIONS[2]);
-	}
-	return clauses;
+const FIELDS_CLEARED_ON_DELETION = [
+	'email',
+	'email_bounced',
+	'password_hash',
+	'password_last_changed_at',
+	'totp_secret',
+	'authenticator_types',
+	'avatar_hash',
+	'avatar_color',
+	'banner_hash',
+	'banner_color',
+	'bio',
+	'pronouns',
+	'accent_color',
+	'timezone',
+	'date_of_birth',
+	'attested_age_floor',
+	'age_attested_at',
+	'locale',
+	'premium_flags',
+	'hidden_profile_badges',
+	'premium_type',
+	'premium_since',
+	'premium_until',
+	'premium_gift_extension_ends_at',
+	'premium_will_cancel',
+	'premium_billing_cycle',
+	'premium_lifetime_sequence',
+	'premium_grace_ends_at',
+	'stripe_subscription_id',
+	'stripe_customer_id',
+	'has_ever_purchased',
+	'terms_agreed_at',
+	'privacy_agreed_at',
+	'last_active_at',
+	'last_active_ip',
+	'acls',
+	'traits',
+	'first_refund_at',
+	'gift_inventory_server_seq',
+	'gift_inventory_client_seq',
+	'premium_onboarding_dismissed_at',
+	'mention_flags',
+	'last_voice_activity_sharing_change_at',
+] as const satisfies ReadonlyArray<keyof UserRow>;
+
+export function deletedUserIdentity() {
+	return {
+		username: DELETED_USER_USERNAME,
+		discriminator: DELETED_USER_DISCRIMINATOR,
+		global_name: DELETED_USER_GLOBAL_NAME,
+		email_verified: false,
+		timezone_privacy_flags: ProfileFieldPrivacyFlags.EVERYONE,
+		flags: UserFlags.DELETED,
+	} satisfies Partial<UserRow>;
 }
 
-function getRequiredActionSortIndex(action: RequiredAction): number {
-	const index = REQUIRED_ACTION_ORDER.indexOf(action);
-	return index === -1 ? REQUIRED_ACTION_ORDER.length : index;
+export function personalFieldsToClear(row: UserRow): Partial<UserRow> {
+	const patch: Partial<UserRow> = {};
+	for (const field of FIELDS_CLEARED_ON_DELETION) {
+		const value = row[field];
+		if (!value || (value instanceof Set && value.size === 0)) continue;
+		patch[field] = null;
+	}
+	return patch;
 }
 
-function suppressDeferredPhoneFlags(rawFlags: number): number {
-	if ((rawFlags & DEFERRED_PHONE_ON_COMMUNITY_JOIN) === 0) {
-		return rawFlags;
-	}
-	if (getCachedDeferredPhoneGateEnabled() === false) {
-		return rawFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN;
-	}
-	return rawFlags & ~DEFERRABLE_PHONE_FLAGS;
-}
-
-export function getRequiredActions(user: User): ReadonlyArray<RequiredAction> {
-	const flags = suppressDeferredPhoneFlags(user.suspiciousActivityFlags ?? 0);
-	if (flags === 0) {
-		return [];
-	}
-	if (!user.email) {
-		return [];
-	}
-	if (accountPolicyContactHasCapability(user.email, 'required_actions_exempt')) {
-		return [];
-	}
-	const activeClauses = buildRequiredActionClauses(flags).filter(
-		(clause) => !clause.options.some((option) => isOptionSatisfiedAtRuntime(user, option)),
+export function isTemporarilyBanned(user: Pick<User, 'flags' | 'tempBannedUntil'>, now = Date.now()): boolean {
+	return (
+		(user.flags & UserFlags.DISABLED) !== 0n && user.tempBannedUntil != null && user.tempBannedUntil.getTime() > now
 	);
-	const simplifiedClauses = activeClauses.filter(
-		(clause, clauseIndex, clauses) =>
-			!clauses.some(
-				(otherClause, otherClauseIndex) => otherClauseIndex !== clauseIndex && clauseImplies(otherClause, clause),
-			),
-	);
-	const requiredActions: Array<RequiredAction> = simplifiedClauses.map((clause) => clause.action);
-	const hasRemainingPhoneRequirement = simplifiedClauses.some((clause) =>
-		clause.options.some((option) => option.channel === 'phone'),
-	);
-	if ((flags & INBOUND_PHONE_VERIFICATION_FLAG) !== 0 && hasRemainingPhoneRequirement) {
-		requiredActions.push('REQUIRE_INBOUND_PHONE_VERIFICATION');
-	}
-	requiredActions.sort((left, right) => getRequiredActionSortIndex(left) - getRequiredActionSortIndex(right));
-	return requiredActions;
 }
 
-export function getEffectiveSuspiciousFlags(user: User): number {
-	let flags = 0;
-	for (const action of getRequiredActions(user)) {
-		flags |= SuspiciousActivityFlags[action];
-	}
-	return flags;
+export function isAccountDisabled(user: Pick<User, 'flags' | 'tempBannedUntil'>, now = Date.now()): boolean {
+	if ((user.flags & UserFlags.DISABLED) === 0n) return false;
+	return user.tempBannedUntil == null || user.tempBannedUntil.getTime() > now;
+}
+
+export function isHeldByDecision(
+	user: Pick<User, 'flags' | 'deletionStartedAt' | 'tempBannedUntil' | 'enforcementDecisionId'>,
+): boolean {
+	return user.enforcementDecisionId !== null && isSignInRefused(user);
+}
+
+export function isSignInRefused(user: Pick<User, 'flags' | 'deletionStartedAt' | 'tempBannedUntil'>): boolean {
+	return isAccountClosed(user) || isTemporarilyBanned(user);
+}
+
+export function canOwnerRunBots(
+	owner: Pick<User, 'isBot' | 'isSystem' | 'flags' | 'deletionStartedAt' | 'tempBannedUntil'>,
+): boolean {
+	return !isAccountClosed(owner) && !isAccountDisabled(owner) && !isAccountLimited(owner);
+}
+
+export function isContentHidden(user: Pick<User, 'contentHiddenSince'>, messageId: bigint): boolean {
+	return user.contentHiddenSince !== null && snowflakeToDate(messageId) >= user.contentHiddenSince;
+}
+
+export function isDirectDeliverySuppressed(user: Pick<User, 'isBot' | 'flags'>): boolean {
+	return !user.isBot && (user.flags & UserFlags.SPAMMER) === UserFlags.SPAMMER;
 }
 
 interface PremiumCheckable {
@@ -184,13 +148,21 @@ interface PremiumCheckable {
 	premiumType: number | null;
 	premiumUntil: Date | null;
 	premiumGiftExtensionEndsAt: Date | null;
-	premiumWillCancel: boolean;
+
 	premiumGraceEndsAt: Date | null;
 	flags: bigint;
 	premiumFlags: number;
 }
 
-export const PREMIUM_GRACE_PERIOD_MS = ms('3 days');
+export const PREMIUM_GRACE_PERIOD_MS = PREMIUM_GRACE_PERIOD_DAYS * MS_PER_DAY;
+
+export function getPremiumPaymentRecoveryGraceMs(billingCycle: string | null | undefined): number {
+	const days =
+		billingCycle === 'yearly'
+			? PREMIUM_PAYMENT_RECOVERY_GRACE_DAYS.yearly
+			: PREMIUM_PAYMENT_RECOVERY_GRACE_DAYS.monthly;
+	return days * MS_PER_DAY;
+}
 
 export function getEffectivePremiumUntil(
 	user: Pick<PremiumCheckable, 'premiumUntil' | 'premiumGiftExtensionEndsAt'>,
@@ -204,25 +176,25 @@ export function getEffectivePremiumUntil(
 	return new Date(effectiveMs);
 }
 
+export function getPaidPremiumAccessEndsAt(
+	user: Pick<PremiumCheckable, 'premiumUntil' | 'premiumGiftExtensionEndsAt' | 'premiumGraceEndsAt'>,
+): Date | null {
+	const effective = getEffectivePremiumUntil(user);
+	if (effective == null) {
+		return null;
+	}
+	const graceEndsMs = user.premiumGraceEndsAt?.getTime() ?? effective.getTime() + PREMIUM_GRACE_PERIOD_MS;
+	return new Date(Math.max(effective.getTime(), graceEndsMs));
+}
+
 export function checkHasActivePaidPremium(
 	user: Pick<PremiumCheckable, 'premiumType' | 'premiumUntil' | 'premiumGiftExtensionEndsAt' | 'premiumGraceEndsAt'>,
 ): boolean {
 	if (user.premiumType == null || user.premiumType <= 0) {
 		return false;
 	}
-	const effective = getEffectivePremiumUntil(user);
-	if (effective == null) {
-		return true;
-	}
-	const nowMs = Date.now();
-	const untilMs = effective.getTime();
-	if (nowMs <= untilMs) {
-		return true;
-	}
-	if (user.premiumGraceEndsAt != null) {
-		return nowMs <= user.premiumGraceEndsAt.getTime();
-	}
-	return nowMs <= untilMs + PREMIUM_GRACE_PERIOD_MS;
+	const endsAt = getPaidPremiumAccessEndsAt(user);
+	return endsAt == null || Date.now() <= endsAt.getTime();
 }
 
 export function checkIsPremium(user: PremiumCheckable): boolean {
@@ -242,6 +214,21 @@ export function checkIsPremium(user: PremiumCheckable): boolean {
 		return true;
 	}
 	return false;
+}
+
+export function getBadgePremiumType(
+	user: Pick<PremiumCheckable, 'premiumType' | 'premiumFlags'>,
+): UserPremiumType | undefined {
+	if (user.premiumType != null && user.premiumType !== UserPremiumTypes.NONE) {
+		return user.premiumType as UserPremiumType;
+	}
+	if (
+		(user.premiumFlags & (PremiumFlags.ENABLED_OVERRIDE | PremiumFlags.PERKS_DISABLED)) ===
+		PremiumFlags.ENABLED_OVERRIDE
+	) {
+		return UserPremiumTypes.SUBSCRIPTION;
+	}
+	return undefined;
 }
 
 const PREMIUM_CLEAR_FIELDS = [
@@ -275,16 +262,12 @@ export function createPremiumClearPatch(): Partial<UserRow> {
 	return mapExpiredPremiumFields(() => null) as Partial<UserRow>;
 }
 
+export function clearPerksSanitizedFlag(premiumFlags: number): number {
+	return premiumFlags & ~PremiumFlags.PERKS_SANITIZED;
+}
+
 const PROFILE_SUBSTRING_EXEMPT_FLAGS = UserFlags.STAFF;
 
 export function isProfileSubstringExempt(user: Pick<PremiumCheckable, 'flags'>): boolean {
 	return (user.flags & PROFILE_SUBSTRING_EXEMPT_FLAGS) !== 0n;
-}
-
-export function isBugHunterBotUser(user: Pick<User, 'flags' | 'isBot'>): boolean {
-	return user.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
-}
-
-export function canUseProfileTimezone(user: Pick<PremiumCheckable, 'flags'>): boolean {
-	return (user.flags & UserFlags.STAFF) !== 0n;
 }

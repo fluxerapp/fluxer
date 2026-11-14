@@ -1,24 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildComboboxOption} from '@app/features/app/components/dialogs/shared/GuildComboboxRenderers';
+import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import Guilds from '@app/features/guild/state/Guilds';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/ProfileTypeSelector.module.css';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {msg} from '@lingui/core/macro';
+import {GLOBAL_PROFILE_DESCRIPTOR, PROFILE_TYPE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
-
-const GLOBAL_PROFILE_DESCRIPTOR = msg({
-	message: 'Global profile',
-	comment: 'Short label in the profile type selector. Keep it concise.',
-});
-const PROFILE_TYPE_DESCRIPTOR = msg({
-	message: 'Profile type',
-	comment: 'Short label in the profile type selector. Keep it concise.',
-});
 
 interface ProfileTypeSelectorProps {
 	selectedGuildId: string | null;
@@ -40,7 +32,6 @@ export const ProfileTypeSelector = observer(({selectedGuildId, onChange, disable
 	const renderGuildRow = useCallback((option: GuildComboboxOption) => {
 		const isGlobal = !option.value;
 		const iconUrl = option.icon ? AvatarUtils.getGuildIconURL({id: option.value, icon: option.icon}) : null;
-		const initial = option.label.charAt(0).toUpperCase();
 		return (
 			<div
 				className={clsx(styles.guildOption, isGlobal && styles.guildOptionGlobal)}
@@ -60,7 +51,10 @@ export const ProfileTypeSelector = observer(({selectedGuildId, onChange, disable
 							aria-hidden
 							data-flx="user.my-profile-tab.profile-type-selector.render-guild-row.guild-avatar-placeholder"
 						>
-							{initial}
+							<GuildAcronym
+								name={option.label}
+								data-flx="user.my-profile-tab.profile-type-selector.render-guild-row.guild-avatar-placeholder-acronym"
+							/>
 						</div>
 					))}
 				<span

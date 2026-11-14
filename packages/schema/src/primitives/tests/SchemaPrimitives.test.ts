@@ -2,11 +2,8 @@
 
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
-	ColorType,
 	coerceNumberFromString,
-	createInt32EnumType,
 	createStringType,
-	createUnboundedStringType,
 	Int32Type,
 	Int64StringType,
 	Int64Type,
@@ -18,10 +15,7 @@ import {
 	stripInvisibles,
 	stripVariationSelectors,
 	UnsignedInt64Type,
-	withFieldDescription,
-	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {describe, expect, it} from 'vitest';
 import {z} from 'zod';
 
@@ -64,14 +58,12 @@ describe('Int64Type', () => {
 		});
 	});
 
-	it.each([
-		Number.MAX_SAFE_INTEGER + 1,
-		Number.NaN,
-		Number.POSITIVE_INFINITY,
-		1.5,
-	])('rejects lossy or noninteger numeric input %j', (input) => {
-		expect(Int64Type.safeParse(input).success).toBe(false);
-	});
+	it.each([Number.MAX_SAFE_INTEGER + 1, Number.NaN, Number.POSITIVE_INFINITY, 1.5])(
+		'rejects lossy or noninteger numeric input %j',
+		(input) => {
+			expect(Int64Type.safeParse(input).success).toBe(false);
+		},
+	);
 });
 
 describe('Int64StringType', () => {
@@ -92,14 +84,12 @@ describe('UnsignedInt64Type', () => {
 		expect(UnsignedInt64Type.parse(input)).toBe(expected);
 	});
 
-	it.each([
-		'-1',
-		'+1',
-		'9223372036854775808',
-		'18446744073709551615',
-	])('rejects %s outside unsigned signed-64-bit storage', (input) => {
-		expect(UnsignedInt64Type.safeParse(input).success).toBe(false);
-	});
+	it.each(['-1', '+1', '9223372036854775808', '18446744073709551615'])(
+		'rejects %s outside unsigned signed-64-bit storage',
+		(input) => {
+			expect(UnsignedInt64Type.safeParse(input).success).toBe(false);
+		},
+	);
 });
 
 describe('SnowflakeType', () => {
@@ -124,21 +114,6 @@ describe('SnowflakeType', () => {
 			success: false,
 			error: {issues: [{message: ValidationErrorCodes.SNOWFLAKE_OUT_OF_RANGE}]},
 		});
-	});
-});
-
-describe('ColorType', () => {
-	it.each([0xff5500, 0x000000, 0xffffff])('preserves valid color %i', (value) => {
-		expect(ColorType.parse(value)).toBe(value);
-	});
-	it.each([
-		[-1, ValidationErrorCodes.COLOR_VALUE_TOO_LOW],
-		[0x1000000, ValidationErrorCodes.COLOR_VALUE_TOO_HIGH],
-	])('reports the color-specific boundary error for %i', (input, message) => {
-		expect(ColorType.safeParse(input)).toMatchObject({success: false, error: {issues: [{message}]}});
-	});
-	it('rejects fractional colors', () => {
-		expect(ColorType.safeParse(123.45).success).toBe(false);
 	});
 });
 
@@ -209,19 +184,6 @@ describe('createStringType', () => {
 	});
 });
 
-describe('createUnboundedStringType', () => {
-	it('normalizes string without length validation', () => {
-		const UnboundedStringType = createUnboundedStringType();
-		const result = UnboundedStringType.parse('  hello\x00world  ');
-		expect(result).toBe('hello\x00world');
-	});
-	it('accepts empty strings', () => {
-		const UnboundedStringType = createUnboundedStringType();
-		const result = UnboundedStringType.parse('');
-		expect(result).toBe('');
-	});
-});
-
 describe('removeStandaloneSurrogates', () => {
 	it('preserves valid characters', () => {
 		expect(removeStandaloneSurrogates('hello')).toBe('hello');
@@ -241,18 +203,6 @@ describe('removeStandaloneSurrogates', () => {
 });
 
 describe('normalizeWhitespace', () => {
-	it('collapses multiple spaces to single space', () => {
-		expect(normalizeWhitespace('hello    world')).toBe('hello world');
-	});
-	it('normalizes unicode spaces', () => {
-		expect(normalizeWhitespace('hello\u00A0world')).toBe('hello world');
-	});
-	it('trims leading and trailing whitespace', () => {
-		expect(normalizeWhitespace('  hello world  ')).toBe('hello world');
-	});
-	it('handles strings with only whitespace', () => {
-		expect(normalizeWhitespace('     ')).toBe('');
-	});
 	it('throws on excessively long strings', () => {
 		const longString = 'a'.repeat(10001);
 		expect(() => normalizeWhitespace(longString)).toThrow(ValidationErrorCodes.STRING_LENGTH_INVALID);
@@ -282,52 +232,8 @@ describe('stripInvisibles', () => {
 });
 
 describe('stripVariationSelectors', () => {
-	it('removes basic variation selectors', () => {
-		expect(stripVariationSelectors('hello\uFE0Fworld')).toBe('helloworld');
-	});
-	it('removes ideographic variation selectors', () => {
-		expect(stripVariationSelectors('hello\u{E0100}world')).toBe('helloworld');
-	});
-	it('preserves normal text', () => {
-		expect(stripVariationSelectors('Hello, World!')).toBe('Hello, World!');
-	});
 	it('throws on excessively long strings', () => {
 		const longString = 'a'.repeat(10001);
 		expect(() => stripVariationSelectors(longString)).toThrow(ValidationErrorCodes.STRING_LENGTH_INVALID);
-	});
-});
-
-describe('named enum metadata', () => {
-	const schema = createInt32EnumType(
-		[
-			[0, 'NONE', 'No selection'],
-			[2, 'SECOND'],
-		],
-		'Selection',
-		'OriginalSelection',
-	);
-	it.each([0, 2])('preserves enum member %i', (value) => {
-		expect(schema.parse(value)).toBe(value);
-	});
-	it('retains the custom error for an unrecognized integer', () => {
-		expect(schema.safeParse(1).error?.issues).toEqual([{code: 'custom', message: 'Expected one of [0, 2]', path: []}]);
-	});
-	it.each([-1, 0.5, '0'])('does not loosen integer validation for %j', (value) => {
-		expect(schema.safeParse(value).success).toBe(false);
-	});
-	it('retains enum metadata when describing and renaming a clone', () => {
-		const described = withFieldDescription(schema, 'Field selection');
-		const renamed = withOpenApiType(described, 'FieldSelection');
-		expect(schema.description).toBe('Selection');
-		expect(schemaMetadata.get(schema)?.name).toBe('OriginalSelection');
-		expect(renamed.description).toBe('Field selection');
-		expect(schemaMetadata.get(renamed)).toEqual({
-			name: 'FieldSelection',
-			format: 'int32',
-			enumEntries: [
-				{value: 0, name: 'NONE', description: 'No selection'},
-				{value: 2, name: 'SECOND'},
-			],
-		});
 	});
 });

@@ -2,25 +2,6 @@
 
 use maud::{Markup, html};
 
-#[derive(Clone, Copy)]
-pub enum EmptyStateVariant {
-    Empty,
-    Loading,
-    Error,
-}
-
-pub fn empty_state(variant: EmptyStateVariant, content: Markup) -> Markup {
-    let classes = match variant {
-        EmptyStateVariant::Empty | EmptyStateVariant::Loading => {
-            "text-neutral-500 text-center py-8"
-        }
-        EmptyStateVariant::Error => "text-red-600 text-center py-8",
-    };
-    html! {
-        div class=(classes) { (content) }
-    }
-}
-
 pub fn empty_state_full(icon: Option<Markup>, title: &str, description: Option<&str>) -> Markup {
     html! {
         div class="flex flex-col items-center justify-center py-12 text-center" {
@@ -59,14 +40,6 @@ pub fn not_found_state(
                 class="text-sm text-blue-600 hover:text-blue-800 hover:underline" {
                 (back_label.unwrap_or("Go back"))
             }
-        }
-    }
-}
-
-pub fn empty_state_text(message: &str) -> Markup {
-    html! {
-        div class="text-neutral-500 text-center py-8" {
-            (message)
         }
     }
 }

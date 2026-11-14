@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheet.module.css';
 import {GROUP_OWNER_DESCRIPTOR} from '@app/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
@@ -42,7 +43,7 @@ export const DMMembersList: React.FC<DMMembersListProps> = ({
 	const recipientDisplayName = recipient ? NicknameUtils.getNickname(recipient, null, channel.id) : '';
 	return (
 		<div className={styles.dmMembersContainer} data-flx="channel.channel-details-bottom-sheet.dm-members-container">
-			{isDM && recipient && (
+			{isDM && recipient && RuntimeConfig.dmPickerAvailable && (
 				<button
 					type="button"
 					className={styles.newGroupButton}

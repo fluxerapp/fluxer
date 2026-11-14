@@ -225,21 +225,8 @@ pub enum EmojiKind {
 }
 
 impl Node {
-    pub fn empty_text() -> Self {
-        Self::Text {
-            content: String::new(),
-        }
-    }
-
     pub fn is_empty_text(&self) -> bool {
         matches!(self, Self::Text { content } if content.is_empty())
-    }
-
-    pub fn text_content(&self) -> Option<&str> {
-        match self {
-            Self::Text { content } => Some(content),
-            _ => None,
-        }
     }
 
     pub fn tag_name(&self) -> &'static str {

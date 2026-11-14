@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import {createMfaBackupCode} from '../BrandedTypes';
-import type {MfaBackupCodeRow} from '../database/types/AuthTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import {createMfaBackupCode} from '@app/api/BrandedTypes';
+import type {MfaBackupCodeRow} from '@app/api/database/types/AuthTypes';
 
 export class MfaBackupCode {
 	readonly userId: UserID;

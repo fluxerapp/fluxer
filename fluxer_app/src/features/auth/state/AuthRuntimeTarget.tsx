@@ -1,0 +1,94 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
+import {makeAutoObservable, observableRef} from 'mobx';
+import {createContext, type ReactNode, useContext} from 'react';
+
+function requireAuthRuntimeInstanceKey(snapshot: RuntimeConfigSnapshot): string {
+	const instanceKey = runtimeInstanceKey(snapshot);
+	if (instanceKey == null) {
+		throw new Error('Auth flow received a runtime snapshot without a valid instance key');
+	}
+	return instanceKey;
+}
+
+type AuthRuntimeTargetPolicy =
+	| {
+			readonly kind: 'instance-selection';
+			readonly initialSnapshot: RuntimeConfigSnapshot | null;
+	  }
+	| {
+			readonly kind: 'fixed-instance';
+			readonly snapshot: RuntimeConfigSnapshot;
+			readonly instanceKey: string;
+	  };
+
+export class AuthRuntimeTarget {
+	snapshot: RuntimeConfigSnapshot | null;
+	readonly initialSnapshot: RuntimeConfigSnapshot | null;
+	private readonly policy: AuthRuntimeTargetPolicy;
+
+	private constructor(policy: AuthRuntimeTargetPolicy) {
+		const snapshot = policy.kind === 'instance-selection' ? policy.initialSnapshot : policy.snapshot;
+		if (snapshot !== null) {
+			requireAuthRuntimeInstanceKey(snapshot);
+		}
+		this.snapshot = snapshot;
+		this.initialSnapshot = snapshot;
+		this.policy = policy;
+		makeAutoObservable<AuthRuntimeTarget, 'policy' | 'initialSnapshot'>(
+			this,
+			{snapshot: observableRef, initialSnapshot: false, policy: false},
+			{autoBind: true},
+		);
+	}
+
+	static forInstanceSelection(snapshot: RuntimeConfigSnapshot | null = null): AuthRuntimeTarget {
+		return new AuthRuntimeTarget({kind: 'instance-selection', initialSnapshot: snapshot});
+	}
+
+	static forFixedInstance(snapshot: RuntimeConfigSnapshot): AuthRuntimeTarget {
+		return new AuthRuntimeTarget({
+			kind: 'fixed-instance',
+			snapshot,
+			instanceKey: requireAuthRuntimeInstanceKey(snapshot),
+		});
+	}
+
+	select(snapshot: RuntimeConfigSnapshot): void {
+		const instanceKey = requireAuthRuntimeInstanceKey(snapshot);
+		if (this.policy.kind === 'fixed-instance' && instanceKey !== this.policy.instanceKey) {
+			throw new Error(
+				`Authentication fixed to instance "${this.policy.instanceKey}" cannot target instance "${instanceKey}"`,
+			);
+		}
+		this.snapshot = snapshot;
+	}
+
+	get canChangeInstance(): boolean {
+		return this.policy.kind === 'instance-selection';
+	}
+
+	reset(): void {
+		this.snapshot = this.initialSnapshot;
+	}
+}
+
+const AuthRuntimeTargetContext = createContext<AuthRuntimeTarget | null>(null);
+
+interface AuthRuntimeTargetProviderProps {
+	readonly target: AuthRuntimeTarget;
+	readonly children: ReactNode;
+}
+
+export function AuthRuntimeTargetProvider({target, children}: AuthRuntimeTargetProviderProps) {
+	return <AuthRuntimeTargetContext.Provider value={target}>{children}</AuthRuntimeTargetContext.Provider>;
+}
+
+export function useAuthRuntimeTarget(): AuthRuntimeTarget {
+	const target = useContext(AuthRuntimeTargetContext);
+	if (target == null) {
+		throw new Error('useAuthRuntimeTarget must be used within AuthRuntimeTargetProvider');
+	}
+	return target;
+}

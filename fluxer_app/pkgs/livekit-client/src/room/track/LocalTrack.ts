@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import {Mutex} from '@livekit/mutex';
-import {debounce} from 'ts-debounce';
 import {getBrowser} from '../../utils/browserParser.ts';
 import DeviceManager from '../DeviceManager.ts';
+import {debounce} from '../debounce.ts';
 import {DeviceUnsupportedError, TrackInvalidError} from '../errors.ts';
 import {TrackEvent} from '../events.ts';
 import CriticalTimers, {type TimerHandle} from '../timers.ts';
@@ -23,6 +23,7 @@ interface SetMediaStreamTrackOptions {
 	force?: boolean;
 	deferEndedListener?: boolean;
 	preservePreviousTrack: boolean;
+	isUnmuting?: boolean;
 }
 
 export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Kind> extends Track<TrackKind> {
@@ -159,10 +160,23 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		track.removeEventListener('unmute', this.handleTrackUnmuteEvent);
 	}
 
+	protected muteTargetFor(rawTrack: MediaStreamTrack, _processedTrack: MediaStreamTrack | undefined): MediaStreamTrack {
+		return rawTrack;
+	}
+
+	protected applyMuteState(
+		rawTrack: MediaStreamTrack,
+		processedTrack: MediaStreamTrack | undefined,
+		isUnmuting = false,
+	) {
+		const muteTarget = this.muteTargetFor(rawTrack, processedTrack);
+		muteTarget.enabled = isUnmuting || !this.isMuted;
+		if (muteTarget !== rawTrack) rawTrack.enabled = true;
+	}
+
 	private async restoreMediaStreamTrackAfterFailure(
 		previousTrack: MediaStreamTrack,
 		previousConstraints: MediaTrackConstraints,
-		previousEnabled: boolean,
 		failedTrack: MediaStreamTrack,
 		failedProcessedTrack: MediaStreamTrack | undefined,
 		previousTrackEndedListenerDeferred: boolean,
@@ -180,7 +194,6 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		this.mediaStream = new MediaStream([previousTrack]);
 		this._mediaStreamTrack = previousTrack;
 		this._constraints = previousConstraints;
-		previousTrack.enabled = previousEnabled;
 		this.addMediaStreamTrackListeners(previousTrack, !previousTrackEndedListenerDeferred);
 		let restoredProcessedTrack: MediaStreamTrack | undefined;
 		if (this.processor) {
@@ -195,12 +208,15 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 				track: previousTrack,
 				kind: this.kind,
 				element: this.processorElement,
+				localTrack: this,
 			});
 			restoredProcessedTrack = this.processor.processedTrack;
 		}
+		this.muteTargetFor(previousTrack, restoredProcessedTrack).enabled = !this.isMuted;
 		if (this.sender && this.sender.transport?.state !== 'closed') {
 			await this.sender.replaceTrack(restoredProcessedTrack ?? previousTrack);
 		}
+		this.applyMuteState(previousTrack, restoredProcessedTrack);
 		await this.resumeUpstream();
 		for (const element of this.attachedElements) {
 			attachToElement(restoredProcessedTrack ?? previousTrack, element);
@@ -208,13 +224,12 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 	}
 
 	private async setMediaStreamTrack(newTrack: MediaStreamTrack, options: SetMediaStreamTrackOptions) {
-		const {deferEndedListener = false, force = false, preservePreviousTrack} = options;
+		const {deferEndedListener = false, force = false, preservePreviousTrack, isUnmuting = false} = options;
 		if (newTrack === this._mediaStreamTrack && !force) {
 			return;
 		}
 		const previousTrack = this._mediaStreamTrack;
 		const previousConstraints = this._constraints;
-		const previousEnabled = previousTrack.enabled;
 		const previousTrackEndedListenerDeferred = this.stagedReplacementTrack === previousTrack;
 		const nextTrackEndedListenerDeferred = deferEndedListener || this.stagedReplacementTrack === newTrack;
 		let processedTrack: MediaStreamTrack | undefined;
@@ -241,14 +256,16 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 					track: newTrack,
 					kind: this.kind,
 					element: this.processorElement,
+					localTrack: this,
 				});
 				processedTrack = this.processor.processedTrack;
 			}
+			this.muteTargetFor(newTrack, processedTrack).enabled = isUnmuting || !this.isMuted;
 			if (this.sender && this.sender.transport?.state !== 'closed') {
 				await this.sender.replaceTrack(processedTrack ?? newTrack);
 			}
 			this._mediaStreamTrack = newTrack;
-			this._mediaStreamTrack.enabled = !this.isMuted;
+			this.applyMuteState(newTrack, processedTrack, isUnmuting);
 			await this.resumeUpstream();
 			this.attachedElements.forEach((el) => {
 				attachToElement(processedTrack ?? newTrack, el);
@@ -261,7 +278,6 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 				await this.restoreMediaStreamTrackAfterFailure(
 					previousTrack,
 					previousConstraints,
-					previousEnabled,
 					newTrack,
 					processedTrack,
 					previousTrackEndedListenerDeferred,
@@ -368,7 +384,6 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 			if (stopProcessor && this.processor) {
 				await this.internalStopProcessor();
 			}
-			return this;
 		} catch (error) {
 			if (!replacementCommitted) {
 				this.providedByUser = previousProvidedByUser;
@@ -377,7 +392,11 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		} finally {
 			unlock();
 		}
+		await this.onSenderTrackSwapped();
+		return this;
 	}
+
+	protected async onSenderTrackSwapped(): Promise<void> {}
 
 	async runWithTrackChangeLock<T>(operation: () => Promise<T>): Promise<T> {
 		const unlock = await this.trackChangeLock.lock();
@@ -413,7 +432,6 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 				preservePreviousTrack: true,
 			});
 			this.stagedReplacementTrack = track;
-			return this;
 		} catch (error) {
 			this.providedByUser = previousProvidedByUser;
 			this.stagedReplacementTrack = previousStagedReplacementTrack;
@@ -421,6 +439,8 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		} finally {
 			unlock();
 		}
+		await this.onSenderTrackSwapped();
+		return this;
 	}
 
 	async commitStagedTrackReplacement(track: MediaStreamTrack, userProvidedTrack: boolean): Promise<typeof this> {
@@ -449,7 +469,7 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		}
 	}
 
-	protected async restart(constraints?: MediaTrackConstraints) {
+	protected async restart(constraints?: MediaTrackConstraints, isUnmuting?: boolean) {
 		this.manuallyStopped = false;
 		const unlock = await this.trackChangeLock.lock();
 		const previousProvidedByUser = this.providedByUser;
@@ -494,7 +514,7 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 			this.log.debug('re-acquired MediaStreamTrack', this.logContext);
 
 			this.providedByUser = false;
-			await this.setMediaStreamTrack(newTrack, {preservePreviousTrack: previousProvidedByUser});
+			await this.setMediaStreamTrack(newTrack, {preservePreviousTrack: previousProvidedByUser, isUnmuting});
 			replacementCommitted = true;
 			this._constraints = constraints;
 			this.pendingDeviceChange = false;
@@ -518,12 +538,13 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 	protected setTrackMuted(muted: boolean) {
 		this.log.debug(`setting ${this.kind} track ${muted ? 'muted' : 'unmuted'}`, this.logContext);
 
-		if (this.isMuted === muted && this._mediaStreamTrack.enabled !== muted) {
+		const processedTrack = this.processor?.processedTrack;
+		if (this.isMuted === muted && this.muteTargetFor(this._mediaStreamTrack, processedTrack).enabled !== muted) {
 			return;
 		}
 
 		this.isMuted = muted;
-		this._mediaStreamTrack.enabled = !muted;
+		this.applyMuteState(this._mediaStreamTrack, processedTrack);
 		this.emit(muted ? TrackEvent.Muted : TrackEvent.Unmuted, this);
 	}
 
@@ -554,6 +575,10 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		);
 
 	private debouncedTrackMuteHandler = debounce(async () => {
+		if (this.source === Track.Source.ScreenShare) {
+			this.log.debug('screen share capture went idle, keeping upstream published', this.logContext);
+			return;
+		}
 		await this.pauseUpstream();
 	}, 5000);
 
@@ -654,6 +679,7 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 				track: this._mediaStreamTrack,
 				element: processorElement,
 				audioContext: this.audioContext,
+				localTrack: this,
 			};
 			try {
 				await processor.init(processorOptions);
@@ -804,6 +830,7 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		} finally {
 			unlock();
 		}
+		await this.onSenderTrackSwapped();
 	}
 
 	getProcessor() {
@@ -817,6 +844,7 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		} finally {
 			unlock();
 		}
+		await this.onSenderTrackSwapped();
 	}
 
 	async stopProcessorIfCurrent(processor: TrackProcessor<TrackKind>, keepElement = true): Promise<boolean> {
@@ -826,10 +854,11 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 				return false;
 			}
 			await this.internalStopProcessor(keepElement);
-			return true;
 		} finally {
 			unlock();
 		}
+		await this.onSenderTrackSwapped();
+		return true;
 	}
 
 	protected async internalStopProcessor(keepElement = true) {

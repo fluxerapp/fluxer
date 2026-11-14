@@ -20,6 +20,10 @@ export function hasRichEmbedContent(embed: RichEmbedContentFields): boolean {
 	);
 }
 
+export function embedAllowsMarkdown(embed: Pick<MessageEmbed, 'type'>): boolean {
+	return embed.type === MessageEmbedTypes.RICH || embed.type === MessageEmbedTypes.BLUESKY;
+}
+
 type MediaOnlyEmbedFields = RichEmbedContentFields & Pick<MessageEmbed, 'image' | 'thumbnail' | 'video' | 'audio'>;
 
 export function isMediaOnlyEmbed(embed: MediaOnlyEmbedFields): boolean {
@@ -27,8 +31,8 @@ export function isMediaOnlyEmbed(embed: MediaOnlyEmbedFields): boolean {
 	return Boolean(embed.image || embed.thumbnail || embed.video || embed.audio);
 }
 
-export const BLUESKY_EMBED_MIN_CONTENT_WIDTH = 320;
-export const BLUESKY_EMBED_MEDIA_FALLBACK_OUTER_WIDTH = 432;
+const BLUESKY_EMBED_MIN_CONTENT_WIDTH = 320;
+const BLUESKY_EMBED_MEDIA_FALLBACK_OUTER_WIDTH = 432;
 export const EMBED_TEXT_OUTER_WIDTH = 516;
 const normalizePositiveWidth = (width: number): number => {
 	if (!Number.isFinite(width) || width <= 0) {

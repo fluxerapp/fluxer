@@ -1,44 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
-import i18n from '@app/app/I18n';
-import {formatTimestamp} from '@app/features/messaging/utils/markdown/DateFormatter';
-import {TimestampStyle} from '@app/features/messaging/utils/markdown/parser/Enums';
 import {getFormattedShortDate} from '@app/features/user/utils/DateFormatting';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {msg} from '@lingui/core/macro';
-
-const EXPIRED_DESCRIPTOR = msg({
-	message: 'Expired {absolute}',
-	comment: 'Error message in the attachment expiry utils helper. Preserve {absolute}; it is inserted by code.',
-});
-const EXPIRES_DESCRIPTOR = msg({
-	message: 'Expires {absolute} ({relativeText})',
-	comment:
-		'Short label in the attachment expiry utils helper. Keep it concise. Preserve {absolute}, {relativeText}; they are inserted by code.',
-});
 
 export interface AttachmentExpiryOverride {
 	expired?: boolean;
 	expiresAt?: Date | string | null;
 }
 
-interface FormatExpiryParams {
-	expiresAt: Date | null;
-	isExpired?: boolean;
-}
-
 export interface AttachmentExpirySummary {
 	expiresAt: Date | null;
 	latestAt: Date | null;
 	isExpired: boolean;
-}
-
-export function formatAttachmentExpiryTooltip({expiresAt, isExpired = false}: FormatExpiryParams): string | null {
-	if (!expiresAt) return null;
-	const timestampSeconds = Math.floor(expiresAt.getTime() / 1000);
-	const absolute = formatTimestamp(timestampSeconds, TimestampStyle.LongDateTime, i18n);
-	const relativeText = formatTimestamp(timestampSeconds, TimestampStyle.RelativeTime, i18n);
-	return isExpired ? i18n._(EXPIRED_DESCRIPTOR, {absolute}) : i18n._(EXPIRES_DESCRIPTOR, {absolute, relativeText});
 }
 
 export function getEarliestAttachmentExpiry(attachments: ReadonlyArray<MessageAttachment>): AttachmentExpirySummary {
@@ -110,10 +82,4 @@ export function mapAttachmentsWithExpiry(
 	now = Date.now(),
 ): ReadonlyArray<AttachmentExpiryResult> {
 	return attachments.map((att) => getEffectiveAttachmentExpiry(att, overrides?.[att.id], now));
-}
-
-export function filterExpiredAttachments(
-	results: ReadonlyArray<AttachmentExpiryResult>,
-): ReadonlyArray<MessageAttachment> {
-	return results.filter((r) => !r.isExpired).map((r) => r.attachment);
 }

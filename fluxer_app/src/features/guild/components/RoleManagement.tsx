@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {GuildSettingsModal} from '@app/features/guild/components/modals/GuildSettingsModal';
+import {GuildSettingsModal} from '@app/features/app/components/dialogs/LoadableSettingsModals';
+import {RoleIcon} from '@app/features/guild/components/RoleIcon';
 import styles from '@app/features/guild/components/RoleManagement.module.css';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import GuildSettingsModalState from '@app/features/guild/state/GuildSettingsModal';
@@ -109,6 +110,7 @@ const RoleBadge: React.FC<{
 					{roleIndicator}
 				</div>
 			)}
+			<RoleIcon role={role} size={16} decorative={true} data-flx="guild.role-management.role-badge.role-icon" />
 			<div className={styles.roleName} data-flx="guild.role-management.role-badge.role-name">
 				{role.name}
 			</div>
@@ -173,13 +175,16 @@ const ManageRolesMenuContent: React.FC<ManageRolesMenuContentProps> = observer(f
 		}
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
-			modal(() => (
-				<GuildSettingsModal
-					guildId={guildId}
-					initialTab="roles"
-					data-flx="guild.role-management.handle-open-guild-settings.guild-settings-modal"
-				/>
-			)),
+			modal(
+				() => (
+					<GuildSettingsModal
+						guildId={guildId}
+						initialTab="roles"
+						data-flx="guild.role-management.handle-open-guild-settings.guild-settings-modal"
+					/>
+				),
+				'guild-settings',
+			),
 		);
 	}, [guildId, onClose]);
 	const allRoles = useMemo(() => {
@@ -279,13 +284,16 @@ export const ManageRolesBottomSheet: React.FC<ManageRolesBottomSheetProps> = obs
 		}
 		ModalCommands.pushAfterBottomSheetClose(
 			onClose,
-			modal(() => (
-				<GuildSettingsModal
-					guildId={guildId}
-					initialTab="roles"
-					data-flx="guild.role-management.handle-open-guild-settings.guild-settings-modal--2"
-				/>
-			)),
+			modal(
+				() => (
+					<GuildSettingsModal
+						guildId={guildId}
+						initialTab="roles"
+						data-flx="guild.role-management.handle-open-guild-settings.guild-settings-modal--2"
+					/>
+				),
+				'guild-settings',
+			),
 		);
 	}, [guildId, onClose]);
 	const allRoles = useMemo(() => {
@@ -367,13 +375,16 @@ function openNoRolesModal(guildId: string) {
 				return;
 			}
 			ModalCommands.push(
-				modal(() => (
-					<GuildSettingsModal
-						guildId={guildId}
-						initialTab="roles"
-						data-flx="guild.role-management.handle-open-roles-settings.guild-settings-modal"
-					/>
-				)),
+				modal(
+					() => (
+						<GuildSettingsModal
+							guildId={guildId}
+							initialTab="roles"
+							data-flx="guild.role-management.handle-open-roles-settings.guild-settings-modal"
+						/>
+					),
+					'guild-settings',
+				),
 			);
 		}, []);
 		return (
@@ -398,10 +409,6 @@ function openNoRolesModal(guildId: string) {
 				description={
 					<NoRolesModalDescription data-flx="guild.role-management.open-no-roles-modal.no-roles-modal-description" />
 				}
-				primaryText={<Trans>OK</Trans>}
-				primaryVariant="primary"
-				secondaryText={false}
-				onPrimary={() => {}}
 				data-flx="guild.role-management.open-no-roles-modal.confirm-modal"
 			/>
 		)),

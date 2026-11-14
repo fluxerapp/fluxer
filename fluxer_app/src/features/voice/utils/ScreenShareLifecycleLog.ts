@@ -18,7 +18,7 @@ export type ScreenShareEndedModal = 'source-stopped' | 'encoder-failed' | 'codec
 
 export type ScreenShareEncoderVerification =
 	| 'recover-stalled'
-	| 'ignore-repeated-stall'
+	| 'stop-stalled'
 	| 'accept-negotiated'
 	| 'correct-negotiated';
 
@@ -102,8 +102,4 @@ export function getRecentScreenShares(): Array<ScreenShareLifecycleEntry> {
 		...entry,
 		sourceKind: entry === open ? ActiveScreenShareSource.getPublishedSource() : entry.sourceKind,
 	}));
-}
-
-export function resetRecentScreenSharesForTests(): void {
-	entries = [];
 }

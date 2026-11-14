@@ -62,7 +62,7 @@
 	height: var(--channel-header-back-button-size);
 	width: var(--channel-header-back-button-size);
 	flex-shrink: 0;
-	margin-right: var(--channel-header-back-button-gap);
+	margin-inline-end: var(--channel-header-back-button-gap);
 }
 
 @media (min-width: 768px) {
@@ -72,20 +72,20 @@
 }
 
 .identityName {
-	margin-left: var(--channel-header-name-gap);
+	margin-inline-start: var(--channel-header-name-gap);
 }
 
 .identityNameGroupDM {
-	margin-left: var(--channel-header-name-gap-group-dm);
+	margin-inline-start: var(--channel-header-name-gap-group-dm);
 }
 
 .identityCaret {
-	margin-left: var(--channel-header-caret-gap);
+	margin-inline-start: var(--channel-header-caret-gap);
 }
 
 .identityTopicDivider {
-	margin-left: var(--channel-header-topic-divider-gap);
-	margin-right: var(--channel-header-topic-divider-gap);
+	margin-inline-start: var(--channel-header-topic-divider-gap);
+	margin-inline-end: var(--channel-header-topic-divider-gap);
 }
 
 .headerActions {
@@ -115,8 +115,8 @@
 	max-width: var(--message-search-bar-width);
 	height: var(--message-search-bar-height);
 	min-height: var(--message-search-bar-height);
-	padding-left: var(--input-container-padding);
-	padding-right: var(--input-container-padding);
+	padding-inline-start: var(--input-container-padding);
+	padding-inline-end: var(--input-container-padding);
 	border: var(--skeleton-chrome-border);
 	border-radius: var(--radius-xl);
 	background-color: var(--background-textarea);
@@ -124,7 +124,7 @@
 }
 
 .headerSearchIcon {
-	margin-right: var(--message-search-bar-icon-gap);
+	margin-inline-end: var(--message-search-bar-icon-gap);
 	flex-shrink: 0;
 }
 
@@ -146,7 +146,7 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	right: var(--member-list-width);
+	inset-inline-end: var(--member-list-width);
 	width: 0.0625rem;
 	background: var(--user-area-divider-color);
 	z-index: 5;
@@ -180,15 +180,15 @@
 	min-height: 0;
 	min-width: 0;
 	overflow: hidden;
-	padding-left: var(--chat-mobile-horizontal-padding);
-	padding-right: var(--chat-mobile-horizontal-padding);
+	padding-inline-start: var(--chat-mobile-horizontal-padding);
+	padding-inline-end: var(--chat-mobile-horizontal-padding);
 	padding-bottom: calc(var(--messages-bottom-clearance) - var(--message-filler-padding-bottom));
 }
 
 @media (min-width: 768px) {
 	.messages {
-		padding-left: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
-		padding-right: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+		padding-inline-start: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+		padding-inline-end: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
 	}
 }
 
@@ -217,15 +217,15 @@
 	width: calc(var(--member-list-width) + var(--outline-frame-border-width, 0.0625rem));
 	min-width: 0;
 	overflow: hidden;
-	border-right: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
+	border-inline-end: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
 	border-bottom: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
-	border-top-left-radius: var(--outline-radius, 0px);
+	border-start-start-radius: var(--outline-radius, 0px);
 	background-color: var(--background-secondary-lighter);
 }
 
 .memberListGroupDM {
 	width: calc(var(--member-list-width) + 2 * var(--outline-frame-border-width, 0.0625rem));
-	border-left: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
+	border-inline-start: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
 }
 
 .memberListScroller {
@@ -235,7 +235,7 @@
 	min-height: 0;
 	overflow: hidden;
 	padding-top: var(--member-list-scroller-padding-block-start);
-	padding-left: var(--member-list-scroller-padding-inline);
-	padding-right: var(--member-list-scroller-padding-inline);
+	padding-inline-start: var(--member-list-scroller-padding-inline);
+	padding-inline-end: var(--member-list-scroller-padding-inline);
 	padding-bottom: var(--member-list-scroller-padding-block-end);
 }

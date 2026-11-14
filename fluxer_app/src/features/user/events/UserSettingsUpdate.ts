@@ -4,11 +4,13 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import GuildList from '@app/features/guild/state/GuildList';
 import UserSettings from '@app/features/user/state/UserSettings';
 
-interface UserSettingsPayload {
+export interface UserSettingsPayload {
 	flags: number;
 	status: string;
 	theme: string;
 	time_format: number;
+	timestamp_format?: number;
+	regional_format?: string | null;
 	guild_positions: Array<string>;
 	locale: string;
 	synced_preferences?: string;

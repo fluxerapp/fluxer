@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	createAuthHarness,
 	createTestAccount,
@@ -12,7 +8,11 @@ import {
 	loginUser,
 	type TestAccount,
 	totpCodeNow,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface BackupCodeEntry {
 	code: string;
@@ -167,6 +167,21 @@ describe('MFA backup code login', () => {
 		const consumed = listed.filter((entry) => entry.consumed);
 		expect(consumed).toHaveLength(1);
 		expect(consumed[0]!.code).toBe(issued);
+	});
+	it('accepts a backup code for only one of several concurrent logins', async () => {
+		const account = await createTestAccount(harness);
+		const secret = createTotpSecret();
+		const codes = await enableTotp(harness, account, secret);
+		const tickets = await Promise.all(Array.from({length: 4}, () => startMfaLogin(harness, account)));
+		const results = await Promise.all(
+			tickets.map((ticket) =>
+				createBuilderWithoutAuth(harness).post('/auth/login/mfa/totp').body({ticket, code: codes[0]!}).executeRaw(),
+			),
+		);
+		const statuses = results.map(({response}) => response.status).sort();
+		expect(statuses).toEqual(
+			[HTTP_STATUS.OK, HTTP_STATUS.BAD_REQUEST, HTTP_STATUS.BAD_REQUEST, HTTP_STATUS.BAD_REQUEST].sort(),
+		);
 	});
 	it('rejects empty and whitespace only backup codes', async () => {
 		const account = await createTestAccount(harness);

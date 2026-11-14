@@ -8,30 +8,8 @@ interface ImageDimensions {
 	height: number;
 }
 
-interface PatternImageLoaderResult {
-	patternReady: boolean;
-}
-
 interface SplashImageLoaderResult {
 	dimensions: ImageDimensions | null;
-}
-
-interface AuthBackgroundResult {
-	patternReady: boolean;
-	splashDimensions: ImageDimensions | null;
-}
-
-export function usePatternImageLoader(patternUrl: string): PatternImageLoaderResult {
-	const [patternReady, setPatternReady] = useState(() => ImageCacheUtils.hasImage(patternUrl));
-	useEffect(() => {
-		if (ImageCacheUtils.hasImage(patternUrl)) {
-			setPatternReady(true);
-			return;
-		}
-		setPatternReady(false);
-		return ImageCacheUtils.loadImage(patternUrl, () => setPatternReady(true));
-	}, [patternUrl]);
-	return {patternReady};
 }
 
 export function useSplashImageLoader(imageUrl: string | null): SplashImageLoaderResult {
@@ -53,13 +31,4 @@ export function useSplashImageLoader(imageUrl: string | null): SplashImageLoader
 		});
 	}, [imageUrl]);
 	return {dimensions};
-}
-
-export function useAuthBackground(splashUrl: string | null, patternUrl: string): AuthBackgroundResult {
-	const {patternReady} = usePatternImageLoader(patternUrl);
-	const {dimensions: splashDimensions} = useSplashImageLoader(splashUrl);
-	return {
-		patternReady,
-		splashDimensions,
-	};
 }

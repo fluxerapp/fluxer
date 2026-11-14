@@ -27,24 +27,3 @@ pub fn mint_token(prefix: &str) -> String {
         .unwrap_or(0);
     format!("{prefix}_{ms:x}_{seq:x}")
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn request_path_sanitizes_unique_bus_name() {
-        assert_eq!(
-            request_path(":1.42", "fluxer_fc_open_1"),
-            "/org/freedesktop/portal/desktop/request/1_42/fluxer_fc_open_1"
-        );
-    }
-
-    #[test]
-    fn mint_token_is_distinct_and_prefixed() {
-        let a = mint_token("fluxer_fc_open");
-        let b = mint_token("fluxer_fc_open");
-        assert_ne!(a, b);
-        assert!(a.starts_with("fluxer_fc_open_"));
-    }
-}

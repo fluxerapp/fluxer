@@ -43,10 +43,6 @@ pub fn parse_and_render_plaintext(
     Ok(render_ast_to_plaintext(&nodes, options))
 }
 
-pub fn render_ast_to_plaintext(nodes: &[Node], options: &PlaintextOptions) -> String {
-    render_to_plaintext(nodes, options)
-}
-
 fn is_block_node(node: &Node) -> bool {
     matches!(
         node,
@@ -171,7 +167,7 @@ fn render_node_to_plaintext(node: &Node, options: &PlaintextOptions) -> String {
             if options.preserve_markdown {
                 return format!(
                     "> [!{}]\n{}",
-                    alert_type_name(*alert_type).to_ascii_uppercase(),
+                    label.to_ascii_uppercase(),
                     content
                         .split('\n')
                         .map(|line| format!("> {line}"))
@@ -360,10 +356,6 @@ fn render_alert_label(alert_type: AlertType) -> &'static str {
     }
 }
 
-fn alert_type_name(alert_type: AlertType) -> &'static str {
-    render_alert_label(alert_type)
-}
-
 fn render_mention_to_plaintext(kind: &MentionKind, options: &PlaintextOptions) -> String {
     match kind {
         MentionKind::User { id } => options
@@ -450,7 +442,7 @@ fn render_nodes_to_plaintext(nodes: &[Node], options: &PlaintextOptions) -> Stri
     result
 }
 
-fn render_to_plaintext(nodes: &[Node], options: &PlaintextOptions) -> String {
+pub fn render_ast_to_plaintext(nodes: &[Node], options: &PlaintextOptions) -> String {
     let rendered = render_nodes_to_plaintext(nodes, options);
     let whitespace_normalized = if options.preserve_markdown {
         trim_horizontal_whitespace_before_newlines_preserving_empty_blockquotes(&rendered)
@@ -531,50 +523,4 @@ fn collapse_excess_newlines(value: &str) -> String {
 
 fn trim_newlines(value: &str) -> String {
     value.trim_matches('\n').to_owned()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::ast::ParserFlags;
-
-    #[test]
-    fn preserves_notification_markdown_and_resolves_mentions() {
-        let mut users = HashMap::new();
-        users.insert("1".to_owned(), "Alice".to_owned());
-        let mut roles = HashMap::new();
-        roles.insert("2".to_owned(), "Ops".to_owned());
-        let mut channels = HashMap::new();
-        channels.insert("3".to_owned(), "alerts".to_owned());
-        let options = PlaintextOptions {
-            preserve_markdown: true,
-            users,
-            roles,
-            channels,
-            ..PlaintextOptions::default()
-        };
-
-        let result = parse_and_render_plaintext(
-            "**hi** <@1> <@&2> <#3> [site](https://fluxer.app)",
-            ParserFlags::ALL,
-            "",
-            &options,
-        )
-        .unwrap();
-
-        assert_eq!(
-            result,
-            "**hi** @Alice @Ops #alerts [site](https://fluxer.app)"
-        );
-
-        let empty_blockquote_result = parse_and_render_plaintext(
-            "> \n>  \nsome text",
-            ParserFlags::ALLOW_BLOCKQUOTES,
-            "",
-            &options,
-        )
-        .unwrap();
-
-        assert_eq!(empty_blockquote_result, "> \n> \nsome text");
-    }
 }

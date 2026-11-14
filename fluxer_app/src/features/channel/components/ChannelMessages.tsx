@@ -5,6 +5,8 @@ import {useMessageListPlaceholderSpecs} from '@app/features/app/components/skele
 import {ScrollFillerSkeleton} from '@app/features/app/components/skeleton/ScrollFillerSkeleton';
 import {reportSkeletonMessagePresentation} from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
 import {measureSkeletonHeightPx, useSkeletonLayoutReport} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
+import Initialization from '@app/features/app/state/Initialization';
+import {registerChannelViewport} from '@app/features/boot_state/BootViewport';
 import {
 	type MessageFocusCandidate,
 	resolveBottommostFocusableMessageId,
@@ -14,9 +16,10 @@ import styles from '@app/features/channel/components/ChannelMessages.module.css'
 import {ChannelWelcomeSection} from '@app/features/channel/components/ChannelWelcomeSection';
 import {CollapsedMessageVisibilityProvider} from '@app/features/channel/components/CollapsedMessageVisibilityContext';
 import {NewMessagesBar} from '@app/features/channel/components/NewMessagesBar';
+import {usePresentableTypingUsers} from '@app/features/channel/components/TypingUsers';
 import {UploadManager} from '@app/features/channel/components/UploadManager';
 import type {Channel} from '@app/features/channel/models/Channel';
-import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import GuildVerification from '@app/features/guild/state/GuildVerification';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
@@ -39,23 +42,30 @@ import {
 	createChannelStream,
 	getCollapsedMessageGroupKey,
 } from '@app/features/messaging/utils/MessageGroupingUtils';
+import {findMessageElement, getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
+import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {useScrollManager} from '@app/features/platform/utils/ScrollManager';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {shouldAutoAck} from '@app/features/read_state/utils/AutoAckPredicate';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import ActiveComposer from '@app/features/threads/state/ActiveComposer';
 import {Button} from '@app/features/ui/button/Button';
 import {Scroller} from '@app/features/ui/components/Scroller';
+import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MediaViewer from '@app/features/ui/state/MediaViewer';
 import Modal from '@app/features/ui/state/Modal';
 import type {User} from '@app/features/user/models/User';
+import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import Window from '@app/features/window/state/Window';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
@@ -66,7 +76,7 @@ import {clsx} from 'clsx';
 import {runInAction} from 'mobx';
 import {observer, useLocalObservable} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useRef} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const MESSAGE_LIST_FOR_DESCRIPTOR = msg({
 	message: 'Message list for {channelName}',
@@ -119,7 +129,6 @@ interface MessagesStateSnapshot {
 
 interface MessagesProps {
 	channel: Channel;
-	onBottomBarVisibilityChange?: (visible: boolean) => void;
 	allowAutoAck?: boolean;
 }
 
@@ -148,6 +157,27 @@ const readFromState = (channelId: string): MessagesStateSnapshot => {
 	};
 };
 
+interface ShownNewMessagesBar {
+	readonly unreadCount: number;
+	readonly oldestUnreadMessageTimestamp: number;
+	readonly isEstimated: boolean;
+}
+
+function useHeldWhileReconciling<T>(live: T, reconciling: boolean): T {
+	const shown = useRef(live);
+	if (!reconciling) {
+		shown.current = live;
+	}
+	return shown.current;
+}
+
+function bottomFadeClassName(isAtBottom: boolean): string {
+	if (!isAtBottom) {
+		return styles.bottomFadeStatusScrolled;
+	}
+	return isDesktopLocalAppDocument() ? styles.bottomFadeStatusAtBottomFullHeight : styles.bottomFadeStatusAtBottom;
+}
+
 function shallowEqual<T extends object>(a: T, b: T): boolean {
 	const aKeys = Object.keys(a);
 	if (aKeys.length !== Object.keys(b).length) return false;
@@ -157,11 +187,7 @@ function shallowEqual<T extends object>(a: T, b: T): boolean {
 	return true;
 }
 
-export const Messages = observer(function Messages({
-	channel,
-	onBottomBarVisibilityChange,
-	allowAutoAck = true,
-}: MessagesProps) {
+const CachedMessages = observer(function CachedMessages({channel, allowAutoAck = true}: MessagesProps) {
 	const {i18n} = useLingui();
 	const scrollerInnerRef = useRef<HTMLDivElement | null>(null);
 	const scrollerContainerRef = useRef<HTMLDivElement | null>(null);
@@ -181,10 +207,12 @@ export const Messages = observer(function Messages({
 		};
 	});
 	const windowId = Window.windowId;
+	const viewIsStale = Initialization.isStale;
 	const isWindowFocused = Window.isFocused();
 	const isModalOpen = Modal.hasModalOpen();
-	const isGatewayConnected = GatewayConnection.isConnected;
+	const isGatewayConnected = GatewaySessions.foregroundConnection.isConnected;
 	const selectedChannelId = SelectedChannel.currentChannelId;
+	const openThreadPanelId = Navigation.threadId;
 	const placeholderSpecs = useMessageListPlaceholderSpecs({
 		channelId: channel.id,
 		compact: state.messageDisplayCompact,
@@ -200,7 +228,7 @@ export const Messages = observer(function Messages({
 		hasMoreBefore: safeMessages.hasMoreBefore,
 		hasMoreAfter: safeMessages.hasMoreAfter,
 	});
-	const windowBar = selectChannelMessagesWindowBar(windowStatus);
+	const windowBar = selectChannelMessagesWindowBar(windowStatus, MessagesState.isRestoredWindowPending(channel.id));
 	const windowNeedsPage = windowStatus.needsPage;
 	const canAutoAck = shouldAutoAck({
 		channelActive: allowAutoAck,
@@ -269,6 +297,10 @@ export const Messages = observer(function Messages({
 			ChannelMessages.releaseRetainedChannel(channel.id);
 		};
 	}, [channel.id]);
+	useEffect(
+		() => registerChannelViewport(channel.id, () => scrollManager.ref.current?.getViewportElement() ?? null),
+		[channel.id, scrollManager],
+	);
 	const updateFromState = useCallback(() => {
 		const snapshot = readFromState(channel.id);
 		const previous = lastStateSnapshotRef.current;
@@ -278,6 +310,25 @@ export const Messages = observer(function Messages({
 		});
 		lastStateSnapshotRef.current = snapshot;
 	}, [channel.id, state]);
+	const revealMessageNode = useCallback(
+		(targetNode: HTMLElement) => {
+			const scrollerNode = scrollManager.ref.current?.getViewportElement();
+			if (!scrollerNode) return;
+			const targetRect = targetNode.getBoundingClientRect();
+			const scrollerRect = scrollerNode.getBoundingClientRect();
+			const isAbove = targetRect.top < scrollerRect.top;
+			const isBelow = targetRect.bottom > scrollerRect.bottom;
+			if (isAbove || isBelow) {
+				scrollManager.ref.current?.revealElement({
+					node: targetNode,
+					padding: 80,
+					animate: false,
+				});
+				scrollManager.scrollHandle();
+			}
+		},
+		[scrollManager],
+	);
 	const onMessageEdit = useCallback(
 		(targetNode: HTMLElement) => {
 			const scrollerNode = scrollManager.ref.current?.getViewportElement();
@@ -293,20 +344,9 @@ export const Messages = observer(function Messages({
 					return;
 				}
 			}
-			const targetRect = targetNode.getBoundingClientRect();
-			const scrollerRect = scrollerNode.getBoundingClientRect();
-			const isAbove = targetRect.top < scrollerRect.top;
-			const isBelow = targetRect.bottom > scrollerRect.bottom;
-			if (isAbove || isBelow) {
-				scrollManager.ref.current?.revealElement({
-					node: targetNode,
-					padding: 80,
-					animate: false,
-				});
-				scrollManager.scrollHandle();
-			}
+			revealMessageNode(targetNode);
 		},
-		[scrollManager, channel.id],
+		[scrollManager, channel.id, revealMessageNode],
 	);
 	const onReveal = useCallback(
 		(messageId: string | null) => {
@@ -382,11 +422,17 @@ export const Messages = observer(function Messages({
 			UserSettings.subscribe(updateFromState),
 			MessageEdit.subscribe(updateFromState),
 		];
-		const onForceJumpToPresent = () => {
+		const onForceJumpToPresent = (payload?: unknown) => {
+			const data = payload as {channelId?: string} | undefined;
+			if (data?.channelId && data.channelId !== channel.id) return;
 			MessageCommands.jumpToLiveEdge(channel.id, MAX_MESSAGES_PER_CHANNEL);
 		};
-		const onScrollPageUp = () => scrollManager.pageBackward(true);
-		const onScrollPageDown = () => scrollManager.pageForward(true);
+		const onScrollPageUp = () => {
+			if (ActiveComposer.accepts(channel.id)) scrollManager.pageBackward(true);
+		};
+		const onScrollPageDown = () => {
+			if (ActiveComposer.accepts(channel.id)) scrollManager.pageForward(true);
+		};
 		const onLayoutResized = (payload?: unknown) => {
 			const data = payload as {channelId?: string} | undefined;
 			if (data?.channelId && data.channelId !== channel.id) return;
@@ -398,7 +444,7 @@ export const Messages = observer(function Messages({
 			const scroller = scrollManager.ref.current?.getViewportElement();
 			const innerElement = scrollerInnerRef.current;
 			if (!scroller || !innerElement) return;
-			const messageElements = innerElement.querySelectorAll<HTMLElement>('[data-message-id]');
+			const messageElements = innerElement.querySelectorAll<HTMLElement>(getMessageSelector(channel.id));
 			if (!messageElements.length) return;
 			const scrollerRect = scroller.getBoundingClientRect();
 			const candidates: Array<MessageFocusCandidate> = [];
@@ -414,7 +460,6 @@ export const Messages = observer(function Messages({
 			}
 		};
 		const dispatchUnsubs = [
-			ComponentBus.subscribe('SCROLL_TO_PRESENT', onScrollToPresent),
 			ComponentBus.subscribe('MESSAGE_SENT', onMessageSent),
 			ComponentBus.subscribe('FORCE_JUMP_TO_PRESENT', onForceJumpToPresent),
 			ComponentBus.subscribe('ESCAPE_PRESSED', onEscapePressed),
@@ -430,6 +475,22 @@ export const Messages = observer(function Messages({
 		};
 	}, [channel.id, updateFromState, onScrollToPresent, onMessageSent, onEscapePressed, scrollManager]);
 	useEffect(() => {
+		return ComponentBus.subscribe('MESSAGE_REVEAL', (payload?: unknown) => {
+			const data = (payload ?? {}) as {channelId?: string; messageId?: string};
+			if (data.channelId !== channel.id || !data.messageId) return;
+			const messageId = data.messageId;
+			window.requestAnimationFrame(() => {
+				const node = findMessageElement(
+					document,
+					scrollManager.ref.current?.getViewportElement(),
+					channel.id,
+					messageId,
+				);
+				if (node) revealMessageNode(node);
+			});
+		});
+	}, [channel.id, scrollManager, revealMessageNode]);
+	useEffect(() => {
 		const editingMessageId = state.editingMessageId;
 		if (editingMessageId) {
 			scrollManager.editEnter();
@@ -438,7 +499,11 @@ export const Messages = observer(function Messages({
 		}
 	}, [state.editingMessageId, scrollManager]);
 	useEffect(() => {
-		if (!windowNeedsPage || !isGatewayConnected || selectedChannelId !== channel.id) {
+		if (
+			!windowNeedsPage ||
+			!isGatewayConnected ||
+			(selectedChannelId !== channel.id && openThreadPanelId !== channel.id)
+		) {
 			if (recoveryFetchChannelIdRef.current === channel.id) {
 				recoveryFetchChannelIdRef.current = null;
 			}
@@ -453,7 +518,7 @@ export const Messages = observer(function Messages({
 				recoveryFetchChannelIdRef.current = null;
 			}
 		});
-	}, [channel.id, isGatewayConnected, selectedChannelId, windowNeedsPage, state.messageVersion]);
+	}, [channel.id, isGatewayConnected, selectedChannelId, openThreadPanelId, windowNeedsPage, state.messageVersion]);
 	useMessageListKeyboardNavigation({
 		containerRef: scrollManager.ref,
 		channelId: channel.id,
@@ -476,6 +541,9 @@ export const Messages = observer(function Messages({
 			scrollManager.jumpCancel();
 			ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId: channel.id});
 		},
+		onNavigatePastNewest: () => {
+			ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId: channel.id, enterKeyboardMode: true});
+		},
 		allowWhenInactive: true,
 	});
 	useEffect(() => {
@@ -487,11 +555,11 @@ export const Messages = observer(function Messages({
 		};
 	}, []);
 	useEffect(() => {
-		if (!canAutoAck || !state.isAtBottom || !state.messages?.ready || state.messages.loadingMore) return;
+		if (viewIsStale || !canAutoAck || !state.isAtBottom || !state.messages?.ready || state.messages.loadingMore) return;
 		if (ReadStates.hasUnread(channel.id)) {
 			ReadStateCommands.ackWithStickyUnread(channel.id);
 		}
-	}, [canAutoAck, state.isAtBottom, state.messages?.ready, state.messages?.loadingMore, channel.id]);
+	}, [viewIsStale, canAutoAck, state.isAtBottom, state.messages?.ready, state.messages?.loadingMore, channel.id]);
 	useEffect(() => {
 		return () => {
 			const readState = ReadStates.getIfExists(channel.id);
@@ -502,15 +570,19 @@ export const Messages = observer(function Messages({
 		};
 	}, [channel.id]);
 	const spammerOverrideVersion = LocalUserSpamOverride.version;
+	const hideBlocked = AdvancedSettings.hideBlockedMessages;
+	const reconcilingSeededWindow = MessagesState.isReconcilingSeededWindow(channel.id);
+	const dividerMessageId = useHeldWhileReconciling(state.visualUnreadMessageId, reconcilingSeededWindow);
 	const channelStream = useMemo<Array<ChannelStreamItem>>(() => {
 		if (!state.messages) return [];
 		return createChannelStream({
 			channel,
 			messages: state.messages,
-			oldestUnreadMessageId: state.visualUnreadMessageId,
+			oldestUnreadMessageId: dividerMessageId,
 			treatSpam: true,
+			hideBlocked,
 		});
-	}, [channel, state.messages, state.messageVersion, state.visualUnreadMessageId, spammerOverrideVersion]);
+	}, [channel, state.messages, state.messageVersion, dividerMessageId, spammerOverrideVersion, hideBlocked]);
 	useEffect(() => {
 		const messages = state.messages;
 		if (!messages?.ready) {
@@ -518,6 +590,9 @@ export const Messages = observer(function Messages({
 		}
 		void MessageCommands.ensureMembersForMessages(messages.toArray());
 	}, [channel.id, state.messages?.ready, state.messageVersion]);
+	useEffect(() => {
+		if (state.messages?.ready && !viewIsStale) VoiceRuntime.noteChannelContentRendered();
+	}, [state.messages?.ready, viewIsStale]);
 	const immediateHighlightedMessageId = (() => {
 		const messages = state.messages;
 		if (!messages?.ready || !messages.hasJumped || !messages.jumpHighlight || !messages.jumpDestinationId) {
@@ -572,37 +647,41 @@ export const Messages = observer(function Messages({
 		onMessageEdit,
 		onReveal,
 	]);
-	const hasBottomBar = windowBar !== 'none';
-	useEffect(() => {
-		onBottomBarVisibilityChange?.(hasBottomBar);
-	}, [hasBottomBar, onBottomBarVisibilityChange]);
-	useEffect(() => {
-		return () => {
-			onBottomBarVisibilityChange?.(false);
-		};
-	}, [onBottomBarVisibilityChange]);
-	const bottomBar =
-		windowBar === 'retry' ? (
+	let bottomBar: React.ReactNode = null;
+	if (windowBar === 'retry') {
+		bottomBar = (
 			<LoadErrorBar
 				loading={safeMessages.loadingMore}
 				onRetry={onRetryLoadMessages}
 				data-flx="channel.messages.load-error-bar"
 			/>
-		) : windowBar === 'present' ? (
+		);
+	} else if (windowBar === 'present') {
+		bottomBar = (
 			<JumpToPresentBar
 				loadingMore={safeMessages.loadingMore}
 				landedAtLiveEdge={safeMessages.landedAtLiveEdge}
 				onJumpToPresent={onScrollToPresent}
 				data-flx="channel.messages.jump-to-present-bar"
 			/>
-		) : null;
-	const showNewMessagesBar = Boolean(windowStatus.phase === 'stream' && state.unreadCount > 0);
+		);
+	}
 	const unreadTimestampMessageId = state.oldestUnreadMessageId ?? state.ackMessageId;
-	const topBar = showNewMessagesBar ? (
+	const newMessagesBar = useHeldWhileReconciling<ShownNewMessagesBar | null>(
+		windowStatus.phase === 'stream' && state.unreadCount > 0
+			? {
+					unreadCount: state.unreadCount,
+					oldestUnreadMessageTimestamp: unreadTimestampMessageId ? extractTimestamp(unreadTimestampMessageId) : 0,
+					isEstimated: state.isEstimated,
+				}
+			: null,
+		reconcilingSeededWindow,
+	);
+	const topBar = newMessagesBar ? (
 		<NewMessagesBar
-			unreadCount={state.unreadCount}
-			oldestUnreadMessageTimestamp={unreadTimestampMessageId ? extractTimestamp(unreadTimestampMessageId) : 0}
-			isEstimated={state.isEstimated}
+			unreadCount={newMessagesBar.unreadCount}
+			oldestUnreadMessageTimestamp={newMessagesBar.oldestUnreadMessageTimestamp}
+			isEstimated={newMessagesBar.isEstimated}
 			onJumpToOldestUnread={onJumpToOldestUnread}
 			onJumpToNewMessages={onScrollToPresentAndAck}
 			data-flx="channel.messages.new-messages-bar"
@@ -632,13 +711,17 @@ export const Messages = observer(function Messages({
 		? i18n._(MESSAGE_LIST_FOR_DESCRIPTOR, {channelName: channel.name})
 		: i18n._(MESSAGE_LIST_DESCRIPTOR);
 	const messageListLiveMode = Accessibility.screenReaderAnnounceNewMessages && state.isAtBottom ? 'polite' : 'off';
+	const composerStatusVisible = usePresentableTypingUsers(channel).length > 0 || channel.rateLimitPerUser > 0;
 	const topFillerVisible = selectChannelMessagesFillerVisible({
 		reducedMotion: Accessibility.useReducedMotion,
 		scrollManagerInitialized: scrollManager.lifecycleIsInitialized(),
 		ready: safeMessages.ready,
 	});
-	const headFillerVisible = windowStatus.olderPageAvailable && topFillerVisible;
+	const deferredReserve = MessagesState.deferredOlderReserve(channel.id);
+	const headOlderAvailable = deferredReserve?.hasMoreBefore ?? windowStatus.olderPageAvailable;
+	const headFillerVisible = headOlderAvailable && topFillerVisible;
 	const tailFillerVisible = windowStatus.newerPageAvailable;
+	const restoredTailPx = tailFillerVisible ? MessagesState.restoredTailHeight(channel.id) : null;
 	const streamHasRows = streamMarkup != null && streamMarkup.length > 0;
 	const spacerFollowsFiller = tailFillerVisible || (headFillerVisible && !streamHasRows);
 	const scrollerInner = (
@@ -646,15 +729,26 @@ export const Messages = observer(function Messages({
 			{headFillerVisible && (
 				<ScrollFillerSkeleton data-flx="channel.messages.scroll-filler-skeleton" {...placeholderSpecs} />
 			)}
-			{windowStatus.olderPageAvailable && safeMessages.length > 0 && (
+			{headOlderAvailable && safeMessages.length > 0 && (
 				<div className={styles.fillerBuffer} data-flx="channel.messages.filler-buffer" />
 			)}
-			{!windowStatus.olderPageAvailable && (
+			{!headOlderAvailable && (
 				<ChannelWelcomeSection channel={channel} data-flx="channel.messages.channel-welcome-section" />
+			)}
+			{deferredReserve !== null && deferredReserve.heightPx > 0 && (
+				<ScrollFillerSkeleton
+					data-flx="channel.messages.deferred-reserve"
+					{...placeholderSpecs}
+					totalHeight={deferredReserve.heightPx}
+				/>
 			)}
 			{streamMarkup}
 			{tailFillerVisible && (
-				<ScrollFillerSkeleton data-flx="channel.messages.scroll-filler-skeleton--2" {...placeholderSpecs} />
+				<ScrollFillerSkeleton
+					data-flx="channel.messages.scroll-filler-skeleton--2"
+					{...placeholderSpecs}
+					totalHeight={restoredTailPx ?? placeholderSpecs.totalHeight}
+				/>
 			)}
 			<div
 				className={clsx(styles.scrollerSpacer, spacerFollowsFiller && styles.scrollerSpacerAfterFiller)}
@@ -679,7 +773,7 @@ export const Messages = observer(function Messages({
 				<Scroller
 					fade={false}
 					scrollbar="regular"
-					hideThumbWhenWindowBlurred
+					hideThumbWhenWindowBlurred={isDesktopLocalAppDocument()}
 					ref={scrollManager.ref}
 					onScroll={scrollManager.scrollHandle}
 					onScrollIntent={scrollManager.scrollHandleUserIntent}
@@ -701,22 +795,43 @@ export const Messages = observer(function Messages({
 							aria-busy={safeMessages.loadingMore ? true : undefined}
 							data-flx="channel.messages.scroller-inner"
 						>
-							<NearViewportSurfaceContext.Provider value={resolveMessageScrollSurface}>
-								<CollapsedMessageVisibilityProvider
-									value={collapsedMessageVisibility}
-									data-flx="channel.messages.collapsed-message-visibility-provider"
-								>
-									{scrollerInner}
-								</CollapsedMessageVisibilityProvider>
-							</NearViewportSurfaceContext.Provider>
+							<FocusRingScope containerRef={scrollerInnerRef} data-flx="channel.messages.focus-ring-scope">
+								<NearViewportSurfaceContext.Provider value={resolveMessageScrollSurface}>
+									<CollapsedMessageVisibilityProvider
+										value={collapsedMessageVisibility}
+										data-flx="channel.messages.collapsed-message-visibility-provider"
+									>
+										{scrollerInner}
+									</CollapsedMessageVisibilityProvider>
+								</NearViewportSurfaceContext.Provider>
+							</FocusRingScope>
 						</div>
 					</div>
 				</Scroller>
+				{composerStatusVisible && (
+					<div
+						className={clsx(styles.bottomFade, bottomFadeClassName(state.isAtBottom))}
+						aria-hidden="true"
+						data-flx="channel.messages.bottom-fade"
+					/>
+				)}
 			</div>
 			{bottomBar}
 		</div>
 	);
 });
+
+export const Messages = observer(function Messages(props: MessagesProps) {
+	return (
+		<CachedMessages
+			key={MessagesState.cacheGeneration}
+			data-flx="channel.channel-messages.messages.cached-messages"
+			{...props}
+		/>
+	);
+});
+const JUMP_START_TIMEOUT_MS = 1500;
+
 const JumpToPresentBar = observer(function JumpToPresentBar({
 	loadingMore,
 	landedAtLiveEdge,
@@ -727,7 +842,29 @@ const JumpToPresentBar = observer(function JumpToPresentBar({
 	onJumpToPresent: () => void;
 }) {
 	const {i18n} = useLingui();
-	const jumpIsActiveNow = loadingMore && landedAtLiveEdge;
+	const [pressed, setPressed] = useState(false);
+	const sawLoadRef = useRef(false);
+	useEffect(() => {
+		if (!pressed) return;
+		if (loadingMore) {
+			sawLoadRef.current = true;
+			return;
+		}
+		if (sawLoadRef.current) {
+			sawLoadRef.current = false;
+			setPressed(false);
+			return;
+		}
+		const timer = window.setTimeout(() => setPressed(false), JUMP_START_TIMEOUT_MS);
+		return () => window.clearTimeout(timer);
+	}, [pressed, loadingMore]);
+	const jumpIsActiveNow = pressed || (loadingMore && landedAtLiveEdge);
+	const handleJump = () => {
+		if (jumpIsActiveNow) return;
+		sawLoadRef.current = false;
+		setPressed(true);
+		onJumpToPresent();
+	};
 	return (
 		<div
 			className={[styles.newMessagesBar, styles.messageBottomPill, styles.jumpToPresentBar].join(' ')}
@@ -742,7 +879,7 @@ const JumpToPresentBar = observer(function JumpToPresentBar({
 				compact
 				fitContent
 				className={styles.newMessagesBarAction}
-				onClick={onJumpToPresent}
+				onClick={handleJump}
 				submitting={jumpIsActiveNow}
 				disabled={jumpIsActiveNow}
 				data-flx="channel.messages.jump-to-present-bar.new-messages-bar-action"

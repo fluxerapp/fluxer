@@ -1,0 +1,13 @@
+voice-fra.chat.example.com {
+	handle /_health {
+		respond "OK" 200
+	}
+
+	handle_path /livekit-fra-server-1/* {
+		import livekit voice-fra-server-1:7880
+	}
+
+	handle {
+		respond 404
+	}
+}

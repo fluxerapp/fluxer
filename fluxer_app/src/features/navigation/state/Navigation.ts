@@ -5,7 +5,7 @@ import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import type {Router} from '@app/features/platform/components/router/RouterTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {action, makeAutoObservable} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 
 type NavigationMode = 'push' | 'replace';
 
@@ -15,24 +15,23 @@ class Navigation {
 	guildId: string | null = null;
 	channelId: string | null = null;
 	messageId: string | null = null;
+	threadId: string | null = null;
+	threadMessageId: string | null = null;
 	private router: Router | null = null;
-	private unsubscribe: (() => void) | null = null;
 	currentLocation: URL | null = null;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	@action
 	initialize(router: Router): void {
 		this.router = router;
 		this.updateFromRouter();
-		this.unsubscribe = this.router.subscribe(() => {
+		this.router.subscribe(() => {
 			this.updateFromRouter();
 		});
 	}
 
-	@action
 	private updateFromRouter(): void {
 		if (!this.router) return;
 		const state = this.router.getState();
@@ -42,24 +41,20 @@ class Navigation {
 			this.guildId = null;
 			this.channelId = null;
 			this.messageId = null;
+			this.threadId = null;
+			this.threadMessageId = null;
 			return;
 		}
 		const params = match.params;
 		this.guildId = (params.guildId as string) ?? null;
 		this.channelId = (params.channelId as string) ?? null;
 		this.messageId = (params.messageId as string) ?? null;
+		this.threadId = (params.threadId as string) ?? null;
+		this.threadMessageId = (params.threadMessageId as string) ?? null;
 	}
 
 	get pathname(): string {
 		return this.currentLocation?.pathname ?? '';
-	}
-
-	get search(): string {
-		return this.currentLocation?.search ?? '';
-	}
-
-	get hash(): string {
-		return this.currentLocation?.hash ?? '';
 	}
 
 	get context(): 'dm' | 'favorites' | 'guild' {
@@ -109,26 +104,6 @@ class Navigation {
 		this.applyNavigation(path, mode);
 	}
 
-	buildChannelPath(guildId: string | null | undefined, channelId: string): string {
-		if (!guildId || guildId === ME) {
-			return Routes.dmChannel(channelId);
-		}
-		if (guildId === '@favorites') {
-			return Routes.favoritesChannel(channelId);
-		}
-		return Routes.guildChannel(guildId, channelId);
-	}
-
-	buildMessagePath(guildId: string | null | undefined, channelId: string, messageId: string): string {
-		if (!guildId || guildId === ME) {
-			return Routes.dmChannelMessage(channelId, messageId);
-		}
-		if (guildId === '@favorites') {
-			return Routes.favoritesChannelMessage(channelId, messageId);
-		}
-		return Routes.channelMessage(guildId, channelId, messageId);
-	}
-
 	private buildGuildPath(guildId: string, channelId?: string, messageId?: string): string {
 		if (messageId && channelId) {
 			return Routes.channelMessage(guildId, channelId, messageId);
@@ -162,14 +137,6 @@ class Navigation {
 		} else {
 			RouterUtils.transitionTo(path);
 		}
-	}
-
-	destroy(): void {
-		if (this.unsubscribe) {
-			this.unsubscribe();
-			this.unsubscribe = null;
-		}
-		this.router = null;
 	}
 }
 

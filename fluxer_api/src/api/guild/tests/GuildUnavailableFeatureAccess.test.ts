@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {acceptInvite, createChannelInvite, createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {acceptInvite, createChannelInvite, createGuild} from './GuildTestUtils';
 
 const STAFF_TEST_FLAGS = UserFlags.HAS_SESSION_STARTED | UserFlags.STAFF;
 
@@ -59,6 +59,35 @@ describe('Guild unavailable feature access checks', () => {
 			.execute();
 		await createBuilder(harness, owner.token)
 			.get(`/channels/${guild.system_channel_id}`)
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACCESS)
+			.execute();
+	});
+	it('blocks whitespace-padded ids and bulk message fetches when UNAVAILABLE_FOR_EVERYONE is enabled', async () => {
+		const owner = await createTestAccount(harness);
+		const member = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Unavailable padded ids');
+		if (!guild.system_channel_id) {
+			throw new Error('Guild system channel is missing');
+		}
+		const invite = await createChannelInvite(harness, owner.token, guild.system_channel_id);
+		await acceptInvite(harness, member.token, invite.code);
+		await createBuilder(harness, member.token)
+			.post('/channels/messages/bulk')
+			.body({requests: [{channel_id: guild.system_channel_id, limit: 10}]})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await addGuildFeaturesForTesting(harness, guild.id, [GuildFeatures.UNAVAILABLE_FOR_EVERYONE]);
+		await createBuilder(harness, member.token)
+			.get(`/guilds/%20${guild.id}`)
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACCESS)
+			.execute();
+		await createBuilder(harness, member.token)
+			.get(`/channels/${guild.system_channel_id}%20`)
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACCESS)
+			.execute();
+		await createBuilder(harness, member.token)
+			.post('/channels/messages/bulk')
+			.body({requests: [{channel_id: guild.system_channel_id, limit: 10}]})
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_ACCESS)
 			.execute();
 	});

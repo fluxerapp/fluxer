@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	_preloadArboriumForTests,
 	isSupportedHighlightLanguage,
+	registerRetainedCodeSource,
 	useArboriumHighlightedHtml,
 } from '@app/features/code_highlighting/utils/ArboriumHighlighting';
 import {COPY_CODE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -11,7 +11,10 @@ import {
 	MarkdownBlock,
 	markdownBlockProps,
 } from '@app/features/messaging/components/markdown/renderers/common/MarkdownBlockAttributes';
-import {MarkdownContext, type RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {
+	isRestrictedInlineContext,
+	type RendererProps,
+} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import type {CodeBlockNode, InlineCodeNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import codeElementsStyles from '@app/features/theme/styles/CodeElements.module.css';
@@ -24,7 +27,7 @@ import {
 import {msg} from '@lingui/core/macro';
 import {clsx} from 'clsx';
 import type katexDefault from 'katex';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 const ERROR_RENDERING_LATEX_DESCRIPTOR = msg({
 	message: 'Error rendering LaTeX: {errorAsErrorMessageI18nMsgUnknownError}',
@@ -39,6 +42,7 @@ const logger = new Logger('CodeElementsRenderer');
 const KATEX_CODE_BLOCK_LANGUAGES = new Set(['katex', 'latex', 'tex']);
 const ANSI_CODE_BLOCK_LANGUAGES = new Set(['ansi']);
 const KATEX_CONTROL_SEQUENCE_REGEX = /\\(?:[a-zA-Z@]+|.)/gu;
+const KATEX_MAX_EXPAND = 512;
 
 type KatexModule = typeof katexDefault;
 
@@ -54,10 +58,6 @@ function loadKatex(): Promise<KatexModule> {
 		})();
 	}
 	return katexPromise;
-}
-
-export async function _preloadForTests(): Promise<void> {
-	await Promise.all([_preloadArboriumForTests(), loadKatex()]);
 }
 
 function useLazyChunkLoad(load: () => Promise<unknown>, isLoaded: boolean, shouldLoad: boolean): void {
@@ -102,7 +102,7 @@ function shouldRenderKatexSource(content: string): boolean {
 
 export function CodeBlockRenderer({node, id, options}: RendererProps<CodeBlockNode>): React.ReactElement {
 	const {content} = node;
-	if (options.context === MarkdownContext.RESTRICTED_INLINE_REPLY) {
+	if (isRestrictedInlineContext(options.context)) {
 		return (
 			<code
 				key={id}
@@ -144,6 +144,11 @@ function RichCodeBlockRenderer({
 		shouldHighlight ? normalisedLanguage : null,
 		shouldHighlight ? content : null,
 	);
+	const codeRef = useRef<HTMLElement | null>(null);
+	useLayoutEffect(() => {
+		if (codeRef.current === null || !shouldHighlight || normalisedLanguage == null) return;
+		return registerRetainedCodeSource(codeRef.current, normalisedLanguage, content);
+	}, [normalisedLanguage, content, shouldHighlight]);
 	const copyButton = (
 		<CopyButton
 			value={content}
@@ -185,6 +190,7 @@ function RichCodeBlockRenderer({
 				throwOnError: false,
 				errorColor: 'var(--accent-danger)',
 				trust: false,
+				maxExpand: KATEX_MAX_EXPAND,
 				strict: false,
 				output: 'html',
 			});
@@ -257,6 +263,7 @@ function RichCodeBlockRenderer({
 		highlightedContent = (
 			<code
 				className={clsx(markupStyles.hljs, language)}
+				ref={codeRef}
 				dangerouslySetInnerHTML={{__html: highlightedHtml}}
 				data-flx="messaging.markdown.renderers.common.code-elements.rich-code-block-renderer.code--4"
 			/>

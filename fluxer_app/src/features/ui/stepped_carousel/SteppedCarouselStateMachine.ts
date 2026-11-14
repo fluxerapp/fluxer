@@ -82,7 +82,7 @@ function shouldRequestFocus(
 	return context.step !== event.step || !context.focusOnStepChange;
 }
 
-export const steppedCarouselStateMachine = setup({
+const steppedCarouselStateMachine = setup({
 	types: {} as {
 		context: SteppedCarouselMachineContext;
 		events: SteppedCarouselMachineEvent;

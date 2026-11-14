@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Initialization from '@app/features/app/state/Initialization';
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
+import type {SnapshotPresenceRow} from '@app/features/gateway/snapshot/SnapshotEntities';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {Presence as WirePresence} from '@app/features/gateway/types/GatewayPresenceTypes';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -21,7 +24,8 @@ import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {normalizeStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {makeAutoObservable, observable, reaction} from 'mobx';
+import isEqual from 'lodash/isEqual';
+import {makeAutoObservable, observable, observableShallow, reaction} from 'mobx';
 
 interface FlattenedPresence {
 	status: StatusType;
@@ -61,7 +65,7 @@ class Presence {
 				presences: false,
 				remotePresenceCountsByGuild: false,
 				remotePresenceCountVersionByGuild: false,
-				mobilePresenceUserIds: observable.shallow,
+				mobilePresenceUserIds: observableShallow,
 				suppressVersionBump: false,
 			},
 			{autoBind: true},
@@ -260,15 +264,19 @@ class Presence {
 		TransientPresence.clear();
 		const localStatus = LocalPresence.getStatus();
 		const localCustomStatus = LocalPresence.customStatus;
-		this.presences.clear();
-		this.remotePresenceCountsByGuild.clear();
-		this.remotePresenceCountVersionByGuild.clear();
-		this.statuses.clear();
-		this.customStatuses.clear();
-		this.mobilePresenceUserIds.clear();
-		this.bumpPresenceVersion();
+		if (Initialization.isStale) {
+			const incoming = new Set(presences?.map((presence) => presence.user.id) ?? []);
+			for (const id of this.presences.keys()) {
+				if (!incoming.has(id)) this.evictPresence(id);
+			}
+			this.remotePresenceCountsByGuild.clear();
+			this.remotePresenceCountVersionByGuild.clear();
+		} else {
+			this.clearAllPresenceState();
+		}
 		this.statuses.set(user.id, localStatus);
-		this.customStatuses.set(user.id, localCustomStatus);
+		if (!isEqual(this.customStatuses.get(user.id), localCustomStatus))
+			this.customStatuses.set(user.id, localCustomStatus);
 		const userGuildIds = new Map<string, Set<string>>();
 		const meContextUserIds = this.buildMeContextUserIds(user.id);
 		for (const guild of guilds) {
@@ -292,13 +300,7 @@ class Presence {
 		this.resyncExternalStatusListeners();
 	}
 
-	handleSessionInvalidated(): void {
-		TransientPresence.clear();
-		const previousUserIds = new Set<string>([
-			...Array.from(this.presences.keys()),
-			...Array.from(this.statuses.keys()),
-			...Array.from(this.customStatuses.keys()),
-		]);
+	private clearAllPresenceState(): void {
 		this.presences.clear();
 		this.remotePresenceCountsByGuild.clear();
 		this.remotePresenceCountVersionByGuild.clear();
@@ -306,11 +308,72 @@ class Presence {
 		this.customStatuses.clear();
 		this.mobilePresenceUserIds.clear();
 		this.bumpPresenceVersion();
+	}
+
+	private resetPresencesToOffline(): void {
+		TransientPresence.clear();
+		const previousUserIds = new Set<string>([
+			...Array.from(this.presences.keys()),
+			...Array.from(this.statuses.keys()),
+			...Array.from(this.customStatuses.keys()),
+		]);
+		this.clearAllPresenceState();
 		for (const userId of previousUserIds) {
 			this.notifyStatusListeners(userId, StatusTypes.OFFLINE, false);
 			queueMicrotask(() => CustomStatusEmitter.emitPresenceChange(userId));
 		}
+	}
+
+	handleSessionInvalidated(): void {
+		this.resetPresencesToOffline();
 		this.resyncExternalStatusListeners();
+	}
+
+	hydrateFromSnapshot(presences: ReadonlyMap<string, SnapshotPresenceRow>, selfUserId: string): void {
+		const localStatus = LocalPresence.getStatus();
+		const localCustomStatus = LocalPresence.customStatus;
+		this.resetPresencesToOffline();
+		this.statuses.set(selfUserId, localStatus);
+		this.customStatuses.set(selfUserId, localCustomStatus);
+		this.suppressVersionBump = true;
+		try {
+			for (const [userId, row] of presences) {
+				if (userId !== selfUserId) {
+					this.seedSnapshotPresence(userId, row);
+				}
+			}
+		} finally {
+			this.suppressVersionBump = false;
+		}
+		this.bumpPresenceVersion();
+		this.resyncExternalStatusListeners();
+	}
+
+	hydrateSnapshotEntry(userId: string, row: SnapshotPresenceRow): void {
+		this.seedSnapshotPresence(userId, row);
+		this.bumpPresenceVersion();
+	}
+
+	private seedSnapshotPresence(userId: string, row: SnapshotPresenceRow): void {
+		const normalizedStatus = normalizeStatus(row.status);
+		const customStatus = fromGatewayCustomStatus(row.customStatus);
+		const guildIds = new Set<string>(row.guildIds);
+		if (guildIds.size === 0) {
+			guildIds.add(ME);
+		}
+		const flattened: FlattenedPresence = {
+			status: normalizedStatus,
+			timestamp: Date.now(),
+			afk: row.afk,
+			mobile: row.mobile,
+			guildIds,
+			customStatus,
+		};
+		this.presences.set(userId, flattened);
+		this.addPresenceCounts(flattened);
+		this.customStatuses.set(userId, customStatus);
+		this.updateStatusFromPresence(userId, flattened);
+		queueMicrotask(() => CustomStatusEmitter.emitPresenceChange(userId));
 	}
 
 	handleGuildCreate(guild: GuildReadyData): void {
@@ -433,7 +496,12 @@ class Presence {
 	private handleReadyPresence(presence: WirePresence, initialGuildIds?: Set<string>, hasMeContext = false): void {
 		const {user, status, afk, mobile, custom_status: customStatusPayload} = presence;
 		const normalizedStatus = normalizeStatus(status);
-		const customStatus = fromGatewayCustomStatus(customStatusPayload);
+		const incomingCustomStatus = fromGatewayCustomStatus(customStatusPayload);
+		const existingCustomStatus = this.customStatuses.get(user.id);
+		const customStatus =
+			existingCustomStatus !== undefined && isEqual(existingCustomStatus, incomingCustomStatus)
+				? existingCustomStatus
+				: incomingCustomStatus;
 		const userId = user.id;
 		if (userId === Authentication.currentUserId) {
 			return;
@@ -583,4 +651,8 @@ class Presence {
 	}
 }
 
-export default new Presence();
+const presence = new Presence();
+
+ResettableStates.register(presence, () => presence.handleSessionInvalidated());
+
+export default presence;

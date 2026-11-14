@@ -211,13 +211,13 @@
 
 .actionButtonAccept {
 	--action-toolbar-item-background: var(--friend-action-brand-background);
-	--action-toolbar-item-color: color-mix(in srgb, var(--brand-primary) 76%, var(--text-primary) 24%);
+	--action-toolbar-item-color: color-mix(in srgb, var(--brand-primary-foreground) 76%, var(--text-primary) 24%);
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.actionButtonAccept:hover {
 	--action-toolbar-item-background: var(--friend-action-brand-hover-background);
-	--action-toolbar-item-color: color-mix(in srgb, var(--brand-primary) 82%, var(--text-primary) 18%);
+	--action-toolbar-item-color: color-mix(in srgb, var(--brand-primary-foreground) 82%, var(--text-primary) 18%);
 }
 
 .actionButtonIgnore {

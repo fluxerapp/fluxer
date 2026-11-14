@@ -5,9 +5,9 @@ import {GO_BACK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescript
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Slider} from '@app/features/ui/components/Slider';
+import {CaretLeftIcon, CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
 import styles from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet.module.css';
 import {useLingui} from '@lingui/react/macro';
-import {CaretLeftIcon, CaretRightIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -19,7 +19,7 @@ export type MenuActionEvent =
 	| {
 			readonly shiftKey?: boolean;
 	  };
-export type MenuActionHandler = {bivarianceHack(event?: MenuActionEvent): void}['bivarianceHack'];
+type MenuActionHandler = {bivarianceHack(event?: MenuActionEvent): void}['bivarianceHack'];
 
 export interface MenuItemType {
 	id?: string;
@@ -70,7 +70,7 @@ export interface MenuRadioType {
 	disabled?: boolean;
 }
 
-export type MenuLeafItem = MenuItemType | MenuSliderType | MenuCheckboxType | MenuRadioType;
+type MenuLeafItem = MenuItemType | MenuSliderType | MenuCheckboxType | MenuRadioType;
 export type MenuSheetItem = MenuLeafItem | MenuSubmenuItemType;
 
 export interface MenuGroupType {

@@ -25,6 +25,10 @@ pub(crate) fn stat_card(label: &str, value: &str) -> Markup {
 
 pub(crate) fn node_stats_section(data: &serde_json::Value, expanded: bool, base: &str) -> Markup {
     let sessions = data.get("sessions").and_then(|v| v.as_u64()).unwrap_or(0);
+    let reconnects: u64 = data
+        .get("session_resumes_total")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
     let guilds = data.get("guilds").and_then(|v| v.as_u64()).unwrap_or(0);
     let presences = data.get("presences").and_then(|v| v.as_u64()).unwrap_or(0);
     let calls = data.get("calls").and_then(|v| v.as_u64()).unwrap_or(0);
@@ -64,6 +68,7 @@ pub(crate) fn node_stats_section(data: &serde_json::Value, expanded: bool, base:
                     div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6" {
                         (stat_card("Nodes", &node_count.to_string()))
                         (stat_card("Sessions", &sessions.to_string()))
+                        (stat_card("Reconnects", &reconnects.to_string()))
                         (stat_card("Guilds", &guilds.to_string()))
                         (stat_card("Presences", &presences.to_string()))
                         (stat_card("Calls", &calls.to_string()))
@@ -83,6 +88,7 @@ pub(crate) fn node_stats_table(nodes: &[serde_json::Value]) -> Markup {
                     tr {
                         th class="px-6 py-3 text-left text-neutral-600 text-xs uppercase" { "Node" }
                         th class="px-6 py-3 text-right text-neutral-600 text-xs uppercase" { "Sessions" }
+                        th class="px-6 py-3 text-right text-neutral-600 text-xs uppercase" { "Session Resumes" }
                         th class="px-6 py-3 text-right text-neutral-600 text-xs uppercase" { "Guilds" }
                         th class="px-6 py-3 text-right text-neutral-600 text-xs uppercase" { "Presences" }
                         th class="px-6 py-3 text-right text-neutral-600 text-xs uppercase" { "Calls" }
@@ -94,22 +100,28 @@ pub(crate) fn node_stats_table(nodes: &[serde_json::Value]) -> Markup {
                         @let node_id = node.get("node_id").and_then(|v| v.as_str()).unwrap_or("");
                         @let label = format_node_id(node_id, i);
                         @let status = node.get("status").and_then(|v| v.as_str()).unwrap_or("-");
-                        @let ns = node.get("sessions").and_then(|v| v.as_u64()).unwrap_or(0);
-                        @let ng = node.get("guilds").and_then(|v| v.as_u64()).unwrap_or(0);
-                        @let np = node.get("presences").and_then(|v| v.as_u64()).unwrap_or(0);
-                        @let nc = node.get("calls").and_then(|v| v.as_u64()).unwrap_or(0);
-                        @let nm = node.pointer("/memory/total").and_then(|v| v.as_str()).unwrap_or("0");
+                        @let ns = node_count_cell(node, "sessions");
+                        @let nsr = node_count_cell(node, "session_resumes_total");
+                        @let ng = node_count_cell(node, "guilds");
+                        @let np = node_count_cell(node, "presences");
+                        @let nc = node_count_cell(node, "calls");
+                        @let nm = node
+                            .pointer("/memory/total")
+                            .and_then(|v| v.as_str())
+                            .map(format_memory_from_bytes)
+                            .unwrap_or_else(|| "-".to_owned());
                         tr class="transition-colors hover:bg-neutral-50" {
                             td class="whitespace-nowrap px-6 py-4 text-sm" {
                                 div class="font-medium text-neutral-900 text-sm" { (label) }
                                 div class="text-neutral-500 text-xs" { (status) }
                             }
                             td class="whitespace-nowrap px-6 py-4 text-right text-sm" { (ns) }
+                            td class="whitespace-nowrap px-6 py-4 text-right text-sm" { (nsr) }
                             td class="whitespace-nowrap px-6 py-4 text-right text-sm" { (ng) }
                             td class="whitespace-nowrap px-6 py-4 text-right text-sm" { (np) }
                             td class="whitespace-nowrap px-6 py-4 text-right text-sm" { (nc) }
                             td class="whitespace-nowrap px-6 py-4 text-right font-medium text-sm" {
-                                (format_memory_from_bytes(nm))
+                                (nm)
                             }
                         }
                     }
@@ -117,6 +129,13 @@ pub(crate) fn node_stats_table(nodes: &[serde_json::Value]) -> Markup {
             }
         }
     }
+}
+
+fn node_count_cell(node: &serde_json::Value, key: &str) -> String {
+    node.get(key)
+        .and_then(|v| v.as_u64())
+        .map(|v| v.to_string())
+        .unwrap_or_else(|| "-".to_owned())
 }
 
 pub(crate) fn format_node_id(node_id: &str, index: usize) -> String {

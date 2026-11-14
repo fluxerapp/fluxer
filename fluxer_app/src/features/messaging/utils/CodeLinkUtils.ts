@@ -2,6 +2,7 @@
 
 import {isLinkWrappedInAngleBrackets} from '@app/features/messaging/utils/LinkSuppressionUtils';
 import * as RegexUtils from '@app/features/messaging/utils/RegexUtils';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 
 export interface CodeLinkConfig {
 	path: string;
@@ -32,20 +33,23 @@ function normalizeUrlBase(urlBase: string | null | undefined): string | null {
 }
 
 function createPattern(config: CodeLinkConfig): RegExp {
+	const urlBases = config.urlBases;
+	const documentHost =
+		typeof location !== 'undefined' && location.host && !isDesktopLocalAppDocument() ? location.host : '';
+	const inputKey = [config.path, documentHost, ...urlBases].join('\u0000');
+	let pattern = patternCache.get(inputKey);
+	if (pattern) {
+		return pattern;
+	}
 	const normalizedBases = new Set<string>();
-	for (const urlBase of config.urlBases) {
+	for (const urlBase of urlBases) {
 		const normalized = normalizeUrlBase(urlBase);
 		if (normalized) {
 			normalizedBases.add(normalized);
 		}
 	}
-	if (typeof location !== 'undefined' && location.host) {
-		normalizedBases.add(`${location.host}/${config.path}`);
-	}
-	const cacheKey = Array.from(normalizedBases).sort().join('|');
-	let pattern = patternCache.get(cacheKey);
-	if (pattern) {
-		return pattern;
+	if (documentHost) {
+		normalizedBases.add(`${documentHost}/${config.path}`);
 	}
 	const branches: Array<string> = [];
 	const orderedBases = Array.from(normalizedBases).sort((a, b) => b.length - a.length || a.localeCompare(b));
@@ -56,11 +60,11 @@ function createPattern(config: CodeLinkConfig): RegExp {
 		branches.push(`${RegexUtils.escapeRegex(host)}(?:\\/#)?${RegexUtils.escapeRegex(path)}`);
 	}
 	pattern = new RegExp(['(?:https?:\\/\\/)?', '(?:', branches.join('|'), ')\\/', CODE_REGEX].join(''), 'gi');
-	patternCache.set(cacheKey, pattern);
+	patternCache.set(inputKey, pattern);
 	return pattern;
 }
 
-function findCodeMatchesInternal(
+function findCodeMatches(
 	content: string | null,
 	config: CodeLinkConfig,
 	options?: {
@@ -96,12 +100,18 @@ export function findCodes(content: string | null, config: CodeLinkConfig): Array
 	return findCodeMatches(content, config).map((match) => match.code);
 }
 
-export function findCodeMatches(content: string | null, config: CodeLinkConfig): Array<CodeLinkMatch> {
-	return findCodeMatchesInternal(content, config);
-}
-
 export function findCode(content: string | null, config: CodeLinkConfig): string | null {
 	return findCodeMatches(content, config)[0]?.code ?? null;
+}
+
+export function findCodeAtUrlStart(url: string | null, config: CodeLinkConfig): string | null {
+	if (!url) return null;
+	const pattern = createPattern(config);
+	pattern.lastIndex = 0;
+	const match = pattern.exec(url);
+	pattern.lastIndex = 0;
+	if (match?.index !== 0) return null;
+	return match[1] ?? null;
 }
 
 export function findSpoileredCodeMatches(content: string | null, config: CodeLinkConfig): Array<CodeLinkMatch> {
@@ -110,7 +120,7 @@ export function findSpoileredCodeMatches(content: string | null, config: CodeLin
 	for (const spoilerMatch of content.matchAll(SPOILER_REGEX)) {
 		const spoilerBody = spoilerMatch[1];
 		if (!spoilerBody) continue;
-		for (const codeMatch of findCodeMatchesInternal(spoilerBody, config, {
+		for (const codeMatch of findCodeMatches(spoilerBody, config, {
 			dedupeCodes: false,
 			limit: Number.POSITIVE_INFINITY,
 		})) {

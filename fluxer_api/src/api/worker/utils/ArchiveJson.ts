@@ -2,7 +2,7 @@
 
 const NON_ASCII_JSON_CHAR = /[\u007f-\uffff]/g;
 
-export function stringifyArchiveJson(value: unknown, space: string | number = 2): string {
+function stringifyArchiveJson(value: unknown, space: string | number = 2): string {
 	const json = JSON.stringify(value, null, space);
 	if (json === undefined) {
 		throw new Error('Archive JSON value is not serializable');

@@ -1,22 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createRoleIDSet, createUserID, type RoleID, type UserID} from '@app/api/BrandedTypes';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
+import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
+import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {
 	GuildFeatures,
 	GuildVerificationLevel,
 	getEffectiveGuildVerificationLevel,
 } from '@fluxer/constants/src/GuildConstants';
-import {GuildEmailVerificationRequiredError} from '@fluxer/errors/src/domains/auth/EmailVerificationRequiredError';
-import {GuildPhoneVerificationRequiredError} from '@fluxer/errors/src/domains/auth/GuildPhoneVerificationRequiredError';
 import {AccountTooNewForGuildError} from '@fluxer/errors/src/domains/guild/AccountTooNewForGuildError';
-import {GuildVerificationRequiredError} from '@fluxer/errors/src/domains/guild/GuildVerificationRequiredError';
+import {
+	GuildVerificationRequiredError,
+	GuildVerificationRequiredReasons,
+} from '@fluxer/errors/src/domains/guild/GuildVerificationRequiredError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
-import {createRoleIDSet, createUserID, type RoleID, type UserID} from '../BrandedTypes';
-import type {Guild} from '../models/Guild';
-import type {GuildMember} from '../models/GuildMember';
-import type {User} from '../models/User';
 
 interface VerificationParams {
 	user: User;
@@ -40,20 +43,7 @@ function checkGuildVerification(params: VerificationParams): void {
 	if (memberRoles && memberRoles.size > 0) {
 		return;
 	}
-	if (verificationLevel === GuildVerificationLevel.VERY_HIGH) {
-		if (!user.hasVerifiedPhone) {
-			throw new GuildPhoneVerificationRequiredError();
-		}
-		return;
-	}
-	if (!user.email) {
-		throw new GuildVerificationRequiredError('You need to claim your account to send messages in this guild.');
-	}
-	if (verificationLevel >= GuildVerificationLevel.LOW) {
-		if (!user.emailVerified) {
-			throw new GuildEmailVerificationRequiredError();
-		}
-	}
+	assertTierAllows(user, TierGatedActions.GUILD_VERIFICATION, NO_TIER_CONTEXT);
 	if (verificationLevel >= GuildVerificationLevel.MEDIUM) {
 		const createdAt = snowflakeToDate(BigInt(user.id)).getTime();
 		const accountAge = Date.now() - createdAt;
@@ -67,9 +57,7 @@ function checkGuildVerification(params: VerificationParams): void {
 				typeof memberJoinedAt === 'string' ? new Date(memberJoinedAt).getTime() : memberJoinedAt.getTime();
 			const membershipDuration = Date.now() - joinedAtTime;
 			if (membershipDuration < ms('10 minutes')) {
-				throw new GuildVerificationRequiredError(
-					"You haven't been a member of this guild long enough to send messages.",
-				);
+				throw new GuildVerificationRequiredError(GuildVerificationRequiredReasons.MEMBERSHIP_AGE);
 			}
 		}
 	}

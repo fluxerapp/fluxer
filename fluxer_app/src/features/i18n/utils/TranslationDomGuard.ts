@@ -148,7 +148,7 @@ export function getTranslationDomGuardStats(): TranslationDomGuardStats {
 	return {...stats};
 }
 
-export function uninstallTranslationDomGuard(): boolean {
+function uninstallTranslationDomGuard(): boolean {
 	const wasInstalled = restorePrototypes != null;
 	stopWatchingKillSwitch?.();
 	stopWatchingKillSwitch = null;
@@ -168,7 +168,7 @@ export function installTranslationDomGuard(): void {
 		(disabled) => {
 			if (disabled) {
 				unpatchPrototypes();
-				logger.info('Translation DOM guard disabled by developer option.');
+				logger.debug('Translation DOM guard disabled by developer option.');
 			} else {
 				patchPrototypes();
 			}

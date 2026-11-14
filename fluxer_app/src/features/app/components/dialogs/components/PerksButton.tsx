@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/app/components/dialogs/components/PerksButton.module.css';
-import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -17,7 +17,7 @@ export const PerksButton: React.FC<{
 	const {i18n} = useLingui();
 	return (
 		<button type="button" onClick={onClick} className={styles.link} data-flx="app.perks-button.link.click.button">
-			{i18n._(PREMIUM_PERKS_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
+			{i18n._(PREMIUM_PERKS_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
 		</button>
 	);
 });

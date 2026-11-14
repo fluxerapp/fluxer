@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {checkAstroServerHealth} from '../src/server/AstroServer';
-import {docsListenHost, docsListenPort} from '../src/server/DocsConfig';
+import {checkAstroServerHealth} from '@/server/AstroServer';
+import {docsListenHost, docsListenPort} from '@/server/DocsConfig';
 
 await checkAstroServerHealth({
 	listenHost: docsListenHost(),

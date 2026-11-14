@@ -7,14 +7,12 @@ import {
 import {BulkDeleteUserMessagesRequest} from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
 import {
 	BulkScheduleUserDeletionRequest,
-	BulkUpdateSuspiciousActivityFlagsRequest,
 	BulkUpdateUserFlagsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {z} from 'zod';
 
 export const AdminBulkTaskType = {
 	UPDATE_USER_FLAGS: 'update_user_flags',
-	UPDATE_SUSPICIOUS_ACTIVITY_FLAGS: 'update_suspicious_activity_flags',
 	UPDATE_GUILD_FEATURES: 'update_guild_features',
 	ADD_GUILD_MEMBERS: 'add_guild_members',
 	SCHEDULE_USER_DELETION: 'schedule_user_deletion',
@@ -28,11 +26,6 @@ export const AdminBulkJobCreateRequest = z.discriminatedUnion('task', [
 		task: z
 			.literal(AdminBulkTaskType.UPDATE_USER_FLAGS)
 			.describe('Adds and removes account flags on every targeted user'),
-	}),
-	BulkUpdateSuspiciousActivityFlagsRequest.extend({
-		task: z
-			.literal(AdminBulkTaskType.UPDATE_SUSPICIOUS_ACTIVITY_FLAGS)
-			.describe('Adds and removes verification requirements on every targeted user'),
 	}),
 	BulkUpdateGuildFeaturesRequest.extend({
 		task: z

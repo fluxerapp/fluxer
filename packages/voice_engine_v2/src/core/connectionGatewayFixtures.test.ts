@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import gatewayConnectionFixtureJson from '../../fixtures/event_logs/gateway_connection.json';
-import reconnectChannelMoveFixtureJson from '../../fixtures/event_logs/reconnect_channel_move.json';
-import resumePreservesMediaFixtureJson from '../../fixtures/event_logs/resume_preserves_media.json';
-import staleConnectionFixtureJson from '../../fixtures/event_logs/stale_connection.json';
-import teardownRendererWindowFixtureJson from '../../fixtures/event_logs/teardown_renderer_window.json';
-import type {VoiceEngineV2Command} from '../protocol/commands';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import {transitionVoiceEngineV2} from './reducer';
+import gatewayConnectionFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/gateway_connection.json';
+import reconnectChannelMoveFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/reconnect_channel_move.json';
+import resumePreservesMediaFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/resume_preserves_media.json';
+import staleConnectionFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/stale_connection.json';
+import teardownRendererWindowFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/teardown_renderer_window.json';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2OperationStatus,
 	type VoiceEngineV2Snapshot,
-} from './state';
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import {describe, expect, it} from 'vitest';
 
 interface VoiceEngineV2ConnectionGatewayFixtureStep {
 	name: string;

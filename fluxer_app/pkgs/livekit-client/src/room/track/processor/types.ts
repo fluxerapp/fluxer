@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type Room from '../../Room.ts';
+import type LocalTrack from '../LocalTrack.ts';
 import type {Track} from '../Track.ts';
 
 export type ProcessorOptions<T extends Track.Kind> = {
@@ -9,6 +10,7 @@ export type ProcessorOptions<T extends Track.Kind> = {
 	track: MediaStreamTrack;
 	element?: HTMLMediaElement;
 	audioContext?: AudioContext;
+	localTrack?: LocalTrack;
 };
 
 export interface AudioProcessorOptions extends ProcessorOptions<Track.Kind.Audio> {

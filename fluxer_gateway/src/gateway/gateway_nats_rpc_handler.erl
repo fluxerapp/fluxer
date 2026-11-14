@@ -9,13 +9,9 @@
     rpc_subjects_for_role/1,
     do_connect/1,
     do_subscribe/1,
-    schedule_reconnect/1,
-    max_handlers/0,
-    parse_nats_url/1,
-    build_connect_opts/1
+    schedule_reconnect/1
 ]).
 
--define(DEFAULT_MAX_HANDLERS, 512).
 -define(RECONNECT_DELAY_MS, 2000).
 -define(CONNECT_TIMEOUT_MS, 10000).
 -define(RPC_SUBJECT_WILDCARD, <<"rpc.gateway.>">>).
@@ -128,7 +124,7 @@ is_rpc_subject(_) -> false.
 do_connect(State) ->
     NatsUrl = fluxer_gateway_env:get(nats_core_url),
     AuthToken = fluxer_gateway_env:get(nats_auth_token),
-    case parse_nats_url(NatsUrl) of
+    case gateway_nats_pool_conn:parse_nats_url(NatsUrl) of
         {ok, Host, Port} ->
             spawn_connect(Host, Port, AuthToken, State);
         {error, Reason} ->
@@ -138,7 +134,7 @@ do_connect(State) ->
 
 -spec spawn_connect(string(), inet:port_number(), term(), map()) -> map().
 spawn_connect(Host, Port, AuthToken, State) ->
-    Opts = build_connect_opts(AuthToken),
+    Opts = gateway_nats_pool_conn:build_connect_opts(AuthToken),
     Parent = self(),
     Token = make_ref(),
     ConnPid = spawn(fun() -> connect_and_notify(Host, Port, Opts, Parent) end),
@@ -152,7 +148,7 @@ spawn_connect(Host, Port, AuthToken, State) ->
 -spec connect_and_notify(string(), inet:port_number(), map(), pid()) -> ok.
 connect_and_notify(Host, Port, Opts, Parent) ->
     _ =
-        case nats:connect(Host, Port, Opts) of
+        case gateway_nats_pool_conn:connect(Host, Port, Opts) of
             {ok, Conn} ->
                 ok = nats:controlling_process(Conn, Parent),
                 Parent ! {nats_connect_result, self(), {ok, Conn}};
@@ -161,142 +157,57 @@ connect_and_notify(Host, Port, Opts, Parent) ->
         end,
     ok.
 
--spec do_subscribe(map()) -> map().
-do_subscribe(#{conn := Conn, rpc_enabled := RpcEnabled} = State) when
+-spec do_subscribe(map()) -> {map(), boolean()}.
+do_subscribe(#{conn := Conn, ready := true, rpc_enabled := true} = State) when
     Conn =/= undefined
 ->
-    case RpcEnabled of
-        false ->
-            logger:info(
-                "Gateway NATS RPC connected but subscription disabled"
-                " (GATEWAY_NATS_RPC_ENABLED=false)"
-            ),
-            State;
-        _ ->
-            subscribe_for_role(Conn, State)
-    end;
+    subscribe_for_role(Conn, State);
+do_subscribe(#{conn := Conn, ready := true} = State) when Conn =/= undefined ->
+    logger:info(
+        "Gateway NATS RPC connected but subscription disabled"
+        " (FLUXER_GATEWAY_NATS_RPC_ENABLED=false)"
+    ),
+    {State, true};
 do_subscribe(State) ->
-    State.
+    {State, false}.
 
--spec subscribe_for_role(nats:conn(), map()) -> map().
+-spec subscribe_for_role(nats:conn(), map()) -> {map(), boolean()}.
 subscribe_for_role(Conn, State) ->
     Role = fluxer_gateway_sup:current_role(),
-    Subjects = rpc_subjects_for_role(Role),
-    case Subjects of
+    Subs = maps:get(rpc_subs, State, #{}),
+    case [Subject || Subject <- rpc_subjects_for_role(Role), not maps:is_key(Subject, Subs)] of
         [] ->
-            logger:info("Gateway NATS RPC connected but not subscribing", #{role => Role}),
-            State;
-        _ ->
-            Sids = subscribe_subjects(Conn, Role, Subjects),
-            State#{sub => Sids}
+            {State, true};
+        Missing ->
+            NewSubs = subscribe_missing(Conn, Role, Missing, Subs),
+            {
+                State#{rpc_subs => NewSubs},
+                map_size(NewSubs) - map_size(Subs) =:= length(Missing)
+            }
     end.
 
--spec subscribe_subjects(nats:conn(), atom(), [binary()]) -> [term()].
-subscribe_subjects(Conn, Role, Subjects) ->
-    lists:filtermap(
-        fun(Subject) ->
-            subscribe_subject(Conn, Role, Subject)
-        end,
-        Subjects
+-spec subscribe_missing(nats:conn(), atom(), [binary()], map()) -> map().
+subscribe_missing(Conn, Role, Missing, Subs) ->
+    lists:foldl(
+        fun(Subject, Acc) -> subscribe_subject(Conn, Role, Subject, Acc) end,
+        Subs,
+        Missing
     ).
 
--spec subscribe_subject(nats:conn(), atom(), binary()) -> {true, term()} | false.
-subscribe_subject(Conn, Role, Subject) ->
-    case nats:sub(Conn, Subject, #{queue_group => ?QUEUE_GROUP}) of
+-spec subscribe_subject(nats:conn(), atom(), binary(), map()) -> map().
+subscribe_subject(Conn, Role, Subject, Subs) ->
+    case gateway_nats_pool_conn:guarded_sub(Conn, Subject, #{queue_group => ?QUEUE_GROUP}) of
         {ok, Sid} ->
             logger:info("Gateway NATS RPC subscribed", #{subject => Subject, role => Role}),
-            {true, Sid};
+            Subs#{Subject => Sid};
         {error, Reason} ->
             logger:error("Gateway NATS RPC failed to subscribe", #{
                 subject => Subject, reason => Reason
             }),
-            false
+            Subs
     end.
 
 -spec schedule_reconnect(map()) -> map().
 schedule_reconnect(State) ->
     erlang:send_after(?RECONNECT_DELAY_MS, self(), connect),
     State.
-
--spec max_handlers() -> pos_integer().
-max_handlers() ->
-    case fluxer_gateway_env:get(gateway_nats_rpc_max_handlers) of
-        Value when is_integer(Value), Value > 0 -> Value;
-        _ -> ?DEFAULT_MAX_HANDLERS
-    end.
-
--spec parse_nats_url(term()) -> {ok, string(), inet:port_number()} | {error, term()}.
-parse_nats_url(Url) ->
-    gateway_nats_pool_conn:parse_nats_url(Url).
-
--spec build_connect_opts(term()) -> map().
-build_connect_opts(AuthToken) ->
-    gateway_nats_pool_conn:build_connect_opts(AuthToken).
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-parse_nats_url_test() ->
-    ?assertEqual({ok, "127.0.0.1", 4222}, parse_nats_url(<<"nats://127.0.0.1:4222">>)),
-    ?assertEqual({ok, "localhost", 4222}, parse_nats_url(<<"nats://localhost:4222">>)),
-    ?assertEqual({ok, "localhost", 4222}, parse_nats_url(<<"nats://localhost">>)),
-    ?assertEqual({ok, "127.0.0.1", 4222}, parse_nats_url("nats://127.0.0.1:4222")),
-    ?assertEqual({error, invalid_nats_url}, parse_nats_url(undefined)).
-
-execute_rpc_method_maps_validation_failure_to_invalid_params_test() ->
-    Payload = iolist_to_binary(
-        json:encode(#{
-            <<"guild_id">> => <<"nope">>,
-            <<"user_id">> => <<"2">>,
-            <<"channel_id">> => <<"0">>
-        })
-    ),
-    ?assertEqual(
-        #{<<"ok">> => false, <<"error">> => <<"invalid_params">>},
-        execute_rpc_method(<<"guild.get_user_permissions">>, Payload)
-    ).
-
-execute_rpc_method_maps_oversized_batch_to_batch_too_large_test() ->
-    GuildIds = [integer_to_binary(N) || N <- lists:seq(1, 101)],
-    Payload = iolist_to_binary(
-        json:encode(#{
-            <<"guild_ids">> => GuildIds,
-            <<"user_id">> => <<"1">>,
-            <<"channel_id">> => <<"0">>
-        })
-    ),
-    ?assertEqual(
-        #{<<"ok">> => false, <<"error">> => <<"batch_too_large">>},
-        execute_rpc_method(<<"guild.get_user_permissions_batch">>, Payload)
-    ).
-
-rpc_subjects_for_role_does_not_route_rpc_to_websocket_test() ->
-    ?assertEqual([], rpc_subjects_for_role(websocket)).
-
-rpc_subjects_for_role_routes_namespaces_to_state_roles_test() ->
-    ?assertEqual([?RPC_SUBJECT_WILDCARD], rpc_subjects_for_role(all)),
-    ?assert(lists:member(<<"rpc.gateway.guild.>">>, rpc_subjects_for_role(guilds))),
-    ?assertEqual([], rpc_subjects_for_role(sessions)),
-    ?assert(lists:member(<<"rpc.gateway.presence.>">>, rpc_subjects_for_role(presence))),
-    ?assert(lists:member(<<"rpc.gateway.call.>">>, rpc_subjects_for_role(calls))),
-    ?assert(lists:member(<<"rpc.gateway.push.>">>, rpc_subjects_for_role(push))).
-
-rpc_subjects_for_role_covers_all_router_prefixes_test() ->
-    Subjects = lists:append([
-        rpc_subjects_for_role(guilds),
-        rpc_subjects_for_role(presence),
-        rpc_subjects_for_role(calls),
-        rpc_subjects_for_role(push)
-    ]),
-    Prefixes = [
-        <<"guild">>, <<"presence">>, <<"push">>, <<"call">>, <<"voice">>, <<"process">>
-    ],
-    lists:foreach(
-        fun(Prefix) ->
-            ExpectedSubject = <<"rpc.gateway.", Prefix/binary, ".>">>,
-            ?assert(lists:member(ExpectedSubject, Subjects))
-        end,
-        Prefixes
-    ).
-
--endif.

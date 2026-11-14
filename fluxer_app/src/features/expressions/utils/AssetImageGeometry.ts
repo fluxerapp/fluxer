@@ -10,10 +10,10 @@ export interface AspectRatioRange {
 	max: number;
 }
 
-export const ASSET_ASPECT_RATIO_TOLERANCE = 0.01;
-export const WIDE_ASSET_ASPECT_RATIO = 16 / 9;
-export const WIDE_ASSET_MIN_HEIGHT_RATIO = 0.5;
-export const WIDE_ASSET_MAX_HEIGHT_RATIO = 1;
+const ASSET_ASPECT_RATIO_TOLERANCE = 0.01;
+const WIDE_ASSET_ASPECT_RATIO = 16 / 9;
+const WIDE_ASSET_MIN_HEIGHT_RATIO = 0.5;
+const WIDE_ASSET_MAX_HEIGHT_RATIO = 1;
 
 export function getAspectRatioRange(aspectRatio: number, minHeightRatio = 1, maxHeightRatio = 1): AspectRatioRange {
 	const safeAspectRatio = Number.isFinite(aspectRatio) && aspectRatio > 0 ? aspectRatio : 1;
@@ -27,7 +27,7 @@ export function getAspectRatioRange(aspectRatio: number, minHeightRatio = 1, max
 	};
 }
 
-export const WIDE_ASSET_ASPECT_RATIO_RANGE = getAspectRatioRange(
+const WIDE_ASSET_ASPECT_RATIO_RANGE = getAspectRatioRange(
 	WIDE_ASSET_ASPECT_RATIO,
 	WIDE_ASSET_MIN_HEIGHT_RATIO,
 	WIDE_ASSET_MAX_HEIGHT_RATIO,
@@ -41,7 +41,7 @@ export function getAspectRatioFromDimensions(dimensions: ImageDimensions): numbe
 	return width / height;
 }
 
-export function isAspectRatioInRange(
+function isAspectRatioInRange(
 	aspectRatio: number | undefined,
 	range: AspectRatioRange,
 	tolerance = ASSET_ASPECT_RATIO_TOLERANCE,
@@ -54,18 +54,11 @@ export function isAspectRatioInRange(
 	return aspectRatio >= min && aspectRatio <= max;
 }
 
-export function clampAspectRatio(aspectRatio: number | undefined, range: AspectRatioRange): number | undefined {
+function clampAspectRatio(aspectRatio: number | undefined, range: AspectRatioRange): number | undefined {
 	if (aspectRatio == null || !Number.isFinite(aspectRatio) || aspectRatio <= 0) {
 		return undefined;
 	}
 	return Math.min(Math.max(aspectRatio, range.min), range.max);
-}
-
-export function clampAspectRatioFromDimensions(
-	dimensions: ImageDimensions,
-	range: AspectRatioRange,
-): number | undefined {
-	return clampAspectRatio(getAspectRatioFromDimensions(dimensions), range);
 }
 
 export function isOriginalImageWithinAssetBounds(
@@ -86,8 +79,4 @@ export function isOriginalImageWithinAssetBounds(
 
 export function clampWideAssetAspectRatio(aspectRatio: number | undefined): number | undefined {
 	return clampAspectRatio(aspectRatio, WIDE_ASSET_ASPECT_RATIO_RANGE);
-}
-
-export function clampWideAssetAspectRatioFromDimensions(dimensions: ImageDimensions): number | undefined {
-	return clampAspectRatioFromDimensions(dimensions, WIDE_ASSET_ASPECT_RATIO_RANGE);
 }

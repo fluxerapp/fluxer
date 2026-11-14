@@ -2,7 +2,7 @@
 
 .container {
 	position: absolute;
-	right: var(--composer-box-padding-inline, 0px);
+	inset-inline-end: var(--composer-box-padding-inline, 0px);
 	bottom: var(--composer-status-safe-gap, 0.5rem);
 	z-index: 4;
 	padding: 0 0.25rem;

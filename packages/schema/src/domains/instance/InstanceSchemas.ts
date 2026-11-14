@@ -1,7 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {RegistrationModes} from '@fluxer/constants/src/AccountConfigConstants';
+import {
+	AccountIdentityLockReasons,
+	AccountIdentityModes,
+	TagStyles,
+} from '@fluxer/constants/src/AccountIdentityConstants';
+import {
+	BUILT_IN_GUILD_BADGE_KINDS,
+	CUSTOM_BADGE_LOOKUP_IDS_MAX,
+	CUSTOM_BADGE_PAGE_LIMIT_DEFAULT,
+	CUSTOM_BADGE_PAGE_LIMIT_MAX,
+	DISCOVERY_GUILD_BADGE_LIMIT,
+} from '@fluxer/constants/src/BadgeConstants';
+import {
+	CaptchaProviderSchema,
+	EffectiveVerificationBasisSchema,
+	EmailDeliveryStateSchema,
+	GuildJoinGateSchema,
+	InstantAccountAvailabilitySchema,
+	InteractionTierModeSchema,
+} from '@fluxer/schema/src/domains/account/AccountTierSchemas';
+import {CustomBadgeCursorType, CustomBadgePositionType} from '@fluxer/schema/src/domains/admin/AdminBadgeSchemas';
+import {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {SsoStatusResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {createNamedStringLiteralUnion} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
+import {
+	createNamedStringLiteralUnion,
+	createStringType,
+	SnowflakeStringType,
+} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 const LimitFilterResponse = z.object({
@@ -32,15 +60,115 @@ export const InstanceBrandingSchema = z
 		logo_url: z.string().nullable().describe('Optional image URL for the application logo'),
 		wordmark_url: z.string().nullable().describe('Optional image URL for the application wordmark'),
 		favicon_url: z.string().nullable().describe('Optional favicon URL for browser metadata'),
+		favicon_dark_url: z
+			.string()
+			.nullable()
+			.describe('Optional favicon URL a self-hosted instance shows when the browser uses a dark color scheme'),
 		theme_color: z.string().nullable().describe('Optional browser theme color'),
+		status_page_url: z.string().nullable().describe('Optional public status page URL'),
+		status_page_instatus: z
+			.boolean()
+			.describe(
+				'Whether the server detected that the status page is an Instatus page that clients can read current incidents from',
+			),
+		status_page_incident_history_url: z
+			.string()
+			.nullable()
+			.describe('Optional public status page incident history URL'),
+		premium_product_name: z.string().describe('Name of the premium tier shown by client applications'),
+		premium_info_url: z.string().nullable().describe('Optional absolute URL of a page describing the premium tier'),
+		sign_in_backdrop_url: z
+			.string()
+			.nullable()
+			.describe('Optional image URL drawn behind the sign-in card on a self-hosted instance'),
+		premium_page_color: z
+			.string()
+			.nullable()
+			.describe('Optional hex color a self-hosted instance uses to recolor its premium page'),
+		premium_showcase_expressions_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the "Your emojis, everywhere" card on its premium page',
+			),
+		premium_showcase_profile_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the "A profile that stands out" card on its premium page',
+			),
+		premium_showcase_stream_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the "Stream in 4K at 60 FPS" card on its premium page',
+			),
+		premium_showcase_upload_url: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional image a self-hosted instance shows next to the card about file size limits on its premium page',
+			),
+		custom_css: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional stylesheet a self-hosted instance applies to its web and desktop app, including on sign-in pages',
+			),
+		upload_limit_message: z
+			.string()
+			.nullable()
+			.describe(
+				'Optional Markdown a self-hosted instance shows when a file is over the upload limit, in place of the default note',
+			),
+		trusted_domains: z
+			.array(z.string())
+			.describe(
+				'Extra domains a self-hosted instance trusts, so links to them open without a warning. Each entry is a hostname, or a hostname with a *. prefix that also covers its subdomains',
+			),
 	})
 	.describe('Branding values safe to expose to clients');
 export type InstanceBranding = z.infer<typeof InstanceBrandingSchema>;
+
+export const AccountIdentityLockReasonSchema = createNamedStringLiteralUnion(
+	[
+		[
+			AccountIdentityLockReasons.SETUP_CONFIGURED,
+			'SETUP_CONFIGURED',
+			'The instance configuration marks setup as finished',
+		],
+		[
+			AccountIdentityLockReasons.EXISTING_INSTANCE,
+			'EXISTING_INSTANCE',
+			'The instance was in use before username sign-in existed, so it stays on email',
+		],
+		[AccountIdentityLockReasons.ADMIN_EXISTS, 'ADMIN_EXISTS', 'The instance already has an administrator'],
+		[AccountIdentityLockReasons.ACCOUNTS_EXIST, 'ACCOUNTS_EXIST', 'The instance already has accounts'],
+	],
+	'Why the sign-in method can no longer change',
+);
 
 export const InstanceSetupSchema = z
 	.object({
 		configured: z.boolean().describe('Whether the instance administrator has completed initial setup'),
 		admin_url: z.string().nullable().describe('Admin panel URL to continue instance setup'),
+		account_identity_locked: z
+			.boolean()
+			.optional()
+			.describe(
+				'Present only while a self-hosted instance is unconfigured. True when the sign-in method can no longer change',
+			),
+		account_identity_lock_reason: AccountIdentityLockReasonSchema.nullable()
+			.optional()
+			.describe(
+				'Present only while a self-hosted instance is unconfigured. Why the sign-in method can no longer change, or null while it still can',
+			),
+		setup_token_required: z
+			.boolean()
+			.optional()
+			.describe(
+				'Present only while a self-hosted instance is unconfigured. True when registration needs the setup token',
+			),
 	})
 	.describe('Initial setup state for self-hosted instances');
 export type InstanceSetup = z.infer<typeof InstanceSetupSchema>;
@@ -49,8 +177,12 @@ const InstanceLegalSchema = z
 	.object({
 		terms_url: z.string().nullable().describe('Optional public terms of service URL for account registration'),
 		privacy_url: z.string().nullable().describe('Optional public privacy policy URL for account registration'),
+		guidelines_url: z
+			.string()
+			.nullable()
+			.describe('Optional public community guidelines URL linked from reporting and enforcement notices'),
 	})
-	.describe('Optional legal document URLs shown during public registration');
+	.describe('Optional legal and policy document URLs shown to users');
 
 const InstanceAppRegistrationSchema = z
 	.object({
@@ -66,18 +198,21 @@ export const InstanceAppPublicSchema = z.object({
 });
 export type InstanceAppPublic = z.infer<typeof InstanceAppPublicSchema>;
 
-export const InstanceCaptchaProviderSchema = z.enum(['hcaptcha', 'turnstile', 'none']);
-export type InstanceCaptchaProvider = z.infer<typeof InstanceCaptchaProviderSchema>;
-
 export const InstanceEndpointsSchema = z
 	.object({
 		api: z.string().describe('Base URL for authenticated API requests'),
 		api_client: z.string().describe('Base URL for client API requests'),
 		api_public: z.string().describe('Base URL for public API requests'),
+		api_transport: z
+			.string()
+			.optional()
+			.describe('Base URL that official desktop clients send API requests to instead of api_client'),
 		gateway: z.string().describe('WebSocket URL for the gateway'),
 		media: z.string().describe('Base URL for the media proxy'),
+		upload_relay: z.string().optional().describe('Base URL for proxied attachment and preview uploads'),
 		static_cdn: z.string().describe('Base URL for static assets (avatars, emojis, etc.)'),
 		marketing: z.string().describe('Base URL for the marketing website'),
+		docs: z.string().optional().describe('Base URL for the documentation website'),
 		admin: z.string().describe('Base URL for the admin panel'),
 		invite: z.string().describe('Base URL for invite links'),
 		gift: z.string().describe('Base URL for gift links'),
@@ -88,20 +223,94 @@ export type InstanceEndpoints = z.infer<typeof InstanceEndpointsSchema>;
 
 export const InstanceCaptchaSchema = z
 	.object({
-		provider: InstanceCaptchaProviderSchema.describe('Captcha provider name (hcaptcha, turnstile, none)'),
-		hcaptcha_site_key: z.string().nullable().describe('hCaptcha site key if using hCaptcha'),
-		turnstile_site_key: z.string().nullable().describe('Cloudflare Turnstile site key if using Turnstile'),
+		provider: CaptchaProviderSchema.describe('Captcha provider (altcha or none)'),
 	})
 	.describe('Captcha configuration');
 export type InstanceCaptcha = z.infer<typeof InstanceCaptchaSchema>;
 
+export const AccountIdentityModeSchema = createNamedStringLiteralUnion(
+	[
+		[AccountIdentityModes.EMAIL, 'EMAIL', 'People sign in with an email address'],
+		[AccountIdentityModes.USERNAME, 'USERNAME', 'People sign in with a username and no email is collected'],
+	],
+	'How people identify themselves when they sign in',
+);
+
+export const TagStyleSchema = createNamedStringLiteralUnion(
+	[
+		[TagStyles.NONE, 'NONE', 'Usernames are unique and shown without a tag'],
+		[TagStyles.RANDOM, 'RANDOM', 'Every account gets a random tag'],
+	],
+	'How usernames are tagged',
+);
+
 export const InstanceFeaturesSchema = z
 	.object({
 		voice_enabled: z.boolean().describe('Whether voice/video calling is enabled'),
-		stripe_enabled: z.boolean().describe('Whether Stripe payments are enabled'),
+		stripe_enabled: z.boolean().describe('Whether premium purchases through Stripe are available'),
+		premium_enabled: z
+			.boolean()
+			.describe('Whether this instance has a premium tier, so premium status, gifts and perks apply'),
+		stripe_serviceable: z
+			.boolean()
+			.describe('Whether existing Stripe subscriptions can be managed, cancelled and billed on this instance'),
 		self_hosted: z.boolean().describe('Whether this is a self-hosted instance'),
 		presigned_attachment_uploads: z.boolean().describe('Whether clients can request presigned attachment upload URLs'),
+		proxy_attachments_through_api: z
+			.boolean()
+			.optional()
+			.describe('Whether attachment links point at the API and need the viewer to be signed in. Missing means false'),
 		emails_enabled: z.boolean().describe('Whether the instance sends emails (verification, password reset, etc.)'),
+		phone_verification_enabled: z.boolean().describe('Deprecated. Always false.'),
+		discovery_enabled: z
+			.boolean()
+			.optional()
+			.describe('Whether the Explore community directory is available. Missing means true'),
+		desktop_modules_enabled: z.boolean().optional().describe('Whether desktop clients may load downloadable modules'),
+		account_deletion_grace_period_hours: z
+			.number()
+			.int()
+			.min(1)
+			.max(8760)
+			.optional()
+			.describe('Hours between a deletion request and the permanent deletion of the account'),
+		account_identity: AccountIdentityModeSchema.optional().describe(
+			'How people sign in on this instance. Clients treat a missing value as email',
+		),
+		tag_style: TagStyleSchema.optional().describe('How usernames are tagged. Clients treat a missing value as random'),
+		identifier_first: z
+			.boolean()
+			.optional()
+			.describe('Whether clients show the single sign-in entry that starts with an email. Missing means false'),
+		instant_accounts: z
+			.boolean()
+			.optional()
+			.describe('Whether accounts can be created without an email, from a display name. Missing means false'),
+		email_codes: z
+			.boolean()
+			.optional()
+			.describe('Whether the instance can send sign-in and verification codes by email. Missing means false'),
+		date_of_birth_step: z
+			.boolean()
+			.optional()
+			.describe(
+				'Whether accounts enter their date of birth in a step after they are created, so sign-up never asks for it. Missing means false',
+			),
+		instant_account_availability: InstantAccountAvailabilitySchema.optional().describe(
+			'Whether accounts can be created from just a display name through public sign-up, and why not. Missing means instant_accounts decides',
+		),
+		interaction_tier: InteractionTierModeSchema.optional().describe(
+			'Which limits apply to accounts that have not finished setting up. Missing means legacy',
+		),
+		guild_join_gate: GuildJoinGateSchema.optional().describe(
+			'When joining a community needs a finished account while interaction_tier is enforced. Missing means always',
+		),
+		email_delivery_state: EmailDeliveryStateSchema.optional().describe(
+			'Whether the instance sends email, and why not. Missing means emails_enabled decides',
+		),
+		verification_basis: EffectiveVerificationBasisSchema.optional().describe(
+			'What an account needs to finish setting up right now. Missing means confirmed_email while emails_enabled, otherwise local_credential',
+		),
 	})
 	.describe('Feature flags for this instance');
 export type InstanceFeatures = z.infer<typeof InstanceFeaturesSchema>;
@@ -117,18 +326,19 @@ export const InstanceGifSchema = z
 	.describe('GIF provider configuration for clients');
 export type InstanceGif = z.infer<typeof InstanceGifSchema>;
 
-export const InstanceSsoSchema = SsoStatusResponse.describe('Single sign-on configuration');
+export const InstanceSsoSchema = SsoStatusResponse.extend({
+	available: z.boolean().optional().describe('Whether an SSO provider is configured for this instance'),
+}).describe('Single sign-on configuration');
 export type InstanceSso = z.infer<typeof InstanceSsoSchema>;
 
 export const InstanceRegistrationModeSchema = createNamedStringLiteralUnion(
 	[
-		['open', 'open', 'Anyone can register'],
-		['approval', 'approval', 'Anyone can register, but admins must approve new accounts'],
-		['closed', 'closed', 'Public registration is closed'],
+		[RegistrationModes.OPEN, 'open', 'Anyone can register'],
+		[RegistrationModes.APPROVAL, 'approval', 'Anyone can register, but admins must approve new accounts'],
+		[RegistrationModes.CLOSED, 'closed', 'Public registration is closed'],
 	],
 	'Registration mode',
 );
-export type InstanceRegistrationMode = z.infer<typeof InstanceRegistrationModeSchema>;
 
 export const InstanceRegistrationSchema = z
 	.object({
@@ -147,30 +357,174 @@ export const InstanceCommunitySchema = z
 			.string()
 			.nullable()
 			.describe('The stock community guild ID when single-community mode is enabled'),
-		direct_messages_disabled: z
+		direct_messages_disabled: z.boolean().describe('Whether direct messages are disabled instance-wide'),
+		friends_disabled: z
 			.boolean()
-			.describe('Whether direct messages and friend requests are disabled instance-wide'),
+			.optional()
+			.describe('Whether friend requests are disabled instance-wide. Missing means direct_messages_disabled decides'),
+		personal_notes_enabled: z
+			.boolean()
+			.optional()
+			.describe('Whether people can use personal notes. Missing means they can'),
+		guild_create_access: z
+			.boolean()
+			.describe(
+				'Whether every account can create communities. When false, only admins and accounts granted the feature_guild_create limit can',
+			),
 	})
 	.describe('Community topology and direct-message policy for this instance');
 export type InstanceCommunity = z.infer<typeof InstanceCommunitySchema>;
+
+export const InstanceConnectionProviderSchema = z
+	.object({
+		id: z.string().describe('Provider id used in connection routes'),
+		name: z.string().describe('Name of the provider shown to people'),
+		icon_url: z.string().nullable().describe('Media proxy URL of the provider icon'),
+	})
+	.describe('A profile connection provider set up by the instance');
+export type InstanceConnectionProvider = z.infer<typeof InstanceConnectionProviderSchema>;
 
 export const InstanceServicesSchema = z
 	.object({
 		gif_enabled: z.boolean().describe('Whether the GIF picker is enabled for this instance'),
 		youtube_enabled: z.boolean().describe('Whether YouTube link enrichment is enabled for this instance'),
 		bluesky_enabled: z.boolean().describe('Whether Bluesky profile connections are enabled for this instance'),
+		connection_providers: z
+			.array(InstanceConnectionProviderSchema)
+			.describe('OAuth and OpenID Connect providers people can connect to their profile on this instance'),
 	})
 	.describe('Optional third-party service integrations enabled for this instance');
 export type InstanceServices = z.infer<typeof InstanceServicesSchema>;
 
+export const InstancePushDeliveryModeSchema = z.enum(['direct', 'external_relay', 'hybrid']);
+export type InstancePushDeliveryMode = z.infer<typeof InstancePushDeliveryModeSchema>;
+
 export const InstancePushSchema = z
 	.object({
 		public_vapid_key: z.string().nullable().describe('VAPID public key for web push notifications'),
+		delivery_mode: InstancePushDeliveryModeSchema.optional().describe('How push notifications reach devices'),
+		event_resolution_path: z
+			.string()
+			.optional()
+			.describe('API path clients call to resolve the payload of a push event'),
+		external_relay_url: z.string().nullable().optional().describe('URL of the external push relay, if any'),
+		relay_signing_key_hashes: z
+			.array(z.string())
+			.nullable()
+			.optional()
+			.describe('Hashes of the keys the external push relay signs with'),
 	})
 	.describe('Push notification configuration');
 export type InstancePush = z.infer<typeof InstancePushSchema>;
 
+export const InstanceAgePolicyActionSchema = z.enum(['restrict', 'block']);
+export type InstanceAgePolicyAction = z.infer<typeof InstanceAgePolicyActionSchema>;
+
+export const InstanceAgePolicyGeoSchema = z
+	.object({
+		country_code: z.string().describe('ISO 3166-1 alpha-2 country code'),
+		region_code: z.string().nullable().describe('ISO 3166-2 subdivision code, or null for the whole country'),
+		action: InstanceAgePolicyActionSchema.describe('Whether the region restricts or blocks access'),
+	})
+	.describe('Age policy for one region');
+export type InstanceAgePolicyGeo = z.infer<typeof InstanceAgePolicyGeoSchema>;
+
+export const InstanceAgePolicySchema = z
+	.object({
+		geos: z.array(InstanceAgePolicyGeoSchema).describe('Regions with an age policy'),
+	})
+	.describe('Regional age policy for this instance');
+export type InstanceAgePolicy = z.infer<typeof InstanceAgePolicySchema>;
+
+export const InstanceNoticeSchema = z
+	.object({
+		id: z.string().describe('Changes whenever the notice text changes, so clients can remember a dismissal'),
+		message: z.string().describe('Notice text written by the instance administrator'),
+		url: z.string().nullable().describe('Optional link shown with the notice'),
+		starts_at: z.iso.datetime().nullable().describe('When clients start showing the notice, or null for now'),
+		ends_at: z.iso.datetime().nullable().describe('When clients stop showing the notice, or null for no end'),
+	})
+	.describe('Notice from the instance administrator shown to everyone, such as planned maintenance');
+export type InstanceNotice = z.infer<typeof InstanceNoticeSchema>;
+
+export const InstanceGuildBadgeSchema = z.object({
+	id: SnowflakeStringType.describe('The ID of the badge, as listed in badge_ids of a community'),
+	name: z.string().describe('The name of the badge'),
+	description: z.string().nullable().describe('Text shown under the name when hovering over the badge, or null'),
+	asset_url: z.string().describe('URL of the badge image, served as WebP by the media proxy'),
+	href: z.string().nullable().describe('URL opened when the badge is clicked, or null'),
+	position: CustomBadgePositionType.optional(),
+});
+
+export type InstanceGuildBadge = z.infer<typeof InstanceGuildBadgeSchema>;
+
+export const InstanceBadgeSchema = InstanceGuildBadgeSchema.extend({position: CustomBadgePositionType});
+
+export type InstanceBadge = z.infer<typeof InstanceBadgeSchema>;
+
+const CustomBadgesVersionType = z
+	.string()
+	.max(64)
+	.describe('Version of the badge catalog. It changes whenever a badge is created, edited, deleted or moved');
+
+export const InstanceBadgesQuery = z.object({
+	ids: z
+		.string()
+		.regex(new RegExp(`^[0-9]{1,20}(?:,[0-9]{1,20}){0,${CUSTOM_BADGE_LOOKUP_IDS_MAX - 1}}$`))
+		.optional()
+		.describe(
+			`Up to ${CUSTOM_BADGE_LOOKUP_IDS_MAX} badge IDs separated by commas. Only these badges are returned. Cannot be sent with after`,
+		),
+	after: CustomBadgeCursorType.optional(),
+	limit: createQueryIntegerType({
+		defaultValue: CUSTOM_BADGE_PAGE_LIMIT_DEFAULT,
+		minValue: 1,
+		maxValue: CUSTOM_BADGE_PAGE_LIMIT_MAX,
+	}).describe(`Most badges to return, from 1 to ${CUSTOM_BADGE_PAGE_LIMIT_MAX}. Not used with ids`),
+	version: CustomBadgesVersionType.optional().describe(
+		'The catalog version the client already holds. When it is the current version the response can be cached for a day',
+	),
+});
+
+export type InstanceBadgesQuery = z.infer<typeof InstanceBadgesQuery>;
+
+export const InstanceBadgesResponse = z.object({
+	version: CustomBadgesVersionType,
+	badges: z
+		.array(InstanceGuildBadgeSchema.required({position: true}))
+		.max(CUSTOM_BADGE_PAGE_LIMIT_MAX)
+		.describe('Community badges in display order. IDs that are unknown or deleted are left out'),
+	next: CustomBadgeCursorType.nullable().describe(
+		'Pass this as after to get the next page, or null on the last page and for a lookup by ids',
+	),
+});
+
+export type InstanceBadgesResponse = z.infer<typeof InstanceBadgesResponse>;
+
+const BuiltInGuildBadgeImageType = z
+	.string()
+	.nullable()
+	.describe('URL of the image this instance shows for the badge, or null to use the built-in artwork');
+
+export const InstanceBuiltInGuildBadgeImagesSchema = z.object({
+	verified: BuiltInGuildBadgeImageType,
+	partnered: BuiltInGuildBadgeImageType,
+	discoverable: BuiltInGuildBadgeImageType,
+});
+
+export type InstanceBuiltInGuildBadgeImages = z.infer<typeof InstanceBuiltInGuildBadgeImagesSchema>;
+
+export const InstanceHiddenBuiltInGuildBadgesSchema = z
+	.array(z.enum(BUILT_IN_GUILD_BADGE_KINDS))
+	.max(BUILT_IN_GUILD_BADGE_KINDS.length)
+	.describe(
+		'Built-in community badges this instance does not show. The community keeps the feature, such as being listed in discovery',
+	);
+
+export type InstanceHiddenBuiltInGuildBadges = z.infer<typeof InstanceHiddenBuiltInGuildBadgesSchema>;
+
 export const WellKnownFluxerResponse = z.object({
+	codename: z.string().optional().describe('Protocol generation spoken by this instance'),
 	api_code_version: z.number().int().describe('Version of the API server code'),
 	endpoints: InstanceEndpointsSchema,
 	captcha: InstanceCaptchaSchema,
@@ -183,6 +537,61 @@ export const WellKnownFluxerResponse = z.object({
 	limits: LimitConfigResponse.describe('Limit configuration with rules and trait definitions'),
 	push: InstancePushSchema,
 	app_public: InstanceAppPublicSchema.describe('Public application configuration for client-side features'),
+	age_policy: InstanceAgePolicySchema,
+	notice: InstanceNoticeSchema.nullable()
+		.optional()
+		.describe('Notice from the instance administrator, or null when there is none'),
+	domain_migration: DomainMigrationDiscoveryResponse.optional().describe(
+		'Web domain migration switch and anonymous rollout, only acted on by official instance clients',
+	),
+	guild_badges: z
+		.array(InstanceGuildBadgeSchema)
+		.max(DISCOVERY_GUILD_BADGE_LIMIT)
+		.optional()
+		.describe(
+			`The first ${DISCOVERY_GUILD_BADGE_LIMIT} custom badges that communities on this instance can show next to their name, in display order. GET /instance/badges serves every badge`,
+		),
+	guild_badges_partial: z
+		.boolean()
+		.optional()
+		.describe('True when the instance has more community badges than guild_badges lists'),
+	custom_badges_version: CustomBadgesVersionType.optional(),
+	built_in_guild_badge_images: InstanceBuiltInGuildBadgeImagesSchema.optional().describe(
+		'Images this instance shows in place of the built-in verified, partnered and discoverable community badges',
+	),
+	hidden_built_in_guild_badges: InstanceHiddenBuiltInGuildBadgesSchema.optional(),
+	voice_origins: z
+		.array(z.string())
+		.max(1000)
+		.optional()
+		.describe(
+			'Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as wss://*.example.com',
+		),
 });
 
 export type WellKnownFluxerResponse = z.infer<typeof WellKnownFluxerResponse>;
+
+export const InstanceAccountIdentityUpdateRequest = z.object({
+	mode: AccountIdentityModeSchema.describe('Sign-in method for the new instance'),
+	tag_style: TagStyleSchema.optional().describe(
+		'How usernames are tagged. Defaults to none. Username sign-in accepts only none',
+	),
+	setup_token: createStringType(1, 256)
+		.nullish()
+		.describe('Setup token of a new self-hosted instance. Required until the first admin account exists'),
+});
+
+export type InstanceAccountIdentityUpdateRequest = z.infer<typeof InstanceAccountIdentityUpdateRequest>;
+
+export const InstanceSetupTokenCheckRequest = z.object({
+	setup_token: createStringType(1, 256).describe('Setup token of a new self-hosted instance'),
+});
+
+export type InstanceSetupTokenCheckRequest = z.infer<typeof InstanceSetupTokenCheckRequest>;
+
+export const InstanceAccountIdentityResponse = z.object({
+	mode: AccountIdentityModeSchema.describe('Sign-in method now in effect'),
+	tag_style: TagStyleSchema.describe('How usernames are tagged'),
+});
+
+export type InstanceAccountIdentityResponse = z.infer<typeof InstanceAccountIdentityResponse>;

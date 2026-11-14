@@ -2,6 +2,7 @@
 
 export const GatewayRpcMethodErrorCodes = {
 	OVERLOADED: 'overloaded',
+	GUILD_OVERLOADED: 'guild_overloaded',
 	INTERNAL_ERROR: 'internal_error',
 	TIMEOUT: 'timeout',
 	NO_RESPONDERS: 'no_responders',

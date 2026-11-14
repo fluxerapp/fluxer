@@ -7,8 +7,8 @@ import type {
 	AuthorizeParams,
 	PublicAppData,
 } from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizePageShared';
+import {OAuthAuthorizingAccount} from '@app/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizingAccount';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
-import type {OAuth2Scope} from '@fluxer/constants/src/OAuth2Constants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -29,6 +29,7 @@ const REQUIRED_DESCRIPTOR = msg({
 interface OAuthScopesStepProps {
 	authParams: AuthorizeParams;
 	botInviteWithoutRedirect: boolean;
+	cannotSubmit: boolean;
 	clientLabel: string;
 	hasNextStep: boolean;
 	hasPreviousStep: boolean;
@@ -44,6 +45,7 @@ interface OAuthScopesStepProps {
 	scopesAdjusted: boolean;
 	selectedScopes: ReadonlySet<string>;
 	showInlineActions?: boolean;
+	showAccount: boolean;
 	isScopeLocked: (scope: string) => boolean;
 	submitting: 'approve' | 'deny' | null;
 }
@@ -51,6 +53,7 @@ interface OAuthScopesStepProps {
 export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 	authParams,
 	botInviteWithoutRedirect,
+	cannotSubmit,
 	clientLabel,
 	hasNextStep,
 	hasPreviousStep,
@@ -66,6 +69,7 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 	scopesAdjusted,
 	selectedScopes,
 	showInlineActions = true,
+	showAccount,
 	isScopeLocked,
 	submitting,
 }) => {
@@ -89,12 +93,11 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 						<p className={styles.sectionDescription} data-flx="auth.o-auth-authorize-page.request-summary">
 							{botInviteWithoutRedirect
 								? i18n._(BOT_INVITE_NO_EXTERNAL_REDIRECT_DESCRIPTOR)
-								: authParams.channelId
-									? authParams.channelId
-									: authParams.guildId
-										? authParams.guildId
-										: i18n._(BOT_SCOPE_REQUESTED_DESCRIPTOR)}
+								: authParams.channelId || authParams.guildId || i18n._(BOT_SCOPE_REQUESTED_DESCRIPTOR)}
 						</p>
+					) : null}
+					{showAccount ? (
+						<OAuthAuthorizingAccount data-flx="auth.o-auth-authorize-page.scopes-step.authorizing-account" />
 					) : null}
 				</div>
 			</div>
@@ -141,7 +144,7 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 													className={styles.scopeDescription}
 													data-flx="auth.o-auth-authorize-page.scope-description"
 												>
-													{getOAuth2ScopeDescription(i18n, scope as OAuth2Scope) ?? scope}
+													{getOAuth2ScopeDescription(i18n, scope) ?? scope}
 												</span>
 											}
 											data-flx="auth.o-auth-authorize-page.switch.toggle-scope"
@@ -151,10 +154,16 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 							})
 						)}
 					</div>
-					{scopesAdjusted && (
-						<div className={styles.caution} data-flx="auth.o-auth-authorize-page.caution--2">
-							<Trans>Turning off scopes may prevent the app from working correctly.</Trans>
+					{scopes.length > 0 && selectedScopes.size === 0 ? (
+						<div className={styles.caution} data-flx="auth.o-auth-authorize-page.caution--no-scopes">
+							<Trans>Turn on at least one scope to authorize this app.</Trans>
 						</div>
+					) : (
+						scopesAdjusted && (
+							<div className={styles.caution} data-flx="auth.o-auth-authorize-page.caution--2">
+								<Trans>Turning off scopes may prevent the app from working correctly.</Trans>
+							</div>
+						)
 					)}
 				</div>
 			</div>
@@ -165,6 +174,7 @@ export const OAuthScopesStep: React.FC<OAuthScopesStepProps> = ({
 				showRedirectNotice={showRedirectNotice}
 				hasPreviousStep={hasPreviousStep}
 				hasNextStep={hasNextStep}
+				authorizeDisabled={cannotSubmit}
 				onAuthorize={onAuthorize}
 				onBack={onBack}
 				onCancel={onCancel}

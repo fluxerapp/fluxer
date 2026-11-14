@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type AdminAuditAttribution, runWithAdminAuditAttribution} from '@app/api/admin/AdminAuditAttribution';
+import {isOperatorRequest, readOperatorHostUser} from '@app/api/admin/operator/OperatorRequests';
+import {createApplicationID, createUserID} from '@app/api/BrandedTypes';
+import {assertMutableUserId} from '@app/api/constants/Core';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
@@ -9,14 +16,9 @@ import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedErr
 import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import {createApplicationID, createUserID} from '../BrandedTypes';
-import {assertMutableUserId} from '../constants/Core';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import type {HonoEnv} from '../types/HonoEnv';
 
 const ADMIN_OAUTH2_APPLICATION_ID_BRANDED = createApplicationID(ADMIN_OAUTH2_APPLICATION_ID);
-type AdminAuthTokenType = 'bearer' | 'session' | 'admin_api_key';
+type AdminAuthTokenType = 'bearer' | 'session' | 'admin_api_key' | 'operator';
 const ADMIN_TARGET_USER_PARAMS = ['user_id', 'target_user_id'] as const;
 
 function ensureBearerIsBuiltInAdminApplication(ctx: Context<HonoEnv>): void {
@@ -30,12 +32,29 @@ function getAdminTokenType(ctx: Context<HonoEnv>): AdminAuthTokenType {
 	if (tokenType === 'bearer' || tokenType === 'session' || tokenType === 'admin_api_key') {
 		return tokenType;
 	}
+	if (tokenType === 'operator' && isOperatorRequest(ctx.req.raw)) {
+		return tokenType;
+	}
 	throw new UnauthorizedError();
 }
 
-function ensureAdminCanAuthenticate(adminUser: User): void {
+function ensureAdminCanAuthenticate(adminUser: User, tokenType: AdminAuthTokenType): void {
+	if (tokenType === 'operator') {
+		return;
+	}
 	if (!adminUser.acls.has(AdminACLs.AUTHENTICATE) && !adminUser.acls.has(AdminACLs.WILDCARD)) {
 		throw new MissingPermissionsError();
+	}
+}
+
+export function hasAdminACL(granted: ReadonlySet<string>, acl: string): boolean {
+	return granted.has(acl) || granted.has(AdminACLs.WILDCARD);
+}
+
+export function requireGrantedAdminACLs(granted: ReadonlySet<string>, required: Iterable<string>): void {
+	if (granted.has(AdminACLs.WILDCARD)) return;
+	for (const acl of required) {
+		if (!granted.has(acl)) throw new MissingACLError(acl);
 	}
 }
 
@@ -43,21 +62,36 @@ function hasAnyAdminACL(acls: Set<string>, requiredACLs: ReadonlyArray<string>):
 	return acls.has(AdminACLs.WILDCARD) || requiredACLs.some((acl) => acls.has(acl));
 }
 
-function ensureAdminApiKeyOwnerCanUseACLs(
-	adminUser: User,
-	tokenType: AdminAuthTokenType,
-	requiredACLs: ReadonlyArray<string>,
-): void {
-	if (tokenType !== 'admin_api_key' || adminUser.acls.has(AdminACLs.WILDCARD)) {
-		return;
+function intersectAdminApiKeyACLs(keyAcls: ReadonlySet<string>, ownerAcls: ReadonlySet<string>): Set<string> {
+	if (ownerAcls.has(AdminACLs.WILDCARD)) {
+		return new Set(keyAcls);
 	}
-	if (!requiredACLs.some((acl) => adminUser.acls.has(acl))) {
-		throw new MissingACLError(requiredACLs[0] ?? AdminACLs.AUTHENTICATE);
+	if (keyAcls.has(AdminACLs.WILDCARD)) {
+		return new Set(ownerAcls);
 	}
+	return new Set(Array.from(keyAcls).filter((acl) => ownerAcls.has(acl)));
 }
 
 function getRequestAdminACLs(ctx: Context<HonoEnv>, adminUser: User, tokenType: AdminAuthTokenType): Set<string> {
-	return tokenType === 'admin_api_key' ? (ctx.get('adminApiKeyAcls') ?? new Set()) : adminUser.acls;
+	if (tokenType === 'operator') {
+		return new Set([AdminACLs.WILDCARD]);
+	}
+	if (tokenType === 'admin_api_key') {
+		return intersectAdminApiKeyACLs(ctx.get('adminApiKeyAcls') ?? new Set(), adminUser.acls);
+	}
+	return adminUser.acls;
+}
+
+function getAdminAuditAttribution(ctx: Context<HonoEnv>, tokenType: AdminAuthTokenType): AdminAuditAttribution | null {
+	if (tokenType === 'operator') {
+		const hostUser = readOperatorHostUser(ctx.req.raw);
+		return hostUser === null ? {via: 'rexctl'} : {via: 'rexctl', host_user: hostUser};
+	}
+	if (tokenType === 'admin_api_key') {
+		const keyId = ctx.get('adminApiKeyId');
+		return keyId === null || keyId === undefined ? null : {via: `api_key:${keyId}`};
+	}
+	return null;
 }
 
 function ensureAdminTargetIsMutable(ctx: Context<HonoEnv>): void {
@@ -95,15 +129,14 @@ function requireAdminAccess(requiredACLs: ReadonlyArray<string>) {
 			},
 			'Checking admin ACL requirements',
 		);
-		ensureAdminCanAuthenticate(adminUser);
-		ensureAdminApiKeyOwnerCanUseACLs(adminUser, tokenType, requiredACLs);
+		ensureAdminCanAuthenticate(adminUser, tokenType);
 		if (!hasAnyAdminACL(requestAcls, requiredACLs)) {
 			throw new MissingACLError(requiredACLs[0] ?? AdminACLs.AUTHENTICATE);
 		}
 		ensureAdminTargetIsMutable(ctx);
 		ctx.set('adminUserId', adminUser.id);
 		ctx.set('adminUserAcls', requestAcls);
-		await next();
+		await runWithAdminAuditAttribution(getAdminAuditAttribution(ctx, tokenType), next);
 	});
 }
 

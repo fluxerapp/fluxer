@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Channels from '@app/features/channel/state/Channels';
 import Favorites from '@app/features/messaging/state/Favorites';
 import Navigation from '@app/features/navigation/state/Navigation';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {
+	type AppStorageScopeChangeEvent,
+	UNAUTHENTICATED_APP_STORAGE_SCOPE,
+} from '@app/features/platform/state/PersistentStorage';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import {action, computed, makeAutoObservable, reaction} from 'mobx';
+import {computed, makeAutoObservable, reaction} from 'mobx';
 
 interface ChannelVisit {
 	channelId: string;
@@ -37,17 +44,17 @@ class SelectedChannel {
 			this,
 			{
 				sortedRecentVisits: computed,
-				recentChannels: computed,
 				recentChannelVisits: computed,
 			},
 			{autoBind: true},
 		);
-		void this.initPersistence();
+		initializeStore(this, () => this.initPersistence());
 	}
 
-	@action
 	private async initPersistence(): Promise<void> {
-		await makePersistent(this, 'SelectedChannel', ['selectedChannelIds', 'recentlyVisitedChannels']);
+		await makePersistent(this, 'SelectedChannel', ['selectedChannelIds', 'recentlyVisitedChannels'], {
+			onRehydrated: this.selectNavigatedChannel,
+		});
 		this.migrateRecentVisits();
 		this.setupNavigationReaction();
 	}
@@ -66,6 +73,17 @@ class SelectedChannel {
 				fireImmediately: true,
 			},
 		);
+	}
+
+	private selectNavigatedChannel(event: AppStorageScopeChangeEvent | null): void {
+		if (event !== null && event.previousScope !== UNAUTHENTICATED_APP_STORAGE_SCOPE) {
+			return;
+		}
+		const {guildId, channelId} = Navigation;
+		if (!guildId || !channelId) {
+			return;
+		}
+		this.selectChannel(guildId, channelId);
 	}
 
 	private normalizeGuildId(guildId: string | null | undefined): string | null {
@@ -87,10 +105,13 @@ class SelectedChannel {
 	get currentChannelId(): string | null {
 		const guildId = this.getCurrentGuildId();
 		if (guildId == null) return null;
+		const routeChannelId = Navigation.channelId;
+		if (routeChannelId != null) {
+			return this.isStoredChannelNavigable(routeChannelId) ? routeChannelId : null;
+		}
 		return this.selectedChannelIds.get(guildId) ?? null;
 	}
 
-	@action
 	private migrateRecentVisits(): void {
 		let needsMigration = false;
 		for (let i = 0; i < this.recentlyVisitedChannels.length; i++) {
@@ -110,14 +131,6 @@ class SelectedChannel {
 		return sorted;
 	}
 
-	get recentChannels(): ReadonlyArray<string> {
-		const sorted = this.sortedRecentVisits;
-		const limit = Math.min(sorted.length, RECENT_CHANNEL_HISTORY_LIMIT);
-		const result: Array<string> = new Array(limit);
-		for (let i = 0; i < limit; i++) result[i] = sorted[i].channelId;
-		return result;
-	}
-
 	get recentChannelVisits(): ReadonlyArray<{
 		channelId: string;
 		guildId: string;
@@ -135,7 +148,6 @@ class SelectedChannel {
 		return result;
 	}
 
-	@action
 	selectChannel(guildId?: string, channelId?: string | null): void {
 		const normalizedGuildId = this.normalizeGuildId(guildId ?? null);
 		if (!normalizedGuildId) return;
@@ -195,7 +207,6 @@ class SelectedChannel {
 		this.viewedChannelHistoryIndex = this.viewedChannelHistory.length - 1;
 	}
 
-	@action
 	navigateViewedChannelHistory(direction: -1 | 1): boolean {
 		let nextIndex = this.viewedChannelHistoryIndex + direction;
 		let target = this.viewedChannelHistory[nextIndex];
@@ -222,22 +233,12 @@ class SelectedChannel {
 		return true;
 	}
 
-	@action
-	deselectChannel(): void {
-		const guildId = this.getCurrentGuildId();
-		if (guildId != null) {
-			this.removeGuildSelection(guildId);
-		}
-	}
-
-	@action
 	clearGuildSelection(guildId: string): void {
 		const normalizedGuildId = this.normalizeGuildId(guildId);
 		if (!normalizedGuildId) return;
 		this.removeGuildSelection(normalizedGuildId);
 	}
 
-	@action
 	getNavigableSelectedChannelId(guildId: string): string | null {
 		const normalizedGuildId = this.normalizeGuildId(guildId);
 		if (!normalizedGuildId) return null;
@@ -250,7 +251,6 @@ class SelectedChannel {
 		return null;
 	}
 
-	@action
 	handleChannelDelete(channel: Channel): void {
 		const guildId = channel.guild_id ?? ME;
 		const normalizedGuildId = this.normalizeGuildId(guildId) ?? guildId;
@@ -260,12 +260,10 @@ class SelectedChannel {
 		}
 	}
 
-	@action
 	private removeGuildSelection(guildId: string): void {
 		this.selectedChannelIds.delete(guildId);
 	}
 
-	@action
 	getValidatedFavoritesChannel(): string | null {
 		const selectedChannelId = this.getNavigableSelectedChannelId(FAVORITES_GUILD_ID);
 		if (selectedChannelId && Favorites.isChannelAccessible(selectedChannelId)) {
@@ -280,6 +278,16 @@ class SelectedChannel {
 		this.removeGuildSelection(FAVORITES_GUILD_ID);
 		return null;
 	}
+
+	reset(): void {
+		this.viewedChannelHistory = [];
+		this.viewedChannelHistoryIndex = -1;
+		RouterUtils.getHistory()?.markBoundary();
+	}
 }
 
-export default new SelectedChannel();
+const selectedChannel = new SelectedChannel();
+
+ResettableStates.register(selectedChannel, () => selectedChannel.reset());
+
+export default selectedChannel;

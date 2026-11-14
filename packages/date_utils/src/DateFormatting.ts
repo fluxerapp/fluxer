@@ -116,11 +116,3 @@ export function getRelativeDateString(
 		hour12: use12Hour,
 	}).format(date);
 }
-
-export function formatLastActive(date: DateInput, locale: string = DEFAULT_LOCALE): string {
-	const dateObj = parseDate(date);
-	if (Number.isNaN(dateObj.getTime())) {
-		return String(date);
-	}
-	return getDateFormatter(locale, {dateStyle: 'medium', timeStyle: 'short'}).format(dateObj);
-}

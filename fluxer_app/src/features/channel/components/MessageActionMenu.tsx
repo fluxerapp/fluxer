@@ -3,7 +3,6 @@
 import {
 	canReportMessage,
 	createMessageActionHandlers,
-	getCopyableMessageText,
 	getEffectiveContent,
 	isClientSystemMessage,
 	isEmbedsSuppressed,
@@ -31,17 +30,22 @@ import {
 	TRY_AGAIN_DESCRIPTOR,
 	UNPIN_MESSAGE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import * as SavedMessageCommands from '@app/features/messaging/commands/SavedMessageCommands';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import {openReportMessageModal} from '@app/features/moderation/utils/ReportActionUtils';
 import Permission from '@app/features/permissions/state/Permission';
+import {openCreateThread} from '@app/features/threads/commands/ThreadNavigation';
+import {CREATE_THREAD_DESCRIPTOR} from '@app/features/threads/utils/ThreadMessageDescriptors';
 import {
 	AddReactionIcon,
 	BookmarkIcon,
 	CopyIdIcon,
 	CopyLinkIcon,
 	CopyMessageTextIcon,
+	CreateThreadIcon,
+	CrosspostIcon,
 	DebugMessageIcon,
 	DeleteIcon,
 	EditMessageIcon,
@@ -80,6 +84,11 @@ const REMOVE_ALL_REACTIONS_DESCRIPTOR = msg({
 	message: 'Remove all reactions',
 	comment: 'Destructive message context menu item for moderators that clears every reaction on a message.',
 });
+const PUBLISH_MESSAGE_DESCRIPTOR = msg({
+	message: 'Publish',
+	comment:
+		'Message context menu item in an announcement channel. Publishing sends the message to every channel that follows this channel.',
+});
 const FORWARD_DESCRIPTOR = msg({
 	message: 'Forward',
 	comment: 'Message context menu item that opens the forward-to-channel picker.',
@@ -113,6 +122,7 @@ interface MessageActionMenuOptions {
 	sourceChannel?: MessagePermissions['channel'] | null;
 	quickReactionCount?: number;
 	submenuReactionCount?: number;
+	hideReply?: boolean;
 }
 
 export const messageActionMenuItemIds = {
@@ -121,6 +131,8 @@ export const messageActionMenuItemIds = {
 	removeAllReactions: 'remove_all_reactions',
 	reply: 'reply',
 	forward: 'forward',
+	crosspost: 'message_crosspost',
+	createThread: 'create_thread',
 	edit: 'edit',
 	pinMessage: 'message_pin',
 	bookmarkMessage: 'message_bookmark',
@@ -159,13 +171,17 @@ export const useMessageActionMenuData = (
 		sourceChannel,
 		quickReactionCount = 5,
 		submenuReactionCount = 16,
+		hideReply = false,
 	} = options;
 	const permissions = useMessagePermissions(message, sourceChannel);
 	const handlers = useMemo(
 		() => createMessageActionHandlers(message, {i18n, onClose, channel: permissions?.channel ?? sourceChannel}),
 		[message, permissions?.channel, sourceChannel, onClose, i18n.locale],
 	);
-	const isSaved = useMemo(() => SavedMessages.isSaved(message.id), [message.id]);
+	const isSaved = SavedMessages.isSaved(message.id);
+	useEffect(() => {
+		void SavedMessageCommands.ensureAllLoaded();
+	}, []);
 	const channel = permissions?.channel ?? sourceChannel ?? null;
 	const shouldBuildQuickReactions = permissions?.canAddReactions === true && message.state === MessageStates.SENT;
 	const reactionEmojiLimit = Math.max(quickReactionCount, submenuReactionCount);
@@ -180,7 +196,6 @@ export const useMessageActionMenuData = (
 	);
 	const developerMode = UserSettings.developerMode;
 	const effectiveContent = useMemo(() => getEffectiveContent(message), [message]);
-	const copyableMessageText = useMemo(() => getCopyableMessageText(message, i18n), [message, i18n.locale]);
 	const canManageMessages = useMemo(
 		() =>
 			permissions != null &&
@@ -244,7 +259,7 @@ export const useMessageActionMenuData = (
 					shortcut: <KeybindHint action="message_react" data-flx="channel.message-action-menu.groups.keybind-hint" />,
 				});
 			}
-			if (reactions.length > 0 && onOpenReactionsSheet) {
+			if (reactions.length > 0 && onOpenReactionsSheet && !permissions?.isPreviewing) {
 				reactionActions.push({
 					id: messageActionMenuItemIds.viewReactions,
 					icon: <ViewReactionsIcon size={20} data-flx="channel.message-action-menu.groups.view-reactions-icon" />,
@@ -263,16 +278,18 @@ export const useMessageActionMenuData = (
 					danger: true,
 				});
 			}
-			interactionActions.push({
-				id: messageActionMenuItemIds.markUnread,
-				icon: <MarkAsUnreadIcon size={20} data-flx="channel.message-action-menu.groups.mark-as-unread-icon" />,
-				label: i18n._(MARK_AS_UNREAD_DESCRIPTOR),
-				onClick: handlers.handleMarkAsUnread,
-				shortcut: (
-					<KeybindHint action="message_mark_unread" data-flx="channel.message-action-menu.groups.keybind-hint--2" />
-				),
-			});
-			if (message.isUserMessage() && supportsInteractiveActions && permissions?.canSendMessages) {
+			if (!permissions?.isPreviewing) {
+				interactionActions.push({
+					id: messageActionMenuItemIds.markUnread,
+					icon: <MarkAsUnreadIcon size={20} data-flx="channel.message-action-menu.groups.mark-as-unread-icon" />,
+					label: i18n._(MARK_AS_UNREAD_DESCRIPTOR),
+					onClick: handlers.handleMarkAsUnread,
+					shortcut: (
+						<KeybindHint action="message_mark_unread" data-flx="channel.message-action-menu.groups.keybind-hint--2" />
+					),
+				});
+			}
+			if (message.isUserMessage() && supportsInteractiveActions && permissions?.canSendMessages && !hideReply) {
 				interactionActions.push({
 					id: messageActionMenuItemIds.reply,
 					icon: <ReplyIcon size={20} data-flx="channel.message-action-menu.groups.reply-icon" />,
@@ -292,6 +309,22 @@ export const useMessageActionMenuData = (
 					shortcut: (
 						<KeybindHint action="message_forward" data-flx="channel.message-action-menu.groups.keybind-hint--4" />
 					),
+				});
+			}
+			if (supportsInteractiveActions && permissions?.canCrosspostMessage && !message.isCrossposted) {
+				interactionActions.push({
+					id: messageActionMenuItemIds.crosspost,
+					icon: <CrosspostIcon size={20} data-flx="channel.message-action-menu.groups.crosspost-icon" />,
+					label: i18n._(PUBLISH_MESSAGE_DESCRIPTOR),
+					onClick: handlers.handleCrosspostMessage,
+				});
+			}
+			if (permissions?.canCreateThread) {
+				interactionActions.push({
+					id: messageActionMenuItemIds.createThread,
+					icon: <CreateThreadIcon size={20} data-flx="channel.message-action-menu.groups.create-thread-icon" />,
+					label: i18n._(CREATE_THREAD_DESCRIPTOR),
+					onClick: () => openCreateThread(permissions.channel, message.id),
 				});
 			}
 			if (message.isCurrentUserAuthor() && message.isUserMessage() && !message.messageSnapshots) {
@@ -366,7 +399,7 @@ export const useMessageActionMenuData = (
 					),
 				});
 			}
-			if (copyableMessageText) {
+			if (effectiveContent) {
 				utilityActions.push({
 					id: messageActionMenuItemIds.copyMessage,
 					icon: <CopyMessageTextIcon size={20} data-flx="channel.message-action-menu.groups.copy-message-text-icon" />,
@@ -460,10 +493,10 @@ export const useMessageActionMenuData = (
 		isSpeaking,
 		voiceReady,
 		effectiveContent,
-		copyableMessageText,
 		handleSpeakMessage,
 		handleReportMessage,
 		handleDebugMessage,
+		hideReply,
 		i18n.locale,
 	]);
 	const quickReactionRowVisible =

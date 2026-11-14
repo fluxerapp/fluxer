@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {entityTagMatches} from '@app/api/utils/EntityTag';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
-import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {resolveDomainMigrationAssignment} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {guildVisitsUserActive} from '@fluxer/schema/src/domains/admin/GuildVisitsSchemas';
+import {resolveVoiceP2pAssignment} from '@fluxer/schema/src/domains/admin/VoiceP2pSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {LoginRequired} from '../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {entityTagMatches} from '../utils/EntityTag';
 
 export function ExperimentController(app: HonoApp) {
 	app.get(
@@ -28,17 +32,32 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, voiceConfig] = await Promise.all([
-				instanceConfigRepository.getExperimentDeliveryConfig(),
-				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
+			const [delivery, domainMigrationConfig, channelThreadsConfig, voiceP2pConfig, geoip, guildVisitsConfig] =
+				await Promise.all([
+					instanceConfigRepository.getExperimentDeliveryConfig(),
+					instanceConfigRepository.getDomainMigrationConfig(),
+					instanceConfigRepository.getChannelThreadsConfig(),
+					instanceConfigRepository.getVoiceP2pConfig(),
+					lookupGeoip(ctx.req.raw),
+					instanceConfigRepository.getGuildVisitsConfig(),
+				]);
+			const user = ctx.get('user');
+			const userId = user.id.toString();
+			const targeting = await resolveExperimentTargeting(user, geoip.countryCode, [
+				domainMigrationConfig,
+				voiceP2pConfig,
 			]);
 			const body: ExperimentAssignmentsResponse = {
 				poll_interval_seconds: delivery.poll_interval_seconds,
 				poll_jitter_percent: delivery.poll_jitter_percent,
 				assignments: {
-					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, ctx.get('user').id.toString()),
+					domain_migration: resolveDomainMigrationAssignment(domainMigrationConfig, userId, targeting),
+					plutonium_page: {enabled: true},
+					voice_p2p: resolveVoiceP2pAssignment(voiceP2pConfig, userId, targeting),
+					guild_visits: {enabled: guildVisitsUserActive(guildVisitsConfig, userId)},
 				},
 			};
+			body.assignments.channel_threads = {active: true, config_version: channelThreadsConfig.config_version};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;
 			ctx.header(HttpHeaders.ETAG, etag);
 			ctx.header(HttpHeaders.CACHE_CONTROL, 'private, no-cache');

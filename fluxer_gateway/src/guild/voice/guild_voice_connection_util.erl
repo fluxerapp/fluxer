@@ -11,17 +11,19 @@
     voice_flags_for_permissions/2,
     resolve_guild_identity/1,
     resolve_viewer_stream_keys/5,
+    bound_viewer_stream_keys/1,
     check_camera_user_limit/3,
     maybe_attach_session_id/2,
     maybe_attach_member/2,
     maybe_attach_geolocation/3,
     maybe_attach_voice_routing_metadata/3,
     maybe_attach_e2ee_key_to_reply/2,
-    normalize_session_id/1,
-    normalize_optional_binary/1,
     maybe_error_reply/5,
+    p2p_agreed/1,
     clear_virtual_access_flags/2
 ]).
+
+-define(MAX_VIEWER_STREAM_KEYS, 256).
 
 -type guild_state() :: map().
 -type voice_state() :: map().
@@ -61,8 +63,14 @@ build_context(Request0) ->
         latitude => Coord(maps:get(latitude, Request, undefined)),
         longitude => Coord(maps:get(longitude, Request, undefined)),
         e2ee_capable => Norm(maps:get(e2ee_capable, Request, false)),
-        bot => Norm(maps:get(bot, Request, false))
+        bot => Norm(maps:get(bot, Request, false)),
+        p2p => maps:get(p2p, Request, undefined),
+        country_code => maps:get(country_code, Request, undefined)
     }.
+
+-spec p2p_agreed(context()) -> boolean().
+p2p_agreed(Context) ->
+    voice_p2p:agreed(maps:get(p2p, Context, undefined), maps:get(bot, Context, false)).
 
 -spec voice_flags_for_permissions(context(), voice_utils:voice_permissions()) -> voice_flags().
 voice_flags_for_permissions(Context, VoicePermissions) ->
@@ -75,7 +83,7 @@ voice_flags_for_permissions(Context, VoicePermissions) ->
 resolve_guild_identity(State) ->
     Data = guild_data(State),
     DataGuildIdBin = maps:get(<<"id">>, Data, undefined),
-    StateGuildId = guild_voice_connection_normalize:normalize_positive_snowflake(
+    StateGuildId = snowflake_id:parse_maybe(
         maps:get(id, State, undefined)
     ),
     GuildMeta = map_utils:ensure_map(maps:get(<<"guild">>, Data, #{})),
@@ -153,14 +161,6 @@ maybe_attach_e2ee_key_to_reply(Reply, undefined) ->
 maybe_attach_e2ee_key_to_reply(Reply, Key) when is_binary(Key) ->
     Reply#{e2ee_key => Key}.
 
--spec normalize_session_id(term()) -> binary() | undefined.
-normalize_session_id(Value) ->
-    guild_voice_connection_normalize:normalize_session_id(Value).
-
--spec normalize_optional_binary(term()) -> binary() | undefined.
-normalize_optional_binary(Value) ->
-    guild_voice_connection_normalize:normalize_optional_binary(Value).
-
 -spec maybe_error_reply(context(), voice_state(), guild_state(), integer(), atom()) ->
     {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
 maybe_error_reply(_Context, _ExistingVoiceState, State, _ChannelIdValue, ErrorAtom) ->
@@ -235,11 +235,26 @@ add_user_to_set(VS, Acc) ->
 -spec validate_viewer_keys(list(), integer() | undefined, integer(), voice_state_map(), list()) ->
     {ok, list()} | {error, atom()}.
 validate_viewer_keys([], _GuildId, _ChId, _VS, Acc) ->
-    {ok, lists:reverse(Acc)};
+    {ok, bound_viewer_stream_keys(lists:reverse(Acc))};
 validate_viewer_keys([Key | Rest], GuildId, ChId, VS, Acc) ->
     case validate_single_key(Key, GuildId, ChId, VS) of
         {ok, ValidKey} -> validate_viewer_keys(Rest, GuildId, ChId, VS, [ValidKey | Acc]);
         {error, _} = Error -> Error
+    end.
+
+-spec bound_viewer_stream_keys([binary()]) -> [binary()].
+bound_viewer_stream_keys(Keys) ->
+    bound_viewer_stream_keys(Keys, ?MAX_VIEWER_STREAM_KEYS, []).
+
+-spec bound_viewer_stream_keys([binary()], non_neg_integer(), [binary()]) -> [binary()].
+bound_viewer_stream_keys([], _Remaining, Acc) ->
+    lists:reverse(Acc);
+bound_viewer_stream_keys(_Keys, 0, Acc) ->
+    lists:reverse(Acc);
+bound_viewer_stream_keys([Key | Rest], Remaining, Acc) ->
+    case lists:member(Key, Acc) of
+        true -> bound_viewer_stream_keys(Rest, Remaining, Acc);
+        false -> bound_viewer_stream_keys(Rest, Remaining - 1, [Key | Acc])
     end.
 
 -spec validate_single_key(term(), integer() | undefined, integer(), voice_state_map()) ->

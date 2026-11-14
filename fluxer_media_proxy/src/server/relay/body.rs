@@ -2,7 +2,8 @@
 
 use crate::{storage::RelayBodyChunks, upload_relay::RelayError};
 use axum::{body::Body, http::HeaderValue};
-use bytes::Bytes;
+use bytes::{Bytes, BytesMut};
+use futures_util::StreamExt as _;
 use http_body_util::BodyExt as _;
 use parking_lot::Mutex;
 use std::{
@@ -221,20 +222,47 @@ impl RelayBodyActiveStream {
     }
 }
 
+pub(in crate::server) async fn buffer_relay_body(
+    mut chunks: RelayBodyChunks,
+    declared_length: u64,
+) -> Result<Bytes, io::Error> {
+    let mut buffered = BytesMut::with_capacity(usize::try_from(declared_length).unwrap_or(0));
+    while let Some(chunk) = chunks.next().await {
+        buffered.extend_from_slice(&chunk?);
+    }
+    Ok(buffered.freeze())
+}
+
 pub(in crate::server) fn relay_body_chunks(stream: RelayBodyStream) -> RelayBodyChunks {
     Box::pin(futures_util::stream::unfold(
         Some(stream),
         |state: Option<RelayBodyStream>| async move {
             let mut stream = state?;
+            let mut coalesced = BytesMut::new();
             loop {
                 match stream.next().await {
                     Some((Ok(chunk), next)) if chunk.is_empty() => {
                         stream = next;
                         tokio::task::yield_now().await;
                     }
-                    Some((Ok(chunk), next)) => return Some((Ok(chunk), Some(next))),
+                    Some((Ok(chunk), next))
+                        if coalesced.is_empty() && chunk.len() >= RELAY_STREAM_FRAME_BYTES =>
+                    {
+                        return Some((Ok(chunk), Some(next)));
+                    }
+                    Some((Ok(chunk), next)) => {
+                        stream = next;
+                        if coalesced.is_empty() {
+                            coalesced.reserve(RELAY_STREAM_FRAME_BYTES);
+                        }
+                        coalesced.extend_from_slice(&chunk);
+                        if coalesced.len() >= RELAY_STREAM_FRAME_BYTES {
+                            return Some((Ok(coalesced.freeze()), Some(stream)));
+                        }
+                    }
                     Some((Err(err), _)) => return Some((Err(err), None)),
-                    None => return None,
+                    None if coalesced.is_empty() => return None,
+                    None => return Some((Ok(coalesced.freeze()), None)),
                 }
             }
         },

@@ -239,11 +239,14 @@ function getCurrentUserNicknameLabels(guildId: string, i18n: I18n): {previous: s
 	const currentUserId = Authentication.currentUserId;
 	const currentMember = GuildMembers.getMember(guildId, currentUserId);
 	const currentUser = Users.getCurrentUser();
-	const fallback = currentUser
-		? NicknameUtils.getDisplayName(currentUser)
-		: currentMember
-			? NicknameUtils.getDisplayName(currentMember.user)
-			: i18n._(UNKNOWN_USER_DESCRIPTOR);
+	let fallback: string;
+	if (currentUser) {
+		fallback = NicknameUtils.getDisplayName(currentUser);
+	} else if (currentMember) {
+		fallback = NicknameUtils.getDisplayName(currentMember.user);
+	} else {
+		fallback = i18n._(UNKNOWN_USER_DESCRIPTOR);
+	}
 	const memberNickname = currentMember?.nick?.trim();
 	if (!currentMember && localCurrentUserNicknames.has(guildId)) {
 		const localNickname = localCurrentUserNicknames.get(guildId)?.trim();
@@ -304,7 +307,7 @@ export async function executeCommand(
 			if (!guildId) {
 				throw new Error('Cannot kick members outside of a guild');
 			}
-			await GuildMemberCommands.kick(guildId, command.userId);
+			await GuildMemberCommands.kick(guildId, command.userId, command.reason);
 			break;
 		}
 		case 'ban': {

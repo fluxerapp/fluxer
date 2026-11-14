@@ -1,0 +1,92 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.root[class] {
+	width: min(50rem, calc(100dvw - 2rem));
+	max-width: 100%;
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	padding-bottom: 0.5rem;
+}
+
+.qualityRow {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.25rem 1rem;
+}
+
+.resolutionSection {
+	flex: 5 1 24rem;
+}
+
+.frameRateSection {
+	flex: 4 1 16rem;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.sectionLabel {
+	color: var(--text-primary);
+	font-size: 0.9375rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+}
+
+.segmented[class] {
+	padding: 0;
+}
+
+.premiumIcon {
+	flex-shrink: 0;
+	width: 0.75rem;
+	height: 0.75rem;
+	color: var(--plutonium-icon);
+}
+
+.switches {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding-top: 1.25rem;
+	border-top: 0.0625rem solid var(--background-modifier-accent);
+}
+
+.footer {
+	gap: 1rem;
+	border-top: 0.0625rem solid var(--background-modifier-accent);
+}
+
+.footer .summary[class] {
+	min-width: 0;
+	flex: 1 1 12rem;
+}
+
+.summary {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.summaryTitle {
+	color: var(--text-primary);
+	font-size: 1rem;
+	font-weight: 700;
+	line-height: 1.25rem;
+}
+
+.summaryDetails {
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	font-weight: 500;
+	line-height: 1.25rem;
+}

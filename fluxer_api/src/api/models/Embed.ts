@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageEmbed, MessageEmbedChild} from '../database/types/MessageTypes';
-import {sanitizeOptionalAbsoluteUrlOrNull} from '../utils/UrlSanitizer';
-import {EmbedAuthor} from './EmbedAuthor';
-import {EmbedField} from './EmbedField';
-import {EmbedFooter} from './EmbedFooter';
-import {EmbedMedia} from './EmbedMedia';
-import {EmbedProvider} from './EmbedProvider';
+import type {MessageEmbed, MessageEmbedChild} from '@app/api/database/types/MessageTypes';
+import {EmbedAuthor} from '@app/api/models/EmbedAuthor';
+import {EmbedField} from '@app/api/models/EmbedField';
+import {EmbedFooter} from '@app/api/models/EmbedFooter';
+import {EmbedMedia} from '@app/api/models/EmbedMedia';
+import {EmbedProvider} from '@app/api/models/EmbedProvider';
+import {sanitizeOptionalAbsoluteUrlOrNull} from '@app/api/utils/UrlSanitizer';
 
 export class Embed {
 	readonly type: string | null;

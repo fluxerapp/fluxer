@@ -21,25 +21,9 @@
 
 .scroller {
 	flex: 1;
-	padding-left: 1rem;
-	padding-right: 1rem;
+	padding-inline-start: 1rem;
+	padding-inline-end: 1rem;
 	padding-top: 1rem;
-}
-
-.messageItem {
-	position: relative;
-	margin-bottom: 1rem;
-	cursor: default;
-	user-select: none;
-	-webkit-user-select: none;
-	overflow: hidden;
-	flex-shrink: 0;
-	border-radius: 0.375rem;
-	border-width: 0.0625rem;
-	border-color: var(--background-header-secondary);
-	background-color: var(--background-secondary);
-	padding-top: 0.5rem;
-	padding-bottom: 0.5rem;
 }
 
 .endState {

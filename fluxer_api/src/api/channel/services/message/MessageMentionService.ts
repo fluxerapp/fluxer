@@ -1,16 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes, MessageTypes, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
-import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {
-	ALLOWED_MENTIONS_PARSE,
-	type AllowedMentionsRequest,
-} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
-import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {
 	type ChannelID,
 	createChannelID,
@@ -19,17 +8,29 @@ import {
 	type GuildID,
 	type RoleID,
 	type UserID,
-} from '../../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {GatewayChannelMention, IGatewayService} from '../../../infrastructure/IGatewayService';
-import {Logger} from '../../../Logger';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {WorkerTaskName} from '../../../worker/WorkerLaneConfig';
-import {WorkerQueueOverflowError} from '../../../worker/WorkerQueueOverflowError';
-import {isOperationDisabled, isPersonalNotesChannel} from './MessageHelpers';
-import type {MessageResponseDataService} from './MessageResponseDataService';
+} from '@app/api/BrandedTypes';
+import {isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {isPersonalNotesChannelId} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
+import {ChannelTypes, MessageTypes, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
+import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {
+	ALLOWED_MENTIONS_PARSE,
+	type AllowedMentionsRequest,
+} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
+import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 interface MentionData {
 	userMentions: Set<UserID>;
@@ -46,6 +47,7 @@ interface MentionReadRepairData {
 	channelMentions: Set<ChannelID>;
 	mentionsEveryone: boolean;
 	changed: boolean;
+	channelsChanged: boolean;
 }
 
 interface MentionableUser {
@@ -55,8 +57,8 @@ interface MentionableUser {
 
 export class MessageMentionService {
 	constructor(
-		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
+		private userRepository: UserRepository,
+		private guildRepository: GuildRepository,
 		private gatewayService: IGatewayService,
 		private workerService: IWorkerService<WorkerTaskName>,
 		private responseDataService: MessageResponseDataService,
@@ -90,13 +92,18 @@ export class MessageMentionService {
 		const roleMentions = allMentions.roles;
 		const channelMentions = allMentions.channels;
 		const isDMChannel = channelType === ChannelTypes.DM || channelType === ChannelTypes.DM_PERSONAL_NOTES;
+		if (isDMChannel) {
+			mentionsEveryone = false;
+			mentionsHere = false;
+		}
+		const referencedAuthorId = referencedMessage?.authorId;
 		const shouldAddReferencedUser =
-			referencedMessage?.authorId &&
-			referencedMessage.authorId !== message.authorId &&
+			referencedAuthorId &&
+			referencedAuthorId !== message.authorId &&
 			!isDMChannel &&
-			(!allowedMentions || allowedMentions.replied_user !== false);
+			allowedMentions?.replied_user !== false;
 		if (shouldAddReferencedUser) {
-			userMentions.add(referencedMessage!.authorId!);
+			userMentions.add(referencedAuthorId);
 		}
 		const sendableFlags = message.flags & SENDABLE_MESSAGE_FLAGS;
 		let flags = message.flags & ~SENDABLE_MESSAGE_FLAGS;
@@ -155,8 +162,8 @@ export class MessageMentionService {
 			changed:
 				!this.setsEqual(message.mentionedUserIds, userMentions) ||
 				!this.setsEqual(message.mentionedRoleIds, roleMentions) ||
-				!this.setsEqual(message.mentionedChannelIds, contentChannelMentions) ||
 				message.mentionEveryone !== mentionsEveryone,
+			channelsChanged: !this.setsEqual(message.mentionedChannelIds, contentChannelMentions),
 		};
 	}
 
@@ -181,7 +188,7 @@ export class MessageMentionService {
 		};
 	}
 
-	private setsEqual<T>(left: ReadonlySet<T>, right: ReadonlySet<T>): boolean {
+	setsEqual<T>(left: ReadonlySet<T>, right: ReadonlySet<T>): boolean {
 		if (left.size !== right.size) return false;
 		for (const value of left) {
 			if (!right.has(value)) return false;
@@ -216,9 +223,10 @@ export class MessageMentionService {
 			allowedMentions.roles === undefined &&
 			allowedMentions.replied_user === undefined;
 		const hasExplicitLists = allowedMentions.users !== undefined || allowedMentions.roles !== undefined;
-		const parse = isExplicitlyEmptyObject
-			? []
-			: (allowedMentions.parse ?? (hasExplicitLists ? [] : ALLOWED_MENTIONS_PARSE));
+		let parse: Readonly<NonNullable<AllowedMentionsRequest['parse']>> = [];
+		if (!isExplicitlyEmptyObject) {
+			parse = allowedMentions.parse ?? (hasExplicitLists ? [] : ALLOWED_MENTIONS_PARSE);
+		}
 		const users = allowedMentions.users ?? [];
 		const roles = allowedMentions.roles ?? [];
 		const hasExplicitParse = allowedMentions.parse !== undefined;
@@ -309,14 +317,9 @@ export class MessageMentionService {
 				channelMentionPromise,
 			]);
 			const filteredRoles = canMentionRoles ? roles : roles.filter((role) => role.mentionable);
-			const blockFilteredMentions = await this.filterBlockedUserMentions({
+			const validUserIds = await this.filterSuppressedSelfMentions({
 				validUsers: users,
 				validUserIds: users.map((u) => u.id),
-				message,
-			});
-			const validUserIds = await this.filterSuppressedSelfMentions({
-				validUsers: blockFilteredMentions.validUsers,
-				validUserIds: blockFilteredMentions.validUserIds,
 				message,
 			});
 			return {
@@ -331,15 +334,10 @@ export class MessageMentionService {
 			validUserIds.length > 0 ? this.userRepository.listUsers(validUserIds) : Promise.resolve([]),
 			channelMentionPromise,
 		]);
-		const blockFilteredMentions = await this.filterBlockedUserMentions({
-			validUsers,
-			validUserIds,
-			message,
-		});
 		return {
 			validUserIds: await this.filterSuppressedSelfMentions({
-				validUsers: blockFilteredMentions.validUsers,
-				validUserIds: blockFilteredMentions.validUserIds,
+				validUsers,
+				validUserIds,
 				message,
 			}),
 			validRoleIds: [],
@@ -372,42 +370,12 @@ export class MessageMentionService {
 		return roles.map((role) => ({id: role.id, mentionable: role.isMentionable}));
 	}
 
-	private async filterBlockedUserMentions({
-		validUsers,
-		validUserIds,
-		message,
-	}: {
-		validUsers: Array<MentionableUser>;
-		validUserIds: Array<UserID>;
-		message: Pick<Message, 'authorId' | 'webhookId'>;
-	}): Promise<{
-		validUsers: Array<MentionableUser>;
-		validUserIds: Array<UserID>;
-	}> {
-		if (validUserIds.length === 0 || message.webhookId != null || message.authorId == null) {
-			return {validUsers, validUserIds};
-		}
-		const authorId = message.authorId;
-		const blockedUserIds = new Set(
-			(
-				await Promise.all(
-					validUserIds.map(async (targetUserId) => {
-						if (targetUserId === authorId) {
-							return null;
-						}
-						const block = await this.userRepository.getRelationship(targetUserId, authorId, RelationshipTypes.BLOCKED);
-						return block ? targetUserId : null;
-					}),
-				)
-			).filter((targetUserId): targetUserId is UserID => targetUserId != null),
-		);
-		if (blockedUserIds.size === 0) {
-			return {validUsers, validUserIds};
-		}
-		return {
-			validUsers: validUsers.filter((user) => !blockedUserIds.has(user.id)),
-			validUserIds: validUserIds.filter((userId) => !blockedUserIds.has(userId)),
-		};
+	async withoutUsersBlockingAuthor(authorId: UserID, userIds: Array<UserID>): Promise<Array<UserID>> {
+		const targets = userIds.filter((userId) => userId !== authorId);
+		if (targets.length === 0) return userIds;
+		const blockingUserIds = await this.userRepository.listUserIdsBlockingTarget(authorId, targets);
+		if (blockingUserIds.size === 0) return userIds;
+		return userIds.filter((userId) => !blockingUserIds.has(userId));
 	}
 
 	async validateChannelMentions({
@@ -479,8 +447,8 @@ export class MessageMentionService {
 		mentionHere?: boolean;
 	}): Promise<void> {
 		const {guildId, message, authorId, mentionHere = false} = params;
-		if (isPersonalNotesChannel({userId: authorId, channelId: message.channelId})) return;
-		const mentionUserIds = Array.from(message.mentionedUserIds ?? []);
+		if (isPersonalNotesChannelId({userId: authorId, channelId: message.channelId})) return;
+		const mentionUserIds = await this.withoutUsersBlockingAuthor(authorId, Array.from(message.mentionedUserIds ?? []));
 		const mentionRoleIds = Array.from(message.mentionedRoleIds ?? []);
 		const mentionEveryone = message.mentionEveryone && !mentionHere;
 		const taskData = {

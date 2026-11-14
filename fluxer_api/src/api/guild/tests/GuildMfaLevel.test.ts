@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
+import {createTestAccount, type TestAccount, totpCodeNow} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import {
+	addMemberRole,
+	createGuild,
+	createRole,
+	getChannel,
+	setupTestGuildWithMembers,
+} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildFeatures, GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount, type TestAccount, totpCodeNow} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createGuild, setupTestGuildWithMembers} from './GuildTestUtils';
 
 const TOTP_SECRET = 'JBSWY3DPEHPK3PXP';
 
@@ -116,14 +124,99 @@ describe('Guild MFA level', () => {
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
-	it('does not require sudo mode for non-mfa_level guild updates', async () => {
-		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'MFA Test Guild');
-		const updated = await createBuilder<GuildResponse>(harness, owner.token)
+	it('requires 2FA for channel permission overwrite edits in an elevated guild', async () => {
+		const {owner, members, guild, channels} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0]!;
+		const channel = channels[0]!;
+		const managerRole = await createRole(harness, owner.token, guild.id, {
+			name: 'Managers',
+			permissions: (Permissions.MANAGE_ROLES | Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES).toString(),
+		});
+		const targetRole = await createRole(harness, owner.token, guild.id, {name: 'Target'});
+		await addMemberRole(harness, owner.token, guild.id, member.userId, managerRole.id);
+		await enableTotp(harness, owner);
+		const loggedInOwner = await loginWithTotp(harness, owner);
+		await createBuilder<GuildResponse>(harness, loggedInOwner.token)
 			.patch(`/guilds/${guild.id}`)
-			.body({name: 'Renamed Guild'})
+			.body({mfa_level: GuildMFALevel.ELEVATED, mfa_method: 'totp', mfa_code: totpCodeNow(TOTP_SECRET)})
 			.expect(HTTP_STATUS.OK)
 			.execute();
-		expect(updated.name).toBe('Renamed Guild');
+		const overwrite = {type: 0, allow: Permissions.SEND_MESSAGES.toString(), deny: '0'};
+		await createBuilder(harness, member.token)
+			.put(`/channels/${channel.id}/permissions/${targetRole.id}`)
+			.body(overwrite)
+			.expect(HTTP_STATUS.BAD_REQUEST, 'TWO_FACTOR_REQUIRED')
+			.execute();
+		await createBuilder(harness, loggedInOwner.token)
+			.put(`/channels/${channel.id}/permissions/${targetRole.id}`)
+			.body(overwrite)
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		await createBuilder(harness, member.token)
+			.delete(`/channels/${channel.id}/permissions/${targetRole.id}`)
+			.expect(HTTP_STATUS.BAD_REQUEST, 'TWO_FACTOR_REQUIRED')
+			.execute();
+		const stored = await getChannel(harness, loggedInOwner.token, channel.id);
+		expect(stored.permission_overwrites?.find((entry) => entry.id === targetRole.id)?.allow).toBe(
+			Permissions.SEND_MESSAGES.toString(),
+		);
+	});
+	const setupModeratorInStatusCommunity = async (feature: string) => {
+		const {owner, members, guild, channels} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0]!;
+		const channel = channels[0]!;
+		const managerRole = await createRole(harness, owner.token, guild.id, {
+			name: 'Managers',
+			permissions: (Permissions.MANAGE_ROLES | Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES).toString(),
+		});
+		const targetRole = await createRole(harness, owner.token, guild.id, {name: 'Target'});
+		await addMemberRole(harness, owner.token, guild.id, member.userId, managerRole.id);
+		await createBuilder(harness, '')
+			.post(`/test/guilds/${guild.id}/features`)
+			.body({add_features: [feature]})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		return {owner, member, guild, channel, targetRole};
+	};
+	const withSelfHosted = async (selfHosted: boolean, run: () => Promise<void>) => {
+		const previous = Config.instance.selfHosted;
+		Config.instance.selfHosted = selfHosted;
+		try {
+			await run();
+		} finally {
+			Config.instance.selfHosted = previous;
+		}
+	};
+	for (const feature of [GuildFeatures.VERIFIED, GuildFeatures.PARTNERED]) {
+		it(`always requires 2FA for moderators in a ${feature} community`, async () => {
+			const {owner, member, guild, channel, targetRole} = await setupModeratorInStatusCommunity(feature);
+			await withSelfHosted(false, async () => {
+				const fetched = await createBuilder<GuildResponse>(harness, owner.token)
+					.get(`/guilds/${guild.id}`)
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				expect(fetched.mfa_level).toBe(GuildMFALevel.ELEVATED);
+				await createBuilder(harness, member.token)
+					.put(`/channels/${channel.id}/permissions/${targetRole.id}`)
+					.body({type: 0, allow: Permissions.SEND_MESSAGES.toString(), deny: '0'})
+					.expect(HTTP_STATUS.BAD_REQUEST, 'TWO_FACTOR_REQUIRED')
+					.execute();
+			});
+		});
+	}
+	it('leaves moderator 2FA to the community on self-hosted instances', async () => {
+		const {owner, member, guild, channel, targetRole} = await setupModeratorInStatusCommunity(GuildFeatures.VERIFIED);
+		await withSelfHosted(true, async () => {
+			const fetched = await createBuilder<GuildResponse>(harness, owner.token)
+				.get(`/guilds/${guild.id}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(fetched.mfa_level).toBe(GuildMFALevel.NONE);
+			await createBuilder(harness, member.token)
+				.put(`/channels/${channel.id}/permissions/${targetRole.id}`)
+				.body({type: 0, allow: Permissions.SEND_MESSAGES.toString(), deny: '0'})
+				.expect(HTTP_STATUS.NO_CONTENT)
+				.execute();
+		});
 	});
 });

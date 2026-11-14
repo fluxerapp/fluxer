@@ -7,11 +7,40 @@ import {app} from 'electron';
 const logger = createChildLogger('JumpList');
 export const TASK_ARG_PREFIX = '--fluxer-task=';
 
-type JumpListTaskId = 'open-settings' | 'new-dm';
+export type JumpListTaskId = 'open-settings' | 'new-dm' | 'open-account-switcher';
+
+const JUMP_LIST_TASK_IDS: ReadonlySet<string> = new Set<JumpListTaskId>([
+	'open-settings',
+	'new-dm',
+	'open-account-switcher',
+]);
+
+let directMessagesAvailable = true;
+const availabilitySubscribers = new Set<() => void>();
+
+export function isDirectMessagesAvailable(): boolean {
+	return directMessagesAvailable;
+}
+
+export function setDirectMessagesAvailable(available: boolean): void {
+	if (available === directMessagesAvailable) return;
+	directMessagesAvailable = available;
+	for (const subscriber of availabilitySubscribers) {
+		try {
+			subscriber();
+		} catch (error) {
+			logger.warn('Direct message availability subscriber threw', {error});
+		}
+	}
+}
+
+export function onDirectMessagesAvailabilityChange(callback: () => void): void {
+	availabilitySubscribers.add(callback);
+}
 
 function buildTasks(): Array<Electron.Task> {
 	const exePath = process.execPath;
-	return [
+	const tasks: Array<Electron.Task> = [
 		{
 			program: exePath,
 			arguments: `${TASK_ARG_PREFIX}open-settings`,
@@ -20,15 +49,26 @@ function buildTasks(): Array<Electron.Task> {
 			title: t('desktop.jumpList.openSettings'),
 			description: t('desktop.jumpList.openSettingsDescription'),
 		},
-		{
+	];
+	if (directMessagesAvailable) {
+		tasks.push({
 			program: exePath,
 			arguments: `${TASK_ARG_PREFIX}new-dm`,
 			iconPath: exePath,
 			iconIndex: 0,
 			title: t('desktop.jumpList.newDirectMessage'),
 			description: t('desktop.jumpList.newDirectMessageDescription'),
-		},
-	];
+		});
+	}
+	tasks.push({
+		program: exePath,
+		arguments: `${TASK_ARG_PREFIX}open-account-switcher`,
+		iconPath: exePath,
+		iconIndex: 0,
+		title: t('desktop.jumpList.chooseAccount'),
+		description: t('desktop.jumpList.chooseAccountDescription'),
+	});
+	return tasks;
 }
 
 let installed = false;
@@ -51,13 +91,14 @@ export function initializeJumpList(): void {
 	installed = true;
 	refreshJumpList();
 	onLocaleChange(refreshJumpList);
+	onDirectMessagesAvailabilityChange(refreshJumpList);
 }
 
 export function parseJumpListTaskFromArgv(argv: ReadonlyArray<string>): JumpListTaskId | null {
 	for (const arg of argv) {
 		if (!arg.startsWith(TASK_ARG_PREFIX)) continue;
 		const id = arg.slice(TASK_ARG_PREFIX.length);
-		if (id === 'open-settings' || id === 'new-dm') return id;
+		if (JUMP_LIST_TASK_IDS.has(id)) return id as JumpListTaskId;
 	}
 	return null;
 }

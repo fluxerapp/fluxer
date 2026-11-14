@@ -1,6 +1,7 @@
 %% SPDX-License-Identifier: AGPL-3.0-or-later
 
 -module(guild_presence_sync).
+
 -typing([eqwalizer]).
 
 -export([
@@ -8,18 +9,13 @@
     sync_member_data/2,
     partition_subscribed_sessions/5,
     get_user_viewable_channel_map/3,
-    remove_invalid_subscriptions/3,
-    dispatch_to_valid_sessions/4
+    session_pids/2
 ]).
 
 -export_type([guild_state/0, user_id/0]).
 
 -type guild_state() :: map().
 -type user_id() :: integer().
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 
 -spec sync_online_status(user_id(), guild_state()) -> ok.
 sync_online_status(UserId, State) ->
@@ -28,14 +24,14 @@ sync_online_status(UserId, State) ->
         error ->
             ok;
         {ok, Ref} ->
-            guild_member_list_store:set_online(Ref, UserId, IsOnline)
+            guild_member_list_engine:set_online(Ref, UserId, IsOnline)
     end,
     guild_member_list_channel_engine:sync_online(UserId, IsOnline, State).
 
 -spec sync_member_data(user_id(), guild_state()) -> ok.
 sync_member_data(UserId, State) ->
     Data = maps:get(data, State, #{}),
-    case guild_data_index:get_member(UserId, Data) of
+    case guild_data_index_members:get_member(UserId, Data) of
         undefined -> ok;
         Member -> sync_local_nif_member_data(UserId, Member, State)
     end.
@@ -55,7 +51,7 @@ sync_default_member_list_data(UserId, Member, State) ->
             SortKey = guild_member_list_common:casefold_binary(DisplayName),
             RoleIds = guild_member_list_store:extract_role_ids(Member),
             IsOnline = compute_is_online(UserId, State),
-            guild_member_list_store:update_member(Ref, UserId, SortKey, RoleIds, IsOnline)
+            guild_member_list_engine:update_member(Ref, UserId, SortKey, RoleIds, IsOnline)
     end.
 
 -spec compute_is_online(user_id(), guild_state()) -> boolean().
@@ -119,44 +115,23 @@ classify_non_target_session(SessionData, SessionUserId, TargetChannelMap, State)
 session_shares_channels(SessionData, SessionUserId, TargetChannelMap, State) ->
     case maps:find(viewable_channels, SessionData) of
         {ok, ViewableMap} when is_map(ViewableMap) ->
-            maps_share_any_key(ViewableMap, TargetChannelMap);
+            map_utils:maps_share_any_key(ViewableMap, TargetChannelMap);
         _ ->
             session_channel_list_shares(SessionUserId, TargetChannelMap, State)
     end.
 
 -spec session_channel_list_shares(user_id(), map(), guild_state()) -> boolean().
 session_channel_list_shares(SessionUserId, TargetChannelMap, State) ->
-    SessionChannelList = guild_visibility:get_user_viewable_channels(SessionUserId, State),
+    SessionChannelList = guild_visibility_channels:get_user_viewable_channels(
+        SessionUserId, State
+    ),
     lists:any(fun(Ch) -> maps:is_key(Ch, TargetChannelMap) end, SessionChannelList).
-
--spec maps_share_any_key(map(), map()) -> boolean().
-maps_share_any_key(MapA, MapB) ->
-    {Smaller, Larger} =
-        case map_size(MapA) =< map_size(MapB) of
-            true -> {MapA, MapB};
-            false -> {MapB, MapA}
-        end,
-    maps_share_any_key_iter(maps:iterator(Smaller), Larger).
-
--spec maps_share_any_key_iter(maps:iterator(), map()) -> boolean().
-maps_share_any_key_iter(Iterator, LargerMap) ->
-    case maps:next(Iterator) of
-        none -> false;
-        {Key, _, NextIterator} -> key_matches_or_continue(Key, NextIterator, LargerMap)
-    end.
-
--spec key_matches_or_continue(term(), maps:iterator(), map()) -> boolean().
-key_matches_or_continue(Key, NextIterator, LargerMap) ->
-    case maps:is_key(Key, LargerMap) of
-        true -> true;
-        false -> maps_share_any_key_iter(NextIterator, LargerMap)
-    end.
 
 -spec get_user_viewable_channel_map(user_id(), map(), guild_state()) -> map().
 get_user_viewable_channel_map(UserId, Sessions, State) ->
     case find_session_viewable_channels_for_user(UserId, Sessions) of
         undefined ->
-            ChannelList = guild_visibility:get_user_viewable_channels(UserId, State),
+            ChannelList = guild_visibility_channels:get_user_viewable_channels(UserId, State),
             maps:from_list([{Ch, true} || Ch <- ChannelList]);
         ViewableMap ->
             ViewableMap
@@ -187,71 +162,14 @@ viewable_channels_or_continue(UserId, SessionData, NextIterator) ->
             find_session_viewable_channels_iter(UserId, NextIterator)
     end.
 
--spec remove_invalid_subscriptions([binary()], user_id(), guild_state()) -> guild_state().
-remove_invalid_subscriptions([], _UserId, State) ->
-    State;
-remove_invalid_subscriptions(InvalidSessionIds, UserId, State) ->
-    MemberSubs = maps:get(member_subscriptions, State, guild_subscriptions:init_state()),
-    {NewMemberSubs, RemovedCount} = unsubscribe_sessions_for_user(
-        InvalidSessionIds, UserId, MemberSubs
-    ),
-    State1 = State#{member_subscriptions => NewMemberSubs},
-    guild_sessions_presence:unsubscribe_many_from_user_presence(UserId, RemovedCount, State1).
-
--spec unsubscribe_sessions_for_user(
-    [binary()], user_id(), guild_subscriptions:subscription_state()
-) ->
-    {guild_subscriptions:subscription_state(), non_neg_integer()}.
-unsubscribe_sessions_for_user(SessionIds, UserId, MemberSubs) ->
-    case maps:get(UserId, MemberSubs, undefined) of
-        undefined ->
-            {MemberSubs, 0};
-        Subscribers ->
-            remove_sessions_from_subscribers(SessionIds, UserId, Subscribers, MemberSubs)
-    end.
-
--spec remove_sessions_from_subscribers(
-    [binary()],
-    user_id(),
-    sets:set(binary()),
-    guild_subscriptions:subscription_state()
-) -> {guild_subscriptions:subscription_state(), non_neg_integer()}.
-remove_sessions_from_subscribers(SessionIds, UserId, Subscribers, MemberSubs) ->
-    {NewSubscribers, RemovedCount} = lists:foldl(
-        fun remove_session_from_subscriber_set/2,
-        {Subscribers, 0},
-        SessionIds
-    ),
-    NewMemberSubs = put_or_remove_subscribers(UserId, NewSubscribers, MemberSubs),
-    {NewMemberSubs, RemovedCount}.
-
--spec remove_session_from_subscriber_set(binary(), {sets:set(binary()), non_neg_integer()}) ->
-    {sets:set(binary()), non_neg_integer()}.
-remove_session_from_subscriber_set(SessionId, {Subscribers, Count}) ->
-    case sets:is_element(SessionId, Subscribers) of
-        true -> {sets:del_element(SessionId, Subscribers), Count + 1};
-        false -> {Subscribers, Count}
-    end.
-
--spec put_or_remove_subscribers(
-    user_id(), sets:set(binary()), guild_subscriptions:subscription_state()
-) -> guild_subscriptions:subscription_state().
-put_or_remove_subscribers(UserId, Subscribers, MemberSubs) ->
-    case sets:size(Subscribers) of
-        0 -> maps:remove(UserId, MemberSubs);
-        _ -> MemberSubs#{UserId => Subscribers}
-    end.
-
--spec dispatch_to_valid_sessions([binary()], map(), map(), integer()) -> ok.
-dispatch_to_valid_sessions(ValidSessionIds, Sessions, PresenceUpdate, GuildId) ->
-    Pids = lists:filtermap(
+-spec session_pids([binary()], map()) -> [pid()].
+session_pids(SessionIds, Sessions) ->
+    lists:filtermap(
         fun(SessionId) ->
             session_pid(SessionId, Sessions)
         end,
-        ValidSessionIds
-    ),
-    gateway_dispatch_relay:dispatch_many(Pids, presence_update, PresenceUpdate, GuildId),
-    ok.
+        SessionIds
+    ).
 
 -spec session_pid(binary(), map()) -> {true, pid()} | false.
 session_pid(SessionId, Sessions) ->
@@ -266,177 +184,3 @@ session_data_pid(SessionData) ->
         Pid when is_pid(Pid) -> {true, Pid};
         _ -> false
     end.
-
--ifdef(TEST).
-
-maps_share_any_key_empty_test() ->
-    ?assertEqual(false, maps_share_any_key(#{}, #{})),
-    ?assertEqual(false, maps_share_any_key(#{1 => true}, #{})),
-    ?assertEqual(false, maps_share_any_key(#{}, #{1 => true})).
-
-maps_share_any_key_overlap_test() ->
-    ?assertEqual(true, maps_share_any_key(#{1 => true, 2 => true}, #{2 => true, 3 => true})),
-    ?assertEqual(true, maps_share_any_key(#{5 => true}, #{5 => true})).
-
-maps_share_any_key_no_overlap_test() ->
-    ?assertEqual(false, maps_share_any_key(#{1 => true, 2 => true}, #{3 => true, 4 => true})).
-
-get_user_viewable_channel_map_uses_session_cache_test() ->
-    Sessions = #{
-        <<"s1">> => #{user_id => 10, viewable_channels => #{100 => true, 200 => true}},
-        <<"s2">> => #{user_id => 20, viewable_channels => #{300 => true}}
-    },
-    State = #{sessions => Sessions, data => #{<<"members">> => #{}}},
-    Result = get_user_viewable_channel_map(10, Sessions, State),
-    ?assertEqual(#{100 => true, 200 => true}, Result).
-
-get_user_viewable_channel_map_skips_session_without_cache_test() ->
-    Sessions = #{
-        <<"s1">> => #{user_id => 10},
-        <<"s2">> => #{user_id => 10, viewable_channels => #{100 => true}}
-    },
-    State = #{sessions => Sessions, data => #{<<"members">> => #{}}},
-    Result = get_user_viewable_channel_map(10, Sessions, State),
-    ?assertEqual(#{100 => true}, Result).
-
-session_shares_channels_uses_cached_viewable_test() ->
-    SessionData = #{user_id => 20, viewable_channels => #{100 => true, 200 => true}},
-    TargetChannelMap = #{200 => true, 300 => true},
-    State = #{sessions => #{}, data => #{<<"members">> => #{}}},
-    ?assertEqual(true, session_shares_channels(SessionData, 20, TargetChannelMap, State)).
-
-session_shares_channels_no_overlap_test() ->
-    SessionData = #{user_id => 20, viewable_channels => #{100 => true}},
-    TargetChannelMap = #{200 => true, 300 => true},
-    State = #{sessions => #{}, data => #{<<"members">> => #{}}},
-    ?assertEqual(false, session_shares_channels(SessionData, 20, TargetChannelMap, State)).
-
-partition_subscribed_sessions_uses_cached_channels_test() ->
-    Sessions = #{
-        <<"s1">> => #{user_id => 20, pid => self(), viewable_channels => #{100 => true}},
-        <<"s2">> => #{user_id => 30, pid => self(), viewable_channels => #{200 => true}}
-    },
-    TargetChannelMap = #{100 => true, 300 => true},
-    State = #{sessions => Sessions, data => #{<<"members">> => #{}}},
-    {Valid, Invalid} = partition_subscribed_sessions(
-        [<<"s1">>, <<"s2">>], Sessions, TargetChannelMap, 10, State
-    ),
-    ?assertEqual([<<"s1">>], Valid),
-    ?assertEqual([<<"s2">>], Invalid).
-
-partition_subscribed_sessions_excludes_target_user_test() ->
-    Sessions = #{
-        <<"s1">> => #{user_id => 10, pid => self(), viewable_channels => #{100 => true}}
-    },
-    assert_partition_result(Sessions, #{100 => true}, [], [<<"s1">>]).
-
-partition_subscribed_sessions_missing_session_test() ->
-    assert_partition_result(#{}, #{100 => true}, [], [<<"s1">>]).
-
-remove_invalid_subscriptions_batches_by_user_test() ->
-    MemberSubs0 = guild_subscriptions:init_state(),
-    MemberSubs1 = guild_subscriptions:subscribe(<<"s1">>, 10, MemberSubs0),
-    MemberSubs2 = guild_subscriptions:subscribe(<<"s2">>, 10, MemberSubs1),
-    MemberSubs3 = guild_subscriptions:subscribe(<<"s3">>, 10, MemberSubs2),
-    State = #{
-        member_subscriptions => MemberSubs3,
-        presence_subscriptions => #{10 => 5}
-    },
-    Result = remove_invalid_subscriptions([<<"s1">>, <<"s3">>, <<"missing">>], 10, State),
-    Remaining = guild_subscriptions:get_subscribed_sessions(
-        10, maps:get(member_subscriptions, Result)
-    ),
-    ?assertEqual([<<"s2">>], lists:sort(Remaining)),
-    ?assertEqual(#{10 => 3}, maps:get(presence_subscriptions, Result)).
-
-sync_member_data_updates_loaded_channel_engines_test() ->
-    GuildId = 100,
-    UserId = 10,
-    ChannelId = 500,
-    BotsRoleId = 200,
-    CountingRoleId = 300,
-    DefaultRef = guild_member_list_engine:new(),
-    ChannelRef = guild_member_list_engine:new(),
-    try
-        ok = load_sync_member_test_ref(DefaultRef, UserId, CountingRoleId, BotsRoleId),
-        ok = load_sync_member_test_ref(ChannelRef, UserId, CountingRoleId, BotsRoleId),
-        State = sync_member_data_test_state(
-            GuildId, UserId, ChannelId, BotsRoleId, CountingRoleId, DefaultRef, ChannelRef
-        ),
-        ?assertEqual(stale_groups(BotsRoleId), guild_member_list_engine:get_groups(ChannelRef)),
-        ok = sync_member_data(UserId, State),
-        ?assertEqual(
-            hoisted_groups(BotsRoleId), guild_member_list_engine:get_groups(ChannelRef)
-        )
-    after
-        guild_member_list_engine:destroy(DefaultRef),
-        guild_member_list_engine:destroy(ChannelRef)
-    end.
-
-assert_partition_result(Sessions, TargetChannelMap, ExpectedValid, ExpectedInvalid) ->
-    State = #{sessions => Sessions, data => #{<<"members">> => #{}}},
-    {Valid, Invalid} = partition_subscribed_sessions(
-        [<<"s1">>], Sessions, TargetChannelMap, 10, State
-    ),
-    ?assertEqual(ExpectedValid, Valid),
-    ?assertEqual(ExpectedInvalid, Invalid).
-
--spec load_sync_member_test_ref(
-    guild_member_list_store:store_ref(), integer(), integer(), integer()
-) -> ok.
-load_sync_member_test_ref(Ref, UserId, MemberRoleId, HoistedRoleId) ->
-    guild_member_list_engine:bulk_load(
-        Ref, [{UserId, <<"counting">>, [MemberRoleId], true}], [HoistedRoleId]
-    ).
-
-sync_member_data_test_state(
-    GuildId, UserId, ChannelId, BotsRoleId, CountingRoleId, DefaultRef, ChannelRef
-) ->
-    Data = guild_data_index:normalize_data(#{
-        <<"guild">> => #{<<"owner_id">> => integer_to_binary(UserId)},
-        <<"roles">> => [
-            role(GuildId, <<"everyone">>, false, 0),
-            role(BotsRoleId, <<"bots">>, true, 1),
-            role(CountingRoleId, <<"Counting">>, false, 1)
-        ],
-        <<"members">> => [
-            #{
-                <<"user">> => #{
-                    <<"id">> => integer_to_binary(UserId),
-                    <<"username">> => <<"Counting">>
-                },
-                <<"roles">> => [
-                    integer_to_binary(BotsRoleId), integer_to_binary(CountingRoleId)
-                ]
-            }
-        ],
-        <<"channels">> => [
-            #{<<"id">> => integer_to_binary(ChannelId), <<"permission_overwrites">> => []}
-        ]
-    }),
-    #{
-        id => GuildId,
-        data => Data,
-        sessions => #{},
-        member_presence => #{UserId => #{<<"status">> => <<"online">>}},
-        connected_user_ids => sets:from_list([UserId]),
-        member_list_engine => DefaultRef,
-        channel_member_list_engines => #{integer_to_binary(ChannelId) => ChannelRef}
-    }.
-
-role(RoleId, Name, Hoist, Position) ->
-    #{
-        <<"id">> => integer_to_binary(RoleId),
-        <<"name">> => Name,
-        <<"hoist">> => Hoist,
-        <<"position">> => Position,
-        <<"permissions">> => <<"0">>
-    }.
-
-stale_groups(RoleId) ->
-    [{integer_to_binary(RoleId), 0}, {<<"online">>, 1}, {<<"offline">>, 0}].
-
-hoisted_groups(RoleId) ->
-    [{integer_to_binary(RoleId), 1}, {<<"online">>, 0}, {<<"offline">>, 0}].
-
--endif.

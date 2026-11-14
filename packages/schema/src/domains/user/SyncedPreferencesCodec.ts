@@ -33,8 +33,10 @@ export function encodeSyncedPreferences(preferences: SyncedPreferences): string 
 
 export function encodedSyncedPreferencesByteLength(encoded: string): number {
 	if (encoded === '') return 0;
-	const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
-	return Math.floor((encoded.length * 3) / 4) - padding;
+	const paddedByteLength = Math.floor((encoded.length * 3) / 4);
+	if (encoded.endsWith('==')) return paddedByteLength - 2;
+	if (encoded.endsWith('=')) return paddedByteLength - 1;
+	return paddedByteLength;
 }
 
 export function decodeSyncedPreferences(encoded: string | null | undefined): SyncedPreferences {
@@ -67,10 +69,6 @@ export function decodeSyncedPreferencesLenient(encoded: string | null | undefine
 
 export function syncedPreferencesToJson(preferences: SyncedPreferences): unknown {
 	return toJson(SyncedPreferencesSchema, preferences);
-}
-
-export function isEmptySyncedPreferencesEncoded(encoded: string | null | undefined): boolean {
-	return !encoded;
 }
 
 export class SyncedPreferencesDecodeError extends Error {

@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
-import {showModerationErrorModal} from '@app/features/moderation/components/alerts/ModerationErrorModalUtils';
 import {REMOVE_TIMEOUT_DESCRIPTOR} from '@app/features/moderation/utils/ModerationMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {User} from '@app/features/user/models/User';
-import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
+import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -37,11 +38,12 @@ export const RemoveTimeoutModal: React.FC<RemoveTimeoutModalProps> = observer(({
 			ModalCommands.pop();
 		} catch (error) {
 			logger.error('Failed to remove timeout:', error);
-			showModerationErrorModal(
-				i18n,
-				<Trans>Failed to remove timeout. Try again.</Trans>,
-				'moderation.remove-timeout-modal.remove-error-modal',
-			);
+			showGenericErrorModal({
+				title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
+				message: <Trans>Failed to remove timeout. Try again.</Trans>,
+				dataFlx: 'moderation.remove-timeout-modal.remove-error-modal',
+				defer: false,
+			});
 		} finally {
 			setIsSubmitting(false);
 		}

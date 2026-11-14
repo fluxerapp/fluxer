@@ -14,18 +14,22 @@ import {
 	type UserSettingsTabType,
 } from '@app/features/user/components/settings_utils/SettingsSectionRegistry';
 
-export const USER_SETTINGS_DEEP_LINK_PATH = '/settings/user';
+const USER_SETTINGS_DEEP_LINK_PATH = '/settings/user';
 
 const USER_SETTINGS_TAB_TYPES = new Set<UserSettingsTabType>([
 	'my_profile',
 	'account_security',
 	'plutonium',
+	'subscriptions',
+	'operator_pass',
 	'gift_inventory',
+	'payments',
 	'privacy_safety',
 	'authorized_apps',
 	'blocked_users',
 	'devices',
 	'appearance',
+	'themes',
 	'accessibility',
 	'chat_settings',
 	'voice_video',
@@ -47,11 +51,11 @@ export interface UserSettingsDeepLinkTarget {
 	section?: string;
 }
 
-export function isUserSettingsTabType(value: string | null | undefined): value is UserSettingsTabType {
+function isUserSettingsTabType(value: string | null | undefined): value is UserSettingsTabType {
 	return !!value && SAFE_SETTINGS_PARAM_REGEX.test(value) && USER_SETTINGS_TAB_TYPES.has(value as UserSettingsTabType);
 }
 
-export function isUserSettingsSectionTarget(tabType: UserSettingsTabType, sectionId: string): boolean {
+function isUserSettingsSectionTarget(tabType: UserSettingsTabType, sectionId: string): boolean {
 	if (!SAFE_SETTINGS_PARAM_REGEX.test(sectionId)) return false;
 	if (isSectionIdValid(sectionId, tabType)) return true;
 	return tabType === 'advanced_settings' && isAdvancedSettingsCategorySectionId(sectionId);

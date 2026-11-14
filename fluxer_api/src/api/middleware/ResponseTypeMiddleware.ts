@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {registerRequestBodySchema} from '@app/api/middleware/RequestBodyBinaryFields';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
+import {resolveRoutePattern} from '@fluxer/errors/src/error_handling/RoutePattern';
 import {createLogger} from '@fluxer/logger/src/Logger';
 import type {Context, MiddlewareHandler} from 'hono';
 import type {ZodType} from 'zod';
-import {Config} from '../Config';
-import type {HonoEnv} from '../types/HonoEnv';
 
 const responseValidationLogger = createLogger('response_validation');
 
@@ -53,7 +55,7 @@ async function validateAndRewriteResponse(ctx: Context<HonoEnv>, schema: ZodType
 		}));
 		const errorContext = {
 			method: ctx.req.method,
-			path: ctx.req.path,
+			path: resolveRoutePattern(ctx),
 			status: response.status,
 			validationErrors,
 			body,
@@ -69,27 +71,6 @@ async function validateAndRewriteResponse(ctx: Context<HonoEnv>, schema: ZodType
 	});
 }
 
-export function ResponseType<T extends ZodType>(
-	schema: T,
-	options?: {
-		skipValidation?: boolean;
-		allowNoContent?: boolean;
-	},
-): MiddlewareHandler<HonoEnv> {
-	const {skipValidation = false, allowNoContent = false} = options ?? {};
-	return async (ctx, next) => {
-		ctx.set('responseSchema', schema);
-		await next();
-		if (skipValidation || !Config.dev.validateResponses) {
-			return;
-		}
-		if (allowNoContent && ctx.res.status === 204) {
-			return;
-		}
-		await validateAndRewriteResponse(ctx, schema);
-	};
-}
-
 type SecurityScheme = 'botToken' | 'oauth2Token' | 'bearerToken' | 'sessionToken' | 'adminApiKey';
 
 export interface OpenAPIRouteMetadata {
@@ -97,12 +78,14 @@ export interface OpenAPIRouteMetadata {
 	summary: string;
 	description: string;
 	responseSchema: ZodType | null;
+	acceptedResponseSchema?: ZodType;
 	responseContentType?: string;
 	requestSchema?: ZodType;
 	requestFormSchema?: ZodType;
 	requestBodyRequired?: boolean;
 	statusCode?: number | Array<number>;
 	bodylessStatusCodes?: Array<number>;
+	errorStatusCodes?: Array<number>;
 	security?: SecurityScheme | Array<SecurityScheme>;
 	tags: string | Array<string>;
 	deprecated?: boolean;
@@ -110,11 +93,7 @@ export interface OpenAPIRouteMetadata {
 		url: string;
 		description?: string;
 	};
-}
-
-interface OpenAPIOptions {
-	description: string;
-	responseContentType?: string;
+	experiment?: string;
 }
 
 function validateOperationId(operationId: string): void {
@@ -125,64 +104,27 @@ function validateOperationId(operationId: string): void {
 	}
 }
 
-function toArray<T>(value: T | Array<T>): Array<T> {
-	return Array.isArray(value) ? value : [value];
-}
-
-export function OpenAPI(metadata: OpenAPIRouteMetadata): MiddlewareHandler<HonoEnv>;
-export function OpenAPI(
-	operationId: string,
-	summary: string,
-	responseSchema: ZodType | null,
-	options: OpenAPIOptions,
-): MiddlewareHandler<HonoEnv>;
-export function OpenAPI(
-	operationIdOrMetadata: string | OpenAPIRouteMetadata,
-	summary?: string,
-	responseSchema?: ZodType | null,
-	options?: OpenAPIOptions,
-): MiddlewareHandler<HonoEnv> {
-	let metadata: OpenAPIRouteMetadata;
-	if (typeof operationIdOrMetadata === 'string') {
-		if (!options?.description) {
-			throw new Error(
-				`Missing description for OpenAPI route ${operationIdOrMetadata}. The description field is required.`,
-			);
-		}
-		if (responseSchema === undefined) {
-			throw new Error(
-				`Missing responseSchema for OpenAPI route ${operationIdOrMetadata}. The responseSchema field is required (use null for no-content responses).`,
-			);
-		}
-		metadata = {
-			operationId: operationIdOrMetadata,
-			summary: summary!,
-			description: options.description,
-			responseSchema,
-			responseContentType: options.responseContentType,
-			tags: [],
-		};
-	} else {
-		metadata = operationIdOrMetadata;
-	}
+export function OpenAPI(metadata: OpenAPIRouteMetadata): MiddlewareHandler<HonoEnv> {
 	validateOperationId(metadata.operationId);
-	const {statusCode, security, tags, bodylessStatusCodes, responseContentType} = metadata;
+	if (metadata.requestSchema) {
+		registerRequestBodySchema(metadata.requestSchema);
+	}
+	const {bodylessStatusCodes, responseContentType} = metadata;
 	const schema = metadata.responseSchema;
-	const fullMetadata: OpenAPIRouteMetadata = {
-		...metadata,
-		statusCode: statusCode === undefined ? undefined : toArray(statusCode),
-		security: security === undefined ? undefined : toArray(security),
-		tags: toArray(tags),
-	};
 	const mediaType = responseContentType?.split(';', 1)[0]?.trim().toLowerCase();
 	const hasJsonResponse = mediaType === undefined || mediaType === 'application/json';
 	return async (ctx, next) => {
-		ctx.set('openapiMetadata', fullMetadata);
-		ctx.set('responseSchema', schema);
 		await next();
-		if (!schema || !hasJsonResponse || !Config.dev.validateResponses || bodylessStatusCodes?.includes(ctx.res.status)) {
+		const statusSchema =
+			ctx.res.status === 202 && metadata.acceptedResponseSchema ? metadata.acceptedResponseSchema : schema;
+		if (
+			!statusSchema ||
+			!hasJsonResponse ||
+			!Config.dev.validateResponses ||
+			bodylessStatusCodes?.includes(ctx.res.status)
+		) {
 			return;
 		}
-		await validateAndRewriteResponse(ctx, schema);
+		await validateAndRewriteResponse(ctx, statusSchema);
 	};
 }

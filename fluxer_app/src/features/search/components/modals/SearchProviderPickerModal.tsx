@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CANCEL_DESCRIPTOR, TRANSLATE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import Translation from '@app/features/messaging/state/Translation';
-import ReverseImageSearch from '@app/features/search/state/ReverseImageSearch';
-import SearchEngine from '@app/features/search/state/SearchEngine';
+import {getSearchProviderStore} from '@app/features/search/utils/SearchProviderUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {formatUserSettingsPath} from '@app/features/user/components/settings_utils/SettingsConstants';
-import {msg} from '@lingui/core/macro';
+import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import type {ReactNode} from 'react';
 import {useCallback, useMemo, useState} from 'react';
 
 const PICK_A_REVERSE_IMAGE_SEARCH_PROVIDER_DESCRIPTOR = msg({
@@ -49,7 +48,25 @@ const SEARCH_THE_WEB_DESCRIPTOR = msg({
 	comment: 'Confirm button label in the web search provider picker. Initiates the web search.',
 });
 
-export type SearchProviderPickerMode = 'text' | 'image' | 'translate';
+type SearchProviderPickerMode = 'text' | 'image' | 'translate';
+
+const PICKER_MESSAGES = {
+	text: {
+		title: PICK_A_WEB_SEARCH_PROVIDER_DESCRIPTOR,
+		selectLabel: WEB_SEARCH_PROVIDER_DESCRIPTOR,
+		confirmLabel: SEARCH_THE_WEB_DESCRIPTOR,
+	},
+	image: {
+		title: PICK_A_REVERSE_IMAGE_SEARCH_PROVIDER_DESCRIPTOR,
+		selectLabel: REVERSE_IMAGE_SEARCH_PROVIDER_DESCRIPTOR,
+		confirmLabel: SEARCH_DESCRIPTOR,
+	},
+	translate: {
+		title: PICK_A_TRANSLATION_PROVIDER_DESCRIPTOR,
+		selectLabel: TRANSLATION_PROVIDER_DESCRIPTOR,
+		confirmLabel: TRANSLATE_DESCRIPTOR,
+	},
+};
 
 interface SearchProviderPickerModalProps {
 	mode: SearchProviderPickerMode;
@@ -61,7 +78,7 @@ export const SearchProviderPickerModal: React.FC<SearchProviderPickerModalProps>
 	const isImageMode = mode === 'image';
 	const isTranslateMode = mode === 'translate';
 	const searchEnginesSettingsPath = formatUserSettingsPath(i18n, 'advanced_settings');
-	const store = isImageMode ? ReverseImageSearch : isTranslateMode ? Translation : SearchEngine;
+	const store = getSearchProviderStore(mode);
 	const engines = store.engines;
 	const options = useMemo<ReadonlyArray<ComboboxOption>>(
 		() => engines.map((engine) => ({value: engine.id, label: engine.name})),
@@ -86,37 +103,38 @@ export const SearchProviderPickerModal: React.FC<SearchProviderPickerModalProps>
 		ModalCommands.pop();
 		onPick(engineId);
 	}, [engines, onPick, selectedEngineId, store]);
-	const title = isImageMode
-		? i18n._(PICK_A_REVERSE_IMAGE_SEARCH_PROVIDER_DESCRIPTOR)
-		: isTranslateMode
-			? i18n._(PICK_A_TRANSLATION_PROVIDER_DESCRIPTOR)
-			: i18n._(PICK_A_WEB_SEARCH_PROVIDER_DESCRIPTOR);
-	const description = isImageMode ? (
-		<Trans>
-			Choose where {PRODUCT_NAME} should send images for reverse image search. We'll remember your pick. You can change
-			it or add your own provider later in {searchEnginesSettingsPath}.
-		</Trans>
-	) : isTranslateMode ? (
-		<Trans>
-			Choose where {PRODUCT_NAME} should send highlighted text for translation. We'll remember your pick. You can change
-			it or add your own provider later in {searchEnginesSettingsPath}.
-		</Trans>
-	) : (
-		<Trans>
-			Choose where {PRODUCT_NAME} should search highlighted text. We'll remember your pick. You can change it or add
-			your own provider later in {searchEnginesSettingsPath}.
-		</Trans>
-	);
-	const selectLabel = isImageMode
-		? i18n._(REVERSE_IMAGE_SEARCH_PROVIDER_DESCRIPTOR)
-		: isTranslateMode
-			? i18n._(TRANSLATION_PROVIDER_DESCRIPTOR)
-			: i18n._(WEB_SEARCH_PROVIDER_DESCRIPTOR);
-	const confirmLabel = isImageMode
-		? i18n._(SEARCH_DESCRIPTOR)
-		: isTranslateMode
-			? i18n._(TRANSLATE_DESCRIPTOR)
-			: i18n._(SEARCH_THE_WEB_DESCRIPTOR);
+	let messages = PICKER_MESSAGES.text;
+	if (isImageMode) {
+		messages = PICKER_MESSAGES.image;
+	} else if (isTranslateMode) {
+		messages = PICKER_MESSAGES.translate;
+	}
+	const title = i18n._(messages.title);
+	let description: ReactNode;
+	if (isImageMode) {
+		description = (
+			<Trans>
+				Choose where {ph({PRODUCT_NAME: RuntimeConfig.productName})} should send images for reverse image search. We'll
+				remember your pick. You can change it or add your own provider later in {searchEnginesSettingsPath}.
+			</Trans>
+		);
+	} else if (isTranslateMode) {
+		description = (
+			<Trans>
+				Choose where {ph({PRODUCT_NAME: RuntimeConfig.productName})} should send highlighted text for translation. We'll
+				remember your pick. You can change it or add your own provider later in {searchEnginesSettingsPath}.
+			</Trans>
+		);
+	} else {
+		description = (
+			<Trans>
+				Choose where {ph({PRODUCT_NAME: RuntimeConfig.productName})} should search highlighted text. We'll remember your
+				pick. You can change it or add your own provider later in {searchEnginesSettingsPath}.
+			</Trans>
+		);
+	}
+	const selectLabel = i18n._(messages.selectLabel);
+	const confirmLabel = i18n._(messages.confirmLabel);
 	const hasSelectedEngine = engines.some((engine) => engine.id === selectedEngineId);
 	return (
 		<Modal.Root size="small" onClose={handleClose} data-flx="search.search-provider-picker-modal.modal-root">

@@ -1,0 +1,119 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.clientIntro {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	width: 100%;
+}
+
+.clientWelcome {
+	width: min(40rem, calc(100vw - 2rem));
+}
+
+.clientIntroCopy {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.clientIntroTitle {
+	margin: 0;
+	color: var(--text-primary);
+	font-size: 1.0625rem;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1.25;
+}
+
+.clientIntroBody {
+	max-width: 24rem;
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.4;
+	text-align: center;
+}
+
+.clientIntroFields {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	width: 100%;
+}
+
+.clientIntroField {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.clientIntroFieldLabel {
+	color: var(--text-primary);
+	font-size: 0.8125rem;
+	font-weight: 700;
+	line-height: 1.125rem;
+}
+
+.clientIntroLanguageSelector {
+	width: 100%;
+}
+
+.clientIntroThemeSelector {
+	width: 100%;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+}
+
+.clientIntroFooter {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	margin-top: 0.5rem;
+	padding-top: 0;
+}
+
+.clientIntroFooter > * {
+	min-width: 10rem;
+	white-space: nowrap;
+}
+
+.clientPermission {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-4);
+	width: 100%;
+}
+
+.clientPermissionProgress {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.375rem;
+	height: 0.375rem;
+}
+
+.clientPermissionDot {
+	width: 0.375rem;
+	height: 0.375rem;
+	border-radius: var(--radius-full);
+	background: var(--background-modifier-accent);
+}
+
+.clientPermissionDotCurrent {
+	background: var(--text-secondary);
+}
+
+@media (max-width: 30rem) {
+	.clientIntroFooter {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.clientIntroFooter > * {
+		width: 100%;
+	}
+}

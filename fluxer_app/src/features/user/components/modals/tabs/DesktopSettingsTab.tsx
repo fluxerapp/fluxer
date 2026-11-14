@@ -3,7 +3,7 @@
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {MacPermissionsSettingsRow} from '@app/features/permissions/system/components/MacPermissionsSettingsRow';
 import {
 	getAutostartStatus,
@@ -20,7 +20,19 @@ import {
 	relaunchDesktopApp,
 	setDesktopWindowBehaviorSettings,
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
-import {getNativePlatformSync, isDesktop, isNativeLinux, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
+import {
+	getNativePlatformSync,
+	isDesktop,
+	isNativeLinux,
+	isNativeMacOS,
+	isNativeWindows,
+} from '@app/features/ui/utils/NativeUtils';
+import {
+	LATER_DESCRIPTOR,
+	LAUNCH_AT_LOGIN_DESCRIPTOR as LAUNCH_PRODUCT_AT_LOGIN_DESCRIPTOR,
+	RESTART_DESCRIPTOR,
+	RESTART_NOW_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {DesktopWindowBehaviorSettings} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -28,27 +40,34 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useLayoutEffect, useState} from 'react';
 
-const LAUNCH_PRODUCT_AT_LOGIN_DESCRIPTOR = msg({
-	message: 'Launch {productName} at login',
-	comment: 'Desktop setting label for starting the app automatically after OS sign-in.',
-});
 const RESTART_PRODUCT_FOR_TRAY_CHANGE_DESCRIPTOR = msg({
 	message:
 		"Restart {productName} for this change to take effect because Linux desktops can't reliably add or remove tray icons at runtime.",
 	comment: 'Desktop setting description shown when a tray-icon change on Linux requires restart.',
 });
-const RESTART_NOW_DESCRIPTOR = msg({
-	message: 'Restart now',
-	comment: 'Short label in the desktop settings tab. Keep it concise.',
+
+const USE_COLORED_TRAY_ICON_DESCRIPTOR = msg({
+	message: 'Use colored tray icon',
+	comment:
+		'Desktop setting toggle label on Windows and Linux. Switches the system tray icon from monochrome to the full-color app icon.',
 });
-const RESTART_DESCRIPTOR = msg({
-	message: 'Restart {productName}?',
-	comment: 'Confirmation prompt in the desktop settings tab. Preserve {productName}; it is inserted by code.',
+
+const USE_COLORED_TRAY_ICON_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Show the full-color {productName} icon instead of a monochrome one that matches your taskbar.',
+	comment: 'Desktop setting description under the colored tray icon toggle on Windows and Linux.',
 });
-const LATER_DESCRIPTOR = msg({
-	message: 'Later',
-	comment: 'Short label in the desktop settings tab. Keep it concise.',
+
+const USE_DARK_TASKBAR_BADGE_DESCRIPTOR = msg({
+	message: 'Use dark taskbar badge',
+	comment:
+		'Desktop setting toggle label on Windows. Switches the unread badge drawn over the taskbar button from red to dark gray.',
 });
+
+const USE_DARK_TASKBAR_BADGE_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Draw the unread badge on the {productName} taskbar button in dark gray instead of red.',
+	comment: 'Desktop setting description under the dark taskbar badge toggle on Windows.',
+});
+
 const DesktopSettingsTab: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const cachedAutostart = getCachedAutostartStatus();
@@ -63,6 +82,7 @@ const DesktopSettingsTab: React.FC = observer(() => {
 	const platform = getNativePlatformSync();
 	const isMac = isNativeMacOS(platform);
 	const isLinux = isNativeLinux(platform);
+	const isWindows = isNativeWindows(platform);
 	useLayoutEffect(() => {
 		let mounted = true;
 		const initDesktopSettings = async () => {
@@ -125,7 +145,7 @@ const DesktopSettingsTab: React.FC = observer(() => {
 			ModalCommands.push(
 				modal(() => (
 					<ConfirmModal
-						title={i18n._(RESTART_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						title={i18n._(RESTART_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 						description={
 							<Trans>
 								Tray icon changes only apply after a restart on Linux because the system tray protocol doesn't reliably
@@ -153,11 +173,27 @@ const DesktopSettingsTab: React.FC = observer(() => {
 			>
 				{isDesktop() && (
 					<Switch
-						label={i18n._(LAUNCH_PRODUCT_AT_LOGIN_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						label={i18n._(LAUNCH_PRODUCT_AT_LOGIN_DESCRIPTOR, {productName: RuntimeConfig.productName})}
 						value={autostartEnabled}
 						disabled={autostartBusy}
 						onChange={handleAutostartChange}
 						data-flx="user.desktop-settings-tab.switch.autostart-change"
+					/>
+				)}
+				{isDesktop() && desktopWindowBehavior?.startMinimized !== undefined && (
+					<Switch
+						label={<Trans>Start minimized</Trans>}
+						description={
+							isMac ? (
+								<Trans>When launched at login, start in the menu bar instead of opening the window</Trans>
+							) : (
+								<Trans>When launched at login, start in the system tray instead of opening the window</Trans>
+							)
+						}
+						value={desktopWindowBehavior.startMinimized}
+						disabled={desktopWindowBehaviorBusy || !autostartEnabled || !desktopWindowBehavior.showTrayIcon}
+						onChange={(value) => handleDesktopWindowBehaviorChange({startMinimized: value})}
+						data-flx="user.desktop-settings-tab.switch.start-minimized-change"
 					/>
 				)}
 				{isDesktop() && desktopWindowBehavior && (
@@ -173,7 +209,7 @@ const DesktopSettingsTab: React.FC = observer(() => {
 							label={isMac ? <Trans>Show menu bar icon</Trans> : <Trans>Show system tray icon</Trans>}
 							description={
 								trayChangePendingRestart && isLinux
-									? i18n._(RESTART_PRODUCT_FOR_TRAY_CHANGE_DESCRIPTOR, {productName: PRODUCT_NAME})
+									? i18n._(RESTART_PRODUCT_FOR_TRAY_CHANGE_DESCRIPTOR, {productName: RuntimeConfig.productName})
 									: undefined
 							}
 							value={desktopWindowBehavior.showTrayIcon}
@@ -181,6 +217,30 @@ const DesktopSettingsTab: React.FC = observer(() => {
 							onChange={handleShowTrayIconChange}
 							data-flx="user.desktop-settings-tab.switch.show-tray-icon-change"
 						/>
+						{!isMac && desktopWindowBehavior.coloredTrayIcon !== undefined && (
+							<Switch
+								label={i18n._(USE_COLORED_TRAY_ICON_DESCRIPTOR)}
+								description={i18n._(USE_COLORED_TRAY_ICON_DESCRIPTION_DESCRIPTOR, {
+									productName: RuntimeConfig.productName,
+								})}
+								value={desktopWindowBehavior.coloredTrayIcon}
+								disabled={desktopWindowBehaviorBusy || !desktopWindowBehavior.showTrayIcon}
+								onChange={(value) => handleDesktopWindowBehaviorChange({coloredTrayIcon: value})}
+								data-flx="user.desktop-settings-tab.switch.colored-tray-icon-change"
+							/>
+						)}
+						{isWindows && desktopWindowBehavior.darkTaskbarBadge !== undefined && (
+							<Switch
+								label={i18n._(USE_DARK_TASKBAR_BADGE_DESCRIPTOR)}
+								description={i18n._(USE_DARK_TASKBAR_BADGE_DESCRIPTION_DESCRIPTOR, {
+									productName: RuntimeConfig.productName,
+								})}
+								value={desktopWindowBehavior.darkTaskbarBadge}
+								disabled={desktopWindowBehaviorBusy}
+								onChange={(value) => handleDesktopWindowBehaviorChange({darkTaskbarBadge: value})}
+								data-flx="user.desktop-settings-tab.switch.dark-taskbar-badge-change"
+							/>
+						)}
 						<Switch
 							label={isMac ? <Trans>Minimize to menu bar</Trans> : <Trans>Minimize to tray</Trans>}
 							value={desktopWindowBehavior.minimizeToTray}
@@ -204,7 +264,7 @@ const DesktopSettingsTab: React.FC = observer(() => {
 					title={<Trans>macOS permissions</Trans>}
 					data-flx="user.desktop-settings-tab.macos-permissions-section"
 				>
-					<MacPermissionsSettingsRow showTitle={false} data-flx="user.desktop-settings-tab.macos-permissions-row" />
+					<MacPermissionsSettingsRow data-flx="user.desktop-settings-tab.macos-permissions-row" />
 				</SettingsSection>
 			)}
 		</SettingsTabContainer>

@@ -11,6 +11,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {OFFLINE_DESCRIPTOR, ONLINE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {resolveMemberListCustomStatus} from '@app/features/member/hooks/useMemberListCustomStatus';
+import {resolveMemberListMobile} from '@app/features/member/hooks/useMemberListMobile';
 import {resolveMemberListPresence} from '@app/features/member/hooks/useMemberListPresence';
 import {useMemberListSubscription} from '@app/features/member/hooks/useMemberListSubscription';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
@@ -22,7 +23,7 @@ import {
 } from '@app/features/member/utils/MemberListLayout';
 import {buildMemberListRangeWindow} from '@app/features/member/utils/MemberListRangeUtils';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
-import TypingIndicator from '@app/features/typing/state/TypingIndicator';
+import RollingTypingStore from '@app/features/typing/rolling/RollingTypingStore';
 import {OwnerCrownIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -79,7 +80,7 @@ function addVisibleMember(params: {
 	groupedItems.get(groupId)?.push(member);
 }
 
-export const SkeletonMemberItem = () => (
+const SkeletonMemberItem = () => (
 	<div
 		className={styles.skeletonItem}
 		data-flx="channel.channel-details-bottom-sheet-member-list.skeleton-member-item.skeleton-item"
@@ -103,7 +104,7 @@ export const SkeletonMemberItem = () => (
 		</div>
 	</div>
 );
-export const MobileMemberListItem = observer(
+const MobileMemberListItem = observer(
 	({
 		guild,
 		channelId,
@@ -116,8 +117,11 @@ export const MobileMemberListItem = observer(
 		onLongPress?: (member: GuildMember) => void;
 	}) => {
 		const {i18n} = useLingui();
-		const isTyping = TypingIndicator.isMemberListTyping(channelId, member.user.id, Authentication.currentUserId);
+		const isTyping = RollingTypingStore.isMemberListTyping(channelId, member.user.id, Authentication.currentUserId);
 		const status = resolveMemberListPresence({guildId: guild.id, channelId, userId: member.user.id});
+		const isMobile = member.isCurrentUser()
+			? undefined
+			: resolveMemberListMobile({guildId: guild.id, channelId, userId: member.user.id});
 		const memberListCustomStatus = resolveMemberListCustomStatus({
 			guildId: guild.id,
 			channelId,
@@ -175,6 +179,7 @@ export const MobileMemberListItem = observer(
 						showOffline={member.user.id === Authentication.currentUserId || isTyping}
 						guildId={guild.id}
 						status={status}
+						isMobile={isMobile}
 						avatarUrl={avatarUrl}
 						hoverAvatarUrl={hoverAvatarUrl}
 						mediaSize={MEDIA_PROXY_AVATAR_SIZE_DEFAULT}

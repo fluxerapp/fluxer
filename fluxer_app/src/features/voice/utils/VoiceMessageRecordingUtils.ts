@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {resolveAudioContextConstructor} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {encodeAudioBufferSliceToWav} from '@app/features/voice/utils/AudioWavEncode';
 
 export interface VoiceWaveformResult {
@@ -57,13 +58,7 @@ function buildWaveformBytes(
 }
 
 export async function prepareVoiceMessageWav(blob: Blob, filename: string): Promise<PreparedVoiceMessage> {
-	const contextClass =
-		window.AudioContext ||
-		(
-			window as typeof window & {
-				webkitAudioContext?: typeof AudioContext;
-			}
-		).webkitAudioContext;
+	const contextClass = resolveAudioContextConstructor();
 	if (!contextClass) {
 		throw new Error('AudioContext is unavailable; cannot prepare voice message');
 	}

@@ -7,14 +7,10 @@
 		"./*": "./*"
 	},
 	"scripts": {
-		"typecheck": "tsgo --noEmit"
-	},
-	"dependencies": {
-		"@fluxer/logger": "workspace:*",
-		"itty-time": "catalog:"
+		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@typescript/native-preview": "catalog:"
+		"typescript": "catalog:ts7"
 	}
 }

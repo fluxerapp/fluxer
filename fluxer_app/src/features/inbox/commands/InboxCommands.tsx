@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {getUnreadChannels} from '@app/features/app/components/floating/UnreadChannelsContent';
+import {getMarkableUnreadChannels} from '@app/features/app/components/floating/UnreadChannelsContent';
 import {CANCEL_DESCRIPTOR, MARK_AS_READ_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {InboxTab} from '@app/features/inbox/state/Inbox';
 import Inbox from '@app/features/inbox/state/Inbox';
@@ -59,7 +59,7 @@ export function revealBookmarksPopoutForFirstSave(): boolean {
 }
 
 export function markAllInboxChannelsAsRead(i18n: I18n): void {
-	const channelIds = getUnreadChannels().map((channel) => channel.id);
+	const channelIds = getMarkableUnreadChannels().map((channel) => channel.id);
 	if (channelIds.length === 0) return;
 	if (Inbox.skipMarkAllAsReadConfirmation) {
 		void ReadStateCommands.bulkAckChannels(channelIds);

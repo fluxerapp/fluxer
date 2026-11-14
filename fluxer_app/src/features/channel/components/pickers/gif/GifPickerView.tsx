@@ -61,7 +61,6 @@ export const GifPickerView = observer(({onClose, selectGif}: GifPickerProps = {}
 	const headerPortalContext = useExpressionPickerHeaderPortal();
 	const hasPortal = Boolean(headerPortalContext?.headerPortalElement);
 	const autoSendKlipyGifs = Accessibility.autoSendKlipyGifs;
-	const gifAutoPlay = true;
 	const videoPool = useGifVideoPool();
 	const scrollerRef = useRef<ScrollerHandle>(null);
 	const searchInputRef = useRef<HTMLInputElement>(null);
@@ -221,7 +220,6 @@ export const GifPickerView = observer(({onClose, selectGif}: GifPickerProps = {}
 								onClose={onClose}
 								selectGif={selectGif}
 								autoSendKlipyGifs={autoSendKlipyGifs}
-								gifAutoPlay={gifAutoPlay}
 								viewportWidth={viewportSize.width}
 								viewportHeight={viewportSize.height}
 								scrollTop={scrollTop}

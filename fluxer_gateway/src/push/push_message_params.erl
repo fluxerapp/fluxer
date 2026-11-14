@@ -3,11 +3,15 @@
 -module(push_message_params).
 -typing([eqwalizer]).
 
--export([context/1, owner_key/1]).
+-export([context/1, owner_key/1, suppresses_notifications/1]).
 
 -export_type([context/0]).
 
 -define(MAX_GUILD_FEATURES, 64).
+-define(MESSAGE_TYPE_DEFAULT, 0).
+-define(MESSAGE_TYPE_REPLY, 19).
+-define(PUSHABLE_MESSAGE_TYPES, [?MESSAGE_TYPE_DEFAULT, ?MESSAGE_TYPE_REPLY]).
+-define(MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS, 4096).
 
 -type context() :: #{
     message_data := map(),
@@ -110,12 +114,42 @@ validate(#{message_id := undefined}) ->
 validate(#{guild_default_notifications := undefined}) ->
     {error, invalid_guild_default_notifications};
 validate(Context) ->
-    {ok, Context}.
+    validate_message_type(message_type(Context), Context).
+
+-spec validate_message_type(integer(), context()) -> {ok, context()} | {error, term()}.
+validate_message_type(Type, Context) ->
+    case lists:member(Type, ?PUSHABLE_MESSAGE_TYPES) of
+        true -> validate_notifications(Context);
+        false -> {error, {unpushable_message_type, Type}}
+    end.
+
+-spec validate_notifications(context()) -> {ok, context()} | {error, term()}.
+validate_notifications(#{message_data := MessageData} = Context) ->
+    case suppresses_notifications(MessageData) of
+        true -> {error, suppressed_notifications};
+        false -> {ok, Context}
+    end.
+
+-spec suppresses_notifications(map()) -> boolean().
+suppresses_notifications(#{<<"flags">> := Flags}) when is_integer(Flags) ->
+    Flags band ?MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS =/= 0;
+suppresses_notifications(_MessageData) ->
+    false.
+
+-spec message_type(context()) -> integer().
+message_type(#{message_data := MessageData}) ->
+    normalize_message_type(maps:get(<<"type">>, MessageData, ?MESSAGE_TYPE_DEFAULT)).
+
+-spec normalize_message_type(term()) -> integer().
+normalize_message_type(Type) when is_integer(Type) ->
+    Type;
+normalize_message_type(_Type) ->
+    ?MESSAGE_TYPE_DEFAULT.
 
 -spec owner_fallback_key(map()) -> term().
 owner_fallback_key(Params) ->
     case snowflake_id:parse_maybe(maps:get(author_id, Params, undefined)) of
-        undefined -> push_normalize:optional_guild_id(maps:get(guild_id, Params, undefined));
+        undefined -> snowflake_id:parse_maybe(maps:get(guild_id, Params, undefined));
         AuthorId -> AuthorId
     end.
 

@@ -7,7 +7,6 @@
 -export([
     start_link/0, start_link/1,
     members/0,
-    is_member/1,
     alive_count/0,
     members_by_role/0,
     subscribe/1,
@@ -20,16 +19,6 @@
     handle_info/2,
     terminate/2,
     code_change/3
-]).
-
--export([
-    apply_discovered/2,
-    maybe_remove_member/2,
-    maybe_add_member/2,
-    update_members/2,
-    add_subscriber/2,
-    role_members/1,
-    reconcile_against_connected_nodes/1
 ]).
 
 -define(MEMBERS_KEY, {gateway_cluster_membership, members}).
@@ -75,10 +64,6 @@ members() ->
 -spec members_by_role() -> #{atom() => [node()]}.
 members_by_role() ->
     persistent_term:get(?ROLE_MEMBERS_KEY, #{all => [node()]}).
-
--spec is_member(node()) -> boolean().
-is_member(Node) ->
-    lists:member(Node, members()).
 
 -spec alive_count() -> non_neg_integer().
 alive_count() ->
@@ -140,8 +125,10 @@ handle_cast(_Msg, State) ->
 handle_info({cluster_peers_changed, Peers}, State) ->
     {noreply, apply_discovered(normalize_nodes(Peers), State)};
 handle_info({nodeup, Node}, State) when is_atom(Node) ->
+    ok = presence_cache:handle_nodeup(Node),
     {noreply, maybe_add_member(Node, State)};
 handle_info({nodedown, Node}, State) when is_atom(Node) ->
+    ok = maybe_start_presence_grace(Node, State),
     {noreply, maybe_remove_member(Node, State)};
 handle_info(refresh_roles, State) ->
     State1 = reconcile_against_connected_nodes(State),
@@ -211,6 +198,13 @@ force_discovery_refresh_safely() ->
         exit:_ -> ok
     end.
 
+-spec maybe_start_presence_grace(node(), state()) -> ok.
+maybe_start_presence_grace(Node, #{members := Members}) ->
+    case lists:member(Node, Members) andalso Node =/= node() of
+        true -> presence_cache:handle_nodedown(Node);
+        false -> ok
+    end.
+
 -spec maybe_remove_member(node(), state()) -> state().
 maybe_remove_member(Node, #{members := Members} = State) ->
     case lists:member(Node, Members) andalso Node =/= node() of
@@ -240,10 +234,6 @@ do_update_members(NewMembers, NewRoleMembers, State) ->
     _ = gateway_node_metadata:refresh_node_pod_names(NewMembers),
     notify_subscribers(NewMembers, State),
     State#{members := NewMembers, members_by_role := NewRoleMembers}.
-
--spec role_members([node()]) -> #{atom() => [node()]}.
-role_members(Members) ->
-    role_members(Members, fun role_for_node/1).
 
 -spec role_members([node()], fun((node()) -> atom())) -> #{atom() => [node()]}.
 role_members(Members, RoleFun) ->

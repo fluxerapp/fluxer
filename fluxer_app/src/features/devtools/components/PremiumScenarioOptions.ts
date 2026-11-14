@@ -168,7 +168,7 @@ export function resetPremiumStateOverrides(): void {
 	DeveloperOptionsCommands.updateOption('unreadGiftInventoryCountOverride', null);
 }
 
-export const isPremiumScenarioOverride = (scenario: PremiumScenarioOption): scenario is PremiumScenarioOverride =>
+const isPremiumScenarioOverride = (scenario: PremiumScenarioOption): scenario is PremiumScenarioOverride =>
 	scenario !== 'none' && scenario !== 'reset';
 export const applyPremiumScenarioOption = (scenario: PremiumScenarioOption) => {
 	if (scenario === 'none') return;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const AuthRateLimitConfigs = {
 	AUTH_REGISTER: {
@@ -38,6 +38,40 @@ export const AuthRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	AUTH_RESET_PASSWORD: {
 		bucket: 'auth:reset',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_RECOVER_ACCOUNT: {
+		bucket: 'auth:recover',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_USERNAME_AVAILABILITY: {
+		bucket: 'auth:username_availability',
+		config: {limit: 30, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_IDENTIFY: {
+		bucket: 'auth:identify',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	AUTH_EMAIL_CODE_SEND: {
+		bucket: 'auth:email_code:send',
+		config: {limit: 5, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_EMAIL_CODE_VERIFY: {
+		bucket: 'auth:email_code:verify',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_REGISTER_HANDOFF: {
+		bucket: 'auth:register:handoff',
+		config: {limit: 10, windowMs: ms('10 seconds')},
+		trustForwardedClientIp: true,
+	} as RouteRateLimitConfig,
+	AUTH_REGISTER_HANDOFF_CHALLENGE: {
+		bucket: 'auth:register:handoff:challenge',
+		config: {limit: 20, windowMs: ms('1 minute')},
+		trustForwardedClientIp: true,
+	} as RouteRateLimitConfig,
+	AUTH_ACCOUNT_HANDOFF_REDEEM: {
+		bucket: 'auth:register:handoff:redeem',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	AUTH_VALIDATE_RESET_TOKEN: {
@@ -100,13 +134,13 @@ export const AuthRateLimitConfigs = {
 		bucket: 'mfa:webauthn:delete',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
-	PHONE_SEND_VERIFICATION: {
-		bucket: 'phone:send_verification',
-		config: {limit: 5, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	PHONE_VERIFY_CODE: {
-		bucket: 'phone:verify_code',
+	MFA_WEBAUTHN_TWO_FACTOR: {
+		bucket: 'mfa:webauthn:two_factor',
 		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	MFA_WEBAUTHN_MIGRATION: {
+		bucket: 'mfa:webauthn:migration',
+		config: {limit: 20, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	AUTH_HANDOFF_INITIATE: {
 		bucket: 'auth:handoff:initiate',
@@ -124,9 +158,41 @@ export const AuthRateLimitConfigs = {
 		bucket: 'auth:handoff:status',
 		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	AUTH_HANDOFF_DENY: {
+		bucket: 'auth:handoff:deny',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	AUTH_HANDOFF_CANCEL: {
 		bucket: 'auth:handoff:cancel',
 		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_ORIGIN_HANDOFF_CREATE: {
+		bucket: 'auth:origin_handoff:create',
+		config: {limit: 3, windowMs: ms('10 minutes')},
+	} as RouteRateLimitConfig,
+	AUTH_ORIGIN_HANDOFF_REDEEM: {
+		bucket: 'auth:origin_handoff:redeem',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_PASSKEY_BRIDGE_START: {
+		bucket: 'auth:passkey_bridge:start',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_PASSKEY_BRIDGE_CEREMONY: {
+		bucket: 'auth:passkey_bridge:ceremony',
+		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	AUTH_PASSKEY_BRIDGE_REDEEM: {
+		bucket: 'auth:passkey_bridge:redeem',
+		config: {limit: 60, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PASSKEY_BRIDGE_START: {
+		bucket: 'mfa:passkey_bridge:start',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PASSKEY_BRIDGE_REDEEM: {
+		bucket: 'mfa:passkey_bridge:redeem',
+		config: {limit: 60, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	SUDO_WEBAUTHN_OPTIONS: {
 		bucket: 'sudo:webauthn:options',
@@ -135,5 +201,9 @@ export const AuthRateLimitConfigs = {
 	SUDO_MFA_METHODS: {
 		bucket: 'sudo:mfa:methods',
 		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_SUDO_EMAIL_CODE: {
+		bucket: 'sudo:email_code',
+		config: {limit: 5, windowMs: ms('15 minutes')},
 	} as RouteRateLimitConfig,
 } as const;

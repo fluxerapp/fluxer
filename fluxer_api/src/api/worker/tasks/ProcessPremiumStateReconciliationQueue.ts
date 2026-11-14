@@ -1,26 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import {isBillingActive} from '@app/api/stripe/BillingConfigCache';
+import {canProvisionPremiumFromSubscriptionStatus} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
+import {
+	getInvoiceLatestLinePeriodEnd,
+	getInvoicePaymentRef,
+	getSubscriptionBillingCycle,
+	getSubscriptionCurrentPeriodStart,
+	getSubscriptionPremiumPeriodEnd,
+	getSubscriptionStartDate,
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import {shiftGiftExtensionPastPremiumUntil} from '@app/api/user/GiftExtensionShift';
+import {clearPerksSanitizedFlag, createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
+import {dispatchUserUpdate} from '@app/api/user/UserMappers';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import {canProvisionPremiumFromSubscriptionStatus} from '../../stripe/StripeSubscriptionAccessPolicy';
-import {
-	getPrimarySubscriptionItem,
-	getSubscriptionPremiumPeriodEnd,
-	getSubscriptionStartDate,
-} from '../../stripe/StripeSubscriptionPeriod';
-import {createPremiumClearPatch, getEffectivePremiumUntil} from '../../user/UserHelpers';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import {getWorkerDependencies} from '../WorkerContext';
 
 interface ReconcileResult {
-	status: 'patched' | 'no_change' | 'skipped' | 'no_active_subscription' | 'stripped_no_subscription' | 'missing_user';
+	status:
+		| 'patched'
+		| 'no_change'
+		| 'skipped'
+		| 'no_active_subscription'
+		| 'stripped_no_subscription'
+		| 'store_entitled'
+		| 'missing_user';
 	patchedFields: Array<string>;
 }
 
@@ -28,30 +41,11 @@ const MAX_USERS_PER_RUN = 250;
 const RETRY_DELAY_MS = 5 * 60 * 1000;
 const CLAIM_LEASE_MS = 10 * 60 * 1000;
 
-function getStripeSubscriptionCustomerId(subscription: Stripe.Subscription): string | null {
-	if (!subscription.customer) {
-		return null;
-	}
-	return typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
-}
-
-function getStripeSubscriptionBillingCycle(subscription: Stripe.Subscription): string | null {
-	const item = getPrimarySubscriptionItem(subscription);
-	const interval = item?.price?.recurring?.interval;
-	if (interval === 'month') {
-		return 'monthly';
-	}
-	if (interval === 'year') {
-		return 'yearly';
-	}
-	return null;
-}
-
 function buildStripePremiumRepairPatch(user: User, subscription: Stripe.Subscription): Partial<UserRow> {
 	const premiumUntil = getSubscriptionPremiumPeriodEnd(subscription);
-	const subscriptionCustomerId = getStripeSubscriptionCustomerId(subscription);
+	const subscriptionCustomerId = extractId(subscription.customer);
 	const premiumWillCancel = Boolean(subscription.cancel_at_period_end || subscription.cancel_at != null);
-	const premiumBillingCycle = getStripeSubscriptionBillingCycle(subscription);
+	const premiumBillingCycle = getSubscriptionBillingCycle(subscription);
 	const patch: Partial<UserRow> = {};
 	if (user.premiumType !== UserPremiumTypes.SUBSCRIPTION) {
 		patch.premium_type = UserPremiumTypes.SUBSCRIPTION;
@@ -62,15 +56,31 @@ function buildStripePremiumRepairPatch(user: User, subscription: Stripe.Subscrip
 	}
 	if (premiumUntil && user.premiumUntil?.getTime() !== premiumUntil.getTime()) {
 		patch.premium_until = premiumUntil;
+		const giftEnd = shiftGiftExtensionPastPremiumUntil(
+			{premiumUntil: user.premiumUntil, giftEnd: user.premiumGiftExtensionEndsAt},
+			premiumUntil,
+			new Date(),
+			getSubscriptionCurrentPeriodStart(subscription),
+		);
+		if (giftEnd !== user.premiumGiftExtensionEndsAt) {
+			patch.premium_gift_extension_ends_at = giftEnd;
+		}
 	}
 	if (user.premiumWillCancel !== premiumWillCancel) {
 		patch.premium_will_cancel = premiumWillCancel;
+	}
+	if (user.premiumGraceEndsAt != null) {
+		patch.premium_grace_ends_at = null;
 	}
 	if (premiumBillingCycle && user.premiumBillingCycle !== premiumBillingCycle) {
 		patch.premium_billing_cycle = premiumBillingCycle;
 	}
 	if (user.stripeSubscriptionId !== subscription.id) {
 		patch.stripe_subscription_id = subscription.id;
+	}
+	const clearedPremiumFlags = clearPerksSanitizedFlag(user.premiumFlags);
+	if (user.premiumFlags !== clearedPremiumFlags) {
+		patch.premium_flags = clearedPremiumFlags;
 	}
 	if (subscriptionCustomerId && user.stripeCustomerId !== subscriptionCustomerId) {
 		patch.stripe_customer_id = subscriptionCustomerId;
@@ -89,11 +99,7 @@ async function patchUserAndDispatch(
 	const patchedFields = Object.keys(patch);
 	const updatedUser = await userRepository.patchUpsert(user.id, patch, user.toRow());
 	userCacheService.setUserPartialResponseFromUserInBackground(updatedUser);
-	await gatewayService.dispatchPresence({
-		userId: updatedUser.id,
-		event: 'USER_UPDATE',
-		data: mapUserToPrivateResponse(updatedUser),
-	});
+	await dispatchUserUpdate(gatewayService, updatedUser);
 	return {updatedUser, patchedFields};
 }
 
@@ -140,6 +146,74 @@ function trackMostRecentTerminalSubscription(
 		return candidate;
 	}
 	return current;
+}
+
+const PAID_INVOICE_LOOKUP_LIMIT = 10;
+
+async function getPaidThroughFromSubscriptionInvoices(
+	stripe: Stripe,
+	subscription: Stripe.Subscription | null,
+): Promise<Date | null> {
+	if (!subscription) {
+		return null;
+	}
+	let invoices: Stripe.ApiList<Stripe.Invoice>;
+	try {
+		invoices = await stripe.invoices.list({
+			subscription: subscription.id,
+			status: 'paid',
+			limit: PAID_INVOICE_LOOKUP_LIMIT,
+			expand: ['data.payments'],
+		});
+	} catch (error) {
+		Logger.warn(
+			{subscriptionId: subscription.id, error},
+			'Failed to list paid invoices while reconciling premium state; not stripping on incomplete data',
+		);
+		throw error;
+	}
+	let paidThrough: Date | null = null;
+	for (const invoice of invoices.data) {
+		const periodEnd = getInvoiceLatestLinePeriodEnd(invoice);
+		if (
+			periodEnd &&
+			(paidThrough === null || periodEnd.getTime() > paidThrough.getTime()) &&
+			!(await wasInvoicePaymentReturned(stripe, invoice))
+		) {
+			paidThrough = periodEnd;
+		}
+	}
+	return paidThrough;
+}
+
+async function wasInvoicePaymentReturned(stripe: Stripe, invoice: Stripe.Invoice): Promise<boolean> {
+	if (invoice.post_payment_credit_notes_amount > 0) {
+		return true;
+	}
+	const charge = await retrieveInvoiceCharge(stripe, invoice);
+	if (!charge) {
+		return false;
+	}
+	if (charge.refunded || charge.amount_refunded > 0) {
+		return true;
+	}
+	if (!charge.disputed) {
+		return false;
+	}
+	const disputes = await stripe.disputes.list({charge: charge.id});
+	return disputes.data.some((dispute) => dispute.status === 'lost');
+}
+
+async function retrieveInvoiceCharge(stripe: Stripe, invoice: Stripe.Invoice): Promise<Stripe.Charge | null> {
+	const paymentRef = getInvoicePaymentRef(invoice);
+	if (paymentRef?.chargeId) {
+		return stripe.charges.retrieve(paymentRef.chargeId);
+	}
+	if (!paymentRef?.paymentIntentId) {
+		return null;
+	}
+	const paymentIntent = await stripe.paymentIntents.retrieve(paymentRef.paymentIntentId, {expand: ['latest_charge']});
+	return typeof paymentIntent.latest_charge === 'object' ? paymentIntent.latest_charge : null;
 }
 
 async function getEffectiveActiveStripeSubscription(
@@ -235,23 +309,45 @@ async function reconcileUserPremiumStateFromStripe(params: {userId: UserID; stri
 		user,
 	);
 	if (!subscription) {
+		const {storeEntitlementService} = getWorkerDependencies();
+		if (await storeEntitlementService.getActiveStoreEntitlement(user.id)) {
+			await storeEntitlementService.applyStoreEntitlementToUser(user.id);
+			return {status: 'store_entitled', patchedFields: []};
+		}
 		const hasStalePremium = user.premiumType === UserPremiumTypes.SUBSCRIPTION;
-		const hasNonStripePremium = Config.instance.selfHosted || (user.premiumFlags & PremiumFlags.ENABLED_OVERRIDE) !== 0;
+		const hasNonStripePremium =
+			(Config.instance.selfHosted && !isBillingActive()) || (user.premiumFlags & PremiumFlags.ENABLED_OVERRIDE) !== 0;
 		if (hasStalePremium && !hasNonStripePremium) {
 			const patch: Partial<UserRow> = {};
 			let effectivePremiumUntil = getEffectivePremiumUntil(user);
-			if (mostRecentTerminalSubscription?.ended_at && user.premiumUntil) {
+			const paidThrough = await getPaidThroughFromSubscriptionInvoices(stripe, mostRecentTerminalSubscription);
+			const terminalSubscriptionIsCurrent =
+				user.stripeSubscriptionId == null || mostRecentTerminalSubscription?.id === user.stripeSubscriptionId;
+			if (mostRecentTerminalSubscription?.ended_at && user.premiumUntil && terminalSubscriptionIsCurrent) {
 				const subscriptionEndedAt = new Date(mostRecentTerminalSubscription.ended_at * 1000);
-				if (subscriptionEndedAt.getTime() < user.premiumUntil.getTime()) {
-					patch.premium_until = subscriptionEndedAt;
-					patch.premium_grace_ends_at = subscriptionEndedAt;
+				const entitlementEnd =
+					paidThrough && paidThrough.getTime() > subscriptionEndedAt.getTime() ? paidThrough : subscriptionEndedAt;
+				if (entitlementEnd.getTime() < user.premiumUntil.getTime()) {
+					patch.premium_until = entitlementEnd;
+					patch.premium_grace_ends_at = entitlementEnd;
 					effectivePremiumUntil = getEffectivePremiumUntil({
-						premiumUntil: subscriptionEndedAt,
+						premiumUntil: entitlementEnd,
 						premiumGiftExtensionEndsAt: user.premiumGiftExtensionEndsAt,
 					});
 				}
 			}
-			const hasFutureLocalEntitlement = effectivePremiumUntil != null && Date.now() <= effectivePremiumUntil.getTime();
+			if (paidThrough && (effectivePremiumUntil == null || paidThrough.getTime() > effectivePremiumUntil.getTime())) {
+				patch.premium_until = paidThrough;
+				patch.premium_grace_ends_at = paidThrough;
+				effectivePremiumUntil = getEffectivePremiumUntil({
+					premiumUntil: paidThrough,
+					premiumGiftExtensionEndsAt: user.premiumGiftExtensionEndsAt,
+				});
+			}
+			const graceEndsAt = patch.premium_grace_ends_at ?? user.premiumGraceEndsAt;
+			const hasFutureLocalEntitlement =
+				(effectivePremiumUntil != null && Date.now() <= effectivePremiumUntil.getTime()) ||
+				(graceEndsAt != null && Date.now() <= graceEndsAt.getTime());
 			if (hasFutureLocalEntitlement) {
 				if (user.premiumWillCancel !== true) {
 					patch.premium_will_cancel = true;
@@ -304,6 +400,7 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 	let skippedCount = 0;
 	let noActiveSubscriptionCount = 0;
 	let strippedNoSubscriptionCount = 0;
+	let storeEntitledCount = 0;
 	let failedCount = 0;
 	let requeuedCount = 0;
 	let claimedElsewhereCount = 0;
@@ -342,6 +439,8 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 					},
 					'Stripped expired premium with no active Stripe subscription via worker queue',
 				);
+			} else if (result.status === 'store_entitled') {
+				storeEntitledCount += 1;
 			} else if (result.status === 'no_change') {
 				noChangeCount += 1;
 			} else if (result.status === 'no_active_subscription') {
@@ -375,6 +474,7 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 			skippedCount,
 			noActiveSubscriptionCount,
 			strippedNoSubscriptionCount,
+			storeEntitledCount,
 			failedCount,
 			requeuedCount,
 			claimedElsewhereCount,

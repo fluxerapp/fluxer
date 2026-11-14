@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ReportFlowAnswerFields} from '@fluxer/schema/src/domains/report/ReportFlowSchemas';
 import {
 	createNamedStringLiteralUnion,
 	createStringType,
 	SnowflakeStringType,
 	SnowflakeType,
+	withFieldDescription,
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
@@ -64,7 +66,7 @@ const GuildReportCategoryEnum = withOpenApiType(
 );
 export const ReportResponse = z.object({
 	report_id: SnowflakeStringType.describe('The unique identifier for this report'),
-	status: z.string().describe('Current status of the report (pending, reviewed, resolved)'),
+	status: z.string().describe('Current status of the report (pending, resolved)'),
 	reported_at: z.string().describe('ISO 8601 timestamp when the report was submitted'),
 });
 
@@ -82,44 +84,47 @@ export const TicketResponse = z.object({
 
 export type TicketResponse = z.infer<typeof TicketResponse>;
 
-const FLUXER_TAG_REGEX = /^([^#]{1,32})#([0-9]{4})$/;
+const FLUXER_TAG_REGEX = /^([^#]{1,32})(#[0-9]{4})?$/;
 const FLUXER_TAG_TYPE = z
 	.string()
-	.min(3)
+	.min(1)
 	.max(37)
-	.refine((value) => FLUXER_TAG_REGEX.test(value), 'Fluxer tag must be in the format username#1234')
-	.describe('A Fluxer username tag in the format username#1234');
-const EU_COUNTRY_CODE_ENUM = createNamedStringLiteralUnion(
-	[
-		['AT', 'AT', 'Austria'],
-		['BE', 'BE', 'Belgium'],
-		['BG', 'BG', 'Bulgaria'],
-		['HR', 'HR', 'Croatia'],
-		['CY', 'CY', 'Cyprus'],
-		['CZ', 'CZ', 'Czechia'],
-		['DK', 'DK', 'Denmark'],
-		['EE', 'EE', 'Estonia'],
-		['FI', 'FI', 'Finland'],
-		['FR', 'FR', 'France'],
-		['DE', 'DE', 'Germany'],
-		['GR', 'GR', 'Greece'],
-		['HU', 'HU', 'Hungary'],
-		['IE', 'IE', 'Ireland'],
-		['IT', 'IT', 'Italy'],
-		['LV', 'LV', 'Latvia'],
-		['LT', 'LT', 'Lithuania'],
-		['LU', 'LU', 'Luxembourg'],
-		['MT', 'MT', 'Malta'],
-		['NL', 'NL', 'Netherlands'],
-		['PL', 'PL', 'Poland'],
-		['PT', 'PT', 'Portugal'],
-		['RO', 'RO', 'Romania'],
-		['SK', 'SK', 'Slovakia'],
-		['SI', 'SI', 'Slovenia'],
-		['ES', 'ES', 'Spain'],
-		['SE', 'SE', 'Sweden'],
-	] as const,
-	'EU country code of residence',
+	.refine((value) => FLUXER_TAG_REGEX.test(value), 'Fluxer tag must be in the format username#1234 or username')
+	.describe('A Fluxer username tag in the format username#1234, or a bare username on an instance without user tags');
+const EuCountryCodeEnum = withOpenApiType(
+	createNamedStringLiteralUnion(
+		[
+			['AT', 'AT', 'Austria'],
+			['BE', 'BE', 'Belgium'],
+			['BG', 'BG', 'Bulgaria'],
+			['HR', 'HR', 'Croatia'],
+			['CY', 'CY', 'Cyprus'],
+			['CZ', 'CZ', 'Czechia'],
+			['DK', 'DK', 'Denmark'],
+			['EE', 'EE', 'Estonia'],
+			['FI', 'FI', 'Finland'],
+			['FR', 'FR', 'France'],
+			['DE', 'DE', 'Germany'],
+			['GR', 'GR', 'Greece'],
+			['HU', 'HU', 'Hungary'],
+			['IE', 'IE', 'Ireland'],
+			['IT', 'IT', 'Italy'],
+			['LV', 'LV', 'Latvia'],
+			['LT', 'LT', 'Lithuania'],
+			['LU', 'LU', 'Luxembourg'],
+			['MT', 'MT', 'Malta'],
+			['NL', 'NL', 'Netherlands'],
+			['PL', 'PL', 'Poland'],
+			['PT', 'PT', 'Portugal'],
+			['RO', 'RO', 'Romania'],
+			['SK', 'SK', 'Slovakia'],
+			['SI', 'SI', 'Slovenia'],
+			['ES', 'ES', 'Spain'],
+			['SE', 'SE', 'Sweden'],
+		] as const,
+		'EU country code of residence',
+	),
+	'EuCountryCode',
 );
 export const ReportMessageRequest = z.object({
 	channel_id: SnowflakeType.describe('ID of the accessible channel containing the reported message'),
@@ -164,26 +169,48 @@ export const DsaReportEmailVerifyRequest = z.object({
 
 export type DsaReportEmailVerifyRequest = z.infer<typeof DsaReportEmailVerifyRequest>;
 
-const DsaReportBase = z.object({
-	ticket: createStringType(1, 128).describe('Verification ticket obtained from email verification'),
-	additional_info: z.optional(createStringType(0, 1000)).describe('Additional context or details about the report'),
-	reporter_full_legal_name: createStringType(1, 160).describe('Full legal name of the person filing the report'),
-	reporter_country_of_residence: EU_COUNTRY_CODE_ENUM.describe('EU country code of the reporter residence'),
-	reporter_fluxer_tag: z.optional(FLUXER_TAG_TYPE).describe('Fluxer tag of the reporter if they have an account'),
-});
-const DsaReportMessageRequest = DsaReportBase.extend({
-	report_type: z.literal('message').describe('Type of report'),
-	category: MessageReportCategoryEnum,
-	message_link: createStringType(1, 2048).describe('Link to the message being reported'),
-	reported_user_tag: z.optional(FLUXER_TAG_TYPE).describe('Fluxer tag of the user who sent the message'),
-});
+interface DsaReportRefinementInput {
+	category?: string | undefined;
+	reporter_full_legal_name?: string | undefined;
+	additional_info?: string | undefined;
+	revision_hash?: string | undefined;
+	steps?: Array<unknown> | undefined;
+	good_faith_confirmed?: true | undefined;
+}
 
-const DsaReportUserRequest = DsaReportBase.extend({
-	report_type: z.literal('user').describe('Type of report'),
-	category: UserReportCategoryEnum,
-	user_id: SnowflakeType.optional().describe('ID of the user being reported'),
-	user_tag: z.optional(FLUXER_TAG_TYPE).describe('Fluxer tag of the user being reported'),
-}).superRefine((value, ctx) => {
+function requireDsaReportField(ctx: z.RefinementCtx, field: string, message: string): void {
+	ctx.addIssue({code: 'custom', message, path: [field]});
+}
+
+function refineDsaReport(value: DsaReportRefinementInput, ctx: z.RefinementCtx): void {
+	if (value.steps === undefined) {
+		if (value.category === undefined) {
+			requireDsaReportField(ctx, 'category', 'category is required when steps are not provided');
+		}
+		if (value.reporter_full_legal_name === undefined) {
+			requireDsaReportField(
+				ctx,
+				'reporter_full_legal_name',
+				'reporter_full_legal_name is required when steps are not provided',
+			);
+		}
+		return;
+	}
+	if (value.revision_hash === undefined) {
+		requireDsaReportField(ctx, 'revision_hash', 'revision_hash is required with steps');
+	}
+	if (value.good_faith_confirmed !== true) {
+		requireDsaReportField(ctx, 'good_faith_confirmed', 'good_faith_confirmed is required with steps');
+	}
+	if (!value.additional_info) {
+		requireDsaReportField(ctx, 'additional_info', 'additional_info is required with steps');
+	}
+}
+
+function refineDsaUserTarget(
+	value: {user_id?: bigint | undefined; user_tag?: string | undefined},
+	ctx: z.RefinementCtx,
+): void {
 	if (!value.user_id && !value.user_tag) {
 		ctx.addIssue({
 			code: 'custom',
@@ -191,14 +218,77 @@ const DsaReportUserRequest = DsaReportBase.extend({
 			path: [],
 		});
 	}
+}
+
+const DsaReportCommonFields = {
+	ticket: createStringType(1, 128).describe('Verification ticket obtained from email verification'),
+	reporter_country_of_residence: withFieldDescription(EuCountryCodeEnum, 'EU country code of the reporter residence'),
+};
+const DSA_REPORT_LEGAL_NAME_TYPE = z
+	.optional(createStringType(1, 160))
+	.describe('Full legal name of the person filing the report, required unless the report is about child sexual abuse');
+const DsaReportFlowFields = {
+	revision_hash: ReportFlowAnswerFields.revision_hash.describe(
+		'revision_hash of the DSA report flow the reporter answered',
+	),
+	steps: ReportFlowAnswerFields.steps.describe(
+		'Screens of the DSA report flow and the answers chosen on each, in order',
+	),
+	good_faith_confirmed: z
+		.literal(true)
+		.describe('Confirms in good faith that the information and allegations in the notice are accurate and complete'),
+	locale: ReportFlowAnswerFields.locale,
+};
+const DsaReportBase = z.object({
+	...DsaReportCommonFields,
+	additional_info: z.optional(createStringType(0, 1000)).describe('Additional context or details about the report'),
+	reporter_full_legal_name: DSA_REPORT_LEGAL_NAME_TYPE,
+	revision_hash: DsaReportFlowFields.revision_hash.optional(),
+	steps: DsaReportFlowFields.steps.optional(),
+	good_faith_confirmed: DsaReportFlowFields.good_faith_confirmed.optional(),
+	locale: DsaReportFlowFields.locale,
+});
+const DsaReportFlowBase = z.object({
+	...DsaReportCommonFields,
+	...DsaReportFlowFields,
+	additional_info: createStringType(1, 1000).describe(
+		'Explanation of the problem. If the reporter believes the content is illegal, which law it breaks and why',
+	),
+	reporter_full_legal_name: DSA_REPORT_LEGAL_NAME_TYPE,
+});
+const DsaReportMessageTarget = {
+	report_type: z.literal('message').describe('Type of report'),
+	message_link: createStringType(1, 2048).describe('Link to the message being reported'),
+	reported_user_tag: z.optional(FLUXER_TAG_TYPE).describe('Fluxer tag of the user who sent the message'),
+};
+const DsaReportUserTarget = {
+	report_type: z.literal('user').describe('Type of report'),
+	user_id: SnowflakeType.optional().describe('ID of the user being reported'),
+	user_tag: z.optional(FLUXER_TAG_TYPE).describe('Fluxer tag of the user being reported'),
+};
+const DsaReportGuildTarget = {
+	report_type: z.literal('guild').describe('Type of report'),
+	guild_id: SnowflakeType.describe('ID of the guild being reported'),
+	invite_code: z.optional(createStringType(1, 64)).describe('Invite code used to access the guild'),
+};
+
+const DsaReportMessageRequest = DsaReportBase.extend({
+	...DsaReportMessageTarget,
+	category: MessageReportCategoryEnum.optional(),
+}).superRefine(refineDsaReport);
+
+const DsaReportUserRequest = DsaReportBase.extend({
+	...DsaReportUserTarget,
+	category: UserReportCategoryEnum.optional(),
+}).superRefine((value, ctx) => {
+	refineDsaReport(value, ctx);
+	refineDsaUserTarget(value, ctx);
 });
 
 const DsaReportGuildRequest = DsaReportBase.extend({
-	report_type: z.literal('guild').describe('Type of report'),
-	category: GuildReportCategoryEnum,
-	guild_id: SnowflakeType.describe('ID of the guild being reported'),
-	invite_code: z.optional(createStringType(1, 64)).describe('Invite code used to access the guild'),
-});
+	...DsaReportGuildTarget,
+	category: GuildReportCategoryEnum.optional(),
+}).superRefine(refineDsaReport);
 
 export const DsaReportRequest = z.discriminatedUnion('report_type', [
 	DsaReportMessageRequest,
@@ -207,3 +297,11 @@ export const DsaReportRequest = z.discriminatedUnion('report_type', [
 ]);
 
 export type DsaReportRequest = z.infer<typeof DsaReportRequest>;
+
+export const DsaReportFlowRequest = z.discriminatedUnion('report_type', [
+	DsaReportFlowBase.extend(DsaReportMessageTarget),
+	DsaReportFlowBase.extend(DsaReportUserTarget).superRefine(refineDsaUserTarget),
+	DsaReportFlowBase.extend(DsaReportGuildTarget),
+]);
+
+export type DsaReportFlowRequest = z.infer<typeof DsaReportFlowRequest>;

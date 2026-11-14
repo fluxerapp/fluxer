@@ -7,7 +7,6 @@
     schedule_anti_entropy/0,
     cancel_anti_entropy_timer/1,
     perform_anti_entropy/1,
-    handle_anti_entropy_request/3,
     handle_anti_entropy_digest_request/3,
     merge_anti_entropy_entries/2,
     record_delete/2,
@@ -43,14 +42,6 @@ perform_anti_entropy(State) ->
     case persistent_term:get(presence_noop, false) of
         true -> State;
         false -> broadcast_anti_entropy_requests(prune_tombstones(State))
-    end.
-
--spec handle_anti_entropy_request(node(), non_neg_integer(), state()) -> {noreply, state()}.
-handle_anti_entropy_request(FromNode, RemoteGeneration, State) ->
-    LocalGeneration = maps:get(generation, State, 0),
-    case LocalGeneration =:= RemoteGeneration of
-        true -> {noreply, State};
-        false -> send_anti_entropy_response(FromNode, State)
     end.
 
 -spec handle_anti_entropy_digest_request(node(), binary(), state()) -> {noreply, state()}.
@@ -106,7 +97,7 @@ tombstones(State) ->
 tombstone_order(State) ->
     Order = maps:get(delete_tombstone_order, State, undefined),
     case queue:is_queue(Order) of
-        true -> Order;
+        true -> eqwalizer:dynamic_cast(Order);
         false -> queue:new()
     end.
 
@@ -257,75 +248,3 @@ is_visible_presence(Presence) ->
         <<"dnd">> -> true;
         _ -> false
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-schedule_anti_entropy_returns_ref_test() ->
-    Ref = schedule_anti_entropy(),
-    ?assert(is_reference(Ref)),
-    _ = erlang:cancel_timer(Ref).
-
-cancel_anti_entropy_timer_noop_undefined_test() ->
-    ?assertEqual(ok, cancel_anti_entropy_timer(#{})),
-    ?assertEqual(ok, cancel_anti_entropy_timer(#{anti_entropy_timer => undefined})).
-
-cancel_anti_entropy_timer_cancels_ref_test() ->
-    Ref = erlang:send_after(60000, self(), test),
-    ?assertEqual(ok, cancel_anti_entropy_timer(#{anti_entropy_timer => Ref})).
-
-is_visible_presence_online_test() ->
-    ?assertEqual(true, is_visible_presence(#{<<"status">> => <<"online">>})),
-    ?assertEqual(true, is_visible_presence(#{<<"status">> => <<"idle">>})),
-    ?assertEqual(true, is_visible_presence(#{<<"status">> => <<"dnd">>})).
-
-is_visible_presence_offline_test() ->
-    ?assertEqual(false, is_visible_presence(#{<<"status">> => <<"offline">>})),
-    ?assertEqual(false, is_visible_presence(#{<<"status">> => <<"invisible">>})),
-    ?assertEqual(false, is_visible_presence(#{})).
-
-merge_single_entry_filters_invalid_test() ->
-    State = #{generation => 0},
-    ?assertEqual(State, merge_single_entry(<<"bad">>, #{}, State)),
-    ?assertEqual(State, merge_single_entry(-1, #{}, State)),
-    ?assertEqual(State, merge_single_entry(1, not_a_map, State)).
-
-prune_tombstones_drops_expired_order_test() ->
-    Now = now_ms(),
-    State = #{
-        delete_tombstones => #{1 => Now - 1, 2 => Now + 60000},
-        delete_tombstone_order => queue:from_list([{Now - 1, 1}, {Now + 60000, 2}])
-    },
-    Pruned = prune_tombstones(State),
-    ?assertEqual(#{2 => Now + 60000}, maps:get(delete_tombstones, Pruned)),
-    ?assertEqual([{Now + 60000, 2}], queue:to_list(maps:get(delete_tombstone_order, Pruned))).
-
-record_delete_above_limit_costs_bounded_work_test_() ->
-    {timeout, 120, fun assert_record_delete_above_limit_is_amortised/0}.
-
-assert_record_delete_above_limit_is_amortised() ->
-    Batch = 1000,
-    Empty = #{delete_tombstones => #{}, delete_tombstone_order => queue:new()},
-    Filled = record_delete_range(Empty, 1, ?TOMBSTONE_LIMIT - Batch),
-    {BelowCost, AtLimit} = measure_record_deletes(
-        Filled, ?TOMBSTONE_LIMIT - Batch + 1, ?TOMBSTONE_LIMIT
-    ),
-    ?assertEqual(?TOMBSTONE_LIMIT, maps:size(tombstones(AtLimit))),
-    {AboveCost, Above} = measure_record_deletes(
-        AtLimit, ?TOMBSTONE_LIMIT + 1, ?TOMBSTONE_LIMIT + Batch
-    ),
-    ?assert(AboveCost < BelowCost * 20),
-    ?assertEqual(?TOMBSTONE_LIMIT, maps:size(tombstones(Above))),
-    ?assert(maps:is_key(?TOMBSTONE_LIMIT + Batch, tombstones(Above))),
-    ?assertNot(maps:is_key(1, tombstones(Above))).
-
-measure_record_deletes(State, From, To) ->
-    {reductions, Before} = erlang:process_info(self(), reductions),
-    NewState = record_delete_range(State, From, To),
-    {reductions, After} = erlang:process_info(self(), reductions),
-    {After - Before, NewState}.
-
-record_delete_range(State, From, To) ->
-    lists:foldl(fun record_delete/2, State, lists:seq(From, To)).
-
--endif.

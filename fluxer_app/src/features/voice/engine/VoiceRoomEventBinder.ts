@@ -3,6 +3,7 @@
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
+import {isVoiceMeshRoom} from '@app/features/voice/engine/mesh/VoiceMeshRoom';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
@@ -17,7 +18,7 @@ import {
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
 import {ScreenShareWatchErrorCode, ScreenShareWatchFailures} from '@app/features/voice/state/ScreenShareWatchFailures';
-import {scheduleScreenShareDecoderVerification} from '@app/features/voice/utils/ScreenShareCodecDiagnostics';
+import {monitorScreenShareDecodeHealth} from '@app/features/voice/utils/ScreenShareCodecDiagnostics';
 import {markScreenShareDecodeFailure} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import type {
@@ -29,9 +30,15 @@ import type {
 	RemoteTrackPublication,
 	Room,
 } from 'livekit-client';
-import {ConnectionState, ParticipantEvent, RoomEvent, Track} from 'livekit-client';
+import {ConnectionState, DisconnectReason, ParticipantEvent, RoomEvent, Track} from 'livekit-client';
 
 const logger = new Logger('VoiceRoomEventBinder');
+
+function resolveRoomDisconnectReason(reason: DisconnectReason | undefined): 'error' | 'server' {
+	return reason === DisconnectReason.PARTICIPANT_REMOVED || reason === DisconnectReason.ROOM_DELETED
+		? 'server'
+		: 'error';
+}
 
 export interface RoomEventCallbacks {
 	onConnected: () => Promise<void>;
@@ -51,7 +58,7 @@ export interface RoomEventDependencies {
 		isDisconnecting: () => boolean;
 		isUserMovePending: () => boolean;
 		markConnected: () => void;
-		markDisconnected: (reason: 'error') => void;
+		markDisconnected: (reason: 'error' | 'server') => void;
 		markReconnecting: () => void;
 		markReconnected: () => void;
 	};
@@ -107,30 +114,6 @@ interface ParticipantSpeakingDisposer {
 	dispose: () => void;
 }
 
-type LatencyTunedReceiver = RTCRtpReceiver & {
-	jitterBufferTarget?: number;
-	playoutDelayHint?: number;
-};
-
-function getRemoteTrackReceiver(track: RemoteTrack): LatencyTunedReceiver | undefined {
-	return (track as RemoteTrack & {receiver?: LatencyTunedReceiver}).receiver;
-}
-
-function applyInteractiveReceiverBuffer(track: RemoteTrack, pub: RemoteTrackPublication): void {
-	const receiver = getRemoteTrackReceiver(track);
-	if (!receiver) return;
-	try {
-		if (pub.kind === Track.Kind.Video && pub.source === Track.Source.ScreenShare) {
-			receiver.jitterBufferTarget = 80;
-			receiver.playoutDelayHint = 0.04;
-		} else if (pub.kind === Track.Kind.Audio) {
-			receiver.jitterBufferTarget = 60;
-		}
-	} catch (error) {
-		logger.debug('Failed to apply interactive receiver buffer target', {error, source: pub.source, kind: pub.kind});
-	}
-}
-
 export function bindRoomEvents(
 	room: Room,
 	attemptId: number,
@@ -141,11 +124,13 @@ export function bindRoomEvents(
 ): void {
 	const guard = dependencies.connection.createGuardedHandler;
 	const participantSpeakingDisposers = new Map<string, ParticipantSpeakingDisposer>();
-	const screenShareDecoderVerificationCancels = new Map<string, () => void>();
+	const screenShareDecodeMonitorCancels = new Map<string, () => void>();
 	const remoteTrackLifecycleDisposers = new Map<string, () => void>();
 	let codecNegotiationDisposer: (() => void) | null = null;
 	let screenShareMigrationDisposer: (() => void) | null = null;
 	let screenShareNegotiationBound = false;
+	let roomReconnecting = false;
+	let screenSharePublicationAwaitingReconnect: LocalTrackPublication | null = null;
 	const remoteTrackLifecycleRoleFor = (pub: RemoteTrackPublication): 'remote-screen-share' | 'remote-camera' | null => {
 		if (pub.kind !== Track.Kind.Video) return null;
 		if (pub.source === Track.Source.ScreenShare) return 'remote-screen-share';
@@ -226,18 +211,18 @@ export function bindRoomEvents(
 			reason,
 		});
 	};
-	const clearScreenShareDecoderVerification = (trackSid: string | undefined): void => {
+	const clearScreenShareDecodeMonitor = (trackSid: string | undefined): void => {
 		if (!trackSid) return;
-		const cancel = screenShareDecoderVerificationCancels.get(trackSid);
+		const cancel = screenShareDecodeMonitorCancels.get(trackSid);
 		if (!cancel) return;
 		cancel();
-		screenShareDecoderVerificationCancels.delete(trackSid);
+		screenShareDecodeMonitorCancels.delete(trackSid);
 	};
-	const clearAllScreenShareDecoderVerifications = (): void => {
-		for (const cancel of screenShareDecoderVerificationCancels.values()) {
+	const clearAllScreenShareDecodeMonitors = (): void => {
+		for (const cancel of screenShareDecodeMonitorCancels.values()) {
 			cancel();
 		}
-		screenShareDecoderVerificationCancels.clear();
+		screenShareDecodeMonitorCancels.clear();
 	};
 	const bindCodecNegotiation = (): void => {
 		codecNegotiationDisposer?.();
@@ -256,7 +241,7 @@ export function bindRoomEvents(
 		screenShareMigrationDisposer = null;
 	};
 	const bindScreenShareNegotiation = (): void => {
-		if (screenShareNegotiationBound) return;
+		if (screenShareNegotiationBound || isVoiceMeshRoom(room)) return;
 		screenShareNegotiationBound = true;
 		bindCodecNegotiation();
 		bindScreenShareMigration();
@@ -266,17 +251,13 @@ export function bindRoomEvents(
 		unbindCodecNegotiation();
 		unbindScreenShareMigration();
 	};
-	const scheduleDecoderVerification = (track: RemoteTrack, pub: RemoteTrackPublication): void => {
+	const monitorDecodeHealth = (track: RemoteTrack, pub: RemoteTrackPublication): void => {
 		if (pub.source !== Track.Source.ScreenShare || pub.kind !== Track.Kind.Video) return;
-		clearScreenShareDecoderVerification(pub.trackSid);
-		const trackSid = pub.trackSid;
-		screenShareDecoderVerificationCancels.set(
-			trackSid,
-			scheduleScreenShareDecoderVerification(
+		clearScreenShareDecodeMonitor(pub.trackSid);
+		screenShareDecodeMonitorCancels.set(
+			pub.trackSid,
+			monitorScreenShareDecodeHealth(
 				() => track.getRTCStatsReport(),
-				() => {
-					screenShareDecoderVerificationCancels.delete(trackSid);
-				},
 				(failure) => {
 					if (!markScreenShareDecodeFailure(failure.codec, 'screen-share-decode-stalled')) return;
 					void ScreenShareCodecNegotiation.publishLocalCapabilities(room, 'manual').catch((error) => {
@@ -309,6 +290,31 @@ export function bindRoomEvents(
 		participantSpeakingDisposers.get(identity)?.dispose();
 		participantSpeakingDisposers.delete(identity);
 	};
+	const observeRemoteScreenSharePublication = (participant: Participant, pub: RemoteTrackPublication): void => {
+		reportScreenSharePublicationObserved(participant.identity, pub.trackSid ?? null);
+		const streamKey = getStreamKeyForParticipantIdentity(guildId, channelId, participant.identity);
+		if (streamKey) {
+			cancelDeferredStopWatchingStreamKey(streamKey);
+		}
+	};
+	const observeExistingRemoteScreenSharePublications = (): void => {
+		room.remoteParticipants.forEach((participant) => {
+			for (const pub of participant.trackPublications.values()) {
+				if (pub.source === Track.Source.ScreenShare) observeRemoteScreenSharePublication(participant, pub);
+			}
+		});
+	};
+	const endScreenShareIfPublicationDidNotReturn = (): void => {
+		const publication = screenSharePublicationAwaitingReconnect;
+		screenSharePublicationAwaitingReconnect = null;
+		if (!publication) return;
+		if (dependencies.screenShare.isScreenSharePublicationReplaceInFlight()) return;
+		if (!('localParticipant' in room) || !room.localParticipant) return;
+		if (room.localParticipant.getTrackPublication(Track.Source.ScreenShare)) return;
+		const didChangeLocalState = dependencies.mediaState.handleLocalTrackStateChange(Track.Source.ScreenShare, false);
+		if (!didChangeLocalState) return;
+		dependencies.screenShare.handleLocalScreenShareTrackUnpublished(room, didChangeLocalState, publication);
+	};
 	bindParticipantSpeakingEvents(room.localParticipant);
 	room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
 	room.on(
@@ -319,6 +325,7 @@ export function bindRoomEvents(
 			bindParticipantSpeakingEvents(room.localParticipant);
 			room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
 			dependencies.remoteSpeaking.hydrateFromRoom(room);
+			observeExistingRemoteScreenSharePublications();
 			bindScreenShareNegotiation();
 			dependencies.permissions.applyDeafen(room, getEffectiveAudioState().effectiveDeaf);
 			dependencies.connection.markConnected();
@@ -343,11 +350,13 @@ export function bindRoomEvents(
 	);
 	room.on(
 		RoomEvent.Disconnected,
-		guard(attemptId, () => {
+		guard(attemptId, (reason?: DisconnectReason) => {
+			roomReconnecting = false;
+			screenSharePublicationAwaitingReconnect = null;
 			participantSpeakingDisposers.forEach(({dispose}) => dispose());
 			participantSpeakingDisposers.clear();
 			unbindScreenShareNegotiation();
-			clearAllScreenShareDecoderVerifications();
+			clearAllScreenShareDecodeMonitors();
 			clearAllRemoteTrackLifecycleBindings();
 			dependencies.remoteSpeaking.clear();
 			dependencies.mediaState.resetLocalMediaState('room_disconnect');
@@ -359,12 +368,13 @@ export function bindRoomEvents(
 			}
 			callbacks.onDisconnected();
 			dependencies.participants.clear();
-			dependencies.connection.markDisconnected('error');
+			dependencies.connection.markDisconnected(resolveRoomDisconnectReason(reason));
 		}),
 	);
 	room.on(
 		RoomEvent.Reconnecting,
 		guard(attemptId, () => {
+			roomReconnecting = true;
 			callbacks.onReconnecting();
 			dependencies.connection.markReconnecting();
 		}),
@@ -372,6 +382,7 @@ export function bindRoomEvents(
 	room.on(
 		RoomEvent.Reconnected,
 		guard(attemptId, () => {
+			roomReconnecting = false;
 			dependencies.participants.hydrateFromRoom(room);
 			bindParticipantSpeakingEvents(room.localParticipant);
 			room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
@@ -381,6 +392,7 @@ export function bindRoomEvents(
 			callbacks.onReconnected();
 			dependencies.media.applyAllLocalAudioPreferences(room);
 			dependencies.subscriptions.reconcileSubscriptions();
+			endScreenShareIfPublicationDidNotReturn();
 		}),
 	);
 	room.on(
@@ -427,8 +439,7 @@ export function bindRoomEvents(
 					trackSid: pub.trackSid,
 				});
 			}
-			applyInteractiveReceiverBuffer(track, pub);
-			scheduleDecoderVerification(track, pub);
+			monitorDecodeHealth(track, pub);
 			dependencies.remoteSpeaking.attachIfApplicable(participant, pub, track);
 			bindRemoteTrackLifecycleIfApplicable(participant, pub, track);
 			if (!participant.isLocal && pub.source === Track.Source.ScreenShare) {
@@ -443,7 +454,7 @@ export function bindRoomEvents(
 	room.on(
 		RoomEvent.TrackUnsubscribed,
 		guard(attemptId, (_t: RemoteTrack, pub: RemoteTrackPublication, p: Participant) => {
-			clearScreenShareDecoderVerification(pub.trackSid);
+			clearScreenShareDecodeMonitor(pub.trackSid);
 			unbindRemoteTrackLifecycleIfApplicable(pub);
 			dependencies.remoteSpeaking.detachIfTrackMatches(p, pub);
 			if (!p.isLocal && pub.source === Track.Source.ScreenShare) {
@@ -479,7 +490,7 @@ export function bindRoomEvents(
 	room.on(
 		RoomEvent.TrackUnpublished,
 		guard(attemptId, (pub: RemoteTrackPublication, p: Participant) => {
-			clearScreenShareDecoderVerification(pub.trackSid);
+			clearScreenShareDecodeMonitor(pub.trackSid);
 			if (!p.isLocal && pub.source === Track.Source.ScreenShare) {
 				const replacementPublication = ScreenSharePublicationMigration.selectScreenSharePublication(p);
 				if (replacementPublication) {
@@ -547,12 +558,16 @@ export function bindRoomEvents(
 		RoomEvent.LocalTrackUnpublished,
 		guard(attemptId, (pub, p: Participant) => {
 			if (p.isLocal) {
-				if (
-					pub.source === Track.Source.ScreenShare &&
-					dependencies.screenShare.isScreenSharePublicationReplaceInFlight()
-				) {
-					dependencies.participants.upsertParticipant(p);
-					return;
+				if (pub.source === Track.Source.ScreenShare) {
+					if (dependencies.screenShare.isScreenSharePublicationReplaceInFlight()) {
+						dependencies.participants.upsertParticipant(p);
+						return;
+					}
+					if (roomReconnecting) {
+						screenSharePublicationAwaitingReconnect = pub as LocalTrackPublication;
+						dependencies.participants.upsertParticipant(p);
+						return;
+					}
 				}
 				const didChangeLocalState = dependencies.mediaState.handleLocalTrackStateChange(pub.source, false);
 				if (pub.source === Track.Source.ScreenShare && 'localParticipant' in room && room.localParticipant) {
@@ -602,11 +617,7 @@ export function bindRoomEvents(
 					pub.setSubscribed(true);
 				}
 				if (pub.source === Track.Source.ScreenShare && !participant.isLocal) {
-					reportScreenSharePublicationObserved(participant.identity, pub.trackSid ?? null);
-					const streamKey = getStreamKeyForParticipantIdentity(guildId, channelId, participant.identity);
-					if (streamKey) {
-						cancelDeferredStopWatchingStreamKey(streamKey);
-					}
+					observeRemoteScreenSharePublication(participant, pub);
 					dependencies.subscriptions.reattachScreenShareAfterPublish(participant.identity, pub);
 					dependencies.subscriptions.reconcileSubscriptions();
 				}
@@ -621,6 +632,7 @@ export function bindRoomEvents(
 		}),
 	);
 	if (room.state === ConnectionState.Connected) {
+		guard(attemptId, observeExistingRemoteScreenSharePublications)();
 		guard(attemptId, bindScreenShareNegotiation)();
 	}
 }

@@ -7,6 +7,7 @@ import {createRequire} from 'node:module';
 import * as path from 'node:path';
 import {STATIC_CDN_URL} from '@electron/common/Constants';
 import type {SpellcheckBundledDictionary} from '@electron/common/Types';
+import {writeFileAtomically} from '@electron/main/AtomicFile';
 import {getSpellcheckLaunchMode, type SpellcheckLaunchMode} from '@electron/main/LaunchOptions';
 import {getNativeLocale} from '@electron/main/MainI18n';
 import {
@@ -14,7 +15,7 @@ import {
 	DICTIONARY_SOURCES,
 	type SpellcheckDictionaryCatalogEntry,
 } from '@electron/main/SpellcheckDictionaries';
-import {app, ipcMain, type Session, type WebContents} from 'electron';
+import {app, ipcMain, net, type Session, type WebContents} from 'electron';
 import log from 'electron-log';
 import {franc} from 'franc-min';
 import {type Hunspell, type HunspellFactory, loadModule} from 'hunspell-asm';
@@ -35,7 +36,6 @@ type SystemHunspellNative = {
 		  })
 		| null;
 	discoverSystemDictionaries: (() => Array<{tag: string; affPath: string; dicPath: string}>) | null;
-	hashFile: ((path: string) => Promise<string>) | null;
 	loadError: Error | null;
 };
 
@@ -140,13 +140,6 @@ let factoryPromise: Promise<HunspellFactory> | null = null;
 let ipcRegistered = false;
 let launchModeLogged = false;
 
-const contextSourceByWebContents = new WeakMap<
-	WebContents,
-	{
-		isTextarea: boolean;
-		ts: number;
-	}
->();
 const norm = (code: string): string => code.toLowerCase();
 const beginSessionApply = (session: Session): number => {
 	const generation = (sessionApplyGeneration.get(session) ?? 0) + 1;
@@ -263,15 +256,8 @@ const writeCachedDictionaryFile = async (
 ): Promise<void> => {
 	const dir = dictionaryCacheDir(dict);
 	const filePath = path.join(dir, fileName);
-	const tmpPath = path.join(dir, `.${fileName}.${process.pid}.${Date.now()}.tmp`);
 	await fs.mkdir(dir, {recursive: true});
-	await fs.writeFile(tmpPath, data, {mode: 0o600});
-	try {
-		await fs.rename(tmpPath, filePath);
-	} catch (error) {
-		await fs.rm(tmpPath, {force: true}).catch(() => {});
-		throw error;
-	}
+	await writeFileAtomically(filePath, data, 0o600);
 };
 const downloadDictionaryFile = async (
 	dict: SpellcheckDictionaryCatalogEntry,
@@ -280,7 +266,7 @@ const downloadDictionaryFile = async (
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), DICTIONARY_DOWNLOAD_TIMEOUT_MS);
 	try {
-		const response = await fetch(dictionaryFileUrl(dict, fileName), {
+		const response = await net.fetch(dictionaryFileUrl(dict, fileName), {
 			headers: {
 				Accept: 'application/octet-stream,*/*;q=0.8',
 			},
@@ -394,7 +380,7 @@ const NATIVE_AFF_PATH_TAG = '__native__';
 
 function loadFromSystemHunspell(tag: string): LoadedHunspell | null {
 	const mod = loadSystemHunspell();
-	if (!mod || !mod.Hunspell || !mod.discoverSystemDictionaries) return null;
+	if (!mod?.Hunspell || !mod.discoverSystemDictionaries) return null;
 	const wantedKey = norm(tag);
 	const wantedBase = languageBase(tag);
 	const installed = mod.discoverSystemDictionaries();
@@ -473,6 +459,7 @@ const detectPreferredLanguages = (session: Session): Array<string> => {
 	return result;
 };
 const ISO6393_TO_DICTIONARY_BASE: Record<string, string> = {
+	bel: 'be',
 	bul: 'bg',
 	cat: 'ca',
 	ces: 'cs',
@@ -972,20 +959,6 @@ const ensureSharedIpc = () => {
 	if (ipcRegistered) return;
 	ipcRegistered = true;
 	ipcMain.on(
-		'spellcheck-context-target',
-		(
-			event,
-			payload: {
-				isTextarea?: boolean;
-			},
-		) => {
-			contextSourceByWebContents.set(event.sender, {
-				isTextarea: Boolean(payload?.isTextarea),
-				ts: Date.now(),
-			});
-		},
-	);
-	ipcMain.on(
 		'spellcheck:update-autodetect-text',
 		(
 			event,
@@ -1011,36 +984,9 @@ const ensureSharedIpc = () => {
 		if (!Array.isArray(words)) return [];
 		return checkWords(event.sender.session, words);
 	});
-	ipcMain.handle('spellcheck:suggest', (event, word: string): Array<string> => {
-		if (typeof word !== 'string' || word.length === 0) return [];
-		return suggestWord(event.sender.session, word);
-	});
 };
-const shouldHandleContextMenu = (webContents: WebContents, params: Electron.ContextMenuParams): boolean => {
-	if (!params['isEditable']) return false;
-	const inputFieldType = (
-		params as {
-			inputFieldType?: string;
-		}
-	).inputFieldType;
-	const isPassword =
-		(
-			params as {
-				isPassword?: boolean;
-			}
-		).isPassword === true ||
-		inputFieldType === 'password' ||
-		(
-			params as {
-				formControlType?: string;
-			}
-		).formControlType === 'password';
-	if (isPassword) return false;
-	const target = contextSourceByWebContents.get(webContents);
-	const targetRecent = target && Date.now() - target.ts < 5000;
-	const isTextLike = inputFieldType === 'plainText' || inputFieldType === 'textarea' || inputFieldType === undefined;
-	return Boolean((targetRecent && target.isTextarea) || isTextLike);
-};
+let rendererSpellcheckHandlersRegistered = false;
+
 export const registerSpellcheck = (webContents: WebContents): void => {
 	ensureSharedIpc();
 	if (!launchModeLogged) {
@@ -1074,13 +1020,8 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 	webContents.on('did-finish-load', () => {
 		void applyStateToWebContents(webContents, sessionState.get(session) ?? state, {broadcastResolved: true});
 	});
-	if (!ipcMain.eventNames().includes('spellcheck-get-state')) {
-		ipcMain.handle('spellcheck-get-state', (event) => {
-			const targetSession = event.sender.session;
-			const next = applyLaunchSpellcheckMode(sessionState.get(targetSession) ?? {...defaultState});
-			sessionState.set(targetSession, next);
-			return next;
-		});
+	if (!rendererSpellcheckHandlersRegistered) {
+		rendererSpellcheckHandlersRegistered = true;
 		ipcMain.handle('spellcheck-set-state', async (event, patch: RendererSpellcheckPatch) => {
 			const targetSession = event.sender.session;
 			const current = sessionState.get(targetSession) ?? {...defaultState};
@@ -1114,7 +1055,7 @@ export const registerSpellcheck = (webContents: WebContents): void => {
 		});
 	}
 	webContents.on('context-menu', (event, params) => {
-		if (!shouldHandleContextMenu(webContents, params)) return;
+		if (!params.isEditable) return;
 		event.preventDefault();
 		const cur = sessionState.get(session) ?? {...defaultState};
 		const resolved = sessionResolvedEngine.get(session) ?? resolveEngine(cur, session);

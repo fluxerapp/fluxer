@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
+import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
-import {comparer, makeAutoObservable, reaction} from 'mobx';
+import {compareStructural, makeAutoObservable, reaction} from 'mobx';
 
 const MESSAGE_EDIT_STORAGE_KEY = 'MessageEdit';
 
@@ -22,9 +22,6 @@ class MessageEdit {
 			return;
 		}
 		if (currentMessageId !== messageId) {
-			if (currentMessageId) {
-				TextareaSelection.clearEditingSelection(channelId, currentMessageId);
-			}
 			this.editingMessageIds[channelId] = messageId;
 		}
 		if (currentContent !== initialContent) {
@@ -35,10 +32,6 @@ class MessageEdit {
 	stopEditing(channelId: string): void {
 		if (!(channelId in this.editingMessageIds)) {
 			return;
-		}
-		const messageId = this.editingMessageIds[channelId];
-		if (messageId) {
-			TextareaSelection.clearEditingSelection(channelId, messageId);
 		}
 		delete this.editingMessageIds[channelId];
 	}
@@ -83,9 +76,18 @@ class MessageEdit {
 		return reaction(
 			() => Object.entries(this.editingMessageIds),
 			() => callback(),
-			{fireImmediately: true, equals: comparer.structural},
+			{fireImmediately: true, equals: compareStructural},
 		);
+	}
+
+	reset(): void {
+		this.editingMessageIds = {};
+		this.editingContents = {};
 	}
 }
 
-export default new MessageEdit();
+const messageEdit = new MessageEdit();
+
+AccountScopedWork.registerCancellation(() => messageEdit.reset());
+
+export default messageEdit;

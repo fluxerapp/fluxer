@@ -38,7 +38,7 @@ export const BOTTOM_LOCK_TOLERANCE = 8;
 export const CENTRE_ALIGNMENT_LIFT = 8;
 export const MESSAGE_REVEAL_PADDING = 16;
 export const UNREAD_LOAD_TRIGGER_LIFT = 16;
-export const RESIZE_STICK_MIN_THRESHOLD = 64;
+const RESIZE_STICK_MIN_THRESHOLD = 64;
 
 export type ContainerResizeShift = {kind: 'none'} | {kind: 'pin'} | {kind: 'shift'; targetScrollTop: number};
 
@@ -76,7 +76,7 @@ export const InitialScrollIntent = Object.freeze({
 
 export type InitialScrollIntent = (typeof InitialScrollIntent)[keyof typeof InitialScrollIntent];
 
-export const UNREAD_ANCHOR_EXEMPT_CHANNEL_TYPES: ReadonlySet<number> = new Set<number>([ChannelTypes.GUILD_VOICE]);
+const UNREAD_ANCHOR_EXEMPT_CHANNEL_TYPES: ReadonlySet<number> = new Set<number>([ChannelTypes.GUILD_VOICE]);
 
 export interface InitialScrollIntentInput {
 	readonly channelType: number | null | undefined;

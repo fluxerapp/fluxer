@@ -1,0 +1,565 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import {BACK_DESCRIPTOR, SAVE_PERCENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import '@app/app/fonts/radio_canada_big/radio-canada-big.css';
+import {Routes} from '@app/app/Routes';
+import {useCheckoutActions} from '@app/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions';
+import {usePremiumData} from '@app/features/app/components/dialogs/components/plutonium/hooks/usePremiumData';
+import GeoIP from '@app/features/app/state/GeoIP';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {getLocaleDirection} from '@app/features/i18n/utils/LocaleDirection';
+import {marketingUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
+import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
+import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
+import styles from '@app/features/premium/components/plutonium_page/PlutoniumPage.module.css';
+import {PlutoniumPageAtom} from '@app/features/premium/components/plutonium_page/PlutoniumPageAtom';
+import {PlutoniumPageButton} from '@app/features/premium/components/plutonium_page/PlutoniumPageButton';
+import {
+	PlutoniumPageComparison,
+	resolveUploadSizes,
+} from '@app/features/premium/components/plutonium_page/PlutoniumPageComparison';
+import {PlutoniumPageHeroShapes} from '@app/features/premium/components/plutonium_page/PlutoniumPageHeroShapes';
+import {heroArtFor} from '@app/features/premium/components/plutonium_page/PlutoniumPageMedia';
+import {
+	CLOSING_BODY_DESCRIPTOR,
+	CLOSING_GIFT_BODY_DESCRIPTOR,
+	CLOSING_GIFT_TITLE_DESCRIPTOR,
+	CLOSING_MEMBER_BODY_DESCRIPTOR,
+	CLOSING_MEMBER_TITLE_DESCRIPTOR,
+	CLOSING_TITLE_DESCRIPTOR,
+	DONATE_INSTEAD_DESCRIPTOR,
+	DONATION_HINT_DESCRIPTOR,
+	GIFT_GRACE_DESCRIPTOR,
+	GIFT_PLUTONIUM_DESCRIPTOR,
+	GIFTED_THANKS_DESCRIPTOR,
+	GRACE_DESCRIPTOR,
+	LAPSED_DESCRIPTOR,
+	MEMBER_THANKS_DESCRIPTOR,
+	MONTHLY_PRICE_DESCRIPTOR,
+	PAGE_LABEL_DESCRIPTOR,
+	PREMIUM_INFO_LINK_DESCRIPTOR,
+	PRICE_OR_DESCRIPTOR,
+	REDEEM_GIFT_CODE_DESCRIPTOR,
+	REDEEM_ONLY_DESCRIPTOR,
+	SUBSCRIBE_MONTHLY_DESCRIPTOR,
+	SUBSCRIBE_YEARLY_DESCRIPTOR,
+	TAG_FOOTNOTE_DESCRIPTOR,
+	TAG_FOOTNOTE_LINK_DESCRIPTOR,
+	VISIONARY_THANKS_DESCRIPTOR,
+	YEARLY_PRICE_DESCRIPTOR,
+} from '@app/features/premium/components/plutonium_page/PlutoniumPageMessages';
+import {
+	resolvePurchaseBlockedNote,
+	resolvePurchaseSurface,
+} from '@app/features/premium/components/plutonium_page/PlutoniumPagePurchases';
+import {PlutoniumPageShowcase} from '@app/features/premium/components/plutonium_page/PlutoniumPageShowcase';
+import {usePurchaseAccountGate} from '@app/features/premium/hooks/usePurchaseAccountGate';
+import PremiumState from '@app/features/premium/state/PremiumState';
+import {forgetPurchaseIntent, type PurchasePlan, peekPurchaseIntent} from '@app/features/premium/state/PurchaseIntent';
+import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {yearlySavingsPercent} from '@app/features/premium/utils/PremiumSavings';
+import {getPremiumProductFullName, getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
+import {getSubscriptionStatus} from '@app/features/premium/utils/SubscriptionStatus';
+import {getPremiumPageVariables} from '@app/features/theme/utils/InstanceBrandColors';
+import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {ArrowLeftIcon} from '@app/features/ui/icons/DirectionalIcons';
+import MobileLayout from '@app/features/ui/state/MobileLayout';
+import Users from '@app/features/user/state/Users';
+import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
+import {getFormattedLongDate} from '@fluxer/date_utils/src/DateFormatting';
+import {msg} from '@lingui/core/macro';
+import {useLingui} from '@lingui/react/macro';
+import {GiftIcon, TicketIcon} from '@phosphor-icons/react';
+import {clsx} from 'clsx';
+import {observer} from 'mobx-react-lite';
+import type React from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
+
+const PLAN_INTENT_UNAVAILABLE_DESCRIPTOR = msg({
+	message: "Purchases aren't available for your account right now.",
+	comment: 'Toast when someone arrives from a subscribe link but purchases are not available for this account.',
+});
+const GIFT_INTENT_UNAVAILABLE_DESCRIPTOR = msg({
+	message: "Gifts aren't available for your account right now.",
+	comment: 'Toast when someone arrives from a gift link but gift purchases are not available for this account.',
+});
+
+const FOOTNOTE_ID = 'plutonium-page-tag-footnote';
+const COMPARE_ID = 'plutonium-page-compare';
+const SUBSCRIBE_ID = 'plutonium-page-subscribe';
+const PLACEHOLDER_PRICE = '...';
+
+function splitTemplate(text: string, token: string): [string, string] {
+	const index = text.indexOf(token);
+	if (index === -1) return [text, ''];
+	return [text.slice(0, index), text.slice(index + token.length)];
+}
+
+export const PlutoniumPage = observer(function PlutoniumPage() {
+	const {i18n} = useLingui();
+	const currentUser = Users.currentUser;
+	const premiumState = PremiumState.loadedForUserId === currentUser?.id ? PremiumState.state : null;
+	const locale = LocaleUtils.getCurrentLocale();
+	const countryCode = GeoIP.countryCode;
+	const isMobile = MobileLayout.enabled;
+	const scrollerRef = useRef<HTMLDivElement | null>(null);
+	const [pendingPlan, setPendingPlan] = useState<PurchasePlan | null>(null);
+	const subscriptionStatus = getSubscriptionStatus(currentUser, premiumState);
+	const {priceIds, monthlyPrice, yearlyPrice} = usePremiumData({premiumState});
+	const {loadingCheckout, handleSelectPlan} = useCheckoutActions(priceIds, countryCode, isMobile, {
+		hasGiftTime: subscriptionStatus.isGiftSubscription,
+	});
+	useEffect(() => {
+		if (!currentUser?.id) return;
+		void PremiumCommands.refreshPremiumState(countryCode ?? undefined);
+	}, [countryCode, currentUser?.id]);
+	useEffect(() => {
+		if (!loadingCheckout) setPendingPlan(null);
+	}, [loadingCheckout]);
+	const accountGate = usePurchaseAccountGate();
+	const paymentDisputeOpen = premiumState?.effective.payment_dispute_open === true;
+	const purchaseDisabled = accountGate.blockedReason !== null || paymentDisputeOpen;
+	const userPurchaseDisabled = premiumState?.effective.premium_purchase_disabled === true;
+	const hasBillingRelationship = subscriptionStatus.hasEverPurchased || premiumState?.billing.subscription != null;
+	const isMember = subscriptionStatus.shouldShowPremiumCard;
+	const {purchasesAvailable, giftPurchasesAvailable, canSubscribe, heroMode, showClosing} = resolvePurchaseSurface({
+		priceIds,
+		userPurchaseDisabled,
+		isMember,
+		canStartSubscription: subscriptionStatus.canStartSubscription,
+		hasBillingRelationship,
+	});
+	const savingsPercent = yearlySavingsPercent(priceIds?.monthly_amount_minor, priceIds?.yearly_amount_minor);
+	const savingsLabel = savingsPercent != null ? i18n._(SAVE_PERCENT_DESCRIPTOR, {percent: savingsPercent}) : null;
+	const uploadSizes = resolveUploadSizes(i18n.locale);
+	const purchaseBlockedNote = resolvePurchaseBlockedNote(i18n, accountGate.blockedReason, paymentDisputeOpen);
+	const startCheckout = useCallback(
+		(plan: PurchasePlan, onDismiss?: () => void) => {
+			if (purchaseDisabled || loadingCheckout) return;
+			const checkout = () => {
+				setPendingPlan(plan);
+				void handleSelectPlan(plan);
+			};
+			accountGate.start(checkout, onDismiss);
+		},
+		[accountGate, handleSelectPlan, loadingCheckout, purchaseDisabled],
+	);
+	const purchaseIntentCheckedRef = useRef(false);
+	useEffect(() => {
+		if (purchaseIntentCheckedRef.current || priceIds == null || currentUser?.id == null) return;
+		purchaseIntentCheckedRef.current = true;
+		const intendedPlan = peekPurchaseIntent();
+		if (intendedPlan === null) return;
+		const gift = intendedPlan === 'gift_1_month' || intendedPlan === 'gift_1_year';
+		if (purchaseDisabled || !(gift ? giftPurchasesAvailable : purchasesAvailable)) {
+			forgetPurchaseIntent();
+			ToastCommands.createToast({
+				type: 'info',
+				children: i18n._(gift ? GIFT_INTENT_UNAVAILABLE_DESCRIPTOR : PLAN_INTENT_UNAVAILABLE_DESCRIPTOR),
+			});
+			return;
+		}
+		startCheckout(intendedPlan, forgetPurchaseIntent);
+	}, [priceIds, currentUser?.id, startCheckout, purchaseDisabled, giftPurchasesAvailable, purchasesAvailable, i18n]);
+	const scrollToId = useCallback((id: string, block: ScrollLogicalPosition = 'start') => {
+		const target = scrollerRef.current?.querySelector<HTMLElement>(`#${id}`);
+		target?.scrollIntoView({behavior: 'smooth', block});
+	}, []);
+	const handleFootnoteClick = useCallback(
+		(event: React.MouseEvent<HTMLAnchorElement>) => {
+			event.preventDefault();
+			scrollToId(FOOTNOTE_ID, 'center');
+		},
+		[scrollToId],
+	);
+	const handleBack = useCallback(() => {
+		const history = RouterUtils.getHistory();
+		if (history && window.history.length > 1) {
+			window.history.back();
+			return;
+		}
+		RouterUtils.transitionTo(Routes.ME);
+	}, []);
+	if (!currentUser) return null;
+	const pricesLoaded = monthlyPrice !== PLACEHOLDER_PRICE && yearlyPrice !== PLACEHOLDER_PRICE;
+	const [monthlyBefore, monthlyAfter] = splitTemplate(
+		i18n._(MONTHLY_PRICE_DESCRIPTOR, {monthlyPrice: '\u0000'}),
+		'\u0000',
+	);
+	const [yearlyBefore, yearlyAfter] = splitTemplate(i18n._(YEARLY_PRICE_DESCRIPTOR, {yearlyPrice: '\u0000'}), '\u0000');
+	const priceSavingText = pricesLoaded ? savingsLabel : i18n._(SAVE_PERCENT_DESCRIPTOR, {percent: 0});
+	const subscribeButtons = (flxSuffix: string) => (
+		<>
+			<PlutoniumPageButton
+				variant="primary"
+				onClick={() => startCheckout('yearly')}
+				disabled={purchaseDisabled}
+				loading={loadingCheckout && pendingPlan === 'yearly'}
+				directional
+				data-flx={`premium.plutonium-page.${flxSuffix}.subscribe-yearly`}
+			>
+				{i18n._(SUBSCRIBE_YEARLY_DESCRIPTOR)}
+			</PlutoniumPageButton>
+			<PlutoniumPageButton
+				variant="secondary"
+				onClick={() => startCheckout('monthly')}
+				disabled={purchaseDisabled}
+				loading={loadingCheckout && pendingPlan === 'monthly'}
+				data-flx={`premium.plutonium-page.${flxSuffix}.subscribe-monthly`}
+			>
+				{i18n._(SUBSCRIBE_MONTHLY_DESCRIPTOR)}
+			</PlutoniumPageButton>
+		</>
+	);
+	const giftButton = (variant: 'primary' | 'secondary', flxSuffix: string) =>
+		giftPurchasesAvailable ? (
+			<PlutoniumPageButton
+				variant={variant}
+				onClick={() => PlutoniumPageCommands.openGiftPlutoniumModal()}
+				data-flx={`premium.plutonium-page.${flxSuffix}.gift`}
+			>
+				{i18n._(GIFT_PLUTONIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+			</PlutoniumPageButton>
+		) : null;
+	const memberLead = (() => {
+		if (subscriptionStatus.isVisionary) return i18n._(VISIONARY_THANKS_DESCRIPTOR);
+		if (subscriptionStatus.gracePeriodInfo.showExpiredState) {
+			return i18n._(LAPSED_DESCRIPTOR, {premiumProductName: getPremiumProductName()});
+		}
+		if (subscriptionStatus.isGiftGrace) {
+			return i18n._(GIFT_GRACE_DESCRIPTOR, {premiumProductName: getPremiumProductName()});
+		}
+		if (subscriptionStatus.gracePeriodInfo.isInGracePeriod) return i18n._(GRACE_DESCRIPTOR);
+		if (subscriptionStatus.isGiftSubscription && subscriptionStatus.actualPremiumUntil) {
+			return i18n._(GIFTED_THANKS_DESCRIPTOR, {
+				premiumProductName: getPremiumProductName(),
+				date: getFormattedLongDate(subscriptionStatus.actualPremiumUntil, locale),
+			});
+		}
+		return i18n._(MEMBER_THANKS_DESCRIPTOR, {premiumProductName: getPremiumProductName()});
+	})();
+	let closingTitle: string;
+	let closingBody: string;
+	if (!canSubscribe) {
+		closingTitle = i18n._(CLOSING_MEMBER_TITLE_DESCRIPTOR);
+		closingBody = i18n._(CLOSING_MEMBER_BODY_DESCRIPTOR, {premiumProductName: getPremiumProductName()});
+	} else if (subscriptionStatus.isGiftSubscription) {
+		closingTitle = i18n._(CLOSING_GIFT_TITLE_DESCRIPTOR);
+		closingBody = i18n._(CLOSING_GIFT_BODY_DESCRIPTOR);
+	} else {
+		closingTitle = i18n._(CLOSING_TITLE_DESCRIPTOR);
+		closingBody = i18n._(CLOSING_BODY_DESCRIPTOR);
+	}
+	let comparisonActions: React.ReactNode = null;
+	if (canSubscribe) {
+		comparisonActions = subscribeButtons('comparison');
+	} else if (isMember) {
+		comparisonActions = giftButton('primary', 'comparison');
+	}
+	const showDonationHint = !RuntimeConfig.isSelfHosted();
+	const premiumInfoUrl = RuntimeConfig.isSelfHosted() ? RuntimeConfig.appPublic.branding.premium_info_url : null;
+	const pageColors = getPremiumPageVariables(
+		RuntimeConfig.isSelfHosted() ? RuntimeConfig.appPublic.branding.premium_page_color : null,
+	);
+	const heroArt = heroArtFor(RuntimeConfig.isSelfHosted());
+	const donationTemplate = i18n._(DONATION_HINT_DESCRIPTOR, {
+		productName: RuntimeConfig.productName,
+		donateLink: '\u0000',
+	});
+	const [donationBefore, donationAfter] = splitTemplate(donationTemplate, '\u0000');
+	const footnoteTemplate = i18n._(TAG_FOOTNOTE_DESCRIPTOR, {
+		productName: RuntimeConfig.productName,
+		visionaryLink: '\u0000',
+	});
+	const [footnoteBefore, footnoteAfter] = splitTemplate(footnoteTemplate, '\u0000');
+	const visionaryHelpUrl = Routes.helpArticle('visionary');
+	const footnote = RuntimeConfig.usesUniqueUsernames ? null : (
+		<p id={FOOTNOTE_ID} className={styles.footnote} data-flx="premium.plutonium-page.footnote">
+			<span data-flx="premium.plutonium-page.plutonium-page.span--5">{`* ${footnoteBefore}`}</span>
+			{visionaryHelpUrl ? (
+				<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--5">
+					<a
+						className={styles.inlineLink}
+						href={visionaryHelpUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						data-flx="premium.plutonium-page.footnote.visionary-link"
+					>
+						{i18n._(TAG_FOOTNOTE_LINK_DESCRIPTOR)}
+					</a>
+				</FocusRing>
+			) : (
+				<span data-flx="premium.plutonium-page.footnote.visionary-text">{i18n._(TAG_FOOTNOTE_LINK_DESCRIPTOR)}</span>
+			)}
+			<span data-flx="premium.plutonium-page.plutonium-page.span--6">{footnoteAfter}</span>
+		</p>
+	);
+	const secondaryLinks = (
+		<div className={styles.secondaryLinks} data-flx="premium.plutonium-page.hero.secondary-links">
+			{giftPurchasesAvailable && (
+				<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring">
+					<button
+						type="button"
+						className={styles.textButton}
+						onClick={() => PlutoniumPageCommands.openGiftPlutoniumModal()}
+						data-flx="premium.plutonium-page.hero.gift-link"
+					>
+						<GiftIcon
+							weight="fill"
+							className={styles.textButtonIcon}
+							aria-hidden="true"
+							data-flx="premium.plutonium-page.plutonium-page.text-button-icon"
+						/>
+						<span data-flx="premium.plutonium-page.plutonium-page.span">
+							{i18n._(GIFT_PLUTONIUM_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+						</span>
+					</button>
+				</FocusRing>
+			)}
+			<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--2">
+				<button
+					type="button"
+					className={styles.textButton}
+					onClick={PlutoniumPageCommands.openGiftInventorySettings}
+					data-flx="premium.plutonium-page.hero.redeem-link"
+				>
+					<TicketIcon
+						weight="fill"
+						className={styles.textButtonIcon}
+						aria-hidden="true"
+						data-flx="premium.plutonium-page.plutonium-page.text-button-icon--2"
+					/>
+					<span data-flx="premium.plutonium-page.plutonium-page.span--2">{i18n._(REDEEM_GIFT_CODE_DESCRIPTOR)}</span>
+				</button>
+			</FocusRing>
+		</div>
+	);
+	const renderPurchaseHero = (lead: string | null) => (
+		<>
+			{lead && (
+				<p className={styles.heroLead} data-flx="premium.plutonium-page.hero.lead">
+					{lead}
+				</p>
+			)}
+			<div
+				className={clsx(styles.priceRow, !pricesLoaded && styles.priceRowPending)}
+				aria-hidden={pricesLoaded ? undefined : true}
+				dir={getLocaleDirection(i18n.locale)}
+				data-flx="premium.plutonium-page.hero.price-line"
+			>
+				<span className={styles.priceItem} data-flx="premium.plutonium-page.hero.price-monthly">
+					{monthlyBefore && (
+						<span className={styles.pricePeriod} data-flx="premium.plutonium-page.hero.price-monthly-before">
+							{monthlyBefore}
+						</span>
+					)}
+					<span className={styles.priceAmount} data-flx="premium.plutonium-page.hero.price-monthly-amount">
+						{monthlyPrice}
+					</span>
+					{monthlyAfter && (
+						<span className={styles.pricePeriod} data-flx="premium.plutonium-page.hero.price-monthly-after">
+							{monthlyAfter}
+						</span>
+					)}
+				</span>
+				<span className={styles.priceYearly} data-flx="premium.plutonium-page.hero.price-yearly">
+					<span className={styles.priceOr} data-flx="premium.plutonium-page.hero.price-or">
+						{i18n._(PRICE_OR_DESCRIPTOR)}
+					</span>
+					<span
+						className={clsx(styles.priceItem, styles.priceItemYearly)}
+						data-flx="premium.plutonium-page.hero.price-yearly-item"
+					>
+						{yearlyBefore && (
+							<span className={styles.pricePeriod} data-flx="premium.plutonium-page.hero.price-yearly-before">
+								{yearlyBefore}
+							</span>
+						)}
+						<span className={styles.priceAmount} data-flx="premium.plutonium-page.hero.price-yearly-amount">
+							{yearlyPrice}
+						</span>
+						{yearlyAfter && (
+							<span className={styles.pricePeriod} data-flx="premium.plutonium-page.hero.price-yearly-after">
+								{yearlyAfter}
+							</span>
+						)}
+						{priceSavingText && (
+							<span className={styles.priceSaving} data-flx="premium.plutonium-page.hero.price-saving">
+								{priceSavingText}
+							</span>
+						)}
+					</span>
+				</span>
+			</div>
+			<div className={clsx(styles.actions, styles.heroActions)} data-flx="premium.plutonium-page.hero.actions">
+				{subscribeButtons('hero')}
+			</div>
+			{purchaseBlockedNote && (
+				<p className={styles.notice} role="note" data-flx="premium.plutonium-page.hero.purchase-blocked">
+					{purchaseBlockedNote}
+				</p>
+			)}
+			{secondaryLinks}
+		</>
+	);
+	const renderHeroBody = () => {
+		if (heroMode === 'member-purchase') return renderPurchaseHero(memberLead);
+		if (heroMode === 'member') {
+			return (
+				<>
+					<p className={styles.heroLead} data-flx="premium.plutonium-page.hero.lead">
+						{memberLead}
+					</p>
+					<div className={clsx(styles.actions, styles.heroActions)} data-flx="premium.plutonium-page.hero.actions">
+						<PlutoniumPageButton
+							variant="primary"
+							onClick={PlutoniumPageCommands.openSubscriptionSettings}
+							directional
+							data-flx="premium.plutonium-page.hero.manage"
+						>
+							{i18n._(MANAGE_SUBSCRIPTION_DESCRIPTOR)}
+						</PlutoniumPageButton>
+						{giftButton('secondary', 'hero')}
+					</div>
+				</>
+			);
+		}
+		if (heroMode === 'redeem-only') {
+			return (
+				<>
+					<p className={styles.heroLead} data-flx="premium.plutonium-page.hero.lead">
+						{i18n._(REDEEM_ONLY_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+					</p>
+					<div className={clsx(styles.actions, styles.heroActions)} data-flx="premium.plutonium-page.hero.actions">
+						<PlutoniumPageButton
+							variant="primary"
+							onClick={PlutoniumPageCommands.openGiftInventorySettings}
+							directional
+							data-flx="premium.plutonium-page.hero.redeem"
+						>
+							{i18n._(REDEEM_GIFT_CODE_DESCRIPTOR)}
+						</PlutoniumPageButton>
+					</div>
+				</>
+			);
+		}
+		return renderPurchaseHero(null);
+	};
+	return (
+		<div
+			className={styles.root}
+			style={(pageColors ?? undefined) as React.CSSProperties | undefined}
+			role="main"
+			aria-label={i18n._(PAGE_LABEL_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+			data-flx="premium.plutonium-page.root"
+		>
+			<div ref={scrollerRef} className={styles.scroller} data-flx="premium.plutonium-page.scroller">
+				{isMobile && (
+					<div className={styles.mobileBar} data-flx="premium.plutonium-page.mobile-bar">
+						<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--3">
+							<button
+								type="button"
+								className={styles.backButton}
+								onClick={handleBack}
+								aria-label={i18n._(BACK_DESCRIPTOR)}
+								data-flx="premium.plutonium-page.mobile-bar.back"
+							>
+								<ArrowLeftIcon
+									weight="bold"
+									className={styles.backIcon}
+									aria-hidden="true"
+									data-flx="premium.plutonium-page.plutonium-page.back-icon"
+								/>
+							</button>
+						</FocusRing>
+					</div>
+				)}
+				<section className={clsx(styles.hero, styles.onBrand)} data-flx="premium.plutonium-page.hero">
+					<PlutoniumPageHeroShapes data-flx="premium.plutonium-page.hero.shapes" />
+					<div className={styles.heroInner} data-flx="premium.plutonium-page.plutonium-page.hero-inner">
+						<PlutoniumPageAtom
+							art={heroArt}
+							live={!RuntimeConfig.isSelfHosted()}
+							data-flx="premium.plutonium-page.plutonium-page.plutonium-page-atom"
+						/>
+						<h1 className={styles.displayHeading} data-flx="premium.plutonium-page.hero.title">
+							{getPremiumProductFullName()}
+						</h1>
+						{renderHeroBody()}
+						{showDonationHint && (
+							<p className={styles.meta} data-flx="premium.plutonium-page.hero.donation-hint">
+								<span data-flx="premium.plutonium-page.plutonium-page.span--3">{donationBefore}</span>
+								<FocusRing offset={-2} data-flx="premium.plutonium-page.plutonium-page.focus-ring--4">
+									<a
+										className={styles.inlineLink}
+										href={marketingUrl('donate')}
+										target="_blank"
+										rel="noopener noreferrer"
+										data-flx="premium.plutonium-page.hero.donation-link"
+									>
+										{i18n._(DONATE_INSTEAD_DESCRIPTOR)}
+									</a>
+								</FocusRing>
+								<span data-flx="premium.plutonium-page.plutonium-page.span--4">{donationAfter}</span>
+							</p>
+						)}
+						{premiumInfoUrl && (
+							<p className={styles.meta} data-flx="premium.plutonium-page.hero.premium-info">
+								<FocusRing offset={-2} data-flx="premium.plutonium-page.hero.premium-info-focus-ring">
+									<a
+										className={styles.inlineLink}
+										href={premiumInfoUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										data-flx="premium.plutonium-page.hero.premium-info-link"
+									>
+										{i18n._(PREMIUM_INFO_LINK_DESCRIPTOR, {premiumProductName: getPremiumProductName()})}
+									</a>
+								</FocusRing>
+							</p>
+						)}
+					</div>
+				</section>
+				<div className={styles.sections} data-flx="premium.plutonium-page.sections">
+					<PlutoniumPageShowcase
+						uploadSize={uploadSizes.premium}
+						freeUploadSize={uploadSizes.free}
+						footnoteId={FOOTNOTE_ID}
+						onFootnoteClick={handleFootnoteClick}
+						data-flx="premium.plutonium-page.plutonium-page.plutonium-page-showcase"
+					/>
+					<div id={COMPARE_ID} data-flx="premium.plutonium-page.compare-anchor">
+						<PlutoniumPageComparison
+							footnoteId={FOOTNOTE_ID}
+							onFootnoteClick={handleFootnoteClick}
+							footnote={footnote}
+							actions={comparisonActions}
+							data-flx="premium.plutonium-page.plutonium-page.plutonium-page-comparison"
+						/>
+					</div>
+					{showClosing && (
+						<section
+							id={SUBSCRIBE_ID}
+							className={clsx(styles.board, styles.boardFeature, styles.onBrand, styles.closing)}
+							data-flx="premium.plutonium-page.closing"
+						>
+							<div className={styles.closingInner} data-flx="premium.plutonium-page.plutonium-page.closing-inner">
+								<h2 className={styles.displayHeading} data-flx="premium.plutonium-page.closing.title">
+									{closingTitle}
+								</h2>
+								<p className={styles.closingBody} data-flx="premium.plutonium-page.closing.body">
+									{closingBody}
+								</p>
+								<div className={styles.actions} data-flx="premium.plutonium-page.closing.actions">
+									{canSubscribe ? subscribeButtons('closing') : giftButton('primary', 'closing')}
+								</div>
+							</div>
+						</section>
+					)}
+				</div>
+			</div>
+		</div>
+	);
+});

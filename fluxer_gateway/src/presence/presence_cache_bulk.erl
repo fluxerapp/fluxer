@@ -7,10 +7,10 @@
 
 -export([
     bulk_get_inner/1,
+    bulk_get_map_inner/1,
     get_from_cluster/1,
     get_local_fast/1,
     local_bulk_presence_map/1,
-    fetch_remote_bulk_presence_map/2,
     normalize_user_ids/1,
     group_user_ids_by_owner/1,
     sanitize_presence_map/1,
@@ -30,11 +30,57 @@
 
 -spec bulk_get_inner([integer()]) -> [map()].
 bulk_get_inner(UserIds) ->
-    UniqueUserIds = normalize_user_ids(UserIds),
-    PrimaryPresenceMap = fetch_primary_presences(UniqueUserIds),
-    MissingUserIds = [U || U <- UniqueUserIds, not maps:is_key(U, PrimaryPresenceMap)],
-    FallbackPresenceMap = fetch_fallback_presences(MissingUserIds),
-    presence_values(maps:merge(PrimaryPresenceMap, FallbackPresenceMap)).
+    presence_values(bulk_get_map_inner(UserIds)).
+
+-spec bulk_get_map_inner([integer()]) -> #{integer() => map()}.
+bulk_get_map_inner(UserIds) ->
+    {Local, Remote} = lists:partition(
+        fun({OwnerNode, _OwnerUserIds}) -> OwnerNode =:= node() end,
+        group_user_ids_by_owner(UserIds)
+    ),
+    LocalMap = lists:foldl(
+        fun({_OwnerNode, OwnerUserIds}, AccMap) ->
+            maps:merge(AccMap, local_bulk_presence_map(OwnerUserIds))
+        end,
+        #{},
+        Local
+    ),
+    Servers = [
+        {{presence_cache, OwnerNode}, OwnerUserIds}
+     || {OwnerNode, OwnerUserIds} <- Remote
+    ],
+    maps:merge(LocalMap, fetch_remote_groups(Servers)).
+
+-spec fetch_remote_groups([{gen_server:server_ref(), [integer()]}]) -> #{integer() => map()}.
+fetch_remote_groups([]) ->
+    #{};
+fetch_remote_groups(Groups) ->
+    Deadline = erlang:monotonic_time(millisecond) + ?REMOTE_CALL_TIMEOUT_MS,
+    Requests = [
+        {Server, Ids, gen_server:send_request(Server, {bulk_get_local_map, Ids})}
+     || {Server, Ids} <- Groups
+    ],
+    lists:foldl(
+        fun({Server, Ids, ReqId}, AccMap) ->
+            maps:merge(AccMap, remote_group_reply(Server, Ids, ReqId, Deadline))
+        end,
+        #{},
+        Requests
+    ).
+
+-spec remote_group_reply(
+    gen_server:server_ref(), [integer()], gen_server:request_id(), integer()
+) ->
+    #{integer() => map()}.
+remote_group_reply(Server, Ids, ReqId, Deadline) ->
+    case gen_server:receive_response(ReqId, {abs, Deadline}) of
+        {reply, Reply} when is_map(Reply) ->
+            sanitize_presence_map(Reply);
+        {reply, _Legacy} ->
+            map_from_presence_list(safe_server_call(Server, {bulk_get_local, Ids}, []));
+        _ ->
+            #{}
+    end.
 
 -spec get_from_cluster(integer()) -> {ok, map()} | not_found.
 get_from_cluster(UserId) ->
@@ -78,15 +124,6 @@ local_bulk_presence_map(UserIds) ->
         Groups
     ).
 
--spec fetch_remote_bulk_presence_map(node(), [integer()]) -> #{integer() => map()}.
-fetch_remote_bulk_presence_map(OwnerNode, UserIds) ->
-    case safe_remote_call(OwnerNode, {bulk_get_local_map, UserIds}, invalid_reply) of
-        Reply when is_map(Reply) -> sanitize_presence_map(Reply);
-        _ ->
-            FallbackReply = safe_remote_call(OwnerNode, {bulk_get_local, UserIds}, []),
-            map_from_presence_list(FallbackReply)
-    end.
-
 -spec safe_remote_call(node(), term(), term()) -> term().
 safe_remote_call(TargetNode, Request, Fallback) ->
     safe_remote_call(TargetNode, Request, Fallback, ?REMOTE_CALL_TIMEOUT_MS).
@@ -95,7 +132,23 @@ safe_remote_call(TargetNode, Request, Fallback) ->
 safe_remote_call(TargetNode, Request, Fallback, Timeout) when
     is_integer(Timeout), Timeout > 0
 ->
-    try gen_server:call({presence_cache, TargetNode}, Request, Timeout) of
+    case is_remote_write(Request) andalso lists:member(TargetNode, nodes()) of
+        true -> fire_remote_cast(TargetNode, Request);
+        false -> safe_server_call({presence_cache, TargetNode}, Request, Fallback, Timeout)
+    end.
+
+-spec is_remote_write(term()) -> boolean().
+is_remote_write({put_local, _UserId, _Presence}) -> true;
+is_remote_write({delete_local, _UserId}) -> true;
+is_remote_write(_Request) -> false.
+
+-spec safe_server_call(gen_server:server_ref(), term(), term()) -> term().
+safe_server_call(Server, Request, Fallback) ->
+    safe_server_call(Server, Request, Fallback, ?REMOTE_CALL_TIMEOUT_MS).
+
+-spec safe_server_call(gen_server:server_ref(), term(), term(), pos_integer()) -> term().
+safe_server_call(Server, Request, Fallback, Timeout) ->
+    try gen_server:call(Server, Request, Timeout) of
         Reply -> Reply
     catch
         error:_ -> Fallback;
@@ -150,7 +203,7 @@ add_user_to_owner_group(UserId, Acc) ->
 
 -spec local_shard_count() -> pos_integer().
 local_shard_count() ->
-    {Count, _Source} = determine_shard_count(presence_cache_shards),
+    {Count, _Source} = clustered_ets_cache:determine_shard_count([presence_cache_shards]),
     Count.
 
 -spec select_shard(term(), pos_integer()) -> non_neg_integer().
@@ -194,44 +247,6 @@ presence_values(PresenceMap) ->
     UserIds = lists:sort(maps:keys(PresenceMap)),
     [maps:get(UserId, PresenceMap) || UserId <- UserIds].
 
--spec fetch_primary_presences([integer()]) -> #{integer() => map()}.
-fetch_primary_presences(UniqueUserIds) ->
-    OwnerGroups = group_user_ids_by_owner(UniqueUserIds),
-    lists:foldl(
-        fun({OwnerNode, OwnerUserIds}, AccMap) ->
-            maps:merge(AccMap, fetch_from_node(OwnerNode, OwnerUserIds))
-        end,
-        #{},
-        OwnerGroups
-    ).
-
--spec fetch_from_node(node(), [integer()]) -> #{integer() => map()}.
-fetch_from_node(OwnerNode, UserIds) ->
-    case OwnerNode =:= node() of
-        true -> local_bulk_presence_map(UserIds);
-        false -> fetch_remote_bulk_presence_map(OwnerNode, UserIds)
-    end.
-
--spec fetch_fallback_presences([integer()]) -> #{integer() => map()}.
-fetch_fallback_presences([]) ->
-    #{};
-fetch_fallback_presences(MissingUserIds) ->
-    OwnerGroups = group_user_ids_by_owner(MissingUserIds),
-    lists:foldl(
-        fun({OwnerNode, OwnerUserIds}, AccMap) ->
-            maps:merge(AccMap, fetch_fallback_from_node(OwnerNode, OwnerUserIds))
-        end,
-        #{},
-        OwnerGroups
-    ).
-
--spec fetch_fallback_from_node(node(), [integer()]) -> #{integer() => map()}.
-fetch_fallback_from_node(OwnerNode, UserIds) ->
-    case OwnerNode =:= node() of
-        true -> local_bulk_presence_map(UserIds);
-        false -> fetch_remote_bulk_presence_map(OwnerNode, UserIds)
-    end.
-
 -spec fetch_from_owner_nodes(integer(), [node()]) -> {ok, map()} | not_found.
 fetch_from_owner_nodes(_UserId, []) ->
     not_found;
@@ -266,14 +281,6 @@ accumulate_ets_lookup(TableName, UserId, AccMap) ->
         error:badarg -> AccMap
     end.
 
--spec determine_shard_count(atom()) -> {pos_integer(), configured | auto}.
-determine_shard_count(ConfigKey) ->
-    case clustered_ets_cache:determine_shard_count([ConfigKey]) of
-        {Count, ConfigKey} -> {Count, configured};
-        {Count, auto} -> {Count, auto};
-        {Count, _Source} -> {Count, configured}
-    end.
-
 -spec normalize_shard_groups([{non_neg_integer(), [term()]}]) ->
     [{non_neg_integer(), [integer()]}].
 normalize_shard_groups(Groups) ->
@@ -295,36 +302,3 @@ presence_user_id(Presence) ->
         _ ->
             undefined
     end.
-
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
-
-group_user_ids_by_owner_matches_single_owner_resolution_test() ->
-    Key = {gateway_cluster_membership, members_by_role},
-    Previous = persistent_term:get(Key, undefined),
-    Nodes = ['presence_a@127.0.0.1', 'presence_b@127.0.0.1', 'presence_c@127.0.0.1'],
-    persistent_term:put(Key, #{presence => Nodes}),
-    try
-        UserIds = [11, 22, 33, 44, 55, 66, 77, 88, 99, 1010],
-        Groups = group_user_ids_by_owner(UserIds),
-        Flattened = [
-            {Owner, UserId}
-         || {Owner, OwnerUserIds} <- Groups, UserId <- OwnerUserIds
-        ],
-        lists:foreach(
-            fun({Owner, UserId}) ->
-                ?assertEqual([Owner], lists:sublist(resolve_owner_nodes(UserId), 1))
-            end,
-            Flattened
-        ),
-        ?assertEqual(lists:sort(UserIds), lists:sort([UserId || {_Owner, UserId} <- Flattened]))
-    after
-        restore_persistent_term(Key, Previous)
-    end.
-
-restore_persistent_term(Key, undefined) ->
-    persistent_term:erase(Key);
-restore_persistent_term(Key, Value) ->
-    persistent_term:put(Key, Value).
-
--endif.

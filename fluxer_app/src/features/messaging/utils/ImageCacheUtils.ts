@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {readAttachmentUrlSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
+import {retainImage} from '@app/features/messaging/utils/ImageRetention';
 import {LRUCache} from 'lru-cache';
 
 export interface CachedImageSize {
@@ -20,9 +22,13 @@ interface ImageCacheEntry {
 	image: HTMLImageElement | null;
 	subscribers: Set<ImageSubscriber>;
 	failedAttempts: number;
+	failedCycles: number;
 	retryDelayMs: number;
+	failedUntil: number;
 	loadTimeoutId: number;
 	retryTimeoutId: number;
+	retryResume: (() => void) | null;
+	retryOnSettle: boolean;
 	connectivityListener: (() => void) | null;
 }
 
@@ -30,9 +36,23 @@ const MAX_CACHE_ENTRIES = 1000;
 const MAX_IMAGE_SOURCE_LENGTH = 16 * 1024;
 const MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD = 256;
 const IMAGE_LOAD_TIMEOUT_MS = 30_000;
-const IMAGE_RETRY_ATTEMPT_LIMIT = 5;
-const IMAGE_RETRY_INITIAL_DELAY_MS = 500;
+const IMAGE_RETRY_ATTEMPT_LIMIT = 2;
+const IMAGE_RETRY_INITIAL_DELAY_MS = 1000;
 const IMAGE_RETRY_MAX_DELAY_MS = IMAGE_RETRY_INITIAL_DELAY_MS * 10;
+const IMAGE_FAILURE_INITIAL_COOLDOWN_MS = 2000;
+const IMAGE_FAILURE_COOLDOWN_MS = 60_000;
+const IMAGE_RECOVERY_ATTENTION_WAKE_INTERVAL_MS = 15_000;
+
+interface ImageRecovery {
+	readonly src: string;
+	readonly waiters: Set<() => void>;
+	timeoutId: number;
+	cancelLoad: (() => void) | null;
+}
+
+const recoveries = new Map<string, ImageRecovery>();
+let recoveryWakeListenersInstalled = false;
+let lastAttentionWakeAt = Number.NEGATIVE_INFINITY;
 
 const imageCache = new LRUCache<string, ImageCacheEntry>({
 	max: MAX_CACHE_ENTRIES,
@@ -66,11 +86,20 @@ const imageHasSource = (image: HTMLImageElement, src: string): boolean => {
 
 const ownsCacheKey = (entry: ImageCacheEntry): boolean => imageCache.peek(entry.src) === entry;
 
+const isCoolingDown = (entry: ImageCacheEntry): boolean => entry.failedUntil > Date.now();
+
+const isLoadInFlight = (entry: ImageCacheEntry): boolean =>
+	entry.image != null || entry.retryTimeoutId !== 0 || entry.connectivityListener != null;
+
+const failureCooldownMs = (failedCycles: number): number =>
+	Math.min(IMAGE_FAILURE_COOLDOWN_MS, IMAGE_FAILURE_INITIAL_COOLDOWN_MS * 2 ** Math.max(0, failedCycles - 1));
+
 function clearRetryState(entry: ImageCacheEntry): void {
 	if (entry.retryTimeoutId !== 0) {
 		window.clearTimeout(entry.retryTimeoutId);
 		entry.retryTimeoutId = 0;
 	}
+	entry.retryResume = null;
 	if (entry.connectivityListener != null) {
 		window.removeEventListener('online', entry.connectivityListener);
 		entry.connectivityListener = null;
@@ -89,19 +118,22 @@ function detachImageLoad(entry: ImageCacheEntry): void {
 	}
 }
 
-function notifySubscribers(entry: ImageCacheEntry, loaded: boolean): void {
-	const subscribers = [...entry.subscribers];
-	entry.subscribers.clear();
+function runCallbacks(callbacks: ReadonlyArray<() => void>): void {
 	const failures: Array<unknown> = [];
-	for (const subscriber of subscribers) {
+	for (const callback of callbacks) {
 		try {
-			if (loaded) subscriber.onLoad();
-			else if (subscriber.onError) subscriber.onError();
+			callback();
 		} catch (error) {
 			failures.push(error);
 		}
 	}
 	if (failures.length > 0) throw new AggregateError(failures, 'Image load callbacks failed');
+}
+
+function notifySubscribers(entry: ImageCacheEntry, loaded: boolean): void {
+	const subscribers = [...entry.subscribers];
+	entry.subscribers.clear();
+	runCallbacks(subscribers.map((subscriber) => (loaded ? subscriber.onLoad : (subscriber.onError ?? (() => {})))));
 }
 
 function abandonEntry(entry: ImageCacheEntry): void {
@@ -110,20 +142,37 @@ function abandonEntry(entry: ImageCacheEntry): void {
 	notifySubscribers(entry, false);
 }
 
-function failEntry(entry: ImageCacheEntry): void {
+function dropEntry(entry: ImageCacheEntry): void {
 	if (ownsCacheKey(entry)) imageCache.delete(entry.src);
 	abandonEntry(entry);
 }
 
+function failEntry(entry: ImageCacheEntry): void {
+	entry.failedAttempts = 0;
+	entry.failedCycles += 1;
+	entry.retryDelayMs = IMAGE_RETRY_INITIAL_DELAY_MS;
+	entry.failedUntil = Date.now() + failureCooldownMs(entry.failedCycles);
+	entry.retryOnSettle = false;
+	abandonEntry(entry);
+}
+
 function settleLoaded(entry: ImageCacheEntry, image: HTMLImageElement): void {
+	retainImage(image);
 	clearRetryState(entry);
 	detachImageLoad(entry);
 	entry.loaded = true;
 	entry.width = image.naturalWidth;
 	entry.height = image.naturalHeight;
 	entry.failedAttempts = 0;
+	entry.failedCycles = 0;
 	entry.retryDelayMs = IMAGE_RETRY_INITIAL_DELAY_MS;
-	notifySubscribers(entry, true);
+	entry.failedUntil = 0;
+	entry.retryOnSettle = false;
+	try {
+		notifySubscribers(entry, true);
+	} finally {
+		resolveRecovery(entry.src);
+	}
 }
 
 function retryDelayForAttempt(entry: ImageCacheEntry): number {
@@ -155,8 +204,17 @@ function startImageLoad(entry: ImageCacheEntry): void {
 	image.src = entry.src;
 }
 
+function hasLapsedAttachmentSignature(src: string): boolean {
+	const signature = readAttachmentUrlSignature(src);
+	return signature !== null && signature.expiresAtMs <= Date.now();
+}
+
 function scheduleRetryOrFail(entry: ImageCacheEntry): void {
-	if (entry.failedAttempts >= IMAGE_RETRY_ATTEMPT_LIMIT) {
+	if (entry.subscribers.size === 0) {
+		dropEntry(entry);
+		return;
+	}
+	if (entry.failedAttempts >= IMAGE_RETRY_ATTEMPT_LIMIT || hasLapsedAttachmentSignature(entry.src)) {
 		failEntry(entry);
 		return;
 	}
@@ -167,6 +225,10 @@ function scheduleRetryOrFail(entry: ImageCacheEntry): void {
 			abandonEntry(entry);
 			return;
 		}
+		if (entry.subscribers.size === 0) {
+			dropEntry(entry);
+			return;
+		}
 		startImageLoad(entry);
 	};
 	if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -174,7 +236,21 @@ function scheduleRetryOrFail(entry: ImageCacheEntry): void {
 		window.addEventListener('online', resume, {once: true});
 		return;
 	}
+	if (entry.retryOnSettle) {
+		entry.retryOnSettle = false;
+		resume();
+		return;
+	}
+	entry.retryResume = resume;
 	entry.retryTimeoutId = window.setTimeout(resume, retryDelayForAttempt(entry));
+}
+
+function expediteRetry(entry: ImageCacheEntry): void {
+	if (entry.retryResume != null) {
+		entry.retryResume();
+		return;
+	}
+	if (entry.image != null) entry.retryOnSettle = true;
 }
 
 function createEntry(src: string): ImageCacheEntry {
@@ -186,9 +262,13 @@ function createEntry(src: string): ImageCacheEntry {
 		image: null,
 		subscribers: new Set(),
 		failedAttempts: 0,
+		failedCycles: 0,
 		retryDelayMs: IMAGE_RETRY_INITIAL_DELAY_MS,
+		failedUntil: 0,
 		loadTimeoutId: 0,
 		retryTimeoutId: 0,
+		retryResume: null,
+		retryOnSettle: false,
 		connectivityListener: null,
 	};
 	imageCache.set(src, entry);
@@ -203,6 +283,12 @@ function rejectImageLoad(onError: (() => void) | undefined): () => void {
 export function hasImage(src: string | null | undefined): boolean {
 	if (!acceptsImageSource(src)) return false;
 	return imageCache.get(src)?.loaded === true;
+}
+
+export function hasFailedImage(src: string | null | undefined): boolean {
+	if (!acceptsImageSource(src)) return false;
+	const entry = imageCache.peek(src);
+	return entry != null && isCoolingDown(entry);
 }
 
 export function getImageSize(src: string | null | undefined): CachedImageSize | undefined {
@@ -223,7 +309,7 @@ export function forgetImage(src: string | null | undefined): void {
 	if (!acceptsImageSource(src)) return;
 	const entry = imageCache.get(src);
 	if (entry == null) return;
-	failEntry(entry);
+	dropEntry(entry);
 }
 
 export function loadImage(src: string | null | undefined, onLoad: () => void, onError?: () => void): () => void {
@@ -233,16 +319,141 @@ export function loadImage(src: string | null | undefined, onLoad: () => void, on
 		onLoad();
 		return () => {};
 	}
-	if (cached != null && cached.subscribers.size >= MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD) {
+	if (cached != null && (isCoolingDown(cached) || cached.subscribers.size >= MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD)) {
 		return rejectImageLoad(onError);
 	}
 	const entry = cached ?? createEntry(src);
 	const subscriber: ImageSubscriber = {onLoad, onError};
 	entry.subscribers.add(subscriber);
-	if (cached == null) startImageLoad(entry);
+	if (!isLoadInFlight(entry)) {
+		entry.failedUntil = 0;
+		startImageLoad(entry);
+	}
 	return () => {
 		entry.subscribers.delete(subscriber);
 	};
+}
+
+export function reportImageError(src: string | null | undefined): void {
+	if (!acceptsImageSource(src)) return;
+	const entry = imageCache.get(src) ?? createEntry(src);
+	if (isLoadInFlight(entry) || isCoolingDown(entry)) return;
+	entry.loaded = false;
+	entry.width = 0;
+	entry.height = 0;
+	failEntry(entry);
+}
+
+export function awaitImage(src: string | null | undefined, onLoad: () => void): () => void {
+	if (!acceptsImageSource(src)) return () => {};
+	if (hasImage(src)) {
+		onLoad();
+		return () => {};
+	}
+	const recovery = recoveries.get(src) ?? createRecovery(src);
+	const waiter = (): void => onLoad();
+	recovery.waiters.add(waiter);
+	if (recovery.timeoutId === 0 && recovery.cancelLoad == null) attemptRecovery(recovery);
+	return () => {
+		recovery.waiters.delete(waiter);
+		if (recovery.waiters.size === 0) stopRecovery(recovery);
+	};
+}
+
+function createRecovery(src: string): ImageRecovery {
+	installRecoveryWakeListeners();
+	const recovery: ImageRecovery = {src, waiters: new Set(), timeoutId: 0, cancelLoad: null};
+	recoveries.set(src, recovery);
+	return recovery;
+}
+
+function clearRecoveryWork(recovery: ImageRecovery): void {
+	if (recovery.timeoutId !== 0) {
+		window.clearTimeout(recovery.timeoutId);
+		recovery.timeoutId = 0;
+	}
+	const cancelLoad = recovery.cancelLoad;
+	recovery.cancelLoad = null;
+	cancelLoad?.();
+}
+
+function stopRecovery(recovery: ImageRecovery): void {
+	clearRecoveryWork(recovery);
+	if (recoveries.get(recovery.src) === recovery) recoveries.delete(recovery.src);
+}
+
+function resolveRecovery(src: string): void {
+	const recovery = recoveries.get(src);
+	if (recovery == null) return;
+	const waiters = [...recovery.waiters];
+	recovery.waiters.clear();
+	stopRecovery(recovery);
+	runCallbacks(waiters);
+}
+
+function scheduleRecovery(recovery: ImageRecovery): void {
+	if (recoveries.get(recovery.src) !== recovery) return;
+	const entry = imageCache.peek(recovery.src);
+	const delay = entry != null && isCoolingDown(entry) ? entry.failedUntil - Date.now() : IMAGE_RETRY_INITIAL_DELAY_MS;
+	recovery.timeoutId = window.setTimeout(() => {
+		recovery.timeoutId = 0;
+		attemptRecovery(recovery);
+	}, delay);
+}
+
+function attemptRecovery(recovery: ImageRecovery): void {
+	clearRecoveryWork(recovery);
+	if (hasImage(recovery.src)) {
+		resolveRecovery(recovery.src);
+		return;
+	}
+	const entry = imageCache.peek(recovery.src);
+	if (entry != null && isCoolingDown(entry)) {
+		scheduleRecovery(recovery);
+		return;
+	}
+	let settled = false;
+	const cancelLoad = loadImage(
+		recovery.src,
+		() => {
+			settled = true;
+		},
+		() => {
+			settled = true;
+			recovery.cancelLoad = null;
+			scheduleRecovery(recovery);
+		},
+	);
+	if (!settled) recovery.cancelLoad = cancelLoad;
+}
+
+function wakeRecoveries(): void {
+	for (const recovery of [...recoveries.values()]) {
+		const entry = imageCache.peek(recovery.src);
+		if (recovery.cancelLoad != null) {
+			if (entry != null) expediteRetry(entry);
+			continue;
+		}
+		if (entry != null && !isLoadInFlight(entry)) entry.failedUntil = 0;
+		attemptRecovery(recovery);
+	}
+}
+
+function wakeRecoveriesOnAttention(): void {
+	const now = Date.now();
+	if (now - lastAttentionWakeAt < IMAGE_RECOVERY_ATTENTION_WAKE_INTERVAL_MS) return;
+	lastAttentionWakeAt = now;
+	wakeRecoveries();
+}
+
+function installRecoveryWakeListeners(): void {
+	if (recoveryWakeListenersInstalled || typeof window === 'undefined') return;
+	recoveryWakeListenersInstalled = true;
+	window.addEventListener('online', wakeRecoveries);
+	window.addEventListener('focus', wakeRecoveriesOnAttention);
+	document.addEventListener('visibilitychange', () => {
+		if (document.visibilityState === 'visible') wakeRecoveriesOnAttention();
+	});
 }
 
 export function pinImage(src: string | null | undefined): () => void {
@@ -251,8 +462,4 @@ export function pinImage(src: string | null | undefined): () => void {
 
 export function warmImage(src: string | null | undefined): void {
 	loadImage(src, () => {});
-}
-
-export function _clearForTests(): void {
-	imageCache.clear();
 }

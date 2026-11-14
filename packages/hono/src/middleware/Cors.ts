@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MiddlewareHandler} from 'hono';
+import type {Context, MiddlewareHandler} from 'hono';
 
 export interface CorsOptions {
 	enabled?: boolean;
@@ -14,6 +14,14 @@ export interface CorsOptions {
 
 const DEFAULT_METHODS = ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'];
 const DEFAULT_HEADERS = ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept-Language', 'X-Request-ID'];
+
+function appendOriginVary(c: Context): void {
+	const vary = c.res.headers.get('Vary');
+	const fields = vary?.split(',').map((field) => field.trim().toLowerCase()) ?? [];
+	if (!fields.includes('*') && !fields.includes('origin')) {
+		c.header('Vary', 'Origin', {append: Boolean(vary)});
+	}
+}
 
 export function cors(options: CorsOptions = {}): MiddlewareHandler {
 	const {
@@ -36,7 +44,6 @@ export function cors(options: CorsOptions = {}): MiddlewareHandler {
 				c.header('Access-Control-Allow-Origin', '*');
 			} else if (Array.isArray(origins) && requestOrigin && origins.includes(requestOrigin)) {
 				c.header('Access-Control-Allow-Origin', requestOrigin);
-				c.header('Vary', 'Origin');
 			}
 			if (credentials) {
 				c.header('Access-Control-Allow-Credentials', 'true');
@@ -52,10 +59,16 @@ export function cors(options: CorsOptions = {}): MiddlewareHandler {
 			if (maxAge !== undefined) {
 				c.header('Access-Control-Max-Age', maxAge.toString());
 			}
+			if (origins !== '*') {
+				appendOriginVary(c);
+			}
 			return c.body(null, 204);
 		}
 		await next();
 		applyCorsHeaders();
+		if (origins !== '*') {
+			appendOriginVary(c);
+		}
 		return;
 	};
 }

@@ -12,27 +12,29 @@ export function parseJsonUnknown(text: string): unknown {
 }
 
 export function parseJsonRecord(text: string): JsonRecord | null {
-	try {
-		const parsed = parseJsonUnknown(text);
-		return isJsonRecord(parsed) ? parsed : null;
-	} catch {
-		return null;
-	}
+	return parseJsonWithGuard(text, isJsonRecord);
 }
 
 export function parseJsonArray(text: string): Array<unknown> | null {
-	try {
-		const parsed = parseJsonUnknown(text);
-		return Array.isArray(parsed) ? parsed : null;
-	} catch {
-		return null;
-	}
+	return parseJsonWithGuard(text, Array.isArray);
 }
 
 export function parseJsonWithGuard<T>(text: string, guard: (value: unknown) => value is T): T | null {
 	try {
 		const parsed = parseJsonUnknown(text);
 		return guard(parsed) ? parsed : null;
+	} catch {
+		return null;
+	}
+}
+
+export function isStringArray(value: unknown): value is Array<string> {
+	return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+export function parseJsonOrNull(raw: string): unknown {
+	try {
+		return parseJsonUnknown(raw);
 	} catch {
 		return null;
 	}

@@ -18,16 +18,12 @@ describe('MessageNonceRequest', () => {
 		expect(MessageNonceRequest.parse(input)).toBe(expected);
 	});
 
-	it.each([
-		-1,
-		0.5,
-		Number.MAX_SAFE_INTEGER + 1,
-		Number.POSITIVE_INFINITY,
-		'',
-		'a'.repeat(33),
-	])('rejects invalid nonce %j', (input) => {
-		expect(MessageNonceRequest.safeParse(input).success).toBe(false);
-	});
+	it.each([-1, 0.5, Number.MAX_SAFE_INTEGER + 1, Number.POSITIVE_INFINITY, '', 'a'.repeat(33)])(
+		'rejects invalid nonce %j',
+		(input) => {
+			expect(MessageNonceRequest.safeParse(input).success).toBe(false);
+		},
+	);
 });
 
 describe('MessageRequestSchema', () => {
@@ -129,5 +125,13 @@ describe('RichEmbedRequest', () => {
 			return;
 		}
 		expect(result.data.title).toBe('');
+	});
+});
+
+describe('RichEmbedRequest author', () => {
+	it('drops an author whose name is empty', () => {
+		const result = RichEmbedRequest.safeParse({author: {name: ''}, description: 'text'});
+		expect(result.success).toBe(true);
+		expect(result.data?.author).toBeUndefined();
 	});
 });

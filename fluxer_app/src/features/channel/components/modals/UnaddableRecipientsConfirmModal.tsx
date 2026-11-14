@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {CANCEL_DESCRIPTOR, CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Users from '@app/features/user/state/Users';
 import {msg} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
+import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useMemo} from 'react';
 
@@ -91,7 +91,16 @@ export const UnaddableRecipientsConfirmModal = observer(
 				</ul>
 				{addableCount > 0 ? (
 					<p data-flx="channel.unaddable-recipients-confirm-modal.p--2">
-						<Trans>Create the group DM with the remaining {addableCount} recipient(s) and skip the others?</Trans>
+						<Trans>
+							Create the group DM with the remaining{' '}
+							<Plural
+								value={addableCount}
+								one="# recipient"
+								other="# recipients"
+								data-flx="channel.unaddable-recipients-confirm-modal.plural"
+							/>{' '}
+							and skip the others?
+						</Trans>
 					</p>
 				) : (
 					<p data-flx="channel.unaddable-recipients-confirm-modal.p--3">
@@ -105,7 +114,6 @@ export const UnaddableRecipientsConfirmModal = observer(
 				<ConfirmModal
 					title={i18n._(SOME_USERS_CAN_T_BE_ADDED_DESCRIPTOR)}
 					description={description}
-					secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 					size="small"
 					data-flx="channel.unaddable-recipients-confirm-modal.confirm-modal"
 				/>

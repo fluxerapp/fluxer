@@ -9,12 +9,8 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo} from 'react';
 
-const AND_1_OTHER_CALL_DESCRIPTOR = msg({
-	message: 'And 1 other call',
-	comment: 'Label in the user settings voice activity section.',
-});
 const AND_OTHER_CALLS_DESCRIPTOR = msg({
-	message: 'And {additionalCount} other calls',
+	message: '{additionalCount, plural, one {And # other call} other {And # other calls}}',
 	comment: 'Label in the user settings voice activity section. Preserve {additionalCount}; it is inserted by code.',
 });
 
@@ -34,12 +30,10 @@ export const VoiceActivitySection: React.FC<VoiceActivitySectionProps> = observe
 			[activityAggregates],
 		);
 		const additionalCount = Math.max(0, aggregatedActivities.length - 1);
-		const additionalCallsLabel = useMemo(() => {
-			if (additionalCount === 1) {
-				return i18n._(AND_1_OTHER_CALL_DESCRIPTOR);
-			}
-			return i18n._(AND_OTHER_CALLS_DESCRIPTOR, {additionalCount});
-		}, [additionalCount, i18n.locale]);
+		const additionalCallsLabel = useMemo(
+			() => i18n._(AND_OTHER_CALLS_DESCRIPTOR, {additionalCount}),
+			[additionalCount, i18n.locale],
+		);
 		if (!primaryActivity) {
 			return null;
 		}

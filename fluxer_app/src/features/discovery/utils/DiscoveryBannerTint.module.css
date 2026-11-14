@@ -1,0 +1,57 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.bannerTint {
+	position: absolute;
+	inset: 0;
+	display: block;
+}
+
+.bannerTintViolet {
+	composes: bannerTint;
+	background-color: #a99adf;
+}
+
+.bannerTintBlue {
+	composes: bannerTint;
+	background-color: #93b7e0;
+}
+
+.bannerTintTeal {
+	composes: bannerTint;
+	background-color: #8fc9c6;
+}
+
+.bannerTintGreen {
+	composes: bannerTint;
+	background-color: #9ac9a4;
+}
+
+.bannerTintLime {
+	composes: bannerTint;
+	background-color: #bfcb92;
+}
+
+.bannerTintAmber {
+	composes: bannerTint;
+	background-color: #dfc194;
+}
+
+.bannerTintCoral {
+	composes: bannerTint;
+	background-color: #e0a894;
+}
+
+.bannerTintRose {
+	composes: bannerTint;
+	background-color: #dd9caa;
+}
+
+.bannerTintMagenta {
+	composes: bannerTint;
+	background-color: #cd9ac9;
+}
+
+.bannerTintIndigo {
+	composes: bannerTint;
+	background-color: #9ba4dd;
+}

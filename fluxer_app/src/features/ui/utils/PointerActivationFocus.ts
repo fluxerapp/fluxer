@@ -25,7 +25,3 @@ export function shouldRestoreFocusToTarget(target: HTMLElement | null, keyboardM
 	if (keyboardModeEnabled) return true;
 	return !isSamePointerActivation(target, pointerActivationFocusTarget);
 }
-
-export function clearPointerActivationFocusTargetForTests(): void {
-	pointerActivationFocusTarget = null;
-}

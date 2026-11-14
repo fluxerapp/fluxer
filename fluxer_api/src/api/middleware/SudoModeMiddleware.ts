@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getSudoModeService} from '@app/api/auth/services/SudoModeService';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {createMiddleware} from 'hono/factory';
-import {getSudoModeService} from '../auth/services/SudoModeService';
-import type {HonoEnv} from '../types/HonoEnv';
 
 export const SUDO_MODE_HEADER = 'X-Fluxer-Sudo-Mode-JWT';
 export const SudoModeMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {

@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ScreenshareResolution, StreamingMode} from '@app/features/voice/state/VoiceSettings';
-import type {ScreenShareCaptureOptions, TrackPublishOptions, VideoEncoding} from 'livekit-client';
+import type {
+	ScreenShareContentHint,
+	ScreenShareScalabilityModePreference,
+} from '@app/features/voice/utils/CodecCapabilityDetector';
+import {getH264HardwareProfilesSync} from '@app/features/voice/utils/GpuEncoderCapabilities';
+import type {VideoQualityCaps} from '@app/features/voice/utils/VideoQualityCaps';
+import {MAX_SCREEN_SHARE_BITRATE} from '@fluxer/constants/src/LimitConstants';
+import type {ScreenShareCaptureOptions, TrackPublishOptions, VideoCodec} from 'livekit-client';
 
 const DIMENSIONS: Record<
 	ScreenshareResolution,
@@ -17,12 +24,19 @@ const DIMENSIONS: Record<
 	ultra: {width: 2560, height: 1440},
 	source: {width: 3840, height: 2160},
 };
-export const SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS = 6_000_000;
-export const SCREEN_SHARE_DEGRADATION_PREFERENCE: NonNullable<TrackPublishOptions['degradationPreference']> =
-	'maintain-resolution';
 export const SUPPORTED_SCREEN_SHARE_FRAME_RATES = [15, 30, 60, 90, 120] as const;
 
 export type SupportedScreenShareFrameRate = (typeof SUPPORTED_SCREEN_SHARE_FRAME_RATES)[number];
+
+export interface ScreenShareBitrateBudget {
+	ceilingBps: number;
+	chosenBps: number | null;
+}
+
+const SCREEN_SHARE_BITS_PER_PIXEL_PER_FRAME = 0.02;
+const SCREEN_SHARE_MIN_MAINTAIN_FRAMERATE_BITRATE_BPS = 500_000;
+const SOFTWARE_H264_MAX_RESOLUTION: ScreenshareResolution = 'medium';
+const SOFTWARE_H264_MAX_FRAME_RATE: SupportedScreenShareFrameRate = 30;
 
 const BITRATE_KBPS: Record<ScreenshareResolution, Record<SupportedScreenShareFrameRate, number>> = {
 	low_240p: {15: 300, 30: 500, 60: 700, 90: 700, 120: 700},
@@ -44,81 +58,47 @@ const BITRATE_RUNGS = [
 
 export function resolveScreenShareFrameRate(frameRate: number): SupportedScreenShareFrameRate {
 	if (frameRate >= 120) return 120;
-	if (frameRate >= 90) return 90;
 	if (frameRate >= 60) return 60;
 	if (frameRate >= 30) return 30;
 	return 15;
 }
 
-function getScreenShareDimensions(resolution: ScreenshareResolution): {
-	width: number;
-	height: number;
-} {
-	return DIMENSIONS[resolution];
+function getScreenShareRungPixels(resolution: ScreenshareResolution): number {
+	return DIMENSIONS[resolution].width * DIMENSIONS[resolution].height;
 }
 
-function resolveBitrateRungForDimensions(dimensions: {width: number; height: number}): ScreenshareResolution {
-	const pixels = dimensions.width * dimensions.height;
+function resolveBitrateRungForPixels(pixels: number): ScreenshareResolution {
 	let rung: ScreenshareResolution = BITRATE_RUNGS[0];
 	for (const candidate of BITRATE_RUNGS) {
-		if (DIMENSIONS[candidate].width * DIMENSIONS[candidate].height > pixels) break;
+		if (getScreenShareRungPixels(candidate) > pixels) break;
 		rung = candidate;
 	}
 	return rung;
 }
 
-function resolveBitrateRung(
-	resolution: ScreenshareResolution,
-	sourceDimensions?: {
-		width: number;
-		height: number;
-	},
-): ScreenshareResolution {
-	return resolveBitrateRungForDimensions(resolveEffectiveScreenShareDimensions(resolution, sourceDimensions));
+function computeScreenShareBitrateBps(
+	pixels: number,
+	rung: ScreenshareResolution,
+	frameRate: SupportedScreenShareFrameRate,
+	budget: ScreenShareBitrateBudget,
+): number {
+	if (budget.chosenBps !== null) return Math.min(budget.chosenBps, budget.ceilingBps);
+	const scale = Math.max(1, budget.ceilingBps / MAX_SCREEN_SHARE_BITRATE);
+	const rungFloor = BITRATE_KBPS[rung][frameRate] * 1000 * scale;
+	const computed = SCREEN_SHARE_BITS_PER_PIXEL_PER_FRAME * pixels * frameRate * scale;
+	return Math.min(budget.ceilingBps, Math.round(Math.max(rungFloor, computed)));
 }
 
 export function getScreenShareBitrateBps(
 	resolution: ScreenshareResolution,
 	frameRate: SupportedScreenShareFrameRate,
-	sourceDimensions?: {
-		width: number;
-		height: number;
-	},
+	budget: ScreenShareBitrateBudget,
 ): number {
-	return BITRATE_KBPS[resolveBitrateRung(resolution, sourceDimensions)][frameRate] * 1000;
+	const fit = resolveEffectiveScreenShareDimensions(resolution);
+	return computeScreenShareBitrateBps(fit.width * fit.height, fit.rung, frameRate, budget);
 }
 
-export function capScreenShareEncodingToDimensions(
-	encoding: VideoEncoding,
-	dimensions: {width?: number; height?: number} | undefined,
-): VideoEncoding {
-	if (typeof encoding.maxBitrate !== 'number') return encoding;
-	const width = dimensions?.width;
-	const height = dimensions?.height;
-	if (!width || !height || width <= 0 || height <= 0) return encoding;
-	const frameRate = resolveScreenShareFrameRate(encoding.maxFramerate ?? 60);
-	const ceiling = BITRATE_KBPS[resolveBitrateRungForDimensions({width, height})][frameRate] * 1000;
-	if (encoding.maxBitrate <= ceiling) return encoding;
-	return {...encoding, maxBitrate: ceiling};
-}
-
-export function getScreenShareEncoding(
-	resolution: ScreenshareResolution,
-	frameRate: number,
-	sourceDimensions?: {
-		width: number;
-		height: number;
-	},
-): VideoEncoding {
-	const resolvedFrameRate = resolveScreenShareFrameRate(frameRate);
-	return {
-		maxBitrate: getScreenShareBitrateBps(resolution, resolvedFrameRate, sourceDimensions),
-		maxFramerate: resolvedFrameRate,
-		priority: 'high',
-	};
-}
-
-export const STREAMING_MODE_PRESETS: Record<
+const STREAMING_MODE_PRESETS: Record<
 	Exclude<StreamingMode, 'custom'>,
 	{
 		resolution: ScreenshareResolution;
@@ -126,17 +106,7 @@ export const STREAMING_MODE_PRESETS: Record<
 	}
 > = {
 	gaming: {resolution: 'ultra', frameRate: 60},
-	screenshare: {resolution: 'source', frameRate: 15},
-};
-const FREE_STREAMING_MODE_PRESETS: Record<
-	Exclude<StreamingMode, 'custom'>,
-	{
-		resolution: ScreenshareResolution;
-		frameRate: SupportedScreenShareFrameRate;
-	}
-> = {
-	gaming: {resolution: 'medium', frameRate: 30},
-	screenshare: {resolution: 'medium', frameRate: 30},
+	screenshare: {resolution: 'high', frameRate: 30},
 };
 
 export interface BuiltScreenShareOptions {
@@ -147,8 +117,11 @@ export interface BuiltScreenShareOptions {
 export interface ScreenShareBuildConfig {
 	resolution: ScreenshareResolution;
 	frameRate: number;
+	maxBitrate: number;
+	context: ScreenShareContext;
 	includeAudio: boolean;
 	contentHint?: ScreenShareCaptureOptions['contentHint'];
+	degradationPreference?: NonNullable<TrackPublishOptions['degradationPreference']>;
 	sourceDimensions?: {
 		width: number;
 		height: number;
@@ -167,41 +140,53 @@ function resolveScreenShareCursorCapture(
 	return preferredDisplaySurface === 'window' ? 'never' : 'always';
 }
 
+function floorToEven(value: number): number {
+	return Math.max(2, Math.floor(value / 2) * 2);
+}
+
 export function resolveEffectiveScreenShareDimensions(
 	resolution: ScreenshareResolution,
 	sourceDimensions?: {
 		width: number;
 		height: number;
-	},
+	} | null,
 ): {
 	width: number;
 	height: number;
+	rung: ScreenshareResolution;
 } {
-	const preset = getScreenShareDimensions(resolution);
-	if (resolution !== 'source' || !sourceDimensions) return preset;
-	if (sourceDimensions.width <= 0 || sourceDimensions.height <= 0) return preset;
+	const preset = DIMENSIONS[resolution];
+	if (!sourceDimensions || sourceDimensions.width <= 0 || sourceDimensions.height <= 0) {
+		return {width: preset.width, height: preset.height, rung: resolution};
+	}
+	const budget = getScreenShareRungPixels(resolution);
+	const sourcePixels = sourceDimensions.width * sourceDimensions.height;
+	if (sourcePixels <= budget) {
+		return {
+			width: sourceDimensions.width,
+			height: sourceDimensions.height,
+			rung: resolveBitrateRungForPixels(sourcePixels),
+		};
+	}
+	const scale = Math.sqrt(budget / sourcePixels);
 	return {
-		width: Math.min(preset.width, sourceDimensions.width),
-		height: Math.min(preset.height, sourceDimensions.height),
+		width: floorToEven(sourceDimensions.width * scale),
+		height: floorToEven(sourceDimensions.height * scale),
+		rung: resolution,
 	};
 }
 
-export function buildScreenShareOptions(config: ScreenShareBuildConfig): BuiltScreenShareOptions;
-export function buildScreenShareOptions(resolution: ScreenshareResolution, frameRate: number): BuiltScreenShareOptions;
-export function buildScreenShareOptions(
-	configOrResolution: ScreenShareBuildConfig | ScreenshareResolution,
-	maybeFrameRate?: number,
-): BuiltScreenShareOptions {
-	const config: ScreenShareBuildConfig =
-		typeof configOrResolution === 'object'
-			? configOrResolution
-			: {resolution: configOrResolution, frameRate: maybeFrameRate ?? 30, includeAudio: true};
-	const {width, height} = resolveEffectiveScreenShareDimensions(config.resolution, config.sourceDimensions);
+export function buildScreenShareOptions(config: ScreenShareBuildConfig): BuiltScreenShareOptions {
+	const {width, height, rung} = resolveEffectiveScreenShareDimensions(config.resolution, config.sourceDimensions);
 	const resolvedFrameRate = resolveScreenShareFrameRate(config.frameRate);
 	const video: ScreenShareVideoOptions = {
 		cursor: resolveScreenShareCursorCapture(config.preferredDisplaySurface),
 		...(config.preferredDisplaySurface ? {displaySurface: config.preferredDisplaySurface} : {}),
 	};
+	let windowAudio: 'system' | 'window' | 'exclude' = 'exclude';
+	if (config.includeAudio) {
+		windowAudio = config.useBrowserAudioPicker ? 'system' : 'window';
+	}
 	return {
 		captureOptions: {
 			audio: config.includeAudio,
@@ -210,45 +195,60 @@ export function buildScreenShareOptions(
 			selfBrowserSurface: 'include',
 			monitorTypeSurfaces: config.preferredDisplaySurface === 'window' ? 'exclude' : 'include',
 			systemAudio: config.includeAudio && config.useBrowserAudioPicker ? 'include' : 'exclude',
-			windowAudio: config.includeAudio ? (config.useBrowserAudioPicker ? 'system' : 'window') : 'exclude',
+			windowAudio,
 			resolution: {width, height, frameRate: resolvedFrameRate},
 			video,
 		},
 		publishOptions: {
-			degradationPreference: SCREEN_SHARE_DEGRADATION_PREFERENCE,
-			screenShareEncoding: getScreenShareEncoding(config.resolution, resolvedFrameRate, config.sourceDimensions),
+			degradationPreference: resolveScreenShareDegradationPreference({
+				context: config.context,
+				rung,
+				contentHint: config.contentHint,
+				maxBitrate: config.maxBitrate,
+				degradationPreference: config.degradationPreference,
+			}),
+			screenShareEncoding: {maxBitrate: config.maxBitrate, maxFramerate: resolvedFrameRate, priority: 'high'},
 		},
 	};
 }
 
-const FREE_TIER_FALLBACK_RESOLUTION: ScreenshareResolution = 'medium';
-const FREE_TIER_RESOLUTIONS: ReadonlyArray<ScreenshareResolution> = ['low_480p', 'medium'];
-const FREE_TIER_MAX_FRAME_RATE: SupportedScreenShareFrameRate = 30;
-
-function isFreeTierResolution(resolution: ScreenshareResolution): boolean {
-	return FREE_TIER_RESOLUTIONS.includes(resolution);
+export function capsAllowScreenShareResolution(caps: VideoQualityCaps, resolution: ScreenshareResolution): boolean {
+	return DIMENSIONS[resolution].height <= caps.screenShareMaxHeight;
 }
 
-function clampToFreeTier(
+export function capsAllowScreenShareFrameRate(caps: VideoQualityCaps, frameRate: number): boolean {
+	return frameRate <= caps.screenShareMaxFrameRate;
+}
+
+export function capScreenShareResolution(
+	caps: VideoQualityCaps,
 	resolution: ScreenshareResolution,
+): ScreenshareResolution {
+	let capped: ScreenshareResolution = BITRATE_RUNGS[0];
+	for (const candidate of BITRATE_RUNGS.slice(0, BITRATE_RUNGS.indexOf(resolution) + 1)) {
+		if (capsAllowScreenShareResolution(caps, candidate)) capped = candidate;
+	}
+	return capped;
+}
+
+export function maxScreenShareResolution(caps: VideoQualityCaps): ScreenshareResolution {
+	return capScreenShareResolution(caps, 'source');
+}
+
+function capScreenShareFrameRate(
+	caps: VideoQualityCaps,
 	frameRate: SupportedScreenShareFrameRate,
-): {
-	resolution: ScreenshareResolution;
-	frameRate: SupportedScreenShareFrameRate;
-} {
-	const cappedResolution: ScreenshareResolution = isFreeTierResolution(resolution)
-		? resolution
-		: FREE_TIER_FALLBACK_RESOLUTION;
-	const cappedFrameRate: SupportedScreenShareFrameRate =
-		frameRate > FREE_TIER_MAX_FRAME_RATE ? FREE_TIER_MAX_FRAME_RATE : frameRate;
-	return {resolution: cappedResolution, frameRate: cappedFrameRate};
+): SupportedScreenShareFrameRate {
+	return capsAllowScreenShareFrameRate(caps, frameRate)
+		? frameRate
+		: resolveScreenShareFrameRate(caps.screenShareMaxFrameRate);
 }
 
 export function resolveStreamingModeSettings(
 	mode: StreamingMode,
 	customResolution: ScreenshareResolution,
 	customFrameRate: number,
-	hasHigherQuality: boolean,
+	caps: VideoQualityCaps,
 ): {
 	resolution: ScreenshareResolution;
 	frameRate: SupportedScreenShareFrameRate;
@@ -256,14 +256,14 @@ export function resolveStreamingModeSettings(
 	const resolved =
 		mode === 'custom'
 			? {resolution: customResolution, frameRate: resolveScreenShareFrameRate(customFrameRate)}
-			: (hasHigherQuality ? STREAMING_MODE_PRESETS : FREE_STREAMING_MODE_PRESETS)[mode];
-	if (hasHigherQuality) {
-		return resolved;
-	}
-	return clampToFreeTier(resolved.resolution, resolved.frameRate);
+			: STREAMING_MODE_PRESETS[mode];
+	return {
+		resolution: capScreenShareResolution(caps, resolved.resolution),
+		frameRate: capScreenShareFrameRate(caps, resolved.frameRate),
+	};
 }
 
-export type ScreenShareContext = 'display' | 'device';
+export type ScreenShareContext = 'display' | 'app' | 'device';
 
 export function normaliseStreamingModeForContext(mode: StreamingMode, context: ScreenShareContext): StreamingMode {
 	if (context === 'device' && mode === 'screenshare') {
@@ -272,16 +272,328 @@ export function normaliseStreamingModeForContext(mode: StreamingMode, context: S
 	return mode;
 }
 
-export function normaliseResolutionForContext(
-	resolution: ScreenshareResolution,
+const SENT_PIXEL_FILL_RATIO = 0.98;
+
+export interface ScreenShareQualityInput {
+	mode: StreamingMode;
+	storedResolution: ScreenshareResolution;
+	storedFrameRate: number;
+	caps: VideoQualityCaps;
+	context: ScreenShareContext;
+}
+
+export interface ScreenShareTargetInput extends ScreenShareQualityInput {
+	sourceDimensions: {width: number; height: number} | null;
+	bitrate: ScreenShareBitrateBudget;
+	hintSetting: ScreenShareContentHint;
+	codec?: VideoCodec;
+	softwareEncoderClamp?: boolean;
+}
+
+export interface ScreenShareTarget {
+	mode: StreamingMode;
+	resolution: ScreenshareResolution;
+	frameRate: SupportedScreenShareFrameRate;
+	context: ScreenShareContext;
+	width: number;
+	height: number;
+	rung: ScreenshareResolution;
+	maxBitrate: number;
+	bitrate: ScreenShareBitrateBudget;
+	contentHint: ScreenShareCaptureOptions['contentHint'];
+	degradationPreference: NonNullable<TrackPublishOptions['degradationPreference']>;
+	softwareEncoderClamped: boolean;
+	presetOwned: boolean;
+	tierLimited: boolean;
+	deviceMapped: boolean;
+}
+
+export interface ScreenShareDegradationInput {
+	context: ScreenShareContext;
+	rung: ScreenshareResolution;
+	contentHint: ScreenShareCaptureOptions['contentHint'];
+	maxBitrate: number;
+	degradationPreference?: NonNullable<TrackPublishOptions['degradationPreference']>;
+}
+
+export function resolveScreenShareDegradationPreference(
+	target: ScreenShareDegradationInput,
+): NonNullable<TrackPublishOptions['degradationPreference']> {
+	if (target.degradationPreference) return target.degradationPreference;
+	if (target.context === 'device') return 'balanced';
+	if (target.rung === 'source') return 'maintain-resolution';
+	if (target.contentHint === 'text' || target.contentHint === 'detail') return 'maintain-resolution';
+	if (target.maxBitrate < SCREEN_SHARE_MIN_MAINTAIN_FRAMERATE_BITRATE_BPS) return 'maintain-resolution';
+	return 'maintain-framerate';
+}
+
+export function isH264SoftwareClamped(): boolean {
+	return getH264HardwareProfilesSync()?.profiles.size === 0;
+}
+
+function shouldClampToSoftwareH264(codec: VideoCodec | undefined): boolean {
+	return codec === 'h264' && isH264SoftwareClamped();
+}
+
+function clampToSoftwareH264Budget(quality: {
+	mode: StreamingMode;
+	resolution: ScreenshareResolution;
+	frameRate: SupportedScreenShareFrameRate;
+}): {
+	mode: StreamingMode;
+	resolution: ScreenshareResolution;
+	frameRate: SupportedScreenShareFrameRate;
+} {
+	const cappedResolution =
+		BITRATE_RUNGS.indexOf(quality.resolution) > BITRATE_RUNGS.indexOf(SOFTWARE_H264_MAX_RESOLUTION)
+			? SOFTWARE_H264_MAX_RESOLUTION
+			: quality.resolution;
+	const cappedFrameRate =
+		quality.frameRate > SOFTWARE_H264_MAX_FRAME_RATE ? SOFTWARE_H264_MAX_FRAME_RATE : quality.frameRate;
+	return {mode: quality.mode, resolution: cappedResolution, frameRate: cappedFrameRate};
+}
+
+function resolveEffectiveScreenShareQuality(input: ScreenShareQualityInput): {
+	mode: StreamingMode;
+	resolution: ScreenshareResolution;
+	frameRate: SupportedScreenShareFrameRate;
+} {
+	const mode = normaliseStreamingModeForContext(input.mode, input.context);
+	const settings = resolveStreamingModeSettings(mode, input.storedResolution, input.storedFrameRate, input.caps);
+	return {mode, resolution: settings.resolution, frameRate: settings.frameRate};
+}
+
+function resolveScreenShareContentHintForMode(
+	mode: StreamingMode,
+	hintSetting: ScreenShareContentHint,
+): ScreenShareCaptureOptions['contentHint'] {
+	if (mode === 'gaming') return 'motion';
+	if (mode === 'screenshare') return 'text';
+	return hintSetting === 'auto' ? undefined : hintSetting;
+}
+
+function resolveScreenShareContentHint(
+	mode: StreamingMode,
+	hintSetting: ScreenShareContentHint,
 	context: ScreenShareContext,
-	hasHigherQuality: boolean,
-): ScreenshareResolution {
-	if (!hasHigherQuality && !isFreeTierResolution(resolution)) {
-		return FREE_TIER_FALLBACK_RESOLUTION;
+): ScreenShareCaptureOptions['contentHint'] {
+	const hint = resolveScreenShareContentHintForMode(mode, hintSetting);
+	return hint === 'motion' && context !== 'device' ? undefined : hint;
+}
+
+export function resolveScreenShareTarget(input: ScreenShareTargetInput): ScreenShareTarget {
+	const clamped = input.softwareEncoderClamp === true || shouldClampToSoftwareH264(input.codec);
+	const configured = resolveEffectiveScreenShareQuality(input);
+	const effective = clamped ? clampToSoftwareH264Budget(configured) : configured;
+	const configuredOnDisplay = resolveEffectiveScreenShareQuality({...input, context: 'display'});
+	const onDisplay = clamped ? clampToSoftwareH264Budget(configuredOnDisplay) : configuredOnDisplay;
+	const fit = resolveEffectiveScreenShareDimensions(effective.resolution, input.sourceDimensions);
+	const maxBitrate = computeScreenShareBitrateBps(fit.width * fit.height, fit.rung, effective.frameRate, input.bitrate);
+	const contentHint = resolveScreenShareContentHint(effective.mode, input.hintSetting, input.context);
+	return {
+		mode: effective.mode,
+		resolution: effective.resolution,
+		frameRate: effective.frameRate,
+		context: input.context,
+		width: fit.width,
+		height: fit.height,
+		rung: fit.rung,
+		maxBitrate,
+		bitrate: input.bitrate,
+		contentHint,
+		degradationPreference: resolveScreenShareDegradationPreference({
+			context: input.context,
+			rung: fit.rung,
+			contentHint,
+			maxBitrate,
+		}),
+		softwareEncoderClamped: clamped,
+		presetOwned: effective.mode !== 'custom',
+		tierLimited:
+			input.mode === 'custom' &&
+			(!capsAllowScreenShareResolution(input.caps, input.storedResolution) ||
+				!capsAllowScreenShareFrameRate(input.caps, resolveScreenShareFrameRate(input.storedFrameRate))),
+		deviceMapped:
+			effective.mode !== onDisplay.mode ||
+			effective.resolution !== onDisplay.resolution ||
+			effective.frameRate !== onDisplay.frameRate,
+	};
+}
+
+export interface ScreenShareLayeringInput {
+	codec: VideoCodec | undefined;
+	svcSetting: ScreenShareScalabilityModePreference | undefined;
+}
+
+export interface ScreenShareLayering {
+	simulcast: boolean;
+	scalabilityMode: TrackPublishOptions['scalabilityMode'];
+}
+
+export function resolveScreenShareLayering(input: ScreenShareLayeringInput): ScreenShareLayering {
+	if (input.codec !== 'av1' && input.codec !== 'vp9') {
+		return {simulcast: false, scalabilityMode: undefined};
 	}
-	if (context === 'device' && resolution === 'source') {
-		return hasHigherQuality ? 'ultra' : FREE_TIER_FALLBACK_RESOLUTION;
+	return {
+		simulcast: false,
+		scalabilityMode: input.svcSetting === 'single_layer' ? 'L1T1' : 'L1T3',
+	};
+}
+
+export type ScreenShareLimitClass = 'device' | 'link' | 'capture';
+
+export interface ScreenShareLimitSample {
+	frameRate: SupportedScreenShareFrameRate;
+	maxBitrate: number;
+	elapsedMs: number;
+	framesEncoded: number;
+	encodeTimeMs: number;
+	bytesSent: number;
+	targetBitrateBps: number | null;
+	sourceFramesPerSecond: number | null;
+	cpuLimitedTicks: number;
+}
+
+const ENCODE_DUTY_SATURATION = 1;
+const LINK_LIMITED_CPU_TICKS = 3;
+const LINK_LIMITED_TARGET_RATIO = 0.85;
+const LINK_LIMITED_FILL_RATIO = 0.65;
+const CAPTURE_SHORTFALL_RATIO = 0.6;
+
+export function classifyScreenShareLimit(sample: ScreenShareLimitSample): ScreenShareLimitClass | null {
+	if (sample.elapsedMs <= 0 || sample.framesEncoded < 0 || sample.bytesSent < 0) return null;
+	if (sample.framesEncoded === 0 && sample.sourceFramesPerSecond === null) return null;
+	const duty =
+		sample.framesEncoded > 0 ? (sample.encodeTimeMs / sample.framesEncoded) * (sample.frameRate / 1000) : null;
+	if (duty !== null && duty >= ENCODE_DUTY_SATURATION) return 'device';
+	if (
+		sample.sourceFramesPerSecond !== null &&
+		sample.sourceFramesPerSecond < sample.frameRate * CAPTURE_SHORTFALL_RATIO
+	) {
+		return 'capture';
 	}
-	return resolution;
+	if (sample.maxBitrate <= 0) return 'device';
+	const fill = (sample.bytesSent * 8000) / sample.elapsedMs / sample.maxBitrate;
+	const targetRatio = sample.targetBitrateBps === null ? 1 : sample.targetBitrateBps / sample.maxBitrate;
+	if (
+		sample.cpuLimitedTicks < LINK_LIMITED_CPU_TICKS &&
+		targetRatio < LINK_LIMITED_TARGET_RATIO &&
+		fill >= LINK_LIMITED_FILL_RATIO
+	) {
+		return 'link';
+	}
+	return 'device';
+}
+
+export interface ScreenShareSenderParametersInput {
+	encodings: ReadonlyArray<RTCRtpEncodingParameters>;
+	target: ScreenShareTarget;
+	capture: {width: number; height: number} | null;
+	scalabilityMode: TrackPublishOptions['scalabilityMode'];
+}
+
+export interface ScreenShareSenderParameters {
+	degradationPreference: NonNullable<TrackPublishOptions['degradationPreference']>;
+	encodings: Array<RTCRtpEncodingParameters>;
+}
+
+function distributeScreenShareBitrate(
+	encodings: ReadonlyArray<RTCRtpEncodingParameters>,
+	maxBitrate: number,
+): Array<number> {
+	if (encodings.length === 1) return [maxBitrate];
+	const weights = encodings.map((encoding) =>
+		typeof encoding.maxBitrate === 'number' && encoding.maxBitrate > 0 ? encoding.maxBitrate : 0,
+	);
+	if (weights.some((weight) => weight <= 0)) {
+		return encodings.map(() => Math.floor(maxBitrate / encodings.length));
+	}
+	const total = weights.reduce((sum, weight) => sum + weight, 0);
+	return weights.map((weight) => Math.floor((weight / total) * maxBitrate));
+}
+
+export function resolveScreenShareSenderCodec(
+	codecOverride: VideoCodec | undefined,
+	negotiatedCodec: VideoCodec | undefined,
+	publishedCodec: VideoCodec | undefined,
+): VideoCodec | undefined {
+	return codecOverride ?? negotiatedCodec ?? publishedCodec;
+}
+
+export function buildScreenShareSenderParameters(input: ScreenShareSenderParametersInput): ScreenShareSenderParameters {
+	const degradationPreference = resolveScreenShareDegradationPreference(input.target);
+	const targetPixels = input.target.width * input.target.height;
+	const capturePixels = input.capture ? input.capture.width * input.capture.height : null;
+	const baseScale = Math.min(...input.encodings.map((encoding) => encoding.scaleResolutionDownBy ?? 1));
+	const targetScale =
+		capturePixels === null || degradationPreference === 'maintain-framerate'
+			? 1
+			: Math.max(1, Math.sqrt(capturePixels / targetPixels));
+	const sentPixels = capturePixels === null ? null : capturePixels / (targetScale * targetScale);
+	const maxBitrate =
+		sentPixels !== null && sentPixels < targetPixels * SENT_PIXEL_FILL_RATIO
+			? Math.min(
+					input.target.maxBitrate,
+					computeScreenShareBitrateBps(
+						sentPixels,
+						resolveBitrateRungForPixels(sentPixels),
+						input.target.frameRate,
+						input.target.bitrate,
+					),
+				)
+			: input.target.maxBitrate;
+	const bitrates = distributeScreenShareBitrate(input.encodings, maxBitrate);
+	return {
+		degradationPreference,
+		encodings: input.encodings.map((encoding, index) => {
+			const applied: RTCRtpEncodingParameters = {
+				...encoding,
+				maxBitrate: bitrates[index],
+				maxFramerate: input.target.frameRate,
+				priority: 'high',
+				networkPriority: 'high',
+				scaleResolutionDownBy: ((encoding.scaleResolutionDownBy ?? 1) / baseScale) * targetScale,
+			};
+			if (input.scalabilityMode) {
+				applied.scalabilityMode = input.scalabilityMode;
+			} else {
+				delete applied.scalabilityMode;
+			}
+			return applied;
+		}),
+	};
+}
+
+export type ScreenShareQualityPick =
+	| {axis: 'resolution'; resolution: ScreenshareResolution}
+	| {axis: 'frameRate'; frameRate: SupportedScreenShareFrameRate};
+
+export interface ScreenShareQualityPatch {
+	streamingMode: 'custom';
+	screenshareResolution?: ScreenshareResolution;
+	videoFrameRate?: SupportedScreenShareFrameRate;
+}
+
+export function resolveScreenShareQualityPick(
+	input: ScreenShareQualityInput,
+	pick: ScreenShareQualityPick,
+): ScreenShareQualityPatch | null {
+	const effective = resolveEffectiveScreenShareQuality(input);
+	const stored = resolveEffectiveScreenShareQuality({...input, mode: 'custom'});
+	if (pick.axis === 'resolution') {
+		if (!capsAllowScreenShareResolution(input.caps, pick.resolution)) return null;
+		if (pick.resolution === effective.resolution) return null;
+		return {
+			streamingMode: 'custom',
+			screenshareResolution: pick.resolution,
+			...(stored.frameRate === effective.frameRate ? {} : {videoFrameRate: effective.frameRate}),
+		};
+	}
+	if (!capsAllowScreenShareFrameRate(input.caps, pick.frameRate)) return null;
+	if (pick.frameRate === effective.frameRate) return null;
+	return {
+		streamingMode: 'custom',
+		...(stored.resolution === effective.resolution ? {} : {screenshareResolution: effective.resolution}),
+		videoFrameRate: pick.frameRate,
+	};
 }

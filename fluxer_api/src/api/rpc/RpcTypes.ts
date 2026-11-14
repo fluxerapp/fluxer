@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import type {Channel} from '../models/Channel';
-import type {FavoriteMeme} from '../models/FavoriteMeme';
-import type {ReadState} from '../models/ReadState';
-import type {Relationship} from '../models/Relationship';
-import type {User} from '../models/User';
-import type {UserGuildSettings} from '../models/UserGuildSettings';
-import type {UserSettings} from '../models/UserSettings';
-import type {WebAuthnCredential} from '../models/WebAuthnCredential';
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {Channel} from '@app/api/models/Channel';
+import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
+import type {ReadState} from '@app/api/models/ReadState';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
 
 export interface UserData {
 	user: User;

@@ -20,12 +20,6 @@ export function assertString(value: unknown, name: string): asserts value is str
 	assert.equal(typeof value, 'string', `${name} must be string`);
 }
 
-export function assertPositiveFinite(value: unknown, fieldName: string): asserts value is number {
-	assert.equal(typeof value, 'number', `${fieldName} must be a number`);
-	assert.ok(Number.isFinite(value as number), `${fieldName} must be finite`);
-	assert.ok((value as number) > 0, `${fieldName} must be positive`);
-}
-
 export function assertNonNegativeFinite(value: unknown, fieldName: string): asserts value is number {
 	assert.equal(typeof value, 'number', `${fieldName} must be a number`);
 	assert.ok(Number.isFinite(value as number), `${fieldName} must be finite`);
@@ -35,12 +29,6 @@ export function assertNonNegativeFinite(value: unknown, fieldName: string): asse
 export function assertFiniteNumber(value: unknown, name: string): asserts value is number {
 	assert.equal(typeof value, 'number', `${name} must be number`);
 	assert.ok(Number.isFinite(value), `${name} must be finite`);
-}
-
-export function assertNonNegativeInteger(value: unknown, name: string): asserts value is number {
-	assertFiniteNumber(value, name);
-	assert.ok((value as number) >= 0, `${name} must be non-negative`);
-	assert.equal(Math.trunc(value as number), value, `${name} must be integer`);
 }
 
 export function assertBoolean(value: unknown, fieldName: string): asserts value is boolean {
@@ -62,28 +50,6 @@ export function assertNullableObjectLike<T extends object>(
 export function assertNonNullObject(value: unknown, name: string): void {
 	assert.ok(value !== null && value !== undefined, `${name} must not be null/undefined`);
 	assert.equal(typeof value, 'object', `${name} must be object`);
-}
-
-export function assertFunctionLike(
-	value: unknown,
-	fieldName: string,
-): asserts value is (...args: Array<unknown>) => unknown {
-	assert.equal(typeof value, 'function', `${fieldName} must be a function`);
-}
-
-export function assertFunction(value: unknown, name: string): asserts value is (...args: Array<unknown>) => unknown {
-	assert.equal(typeof value, 'function', `${name} must be function`);
-}
-
-export function assertBoundedSize(size: number, cap: number, name: string): void {
-	assertNonNegativeInteger(size, `${name}.size`);
-	assert.ok(size <= cap, `${name} exceeded cap=${cap} (size=${size})`);
-}
-
-export function assertMonotonicForward(prevMs: number, nextMs: number, name: string): void {
-	assertFiniteNumber(prevMs, `${name}.prevMs`);
-	assertFiniteNumber(nextMs, `${name}.nextMs`);
-	assert.ok(nextMs >= prevMs, `${name} must be monotonic forward`);
 }
 
 export interface MutedOrDeafenedSnapshot {

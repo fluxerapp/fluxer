@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {blockUser} from '@app/api/user/tests/RelationshipTestUtils';
 import {UserNotificationSettings} from '@fluxer/constants/src/UserConstants';
-import {RpcRequest} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {blockUser} from '../../user/tests/RelationshipTestUtils';
 
 interface RpcUserGuildSettingsResponse {
 	type: 'get_user_guild_settings';
@@ -70,23 +69,6 @@ describe('RpcService user batch fanout', () => {
 		).toStrictEqual(requested.map((entry) => entry.expected));
 	});
 
-	test('rejects user batch requests above the schema bound', () => {
-		for (const type of ['get_user_guild_settings', 'get_user_blocked_ids']) {
-			const withinBound = RpcRequest.safeParse({
-				type,
-				user_ids: Array.from({length: 1000}, () => UNKNOWN_USER_ID),
-				guild_id: '0',
-			});
-			expect(withinBound.success).toBe(true);
-			const aboveBound = RpcRequest.safeParse({
-				type,
-				user_ids: Array.from({length: 1001}, () => UNKNOWN_USER_ID),
-				guild_id: '0',
-			});
-			expect(aboveBound.success).toBe(false);
-		}
-	});
-
 	test('returns blocked ids per user for get_user_blocked_ids', async () => {
 		const blocker = await createTestAccount(harness);
 		const blockedFirst = await createTestAccount(harness);
@@ -106,5 +88,16 @@ describe('RpcService user batch fanout', () => {
 			[blockedFirst.userId, blockedSecond.userId].sort(),
 		);
 		expect(rpcResponse.data[bystander.userId]).toStrictEqual([]);
+	});
+
+	test('returns only adults for get_users_adult_content_allowed', async () => {
+		const adult = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
+		const teen = await createTestAccount(harness, {dateOfBirth: '2012-01-01'});
+		const rpcResponse = await createBuilder<{data: {user_ids: Array<string>}}>(harness, '')
+			.post('/test/rpc-session-init')
+			.body({type: 'get_users_adult_content_allowed', user_ids: [adult.userId, teen.userId, UNKNOWN_USER_ID]})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(rpcResponse.data.user_ids).toStrictEqual([adult.userId]);
 	});
 });

@@ -18,19 +18,27 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
-export const ChannelTypeSchema = withOpenApiType(
-	createInt32EnumType(
+export const ChannelTypeSchema = createInt32EnumType(
+	[
+		[ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'A text channel within a guild'],
+		[ChannelTypes.DM, 'DM', 'A direct message between users'],
+		[ChannelTypes.GUILD_VOICE, 'GUILD_VOICE', 'A voice channel within a guild'],
+		[ChannelTypes.GROUP_DM, 'GROUP_DM', 'A group direct message between users'],
+		[ChannelTypes.GUILD_CATEGORY, 'GUILD_CATEGORY', 'A category that contains channels'],
 		[
-			[ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'A text channel within a guild'],
-			[ChannelTypes.DM, 'DM', 'A direct message between users'],
-			[ChannelTypes.GUILD_VOICE, 'GUILD_VOICE', 'A voice channel within a guild'],
-			[ChannelTypes.GROUP_DM, 'GROUP_DM', 'A group direct message between users'],
-			[ChannelTypes.GUILD_CATEGORY, 'GUILD_CATEGORY', 'A category that contains channels'],
-			[ChannelTypes.GUILD_LINK, 'GUILD_LINK', 'A link channel for external resources'],
-			[ChannelTypes.DM_PERSONAL_NOTES, 'DM_PERSONAL_NOTES', 'Personal notes DM channel'],
+			ChannelTypes.GUILD_ANNOUNCEMENT,
+			'GUILD_ANNOUNCEMENT',
+			'A guild channel whose messages can be published to channels that follow it',
 		],
-		'The type of the channel',
-	),
+		[ChannelTypes.ANNOUNCEMENT_THREAD, 'ANNOUNCEMENT_THREAD', 'A public thread within an announcement channel'],
+		[ChannelTypes.PUBLIC_THREAD, 'PUBLIC_THREAD', 'A public thread within a text, forum or media channel'],
+		[ChannelTypes.PRIVATE_THREAD, 'PRIVATE_THREAD', 'A private thread within a text channel'],
+		[ChannelTypes.GUILD_FORUM, 'GUILD_FORUM', 'A channel that can only contain threads'],
+		[ChannelTypes.GUILD_MEDIA, 'GUILD_MEDIA', 'A channel that can only contain threads in a gallery view'],
+		[ChannelTypes.GUILD_LINK, 'GUILD_LINK', 'A link channel for external resources'],
+		[ChannelTypes.DM_PERSONAL_NOTES, 'DM_PERSONAL_NOTES', 'Personal notes DM channel'],
+	],
+	'The type of the channel',
 	'ChannelType',
 );
 export const ChannelOverwriteTypeSchema = withOpenApiType(
@@ -53,7 +61,7 @@ function sanitizeChannelName(value: string): string {
 		throw new Error(ValidationErrorCodes.STRING_LENGTH_INVALID);
 	}
 	let s = normalizeString(value);
-	s = stripInvisibles(s);
+	s = stripInvisibles(s, {keepInnerJoinControls: true});
 	s = normalizeWhitespace(s);
 	return s;
 }

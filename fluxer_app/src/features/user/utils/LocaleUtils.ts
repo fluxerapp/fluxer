@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import i18n, {loadLocaleCatalog, normalizeLocale} from '@app/app/I18n';
+import SystemLocale from '@app/features/i18n/state/SystemLocale';
 import {getCachedCollator} from '@app/features/i18n/utils/IntlCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
+import arabLeagueFlagUrl from '@app/media/images/arab-league-flag.svg';
 import {DiscoverySupportedLanguages} from '@fluxer/constants/src/DiscoveryConstants';
+import {resolveRegionalFormatLocale} from '@fluxer/constants/src/Locales';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -145,19 +148,63 @@ const CHINESE_TRADITIONAL_DESCRIPTOR = msg({
 	message: 'Chinese (traditional)',
 	comment: 'Short label in the language and locale names. Keep it concise.',
 });
+const BELARUSIAN_DESCRIPTOR = msg({
+	message: 'Belarusian',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const BANGLA_DESCRIPTOR = msg({
+	message: 'Bangla',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const CATALAN_DESCRIPTOR = msg({
+	message: 'Catalan',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const FILIPINO_DESCRIPTOR = msg({
+	message: 'Filipino',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const LATVIAN_DESCRIPTOR = msg({
+	message: 'Latvian',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const PORTUGUESE_PORTUGAL_DESCRIPTOR = msg({
+	message: 'Portuguese (Portugal)',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const SLOVAK_DESCRIPTOR = msg({
+	message: 'Slovak',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const SLOVENIAN_DESCRIPTOR = msg({
+	message: 'Slovenian',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const ALBANIAN_DESCRIPTOR = msg({
+	message: 'Albanian',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
+const TOKI_PONA_DESCRIPTOR = msg({
+	message: 'Toki Pona',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
 const logger = new Logger('LocaleUtils');
 
 interface LocaleInfo {
 	code: string;
 	name: MessageDescriptor;
 	nativeName: string;
-	flag: string;
+	flag: string | null;
+	flagImageUrl?: string;
 	region?: string;
 }
 
 const SUPPORTED_LOCALES: Array<LocaleInfo> = [
-	{code: 'ar', name: ARABIC_DESCRIPTOR, nativeName: 'العربية', flag: '🇸🇦'},
+	{code: 'ar', name: ARABIC_DESCRIPTOR, nativeName: 'العربية', flag: null, flagImageUrl: arabLeagueFlagUrl},
+	{code: 'be', name: BELARUSIAN_DESCRIPTOR, nativeName: 'Беларуская', flag: null},
 	{code: 'bg', name: BULGARIAN_DESCRIPTOR, nativeName: 'Български', flag: '🇧🇬'},
+	{code: 'bn', name: BANGLA_DESCRIPTOR, nativeName: 'বাংলা', flag: '🇧🇩'},
+	{code: 'ca', name: CATALAN_DESCRIPTOR, nativeName: 'Català', flag: null},
 	{code: 'cs', name: CZECH_DESCRIPTOR, nativeName: 'Čeština', flag: '🇨🇿'},
 	{code: 'da', name: DANISH_DESCRIPTOR, nativeName: 'Dansk', flag: '🇩🇰'},
 	{code: 'de', name: GERMAN_DESCRIPTOR, nativeName: 'Deutsch', flag: '🇩🇪'},
@@ -165,8 +212,9 @@ const SUPPORTED_LOCALES: Array<LocaleInfo> = [
 	{code: 'en-GB', name: ENGLISH_DESCRIPTOR, nativeName: 'English', flag: '🇬🇧'},
 	{code: 'en-US', name: ENGLISH_US_DESCRIPTOR, nativeName: 'English (US)', flag: '🇺🇸'},
 	{code: 'es-ES', name: SPANISH_SPAIN_DESCRIPTOR, nativeName: 'Español (España)', flag: '🇪🇸'},
-	{code: 'es-419', name: SPANISH_LATIN_AMERICA_DESCRIPTOR, nativeName: 'Español (Latinoamérica)', flag: '🌎'},
+	{code: 'es-419', name: SPANISH_LATIN_AMERICA_DESCRIPTOR, nativeName: 'Español (Latinoamérica)', flag: null},
 	{code: 'fi', name: FINNISH_DESCRIPTOR, nativeName: 'Suomi', flag: '🇫🇮'},
+	{code: 'fil', name: FILIPINO_DESCRIPTOR, nativeName: 'Filipino', flag: '🇵🇭'},
 	{code: 'fr', name: FRENCH_DESCRIPTOR, nativeName: 'Français', flag: '🇫🇷'},
 	{code: 'he', name: HEBREW_DESCRIPTOR, nativeName: 'עברית', flag: '🇮🇱'},
 	{code: 'hi', name: HINDI_DESCRIPTOR, nativeName: 'हिन्दी', flag: '🇮🇳'},
@@ -177,14 +225,20 @@ const SUPPORTED_LOCALES: Array<LocaleInfo> = [
 	{code: 'ja', name: JAPANESE_DESCRIPTOR, nativeName: '日本語', flag: '🇯🇵'},
 	{code: 'ko', name: KOREAN_DESCRIPTOR, nativeName: '한국어', flag: '🇰🇷'},
 	{code: 'lt', name: LITHUANIAN_DESCRIPTOR, nativeName: 'Lietuvių', flag: '🇱🇹'},
+	{code: 'lv', name: LATVIAN_DESCRIPTOR, nativeName: 'Latviešu', flag: '🇱🇻'},
 	{code: 'nl', name: DUTCH_DESCRIPTOR, nativeName: 'Nederlands', flag: '🇳🇱'},
 	{code: 'no', name: NORWEGIAN_DESCRIPTOR, nativeName: 'Norsk', flag: '🇳🇴'},
 	{code: 'pl', name: POLISH_DESCRIPTOR, nativeName: 'Polski', flag: '🇵🇱'},
 	{code: 'pt-BR', name: PORTUGUESE_BRAZIL_DESCRIPTOR, nativeName: 'Português (Brasil)', flag: '🇧🇷'},
+	{code: 'pt-PT', name: PORTUGUESE_PORTUGAL_DESCRIPTOR, nativeName: 'Português (Portugal)', flag: '🇵🇹'},
 	{code: 'ro', name: ROMANIAN_DESCRIPTOR, nativeName: 'Română', flag: '🇷🇴'},
 	{code: 'ru', name: RUSSIAN_DESCRIPTOR, nativeName: 'Русский', flag: '🇷🇺'},
+	{code: 'sk', name: SLOVAK_DESCRIPTOR, nativeName: 'Slovenčina', flag: '🇸🇰'},
+	{code: 'sl', name: SLOVENIAN_DESCRIPTOR, nativeName: 'Slovenščina', flag: '🇸🇮'},
+	{code: 'sq', name: ALBANIAN_DESCRIPTOR, nativeName: 'Shqip', flag: '🇦🇱'},
 	{code: 'sv-SE', name: SWEDISH_DESCRIPTOR, nativeName: 'Svenska', flag: '🇸🇪'},
 	{code: 'th', name: THAI_DESCRIPTOR, nativeName: 'ไทย', flag: '🇹🇭'},
+	{code: 'tok', name: TOKI_PONA_DESCRIPTOR, nativeName: 'toki pona', flag: null},
 	{code: 'tr', name: TURKISH_DESCRIPTOR, nativeName: 'Türkçe', flag: '🇹🇷'},
 	{code: 'uk', name: UKRAINIAN_DESCRIPTOR, nativeName: 'Українська', flag: '🇺🇦'},
 	{code: 'vi', name: VIETNAMESE_DESCRIPTOR, nativeName: 'Tiếng Việt', flag: '🇻🇳'},
@@ -197,14 +251,18 @@ let localeChangeSequence = 0;
 let localLocaleOverride: string | null = null;
 
 export function getCurrentLocale(): string {
-	return UserSettings.getLocale() || DEFAULT_LOCALE;
+	return UserSettings.locale || DEFAULT_LOCALE;
+}
+
+export function getFormattingLocale(): string {
+	return resolveRegionalFormatLocale(UserSettings.regionalFormat, getCurrentLocale(), SystemLocale.locale);
 }
 
 export function getCurrentOrDetectedLocale(): string {
 	if (localLocaleOverride) {
 		return localLocaleOverride;
 	}
-	const currentLocale = UserSettings.getLocale();
+	const currentLocale = UserSettings.locale;
 	if (UserSettings.isHydrated() || currentLocale !== DEFAULT_LOCALE) {
 		return currentLocale || DEFAULT_LOCALE;
 	}
@@ -219,9 +277,6 @@ export function setLocale(localeCode: string): void {
 	}
 	const normalized = normalizeLocale(locale.code);
 	const previousLocale = normalizeLocale(getCurrentLocale());
-	if (normalized === previousLocale) {
-		return;
-	}
 	const sequence = ++localeChangeSequence;
 	void (async () => {
 		try {
@@ -230,7 +285,7 @@ export function setLocale(localeCode: string): void {
 			logger.error(`Failed to load locale ${localeCode}:`, error);
 			return;
 		}
-		if (sequence !== localeChangeSequence) {
+		if (sequence !== localeChangeSequence || normalized === previousLocale) {
 			return;
 		}
 		try {
@@ -279,7 +334,8 @@ interface TranslatedLocaleInfo {
 	code: string;
 	name: string;
 	nativeName: string;
-	flag: string;
+	flag: string | null;
+	flagImageUrl?: string;
 	region?: string;
 }
 
@@ -288,7 +344,7 @@ interface DiscoveryLanguageInfo {
 	label: string;
 }
 
-export function getLocalizedLocaleName(code: string): string {
+function getLocalizedLocaleName(code: string): string {
 	const info = SUPPORTED_LOCALES.find((locale) => locale.code === code);
 	return info ? i18n._(info.name) : code;
 }

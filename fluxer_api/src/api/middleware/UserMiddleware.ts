@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isOperatorPath, isOperatorRequest} from '@app/api/admin/operator/OperatorRequests';
+import {openAttachmentMediaToken} from '@app/api/attachment/AttachmentMediaToken';
+import {isAttachmentMediaRequest} from '@app/api/attachment/AttachmentPublicUrl';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import {Logger} from '@app/api/Logger';
+import {hashRequestToken, recordAuthFailure} from '@app/api/middleware/RequestErrorTelemetry';
+import {getApplicationRepository} from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {isSignInRefused} from '@app/api/user/UserHelpers';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
+import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import * as AuthSession from '../auth/AuthSession';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import type {HonoEnv} from '../types/HonoEnv';
-import {requireRequestClientIp} from '../utils/RequestClientIp';
-import {stripApiPrefix} from '../utils/RequestPathUtils';
-import {hashAuthToken, recordAbuseSignal} from './AbusiveIpAutoBanner';
 
 type TokenType = 'session' | 'bearer' | 'bot' | 'admin_api_key';
 
@@ -17,7 +23,17 @@ interface ParsedAuthHeader {
 	type: TokenType;
 }
 
-const SKIP_PATHS = new Set(['/_health', '/webhooks/livekit', '/webhooks/sweego']);
+const SKIP_PATHS = new Set([
+	'/_health',
+	'/admin/sso/sign-in',
+	'/webhooks/livekit',
+	'/voice/join/preview',
+	'/voice/join',
+	'/voice/node',
+	'/webhooks/sweego',
+	'/webhooks/app-store',
+	'/webhooks/google-play',
+]);
 const SESSION_TOKEN_PATTERN = /^flx_[A-Za-z0-9]{36}$/;
 
 function parseAuthHeader(authHeader?: string | null): ParsedAuthHeader | null {
@@ -60,7 +76,7 @@ function setUserInContext(ctx: Context<HonoEnv>, user: User, trackActivity: bool
 	ctx.set('user', user);
 	if (trackActivity) {
 		const now = new Date();
-		const ip = requireRequestClientIp(ctx);
+		const ip = getRequestClientIp(ctx);
 		const kvActivityTracker = ctx.get('kvActivityTracker');
 		const userActivityBuffer = ctx.get('userActivityBuffer');
 		userActivityBuffer.recordActivity(user.id, now, ip);
@@ -70,6 +86,23 @@ function setUserInContext(ctx: Context<HonoEnv>, user: User, trackActivity: bool
 	}
 }
 
+async function authenticateAttachmentMediaToken(ctx: Context<HonoEnv>): Promise<void> {
+	const token = ctx.req.query('mt');
+	if (!token) return;
+	const payload = openAttachmentMediaToken(token);
+	if (!payload) return;
+	const apiContext = ctx.get('apiContext');
+	const authSession = await apiContext.services.users.getAuthSessionByToken(Buffer.from(payload.s, 'base64url'));
+	if (!authSession || authSession.isExpiredSsoSession() || authSession.userId.toString() !== payload.u) return;
+	const user = await apiContext.services.users.findUnique(authSession.userId);
+	if (!user || isSignInRefused(user)) return;
+	ctx.set('authSession', authSession);
+	ctx.set('authTokenType', 'attachment_media');
+	ctx.set('attachmentMediaToken', payload);
+	ctx.set('clientFeatures', new Set(payload.f));
+	setUserInContext(ctx, user, false);
+}
+
 export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	const path = stripApiPrefix(ctx.req.path);
 	if (SKIP_PATHS.has(path)) {
@@ -77,37 +110,54 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	}
 	const rawAuthHeader = ctx.req.header('Authorization');
 	const parsed = parseAuthHeader(rawAuthHeader);
-	const resolvedClientIp = requireRequestClientIp(ctx);
-	ctx.set('oauthBearerToken', undefined);
+	const resolvedClientIp = getRequestClientIp(ctx);
 	ctx.set('oauthBearerApplicationId', undefined);
 	ctx.set('oauthBearerAllowed', false);
 	ctx.set('oauthBearerScopes', undefined);
-	ctx.set('oauthBearerUserId', undefined);
 	ctx.set('authToken', undefined);
+	ctx.set('adminApiKeyId', null);
+	if (isOperatorRequest(ctx.req.raw)) {
+		if (isOperatorPath(path)) {
+			const operator = await ctx.get('apiContext').services.users.findUnique(SYSTEM_USER_ID);
+			if (operator) {
+				ctx.set('authTokenType', 'operator');
+				setUserInContext(ctx, operator, false);
+			}
+		}
+		await next();
+		return;
+	}
 	if (!parsed) {
 		if (rawAuthHeader) {
-			recordAbuseSignal(resolvedClientIp, 'auth_failure:malformed', {tokenHash: hashAuthToken(rawAuthHeader)});
+			recordAuthFailure(resolvedClientIp, hashRequestToken(rawAuthHeader));
+		} else if (isAttachmentMediaRequest(ctx.req.method, ctx.req.path)) {
+			await authenticateAttachmentMediaToken(ctx);
 		}
 		return next();
 	}
 	const {token, type} = parsed;
-	const tokenHash = hashAuthToken(token);
+	const tokenHash = hashRequestToken(token);
 	ctx.set('authToken', token);
 	if (type === 'session') {
 		const apiContext = ctx.get('apiContext');
 		const authSession = await AuthSession.getAuthSessionByToken(apiContext, token);
 		if (authSession) {
-			void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash);
 			const user = await apiContext.services.users.findUnique(authSession.userId);
-			if (user) {
+			if (user && !isSignInRefused(user)) {
+				void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash, ctx.req.raw);
 				ctx.set('authSession', authSession);
 				ctx.set('authTokenType', 'session');
 				setUserInContext(ctx, user, true);
 			} else {
-				recordAbuseSignal(resolvedClientIp, 'auth_failure:session', {tokenHash});
+				recordAuthFailure(resolvedClientIp, tokenHash);
+				if (user) {
+					void AuthSession.revokeToken(apiContext, token).catch((error: unknown) => {
+						Logger.warn({error, userId: user.id}, 'Failed to revoke a refused session');
+					});
+				}
 			}
 		} else {
-			recordAbuseSignal(resolvedClientIp, 'auth_failure:session', {tokenHash});
+			recordAuthFailure(resolvedClientIp, tokenHash);
 		}
 		await next();
 		return;
@@ -115,23 +165,23 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	if (type === 'bearer') {
 		const oauth2TokenRepository = ctx.get('oauth2TokenRepository');
 		const accessToken = await oauth2TokenRepository.getAccessToken(token);
-		if (accessToken) {
-			ctx.set('oauthBearerToken', token);
+		const [tokenUser, application] = accessToken
+			? await Promise.all([
+					ctx.get('apiContext').services.users.findUnique(accessToken.userId),
+					getApplicationRepository().getApplication(accessToken.applicationId),
+				])
+			: [null, null];
+		if (accessToken && application && !(tokenUser && isSignInRefused(tokenUser))) {
 			ctx.set('oauthBearerApplicationId', accessToken.applicationId);
 			ctx.set('oauthBearerScopes', accessToken.scope);
-			ctx.set('oauthBearerUserId', accessToken.userId ?? undefined);
 			ctx.set('authTokenType', 'bearer');
-			const userId = accessToken.userId ?? null;
-			if (userId) {
-				const user = await ctx.get('apiContext').services.users.findUnique(userId);
-				if (user) {
-					setUserInContext(ctx, user, false);
-				}
+			if (tokenUser) {
+				setUserInContext(ctx, tokenUser, false);
 			}
 			await next();
 			return;
 		}
-		recordAbuseSignal(resolvedClientIp, 'auth_failure:bearer', {tokenHash});
+		recordAuthFailure(resolvedClientIp, tokenHash);
 		await next();
 		return;
 	}
@@ -142,10 +192,10 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 			const botUser = await ctx.get('apiContext').services.users.findUnique(botUserId);
 			if (botUser) {
 				ctx.set('authTokenType', 'bot');
-				setUserInContext(ctx, botUser, false);
+				setUserInContext(ctx, botUser, true);
 			}
 		} else {
-			recordAbuseSignal(resolvedClientIp, 'auth_failure:bot', {tokenHash});
+			recordAuthFailure(resolvedClientIp, tokenHash);
 		}
 		await next();
 		return;
@@ -160,14 +210,16 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 		const apiKey = await adminApiKeyService.validateApiKey(token);
 		if (apiKey) {
 			const user = await ctx.get('apiContext').services.users.findUnique(apiKey.createdById);
-			if (user) {
+			if (user && !isSignInRefused(user)) {
 				ctx.set('authTokenType', 'admin_api_key');
-				ctx.set('adminApiKey', apiKey);
 				ctx.set('adminApiKeyAcls', apiKey.acls);
+				ctx.set('adminApiKeyId', apiKey.keyId);
 				setUserInContext(ctx, user, false);
+			} else if (user) {
+				recordAuthFailure(resolvedClientIp, tokenHash);
 			}
 		} else {
-			recordAbuseSignal(resolvedClientIp, 'auth_failure:admin_api_key', {tokenHash});
+			recordAuthFailure(resolvedClientIp, tokenHash);
 		}
 		await next();
 		return;

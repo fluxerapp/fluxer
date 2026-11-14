@@ -21,8 +21,3 @@ pub struct GetJobResponse {
 pub struct CancelJobResponse {
     pub cancelled: bool,
 }
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ActiveJobsResponse {
-    pub jobs: Vec<serde_json::Value>,
-}

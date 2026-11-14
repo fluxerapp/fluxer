@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
+import {type CallCaller, type CallData, callCallerRpcParams} from '@app/api/infrastructure/IGatewayService';
+import {NatsGatewayRpcTransport} from '@app/api/infrastructure/NatsGatewayRpcTransport';
+import {Logger} from '@app/api/Logger';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {ms} from 'itty-time';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from './GatewayRpcError';
-import type {IGatewayRpcTransport} from './IGatewayRpcTransport';
-import type {CallData} from './IGatewayService';
-import {NatsGatewayRpcTransport} from './NatsGatewayRpcTransport';
+
+export type GatewayRpcTransport = Pick<NatsGatewayRpcTransport, 'call' | 'destroy'>;
 
 const MAX_RETRY_ATTEMPTS = 2;
 
 export class GatewayRpcClient {
 	private static instance: GatewayRpcClient | null = null;
-	private readonly transport: IGatewayRpcTransport;
+	private readonly transport: GatewayRpcTransport;
 
-	private constructor(transport: IGatewayRpcTransport) {
+	private constructor(transport: GatewayRpcTransport) {
 		this.transport = transport;
 	}
 
@@ -26,7 +27,7 @@ export class GatewayRpcClient {
 		return GatewayRpcClient.instance;
 	}
 
-	static createForTests(transport: IGatewayRpcTransport): GatewayRpcClient {
+	static createForTests(transport: GatewayRpcTransport): GatewayRpcClient {
 		const client = new GatewayRpcClient(transport);
 		GatewayRpcClient.instance = client;
 		return client;
@@ -128,6 +129,7 @@ export class GatewayRpcClient {
 		region: string,
 		ringing: Array<string>,
 		recipients: Array<string>,
+		caller?: CallCaller,
 	): Promise<CallData> {
 		return this.call<CallData>('call.create', {
 			channel_id: channelId,
@@ -135,6 +137,7 @@ export class GatewayRpcClient {
 			region,
 			ringing,
 			recipients,
+			...callCallerRpcParams(caller),
 		});
 	}
 
@@ -142,16 +145,12 @@ export class GatewayRpcClient {
 		return this.call('call.update_region', {channel_id: channelId, region});
 	}
 
-	async ringCallRecipients(channelId: string, recipients: Array<string>): Promise<boolean> {
-		return this.call('call.ring', {channel_id: channelId, recipients});
+	async ringCallRecipients(channelId: string, recipients: Array<string>, caller?: CallCaller): Promise<boolean> {
+		return this.call('call.ring', {channel_id: channelId, recipients, ...callCallerRpcParams(caller)});
 	}
 
 	async stopRingingCallRecipients(channelId: string, recipients: Array<string>): Promise<boolean> {
 		return this.call('call.stop_ringing', {channel_id: channelId, recipients});
-	}
-
-	async deleteCall(channelId: string): Promise<boolean> {
-		return this.call('call.delete', {channel_id: channelId});
 	}
 
 	async getNodeStats(): Promise<unknown> {
