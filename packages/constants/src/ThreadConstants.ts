@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 
 export const THREAD_CHANNEL_TYPES = new Set<number>([
@@ -21,6 +21,7 @@ export const THREAD_PARENT_CHANNEL_TYPES = new Set<number>([
 	...TEXT_THREAD_PARENT_CHANNEL_TYPES,
 	...THREAD_ONLY_CHANNEL_TYPES,
 ]);
+export const WEBHOOK_CHANNEL_TYPES = new Set<number>([...GUILD_TEXT_BASED_CHANNEL_TYPES, ...THREAD_ONLY_CHANNEL_TYPES]);
 export const THREAD_FEATURE_CHANNEL_TYPES = new Set<number>([...THREAD_CHANNEL_TYPES, ...THREAD_ONLY_CHANNEL_TYPES]);
 
 export function publicThreadTypeFor(parentType: number): number {
