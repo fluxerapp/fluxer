@@ -9,7 +9,7 @@ import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
-import {openInAppOrExternalUrl} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
+import {openInAppOrExternalUrl} from '@app/features/messaging/utils/InAppLinkUtils';
 import NagbarState from '@app/features/ui/state/Nagbar';
 import StatusPage, {type MaintenanceStatus, type StatusPageMaintenance} from '@app/features/user/state/StatusPage';
 import {getFormattedDateTime} from '@app/features/user/utils/DateFormatting';

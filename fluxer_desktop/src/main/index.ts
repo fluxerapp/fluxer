@@ -8,6 +8,7 @@ import {errorMessage} from '@electron/common/ErrorMessage';
 import {configureUserDataPath} from '@electron/common/UserDataPath';
 import {isAccountEngineAvailable} from '@electron/main/AccountEngineHost';
 import {startAccountEngine, stopAccountEngine} from '@electron/main/AccountEngineIpc';
+import {registerApiAttachmentAuthorizationIpc} from '@electron/main/ApiAttachmentAuthorizationIpc';
 import {
 	APP_STORE_ADDON_PACKAGE,
 	createAppStoreBoundary,
@@ -719,6 +720,11 @@ export async function startMainApp(
 			runStartupPhase('ipc-handlers', registerIpcHandlers);
 		} catch (error) {
 			log.error('[Init] Failed to register IPC handlers:', error);
+		}
+		try {
+			runStartupPhase('api-attachment-authorization', registerApiAttachmentAuthorizationIpc);
+		} catch (error) {
+			log.error('[Init] Failed to register the attachment authorization handler:', error);
 		}
 		try {
 			runStartupPhase('autostart-handlers', registerAutostartHandlers);

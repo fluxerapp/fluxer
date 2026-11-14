@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createChildLogger} from '@electron/common/Logger';
+import {getApiAttachmentAuthorization} from '@electron/main/ApiAttachmentAuthorization';
 import {DesktopLocalAppAPIProxyRequestHandler} from '@electron/main/LocalAppAPIProxyRequestHandler';
 import {DesktopLocalAppFileRequestHandler, type LocalAppIndexContext} from '@electron/main/LocalAppFileRequestHandler';
 import type {DesktopLocalAppFiles} from '@electron/main/LocalAppFileResolver';
@@ -74,6 +75,7 @@ export class DesktopLocalAppRequestHandler {
 		this.remoteResourceRequestHandler = new DesktopLocalAppRemoteResourceRequestHandler({
 			proxyClient: dependencies.resourceProxyClient,
 			runtimePlans: dependencies.runtimePlans,
+			attachmentAuthorization: getApiAttachmentAuthorization(),
 		});
 		this.fileRequestHandler = new DesktopLocalAppFileRequestHandler({
 			files: dependencies.files,

@@ -111,9 +111,16 @@ fn instance_sources_from_discovery(discovery: &serde_json::Value) -> InstanceCsp
             connect_origins.push(origin);
         }
     }
+    let proxies_attachments = discovery
+        .pointer("/features/proxy_attachments_through_api")
+        .and_then(serde_json::Value::as_bool)
+        == Some(true);
     InstanceCspSources {
         static_cdn_endpoint: http_origin("static_cdn"),
         media_endpoint: http_origin("media"),
+        attachment_api_endpoint: proxies_attachments
+            .then(|| http_origin("api_client").or_else(|| http_origin("api")))
+            .flatten(),
         connect_origins,
     }
 }

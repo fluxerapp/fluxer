@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isApiAttachmentUrl, withoutAttachmentToken} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {isAttachmentCdnUrl, stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {inferFormatContentType, PREVIEW_FORMAT_PRIORITY} from '@fluxer/schema/src/domains/gif/GifMediaFormatKeys';
 
@@ -110,6 +111,7 @@ export function pickCanonicalPreviewFormat(
 const STORED_PREVIEW_DEVICE_PIXEL_RATIO = 2;
 
 export function stripOwnAttachmentSignature(url: string): string {
+	if (isApiAttachmentUrl(url)) return withoutAttachmentToken(url);
 	const mediaEndpoint = RuntimeConfig.getSnapshotOrNull()?.mediaEndpoint;
 	if (mediaEndpoint === undefined) return stripAttachmentSignature(url);
 	return isAttachmentCdnUrl(url, mediaEndpoint) ? stripAttachmentSignature(url) : url;

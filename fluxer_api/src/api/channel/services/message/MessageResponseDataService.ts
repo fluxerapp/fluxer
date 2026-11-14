@@ -7,6 +7,7 @@ import {Config} from '@app/api/Config';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {requestSvcJson} from '@app/api/infrastructure/SvcErrorReply';
+import {isApiProxiedAttachments} from '@app/api/instance/AttachmentAccessMode';
 import {getInstanceProductName} from '@app/api/instance/ProductName';
 import {Logger} from '@app/api/Logger';
 import type {Channel} from '@app/api/models/Channel';
@@ -99,6 +100,9 @@ export class MessageResponseDataService {
 			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
 			attachment_decay: await attachmentDecayEnabled(),
 			instance_name: getInstanceProductName(),
+			...(isApiProxiedAttachments() && access.includeHidden !== true
+				? {attachment_api_base: Config.endpoints.apiClient}
+				: {}),
 		};
 	}
 	constructor(private readonly connectionManager: INatsConnectionManager) {}

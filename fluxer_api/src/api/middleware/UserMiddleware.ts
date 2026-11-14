@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isOperatorPath, isOperatorRequest} from '@app/api/admin/operator/OperatorRequests';
+import {openAttachmentMediaToken} from '@app/api/attachment/AttachmentMediaToken';
+import {isAttachmentMediaRequest} from '@app/api/attachment/AttachmentPublicUrl';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {Logger} from '@app/api/Logger';
@@ -84,6 +86,23 @@ function setUserInContext(ctx: Context<HonoEnv>, user: User, trackActivity: bool
 	}
 }
 
+async function authenticateAttachmentMediaToken(ctx: Context<HonoEnv>): Promise<void> {
+	const token = ctx.req.query('mt');
+	if (!token) return;
+	const payload = openAttachmentMediaToken(token);
+	if (!payload) return;
+	const apiContext = ctx.get('apiContext');
+	const authSession = await apiContext.services.users.getAuthSessionByToken(Buffer.from(payload.s, 'base64url'));
+	if (!authSession || authSession.isExpiredSsoSession() || authSession.userId.toString() !== payload.u) return;
+	const user = await apiContext.services.users.findUnique(authSession.userId);
+	if (!user || isSignInRefused(user)) return;
+	ctx.set('authSession', authSession);
+	ctx.set('authTokenType', 'attachment_media');
+	ctx.set('attachmentMediaToken', payload);
+	ctx.set('clientFeatures', new Set(payload.f));
+	setUserInContext(ctx, user, false);
+}
+
 export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	const path = stripApiPrefix(ctx.req.path);
 	if (SKIP_PATHS.has(path)) {
@@ -111,6 +130,8 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	if (!parsed) {
 		if (rawAuthHeader) {
 			recordAuthFailure(resolvedClientIp, hashRequestToken(rawAuthHeader));
+		} else if (isAttachmentMediaRequest(ctx.req.method, ctx.req.path)) {
+			await authenticateAttachmentMediaToken(ctx);
 		}
 		return next();
 	}

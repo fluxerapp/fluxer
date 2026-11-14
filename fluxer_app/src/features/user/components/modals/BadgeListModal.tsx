@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {openInAppOrExternalUrl} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
 import {handleExternalLinkAuxClick} from '@app/features/messaging/utils/ExternalLinkUtils';
+import {openInAppOrExternalUrl} from '@app/features/messaging/utils/InAppLinkUtils';
 import styles from '@app/features/user/components/modals/BadgeListModal.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';

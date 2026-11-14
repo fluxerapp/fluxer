@@ -567,8 +567,11 @@ Attachment retention overrides and the values in use.
 | Field | Type | Description |
 | --- | --- | --- |
 | attachment_decay<sup>1</sup> | object | Nullable overrides, plus an `effective` object with the values in use |
+| proxy_attachments_through_api<sup>2</sup> | boolean | Whether [attachment URLs point at the API](/http-api/messages/#attachment-urls-on-the-api) |
 
 <sup>1</sup> The keys are `enabled`, `min_size_mb`, `max_size_mb`, `max_eligible_size_mb`, `min_lifetime_days`, `max_lifetime_days`, `curve` (0-1), `renew_threshold_days` and `renew_window_days`. Null uses the default
+
+<sup>2</sup> Data harvest links and admin views keep Media Proxy URLs. URLs handed out before a change keep working until they expire, so run the Media Proxy with the [signature mode](/media-proxy/overview/#signed-attachment-urls) set to `enforce`. A cache in front of the API must not store these files, and access logs should leave out the `mt` query parameter. Clients pick up a change when they next load the instance discovery document, and a web app tab opened before the change needs a reload when the API has its own domain. No URL holds a token for the whole account. The web app loads images with the session header and shows them from memory, and the desktop app adds the header itself. Videos, audio, downloads and files opened in the browser use a token that opens one file for 5 minutes. Copy actions in Fluxer leave the token out. Turning the setting off again breaks the API URLs handed out while it was on. Messages show their files again once clients load them again, but favorite GIFs saved from attachments while it was on stay broken
 
 Fluxer drops an override that would make a maximum smaller than its minimum.
 
@@ -717,7 +720,7 @@ Merges the body into the saved configuration and returns the [instance configura
 | registration? | object | `mode`, `admin_registration_urls_enabled` and `allowed_email_domains` |
 | app_public?<sup>2</sup> | object | `branding`, `setup`, `legal` and `registration` objects, each merged field by field |
 | integrations?<sup>3</sup> | object | `gif`, `youtube`, `email` and `bluesky` objects, `bluesky.keys` and `connection_providers` |
-| media? | object | `attachment_decay` overrides, null to restore a default |
+| media? | object | `attachment_decay` overrides, null to restore a default, and `proxy_attachments_through_api` |
 | policy? | [instance policy update](#instance-policy-update-structure) object | Community, direct message, premium and gating policy |
 | billing?<sup>4</sup> | object | [Instance billing](#instance-billing-object) fields, plus `stripe_secret_key` and `stripe_webhook_secret` |
 | distribution_pricing?<sup>6</sup> | object | `rules`, each with `id`, `active`, `rate_bps` and `products` from the [distribution rule](#distribution-rule-object) |

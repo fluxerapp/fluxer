@@ -7951,7 +7951,7 @@ msgid "Channel access"
 msgstr "การเข้าถึงช่อง"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "ไม่สามารถเข้าถึงช่องได้"
 
@@ -13380,13 +13380,13 @@ msgstr "สถานะสำหรับนักพัฒนา"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "เครื่องมือสำหรับนักพัฒนา"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "เครื่องมือสำหรับนักพัฒนาสามารถใช้งานได้จากป้ายพนักงานในส่วนหัวของช่อง"
 
@@ -21564,7 +21564,7 @@ msgid "Link styling"
 msgstr "สไตล์ลิงก์"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "ลิงก์ใช้งานไม่ได้"
 
@@ -38109,7 +38109,7 @@ msgid "This link has expired"
 msgstr "ลิงก์นี้หมดอายุแล้ว"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "ลิงก์นี้ไม่พร้อมใช้งานสำหรับบัญชีของคุณ"
 
@@ -43901,7 +43901,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "คุณเปลี่ยนแท็กขณะใช้ {PREMIUM_PRODUCT_NAME} แท็กจะถูกสุ่มใหม่เมื่อ {PREMIUM_PRODUCT_NAME} ของคุณหมดอายุ เว้นแต่จะมีการต่ออายุ"
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "คุณไม่มีสิทธิ์เข้าถึงช่องที่มีการส่งข้อความนี้"
 

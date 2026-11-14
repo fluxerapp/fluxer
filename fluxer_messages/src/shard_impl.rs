@@ -341,6 +341,32 @@ struct ResponseBuildOptions {
     excluded_types: Vec<i32>,
     attachment_decay: bool,
     instance_name: String,
+    attachment_api_base: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct AttachmentUrlScope {
+    message_id: i64,
+    channel_id: i64,
+    storage_channel_id: i64,
+}
+
+impl AttachmentUrlScope {
+    fn for_message(message: &Message) -> Self {
+        Self {
+            message_id: message.message_id,
+            channel_id: message.channel_id,
+            storage_channel_id: attachment_storage_channel_id(message),
+        }
+    }
+
+    fn for_snapshot(message_id: i64, channel_id: i64) -> Self {
+        Self {
+            message_id,
+            channel_id,
+            storage_channel_id: channel_id,
+        }
+    }
 }
 
 impl ResponseBuildOptions {
@@ -1306,15 +1332,13 @@ impl<T: Transport> MessagesShard<T> {
         include_referenced_message: bool,
     ) -> ApiMessageResponse {
         let author = self.resolve_author(message, options, context);
-        let storage_channel_id = attachment_storage_channel_id(message);
+        let scope = AttachmentUrlScope::for_message(message);
         let attachments = message
             .attachments
             .as_deref()
             .unwrap_or_default()
             .iter()
-            .filter_map(|attachment| {
-                self.map_attachment(storage_channel_id, attachment, options, context)
-            })
+            .filter_map(|attachment| self.map_attachment(scope, attachment, options, context))
             .collect();
         let embeds = if (message.flags.unwrap_or_default() & MESSAGE_FLAG_SUPPRESS_EMBEDS) == 0 {
             message
@@ -1322,7 +1346,7 @@ impl<T: Transport> MessagesShard<T> {
                 .as_deref()
                 .unwrap_or_default()
                 .iter()
-                .map(|embed| self.map_embed(embed, options))
+                .map(|embed| self.map_embed(embed, options, scope))
                 .collect()
         } else {
             Vec::new()
@@ -1474,7 +1498,7 @@ impl<T: Transport> MessagesShard<T> {
 
     fn map_attachment(
         &self,
-        channel_id: i64,
+        scope: AttachmentUrlScope,
         attachment: &MessageAttachment,
         options: &ResponseBuildOptions,
         context: &ResponseContext,
@@ -1485,13 +1509,7 @@ impl<T: Transport> MessagesShard<T> {
         let expired =
             decay.is_some_and(|expires_at| expires_at.timestamp_millis() <= unix_millis());
         let url = (!expired).then(|| {
-            attachment_cdn_url(
-                channel_id,
-                attachment_id,
-                &filename,
-                options,
-                unix_seconds(),
-            )
+            scoped_attachment_url(scope, attachment_id, &filename, options, unix_seconds())
         });
         let content_type = attachment.content_type.clone().unwrap_or_else(|| {
             mime_guess::from_path(&filename)
@@ -1526,6 +1544,7 @@ impl<T: Transport> MessagesShard<T> {
         &self,
         embed: &MessageEmbed,
         options: &ResponseBuildOptions,
+        scope: AttachmentUrlScope,
     ) -> ApiMessageEmbedResponse {
         let base = self.map_embed_child_like(
             embed.embed_type.clone(),
@@ -1547,6 +1566,7 @@ impl<T: Transport> MessagesShard<T> {
             embed.html_width,
             embed.html_height,
             options,
+            scope,
         );
         let children = embed.children.as_ref().map(|children| {
             children
@@ -1572,6 +1592,7 @@ impl<T: Transport> MessagesShard<T> {
                         child.html_width,
                         child.html_height,
                         options,
+                        scope,
                     )
                 })
                 .collect::<Vec<_>>()
@@ -1604,45 +1625,54 @@ impl<T: Transport> MessagesShard<T> {
         html_width: Option<i32>,
         html_height: Option<i32>,
         options: &ResponseBuildOptions,
+        scope: AttachmentUrlScope,
     ) -> ApiMessageEmbedChildResponse {
         ApiMessageEmbedChildResponse {
             embed_type: embed_type.unwrap_or_else(|| "rich".to_owned()),
             title,
             description,
-            url: url.map(|url| sign_own_url(&url, options)),
+            url: url.map(|url| own_media_url(&url, options, scope, false)),
             timestamp: timestamp.map(epoch_millis_to_iso),
             color,
             author: author.and_then(|author| {
                 author.name.map(|name| ApiEmbedAuthorResponse {
                     name,
-                    url: author.url.map(|url| sign_own_url(&url, options)),
+                    url: author
+                        .url
+                        .map(|url| own_media_url(&url, options, scope, false)),
                     proxy_icon_url: author
                         .icon_url
                         .as_ref()
-                        .map(|url| external_media_proxy_url(url, options)),
-                    icon_url: author.icon_url.map(|url| sign_own_url(&url, options)),
+                        .map(|url| own_media_proxy_url(url, options, scope, false)),
+                    icon_url: author
+                        .icon_url
+                        .map(|url| own_media_url(&url, options, scope, false)),
                 })
             }),
             provider: provider.and_then(|provider| {
                 provider.name.map(|name| ApiEmbedProviderResponse {
                     name,
-                    url: provider.url.map(|url| sign_own_url(&url, options)),
+                    url: provider
+                        .url
+                        .map(|url| own_media_url(&url, options, scope, false)),
                     icon_url: None,
                     proxy_icon_url: None,
                 })
             }),
-            thumbnail: thumbnail.and_then(|media| self.map_embed_media(media, options)),
-            image: image.and_then(|media| self.map_embed_media(media, options)),
-            video: video.and_then(|media| self.map_embed_media(media, options)),
-            audio: audio.and_then(|media| self.map_embed_media(media, options)),
+            thumbnail: thumbnail.and_then(|media| self.map_embed_media(media, options, scope)),
+            image: image.and_then(|media| self.map_embed_media(media, options, scope)),
+            video: video.and_then(|media| self.map_embed_media(media, options, scope)),
+            audio: audio.and_then(|media| self.map_embed_media(media, options, scope)),
             footer: footer.and_then(|footer| {
                 footer.text.map(|text| ApiEmbedFooterResponse {
                     text,
                     proxy_icon_url: footer
                         .icon_url
                         .as_ref()
-                        .map(|url| external_media_proxy_url(url, options)),
-                    icon_url: footer.icon_url.map(|url| sign_own_url(&url, options)),
+                        .map(|url| own_media_proxy_url(url, options, scope, false)),
+                    icon_url: footer
+                        .icon_url
+                        .map(|url| own_media_url(&url, options, scope, false)),
                 })
             }),
             fields: fields.map(|fields| fields.into_iter().map(map_embed_field_response).collect()),
@@ -1657,11 +1687,15 @@ impl<T: Transport> MessagesShard<T> {
         &self,
         media: MessageEmbedMedia,
         options: &ResponseBuildOptions,
+        scope: AttachmentUrlScope,
     ) -> Option<ApiEmbedMediaResponse> {
         let url = media.url?;
+        let owned = media
+            .flags
+            .is_some_and(|flags| flags & EMBED_MEDIA_OWNED_ATTACHMENT_FLAG != 0);
         Some(ApiEmbedMediaResponse {
-            proxy_url: external_media_proxy_url(&url, options),
-            url: sign_own_url(&url, options),
+            proxy_url: own_media_proxy_url(&url, options, scope, owned),
+            url: own_media_url(&url, options, scope, owned),
             width: media.width,
             height: media.height,
             duration: media.duration,
@@ -1690,6 +1724,7 @@ impl<T: Transport> MessagesShard<T> {
             .and_then(|mentions| mentions.snapshots.get(snapshot_index))
             .cloned()
             .unwrap_or_else(|| extract_mentions_from_markdown(snapshot.content.as_deref()));
+        let scope = AttachmentUrlScope::for_snapshot(message_id, channel_id);
         let mention_channels =
             ids_present_in_set(&snapshot.mention_channels, &snapshot_mentions.channels)
                 .into_iter()
@@ -1700,7 +1735,7 @@ impl<T: Transport> MessagesShard<T> {
                 snapshot.embeds.as_deref().map(|embeds| {
                     embeds
                         .iter()
-                        .map(|embed| self.map_embed(embed, options))
+                        .map(|embed| self.map_embed(embed, options, scope))
                         .collect()
                 })
             } else {
@@ -1709,9 +1744,7 @@ impl<T: Transport> MessagesShard<T> {
         let attachments = snapshot.attachments.as_ref().map(|attachments| {
             attachments
                 .iter()
-                .filter_map(|attachment| {
-                    self.map_attachment(channel_id, attachment, options, context)
-                })
+                .filter_map(|attachment| self.map_attachment(scope, attachment, options, context))
                 .collect()
         });
         ApiMessageSnapshotResponse {
@@ -2308,6 +2341,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 include_hidden,
                 threads_mask,
                 instance_name,
+                attachment_api_base,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
                 let message_id = parse_i64(&message_id, "message_id")?;
@@ -2338,6 +2372,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             threads_mask,
                             excluded_types: Vec::new(),
                             instance_name,
+                            attachment_api_base,
                         },
                     )
                     .await?;
@@ -2362,6 +2397,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 include_hidden,
                 threads_mask,
                 instance_name,
+                attachment_api_base,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2389,6 +2425,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             threads_mask,
                             excluded_types: Vec::new(),
                             instance_name,
+                            attachment_api_base,
                         },
                     )
                     .await?;
@@ -2411,6 +2448,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 include_hidden,
                 threads_mask,
                 instance_name,
+                attachment_api_base,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2438,6 +2476,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             threads_mask,
                             excluded_types: Vec::new(),
                             instance_name,
+                            attachment_api_base,
                         },
                     )
                     .await?;
@@ -2462,6 +2501,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 threads_mask,
                 mut exclude_types,
                 instance_name,
+                attachment_api_base,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
                 if threads_mask && !exclude_types.contains(&MESSAGE_TYPE_THREAD_CREATED) {
@@ -2509,6 +2549,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             threads_mask,
                             excluded_types: exclude_types,
                             instance_name,
+                            attachment_api_base,
                         },
                     )
                     .await?;
@@ -3085,6 +3126,184 @@ fn attachment_cdn_url(
     )
 }
 
+fn api_attachment_url(
+    api_base: &str,
+    channel_id: i64,
+    attachment_id: i64,
+    raw_filename: &str,
+    message_id: Option<i64>,
+    preserved_query: &[&str],
+) -> String {
+    let mut url = format!(
+        "{}/channels/{channel_id}/attachments/{attachment_id}/{raw_filename}",
+        api_base.trim_end_matches('/')
+    );
+    let mid = message_id.map(|id| format!("mid={id}"));
+    let fields: Vec<&str> = mid
+        .as_deref()
+        .into_iter()
+        .chain(preserved_query.iter().copied())
+        .collect();
+    if !fields.is_empty() {
+        url.push('?');
+        url.push_str(&fields.join("&"));
+    }
+    url
+}
+
+fn scoped_attachment_url(
+    scope: AttachmentUrlScope,
+    attachment_id: i64,
+    filename: &str,
+    options: &ResponseBuildOptions,
+    now_secs: u64,
+) -> String {
+    match options.attachment_api_base.as_deref() {
+        Some(api_base) => api_attachment_url(
+            api_base,
+            scope.channel_id,
+            attachment_id,
+            filename,
+            Some(scope.message_id),
+            &[],
+        ),
+        None => attachment_cdn_url(
+            scope.storage_channel_id,
+            attachment_id,
+            filename,
+            options,
+            now_secs,
+        ),
+    }
+}
+
+fn is_api_attachment_url(api_base: &str, input_url: &str) -> bool {
+    let api_base = api_base.trim_end_matches('/');
+    let (Ok(base), Ok(target)) = (Url::parse(api_base), Url::parse(input_url)) else {
+        return false;
+    };
+    if base.origin() != target.origin() {
+        return false;
+    }
+    let base_path = raw_url_path(api_base).trim_end_matches('/');
+    let Some(rest) = raw_url_path(input_url)
+        .strip_prefix(base_path)
+        .and_then(|path| path.strip_prefix("/channels/"))
+    else {
+        return false;
+    };
+    let mut segments = rest.splitn(4, '/');
+    matches!(
+        (segments.next(), segments.next(), segments.next(), segments.next()),
+        (Some(channel_id), Some("attachments"), Some(attachment_id), Some(filename))
+            if is_snowflake_segment(channel_id)
+                && is_snowflake_segment(attachment_id)
+                && !filename.is_empty()
+    )
+}
+
+fn is_reserved_api_query_name(name: &str) -> bool {
+    name == "mid" || name == "mt"
+}
+
+fn without_media_token(input_url: &str) -> String {
+    let (head, fragment) = input_url
+        .split_once('#')
+        .map_or((input_url, None), |(head, fragment)| (head, Some(fragment)));
+    let Some((base, query)) = head.split_once('?') else {
+        return input_url.to_owned();
+    };
+    let kept: Vec<&str> = query
+        .split('&')
+        .filter(|field| !field.is_empty())
+        .filter(|field| field.split_once('=').map_or(*field, |(name, _)| name) != "mt")
+        .collect();
+    let mut url = base.to_owned();
+    if !kept.is_empty() {
+        url.push('?');
+        url.push_str(&kept.join("&"));
+    }
+    if let Some(fragment) = fragment {
+        url.push('#');
+        url.push_str(fragment);
+    }
+    url
+}
+
+fn api_own_media_url(
+    input_url: &str,
+    options: &ResponseBuildOptions,
+    api_base: &str,
+    scope: AttachmentUrlScope,
+    owned: bool,
+) -> Option<String> {
+    let media_endpoint = options.media_endpoint.trim_end_matches('/');
+    let (storage_key, attachment_id) = own_attachment_key(input_url, media_endpoint)?;
+    let key_channel_id: i64 = storage_key.split('/').nth(1)?.parse().ok()?;
+    let raw_path =
+        raw_url_path(input_url).strip_prefix(raw_url_path(media_endpoint).trim_end_matches('/'))?;
+    let mut raw_segments = raw_path.trim_start_matches('/').splitn(4, '/');
+    let raw_filename = raw_segments.nth(3)?;
+    let query = input_url
+        .split_once('?')
+        .map(|(_, query)| query.split_once('#').map_or(query, |(query, _)| query))
+        .unwrap_or_default();
+    let preserved: Vec<&str> = query
+        .split('&')
+        .filter(|field| !field.is_empty())
+        .filter(|field| {
+            let name = field.split_once('=').map_or(*field, |(name, _)| name);
+            !fluxer_common::attachment_url_signature::is_signature_parameter_name(name)
+                && !is_reserved_api_query_name(name)
+        })
+        .collect();
+    let (channel_id, message_id) = if owned && key_channel_id == scope.storage_channel_id {
+        (scope.channel_id, Some(scope.message_id))
+    } else {
+        (key_channel_id, None)
+    };
+    Some(api_attachment_url(
+        api_base,
+        channel_id,
+        attachment_id,
+        raw_filename,
+        message_id,
+        &preserved,
+    ))
+}
+
+fn own_media_url(
+    input_url: &str,
+    options: &ResponseBuildOptions,
+    scope: AttachmentUrlScope,
+    owned: bool,
+) -> String {
+    match options.attachment_api_base.as_deref() {
+        Some(api_base) if is_api_attachment_url(api_base, input_url) => {
+            without_media_token(input_url)
+        }
+        Some(api_base) => api_own_media_url(input_url, options, api_base, scope, owned)
+            .unwrap_or_else(|| input_url.to_owned()),
+        None => sign_own_url(input_url, options),
+    }
+}
+
+fn own_media_proxy_url(
+    input_url: &str,
+    options: &ResponseBuildOptions,
+    scope: AttachmentUrlScope,
+    owned: bool,
+) -> String {
+    match options.attachment_api_base.as_deref() {
+        Some(api_base) if is_api_attachment_url(api_base, input_url) => {
+            without_media_token(input_url)
+        }
+        Some(api_base) => api_own_media_url(input_url, options, api_base, scope, owned)
+            .unwrap_or_else(|| external_media_proxy_url(input_url, options)),
+        None => external_media_proxy_url(input_url, options),
+    }
+}
+
 fn raw_url_path(url: &str) -> &str {
     let Some((_, after_scheme)) = url.split_once("://") else {
         return "";
@@ -3565,6 +3784,7 @@ mod tests {
             excluded_types: Vec::new(),
             attachment_decay: true,
             instance_name: "Fluxer".to_owned(),
+            attachment_api_base: None,
         }
     }
 
@@ -3581,6 +3801,10 @@ mod tests {
             attachment_url_secret: (0u8..32).collect(),
             ..build_options()
         }
+    }
+
+    fn signed_scope() -> AttachmentUrlScope {
+        AttachmentUrlScope::for_snapshot(SIGNED_ATTACHMENT_ID, SIGNED_CHANNEL_ID)
     }
 
     fn signed_attachment() -> MessageAttachment {
@@ -3710,7 +3934,7 @@ mod tests {
         };
 
         let mapped = shard
-            .map_attachment(SIGNED_CHANNEL_ID, &signed_attachment(), &options, &context)
+            .map_attachment(signed_scope(), &signed_attachment(), &options, &context)
             .expect("a decayed attachment still maps");
 
         assert_eq!(None, mapped.url);
@@ -3731,7 +3955,7 @@ mod tests {
         }))
         .unwrap();
 
-        let mapped = shard.map_embed(&embed, &options);
+        let mapped = shard.map_embed(&embed, &options, signed_scope());
 
         let base = mapped.base;
         assert_eq!(
@@ -3819,5 +4043,213 @@ mod tests {
         ] {
             assert_eq!(input, media_proxy_url_at(input, &options, now), "{input}");
         }
+    }
+
+    const API_BASE: &str = "https://api.test/api";
+    const COPY_CHANNEL_ID: i64 = 1_544_725_486_800_732_999;
+    const MESSAGE_ID: i64 = 1_544_971_349_200_470_123;
+
+    fn api_options() -> ResponseBuildOptions {
+        ResponseBuildOptions {
+            attachment_api_base: Some(API_BASE.to_owned()),
+            ..signing_options()
+        }
+    }
+
+    fn crosspost_scope() -> AttachmentUrlScope {
+        AttachmentUrlScope {
+            message_id: MESSAGE_ID,
+            channel_id: COPY_CHANNEL_ID,
+            storage_channel_id: SIGNED_CHANNEL_ID,
+        }
+    }
+
+    fn own_embed(url: &str) -> MessageEmbed {
+        serde_json::from_value(json!({
+            "type": "image",
+            "url": url,
+            "image": {"url": url},
+            "footer": {"text": "footer", "icon_url": url},
+        }))
+        .unwrap()
+    }
+
+    fn uploaded_embed(url: &str) -> MessageEmbed {
+        serde_json::from_value(json!({
+            "type": "rich",
+            "url": url,
+            "image": {"url": url, "flags": EMBED_MEDIA_OWNED_ATTACHMENT_FLAG},
+            "footer": {"text": "footer", "icon_url": url},
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn an_api_attachment_url_names_the_viewed_channel_and_message() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let mapped = shard
+            .map_attachment(
+                crosspost_scope(),
+                &signed_attachment(),
+                &api_options(),
+                &ResponseContext::default(),
+            )
+            .expect("the attachment maps");
+
+        let expected = format!(
+            "{API_BASE}/channels/{COPY_CHANNEL_ID}/attachments/{SIGNED_ATTACHMENT_ID}/{SIGNED_FILENAME}?mid={MESSAGE_ID}"
+        );
+        assert_eq!(Some(expected.clone()), mapped.url);
+        assert_eq!(Some(expected), mapped.proxy_url);
+    }
+
+    #[test]
+    fn a_decayed_attachment_has_no_api_url() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let context = ResponseContext {
+            attachment_decay: [(
+                SIGNED_ATTACHMENT_ID,
+                DateTime::<Utc>::from_timestamp_millis(unix_millis() - 1_000).unwrap(),
+            )]
+            .into_iter()
+            .collect(),
+            ..ResponseContext::default()
+        };
+        let mapped = shard
+            .map_attachment(
+                crosspost_scope(),
+                &signed_attachment(),
+                &api_options(),
+                &context,
+            )
+            .expect("a decayed attachment still maps");
+
+        assert_eq!(None, mapped.url);
+        assert_eq!(None, mapped.proxy_url);
+    }
+
+    #[test]
+    fn an_uploaded_embed_image_points_at_the_message_and_drops_the_signature() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let own = format!(
+            "https://media.test/{}?ex=1&is=2&hm=3&mt=4&width=64",
+            signed_storage_key()
+        );
+
+        let mapped = shard.map_embed(&uploaded_embed(&own), &api_options(), crosspost_scope());
+
+        let owned = format!(
+            "{API_BASE}/channels/{COPY_CHANNEL_ID}/attachments/{SIGNED_ATTACHMENT_ID}/{SIGNED_FILENAME}?mid={MESSAGE_ID}&width=64"
+        );
+        let linked = format!(
+            "{API_BASE}/channels/{SIGNED_CHANNEL_ID}/attachments/{SIGNED_ATTACHMENT_ID}/{SIGNED_FILENAME}?width=64"
+        );
+        let base = mapped.base;
+        let image = base.image.expect("the embed has an image");
+        assert_eq!(owned, image.url);
+        assert_eq!(owned, image.proxy_url);
+        assert_eq!(Some(linked.clone()), base.url);
+        let footer = base.footer.expect("the embed has a footer");
+        assert_eq!(Some(linked.clone()), footer.icon_url);
+        assert_eq!(Some(linked), footer.proxy_icon_url);
+    }
+
+    #[test]
+    fn a_linked_file_from_the_same_channel_never_names_the_message() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let own = format!("https://media.test/{}", signed_storage_key());
+
+        let mapped = shard.map_embed(&own_embed(&own), &api_options(), crosspost_scope());
+
+        let expected = format!(
+            "{API_BASE}/channels/{SIGNED_CHANNEL_ID}/attachments/{SIGNED_ATTACHMENT_ID}/{SIGNED_FILENAME}"
+        );
+        let base = mapped.base;
+        let image = base.image.expect("the embed has an image");
+        assert_eq!(expected, image.url);
+        assert_eq!(expected, image.proxy_url);
+        assert_eq!(Some(expected), base.url);
+    }
+
+    #[test]
+    fn an_embed_url_from_another_channel_keeps_that_channel_and_no_message() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let other_channel_id = COPY_CHANNEL_ID - 1;
+        let own = format!(
+            "https://media.test/attachments/{other_channel_id}/{SIGNED_ATTACHMENT_ID}/{SIGNED_FILENAME}"
+        );
+
+        let mapped = shard.map_embed(&own_embed(&own), &api_options(), crosspost_scope());
+
+        let expected = format!(
+            "{API_BASE}/channels/{other_channel_id}/attachments/{SIGNED_ATTACHMENT_ID}/{SIGNED_FILENAME}"
+        );
+        let image = mapped.base.image.expect("the embed has an image");
+        assert_eq!(expected, image.url);
+        assert_eq!(expected, image.proxy_url);
+    }
+
+    #[test]
+    fn an_api_url_in_an_embed_is_never_sent_through_the_external_proxy() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let pasted = format!(
+            "{API_BASE}/channels/{COPY_CHANNEL_ID}/attachments/{SIGNED_ATTACHMENT_ID}/{SIGNED_FILENAME}"
+        );
+        let foreign = "https://example.test/cat.png";
+
+        let mapped = shard.map_embed(
+            &own_embed(&format!("{pasted}?mt=secret")),
+            &api_options(),
+            crosspost_scope(),
+        );
+        let image = mapped.base.image.expect("the embed has an image");
+        assert_eq!(pasted, image.url);
+        assert_eq!(pasted, image.proxy_url);
+
+        let mapped = shard.map_embed(&own_embed(foreign), &api_options(), crosspost_scope());
+        let image = mapped.base.image.expect("the embed has an image");
+        assert_eq!(foreign, image.url);
+        assert_eq!(
+            external_media_proxy_url(foreign, &signing_options()),
+            image.proxy_url
+        );
+    }
+
+    #[test]
+    fn without_an_api_base_every_url_matches_the_media_proxy_form() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let options = signing_options();
+        let now = unix_seconds();
+        let mapped = shard
+            .map_attachment(
+                crosspost_scope(),
+                &signed_attachment(),
+                &options,
+                &ResponseContext::default(),
+            )
+            .expect("the attachment maps");
+        assert_eq!(
+            Some(attachment_cdn_url(
+                SIGNED_CHANNEL_ID,
+                SIGNED_ATTACHMENT_ID,
+                SIGNED_FILENAME,
+                &options,
+                now
+            )),
+            mapped.url
+        );
+
+        let own = format!("https://media.test/{}", signed_storage_key());
+        let mapped = shard.map_embed(&own_embed(&own), &options, crosspost_scope());
+        let image = mapped.base.image.expect("the embed has an image");
+        assert_eq!(sign_own_url(&own, &options), image.url);
+        assert_eq!(external_media_proxy_url(&own, &options), image.proxy_url);
     }
 }

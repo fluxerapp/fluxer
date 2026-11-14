@@ -161,6 +161,18 @@ A URL is valid for 24 hours from `is`. Keep the four parameters as they are, and
 
 A [data harvest](/http-api/users/data-harvest/) archive links each attachment with `uc=dp` and `ex=0`. These URLs don't expire and work until the instance removes the secret that signed them.
 
+### Attachment URLs on the API
+
+When [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, `url` and `proxy_url` point at [Get attachment file](#get-attachment-file) instead of the Media Proxy, and have no signature.
+
+```text
+/v1/channels/{channel_id}/attachments/{attachment_id}/{filename}?mid={message_id}
+```
+
+Fetching one needs the same access as reading the message. Send your token in the `Authorization` header. When a request can't send a header, such as a video player, a download or a link opened in the browser, add `mt` from [Create attachment token](#create-attachment-token), which opens only that one file for a few minutes. Keep `mid` as issued. A link copied for someone else should leave out `mt`.
+
+An embed image uploaded with `attachment://` names its own message in `mid`. Any other embed URL that points to a stored file names the channel of that file and has no `mid`, so it opens only for people who can read the message the file came from. Fluxer doesn't build link previews for attachment URLs in message text while the setting is on.
+
 ### Example
 
 ```json
@@ -377,7 +389,7 @@ An embed is a link preview Fluxer builds, or a rich embed you send.
 | placeholder? | string | An encoded placeholder image |
 | flags? | integer | `CONTAINS_EXPLICIT_MEDIA` and `IS_ANIMATED` from [attachment flags](#attachment-flags) |
 
-Fluxer signs every embed URL that points to an attachment on this instance, the same way as [attachment URLs](#signed-attachment-urls).
+Fluxer signs every embed URL that points to an attachment on this instance, the same way as [attachment URLs](#signed-attachment-urls). When [attachment URLs point at the API](#attachment-urls-on-the-api), these URLs point at the API instead.
 
 ## Embed footer object
 
@@ -863,7 +875,74 @@ Signs 1 to 50 attachment URLs again. A refreshed URL is valid until its `ex`, wh
 | --- | --- | --- |
 | 200 | response body | The URLs were signed |
 
+When [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, a URL of this instance comes back as an [attachment URL on the API](#attachment-urls-on-the-api) with no `mid`.
+
 The rate limit is 60 requests per 10 seconds, on the `attachment:refresh_urls` bucket.
+
+## Get attachment file
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/attachments/{attachment_id}/{filename}" bot />
+
+Streams an attachment file. Only works when [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, and returns 404 otherwise. You need to be able to [read the message](#access-and-history) the file belongs to. `HEAD` and `Range` work as they do on the Media Proxy.
+
+### Query string
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mid? | snowflake | The message the file belongs to, as issued in the URL |
+| mt? | string | A token for this file from [Create attachment token](#create-attachment-token), for a request without an `Authorization` header |
+| width? | integer | Resize to this width (1-8,192) |
+| height? | integer | Resize to this height (1-8,192) |
+| format? | string | A [transformation](/media-proxy/transformations/) output format |
+| quality? | string | `low`, `high`, `lossless` or `auto` |
+| fmt? | string | The same as `format` |
+| animated? | boolean | Whether to keep animation |
+| effort? | integer | Encoder effort, 0 to 9 |
+| download? | boolean | Whether to send the file as a download |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | file | The file |
+| 206 | file | Part of the file, for a `Range` request |
+| 400 | empty | A query value is out of range |
+| 401 | empty | `mt` is expired or invalid, or was made for another file |
+| 404 | empty | The file doesn't exist or you can't read its message |
+| 416 | empty | The range is outside the file |
+
+The response has `Cache-Control: private`, and `Cache-Control: private, no-store` for a request with `mt`. The rate limit is 600 requests per 10 seconds, on the `channel:attachment:read` bucket.
+
+## Create attachment token
+
+<RouteHeader method="POST" path="/v1/users/@me/attachment-token" />
+
+Creates a token for the `mt` query parameter of one [attachment URL on the API](#attachment-urls-on-the-api). Only works when [`proxy_attachments_through_api`](/http-api/instance/#instance-features-object) is true, and returns 404 otherwise. Bot and OAuth2 tokens can't use this route.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url | string | The attachment URL the token is for |
+
+The token opens only the file in `url`, and only for 5 minutes. Get a new one before `expires_at` if a player still needs the file. It stops working when the session it came from signs out, and requests with it fail within 15 seconds of losing access to the message.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The value for `mt` |
+| expires_at | ISO8601 timestamp | When the token stops working |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The token |
+| 400 | error | `url` is missing |
+| 404 | empty | The setting is off, `url` isn't an attachment URL on the API, or you can't read its file |
+
+The rate limit is 120 requests per 10 seconds, on the `user:attachment_token` bucket.
 
 ## Create message
 

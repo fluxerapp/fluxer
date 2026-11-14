@@ -95,6 +95,8 @@ pub enum MessageRequest {
         threads_mask: bool,
         #[serde(default = "default_instance_name")]
         instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     BuildResponse {
         message: Message,
@@ -116,6 +118,8 @@ pub enum MessageRequest {
         threads_mask: bool,
         #[serde(default = "default_instance_name")]
         instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     BuildResponses {
         messages: Vec<Message>,
@@ -135,6 +139,8 @@ pub enum MessageRequest {
         threads_mask: bool,
         #[serde(default = "default_instance_name")]
         instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     ListResponses {
         channel_id: String,
@@ -160,6 +166,8 @@ pub enum MessageRequest {
         exclude_types: Vec<i32>,
         #[serde(default = "default_instance_name")]
         instance_name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        attachment_api_base: Option<String>,
     },
     ExtractMentions {
         contents: Vec<String>,

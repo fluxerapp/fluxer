@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
+import {publicAttachmentUrl} from '@app/api/attachment/AttachmentPublicUrl';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -26,12 +26,12 @@ export function AttachmentController(app: HonoApp) {
 			security: ['botToken', 'sessionToken'],
 			tags: ['Messages'],
 			description:
-				'Reissues the expiring signature on attachment URLs. Returns one entry per requested URL, in the order they were requested, each pairing the URL exactly as it was sent with a freshly signed copy. A URL that is not an attachment URL of this instance is returned unchanged. No membership or existence check is performed.',
+				'Reissues the expiring signature on attachment URLs. Returns one entry per requested URL, in the order they were requested, each pairing the URL exactly as it was sent with a freshly signed copy. A URL that is not an attachment URL of this instance is returned unchanged. No membership or existence check is performed. When the instance serves attachments through the API, the refreshed URL points at the API and has no signature.',
 		}),
 		async (ctx) => {
 			const urls = ctx.req.valid('json').attachment_urls;
 			return ctx.json({
-				refreshed_urls: urls.map((original) => ({original, refreshed: signAttachmentUrl(original)})),
+				refreshed_urls: urls.map((original) => ({original, refreshed: publicAttachmentUrl(original)})),
 			});
 		},
 	);

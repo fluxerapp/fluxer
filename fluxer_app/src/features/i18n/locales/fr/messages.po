@@ -7951,7 +7951,7 @@ msgid "Channel access"
 msgstr "Accès aux salons"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "Accès au salon refusé"
 
@@ -13380,13 +13380,13 @@ msgstr "État du développeur"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "Outils de développement"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Les outils de développement sont accessibles depuis le badge du personnel dans l'en-tête du salon."
 
@@ -21564,7 +21564,7 @@ msgid "Link styling"
 msgstr "Style des liens"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "Lien indisponible"
 
@@ -38109,7 +38109,7 @@ msgid "This link has expired"
 msgstr "Ce lien a expiré"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "Ce lien n'est pas disponible pour votre compte."
 
@@ -43901,7 +43901,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Vous avez changé votre tag alors que vous étiez abonné à {PREMIUM_PRODUCT_NAME}. Il sera modifié aléatoirement à l'expiration de votre abonnement {PREMIUM_PRODUCT_NAME}, sauf s'il est renouvelé."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Vous n'avez pas accès au salon où ce message a été envoyé."
 

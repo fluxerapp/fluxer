@@ -8,7 +8,7 @@ import {Nagbar} from '@app/features/app/components/layout/Nagbar';
 import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
-import {openInAppOrExternalUrl} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
+import {openInAppOrExternalUrl} from '@app/features/messaging/utils/InAppLinkUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';

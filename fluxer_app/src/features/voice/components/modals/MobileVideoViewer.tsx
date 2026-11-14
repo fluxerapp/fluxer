@@ -11,6 +11,7 @@ import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {PanZoomSurface} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomSurface';
 import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
+import {useApiAttachmentPlaybackSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {resolveDesktopCrossOriginMediaURL} from '@app/features/messaging/utils/DesktopResourceUrl';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -78,6 +79,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 	const videoRef = useRef<HTMLVideoElement>(null);
 	useMediaSourceResume(videoRef);
 	const handleVideoError = useAttachmentRefreshOnError(src);
+	const playbackSrc = useApiAttachmentPlaybackSrc(src);
 	useInAppMediaSoundCapture(videoRef);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [zoomState, setZoomState] = useState<ZoomState>('fit');
@@ -397,7 +399,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 				<video
 					ref={videoRef}
 					className={styles.video}
-					src={resolveDesktopCrossOriginMediaURL(src)}
+					src={resolveDesktopCrossOriginMediaURL(playbackSrc)}
 					autoPlay={initialTime === undefined}
 					playsInline
 					loop={loop}
