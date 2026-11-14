@@ -166,6 +166,7 @@ const USER_TOGGLEABLE_GUILD_FEATURES: ReadonlySet<string> = new Set([
 	GuildFeatures.CLONE_STICKER_ENABLED,
 	GuildFeatures.HIDE_OWNER_CROWN,
 	GuildFeatures.VISITS_ENABLED,
+	GuildFeatures.MEMBER_DMS_DISABLED,
 ]);
 const SUPPORTED_SYSTEM_CHANNEL_FLAGS = SystemChannelFlags.SUPPRESS_JOIN_NOTIFICATIONS;
 const GUILD_SETTINGS_AUDIT_KEYS: ReadonlySet<string> = new Set([

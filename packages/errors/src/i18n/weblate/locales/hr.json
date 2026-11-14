@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Ne možeš poslati zahtjev za prijateljstvo blokiranom korisniku.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Ne možeš poslati zahtjev za prijateljstvo sam sebi.",
 	"friends_and_dms.cannot_send_messages_to_user": "Ne možeš slati poruke ovom korisniku.",
+	"friends_and_dms.community_member_dms_disabled": "Zajednica koju dijeliš s ovom osobom isključila je izravne poruke između članova koji nisu prijatelji.",
 	"friends_and_dms.direct_messages_disabled": "Izravne poruke onemogućene su na ovoj instanci.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Duplicirani primatelji nisu dopušteni.",
 	"friends_and_dms.friend_request_blocked": "Korisnik trenutno ne prihvaća zahtjeve za prijateljstvo.",

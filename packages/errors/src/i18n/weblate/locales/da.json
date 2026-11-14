@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Du kan ikke sende en venneanmodning til en blokeret bruger.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Du kan ikke sende en venneanmodning til dig selv.",
 	"friends_and_dms.cannot_send_messages_to_user": "Du kan ikke sende beskeder til denne bruger.",
+	"friends_and_dms.community_member_dms_disabled": "Et fællesskab, du deler med denne person, har slået direkte beskeder fra mellem medlemmer, der ikke er venner.",
 	"friends_and_dms.direct_messages_disabled": "Direkte beskeder er deaktiveret på denne instans.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Duplikerede modtagere er ikke tilladt.",
 	"friends_and_dms.friend_request_blocked": "Brugeren accepterer ikke venneanmodninger på nuværende tidspunkt.",

@@ -376,6 +376,7 @@
 	"friends_and_dms.cannot_send_friend_request_to_blocked_user": "Vous ne pouvez pas envoyer de demande d’ami à un utilisateur bloqué.",
 	"friends_and_dms.cannot_send_friend_request_to_self": "Vous ne pouvez pas vous envoyer de demande d’ami.",
 	"friends_and_dms.cannot_send_messages_to_user": "Vous ne pouvez pas envoyer de messages à cet utilisateur.",
+	"friends_and_dms.community_member_dms_disabled": "Une communauté que vous partagez avec cette personne a désactivé les messages privés entre les membres qui ne sont pas amis.",
 	"friends_and_dms.direct_messages_disabled": "Les messages privés sont désactivés sur cette instance.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Les destinataires en double ne sont pas autorisés.",
 	"friends_and_dms.friend_request_blocked": "L'utilisateur n'accepte pas les demandes d'ami pour le moment.",
