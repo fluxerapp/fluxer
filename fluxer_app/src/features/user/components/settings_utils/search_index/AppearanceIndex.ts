@@ -3,6 +3,7 @@
 import {Routes} from '@app/app/Routes';
 import {VOICE_CHANNEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Platform} from '@app/features/platform/types/Platform';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {
 	CHAT_INPUT_DESCRIPTOR,
@@ -16,6 +17,7 @@ import {
 	SHOW_DOWNLOAD_BUTTON_DESCRIPTOR,
 	SHOW_HELP_CENTER_BUTTON_DESCRIPTOR,
 	SHOW_NEKO_DESCRIPTOR,
+	SHOW_PLUTONIUM_BUTTON_DESCRIPTOR,
 	TWO_CLICKS_DESCRIPTOR,
 	VOICE_CHANNEL_CONFIRMATION_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
@@ -89,6 +91,11 @@ const HELP_CENTER_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR = msg({
 	message: 'Help center button in the sidebar',
 	comment: 'Settings search entry description. One-line summary of what the setting controls.',
 });
+const PLUTONIUM_BUTTON_IN_THE_DM_LIST_DESCRIPTOR = msg({
+	message: 'Plutonium button in the direct messages list',
+	comment:
+		'Settings search entry description. One-line summary of what the setting controls. Plutonium is the product name.',
+});
 const DOWNLOAD_BUTTON_IN_THE_SIDEBAR_DESCRIPTOR = msg({
 	message: 'Download app button in the sidebar',
 	comment: 'Settings search entry description. One-line summary of what the setting controls.',
@@ -144,6 +151,17 @@ export const appearanceIndex: Array<SearchableSettingDescriptor> = [
 		audience: 'advanced',
 		tags: ['appearance'],
 		isVisible: () => Routes.help() != null,
+	},
+	{
+		id: 'appearance-show-plutonium-button',
+		tabType: 'appearance',
+		sectionId: 'interface',
+		label: SHOW_PLUTONIUM_BUTTON_DESCRIPTOR,
+		keywords: [],
+		description: PLUTONIUM_BUTTON_IN_THE_DM_LIST_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['appearance'],
+		isVisible: () => shouldShowPremiumFeatures(),
 	},
 	{
 		id: 'appearance-show-download-button',
