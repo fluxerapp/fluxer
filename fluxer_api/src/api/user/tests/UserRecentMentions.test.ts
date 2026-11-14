@@ -86,7 +86,7 @@ describe('User recent mentions', () => {
 		await removeMemberRole(harness, owner.token, guild.id, member.userId, accessRole.id);
 		await createBuilder(harness, member.token)
 			.get(`/channels/${channelId}/messages/${message.id}`)
-			.expect(HttpStatus.FORBIDDEN)
+			.expect(HttpStatus.NOT_FOUND)
 			.execute();
 		const filteredMentions = await createBuilder<MessageListResponse>(harness, member.token)
 			.get('/users/@me/mentions')
