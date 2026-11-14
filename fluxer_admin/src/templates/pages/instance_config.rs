@@ -887,9 +887,9 @@ pub(super) fn allowed_domains_input(name: &str, value: &str, hint: &str) -> Mark
 
 fn limit_config_section(base: &str, limit_config: &LimitConfigResponse) -> Markup {
     let description = if limit_config.self_hosted.unwrap_or(false) {
-        "Self-hosted instance with all premium features enabled by default. Configure user and guild limits."
+        "In this self-hosted instance, configure limit rules that control user and community limits or grant features based on traits and features."
     } else {
-        "Configure limit rules that control user and guild restrictions based on traits and features."
+        "Configure limit rules that control user and community limits based on traits and features."
     };
     section_card_simple(
         "Limit Configuration",

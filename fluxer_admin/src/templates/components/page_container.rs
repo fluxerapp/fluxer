@@ -58,7 +58,7 @@ pub fn page_header_full(
                 div class="flex min-w-0 flex-1 flex-col gap-2" {
                     h1 class="break-words font-bold text-2xl text-gray-900 sm:text-3xl" { (title) }
                     @if let Some(desc) = description {
-                        p class="text-base text-gray-600" { (desc) }
+                        p class="max-w-4xl text-base text-gray-600" { (desc) }
                     }
                 }
                 @if let Some(actions) = actions {

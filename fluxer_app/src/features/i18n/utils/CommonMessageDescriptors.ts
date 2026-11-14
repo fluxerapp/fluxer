@@ -367,6 +367,10 @@ export const INVITE_PEOPLE_DESCRIPTOR = msg({
 	message: 'Invite people',
 	comment: 'Action label that opens the community invite creation modal or sheet.',
 });
+export const TRANSFER_COMMUNITY_OWNERSHIP_DESCRIPTOR = msg({
+	message: 'Transfer community ownership',
+	comment: 'Title of the community ownership transfer section in community settings and of its confirmation modal.',
+});
 export const TRANSFER_OWNERSHIP_DESCRIPTOR = msg({
 	message: 'Transfer ownership',
 	comment: 'Action label in community settings that hands ownership of the community to another member.',
