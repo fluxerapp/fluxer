@@ -10053,6 +10053,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "코네티컷"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr ""
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10934,6 +10939,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "로그인을 완료할 수 없습니다. 다시 시도해 주세요."
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "SSO 로그인을 연결할 수 없습니다"
@@ -38751,6 +38758,11 @@ msgstr "웹훅을 생성하려면 <0>{channelWebhooksSettingsPath}</0>을(를) �
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "사람들을 들어오게 하려면 관리자 패널에서 가입 링크를 만드세요."
+
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr ""
 
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."

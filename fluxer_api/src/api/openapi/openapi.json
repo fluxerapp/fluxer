@@ -38532,7 +38532,11 @@
 						"description": "Text for the SSO sign-in button, or null when the client shows its default label",
 						"type": ["string", "null"]
 					},
-					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
+					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"},
+					"provider_trait": {
+						"description": "User trait that marks an account as linked to the current SSO provider",
+						"type": "string"
+					}
 				},
 				"required": ["enabled", "enforced", "username_from_provider", "display_name", "button_label", "redirect_uri"],
 				"additionalProperties": false
@@ -40095,6 +40099,10 @@
 						"type": ["string", "null"]
 					},
 					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"},
+					"provider_trait": {
+						"description": "User trait that marks an account as linked to the current SSO provider",
+						"type": "string"
+					},
 					"available": {"description": "Whether an SSO provider is configured for this instance", "type": "boolean"}
 				},
 				"required": ["enabled", "enforced", "username_from_provider", "display_name", "button_label", "redirect_uri"],
