@@ -3,7 +3,7 @@
 -module(guild_voice_permissions).
 -typing([eqwalizer]).
 
--export([check_voice_permissions_and_limits/6]).
+-export([check_voice_permissions_and_limits/6, is_member_timed_out/2]).
 
 -export_type([
     guild_state/0,
