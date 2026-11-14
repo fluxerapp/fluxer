@@ -21749,6 +21749,16 @@
 							"$ref": "#/components/schemas/SnowflakeType"
 						},
 						"description": "Get mentions before this message ID"
+					},
+					{
+						"name": "guild_id",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Community to list mentions from when guilds is false",
+							"$ref": "#/components/schemas/SnowflakeType"
+						},
+						"description": "Community to list mentions from when guilds is false"
 					}
 				]
 			}

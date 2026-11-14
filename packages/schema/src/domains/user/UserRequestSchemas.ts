@@ -654,6 +654,7 @@ export const UserMentionsQueryRequest = z.object({
 	everyone: QueryBooleanType.optional().default(true).describe('Whether to include @everyone mentions'),
 	guilds: QueryBooleanType.optional().default(true).describe('Whether to include guild mentions'),
 	before: SnowflakeType.optional().describe('Get mentions before this message ID'),
+	guild_id: SnowflakeType.optional().describe('Community to list mentions from when guilds is false'),
 });
 
 export type UserMentionsQueryRequest = z.infer<typeof UserMentionsQueryRequest>;
