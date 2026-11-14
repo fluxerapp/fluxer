@@ -106,6 +106,7 @@ interface NewThread {
 	invitable: boolean | null;
 	hasStarter: boolean;
 	appliedTags?: Array<bigint>;
+	starterAuthorId?: UserID | null;
 }
 
 export class ThreadCreationService {
@@ -139,6 +140,7 @@ export class ThreadCreationService {
 			input: params.input,
 			invitable: null,
 			hasStarter: true,
+			starterAuthorId: await this.starterAuthorToAdd(parentAuth.channel, source, params.user.id),
 		});
 		await this.recordCreateAudit(view, params.user.id, params.auditLogReason);
 		const events: Array<ThreadDispatchEvent> = [threadCreateEvent(view, {members, newlyCreated: true})];
@@ -172,6 +174,20 @@ export class ThreadCreationService {
 		}
 		await dispatchThreadEvents(this.ctx.gatewayService, view.state.guildId, events);
 		return mapThreadToResponse(view);
+	}
+
+	private async starterAuthorToAdd(parent: Channel, source: Message, creatorId: UserID): Promise<UserID | null> {
+		const authorId = source.authorId;
+		if (authorId === null || source.webhookId !== null || authorId === creatorId || parent.guildId === null) {
+			return null;
+		}
+		const canView = await this.ctx.gatewayService.checkPermission({
+			guildId: parent.guildId,
+			userId: authorId,
+			channelId: parent.id,
+			permission: Permissions.VIEW_CHANNEL,
+		});
+		return canView ? authorId : null;
 	}
 
 	private async isAmongRecentMessages(channelId: ChannelID, messageId: MessageID): Promise<boolean> {
@@ -448,7 +464,8 @@ export class ThreadCreationService {
 			throw new InvalidChannelTypeError();
 		}
 		const view = await loadThreadView(this.ctx.channelRepository, channel, state, parent);
-		const members = creator.kind === 'user' ? await threads.getMembers(params.threadId, [ownerId]) : [];
+		const memberIds = params.starterAuthorId ? [ownerId, params.starterAuthorId] : [ownerId];
+		const members = creator.kind === 'user' ? await threads.getMembers(params.threadId, memberIds) : [];
 		let kind = 'standalone';
 		if (parent.isThreadOnly()) {
 			kind = 'forum_post';
@@ -520,6 +537,9 @@ export class ThreadCreationService {
 				const userId = creator.user.id;
 				const flags = creator.user.isBot ? 0 : ThreadMemberFlags.HAS_INTERACTED;
 				options.members.push({userId, flags});
+			}
+			if (params.starterAuthorId) {
+				options.members.push({userId: params.starterAuthorId, flags: 0});
 			}
 			return threads.create(options);
 		};
