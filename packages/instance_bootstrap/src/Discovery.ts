@@ -656,6 +656,10 @@ function parseSso(value: unknown): InstanceSso | null {
 	if (available != null) {
 		sso.available = available;
 	}
+	const providerTrait = readNonEmptyString(source, 'provider_trait');
+	if (providerTrait != null) {
+		sso.provider_trait = providerTrait;
+	}
 	return sso;
 }
 

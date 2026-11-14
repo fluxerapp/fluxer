@@ -351,6 +351,10 @@ function readSso(value: unknown): InstanceSso | null {
 	if (available !== undefined) {
 		sso.available = available;
 	}
+	const providerTrait = readOptionalText(source, 'provider_trait');
+	if (providerTrait != null) {
+		sso.provider_trait = providerTrait;
+	}
 	return sso;
 }
 

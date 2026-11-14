@@ -22,6 +22,7 @@ import {
 	ssoIdentityTrait,
 	ssoIdentityTraits,
 	ssoProviderIdOf,
+	ssoProviderTrait,
 } from '@app/api/auth/services/SsoIdentityLinks';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
 import {extractInviteCodeFromRedirect, sanitizeSsoRedirectTo} from '@app/api/auth/services/SsoUtils';
@@ -126,6 +127,7 @@ interface PublicSsoStatus {
 	display_name: string | null;
 	button_label: string | null;
 	redirect_uri: string;
+	provider_trait: string;
 }
 
 interface ResolvedSsoConfig extends InstanceSsoConfig {
@@ -451,6 +453,7 @@ export class SsoService {
 			display_name: config.displayName ?? null,
 			button_label: config.buttonLabel,
 			redirect_uri: config.redirectUri,
+			provider_trait: ssoProviderTrait(config.providerId),
 		};
 	}
 
@@ -926,16 +929,13 @@ export class SsoService {
 	}
 
 	private async bindSsoIdentity(user: User, sub: string, config: ResolvedSsoConfig): Promise<User> {
-		const identityTrait = ssoIdentityTrait(config.providerId, sub);
-		const traits = user.traits;
 		this.assertLinkable(user, sub, config);
 		await this.claimSsoIdentity(user.id, sub, config);
-		if (traits.has(identityTrait)) {
+		const missing = ssoIdentityTraits(config.providerId, sub).filter((trait) => !user.traits.has(trait));
+		if (missing.length === 0) {
 			return user;
 		}
-		for (const trait of ssoIdentityTraits(config.providerId, sub)) {
-			traits.add(trait);
-		}
+		const traits = new Set([...user.traits, ...missing]);
 		const {users} = this.apiContext.services;
 		return users.patchUpsert(user.id, {traits}, user.toRow());
 	}
