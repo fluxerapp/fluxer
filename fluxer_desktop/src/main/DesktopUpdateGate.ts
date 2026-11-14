@@ -6,8 +6,8 @@ import type {DesktopUpdateState} from '@fluxer/desktop_ipc/src/ModuleContract';
 const logger = createChildLogger('DesktopUpdateGate');
 
 export interface DesktopUpdateCheck {
-	readonly shellNewer: boolean;
-	readonly modulesChanged: boolean;
+	readonly shellReady: boolean;
+	readonly modulesReady: boolean;
 }
 
 interface DesktopUpdateController {
@@ -40,7 +40,7 @@ const gateState: DesktopUpdateGateState = {
 };
 
 function isAvailable(check: DesktopUpdateCheck | null): boolean {
-	return check != null && (check.shellNewer || check.modulesChanged);
+	return check != null && (check.shellReady || check.modulesReady);
 }
 
 export function getDesktopUpdateState(): DesktopUpdateState {
@@ -48,12 +48,12 @@ export function getDesktopUpdateState(): DesktopUpdateState {
 	return {
 		available,
 		updating: gateState.running != null,
-		replacesShell: available && gateState.lastCheck?.shellNewer === true,
+		replacesShell: available && gateState.lastCheck?.shellReady === true,
 	};
 }
 
 export function desktopUpdateReplacesShell(): boolean {
-	return gateState.lastCheck?.shellNewer === true;
+	return gateState.lastCheck?.shellReady === true;
 }
 
 function notify(): void {

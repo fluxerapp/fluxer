@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {whenBootRevealed} from '@app/features/boot_state/BootReveal';
 import {
 	checkNativePermission,
 	MAC_PERMISSION_KINDS,
@@ -49,6 +50,7 @@ class MacPermissions {
 	}
 
 	private async initialize(): Promise<void> {
+		await whenBootRevealed();
 		await this.refreshAll();
 		runInAction(() => {
 			this.isHydrated = true;

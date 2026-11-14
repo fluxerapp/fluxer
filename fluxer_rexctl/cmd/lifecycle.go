@@ -3,9 +3,11 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -50,7 +52,7 @@ var logParts = []logPart{
 	{"push", []string{"push"}},
 	{"database", []string{"postgres"}},
 	{"search", []string{"meilisearch"}},
-	{"storage", []string{"seaweedfs", "seaweedfs-init"}},
+	{"storage", []string{"seaweedfs", "seaweedfs-init", stack.ObjectsInitService}},
 	{"cache", []string{"valkey"}},
 	{"queue", []string{"nats"}},
 	{"internal", []string{"snowflakes", "users", "gifs", "messages", "unfurl"}},
@@ -78,6 +80,36 @@ func servicesForName(name string) ([]string, error) {
 		Code: ui.ExitUsage,
 		Msg:  fmt.Sprintf("There's no service called %s.", name),
 		Fix:  "Pick " + ui.JoinOr(logServiceNames()) + ".",
+	}
+}
+
+type rustLogs struct {
+	w    io.Writer
+	only []string
+	buf  []byte
+}
+
+func (r *rustLogs) Write(p []byte) (int, error) {
+	r.buf = append(r.buf, p...)
+	for {
+		i := bytes.IndexByte(r.buf, '\n')
+		if i < 0 {
+			return len(p), nil
+		}
+		line := string(r.buf[:i])
+		r.buf = r.buf[i+1:]
+		if msg, ok := strings.CutPrefix(line, stack.RustService+" | "); ok {
+			svc := stack.RustLogService(msg)
+			if len(r.only) > 0 && !slices.Contains(r.only, svc) {
+				continue
+			}
+			if svc != "" {
+				line = svc + " | " + msg
+			}
+		}
+		if _, err := io.WriteString(r.w, line+"\n"); err != nil {
+			return len(p), err
+		}
 	}
 }
 
@@ -469,6 +501,9 @@ func newLogsCmd(app *App) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if inst.State.IsNative() {
+				return runNativeLogs(ctx, app, inst, follow, since, services)
+			}
 			p, err := app.Named(ctx, inst)
 			if err != nil {
 				return err
@@ -476,7 +511,17 @@ func newLogsCmd(app *App) *cobra.Command {
 			if services, err = runningPart(inst, args, services); err != nil {
 				return err
 			}
-			opts := engine.LogsOptions{Follow: follow, Since: since, Stdout: app.UI.Stdout()}
+			var inRust []string
+			if len(services) > 0 {
+				if services, inRust = stack.ModeServices(inst.State.Settings, services); len(services) == 0 {
+					return ui.Refused(fmt.Sprintf("This instance runs without %s, so it has no logs here.", args[0]), "Run rexctl status to see what runs.")
+				}
+			}
+			out := app.UI.Stdout()
+			if stack.RustSingle(inst.State.Settings) {
+				out = &rustLogs{w: out, only: inRust}
+			}
+			opts := engine.LogsOptions{Follow: follow, Since: since, Stdout: out}
 			if since == "" {
 				opts.Tail = 200
 			}
@@ -520,6 +565,9 @@ func runStart(ctx context.Context, app *App) error {
 	inst, err := app.Instance()
 	if err != nil {
 		return err
+	}
+	if inst.State.IsNative() {
+		return runNativeStart(ctx, app, inst)
 	}
 	return app.Change(ctx, inst, func(e *engine.Engine) error {
 		if inst.State.Stopped {
@@ -575,7 +623,7 @@ func runBootStart(ctx context.Context, app *App) error {
 	if err != nil || inst == nil {
 		return err
 	}
-	if inst.State.Stopped || inst.State.Ejected != nil {
+	if inst.State.Stopped || inst.State.Ejected != nil || inst.State.IsNative() {
 		return nil
 	}
 	if !bootStackUp(ctx, app, inst) {
@@ -725,6 +773,9 @@ func runStop(ctx context.Context, app *App) error {
 	if err != nil {
 		return err
 	}
+	if inst.State.IsNative() {
+		return runNativeStop(ctx, app, inst, false)
+	}
 	return app.Locked(ctx, inst, func() error {
 		if err := managed(inst); err != nil {
 			return err
@@ -776,6 +827,9 @@ func runDown(ctx context.Context, app *App) error {
 	if err != nil {
 		return err
 	}
+	if inst.State.IsNative() {
+		return runNativeStop(ctx, app, inst, true)
+	}
 	return app.Locked(ctx, inst, func() error {
 		if err := managed(inst); err != nil {
 			return err
@@ -820,7 +874,7 @@ func runBootStop(ctx context.Context, app *App) error {
 	if err != nil || inst == nil {
 		return err
 	}
-	if inst.State.Ejected != nil {
+	if inst.State.Ejected != nil || inst.State.IsNative() {
 		return nil
 	}
 	e, err := app.Engine(ctx, inst)
@@ -845,6 +899,9 @@ func newRestartCmd(app *App) *cobra.Command {
 			inst, err := app.Instance()
 			if err != nil {
 				return err
+			}
+			if inst.State.IsNative() {
+				return runNativeRestart(ctx, app, inst)
 			}
 			return app.Change(ctx, inst, func(e *engine.Engine) error {
 				return app.UI.Step(ctx, "Restarting Fluxer", func(ctx context.Context, s *ui.Step) error {

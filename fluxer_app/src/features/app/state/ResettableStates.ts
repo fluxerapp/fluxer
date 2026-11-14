@@ -33,7 +33,7 @@ class ResettableStateRegistry {
 	}
 
 	prepareForAccountTransition(reason: AccountTransitionReason): void {
-		this.logger.info('Resetting registered stores for account transition', reason);
+		this.logger.debug('Resetting registered stores for account transition', reason);
 		this.resetAll();
 	}
 }

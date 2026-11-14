@@ -110,7 +110,6 @@ Display, motion, message, media, voice and interaction preferences.
 | show_suppress_embeds_button? | bool | Whether messages show the suppress embeds button |
 | show_gif_indicator? | bool | Whether GIFs show a GIF indicator |
 | show_attachment_expiry_indicator? | bool | Whether attachments show their expiry indicator |
-| use_browser_locale_for_time_format? | bool | Whether times use the browser locale |
 | channel_typing_indicator_mode | int32 | [Channel typing indicator mode](#channel-typing-indicator-modes) |
 | show_selected_channel_typing_indicator? | bool | Whether the selected channel shows its typing indicator |
 | show_message_action_bar? | bool | Whether messages show the action bar |

@@ -19,6 +19,7 @@
 **/_build/
 **/coverage/
 **/dist/
+!/tools/dist/
 **/node_modules/
 **/target/
 **/test-results.json
@@ -49,7 +50,8 @@
 /upload_staging/
 
 
-/fluxer_desktop/
+/fluxer_desktop/*
+!/fluxer_desktop/native/
 
 **/.idea/
 **/*.iml
@@ -64,3 +66,5 @@
 
 **/.DS_Store
 **/Thumbs.db
+
+/fluxer_native/fluxerd

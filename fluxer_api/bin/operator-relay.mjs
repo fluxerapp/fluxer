@@ -3,7 +3,7 @@
 
 import {request} from 'node:http';
 
-const SOCKET_PATH = process.env.FLUXER_OPERATOR_SOCKET ?? '/run/fluxer/operator.sock';
+const SOCKET_PATH = process.env.FLUXER_OPERATOR_SOCKET || '/run/fluxer/operator.sock';
 const HOST_USER_HEADER = 'X-Fluxer-Operator-Host-User';
 const SCHEMA_MAJOR = 1;
 const TIMEOUT_MS = 120_000;

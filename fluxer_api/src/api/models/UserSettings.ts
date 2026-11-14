@@ -22,6 +22,7 @@ import {
 	type ThemeType,
 	ThemeTypes,
 	type TimeFormatType,
+	type TimestampFormatType,
 	UNCATEGORIZED_FOLDER_ID,
 	UserExplicitContentFilterTypes,
 } from '@fluxer/constants/src/UserConstants';
@@ -57,6 +58,8 @@ export class UserSettings {
 	readonly guildFolders: Array<UserGuildFolder>;
 	readonly afkTimeout: number;
 	readonly timeFormat: TimeFormatType;
+	readonly regionalFormat: string | null;
+	readonly timestampFormat: TimestampFormatType;
 	readonly trustedDomains: Set<string>;
 	readonly defaultHideMutedChannels: boolean;
 	readonly sensitiveContentFriendDmFilter: SensitiveMediaFilterLevelValue;
@@ -103,6 +106,8 @@ export class UserSettings {
 		this.guildFolders = (row.guild_folders ?? []).map((folder) => new UserGuildFolder(folder));
 		this.afkTimeout = row.afk_timeout ?? 600;
 		this.timeFormat = (row.time_format ?? 0) as TimeFormatType;
+		this.regionalFormat = row.regional_format ?? null;
+		this.timestampFormat = (row.timestamp_format ?? 0) as TimestampFormatType;
 		this.trustedDomains = row.trusted_domains ?? new Set();
 		this.defaultHideMutedChannels = row.default_hide_muted_channels ?? false;
 		this.sensitiveContentFriendDmFilter = (row.sensitive_content_friend_dm_filter ??
@@ -155,6 +160,8 @@ export class UserSettings {
 			guild_folders: this.guildFolders.length > 0 ? this.guildFolders.map((folder) => folder.toGuildFolder()) : null,
 			afk_timeout: this.afkTimeout,
 			time_format: this.timeFormat,
+			regional_format: this.regionalFormat,
+			timestamp_format: this.timestampFormat,
 			trusted_domains: this.trustedDomains.size > 0 ? this.trustedDomains : null,
 			default_hide_muted_channels: this.defaultHideMutedChannels,
 			sensitive_content_friend_dm_filter: this.sensitiveContentFriendDmFilter,
@@ -234,6 +241,8 @@ export class UserSettings {
 			],
 			afk_timeout: 600,
 			time_format: 0,
+			regional_format: null,
+			timestamp_format: 0,
 			trusted_domains: new Set(),
 			default_hide_muted_channels: false,
 			sensitive_content_friend_dm_filter: isAdult ? SensitiveMediaFilterLevel.SHOW : SensitiveMediaFilterLevel.BLUR,

@@ -15,12 +15,22 @@ import {useCallback} from 'react';
 const UPDATE_AVAILABLE_DESCRIPTOR = msg({
 	message: 'Update available',
 	comment:
-		'Tooltip and accessible label on the channel header updater icon in the desktop app. Clicking it downloads the update, then either reloads the window or, when the desktop app itself updates, closes it and opens the updater.',
+		'Tooltip and accessible label on the channel header updater icon in the desktop app when a new desktop version must be downloaded by hand. Clicking it opens the download.',
+});
+const RELOAD_TO_UPDATE_DESCRIPTOR = msg({
+	message: 'Reload to update',
+	comment:
+		'Tooltip and accessible label on the channel header updater icon in the desktop app when an update to the app files is ready. Clicking it reloads the window in place to finish updating.',
+});
+const RESTART_TO_UPDATE_DESCRIPTOR = msg({
+	message: 'Restart to update',
+	comment:
+		'Tooltip and accessible label on the channel header updater icon in the desktop app when an update to the desktop app itself is ready. Clicking it restarts the app to finish updating.',
 });
 const UPDATING_DESCRIPTOR = msg({
 	message: 'Updating…',
 	comment:
-		'Tooltip and accessible label on the channel header updater icon in the desktop app while an update the user started is downloading. The app reloads by itself when it is done.',
+		'Tooltip and accessible label on the channel header updater icon in the desktop app while an update the user started is being applied. The app reloads or restarts by itself when it is done.',
 });
 const CLICK_TO_RELOAD_AND_UPDATE_DESCRIPTOR = msg({
 	message: 'Reload {productName} to use web update {version}',
@@ -60,7 +70,9 @@ export const UpdaterIcon = observer(() => {
 	let tooltip: string;
 	if (affordance === 'updating') {
 		tooltip = i18n._(UPDATING_DESCRIPTOR);
-	} else if (affordance !== 'web') {
+	} else if (affordance === 'desktop') {
+		tooltip = i18n._(Updater.desktopUpdateReplacesShell ? RESTART_TO_UPDATE_DESCRIPTOR : RELOAD_TO_UPDATE_DESCRIPTOR);
+	} else if (affordance === 'manual') {
 		tooltip = i18n._(UPDATE_AVAILABLE_DESCRIPTOR);
 	} else {
 		tooltip = version

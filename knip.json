@@ -10,7 +10,7 @@
 		"fluxer_app_proxy/src/routes/instance_brand_preboot.js",
 		"fluxer_app_proxy/src/routes/saturation_preboot.js",
 		"fluxer_app/src/features/voice/utils/camera-effects/models/selfie_segmentation_256x256.d.onnx.ts",
-		"fluxer_app/src/media/images/i-like-food.d.svg.ts"
+		"fluxer_app/src/media/images/*.d.svg.ts"
 	],
 	"ignoreIssues": {
 		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
@@ -30,7 +30,6 @@
 				"bidi-js",
 				"emoji-regex",
 				"harfbuzzjs",
-				"ioredis",
 				"maxmind",
 				"nodemailer",
 				"pg",
@@ -46,14 +45,18 @@
 				"scripts/build-sw.mjs",
 				"scripts/Generate*.ts",
 				"src/features/account_engine/core/index.ts",
-				"src/features/platform/utils/BrowserAssertStrict.ts"
+				"src/features/platform/utils/BrowserAssertStrict.ts",
+				"src/app/desktop/DesktopDeferredComponents.tsx",
+				"src/app/desktop/DesktopDeferredUI.ts"
 			]
 		},
 		"fluxer_desktop": {
 			"ignoreExportsUsedInFile": false,
 			"entry": [
 				"src/main/Bootstrap.ts",
+				"src/main/DesktopTrustedCertificatesWorker.ts",
 				"src/main/index.ts",
+				"src/main/LaunchEntry.ts",
 				"src/preload/index.ts",
 				"src/preload/LegacyHarvestPreload.ts",
 				"src/engine/AccountEngineMain.ts",
@@ -62,8 +65,7 @@
 				"scripts/generate-windows-badges.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
-			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"],
-			"ignoreDependencies": ["electron-builder"]
+			"ignoreBinaries": ["reg.exe", "update-desktop-database", "xdg-mime"]
 		},
 		"fluxer_docs": {
 			"entry": ["scripts/*.ts", "src/**/*.astro"],

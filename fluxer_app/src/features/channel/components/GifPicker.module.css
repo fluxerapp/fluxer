@@ -351,7 +351,7 @@
 .suggestionTag {
 	padding: 0.5rem 1rem;
 	border: none;
-	border-radius: 1rem;
+	border-radius: var(--radius-lg);
 	background-color: var(--background-tertiary);
 	color: var(--text-primary);
 	font-size: 0.875rem;

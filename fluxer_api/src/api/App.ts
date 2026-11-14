@@ -4,10 +4,12 @@ import {createInitializer, createShutdown} from '@app/api/app/APILifecycle';
 import {registerControllers} from '@app/api/app/ControllerRegistry';
 import {configureMiddleware} from '@app/api/app/MiddlewarePipeline';
 import type {APIConfig} from '@app/api/config/APIConfig';
+import {StorageFullError, StorageReadOnlyError} from '@app/api/infrastructure/IStorageService';
 import {recordRequestStatus} from '@app/api/middleware/RequestErrorTelemetry';
 import type {ServiceSingletonDependencies} from '@app/api/middleware/ServiceSingletons';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {AppErrorHandler, AppNotFoundHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
 import {resolveErrorStatus} from '@fluxer/errors/src/error_handling/ErrorIntrospection';
 import {createMetricsMiddleware} from '@fluxer/hono/src/middleware/Metrics';
@@ -29,7 +31,11 @@ interface APIAppResult {
 	shutdown: () => Promise<void>;
 }
 
-function TelemetryAwareAppErrorHandler(err: Error, ctx: Context<HonoEnv>): Response | Promise<Response> {
+function TelemetryAwareAppErrorHandler(error: Error, ctx: Context<HonoEnv>): Response | Promise<Response> {
+	const err =
+		error instanceof StorageReadOnlyError || error instanceof StorageFullError
+			? new ServiceUnavailableError({cause: error})
+			: error;
 	if (!(err instanceof IpBannedError)) {
 		const status = resolveErrorStatus(err);
 		if (status !== null && !ctx.get('user')) {

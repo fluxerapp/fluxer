@@ -16,6 +16,7 @@ import type {Application} from '@app/api/models/Application';
 import type {User} from '@app/api/models/User';
 import type {BotAuthService} from '@app/api/oauth/BotAuthService';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import {enforceFluxerTagChangeRateLimit} from '@app/api/user/FluxerTagChangeRateLimit';
 import {dispatchUserUpdate, hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
@@ -128,6 +129,7 @@ export class ApplicationService {
 			});
 		}
 		const owner = await this.apiContext.services.users.findUniqueAssert(args.ownerUserId);
+		assertAccountNotLimited(owner);
 		const botIsPublic = args.botPublic ?? true;
 		const botRequireCodeGrant = args.botRequireCodeGrant ?? false;
 		assertTierAllows(owner, TierGatedActions.APPLICATION_CREATE, NO_TIER_CONTEXT);

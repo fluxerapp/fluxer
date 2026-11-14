@@ -5,7 +5,7 @@ import {requestAccountSwitcher} from '@electron/main/DesktopTray';
 import {updateFromCommandLine} from '@electron/main/DesktopUpdatePrompt';
 import {type JumpListTaskId, parseJumpListTaskFromArgv} from '@electron/main/JumpList';
 import {isDesktopUpdateRequested} from '@electron/main/LaunchOptions';
-import {getMainWindow, isMainWindowTakenOver, onMainWindowTakeoverEnded, showWindow} from '@electron/main/Window';
+import {getMainWindow, isTrustedOrigin, showWindow} from '@electron/main/Window';
 import {app, ipcMain} from 'electron';
 import log from 'electron-log';
 
@@ -148,14 +148,6 @@ export function initializeDeepLinks(): void {
 	registerInitialDeepLinkHandler();
 }
 
-function deliverDeepLinkHeldByTakeover(): void {
-	const mainWindow = getMainWindow();
-	if (initialDeepLink == null || mainWindow == null || mainWindow.isDestroyed()) return;
-	const url = initialDeepLink;
-	initialDeepLink = null;
-	mainWindow.webContents.send('deep-link', url);
-}
-
 function registerInitialDeepLinkHandler(): void {
 	const deepLinkArg = extractDeepLinkFromArgv(process.argv);
 	if (deepLinkArg && parseHandoffReturnLink(deepLinkArg) == null) {
@@ -165,7 +157,6 @@ function registerInitialDeepLinkHandler(): void {
 			shouldSuppressAsDuplicate(normalized);
 		}
 	}
-	onMainWindowTakeoverEnded(deliverDeepLinkHeldByTakeover);
 	ipcMain.handle('get-initial-deep-link', (): string | null => {
 		const url = initialDeepLink;
 		initialDeepLink = null;
@@ -183,18 +174,18 @@ function dispatchDeepLink(url: string): void {
 	const normalized = normalizeDeepLinkForRenderer(url);
 	if (!normalized || shouldSuppressAsDuplicate(normalized)) return;
 	recordRecentDeepLink(url);
-	if (isMainWindowTakenOver()) {
-		initialDeepLink = normalized;
-		showWindow();
-		return;
-	}
 	const mainWindow = getMainWindow();
-	if (mainWindow && !mainWindow.isDestroyed()) {
+	if (
+		mainWindow &&
+		!mainWindow.isDestroyed() &&
+		isTrustedOrigin(mainWindow.webContents.getURL()) &&
+		!mainWindow.webContents.isLoadingMainFrame()
+	) {
 		mainWindow.webContents.send('deep-link', normalized);
-		showWindow();
 	} else {
 		initialDeepLink = normalized;
 	}
+	showWindow();
 }
 
 function dispatchJumpListTask(taskId: JumpListTaskId): void {
@@ -205,11 +196,12 @@ function dispatchJumpListTask(taskId: JumpListTaskId): void {
 	const mainWindow = getMainWindow();
 	if (!mainWindow || mainWindow.isDestroyed()) return;
 	showWindow();
-	if (taskId === 'open-settings') {
-		mainWindow.webContents.send('open-settings');
-	} else {
-		mainWindow.webContents.send('jump-list-new-dm');
-	}
+	const sendTask = (): void => {
+		if (mainWindow.isDestroyed()) return;
+		mainWindow.webContents.send(taskId === 'open-settings' ? 'open-settings' : 'jump-list-new-dm');
+	};
+	if (isTrustedOrigin(mainWindow.webContents.getURL()) && !mainWindow.webContents.isLoadingMainFrame()) sendTask();
+	else mainWindow.webContents.once('did-finish-load', sendTask);
 }
 
 export function handleOpenUrl(url: string): void {

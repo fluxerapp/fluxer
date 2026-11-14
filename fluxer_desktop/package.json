@@ -11,8 +11,8 @@
 	"scripts": {
 		"build": "node scripts/build.mjs",
 		"generate:windows-badges": "electron scripts/generate-windows-badges.mjs",
-		"set-channel": "../tools/ci/run.sh build-desktop --step set_build_channel",
-		"typecheck": "pnpm set-channel && tsc --noEmit"
+		"package:dir": "node scripts/build.mjs && electron-builder --config electron-builder.config.cjs --dir",
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@fluxer/constants": "workspace:*",
@@ -33,11 +33,6 @@
 		"electron-builder": "27.0.0-alpha.8",
 		"esbuild": "catalog:",
 		"typescript": "catalog:ts7"
-	},
-	"knip": {
-		"ignoreDependencies": [
-			"electron-builder"
-		]
 	},
 	"optionalDependencies": {
 		"@fluxer/app-store": "file:./native/app-store",

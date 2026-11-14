@@ -18,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/ui"
 )
@@ -52,6 +53,7 @@ func Execute(version, commit string) int {
 		release.RemoveOldBinary()
 	}
 	app := &App{Version: version, Commit: commit, UI: ui.New(ui.Options{})}
+	native.Warn = app.UI.Warn
 	root := newRoot(app)
 	root.SetOut(ui.NewHelpWriter(os.Stdout, groupRun, groupManage, groupOther))
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
@@ -111,6 +113,7 @@ func newRoot(app *App) *cobra.Command {
 		newDownCmd(app),
 		newRestartCmd(app),
 		newUpgradeCmd(app),
+		newMigrateCmd(app),
 		newAutoUpgradeCmd(app),
 		newBootCmd(app),
 		newRollbackCmd(app),

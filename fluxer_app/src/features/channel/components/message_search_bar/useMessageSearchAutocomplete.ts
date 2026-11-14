@@ -327,7 +327,7 @@ export function useMessageSearchAutocomplete({
 		if (context) {
 			context.beginSearch(searchQuery, plan.workerFilters, new Set(), new Set(), boosters);
 		}
-		if (!plan.guildsToSearch || plan.guildsToSearch.length === 0) {
+		if (!isUserFilterMode || !plan.guildsToSearch || plan.guildsToSearch.length === 0) {
 			memberFetchQueryRef.current = searchQuery;
 			return;
 		}
@@ -335,9 +335,6 @@ export function useMessageSearchAutocomplete({
 		const scheduledQuery = searchQuery;
 		memberFetchDebounceTimerRef.current = setTimeout(() => {
 			memberFetchDebounceTimerRef.current = null;
-			if (!isPlaintextSuggestionMode && !isUserFilterMode) {
-				return;
-			}
 			if (memberFetchQueryRef.current !== scheduledQuery) {
 				return;
 			}

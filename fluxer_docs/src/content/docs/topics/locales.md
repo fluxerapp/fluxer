@@ -13,7 +13,10 @@ A `locale` field in a request, such as the one in [user settings](/http-api/user
 | Value | Description |
 | --- | --- |
 | ar | Arabic |
+| be | Belarusian |
 | bg | Bulgarian |
+| bn | Bangla |
+| ca | Catalan |
 | cs | Czech |
 | da | Danish |
 | de | German |
@@ -23,6 +26,7 @@ A `locale` field in a request, such as the one in [user settings](/http-api/user
 | es-ES | Spanish (Spain) |
 | es-419 | Spanish (Latin America) |
 | fi | Finnish |
+| fil | Filipino |
 | fr | French |
 | he | Hebrew |
 | hi | Hindi |
@@ -33,14 +37,20 @@ A `locale` field in a request, such as the one in [user settings](/http-api/user
 | ja | Japanese |
 | ko | Korean |
 | lt | Lithuanian |
+| lv | Latvian |
 | nl | Dutch |
 | no | Norwegian |
 | pl | Polish |
 | pt-BR | Portuguese (Brazil) |
+| pt-PT | Portuguese (Portugal) |
 | ro | Romanian |
 | ru | Russian |
+| sk | Slovak |
+| sl | Slovenian |
+| sq | Albanian |
 | sv-SE | Swedish |
 | th | Thai |
+| tok | Toki Pona |
 | tr | Turkish |
 | uk | Ukrainian |
 | vi | Vietnamese |
@@ -53,8 +63,8 @@ When you're signed in and your account has a saved locale, the API uses it. Othe
 
 The API sorts the `Accept-Language` tags by `q` weight and makes two passes over them. Matching ignores case and accepts `_` in place of `-`.
 
-1. The first tag that is a supported locale wins. `sv` counts as `sv-SE`, and `nb` and `nn` count as `no`.
-2. If no tag matched, the first tag whose language subtag has a locale wins, and `fr-CA` picks `fr`. A Chinese tag with `Hant`, `TW`, `HK` or `MO` picks `zh-TW`. The language subtags below pick a set locale.
+1. The first tag that is a supported locale wins. `sv` counts as `sv-SE`, `tl` counts as `fil`, and `nb` and `nn` count as `no`.
+2. If no tag matched, the first tag whose language subtag has a locale wins, and `fr-CA` picks `fr`. A Chinese tag with `Hant`, `TW`, `HK` or `MO` picks `zh-TW`. A Portuguese tag with a region other than `BR`, such as `pt-AO`, picks `pt-PT`. The language subtags below pick a set locale.
 
 | Language subtag | Locale |
 | --- | --- |

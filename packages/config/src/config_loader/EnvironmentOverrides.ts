@@ -54,6 +54,12 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_DATABASE_BACKEND: {path: ['database', 'backend']},
 	FLUXER_KV_URL: {path: ['internal', 'kv']},
 	FLUXER_KV_MODE: {path: ['internal', 'kv_mode']},
+	FLUXER_KV_POSTGRES_MAX_CONNECTIONS: {path: ['internal', 'kv_postgres', 'max_connections'], parse: parseInteger},
+	FLUXER_KV_POSTGRES_MAX_BYTES: {path: ['internal', 'kv_postgres', 'max_bytes'], parse: parseInteger},
+	FLUXER_STORAGE_BACKEND: {path: ['storage', 'backend']},
+	FLUXER_STORAGE_ROOT: {path: ['storage', 'root']},
+	FLUXER_STORAGE_UPLOADS_TTL: {path: ['storage', 'uploads_ttl']},
+	FLUXER_STORAGE_READ_ONLY: {path: ['storage', 'read_only'], parse: parseBoolean},
 	FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: {path: ['internal', 'media_proxy']},
 	FLUXER_S3_ENDPOINT: {path: ['s3', 'endpoint']},
 	FLUXER_S3_PUBLIC_ENDPOINT: {path: ['s3', 'presigned_url_base']},
@@ -69,6 +75,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_NATS_JETSTREAM_URL: {path: ['services', 'nats', 'jetstream_url']},
 	FLUXER_NATS_AUTH_TOKEN: {path: ['services', 'nats', 'auth_token']},
 	FLUXER_API_PORT: {path: ['services', 'api', 'port'], parse: parseInteger},
+	FLUXER_API_HOST: {path: ['services', 'api', 'host']},
 	FLUXER_API_HEADERS_TIMEOUT_MS: {path: ['services', 'api', 'headers_timeout_ms'], parse: parseInteger},
 	FLUXER_API_REQUEST_TIMEOUT_MS: {path: ['services', 'api', 'request_timeout_ms'], parse: parseInteger},
 	FLUXER_API_MAX_INFLIGHT_REQUESTS: {path: ['services', 'api', 'max_inflight_requests'], parse: parseInteger},
@@ -328,7 +335,6 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_LABS_GUILD_ID: {path: ['operator_pass', 'labs_guild_id']},
 	FLUXER_LABS_OPERATOR_ROLE_ID: {path: ['operator_pass', 'labs_operator_role_id']},
 	FLUXER_LABS_VISIONARY_ROLE_ID: {path: ['operator_pass', 'labs_visionary_role_id']},
-	FLUXER_LABS_ACCESS_ROLE_ID: {path: ['operator_pass', 'labs_access_role_id']},
 	FLUXER_LABS_OPERATORS_CHANNEL_ID: {path: ['operator_pass', 'labs_operators_channel_id']},
 	FLUXER_PAYMENT_DISPUTE_CLOSURE_EFFECTIVE_AT: {path: ['payment_disputes', 'closure_effective_at']},
 	FLUXER_OPERATOR_PASS_PRICE_RISES_AT: {path: ['operator_pass', 'price_rises_at']},
@@ -599,6 +605,7 @@ function setNestedValue(target: ConfigContainer, keys: Array<ConfigPathKey>, val
 const NAMED_FLUXER_ENV_ALIASES: Record<string, string | undefined> = {
 	FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: 'FLUXER_MEDIA_PROXY_ENDPOINT',
 	FLUXER_NATS_URL: 'FLUXER_NATS_CORE_URL',
+	FLUXER_STORAGE_UPLOADS_TTL: 'FLUXER_SEAWEEDFS_UPLOADS_TTL',
 };
 
 function nonBlank(value: string | undefined): string | undefined {

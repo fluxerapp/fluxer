@@ -64,6 +64,13 @@
 			"version": "1.1.0",
 			"sha256": "9254327ce690b6f63a5bb605225479b5c4050b5bb413b922ebbc255913e62ee8"
 		},
+		"noto-sans-bengali": {
+			"type": "github-release",
+			"repo": "notofonts/bengali",
+			"tag": "NotoSansBengali-v3.011",
+			"asset": "NotoSansBengali-v3.011.zip",
+			"sha256": "2aca24bf71665e66c32e14862ee58857dd8b8b07b6321ec7c96f3121ad6683b1"
+		},
 		"plex-sans-hebrew": {
 			"type": "npm",
 			"package": "@ibm/plex-sans-hebrew",
@@ -1552,6 +1559,224 @@
 					},
 					"files": 1,
 					"codepoints": 458
+				}
+			}
+		},
+		"FluxerSansBengali": {
+			"mode": "rebuild",
+			"source": "noto-sans-bengali",
+			"srcSubdir": "NotoSansBengali/hinted/ttf",
+			"cssFamily": "Fluxer Sans Bengali",
+			"stylesheet": "css/script-bengali.css",
+			"latinCore": false,
+			"gasp": {
+				"8": 10,
+				"65535": 15
+			},
+			"codepoints": 134,
+			"faces": {
+				"Thin": {
+					"sourceFile": "NotoSansBengali-Thin.woff2",
+					"sourceSha256": "33faee3b5fcb9b1e77b5d65a2a202a5b571ec9d31834a9b809c3c313e47e56d7",
+					"hinting": {
+						"fpgm": 3596,
+						"prep": 178,
+						"cvt ": 66
+					},
+					"metrics": {
+						"head.unitsPerEm": 1000,
+						"head.macStyle": 0,
+						"hhea.ascender": 917,
+						"hhea.descender": -408,
+						"hhea.lineGap": 0,
+						"hhea.caretSlopeRise": 1000,
+						"hhea.caretSlopeRun": 0,
+						"OS/2.sTypoAscender": 917,
+						"OS/2.sTypoDescender": -408,
+						"OS/2.sTypoLineGap": 0,
+						"OS/2.usWinAscent": 995,
+						"OS/2.usWinDescent": 408,
+						"OS/2.sxHeight": 536,
+						"OS/2.sCapHeight": 622,
+						"OS/2.usWeightClass": 100,
+						"OS/2.fsSelection": 448
+					},
+					"files": 1,
+					"codepoints": 134
+				},
+				"ExtraLight": {
+					"sourceFile": "NotoSansBengali-ExtraLight.woff2",
+					"sourceSha256": "89d9a6050c4ab3c252917065919f67e84d3777956d0e43da41b015c32a9aa40e",
+					"hinting": {
+						"fpgm": 3596,
+						"prep": 178,
+						"cvt ": 66
+					},
+					"metrics": {
+						"head.unitsPerEm": 1000,
+						"head.macStyle": 0,
+						"hhea.ascender": 917,
+						"hhea.descender": -408,
+						"hhea.lineGap": 0,
+						"hhea.caretSlopeRise": 1000,
+						"hhea.caretSlopeRun": 0,
+						"OS/2.sTypoAscender": 917,
+						"OS/2.sTypoDescender": -408,
+						"OS/2.sTypoLineGap": 0,
+						"OS/2.usWinAscent": 995,
+						"OS/2.usWinDescent": 408,
+						"OS/2.sxHeight": 536,
+						"OS/2.sCapHeight": 622,
+						"OS/2.usWeightClass": 200,
+						"OS/2.fsSelection": 448
+					},
+					"files": 1,
+					"codepoints": 134
+				},
+				"Light": {
+					"sourceFile": "NotoSansBengali-Light.woff2",
+					"sourceSha256": "f9a13c0a874df2c8a4feca6ccac135e8e54d20d11e4e90714ad4c568984beb38",
+					"hinting": {
+						"fpgm": 3596,
+						"prep": 178,
+						"cvt ": 66
+					},
+					"metrics": {
+						"head.unitsPerEm": 1000,
+						"head.macStyle": 0,
+						"hhea.ascender": 917,
+						"hhea.descender": -408,
+						"hhea.lineGap": 0,
+						"hhea.caretSlopeRise": 1000,
+						"hhea.caretSlopeRun": 0,
+						"OS/2.sTypoAscender": 917,
+						"OS/2.sTypoDescender": -408,
+						"OS/2.sTypoLineGap": 0,
+						"OS/2.usWinAscent": 995,
+						"OS/2.usWinDescent": 408,
+						"OS/2.sxHeight": 536,
+						"OS/2.sCapHeight": 622,
+						"OS/2.usWeightClass": 300,
+						"OS/2.fsSelection": 448
+					},
+					"files": 1,
+					"codepoints": 134
+				},
+				"Regular": {
+					"sourceFile": "NotoSansBengali-Regular.woff2",
+					"sourceSha256": "63e4f73c5b90359edc8ce6f3f6b2f05c5416d44156e80ab6216f851181c56e78",
+					"hinting": {
+						"fpgm": 3596,
+						"prep": 178,
+						"cvt ": 66
+					},
+					"metrics": {
+						"head.unitsPerEm": 1000,
+						"head.macStyle": 0,
+						"hhea.ascender": 917,
+						"hhea.descender": -408,
+						"hhea.lineGap": 0,
+						"hhea.caretSlopeRise": 1000,
+						"hhea.caretSlopeRun": 0,
+						"OS/2.sTypoAscender": 917,
+						"OS/2.sTypoDescender": -408,
+						"OS/2.sTypoLineGap": 0,
+						"OS/2.usWinAscent": 995,
+						"OS/2.usWinDescent": 408,
+						"OS/2.sxHeight": 536,
+						"OS/2.sCapHeight": 622,
+						"OS/2.usWeightClass": 400,
+						"OS/2.fsSelection": 448
+					},
+					"files": 1,
+					"codepoints": 134
+				},
+				"Medium": {
+					"sourceFile": "NotoSansBengali-Medium.woff2",
+					"sourceSha256": "1677c40b2fd8c3d9c1d563034f432a43be3cab98da768b725d4e25f9a4cf6257",
+					"hinting": {
+						"fpgm": 3596,
+						"prep": 178,
+						"cvt ": 66
+					},
+					"metrics": {
+						"head.unitsPerEm": 1000,
+						"head.macStyle": 0,
+						"hhea.ascender": 917,
+						"hhea.descender": -408,
+						"hhea.lineGap": 0,
+						"hhea.caretSlopeRise": 1000,
+						"hhea.caretSlopeRun": 0,
+						"OS/2.sTypoAscender": 917,
+						"OS/2.sTypoDescender": -408,
+						"OS/2.sTypoLineGap": 0,
+						"OS/2.usWinAscent": 995,
+						"OS/2.usWinDescent": 408,
+						"OS/2.sxHeight": 536,
+						"OS/2.sCapHeight": 622,
+						"OS/2.usWeightClass": 500,
+						"OS/2.fsSelection": 448
+					},
+					"files": 1,
+					"codepoints": 134
+				},
+				"SemiBold": {
+					"sourceFile": "NotoSansBengali-SemiBold.woff2",
+					"sourceSha256": "3bbd716ae13e2f1a645da09ca5557a9b95b11cb762b41e3da81f8fd275c03622",
+					"hinting": {
+						"fpgm": 3596,
+						"prep": 178,
+						"cvt ": 66
+					},
+					"metrics": {
+						"head.unitsPerEm": 1000,
+						"head.macStyle": 0,
+						"hhea.ascender": 917,
+						"hhea.descender": -408,
+						"hhea.lineGap": 0,
+						"hhea.caretSlopeRise": 1000,
+						"hhea.caretSlopeRun": 0,
+						"OS/2.sTypoAscender": 917,
+						"OS/2.sTypoDescender": -408,
+						"OS/2.sTypoLineGap": 0,
+						"OS/2.usWinAscent": 995,
+						"OS/2.usWinDescent": 408,
+						"OS/2.sxHeight": 536,
+						"OS/2.sCapHeight": 622,
+						"OS/2.usWeightClass": 600,
+						"OS/2.fsSelection": 448
+					},
+					"files": 1,
+					"codepoints": 134
+				},
+				"Bold": {
+					"sourceFile": "NotoSansBengali-Bold.woff2",
+					"sourceSha256": "06426acf1b9be102950d944fb6e46480bce9bfabe9e51fd5ee03a5b14ef2681e",
+					"hinting": {
+						"fpgm": 3596,
+						"prep": 178,
+						"cvt ": 66
+					},
+					"metrics": {
+						"head.unitsPerEm": 1000,
+						"head.macStyle": 1,
+						"hhea.ascender": 917,
+						"hhea.descender": -408,
+						"hhea.lineGap": 0,
+						"hhea.caretSlopeRise": 1000,
+						"hhea.caretSlopeRun": 0,
+						"OS/2.sTypoAscender": 917,
+						"OS/2.sTypoDescender": -408,
+						"OS/2.sTypoLineGap": 0,
+						"OS/2.usWinAscent": 995,
+						"OS/2.usWinDescent": 408,
+						"OS/2.sxHeight": 536,
+						"OS/2.sCapHeight": 622,
+						"OS/2.usWeightClass": 700,
+						"OS/2.fsSelection": 416
+					},
+					"files": 1,
+					"codepoints": 134
 				}
 			}
 		},
@@ -3244,12 +3469,16 @@
 			"bytes": 3023
 		},
 		"css/locale-fallbacks.css": {
-			"sha256": "c81f498b8b5a27a3e15a56c8ec2b0cd3892094b2337d85a5c2e3af87d437c114",
-			"bytes": 3133
+			"sha256": "242f867c04718487e30d60bb1b92a7411f6b29e1ded786274f89af82ceeafd6a",
+			"bytes": 3715
 		},
 		"css/script-arabic.css": {
 			"sha256": "13fb70d818f3daee7376327bfa229225d19e618d2811235c90a16501fb672aa0",
 			"bytes": 15974
+		},
+		"css/script-bengali.css": {
+			"sha256": "3815e405508e610b1ea76da9b3f22366d13537f206e2c8dcbeb37ab6d6ab9c80",
+			"bytes": 4691
 		},
 		"css/script-devanagari.css": {
 			"sha256": "e2714b5e3a2b117d1282ecd00efb06f290cc6d7677e718f02ca7f23b87e494f5",
@@ -3280,12 +3509,12 @@
 			"bytes": 8662
 		},
 		"css/variables.css": {
-			"sha256": "8fe0dd78ec093d7a8dd4c55bb320e887f14bf33279b4d30e5106a9d26830f1a3",
-			"bytes": 486
+			"sha256": "256ddac2a38aeb05a1daba569e04c54e01fda7d4c4f8685224aa5687a1bd7c37",
+			"bytes": 509
 		},
 		"manifest.json": {
-			"sha256": "02c5a7e6ceaad648ae5ccc51b8c28ecb7f892187116c35713a07924808223aa7",
-			"bytes": 1202350
+			"sha256": "d8d06c96437580a90fb4edc36098b444d18c179eb950b72e40763291cfcc4748",
+			"bytes": 1206811
 		}
 	},
 	"files": {
@@ -3480,6 +3709,34 @@
 		"files/FluxerSansDevanagari/FluxerSansDevanagari-Bold.woff2": {
 			"sha256": "e5c337bf1073fcda561dfe8e211bf47da5586097dac9bc6718c6b777d25ffdcd",
 			"bytes": 100692
+		},
+		"files/FluxerSansBengali/FluxerSansBengali-Thin.woff2": {
+			"sha256": "e097751721779c8fc48678a495c15b44eaf67d9389ce08dfb6aa8583fe57d637",
+			"bytes": 56524
+		},
+		"files/FluxerSansBengali/FluxerSansBengali-ExtraLight.woff2": {
+			"sha256": "6c7cdea404ad4693bc1cbec4baf7028c395ef0cac95d90a457dd424653a30fd8",
+			"bytes": 58428
+		},
+		"files/FluxerSansBengali/FluxerSansBengali-Light.woff2": {
+			"sha256": "5002e934d4867b30b8994a79c23cb02fba6f85f2f3ec555f7528a0a05f52363c",
+			"bytes": 58436
+		},
+		"files/FluxerSansBengali/FluxerSansBengali-Regular.woff2": {
+			"sha256": "7b1ad9dd0b3c6175146a9aab2e42883cccdcc50d9f4556d43596e3ce26cbd971",
+			"bytes": 56920
+		},
+		"files/FluxerSansBengali/FluxerSansBengali-Medium.woff2": {
+			"sha256": "cdd598f5da46ebde891b4347c3225609dfcc6dc8f4e6ecd2d0cfc58b0c087057",
+			"bytes": 59952
+		},
+		"files/FluxerSansBengali/FluxerSansBengali-SemiBold.woff2": {
+			"sha256": "a8d53aec031232bf570b837aab5c18bf625414db2dfe44cf7adccd2dd5f228b4",
+			"bytes": 60184
+		},
+		"files/FluxerSansBengali/FluxerSansBengali-Bold.woff2": {
+			"sha256": "e4dffae9696da0eee541fdb98974a4fdf7e6966324397823b3754ba4a69c4ce6",
+			"bytes": 59844
 		},
 		"files/FluxerSansHebrew/FluxerSansHebrew-Thin.woff2": {
 			"sha256": "3ca4457b9336ab95ea298244dc951d9e359f769713bff15eccd51dbfa3bd0dd5",

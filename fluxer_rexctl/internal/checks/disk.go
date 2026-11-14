@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	firstStartBytes = 256 << 20
-	diskReserve     = backup.DiskReserve
+	firstStartBytes    = 256 << 20
+	diskReserve        = backup.DiskReserve
+	nativeReleaseBytes = 3_000_000_000
 )
 
 const vmDiskNote = "The container engine keeps its data in a virtual machine disk, and rexctl can only check this machine's disk."
@@ -34,6 +35,9 @@ func runDisk(ctx context.Context, e *Env) Result {
 		return e.installedDisk(ctx)
 	case e.phase&Voice != 0:
 		return e.reserveDisk(spaces(e.wants(0, 0)))
+	}
+	if e.Native {
+		return e.nativeInstallDisk()
 	}
 	spaces := e.InstallNeed(ctx)
 	if len(spaces) == 0 {
@@ -69,6 +73,18 @@ func runDisk(ctx context.Context, e *Env) Result {
 	}
 	e.noteVMDisk(&r)
 	return r
+}
+
+func (e *Env) nativeInstallDisk() Result {
+	sp := spaces([]Space{{Path: e.Dir, Need: nativeReleaseBytes + firstStartBytes}})
+	if len(sp) == 0 {
+		return skip("Couldn't read how much free disk space this machine has.")
+	}
+	has := fmt.Sprintf("%s has %s of free disk space and this install needs about %s there.", e.diskRole(sp[0].Path), size(sp[0].Free), size(sp[0].Need))
+	if sp[0].Short() {
+		return fail(has, e.installDiskFix(sp[0].Path))
+	}
+	return pass(has)
 }
 
 func (e *Env) installedDisk(ctx context.Context) Result {
@@ -354,13 +370,26 @@ func RunningRefs(set *stack.Set, fluxer map[string]string, run Running) []string
 	if chosen == nil {
 		chosen = func(string) string { return "" }
 	}
-	external := run.ExternalStore
+	modes := map[string]string{}
+	for _, k := range []string{settings.RustProcess, settings.StorageBackend, settings.KVMode} {
+		modes[k] = chosen(k)
+	}
+	external := run.ExternalStore || stack.FilesystemStorage(modes)
+	single := stack.RustSingle(modes)
+	images := stack.ComposeImages(compose)
+	if single {
+		images[stack.RustService] = "${FLUXER_REGISTRY}"
+	}
 	var out []string
-	for svc, value := range stack.ComposeImages(compose) {
+	for svc, value := range images {
 		switch {
 		case svc == "livekit" && !run.Voice:
 			continue
 		case (svc == "seaweedfs" || svc == "seaweedfs-init") && external:
+			continue
+		case svc == "valkey" && stack.KVPostgres(modes):
+			continue
+		case stack.RunsIn(svc, single) != svc:
 			continue
 		}
 		ref := imageFor(svc, value, fluxer, chosen)

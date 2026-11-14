@@ -32,6 +32,6 @@ and `assets/libfluxwebp-*.txt`.
 Fonts used to be mirrored here under `fonts/`. They are now bundled by each app
 that uses them, and their OFL-1.1 licenses and modification disclosure live with
 the binaries in `packages/fonts/` (`LICENSE-IBM-PLEX.txt`,
-`NOTICE.md`).
+`LICENSE-NOTO-SANS-BENGALI.txt`, `NOTICE.md`).
 
 No Fluxer license notice grants rights to third-party trademarks or brand names.

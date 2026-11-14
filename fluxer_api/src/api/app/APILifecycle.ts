@@ -17,6 +17,7 @@ import {
 	startSharedListWatch,
 	stopSharedListWatch,
 } from '@app/api/infrastructure/activity/SharedLists';
+import {filesystemObjectPath} from '@app/api/infrastructure/FilesystemStorageLayout';
 import {shutdownStorageChangeFeed} from '@app/api/infrastructure/StorageServiceFactory';
 import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
@@ -196,6 +197,9 @@ export function createInitializer(
 					accessKeyId: config.s3.accessKeyId,
 					secretAccessKey: config.s3.secretAccessKey,
 				},
+				...(config.storage.backend === 'filesystem'
+					? {resolveStoredObjectPath: (bucket, key) => filesystemObjectPath(config.storage.root, bucket, key)}
+					: {}),
 			});
 			if (geoipStartupResult.mode === 's3') {
 				logger.info(
@@ -205,7 +209,7 @@ export function createInitializer(
 						s3_bucket: geoipStartupResult.bucket,
 						s3_key: geoipStartupResult.key,
 					},
-					'GeoIP database downloaded from S3',
+					geoipStartupResult.downloaded ? 'GeoIP database downloaded from S3' : 'GeoIP database copied from storage',
 				);
 			}
 			if (config.database.backend === 'postgres' && !hasDatabaseQueryExecutor()) {
@@ -422,7 +426,7 @@ export function createShutdown(config: APIConfig, logger: LoggerInterface): () =
 				unsupportedDatabaseBackend(config.database.backend);
 		}
 		try {
-			closeOwnedKVClient();
+			await closeOwnedKVClient();
 			logger.info('Key-value client closed');
 		} catch (error) {
 			logger.error({error}, 'Error closing key-value client');

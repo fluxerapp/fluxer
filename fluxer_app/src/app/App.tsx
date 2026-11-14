@@ -7,7 +7,6 @@ import {NekoSprite} from '@app/features/accessibility/components/NekoSprite';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import AccountEngine from '@app/features/account_engine/state/AccountEngine';
 import {DndContext} from '@app/features/app/components/layout/DndContext';
-import GlobalOverlays from '@app/features/app/components/layout/GlobalOverlays';
 import {NativeTitlebar} from '@app/features/app/components/layout/NativeTitlebar';
 import {useAppPlatformBridges} from '@app/features/app/hooks/useAppPlatformBridges';
 import {useDesktopAllowTransparency} from '@app/features/app/hooks/useDesktopAllowTransparency';
@@ -23,15 +22,18 @@ import {getInstanceBrandStyle, getInstanceCssOrigins} from '@app/features/app/st
 import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state/LayoutVariantContext';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
+import {afterBootReveal} from '@app/features/boot_state/BootReveal';
+import BootStateRestore from '@app/features/boot_state/BootStateRestore';
 import {showMyselfTypingHelper} from '@app/features/devtools/utils/ShowMyselfTypingHelper';
 import GatewaySessions from '@app/features/gateway/transport/GatewaySessionPool';
 import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {Outlet, RouterProvider} from '@app/features/platform/components/router/RouterReact';
+import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {PremiumCheckoutReturnWatcher} from '@app/features/premium/components/PremiumCheckoutReturnWatcher';
+import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {QUICK_SWITCHER_PORTAL_ID} from '@app/features/search/components/quick_switcher/QuickSwitcherConstants';
 import {useCustomThemeStyle, useInstanceCustomCss} from '@app/features/theme/hooks/useCustomThemeStyle';
 import {useRemScaleTracking} from '@app/features/theme/hooks/useRemScaleTracking';
@@ -51,8 +53,8 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Modal from '@app/features/ui/state/Modal';
 import Popout from '@app/features/ui/state/Popout';
 import {UNFOCUSED_FULLY_INTERACTIVE_CLASS} from '@app/features/ui/utils/WindowFocusInteractionGuard';
+import {preloadUserSettingsModal} from '@app/features/user/commands/UserSettingsModalCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
-import {IncomingCallManager} from '@app/features/voice/components/IncomingCallManager';
 import {VoiceLiveKitRoot} from '@app/features/voice/components/VoiceLiveKitRoot';
 import VoiceRuntime from '@app/features/voice/engine/VoiceRuntime';
 import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
@@ -69,6 +71,20 @@ const NO_TRUSTED_SITES: ReadonlyArray<string> = [];
 const QuickCssEditorHost = createNamedLoadableComponent<Record<string, never>>({
 	displayName: 'QuickCssEditorHost',
 	load: async () => (await import('@app/features/theme_settings/components/QuickCssEditorHost')).QuickCssEditorHost,
+});
+
+const GlobalOverlays = createNamedLoadableComponent<Record<string, never>>({
+	displayName: 'GlobalOverlays',
+	load: async () => (await import('@app/features/app/components/layout/GlobalOverlays')).default,
+});
+const IncomingCallManager = createNamedLoadableComponent<Record<string, never>>({
+	displayName: 'IncomingCallManager',
+	load: async () => (await import('@app/features/voice/components/IncomingCallManager')).IncomingCallManager,
+});
+const PremiumCheckoutReturnWatcher = createNamedLoadableComponent<Record<string, never>>({
+	displayName: 'PremiumCheckoutReturnWatcher',
+	load: async () =>
+		(await import('@app/features/premium/components/PremiumCheckoutReturnWatcher')).PremiumCheckoutReturnWatcher,
 });
 
 const logger = new Logger('App');
@@ -93,6 +109,16 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	const topPopoutRequiresBackdrop = Popout.requiresBackdrop();
 	const hasBlockingModal = Modal.hasModalOpen();
 	const voiceRuntime = VoiceRuntime.module;
+	const [overlaysReady, setOverlaysReady] = useState(() => BootStateRestore.phase !== 'stale');
+	useEffect(() => {
+		let active = true;
+		afterBootReveal(() => {
+			if (active) setOverlaysReady(true);
+		});
+		return () => {
+			active = false;
+		};
+	}, []);
 	const ringsContainerRef = useRef<HTMLDivElement>(null);
 	useTextInputContextMenu();
 	useInertBackground(ringsContainerRef, hasBlockingModal || topPopoutRequiresBackdrop);
@@ -103,6 +129,22 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	useEffect(() => {
 		let active = true;
 		AccountEngine.start();
+		let disposeBootStateWriter: (() => void) | null = null;
+		if (isDesktopLocalAppDocument()) {
+			afterBootReveal(preloadUserSettingsModal);
+		}
+		afterBootReveal(() => {
+			if (!active) return;
+			void loadLazyModule(() => import('@app/features/boot_state/BootStateWriter'))
+				.then(({installBootStateWriter}) => {
+					if (active) {
+						disposeBootStateWriter = installBootStateWriter();
+					}
+				})
+				.catch((error: unknown) => {
+					logger.warn('Failed to load the boot state writer', error);
+				});
+		});
 		void SessionManager.initialize()
 			.then(() => {
 				if (active) {
@@ -114,6 +156,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 			});
 		return () => {
 			active = false;
+			disposeBootStateWriter?.();
 			GatewaySessions.dispose();
 			AccountEngine.stop();
 		};
@@ -209,9 +252,9 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 						aria-hidden="true"
 						data-flx="app.app.app-wrapper.quick-switcher-portal"
 					/>
-					<GlobalOverlays data-flx="app.app.app-wrapper.global-overlays" />
-					<IncomingCallManager data-flx="app.app.app-wrapper.incoming-call-manager" />
-					{voiceRuntime ? (
+					{overlaysReady && <GlobalOverlays data-flx="app.app.app-wrapper.global-overlays" />}
+					{overlaysReady && <IncomingCallManager data-flx="app.app.app-wrapper.incoming-call-manager" />}
+					{overlaysReady && voiceRuntime ? (
 						<voiceRuntime.VoiceRuntimeEffects data-flx="app.app.app-wrapper.voice-runtime-voice-runtime-effects" />
 					) : null}
 					{quickCssEditorOpen ? <QuickCssEditorHost data-flx="app.app.app-wrapper.quick-css-editor-host" /> : null}

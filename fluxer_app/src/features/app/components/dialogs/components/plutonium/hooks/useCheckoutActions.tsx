@@ -395,7 +395,7 @@ export const useCheckoutActions = (
 	const handleSelectPlan = useCallback(
 		async (plan: Plan, {isBusiness = false, cnpj}: {isBusiness?: boolean; cnpj?: string} = {}) => {
 			if (loadingCheckout) return;
-			logger.info('Plan selected', {plan, hasGiftTime});
+			logger.debug('Plan selected', {plan, hasGiftTime});
 			const showCheckoutPlanErrorModal = (message: string, flxKey: string) => {
 				ModalCommands.push(
 					modal(() => (

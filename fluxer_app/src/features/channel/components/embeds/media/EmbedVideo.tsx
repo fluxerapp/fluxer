@@ -17,6 +17,7 @@ import {
 } from '@app/features/channel/components/embeds/media/VideoDimensionUtils';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useApiAttachmentPlaybackSrc, useApiAttachmentSrc} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
@@ -225,10 +226,12 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			maxHeight,
 		});
 		const posterRequestWidth = Math.max(1, Math.round(declaredLayout.renderDimensions.width * mediaDevicePixelRatio()));
-		const posterSrc = isBlob ? null : buildMediaProxyURL(src, {format: 'webp', width: posterRequestWidth});
+		const requestedPosterSrc = isBlob ? null : buildMediaProxyURL(src, {format: 'webp', width: posterRequestWidth});
 		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({
-			rememberKey: posterSrc ?? effectiveSrc,
+			rememberKey: requestedPosterSrc ?? effectiveSrc,
 		});
+		const posterDisplaySrc = useApiAttachmentSrc(requestedPosterSrc ?? '', isNearViewport);
+		const posterSrc = requestedPosterSrc === null ? null : (posterDisplaySrc ?? null);
 		const [posterCacheAtMount] = useState<PosterCacheAtMount>(() => ({
 			src: posterSrc,
 			cached: posterSrc ? ImageCacheUtils.hasImage(posterSrc) : false,
@@ -262,6 +265,9 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			reveal: revealSensitiveMedia,
 		} = useMatureMedia(nsfw, channelId);
 		const shouldLoadMedia = isNearViewport && !shouldBlur;
+		const playbackSrc = useApiAttachmentPlaybackSrc(
+			(metadataProbeArmed && shouldLoadMedia) || isPlayingInline ? effectiveSrc : undefined,
+		);
 		const defaultName =
 			title || deriveDefaultNameFromMessage({message, attachmentId, embedIndex, url: embedUrl || src, proxyUrl: src});
 		const {
@@ -574,7 +580,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					muted
 					playsInline
 					preload="metadata"
-					src={resolveDesktopCrossOriginMediaURL(effectiveSrc)}
+					src={resolveDesktopCrossOriginMediaURL(playbackSrc)}
 					tabIndex={-1}
 					onLoadedMetadata={handleMetadataProbeLoaded}
 					onError={handleVideoError}
@@ -609,7 +615,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 								<video
 									ref={inlineVideoRef}
 									className={styles.inlineVideo}
-									src={resolveDesktopCrossOriginMediaURL(effectiveSrc)}
+									src={resolveDesktopCrossOriginMediaURL(playbackSrc)}
 									poster={presentedPosterSrc ?? undefined}
 									autoPlay
 									playsInline

@@ -13,8 +13,10 @@ import {
 	countOperatorPassCertificateNameCharacters,
 	OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH,
 	OPERATOR_PASS_WALL_NAME_MAX_LENGTH,
-	type OperatorPassOfferResponse,
-	type OperatorPassPassesResponse,
+} from '@fluxer/schema/src/domains/operator_pass/OperatorPassNames';
+import type {
+	OperatorPassOfferResponse,
+	OperatorPassPassesResponse,
 } from '@fluxer/schema/src/domains/operator_pass/OperatorPassSchemas';
 import {
 	getOperatorPassWallQuoteProblem as getSharedOperatorPassWallQuoteProblem,

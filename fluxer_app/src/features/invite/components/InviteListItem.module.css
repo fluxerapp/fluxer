@@ -17,7 +17,6 @@
 .headerColumn {
 	font-weight: 600;
 	font-size: 0.75rem;
-	text-transform: uppercase;
 	color: var(--text-primary-muted);
 }
 
@@ -67,7 +66,6 @@
 .label {
 	font-weight: 600;
 	font-size: 0.75rem;
-	text-transform: uppercase;
 	color: var(--text-primary-muted);
 }
 

@@ -8,6 +8,7 @@ import {getAccountDisplayLabels} from '@app/features/auth/AccountDisplayUtils';
 import {
 	FORGOT_YOUR_PASSWORD_DESCRIPTOR,
 	SIGN_IN_WITH_BROWSER_DESCRIPTOR,
+	USE_A_PASSKEY_SAVED_FOR_HOST_DESCRIPTOR,
 } from '@app/features/auth/AuthMessageDescriptors';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {AgeBlockedRemovalGate} from '@app/features/auth/components/AgeBlockedRemovalGate';
@@ -144,6 +145,7 @@ export interface AuthLoginLayoutProps {
 	readonly suppressInlineBackButtons?: boolean;
 	readonly initialIdentifier?: string | null;
 	readonly allowSsoAutoStart?: boolean;
+	readonly passkeyBridgePageAvailable?: boolean;
 }
 
 interface HandoffAccountsRequest {
@@ -442,6 +444,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	suppressInlineBackButtons = false,
 	initialIdentifier = null,
 	allowSsoAutoStart = true,
+	passkeyBridgePageAvailable = true,
 }: AuthLoginLayoutProps) {
 	const {i18n} = useLingui();
 	const {setContentMode} = useAuthLayoutContext();
@@ -561,22 +564,32 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		setBrowserStepStartsSso(true);
 		enterBrowserStep();
 	}, [enterBrowserStep]);
-	const {form, identifierField, isLoading, fieldErrors, handlePasskeyLogin, isPasskeyLoading, connectingMessage} =
-		useLoginFormController({
-			redirectPath: redirectPath ?? undefined,
-			inviteCode: inviteCode ?? undefined,
-			runtimeSnapshot: resolvedAuthRuntimeSnapshot,
-			onLoginSuccess: handleLoginSuccess,
-			onRequireMfa: (challenge) => {
-				AuthenticationCommands.setMfaTicket({
-					...challenge,
-					runtimeSnapshot: requireAuthInstanceSnapshot(resolvedAuthRuntimeSnapshot),
-				});
-			},
-			onRequireIpAuthorization: (challenge) => {
-				setIpAuthChallenge(challenge);
-			},
-		});
+	const {
+		form,
+		identifierField,
+		isLoading,
+		fieldErrors,
+		handlePasskeyLogin,
+		handleLegacyPasskeyLogin,
+		legacyPasskeyHost,
+		isPasskeyLoading,
+		connectingMessage,
+	} = useLoginFormController({
+		redirectPath: redirectPath ?? undefined,
+		inviteCode: inviteCode ?? undefined,
+		runtimeSnapshot: resolvedAuthRuntimeSnapshot,
+		passkeyBridgePageAvailable,
+		onLoginSuccess: handleLoginSuccess,
+		onRequireMfa: (challenge) => {
+			AuthenticationCommands.setMfaTicket({
+				...challenge,
+				runtimeSnapshot: requireAuthInstanceSnapshot(resolvedAuthRuntimeSnapshot),
+			});
+		},
+		onRequireIpAuthorization: (challenge) => {
+			setIpAuthChallenge(challenge);
+		},
+	});
 	const isPasskeyBridgeRedeeming = usePasskeyBridgeReturn({
 		redirectPath: redirectPath ?? undefined,
 		onLoginSuccess: handleLoginSuccess,
@@ -931,6 +944,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 				title={resolveAuthStepTitle(formTitle, i18n._(WELCOME_BACK_DESCRIPTOR))}
 				switchError={resolveStepError(showAccountSelector, switchError)}
 				leadingAction={renderOldAppSignIn()}
+				legacyPasskeyHost={legacyPasskeyHost}
 				disabled={passkeyControlsDisabled || isStartingSso}
 				passkeyAvailableForInstance={isPasskeyAvailableForCurrentClient(resolvedAuthRuntimeSnapshot)}
 				registerLink={registerLink}
@@ -939,6 +953,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 				onBrowserLogin={handleShowBrowserStep}
 				onEmailLogin={selectEmailMethod}
 				onPasskeyLogin={handlePasskeyLogin}
+				onLegacyPasskeyLogin={handleLegacyPasskeyLogin}
 				onBackToInstance={inlineInstanceBackAction}
 				ssoAction={resolveMethodSsoAction({
 					ssoConfig,
@@ -973,6 +988,24 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		const oldAppSignIn = renderOldAppSignIn();
 		if (oldAppSignIn !== null) {
 			actions.push(oldAppSignIn);
+		}
+		if (
+			legacyPasskeyHost !== null &&
+			showPasskeyOption &&
+			isPasskeyAvailableForCurrentClient(resolvedAuthRuntimeSnapshot)
+		) {
+			actions.push(
+				<Button
+					key="legacy-passkey"
+					fitContainer
+					variant={ButtonVariant.SECONDARY}
+					disabled={passkeyControlsDisabled}
+					onClick={handleLegacyPasskeyLogin}
+					data-flx="auth.flow.auth-login-layout.identifier-first.button.legacy-passkey"
+				>
+					{i18n._(USE_A_PASSKEY_SAVED_FOR_HOST_DESCRIPTOR, {host: legacyPasskeyHost})}
+				</Button>,
+			);
 		}
 		if (isInstanceSsoAvailable(ssoConfig)) {
 			actions.push(

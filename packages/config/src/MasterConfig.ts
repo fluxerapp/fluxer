@@ -4,6 +4,10 @@ import type {DerivedEndpoints} from '@fluxer/config/src/EndpointDerivation';
 
 type RuntimeEnv = 'development' | 'production' | 'test';
 type DatabaseBackend = 'postgres' | 'cassandra';
+export const KV_MODE_NAMES = ['standalone', 'cluster', 'postgres'] as const;
+type KVModeName = (typeof KV_MODE_NAMES)[number];
+export const STORAGE_BACKEND_NAMES = ['s3', 'filesystem'] as const;
+type StorageBackendName = (typeof STORAGE_BACKEND_NAMES)[number];
 type PublicScheme = 'http' | 'https';
 export const CACHE_PURGE_ADAPTER_NAMES = ['none', 'http', 'controller'] as const;
 export type CachePurgeAdapterName = (typeof CACHE_PURGE_ADAPTER_NAMES)[number];
@@ -63,7 +67,11 @@ export interface MasterConfig {
 	endpoints: DerivedEndpoints;
 	internal: {
 		kv: string;
-		kv_mode: 'standalone' | 'cluster';
+		kv_mode: KVModeName;
+		kv_postgres?: {
+			max_connections?: number;
+			max_bytes?: number;
+		};
 		media_proxy: string;
 	};
 	database: {
@@ -90,6 +98,12 @@ export interface MasterConfig {
 			prepared_statements: boolean;
 		};
 	};
+	storage: {
+		backend: StorageBackendName;
+		root: string;
+		uploads_ttl: string;
+		read_only: boolean;
+	};
 	s3?: {
 		endpoint: string;
 		presigned_url_base?: string;
@@ -107,6 +121,7 @@ export interface MasterConfig {
 	services: {
 		api: {
 			port: number;
+			host?: string;
 			headers_timeout_ms: number;
 			request_timeout_ms: number;
 			max_inflight_requests: number;
@@ -347,7 +362,6 @@ export interface MasterConfig {
 		labs_guild_id?: string;
 		labs_operator_role_id?: string;
 		labs_visionary_role_id?: string;
-		labs_access_role_id?: string;
 		labs_operators_channel_id?: string;
 		standard_prices_minor?: Partial<Record<string, number>>;
 		release_lists?: string;

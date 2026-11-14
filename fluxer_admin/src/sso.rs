@@ -5,6 +5,7 @@ use crate::{
     config::{AdminConfig, SsoConfig},
     oauth2::admin_client_basic_auth,
 };
+use anyhow::Context as _;
 use base64::{
     Engine as _,
     engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD},
@@ -45,14 +46,18 @@ pub struct SsoSignInResponse {
     pub access_token: String,
 }
 
-pub(crate) fn http_client(build_version: &str) -> reqwest::Client {
+pub(crate) fn http_client(build_version: &str) -> anyhow::Result<reqwest::Client> {
     reqwest::Client::builder()
         .user_agent(format!("FluxerAdmin/{build_version} (Rust)"))
         .https_only(true)
         .redirect(reqwest::redirect::Policy::none())
         .timeout(Duration::from_secs(15))
+        .no_gzip()
+        .no_brotli()
+        .no_deflate()
+        .http1_only()
         .build()
-        .expect("failed to create SSO HTTP client")
+        .context("failed to create the SSO HTTP client")
 }
 
 fn parse_https_url(value: &str) -> anyhow::Result<url::Url> {
@@ -214,6 +219,7 @@ mod tests {
     #[tokio::test]
     async fn provider_client_refuses_http_before_connecting() {
         let error = http_client("test")
+            .unwrap()
             .get("http://127.0.0.1/")
             .send()
             .await

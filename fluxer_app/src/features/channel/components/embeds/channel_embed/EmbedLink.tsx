@@ -6,6 +6,7 @@ import {
 	type LinkComponentProps,
 	logger,
 } from '@app/features/channel/components/embeds/channel_embed/ChannelEmbedShared';
+import Channels from '@app/features/channel/state/Channels';
 import {SUPPRESS_EMBEDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {LinkDestinationTooltip} from '@app/features/messaging/components/LinkDestinationTooltip';
@@ -14,6 +15,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {attachmentUrlMayNeedRefresh} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {isTrustedExternalUrl, openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
+import {getInAppLinkAction} from '@app/features/messaging/utils/InAppLinkUtils';
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -23,11 +25,23 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import type {FC} from 'react';
 
-export const EmbedLink: FC<LinkComponentProps> = observer(({url, children, className}) => {
+export const EmbedLink: FC<LinkComponentProps> = observer(({url, children, className, messageId, channelId}) => {
+	const {i18n} = useLingui();
 	const href = AttachmentUrlRefresher.fresh(url);
 	const warmAttachmentUrl = () => AttachmentUrlRefresher.warm(url);
+	const openInApp = getInAppLinkAction(url, {
+		i18n,
+		guildId: channelId ? Channels.getChannel(channelId)?.guildId : undefined,
+		returnToMessageId: messageId,
+		returnChannelId: channelId,
+	});
 	const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
 		e.stopPropagation();
+		if (openInApp) {
+			e.preventDefault();
+			openInApp();
+			return;
+		}
 		try {
 			const parsed = new URL(url);
 			if (!TrustedDomain.isTrustedDomain(parsed.hostname)) {
@@ -47,7 +61,7 @@ export const EmbedLink: FC<LinkComponentProps> = observer(({url, children, class
 	return (
 		<LinkDestinationTooltip
 			url={url}
-			untrusted={!isTrustedExternalUrl(url)}
+			untrusted={!openInApp && !isTrustedExternalUrl(url)}
 			data-flx="channel.embeds.channel-embed.embed-link.link-destination-tooltip"
 		>
 			<FocusRing data-flx="channel.embeds.embed.link-component.focus-ring">

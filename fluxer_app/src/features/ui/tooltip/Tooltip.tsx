@@ -17,8 +17,8 @@ import {
 	subscribeTooltipScrollHide,
 } from '@app/features/ui/tooltip/TooltipScrollCoordinator';
 import {
-	createTooltipSnapshot,
 	getTooltipStateValue,
+	initialTooltipSnapshot,
 	selectTooltipModel,
 	type TooltipEnvironment,
 	type TooltipMachineEvent,
@@ -284,7 +284,7 @@ export const Tooltip = observer(
 				mobileLayout.enabled,
 			],
 		);
-		const [tooltipSnapshot, setTooltipSnapshot] = useState(() => createTooltipSnapshot(tooltipEnvironment));
+		const [tooltipSnapshot, setTooltipSnapshot] = useState(() => initialTooltipSnapshot(tooltipEnvironment));
 		const tooltipModel = selectTooltipModel(tooltipSnapshot);
 		const tooltipStateValue = getTooltipStateValue(tooltipSnapshot);
 		const shouldRenderTooltip = tooltipModel.shouldRender;
@@ -545,7 +545,11 @@ export const Tooltip = observer(
 				longPressTimeoutRef.current = null;
 			}
 		}, []);
+		const mountEnvironmentRef = useRef<TooltipEnvironment | null>(tooltipEnvironment);
 		useEffect(() => {
+			const mountEnvironment = mountEnvironmentRef.current;
+			mountEnvironmentRef.current = null;
+			if (mountEnvironment === tooltipEnvironment) return;
 			sendTooltipEvent({type: 'tooltip.environmentChanged', environment: tooltipEnvironment});
 		}, [sendTooltipEvent, tooltipEnvironment]);
 		useEffect(() => {

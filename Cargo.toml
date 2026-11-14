@@ -9,6 +9,49 @@ members = [
 	"fluxer_messages",
 	"fluxer_push",
 	"fluxer_snowflakes",
+	"fluxer_server",
+	"tools/ci",
+	"tools/dev",
+	"fluxer_users",
+	"fluxer_unfurl",
+	"packages/markdown_parser/rust",
+	"fluxer_app/rust/libfluxcore",
+	"fluxer_app/rust/libfluxwebp",
+	"fluxer_desktop/native/app-store",
+	"fluxer_desktop/native/gateway-socket",
+	"fluxer_desktop/native/hardware-encoder",
+	"fluxer_desktop/native/linux-audio-capture",
+	"fluxer_desktop/native/linux-evdev",
+	"fluxer_desktop/native/linux-input-hook",
+	"fluxer_desktop/native/linux-notifications",
+	"fluxer_desktop/native/linux-portals",
+	"fluxer_desktop/native/mac-app-audio",
+	"fluxer_desktop/native/mac-clipboard",
+	"fluxer_desktop/native/mac-screen-capture",
+	"fluxer_desktop/native/mac-sysctl",
+	"fluxer_desktop/native/mac-tcc",
+	"fluxer_desktop/native/macos-input-hook",
+	"fluxer_desktop/native/platform-info",
+	"fluxer_desktop/native/rt-thread",
+	"fluxer_desktop/native/sample-pool",
+	"fluxer_desktop/native/system-hunspell",
+	"fluxer_desktop/native/webauthn",
+	"fluxer_desktop/native/win-clipboard",
+	"fluxer_desktop/native/win-game-capture",
+	"fluxer_desktop/native/win-process-loopback",
+	"fluxer_desktop/native/win-shell",
+	"fluxer_desktop/native/windows-input-hook",
+]
+default-members = [
+	"fluxer_admin",
+	"fluxer_app_proxy",
+	"fluxer_common",
+	"fluxer_media_proxy",
+	"fluxer_gifs",
+	"fluxer_svc",
+	"fluxer_messages",
+	"fluxer_push",
+	"fluxer_snowflakes",
 	"tools/ci",
 	"tools/dev",
 	"fluxer_users",
@@ -28,3 +71,22 @@ license = "AGPL-3.0-or-later"
 lto = "fat"
 codegen-units = 1
 strip = "symbols"
+
+[profile.desktop-native]
+inherits = "release"
+lto = false
+codegen-units = 16
+strip = "none"
+
+[profile.wasm-release]
+inherits = "release"
+codegen-units = 1
+lto = true
+opt-level = "z"
+panic = "abort"
+strip = true
+
+[profile.release-fast]
+inherits = "release"
+lto = "thin"
+codegen-units = 16

@@ -13,6 +13,8 @@ import {
 	LINUX_ICON_NAME,
 } from '@electron/common/DesktopIdentity';
 import {createChildLogger} from '@electron/common/Logger';
+import {IS_OFFLINE_BUILD} from '@electron/common/OfflineBuild';
+import {getAppResourcesPath} from '@electron/main/DesktopDistributionPath';
 import {isDirectMessagesAvailable, onDirectMessagesAvailabilityChange, TASK_ARG_PREFIX} from '@electron/main/JumpList';
 import {getStableLinuxLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
@@ -99,7 +101,7 @@ export function quoteExecArg(value: string): string {
 }
 
 function installHicolorIcons(): void {
-	const iconRoot = path.join(process.resourcesPath, 'icons');
+	const iconRoot = path.join(getAppResourcesPath(), 'icons');
 	for (const size of HICOLOR_ICON_SIZES) {
 		const source = path.join(iconRoot, `${size}x${size}.png`);
 		const target = path.join(getXdgDataHome(), 'icons', 'hicolor', `${size}x${size}`, 'apps', `${LINUX_ICON_NAME}.png`);
@@ -359,8 +361,8 @@ export function ensureLinuxDesktopEntry(): void {
 		registerProtocolClient();
 		return;
 	}
-	if (process.env.FLUXER_DISABLE_DESKTOP_FILE === '1') {
-		logger.debug('Skipping .desktop entry management; FLUXER_DISABLE_DESKTOP_FILE=1');
+	if (IS_OFFLINE_BUILD || process.env.FLUXER_DISABLE_DESKTOP_FILE === '1') {
+		logger.debug('Skipping .desktop entry management; the package installs its own entry');
 		if (findSystemDesktopEntry() !== null) registerProtocolClient();
 		return;
 	}

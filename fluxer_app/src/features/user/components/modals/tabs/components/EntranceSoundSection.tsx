@@ -26,6 +26,7 @@ import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/comp
 import styles from '@app/features/user/components/modals/tabs/components/EntranceSoundSection.module.css';
 import {useEntranceSound} from '@app/features/user/components/modals/tabs/hooks/useEntranceSound';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {
 	SUMMARY_NONE_DESCRIPTOR as NONE_LIBRARY_OPTION_DESCRIPTOR,
 	PREVIEW_SOUND_DESCRIPTOR,
@@ -277,11 +278,11 @@ export const EntranceSoundSection: React.FC = observer(() => {
 		[],
 	);
 	const {i18n} = useLingui();
-	const maxDurationSeconds = getCachedNumberFormat(i18n.locale, {
+	const maxDurationSeconds = getCachedNumberFormat(getFormattingLocale(), {
 		minimumFractionDigits: 1,
 		maximumFractionDigits: 1,
 	}).format(ENTRANCE_SOUND_MAX_DURATION_MS / MS_PER_SECOND);
-	const maxSizeLabel = formatFileSize(i18n.locale, ENTRANCE_SOUND_MAX_BYTES);
+	const maxSizeLabel = formatFileSize(getFormattingLocale(), ENTRANCE_SOUND_MAX_BYTES);
 	const currentGuildId = SelectedGuild.selectedGuildId;
 	const guilds = Guilds.getGuilds();
 	const [selectedScopeId, setSelectedScopeId] = useState(() =>
@@ -415,7 +416,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 			...library.map((entry: EntranceSoundEntry) => ({
 				value: entry.id,
 				label: entry.name,
-				description: formatSoundDuration(entry.durationMs, i18n.locale),
+				description: formatSoundDuration(entry.durationMs, getFormattingLocale()),
 			})),
 		],
 		[library, i18n.locale],
@@ -540,7 +541,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 										{resolvedSound.name}
 									</span>
 									<span className={styles.soundDuration} data-flx="user.entrance-sound-section.sound-duration">
-										{formatSoundDuration(resolvedSound.durationMs, i18n.locale)}
+										{formatSoundDuration(resolvedSound.durationMs, getFormattingLocale())}
 									</span>
 								</div>
 							</div>
@@ -620,7 +621,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 													{entry.name}
 												</span>
 												<span className={styles.soundDuration} data-flx="user.entrance-sound-section.sound-duration">
-													{`${formatSoundDuration(entry.durationMs, i18n.locale)}${isActiveHere ? ` · ${i18n._(ACTIVE_BADGE_DESCRIPTOR)}` : ''}`}
+													{`${formatSoundDuration(entry.durationMs, getFormattingLocale())}${isActiveHere ? ` · ${i18n._(ACTIVE_BADGE_DESCRIPTOR)}` : ''}`}
 												</span>
 											</div>
 										</div>

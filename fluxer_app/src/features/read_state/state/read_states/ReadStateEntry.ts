@@ -213,7 +213,7 @@ export class ReadStateEntry {
 		if (currentUser == null) {
 			return;
 		}
-		const messages = Messages.getMessages(this.channelId);
+		const messages = Messages.getMessagesIncludingDeferred(this.channelId) ?? Messages.getMessages(this.channelId);
 		const isPrivate = this.isPrivate;
 		const userId = currentUser.id;
 		const guildId = this.guildId;
@@ -276,7 +276,7 @@ export class ReadStateEntry {
 		if (!this.isPrivate) {
 			return null;
 		}
-		const messages = Messages.getMessages(this.channelId);
+		const messages = Messages.getMessagesIncludingDeferred(this.channelId) ?? Messages.getMessages(this.channelId);
 		if (!messages.hasNewestMessages()) {
 			return null;
 		}
@@ -341,7 +341,7 @@ export class ReadStateEntry {
 		if (ackTimestamp === 0 || Number.isNaN(ackTimestamp)) {
 			return 0;
 		}
-		const messages = Messages.getMessages(this.channelId);
+		const messages = Messages.getMessagesIncludingDeferred(this.channelId) ?? Messages.getMessages(this.channelId);
 		const isPrivate = this.isPrivate;
 		let mentionCount = 0;
 		messages.forEachBuffered((message) => {

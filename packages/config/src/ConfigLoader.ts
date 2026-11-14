@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createECDH} from 'node:crypto';
+import path from 'node:path';
 import {isConfigObject} from '@fluxer/config/src/config_loader/ConfigObject';
 import {buildNamedFluxerEnvOverrides, readEnvValue} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
 import {
@@ -14,7 +15,9 @@ import {
 import {
 	ACCOUNT_IDENTITY_MODE_NAMES,
 	CACHE_PURGE_ADAPTER_NAMES,
+	KV_MODE_NAMES,
 	type MasterConfig,
+	STORAGE_BACKEND_NAMES,
 	STORE_PRODUCT_SLOT_NAMES,
 	TAG_STYLE_NAMES,
 } from '@fluxer/config/src/MasterConfig';
@@ -22,6 +25,31 @@ import {
 let cachedConfig: MasterConfig | null = null;
 
 const MAX_REPORT_RETENTION_DAYS = 36_500;
+
+const DAY_MS = 86_400_000;
+const UPLOADS_TTL_PATTERN = /^(\d+)([mhdwMy])$/;
+const UPLOADS_TTL_UNIT_MS: Record<string, number> = {
+	m: 60_000,
+	h: 3_600_000,
+	d: DAY_MS,
+	w: 7 * DAY_MS,
+	M: 30 * DAY_MS,
+	y: 365 * DAY_MS,
+};
+
+export function parseUploadsTtlMs(value: string): number | null {
+	if (value === 'off') {
+		return null;
+	}
+	const match = UPLOADS_TTL_PATTERN.exec(value);
+	const ms = match ? Number(match[1]) * (UPLOADS_TTL_UNIT_MS[match[2]] ?? Number.NaN) : Number.NaN;
+	if (!Number.isSafeInteger(ms)) {
+		throw new Error(
+			`FLUXER_STORAGE_UPLOADS_TTL must be a number followed by m, h, d, w, M or y, such as 1d, or off, got ${JSON.stringify(value)}`,
+		);
+	}
+	return ms === 0 ? null : ms;
+}
 
 const OFFICIAL_ANDROID_PASSKEY_ORIGINS = [
 	'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
@@ -65,6 +93,12 @@ function defaultConfig(): MasterConfig {
 			kv: 'redis://localhost:6379/0',
 			kv_mode: 'standalone',
 			media_proxy: 'http://127.0.0.1:8082',
+		},
+		storage: {
+			backend: 's3',
+			root: '',
+			uploads_ttl: '1d',
+			read_only: false,
 		},
 		database: {
 			backend: 'postgres',
@@ -545,6 +579,38 @@ function validateReportRetentionConfig(config: MasterConfig): void {
 	assertBoolean(retention.dry_run, 'FLUXER_REPORT_RETENTION_DRY_RUN');
 }
 
+function validateStorageConfig(config: MasterConfig): void {
+	const storage = config.storage;
+	assertOneOf(storage.backend, STORAGE_BACKEND_NAMES, 'FLUXER_STORAGE_BACKEND');
+	assertBoolean(storage.read_only, 'FLUXER_STORAGE_READ_ONLY');
+	if (storage.backend === 's3') {
+		requireString(config.s3?.access_key_id, 'FLUXER_S3_ACCESS_KEY_ID');
+		requireString(config.s3?.secret_access_key, 'FLUXER_S3_SECRET_ACCESS_KEY');
+		return;
+	}
+	requireString(storage.root, 'FLUXER_STORAGE_ROOT');
+	if (!path.isAbsolute(storage.root)) {
+		throw new Error('FLUXER_STORAGE_ROOT must be an absolute path');
+	}
+	parseUploadsTtlMs(storage.uploads_ttl);
+}
+
+function validateKVConfig(config: MasterConfig): void {
+	assertOneOf(config.internal.kv_mode, KV_MODE_NAMES, 'FLUXER_KV_MODE');
+	const pool = config.internal.kv_postgres;
+	if (pool?.max_connections !== undefined) {
+		assertIntegerInRange(pool.max_connections, 'FLUXER_KV_POSTGRES_MAX_CONNECTIONS', 1, 1000);
+	}
+	if (pool?.max_bytes !== undefined) {
+		assertIntegerInRange(pool.max_bytes, 'FLUXER_KV_POSTGRES_MAX_BYTES', 1, Number.MAX_SAFE_INTEGER);
+	}
+	if (config.internal.kv_mode === 'postgres' && config.database.backend !== 'postgres') {
+		throw new Error(
+			'FLUXER_KV_MODE=postgres keeps key-value data in the main Postgres database, so FLUXER_DATABASE_BACKEND must be postgres',
+		);
+	}
+}
+
 function validateStorageChangeFeedConfig(config: MasterConfig): void {
 	const feed = config.services.api?.storage_change_feed;
 	if (!feed?.enabled) {
@@ -728,7 +794,6 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	assertOneOf(config.env, ['development', 'production', 'test'], 'FLUXER_ENV');
 	assertOneOf(config.domain.public_scheme, ['http', 'https'], 'FLUXER_PUBLIC_SCHEME');
 	assertOneOf(config.database.backend, ['postgres', 'cassandra'], 'FLUXER_DATABASE_BACKEND');
-	assertOneOf(config.internal.kv_mode, ['standalone', 'cluster'], 'FLUXER_KV_MODE');
 	assertOneOf(config.integrations.email.provider, ['smtp', 'none'], 'FLUXER_EMAIL_PROVIDER');
 	if (config.integrations.email.delivery !== undefined) {
 		assertOneOf(config.integrations.email.delivery, ['off', 'smtp'], 'FLUXER_EMAIL_DELIVERY');
@@ -742,6 +807,8 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 		assertOneOf(config.instance.account_identity, ACCOUNT_IDENTITY_MODE_NAMES, 'FLUXER_ACCOUNT_IDENTITY');
 	}
 	validatePostgresConfig(config);
+	validateKVConfig(config);
+	validateStorageConfig(config);
 	validateApiWorkerConfig(config);
 	validateStorageChangeFeedConfig(config);
 	validateReportRetentionConfig(config);
@@ -776,8 +843,6 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	requireString(config.auth.connection_initiation_secret, 'FLUXER_CONNECTION_INITIATION_SECRET');
 	applyProfilePseudonymSecret(config);
 	validateVapidConfig(config);
-	requireString(config.s3?.access_key_id, 'FLUXER_S3_ACCESS_KEY_ID');
-	requireString(config.s3?.secret_access_key, 'FLUXER_S3_SECRET_ACCESS_KEY');
 	requireString(config.services.media_proxy.secret_key, 'FLUXER_MEDIA_PROXY_SECRET_KEY');
 	validateUploadRelaySecret(config.services.media_proxy.upload_relay.secret_base64);
 	validateAttachmentUrlSecrets(config.services.media_proxy.attachment_urls.secrets_base64);

@@ -2,6 +2,12 @@
 
 import {PurchaseBlockedReasons} from '@fluxer/constants/src/AccountTierConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
+import {
+	countOperatorPassCertificateNameCharacters,
+	OPERATOR_PASS_CERTIFICATE_NAME_MAX_CODE_UNITS,
+	OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH,
+	OPERATOR_PASS_WALL_NAME_MAX_LENGTH,
+} from '@fluxer/schema/src/domains/operator_pass/OperatorPassNames';
 import {OPERATOR_PASS_WALL_QUOTE_MAX_CODE_UNITS} from '@fluxer/schema/src/domains/operator_pass/OperatorPassWallQuote';
 import {CnpjSchema} from '@fluxer/schema/src/domains/premium/Cnpj';
 import {
@@ -12,6 +18,13 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {DiscriminatorType, UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
+
+export {
+	OPERATOR_PASS_CERTIFICATE_NAME_MAX_CODE_UNITS,
+	OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH,
+	OPERATOR_PASS_WALL_NAME_MAX_LENGTH,
+	truncateOperatorPassCertificateName,
+} from '@fluxer/schema/src/domains/operator_pass/OperatorPassNames';
 
 export const OPERATOR_PASS_PHASES = ['early_bird', 'standard'] as const;
 
@@ -83,8 +96,6 @@ export const OperatorPassPurchaseBlockedReasonSchema = createNamedStringLiteralU
 	'Why the current account cannot buy passes',
 );
 
-export const OPERATOR_PASS_WALL_NAME_MAX_LENGTH = 32;
-
 export const OPERATOR_PASS_MAX_QUANTITY = 100;
 
 export const OPERATOR_PASS_DELIVERY_WAIVER_VERSION = 'delivery-waiver-2026-10-30';
@@ -94,31 +105,6 @@ export const OPERATOR_PASS_DELIVERY_COUNTRY_VERSION = 'delivery-country-2026-10-
 export const OPERATOR_PASS_DELIVERY_BUSINESS_VERSION = 'delivery-business-2026-10-30';
 
 export const OPERATOR_PASS_VISIONARY_BOX_VERSION = 'visionary-terms-2026-10-31';
-
-export const OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH = 48;
-
-export const OPERATOR_PASS_CERTIFICATE_NAME_MAX_CODE_UNITS = OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH * 8;
-
-const GRAPHEMES = new Intl.Segmenter('en', {granularity: 'grapheme'});
-
-export function countOperatorPassCertificateNameCharacters(name: string): number {
-	let count = 0;
-	for (const _ of GRAPHEMES.segment(name)) {
-		count++;
-	}
-	return count;
-}
-
-export function truncateOperatorPassCertificateName(name: string): string {
-	let end = 0;
-	let count = 0;
-	for (const {segment} of GRAPHEMES.segment(name)) {
-		if (count === OPERATOR_PASS_CERTIFICATE_NAME_MAX_LENGTH) break;
-		end += segment.length;
-		count++;
-	}
-	return name.slice(0, end);
-}
 
 export const OperatorPassCertificateNameType = z
 	.string()

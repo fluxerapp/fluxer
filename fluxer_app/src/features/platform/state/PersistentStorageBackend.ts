@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	APP_STORAGE_INDEXED_DB_NAME,
+	APP_STORAGE_INDEXED_DB_VERSION,
+	APP_STORAGE_OBJECT_STORE,
+	APP_STORAGE_SCOPE_INDEX,
+} from '@app/features/platform/state/AppStorageDatabase';
 import {getProtectedIndexedDB} from '@app/features/platform/state/ProtectedWebStorage';
 
 export const PersistentStorageBackendKind = Object.freeze({
@@ -38,11 +44,6 @@ export interface PersistentStorageBackend {
 	clearAllExcept(keysToKeep: ReadonlySet<string>): Promise<void>;
 	setMany(writes: ReadonlyArray<AppStorageWrite>): Promise<void>;
 }
-
-export const APP_STORAGE_INDEXED_DB_NAME = 'fluxer-app-storage';
-export const APP_STORAGE_INDEXED_DB_VERSION = 1;
-export const APP_STORAGE_OBJECT_STORE = 'entries';
-export const APP_STORAGE_SCOPE_INDEX = 'scope';
 
 const APP_STORAGE_OPERATION_TIMEOUT_MS = 5_000;
 const APP_STORAGE_OPEN_BLOCKED_WAIT_MS = 500;

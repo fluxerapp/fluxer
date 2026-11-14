@@ -170,6 +170,7 @@ export default defineConfig({
 						'operator/sign-in',
 						'operator/kubernetes',
 						'operator/docker-compose',
+						'operator/build-from-source',
 						'operator/voice-compose',
 						'operator/environment',
 						'operator/rexctl',

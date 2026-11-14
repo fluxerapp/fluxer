@@ -363,6 +363,8 @@ html.platform-native.platform-macos {
 
 html {
 	--custom-zoom: 100;
+	--safe-area-inset-inline-start: env(safe-area-inset-left, 0px);
+	--safe-area-inset-inline-end: env(safe-area-inset-right, 0px);
 	background-color: var(--background-secondary);
 	color: var(--text-primary);
 	overflow: hidden;
@@ -373,6 +375,11 @@ html {
 	font-size: calc(var(--custom-zoom, 100) * 0.16px);
 	line-height: 1.5;
 	font-optical-sizing: auto;
+}
+
+html[dir='rtl'] {
+	--safe-area-inset-inline-start: env(safe-area-inset-right, 0px);
+	--safe-area-inset-inline-end: env(safe-area-inset-left, 0px);
 }
 
 html.allow-transparency,

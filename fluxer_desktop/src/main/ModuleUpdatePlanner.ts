@@ -102,13 +102,9 @@ export class ModuleUpdatePlanner {
 		if (!this.hasBundledRenderer()) {
 			return [];
 		}
-		const missing: Array<string> = [];
-		for (const [moduleName, sha256] of Object.entries(this.store.getCommitted())) {
-			if (!(await this.isInstalled(moduleName, sha256))) {
-				missing.push(moduleName);
-			}
-		}
-		return missing;
+		const committed = Object.entries(this.store.getCommitted());
+		const installed = await Promise.all(committed.map(([moduleName, sha256]) => this.isInstalled(moduleName, sha256)));
+		return committed.filter((_entry, index) => !installed[index]).map(([moduleName]) => moduleName);
 	}
 
 	public bundleCoversModule(moduleName: string, manifest: DesktopModuleUpdateManifest): boolean {

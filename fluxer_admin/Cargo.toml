@@ -22,6 +22,7 @@ serde_json = "1.0.154"
 sha2 = "0.11.1"
 time = { version = "0.3.55", features = ["formatting", "parsing"] }
 tokio = { version = "1.54.1", features = ["macros", "net", "rt-multi-thread", "signal"] }
+tokio-util = "0.7.20"
 tower-http = { version = "0.7.1", features = ["compression-gzip", "trace"] }
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"

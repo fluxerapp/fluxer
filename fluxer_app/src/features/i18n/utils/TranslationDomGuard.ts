@@ -168,7 +168,7 @@ export function installTranslationDomGuard(): void {
 		(disabled) => {
 			if (disabled) {
 				unpatchPrototypes();
-				logger.info('Translation DOM guard disabled by developer option.');
+				logger.debug('Translation DOM guard disabled by developer option.');
 			} else {
 				patchPrototypes();
 			}

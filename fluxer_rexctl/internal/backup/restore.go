@@ -22,6 +22,7 @@ import (
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/envfile"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/host"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/instance"
+	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/native"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/release"
 	"github.com/fluxerapp/fluxer/fluxer_rexctl/internal/stack"
 )
@@ -330,10 +331,11 @@ func readRestoreMarker(dir string) *restoreMarker {
 }
 
 func keptVolumes(m *Manifest) []string {
+	out := slices.Clone(m.Left)
 	if m.WithoutUploads() {
-		return []string{UploadsVolume}
+		out = append(out, m.Uploads.VolumeShort())
 	}
-	return nil
+	return out
 }
 
 func CheckUploadsInPlace(ctx context.Context, dir string, existing *instance.Instance, e *engine.Engine, m *Manifest) error {
@@ -598,6 +600,87 @@ func extractFiles(path, dir string) error {
 	return err
 }
 
+const (
+	nativeSecretsName = "secrets.env"
+	maxStateSize      = 16 << 20
+)
+
+type NativeArchive struct {
+	Native bool
+	State  []byte
+}
+
+func FromNative(path string) (NativeArchive, error) {
+	name := FilesPrefix + instance.StateDirName + "/" + instance.StateFileName
+	var out NativeArchive
+	hasSecrets := false
+	err := walkArchive(path, func(hdr *tar.Header, r io.Reader) error {
+		if !strings.HasPrefix(hdr.Name, FilesPrefix) {
+			return errStop
+		}
+		hasSecrets = hasSecrets || hdr.Name == FilesPrefix+nativeSecretsName
+		if hdr.Name == name {
+			data, err := io.ReadAll(io.LimitReader(r, maxStateSize+1))
+			if err != nil {
+				return err
+			}
+			if len(data) > maxStateSize {
+				return fmt.Errorf("%w: %s is too large", ErrDamaged, hdr.Name)
+			}
+			out.State = data
+		}
+		return nil
+	})
+	if errors.Is(err, errStop) {
+		err = nil
+	}
+	if err != nil {
+		return out, err
+	}
+	if out.State == nil {
+		out.Native = hasSecrets
+		return out, nil
+	}
+	var st struct {
+		Runtime string `json:"runtime"`
+	}
+	if err := json.Unmarshal(out.State, &st); err != nil {
+		return out, fmt.Errorf("%w: %s: %v", ErrDamaged, name, err)
+	}
+	out.Native = st.Runtime == instance.RuntimeNative
+	return out, nil
+}
+
+func ExtractNativeFiles(path, dir string) error {
+	err := walkArchive(path, func(hdr *tar.Header, r io.Reader) error {
+		if !strings.HasPrefix(hdr.Name, FilesPrefix) {
+			return errStop
+		}
+		rel := strings.TrimSuffix(strings.TrimPrefix(hdr.Name, FilesPrefix), "/")
+		if rel == "" || !slices.ContainsFunc(native.InstanceFiles, func(f string) bool { return rel == f || strings.HasPrefix(rel, f+"/") }) {
+			return nil
+		}
+		if !filepath.IsLocal(filepath.FromSlash(rel)) {
+			return fmt.Errorf("%w: unsafe path %q", ErrDamaged, hdr.Name)
+		}
+		target := filepath.Join(dir, filepath.FromSlash(rel))
+		switch hdr.Typeflag {
+		case tar.TypeDir:
+			return os.MkdirAll(target, dirMode(hdr.Mode))
+		case tar.TypeReg:
+			if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil {
+				return err
+			}
+			return writeFile(target, r, os.FileMode(hdr.Mode).Perm(), false)
+		}
+		return nil
+	})
+	if errors.Is(err, errStop) {
+		return nil
+	}
+	return err
+}
+
 func dirMode(mode int64) os.FileMode {
 	m := os.FileMode(mode).Perm()
 	if m == 0 {
@@ -726,7 +809,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 		if !ok {
 			return &RestoreError{Part: short, Err: errors.New("the volume wasn't created")}
 		}
-		if short == UploadsVolume && v.bind != "" {
+		if uploadsVolume(short) && v.bind != "" {
 			uploadsBind = v.bind
 		}
 		pr, pw := io.Pipe()
@@ -821,7 +904,7 @@ func restoreData(ctx context.Context, path string, p *engine.Project, image stri
 
 func forgetUploadsID(bind string) error {
 	if err := os.Remove(filepath.Join(bind, UploadsIDFile)); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return &RestoreError{Part: UploadsVolume, Err: err}
+		return &RestoreError{Part: "uploads", Err: err}
 	}
 	return nil
 }

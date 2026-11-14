@@ -82,6 +82,7 @@ const FEATURE_FLAG_KEYS = Object.freeze([
 	'instant_accounts',
 	'email_codes',
 	'date_of_birth_step',
+	'proxy_attachments_through_api',
 ] as const) satisfies ReadonlyArray<keyof InstanceFeatures>;
 
 const BRANDING_URL_KEYS = Object.freeze([
@@ -158,7 +159,6 @@ export interface InstanceDiscoveryDocument {
 	readonly customBadgesVersion?: string | null;
 	readonly builtInGuildBadgeImages?: InstanceBuiltInGuildBadgeImages;
 	readonly hiddenBuiltInGuildBadges?: InstanceHiddenBuiltInGuildBadges;
-	readonly hiddenRoleIds?: ReadonlyArray<string>;
 }
 
 interface InstanceDiscoveryAttempt {
@@ -326,7 +326,6 @@ export function parseInstanceDiscoveryDocument(payload: unknown): InstanceDiscov
 		customBadgesVersion: readNonEmptyString(source, 'custom_badges_version'),
 		builtInGuildBadgeImages: parseBuiltInGuildBadgeImages(source.built_in_guild_badge_images),
 		hiddenBuiltInGuildBadges: parseHiddenBuiltInGuildBadges(source.hidden_built_in_guild_badges),
-		hiddenRoleIds: parseHiddenRoleIds(source.hidden_role_ids),
 	};
 }
 
@@ -657,6 +656,10 @@ function parseSso(value: unknown): InstanceSso | null {
 	if (available != null) {
 		sso.available = available;
 	}
+	const providerTrait = readNonEmptyString(source, 'provider_trait');
+	if (providerTrait != null) {
+		sso.provider_trait = providerTrait;
+	}
 	return sso;
 }
 
@@ -731,13 +734,6 @@ function parseHiddenBuiltInGuildBadges(value: unknown): InstanceHiddenBuiltInGui
 		return [];
 	}
 	return BUILT_IN_GUILD_BADGE_KINDS.filter((kind) => value.includes(kind));
-}
-
-function parseHiddenRoleIds(value: unknown): Array<string> {
-	if (!Array.isArray(value)) {
-		return [];
-	}
-	return value.filter((id): id is string => typeof id === 'string' && /^\d{1,20}$/.test(id));
 }
 
 function parseGuildBadges(value: unknown): Array<InstanceGuildBadge> {

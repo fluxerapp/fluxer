@@ -491,7 +491,7 @@ const InviteModalContent = observer(function InviteModalContent({
 				)}
 			</Modal.Content>
 			{!showAdvanced ? (
-				<Modal.Footer data-flx="invite.invite-modal.modal-footer--2">
+				<Modal.Footer className={selectorStyles.selectorFooter} data-flx="invite.invite-modal.modal-footer--2">
 					<CopyLinkSection
 						label={
 							hideInviteLinks ? (

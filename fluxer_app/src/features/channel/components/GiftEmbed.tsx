@@ -4,17 +4,9 @@ import styles from '@app/features/channel/components/GiftEmbed.module.css';
 import * as GiftCommands from '@app/features/gift/commands/GiftCommands';
 import Gifts from '@app/features/gift/state/Gifts';
 import {getGiftDurationText} from '@app/features/gift/utils/GiftUtils';
-import {
-	EmbedCard,
-	EmbedSkeletonButton,
-	EmbedSkeletonCircle,
-	EmbedSkeletonSubtitle,
-	EmbedSkeletonTitle,
-} from '@app/features/messaging/components/embeds/embed_card/EmbedCard';
 import cardStyles from '@app/features/messaging/components/embeds/embed_card/EmbedCard.module.css';
 import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {Button} from '@app/features/ui/button/Button';
 import Users from '@app/features/user/state/Users';
 import {getAccountGatePresentation} from '@app/features/user/utils/AccountGatePresentation';
@@ -23,9 +15,11 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {GiftIcon, QuestionIcon} from '@phosphor-icons/react';
+import {AtomIcon, QuestionIcon} from '@phosphor-icons/react';
+import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useMemo, useRef} from 'react';
+import type React from 'react';
+import {useEffect, useMemo, useState} from 'react';
 
 const FROM_DESCRIPTOR = msg({
 	message: 'From {creatorTag}',
@@ -33,15 +27,11 @@ const FROM_DESCRIPTOR = msg({
 });
 const ALREADY_REDEEMED_DESCRIPTOR = msg({
 	message: 'Already redeemed',
-	comment: 'Status pill on a gift code embed when the gift has already been claimed.',
+	comment: 'Status line on a gift code embed when the gift has already been claimed.',
 });
 const CLICK_TO_CLAIM_YOUR_GIFT_DESCRIPTOR = msg({
 	message: 'Click to claim your gift!',
 	comment: 'Call-to-action text on a redeemable gift code embed. Tone can be friendly.',
-});
-const GIFT_CLAIMED_DESCRIPTOR = msg({
-	message: 'Gift claimed',
-	comment: 'Toast confirmation shown after successfully claiming a gift from the gift code embed.',
 });
 const CLAIM_GIFT_DESCRIPTOR = msg({
 	message: 'Claim gift',
@@ -55,10 +45,6 @@ const THIS_GIFT_CODE_IS_INVALID_OR_ALREADY_CLAIMED_DESCRIPTOR = msg({
 	message: 'This gift code is invalid or already claimed.',
 	comment: 'Body shown on an unknown gift embed explaining why the code is invalid.',
 });
-const GIFT_UNAVAILABLE_DESCRIPTOR = msg({
-	message: 'Gift unavailable',
-	comment: 'Title shown on a gift code embed when the gift cannot be resolved due to a non-permanent failure.',
-});
 const logger = new Logger('GiftEmbed');
 
 interface GiftEmbedProps {
@@ -70,173 +56,134 @@ export const GiftEmbed = observer(function GiftEmbed({code}: GiftEmbedProps) {
 	const target = useMemo(currentInstanceTarget, []);
 	const giftState = Gifts.getGift(code, target);
 	const gift = giftState?.data;
-	const creator = Users.getUser(gift?.created_by?.id ?? '');
+	const creator = Users.getUser(gift?.created_by?.id ?? '') ?? gift?.created_by ?? null;
 	const giftRedeemGate = canPerform(Users.currentUser, TierGatedActions.GIFT_REDEEM);
+	const [redeeming, setRedeeming] = useState(false);
 	useEffect(() => {
 		if (!giftState) {
 			void GiftCommands.fetchWithCoalescing(code, target).catch(() => {});
 		}
 	}, [code, giftState, target]);
-	const prevLoadingRef = useRef<boolean>(true);
-	useEffect(() => {
-		const isLoading = !!giftState?.loading;
-		if (prevLoadingRef.current && !isLoading && giftState) {
-			ComponentBus.dispatch('LAYOUT_RESIZED');
-		}
-		prevLoadingRef.current = isLoading;
-	}, [giftState?.loading]);
 	if (!giftState || giftState.loading) {
 		return <GiftLoadingState data-flx="channel.gift-embed.gift-loading-state" />;
 	}
 	if (giftState.invalid || giftState.error || !gift) {
-		return <GiftNotFoundError data-flx="channel.gift-embed.gift-not-found-error" />;
+		return (
+			<GiftCard
+				muted
+				icon={<QuestionIcon weight="bold" className={styles.icon} data-flx="channel.gift-embed.unknown-icon" />}
+				title={i18n._(UNKNOWN_GIFT_DESCRIPTOR)}
+				meta={i18n._(THIS_GIFT_CODE_IS_INVALID_OR_ALREADY_CLAIMED_DESCRIPTOR)}
+				action={null}
+				data-flx="channel.gift-embed.gift-card"
+			/>
+		);
 	}
-	const durationText = getGiftDurationText(i18n, gift);
-	const creatorTag = creator ? NicknameUtils.getDisplayName(creator) : '';
 	const gatePresentation = giftRedeemGate.allowed ? null : getAccountGatePresentation(i18n, giftRedeemGate);
 	const handleRedeem = async () => {
 		if (gatePresentation) {
 			gatePresentation.onAction();
 			return;
 		}
+		if (redeeming) return;
+		setRedeeming(true);
 		try {
 			await GiftCommands.redeem(i18n, code, target);
 		} catch (error) {
 			logger.error('Failed to redeem gift', error);
+		} finally {
+			setRedeeming(false);
 		}
 	};
-	const subtitleNode = creator ? (
-		<span className={styles.subRow} data-flx="channel.gift-embed.sub-row">
-			{i18n._(FROM_DESCRIPTOR, {creatorTag})}
-		</span>
-	) : undefined;
-	const helpText = gift.redeemed
-		? i18n._(ALREADY_REDEEMED_DESCRIPTOR)
-		: (gatePresentation?.description ?? i18n._(CLICK_TO_CLAIM_YOUR_GIFT_DESCRIPTOR));
-	const footer =
-		gift.redeemed && gatePresentation === null ? (
-			<Button variant="primary" fitContainer matchSkeletonHeight disabled data-flx="channel.gift-embed.button">
-				{i18n._(GIFT_CLAIMED_DESCRIPTOR)}
-			</Button>
-		) : (
-			<Button
-				variant="primary"
-				fitContainer
-				matchSkeletonHeight
-				onClick={handleRedeem}
-				disabled={gift.redeemed}
-				data-flx="channel.gift-embed.button.redeem"
-			>
-				{(() => {
-					if (gift.redeemed) return i18n._(GIFT_CLAIMED_DESCRIPTOR);
-					if (gatePresentation) return gatePresentation.actionLabel;
-					return i18n._(CLAIM_GIFT_DESCRIPTOR);
-				})()}
-			</Button>
-		);
+	let meta: string;
+	if (gift.redeemed) meta = i18n._(ALREADY_REDEEMED_DESCRIPTOR);
+	else if (gatePresentation) meta = gatePresentation.description;
+	else if (creator) meta = i18n._(FROM_DESCRIPTOR, {creatorTag: NicknameUtils.getDisplayName(creator)});
+	else meta = i18n._(CLICK_TO_CLAIM_YOUR_GIFT_DESCRIPTOR);
 	return (
-		<EmbedCard
-			splashURL={null}
-			icon={
-				<div
-					className={`${styles.iconCircle} ${gift.redeemed ? styles.iconCircleInactive : styles.iconCircleActive}`}
-					data-flx="channel.gift-embed.icon-circle"
-				>
-					<GiftIcon className={styles.icon} data-flx="channel.gift-embed.icon" />
-				</div>
+		<GiftCard
+			muted={gift.redeemed}
+			icon={<AtomIcon weight="fill" className={styles.icon} data-flx="channel.gift-embed.plutonium-icon" />}
+			title={getGiftDurationText(i18n, gift)}
+			meta={meta}
+			action={
+				gift.redeemed ? null : (
+					<Button
+						variant="primary"
+						small
+						fitContent
+						submitting={redeeming}
+						onClick={handleRedeem}
+						data-flx="channel.gift-embed.redeem"
+					>
+						{gatePresentation ? gatePresentation.actionLabel : i18n._(CLAIM_GIFT_DESCRIPTOR)}
+					</Button>
+				)
 			}
-			title={
-				<h3
-					className={`${styles.title} ${cardStyles.title} ${gift.redeemed ? styles.titleTertiary : styles.titlePrimary}`}
-					data-flx="channel.gift-embed.title"
-				>
-					{durationText}
-				</h3>
-			}
-			subtitle={subtitleNode}
-			body={
-				<div className={styles.helpRow} data-flx="channel.gift-embed.help-row">
-					{helpText}
-				</div>
-			}
-			footer={footer}
-			data-flx="channel.gift-embed.embed-card"
+			data-flx="channel.gift-embed.gift-card--2"
 		/>
 	);
 });
-const GiftLoadingState = observer(function GiftLoadingState() {
+
+function GiftCard({
+	muted,
+	icon,
+	title,
+	meta,
+	action,
+}: {
+	muted: boolean;
+	icon: React.ReactNode;
+	title: string;
+	meta: string;
+	action: React.ReactNode;
+}) {
 	return (
-		<EmbedCard
-			splashURL={null}
-			icon={
-				<EmbedSkeletonCircle
-					className={styles.skeletonCircle}
-					data-flx="channel.gift-embed.gift-loading-state.skeleton-circle"
-				/>
-			}
-			title={
-				<EmbedSkeletonTitle
-					className={styles.skeletonTitle}
-					data-flx="channel.gift-embed.gift-loading-state.skeleton-title"
-				/>
-			}
-			body={
-				<EmbedSkeletonSubtitle
-					className={styles.skeletonHelp}
-					data-flx="channel.gift-embed.gift-loading-state.skeleton-help"
-				/>
-			}
-			footer={
-				<EmbedSkeletonButton
-					className={styles.skeletonButton}
-					data-flx="channel.gift-embed.gift-loading-state.skeleton-button"
-				/>
-			}
-			data-flx="channel.gift-embed.gift-loading-state.embed-card"
-		/>
+		<div className={styles.card} data-flx="channel.gift-embed.card">
+			<div className={clsx(styles.tile, muted && styles.tileMuted)} data-flx="channel.gift-embed.tile">
+				{icon}
+			</div>
+			<div className={styles.text} data-flx="channel.gift-embed.text">
+				<p className={clsx(styles.title, muted && styles.titleMuted)} title={title} data-flx="channel.gift-embed.title">
+					{title}
+				</p>
+				<p className={styles.meta} title={meta} data-flx="channel.gift-embed.meta">
+					{meta}
+				</p>
+			</div>
+			{action !== null && (
+				<div className={styles.action} data-flx="channel.gift-embed.action">
+					{action}
+				</div>
+			)}
+		</div>
 	);
-});
-const GiftNotFoundError = observer(function GiftNotFoundError() {
-	const {i18n} = useLingui();
+}
+
+function GiftLoadingState() {
 	return (
-		<EmbedCard
-			splashURL={null}
-			icon={
-				<div
-					className={`${styles.iconCircle} ${styles.iconCircleDisabled}`}
-					data-flx="channel.gift-embed.gift-not-found-error.icon-circle"
-				>
-					<QuestionIcon
-						className={`${styles.icon} ${styles.iconError}`}
-						data-flx="channel.gift-embed.gift-not-found-error.icon"
+		<div className={styles.card} aria-busy data-flx="channel.gift-embed.loading">
+			<div className={clsx(cardStyles.skeleton, styles.skeletonTile)} data-flx="channel.gift-embed.loading-tile" />
+			<div className={styles.text} data-flx="channel.gift-embed.loading-text">
+				<div className={styles.title} data-flx="channel.gift-embed.loading-title">
+					<div
+						className={clsx(cardStyles.skeleton, styles.skeletonTitle)}
+						data-flx="channel.gift-embed.loading-title-bar"
 					/>
 				</div>
-			}
-			title={
-				<h3
-					className={`${styles.title} ${styles.titleDanger}`}
-					data-flx="channel.gift-embed.gift-not-found-error.title"
-				>
-					{i18n._(UNKNOWN_GIFT_DESCRIPTOR)}
-				</h3>
-			}
-			body={
-				<span className={styles.helpRow} data-flx="channel.gift-embed.gift-not-found-error.help-row">
-					{i18n._(THIS_GIFT_CODE_IS_INVALID_OR_ALREADY_CLAIMED_DESCRIPTOR)}
-				</span>
-			}
-			footer={
-				<Button
-					variant="primary"
-					fitContainer
-					matchSkeletonHeight
-					disabled
-					data-flx="channel.gift-embed.gift-not-found-error.button"
-				>
-					{i18n._(GIFT_UNAVAILABLE_DESCRIPTOR)}
-				</Button>
-			}
-			data-flx="channel.gift-embed.gift-not-found-error.embed-card"
-		/>
+				<div className={styles.meta} data-flx="channel.gift-embed.loading-meta">
+					<div
+						className={clsx(cardStyles.skeleton, styles.skeletonMeta)}
+						data-flx="channel.gift-embed.loading-meta-bar"
+					/>
+				</div>
+			</div>
+			<div className={styles.action} data-flx="channel.gift-embed.loading-action">
+				<div
+					className={clsx(cardStyles.skeleton, styles.skeletonButton)}
+					data-flx="channel.gift-embed.loading-button"
+				/>
+			</div>
+		</div>
 	);
-});
+}

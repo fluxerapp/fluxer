@@ -125,7 +125,10 @@ func imageLines(compose []byte) ([]imageLine, error) {
 		return nil, errors.New("stack: the compose file is empty")
 	}
 	services := mappingValue(doc.Content[0], "services")
-	if services == nil || services.Kind != yaml.MappingNode {
+	if services == nil {
+		return nil, nil
+	}
+	if services.Kind != yaml.MappingNode {
 		return nil, errors.New("stack: the compose file has no services")
 	}
 	var out []imageLine
@@ -163,6 +166,8 @@ func mappingValue(n *yaml.Node, key string) *yaml.Node {
 	return nil
 }
 
+var imageSource = map[string]string{ObjectsInitService: "media-proxy"}
+
 func pinImages(compose []byte, release string, images map[string]string) ([]byte, error) {
 	if len(images) == 0 {
 		return compose, nil
@@ -174,6 +179,9 @@ func pinImages(compose []byte, release string, images map[string]string) ([]byte
 	lines := strings.Split(string(compose), "\n")
 	for _, img := range found {
 		ref, pinned := images[img.service]
+		if src, ok := imageSource[img.service]; ok && !pinned {
+			ref, pinned = images[src]
+		}
 		var value string
 		switch {
 		case strings.HasPrefix(img.value, "${FLUXER_REGISTRY"):

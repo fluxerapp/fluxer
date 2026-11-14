@@ -211,3 +211,29 @@ fn wide_table_with_short_rows_stays_within_node_budget() {
     let filled = parse("a|b\n-|-\n1|2\n|", ParserFlags::ALL, "");
     assert_eq!(filled["nodes"][0]["rows"].as_array().map(Vec::len), Some(2));
 }
+
+#[test]
+fn skin_tone_shortcode_names_resolve_from_emoji_context() {
+    let context = concat!(
+        "C\tadult_tone1\t\u{1F9D1}\u{1F3FB}\t1f9d1-1f3fb\n",
+        "C\tcouple_mm_tone1_tone3\t\u{1F468}\u{1F3FB}\u{200D}\u{2764}\u{FE0F}\u{200D}\u{1F468}\u{1F3FD}\t1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fd\n",
+        "C\tadult\t\u{1F9D1}\t1f9d1\n",
+    );
+    assert_eq!(
+        parse(
+            ":adult_tone1: :couple_mm_tone1_tone3: :adult: <:blob123:1234567890> :adult_tone6:",
+            ParserFlags::ALL,
+            context
+        ),
+        json!({"nodes":[
+            {"type":"Emoji","kind":{"kind":"Standard","raw":"\u{1F9D1}\u{1F3FB}","codepoints":"1f9d1-1f3fb","name":"adult_tone1"}},
+            {"type":"Text","content":" "},
+            {"type":"Emoji","kind":{"kind":"Standard","raw":"\u{1F468}\u{1F3FB}\u{200D}\u{2764}\u{FE0F}\u{200D}\u{1F468}\u{1F3FD}","codepoints":"1f468-1f3fb-200d-2764-fe0f-200d-1f468-1f3fd","name":"couple_mm_tone1_tone3"}},
+            {"type":"Text","content":" "},
+            {"type":"Emoji","kind":{"kind":"Standard","raw":"\u{1F9D1}","codepoints":"1f9d1","name":"adult"}},
+            {"type":"Text","content":" "},
+            {"type":"Emoji","kind":{"kind":"Custom","name":"blob123","id":"1234567890","animated":false}},
+            {"type":"Text","content":" :adult_tone6:"}
+        ]})
+    );
+}

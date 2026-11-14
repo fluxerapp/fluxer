@@ -20,6 +20,7 @@ import {
 	type MenuSheetItem,
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {GUILD_SETTINGS_LABEL_DESCRIPTOR} from '@app/features/user/components/settings_utils/GuildSettingsConstants';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -81,7 +82,7 @@ export const GuildHeaderBottomSheet: React.FC<GuildHeaderBottomSheetProps> = obs
 	const guildCounts = GuildCount.getCounts(guild.id);
 	const presenceCount = guildCounts?.onlineCount ?? 0;
 	const memberCount = guildCounts?.memberCount ?? 0;
-	const formattedPresenceCount = getCachedNumberFormat(i18n.locale).format(presenceCount);
+	const formattedPresenceCount = getCachedNumberFormat(getFormattingLocale()).format(presenceCount);
 	const headerContent = (
 		<div className={headerStyles.header} data-flx="guild.guild-header-bottom-sheet.div">
 			<div className={headerStyles.avatarWrapper} data-flx="guild.guild-header-bottom-sheet.div--2">

@@ -21,6 +21,7 @@ import type {GuildChannelOverride} from '@app/api/models/GuildChannelOverride';
 import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
+import type {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {CustomStatusValidator} from '@app/api/user/services/CustomStatusValidator';
 import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
@@ -70,6 +71,7 @@ interface UserAccountSettingsServiceDeps {
 	guildRepository: GuildRepository;
 	limitConfigService: LimitConfigService;
 	cacheService: ICacheService;
+	labsRoleService: Pick<OperatorPassLabsRoleService, 'resyncLabsRoles'> | null;
 }
 
 export class UserAccountSettingsService {
@@ -197,6 +199,8 @@ export class UserAccountSettingsService {
 		}
 		if (data.afk_timeout !== undefined) updatedRowData.afk_timeout = data.afk_timeout;
 		if (data.time_format !== undefined) updatedRowData.time_format = data.time_format;
+		if (data.timestamp_format !== undefined) updatedRowData.timestamp_format = data.timestamp_format;
+		if (data.regional_format !== undefined) updatedRowData.regional_format = data.regional_format;
 		if (data.developer_mode !== undefined) updatedRowData.developer_mode = data.developer_mode;
 		if (data.trusted_domains !== undefined) {
 			const domainsSet = new Set(data.trusted_domains);
@@ -302,6 +306,9 @@ export class UserAccountSettingsService {
 			currentSettings.toRow(),
 		);
 		await this.deps.updatePropagator.dispatchUserSettingsUpdate({userId, settings: updatedSettings});
+		if (updatedSettings.profilePrivacy !== currentSettings.profilePrivacy) {
+			await this.deps.labsRoleService?.resyncLabsRoles(userId);
+		}
 		if (localeChanged) {
 			const user = await this.deps.userAccountRepository.findUnique(userId);
 			if (user) {

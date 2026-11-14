@@ -7,7 +7,7 @@ import {getNativeLocaleIdentifier} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {noteLocale} from '@app/features/theme/fonts/ScriptFontLoader';
-import {AllLocales, type LocaleCode} from '@fluxer/constants/src/Locales';
+import {AllLocales, type LocaleCode, resolveFormattingLocale} from '@fluxer/constants/src/Locales';
 import {type I18n, i18n, type Messages} from '@lingui/core';
 import {createAtom, runInAction} from 'mobx';
 
@@ -21,6 +21,7 @@ const LANGUAGE_OVERRIDES: Record<string, LocaleCode> = {
 	nn: 'no',
 	pt: 'pt-BR',
 	sv: 'sv-SE',
+	tl: 'fil',
 	zh: 'zh-CN',
 };
 
@@ -30,7 +31,10 @@ type LocaleLoader = () => Promise<{
 
 const loaders: Record<LocaleCode, LocaleLoader> = {
 	ar: () => import('@app/features/i18n/locales/ar/messages.mjs'),
+	be: () => import('@app/features/i18n/locales/be/messages.mjs'),
 	bg: () => import('@app/features/i18n/locales/bg/messages.mjs'),
+	bn: () => import('@app/features/i18n/locales/bn/messages.mjs'),
+	ca: () => import('@app/features/i18n/locales/ca/messages.mjs'),
 	cs: () => import('@app/features/i18n/locales/cs/messages.mjs'),
 	da: () => import('@app/features/i18n/locales/da/messages.mjs'),
 	de: () => import('@app/features/i18n/locales/de/messages.mjs'),
@@ -40,6 +44,7 @@ const loaders: Record<LocaleCode, LocaleLoader> = {
 	'es-ES': () => import('@app/features/i18n/locales/es-ES/messages.mjs'),
 	'es-419': () => import('@app/features/i18n/locales/es-419/messages.mjs'),
 	fi: () => import('@app/features/i18n/locales/fi/messages.mjs'),
+	fil: () => import('@app/features/i18n/locales/fil/messages.mjs'),
 	fr: () => import('@app/features/i18n/locales/fr/messages.mjs'),
 	he: () => import('@app/features/i18n/locales/he/messages.mjs'),
 	hi: () => import('@app/features/i18n/locales/hi/messages.mjs'),
@@ -50,14 +55,20 @@ const loaders: Record<LocaleCode, LocaleLoader> = {
 	ja: () => import('@app/features/i18n/locales/ja/messages.mjs'),
 	ko: () => import('@app/features/i18n/locales/ko/messages.mjs'),
 	lt: () => import('@app/features/i18n/locales/lt/messages.mjs'),
+	lv: () => import('@app/features/i18n/locales/lv/messages.mjs'),
 	nl: () => import('@app/features/i18n/locales/nl/messages.mjs'),
 	no: () => import('@app/features/i18n/locales/no/messages.mjs'),
 	pl: () => import('@app/features/i18n/locales/pl/messages.mjs'),
 	'pt-BR': () => import('@app/features/i18n/locales/pt-BR/messages.mjs'),
+	'pt-PT': () => import('@app/features/i18n/locales/pt-PT/messages.mjs'),
 	ro: () => import('@app/features/i18n/locales/ro/messages.mjs'),
 	ru: () => import('@app/features/i18n/locales/ru/messages.mjs'),
+	sk: () => import('@app/features/i18n/locales/sk/messages.mjs'),
+	sl: () => import('@app/features/i18n/locales/sl/messages.mjs'),
+	sq: () => import('@app/features/i18n/locales/sq/messages.mjs'),
 	'sv-SE': () => import('@app/features/i18n/locales/sv-SE/messages.mjs'),
 	th: () => import('@app/features/i18n/locales/th/messages.mjs'),
+	tok: () => import('@app/features/i18n/locales/tok/messages.mjs'),
 	tr: () => import('@app/features/i18n/locales/tr/messages.mjs'),
 	uk: () => import('@app/features/i18n/locales/uk/messages.mjs'),
 	vi: () => import('@app/features/i18n/locales/vi/messages.mjs'),
@@ -114,6 +125,9 @@ function resolveLocale(value: string): LocaleCode | null {
 		const regionalLocale = `${language}-${regionCode}`;
 		if (supportedLocaleSet.has(regionalLocale as LocaleCode)) {
 			return regionalLocale as LocaleCode;
+		}
+		if (language === 'pt' && regionCode !== 'BR') {
+			return 'pt-PT';
 		}
 	}
 	const override = LANGUAGE_OVERRIDES[language];
@@ -172,7 +186,7 @@ function applyDocumentLocale(localeCode: LocaleCode): void {
 let loadedLocale: LocaleCode | null = null;
 
 function activateLocale(localeCode: LocaleCode, messages: Messages): void {
-	i18n.loadAndActivate({locale: localeCode, messages});
+	i18n.loadAndActivate({locale: localeCode, locales: resolveFormattingLocale(localeCode), messages});
 	loadedLocale = localeCode;
 	applyDocumentLocale(localeCode);
 	noteLocale(localeCode);

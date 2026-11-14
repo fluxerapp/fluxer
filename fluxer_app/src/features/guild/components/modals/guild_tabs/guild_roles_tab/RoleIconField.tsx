@@ -28,6 +28,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {
 	formatAssetUploadExtensions,
@@ -255,7 +256,7 @@ export const RoleIconField = observer(function RoleIconField({role, disabled, on
 	const uploadHint = i18n._(ROLE_ICON_UPLOAD_HINT_DESCRIPTOR, {
 		formats,
 		minimumSize: `${ROLE_ICON_MIN_DIMENSION}×${ROLE_ICON_MIN_DIMENSION}px`,
-		maxSize: formatFileSize(i18n.locale, ROLE_ICON_MAX_BYTES),
+		maxSize: formatFileSize(getFormattingLocale(), ROLE_ICON_MAX_BYTES),
 	});
 	const stageImage = (dataUrl: string) => {
 		stageTokenRef.current += 1;

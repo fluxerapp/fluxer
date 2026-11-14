@@ -192,7 +192,7 @@ export class VoiceEngineV2AppLiveKitExecutionAdapter implements LiveKitMediaPort
 		if (typeof options.token !== 'string' || options.token.length === 0) {
 			throw buildOperatingError('connect', 'options.token is missing');
 		}
-		this.logger.info('connect requested', {url: options.url});
+		this.logger.debug('connect requested', {url: options.url});
 		beginMicrophoneSession();
 		const voiceServerDelegate = this.connection.connectToVoiceServer;
 		if (typeof voiceServerDelegate === 'function') {
@@ -229,7 +229,7 @@ export class VoiceEngineV2AppLiveKitExecutionAdapter implements LiveKitMediaPort
 		if (typeof reason !== 'string' || reason.length === 0) {
 			throw buildOperatingError('disconnect', 'reason is missing');
 		}
-		this.logger.info('disconnect requested', {reason});
+		this.logger.debug('disconnect requested', {reason});
 		const delegate = this.connection.disconnectFromVoiceChannel;
 		if (typeof delegate !== 'function') return;
 		const mapped = reason === 'user' || reason === 'server' ? reason : 'error';

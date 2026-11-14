@@ -4,7 +4,7 @@ import {HdrDisplayMode} from '@app/features/accessibility/state/Accessibility';
 import {readRawStorageItem, writeRawStorageItem} from '@app/features/platform/state/PrebootMirror';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {getInstanceBrandVariables, INSTANCE_BRAND_VARIABLES} from '@app/features/theme/utils/InstanceBrandColors';
-import {useLayoutEffect} from 'react';
+import {useInsertionEffect, useLayoutEffect} from 'react';
 
 const SERVED_THEME_COLOR_STYLE_ID = 'fluxer-instance-theme-color';
 const INSTANCE_BRAND_PREBOOT_STORAGE_KEY = 'fluxer:instance-brand:preboot';
@@ -64,7 +64,7 @@ export function useThemeCssVariables({
 	hdrDisplayMode,
 	instanceThemeColor,
 }: ThemeCssVariablesOptions): void {
-	useLayoutEffect(() => {
+	useInsertionEffect(() => {
 		const htmlNode = document.documentElement;
 		const themeClass = `theme-${effectiveTheme}`;
 		for (const existingClass of Array.from(htmlNode.classList)) {
@@ -101,7 +101,7 @@ export function useThemeCssVariables({
 		messageGroupSpacing,
 		hdrDisplayMode,
 	]);
-	useLayoutEffect(() => {
+	useInsertionEffect(() => {
 		document.getElementById(SERVED_THEME_COLOR_STYLE_ID)?.remove();
 		const variables =
 			instanceThemeColor === null

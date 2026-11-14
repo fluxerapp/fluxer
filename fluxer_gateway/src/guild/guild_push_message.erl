@@ -34,7 +34,7 @@ send(
             {PushMessageData0, ChannelName} = push_message_data(
                 MessageData, ChannelIdBin, EligibleUserIds ++ element(1, Held), Data
             ),
-            PushMessageData = mark_mature(PushMessageData0, ChannelIdBin, Data),
+            PushMessageData = mark_age_restricted(PushMessageData0, ChannelIdBin, Data),
             RoleNames = build_role_names_map(Data),
             Params = push_params(Request#{
                 message_data := PushMessageData,
@@ -46,8 +46,8 @@ send(
             guild_push_engagement:hold(Held, Params)
     end.
 
--spec mark_mature(event_data(), term(), map()) -> event_data().
-mark_mature(PushMessageData, ChannelIdBin, Data) ->
+-spec mark_age_restricted(event_data(), term(), map()) -> event_data().
+mark_age_restricted(PushMessageData, ChannelIdBin, Data) ->
     case guild_dispatch_decorate:parse_snowflake(<<"channel_id">>, ChannelIdBin) of
         undefined ->
             PushMessageData;

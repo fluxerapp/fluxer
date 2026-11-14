@@ -109,6 +109,9 @@ The optional compose files change how Fluxer runs. To use one, list it after `do
 - `docker-compose.proxy.yml` for your own reverse proxy
 - `tunnel.compose.yml` for a tunnel
 - `external-object-store.compose.yml` for your own object store
+- `filesystem-object-store.compose.yml` for uploaded files kept as plain files in a volume instead of SeaweedFS
+- `kv-postgres.compose.yml` for cache, rate limit and queue data kept in Postgres instead of Valkey
+- `rust-server.compose.yml` for the Rust services in one container
 - `ipv6.compose.yml` for IPv6 on Fluxer's network
 - `external-voice.compose.yml` for voice servers of your own without the bundled LiveKit
 
@@ -414,7 +417,7 @@ The email address the voice edge gives Let's Encrypt for notices about its certi
 
 ## Object storage
 
-By default Fluxer keeps files in the bundled object store. To use your own S3-compatible store, set its address and buckets, add `external-object-store.compose.yml` to `COMPOSE_FILE` and put its keys in `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`.
+By default Fluxer keeps files in the bundled object store. To keep them as plain files in a volume instead, add `filesystem-object-store.compose.yml` to `COMPOSE_FILE`. To use your own S3-compatible store, set its address and buckets, add `external-object-store.compose.yml` to `COMPOSE_FILE` and put its keys in `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`.
 
 ### `FLUXER_S3_ENDPOINT`
 
@@ -496,6 +499,22 @@ How many rounds, about two seconds apart, the bundled object store's setup job t
 
 How long the bundled object store keeps files in the uploads bucket before it deletes them, such as `1d` or `12h`. Use `off` to keep them. A new value applies to uploads written after the next start, and files already stored keep their old expiry. The default is `1d`. With rexctl, use `rexctl config set FLUXER_SEAWEEDFS_UPLOADS_TTL`.
 
+### `FLUXER_STORAGE_BACKEND`
+
+filesystem to keep uploaded files as plain files in a volume, or s3 for SeaweedFS or the object store set in storage.endpoint. Where Fluxer keeps uploaded files. `s3` uses the bundled SeaweedFS or the object store at `FLUXER_S3_ENDPOINT`. `filesystem` keeps them as plain files under `FLUXER_STORAGE_ROOT` and needs `FLUXER_S3_ENDPOINT` to be empty. When it's empty, Fluxer uses `s3`. A new native install writes `filesystem`. To switch an instance that already has files, use `rexctl migrate --experimental-native`. With rexctl, use `rexctl config set storage.backend`.
+
+### `FLUXER_STORAGE_ROOT`
+
+The folder that holds the files when `FLUXER_STORAGE_BACKEND` is `filesystem`. The api, worker and media-proxy services must see the same folder. The api and worker log a warning when the disk that holds it has less than 10% of its inodes or space free, and refuse new uploads when it is almost full. With rexctl, use `rexctl config set FLUXER_STORAGE_ROOT`.
+
+### `FLUXER_STORAGE_UPLOADS_TTL`
+
+How long Fluxer keeps files in the uploads bucket when `FLUXER_STORAGE_BACKEND` is `filesystem`. Use a number followed by `m`, `h`, `d`, `w`, `M` for months or `y`, such as `1d`, or `off` to keep them. When it's empty, Fluxer uses `FLUXER_SEAWEEDFS_UPLOADS_TTL`, and `1d` when that is empty too. With rexctl, use `rexctl config set FLUXER_STORAGE_UPLOADS_TTL`.
+
+### `FLUXER_STORAGE_READ_ONLY`
+
+Whether the api and worker refuse to write or delete files. Use `true` or `false`. `rexctl migrate --experimental-native` turns it on while you check the files it moved, and turns it off when you confirm. With rexctl, use `rexctl config set FLUXER_STORAGE_READ_ONLY`.
+
 ## Database
 
 Leave these unset to use the bundled Postgres.
@@ -538,7 +557,7 @@ The Postgres table for Fluxer's key-value data, a plain identifier of letters, d
 
 ## Cache, queue and search
 
-Leave these unset to use the bundled Valkey, NATS and Meilisearch.
+Leave these unset to use the bundled Valkey, NATS and Meilisearch. To keep cache, rate limit and queue data in Postgres instead of Valkey, add `kv-postgres.compose.yml` to `COMPOSE_FILE`.
 
 ### `FLUXER_KV_URL`
 
@@ -546,7 +565,7 @@ The Valkey or Redis URL Fluxer uses for its cache, rate limits and other short-l
 
 ### `FLUXER_KV_MODE`
 
-How Fluxer connects to the key-value store. Use `standalone` for a single Valkey or Redis node or `cluster` for a Redis-compatible cluster. When it's empty, Fluxer uses `standalone`. With rexctl, use `rexctl config set FLUXER_KV_MODE`.
+postgres to keep cache, rate limit and queue data in the database, standalone for the Valkey container, or cluster for a Redis-compatible cluster at `FLUXER_KV_URL`. Where Fluxer keeps its cache, rate limits and other short-lived data. Use `standalone` for a single Valkey or Redis node at `FLUXER_KV_URL`, `cluster` for a Redis-compatible cluster, or `postgres` for tables in Fluxer's own Postgres database. When it's empty, Fluxer uses `standalone`. A new native install writes `postgres`. `postgres` needs `FLUXER_DATABASE_BACKEND` to be `postgres` and `FLUXER_KV_URL` to be empty. A transaction-mode pooler such as PgBouncer in transaction mode breaks the LISTEN connection `postgres` needs, so connect directly or through a session-mode pooler. To switch an instance that already has data, use `rexctl migrate --experimental-native`. With rexctl, use `rexctl config set kv.mode`.
 
 ### `FLUXER_NATS_URL`
 
@@ -1408,6 +1427,26 @@ rexctl sets some of these from the machine's memory and CPU on every start. A va
 
 How many worker threads the async runtime uses in the app-proxy, push, admin, snowflakes, users, gifs, messages and unfurl containers, set as their `TOKIO_WORKER_THREADS`. The default is `2`. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_TOKIO_WORKER_THREADS`.
 
+### `FLUXER_RUST_PROCESS`
+
+single to run the Rust services in one container, or per-service for one container each. How the Rust services run. `single` runs snowflakes, users, messages, gifs, unfurl, push, app-proxy and admin in one process, and `per-service` runs one process for each. When it's empty, Fluxer uses `per-service`. A new native install writes `single`. With rexctl, use `rexctl config set rust.process`.
+
+### `FLUXER_RUST_SERVER_TOKIO_WORKER_THREADS`
+
+How many worker threads the async runtime uses when `FLUXER_RUST_PROCESS` is `single`, set as `TOKIO_WORKER_THREADS` of the one Rust process. The default is `2` with `rust-server.compose.yml`. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_RUST_SERVER_TOKIO_WORKER_THREADS`.
+
+### `FLUXER_RUST_MEMORY_LIMIT`
+
+The memory limit for the rust container when `FLUXER_RUST_PROCESS` is `single`. The default is `1gb` with `rust-server.compose.yml`. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_RUST_MEMORY_LIMIT`.
+
+### `FLUXER_KV_POSTGRES_MAX_CONNECTIONS`
+
+The size of the Postgres connection pool for key-value data in each api and worker process when `FLUXER_KV_MODE` is `postgres`, at least 1. Each process also holds one more connection for LISTEN. Keep `FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS` above the total. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_KV_POSTGRES_MAX_CONNECTIONS`.
+
+### `FLUXER_KV_POSTGRES_MAX_BYTES`
+
+How many bytes the key-value tables may use when `FLUXER_KV_MODE` is `postgres`. Above it, writes of key-value data fail until the cleanup that runs every five minutes brings the tables under it again, like Valkey does at its memory limit. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_KV_POSTGRES_MAX_BYTES`.
+
 ### `FLUXER_MALLOC_ARENA_MAX`
 
 How many memory arenas the glibc allocator may create in the push, admin, snowflakes, users, gifs, messages and unfurl containers, set as their `MALLOC_ARENA_MAX`. Lower values use less memory. The default is `2`. rexctl sizes this. With rexctl, use `rexctl config set FLUXER_MALLOC_ARENA_MAX`.
@@ -2013,6 +2052,22 @@ The domain the services build their addresses from, set from `FLUXER_DOMAIN`.
 
 The database the services use. Docker Compose sets it to `postgres`.
 
+### `FLUXER_ADMIN_UPSTREAM`
+
+The address the edge sends admin panel requests to, which changes when `FLUXER_RUST_PROCESS` is `single`. The default is `admin:18083` with `rust-server.compose.yml`.
+
+### `FLUXER_SERVER_SERVICES`
+
+The Rust services the one Rust process runs, separated by commas.
+
+### `FLUXER_SNOWFLAKES_WORKER_GUARD`
+
+Whether the snowflakes service refuses to start while another snowflakes service with the same worker id answers on NATS. The guard waits up to one second for an answer and refuses only when another running snowflakes service answers, so a second snowflakes service started by hand can't hand out the same IDs. fluxerd sets it to `true` for every snowflakes service, including the one inside the single Rust process. The Helm chart leaves it unset and the guard off, because a rolling update can briefly run two pods with the same worker id. Docker Compose sets it to `true`.
+
+### `UV_THREADPOOL_SIZE`
+
+The size of the libuv thread pool in the api and worker, which file reads and writes use when `FLUXER_STORAGE_BACKEND` is `filesystem`.
+
 ### `FLUXER_EDGE_TLS_DIRECTIVE`
 
 The tls line of the edge Caddyfile, set from `FLUXER_EDGE_TLS`.
@@ -2153,6 +2208,10 @@ The role the bundled Postgres creates on its first start, set from `FLUXER_POSTG
 
 How many async worker threads the Rust services use, set from `FLUXER_TOKIO_WORKER_THREADS` or `FLUXER_MEDIA_PROXY_TOKIO_WORKER_THREADS`.
 
+### `WEED_FILER_OPTIONS_MAX_FILE_NAME_LENGTH`
+
+The longest name in bytes SeaweedFS accepts for one part of an object key. Docker Compose sets it to `1024`, the longest key S3 allows, so attachments with long file names upload. Docker Compose sets it to `1024`.
+
 ### `WEED_MASTER_VOLUME_GROWTH_COPY_1`
 
 How many volumes SeaweedFS creates at once, set from `FLUXER_SEAWEEDFS_VOLUME_GROWTH`.
@@ -2185,6 +2244,10 @@ The OAuth2 redirect URL of the admin panel. The admin service works it out from 
 
 The single sign-on redirect URL of the admin panel. The admin service works it out from its own address.
 
+### `FLUXER_API_HOST`
+
+The address the api service listens on. When it's empty, it listens on every interface.
+
 ### `FLUXER_API_WORKER_LANE`
 
 The job lane a worker runs when `FLUXER_API_WORKER_MODE` is `single_lane`. Each worker container in the stack runs every lane.
@@ -2213,6 +2276,10 @@ A file that has the gateway's Erlang cookie. The stack passes `FLUXER_ERLANG_COO
 
 The URL the gateway sends API RPC requests to. When it's empty, the gateway uses `FLUXER_INTERNAL_API_ENDPOINT` followed by `/internal/rpc`.
 
+### `FLUXER_GATEWAY_BIND_HOST`
+
+The IP address the gateway listens on. When it's empty, it listens on every interface.
+
 ### `FLUXER_GATEWAY_NATS_RPC_ENABLED`
 
 Whether the gateway responds to RPC requests over NATS. The gateway responds to the API only over NATS RPC and must keep it turned on.
@@ -2232,6 +2299,10 @@ The directory the media proxy keeps files in when it stores them on disk. The st
 ### `FLUXER_NATS_CORE_URL`
 
 The older name for `FLUXER_NATS_URL`, which only the api and worker read. Docker Compose passes `FLUXER_NATS_URL`.
+
+### `FLUXER_OPERATOR_SOCKET`
+
+The socket path the api listens on for operator requests and the operator relay connects to. When it's empty, both use `/run/fluxer/operator.sock`.
 
 ### `FLUXER_PUSH_SERVICE_HOST`
 
@@ -2768,10 +2839,6 @@ Only tests and development use these.
 #### `FLUXER_DISABLE_RATE_LIMITS`
 
 Whether rate limits are off.
-
-#### `FLUXER_OPERATOR_SOCKET`
-
-The socket path the operator relay connects to. The api listens on `/run/fluxer/operator.sock`.
 
 #### `FLUXER_RELAX_REGISTRATION_RATE_LIMITS`
 

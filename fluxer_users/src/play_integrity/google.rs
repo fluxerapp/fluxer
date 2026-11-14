@@ -49,6 +49,10 @@ impl GoogleClient {
         let http = reqwest::Client::builder()
             .timeout(REQUEST_TIMEOUT)
             .connect_timeout(CONNECT_TIMEOUT)
+            .no_gzip()
+            .no_brotli()
+            .no_deflate()
+            .http1_only()
             .build()?;
         Ok(Self {
             http,

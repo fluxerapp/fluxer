@@ -9,6 +9,7 @@ import {
 	transitionSteppedCarouselSnapshot,
 } from '@app/features/ui/stepped_carousel/SteppedCarouselStateMachine';
 import {flxElementClassName} from '@app/lib/react';
+import {useDirection} from '@base-ui/react/direction-provider';
 import {AnimatePresence, motion, type Transition, useReducedMotion, type Variants} from 'framer-motion';
 import type React from 'react';
 import {useCallback, useLayoutEffect, useRef, useState} from 'react';
@@ -104,6 +105,7 @@ export function SteppedCarousel<Step extends string>({
 	'data-flx': dataFlx,
 }: SteppedCarouselProps<Step>): React.ReactElement {
 	const shouldReduceMotion = useReducedMotion();
+	const textDirection = useDirection();
 	const [snapshot, setSnapshot] = useState(() =>
 		createSteppedCarouselSnapshot({step, steps, direction: directionProp, focusOnStepChange}),
 	);
@@ -125,6 +127,7 @@ export function SteppedCarousel<Step extends string>({
 		setSnapshot(nextSnapshot);
 	}
 	const model = selectSteppedCarouselModel(nextSnapshot);
+	const slideDirection = textDirection === 'rtl' ? -model.direction : model.direction;
 	const paneRef = useRef<HTMLDivElement | null>(null);
 	const pendingFocusRequestRef = useRef(0);
 	pendingFocusRequestRef.current = model.focusRequestId;
@@ -185,14 +188,14 @@ export function SteppedCarousel<Step extends string>({
 			<AnimatePresence
 				mode="wait"
 				initial={false}
-				custom={model.direction}
+				custom={slideDirection}
 				data-flx="ui.stepped-carousel.stepped-carousel.animate-presence"
 			>
 				<motion.div
 					key={model.step}
 					ref={setMeasureNode}
 					className={styles.pane}
-					custom={model.direction}
+					custom={slideDirection}
 					variants={shouldReduceMotion ? reducedMotionVariants : slideVariants}
 					initial="enter"
 					animate="center"

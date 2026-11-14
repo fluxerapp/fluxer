@@ -15,7 +15,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
@@ -57,7 +57,7 @@ export const DiscoveryGuildCard = observer(function DiscoveryGuildCard({
 	const nameId = `${baseId}-name`;
 	const descriptionId = `${baseId}-description`;
 	const statsId = `${baseId}-stats`;
-	const onlineCount = formatNumber(guild.online_count, getCurrentLocale());
+	const onlineCount = formatNumber(guild.online_count, getFormattingLocale());
 	const nameBadgeFeatures = guild.features.filter((feature) => !DISCOVERY_NAME_BADGE_IGNORED_FEATURES.has(feature));
 	const bannerImageUrl = useMemo(() => {
 		if (!guild.banner) {

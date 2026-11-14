@@ -76,7 +76,6 @@
 }
 
 .spoilerWarning {
-	text-transform: uppercase;
 	font-size: 0.9375rem;
 	background-color: hsla(0, 0%, 0%, 0.6);
 	cursor: pointer;
@@ -205,6 +204,10 @@
 	position: relative;
 	z-index: 1;
 	transform: translate(25%, -25%);
+}
+
+:global(html[dir='rtl']) .actionBar {
+	transform: translate(-25%, -25%);
 }
 
 .button {

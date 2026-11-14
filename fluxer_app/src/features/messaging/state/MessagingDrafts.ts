@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
+import {AppStorageKey} from '@app/features/platform/state/AppStorageKeys';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {makeAutoObservable} from 'mobx';
@@ -49,16 +50,17 @@ export function segmentsEqual(a: ReadonlyArray<MentionSegment>, b: ReadonlyArray
 }
 
 class Drafts {
+	readonly ready: Promise<void>;
 	drafts: Record<string, string> = {};
 	draftSegments: Record<string, Array<MentionSegment>> = {};
 
 	constructor() {
-		makeAutoObservable(this, {}, {autoBind: true});
-		initializeStore(this, () => this.initPersistence());
+		makeAutoObservable(this, {ready: false}, {autoBind: true});
+		this.ready = initializeStore(this, () => this.initPersistence());
 	}
 
 	private async initPersistence(): Promise<void> {
-		await makePersistent(this, 'Drafts', ['drafts', 'draftSegments']);
+		await makePersistent(this, AppStorageKey.MESSAGING_DRAFTS, ['drafts', 'draftSegments']);
 	}
 
 	createDraft(channelId: string, content: string, segments?: ReadonlyArray<MentionSegment> | null): void {

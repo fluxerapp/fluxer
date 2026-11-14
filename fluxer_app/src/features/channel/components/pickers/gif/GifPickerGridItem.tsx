@@ -125,6 +125,7 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 		videoPool,
 		autoPlay: true,
 		enabled: usesVideoElement,
+		wholeFile: true,
 	});
 	const handleClick = useCallback(
 		(event: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => {

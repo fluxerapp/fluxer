@@ -19,8 +19,5 @@
 		"loader-diagnostics.cjs",
 		"win-process-loopback.win32-x64-msvc.node",
 		"win-process-loopback.win32-arm64-msvc.node"
-	],
-	"scripts": {
-		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon"
-	}
+	]
 }

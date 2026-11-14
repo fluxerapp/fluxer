@@ -229,9 +229,18 @@ function buildEmojiIndex(): EmojiIndex {
 				canonicalSurrogateToName[toCanonicalSurrogate(skinToneEntry.surrogatePair)] = skinToneEntry.name;
 			});
 			const skins = (emojiObject as {skins?: ReadonlyArray<{names: ReadonlyArray<string>; surrogates: string}>}).skins;
-			skins?.slice(SKIN_TONE_SURROGATES.length).forEach((skin) => {
-				surrogateToName[skin.surrogates] = skin.names[0];
-				canonicalSurrogateToName[toCanonicalSurrogate(skin.surrogates)] = skin.names[0];
+			skins?.forEach((skin, skinIndex) => {
+				const url = EmojiUtils.getEmojiURL(skin.surrogates) ?? undefined;
+				skin.names.forEach((skinName) => {
+					const skinEmoji: UnicodeEmoji = {...emojiJson, name: skinName, surrogates: skin.surrogates, url};
+					nameToEmoji[skinName] = skinEmoji;
+					shortcodeNameToEmoji[skinName] = skinEmoji;
+					nameToSurrogate[skinName] = skin.surrogates;
+				});
+				if (skinIndex >= SKIN_TONE_SURROGATES.length) {
+					surrogateToName[skin.surrogates] = skin.names[0];
+					canonicalSurrogateToName[toCanonicalSurrogate(skin.surrogates)] = skin.names[0];
+				}
 			});
 			categoryByEmojiName[emoji.uniqueName] = category;
 			emojis.push(emojiJson);
@@ -319,6 +328,8 @@ function buildEmojiIndex(): EmojiIndex {
 		emojiShortcutRegex: new RegExp(`^(${shortcutAlternation})`),
 	};
 }
+
+const PRINTABLE_ASCII_RE = /[!-~]/;
 
 function getEmojiIndex(): EmojiIndex {
 	cachedEmojiIndex ??= buildEmojiIndex();
@@ -454,6 +465,9 @@ export default {
 		const trimmed = emojiName.trim();
 		const name =
 			trimmed.startsWith(':') && trimmed.endsWith(':') && trimmed.length > 2 ? trimmed.slice(1, -1) : trimmed;
+		if (!PRINTABLE_ASCII_RE.test(name)) {
+			return trimmed;
+		}
 		return getEmojiIndex().nameToSurrogate[name] || trimmed;
 	},
 	nameForSurrogate: (surrogate: string, includeColons = true, defaultName = ''): string => {

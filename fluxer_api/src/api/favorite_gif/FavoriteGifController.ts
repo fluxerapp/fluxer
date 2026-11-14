@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {resolveFavoriteGifEntry} from '@app/api/favorite_gif/FavoriteGifResolver';
+import {mediaUrlForRequester} from '@app/api/attachment/AttachmentMediaAccess';
+import {resolveFavoriteGifEntry, unresolvedFavoriteGifEntry} from '@app/api/favorite_gif/FavoriteGifResolver';
 import {resolveGifRequestCountry} from '@app/api/gif/GifRequestCountry';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -44,9 +45,18 @@ export function FavoriteGifController(app: HonoApp) {
 			const locale = getLocale(ctx);
 			const country = await resolveGifRequestCountry(ctx.req.raw);
 			const uniqueUrls = [...new Set(urls)];
-			const resolved = await mapWithConcurrency(uniqueUrls, FAVORITE_GIF_RESOLVE_CONCURRENCY, (url) =>
-				resolveFavoriteGifEntry({url, locale, country, gifService, mediaService, unfurlerService}),
-			);
+			const resolved = await mapWithConcurrency(uniqueUrls, FAVORITE_GIF_RESOLVE_CONCURRENCY, async (url) => {
+				const mediaUrl = await mediaUrlForRequester(ctx, url);
+				if (mediaUrl === null) return unresolvedFavoriteGifEntry(url);
+				return resolveFavoriteGifEntry({
+					url: mediaUrl ?? url,
+					locale,
+					country,
+					gifService,
+					mediaService,
+					unfurlerService,
+				});
+			});
 			const entriesByUrl = new Map(uniqueUrls.map((url, index) => [url, resolved[index]!]));
 			const entries = urls.map((url) => entriesByUrl.get(url)!);
 			return ctx.json({entries});

@@ -44,7 +44,7 @@ function dispatch(
 			logger.debug(payload);
 			return;
 		case 'info':
-			logger.info(payload);
+			logger.debug(payload);
 			return;
 		case 'warn':
 			logger.warn(payload);

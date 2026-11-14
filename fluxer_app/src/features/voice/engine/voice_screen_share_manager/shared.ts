@@ -33,7 +33,7 @@ import {
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {classifyVideoEncoderAcceleration} from '@app/features/voice/utils/VideoAccelerationClassification';
-import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
+import {getVideoQualityCaps} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	BackupCodecPolicy,
 	type LocalParticipant,
@@ -217,7 +217,7 @@ export function resolveConfiguredScreenShareTarget(
 		mode: VoiceSettings.getStreamingMode(),
 		storedResolution: VoiceSettings.getScreenshareResolution(),
 		storedFrameRate: VoiceSettings.getVideoFrameRate(),
-		entitled: hasHigherVideoQuality(),
+		caps: getVideoQualityCaps(),
 		context,
 		sourceDimensions,
 		hintSetting: VoiceSettings.getScreenShareContentHint(),
@@ -755,7 +755,7 @@ function syncScreenShareCaptureSize(sender: RTCRtpSender): void {
 	if (known !== null && known.width === capture.width && known.height === capture.height) return;
 	ActiveScreenShareSource.setSourceDimensions(capture);
 	ActiveScreenShareSource.setTarget(resolveActiveScreenShareTarget());
-	logger.info('Screen share capture size changed; re-resolved the publish target', capture);
+	logger.debug('Screen share capture size changed; re-resolved the publish target', capture);
 }
 
 function countEncodedVideoFrames(stats: RTCStatsReport): number | null {
@@ -801,7 +801,7 @@ function verifyScreenShareEncoderStart(
 	if ((countEncodedVideoFrames(stats) ?? 0) === 0) return 'inconclusive';
 	const encoder = findSoftwareVideoEncoder(stats, codec);
 	if (!encoder) {
-		logger.info('Screen share encoder verified', {codec});
+		logger.debug('Screen share encoder verified', {codec});
 		return 'verified';
 	}
 	logger.warn('Screen share is using a software encoder', {
@@ -859,7 +859,7 @@ export function startScreenShareEncoderMonitor(options: ScreenShareEncoderMonito
 		const limit = classifyScreenShareSendLimit(sendSnapshot, snapshot, cpuLimitedTicks);
 		sendSnapshot = snapshot;
 		if (limit !== ActiveScreenShareSource.getLimit()) {
-			logger.info('Screen share send limit changed', {limit, codec: options.codec});
+			logger.debug('Screen share send limit changed', {limit, codec: options.codec});
 		}
 		ActiveScreenShareSource.setLimit(limit);
 		if (!verified) {

@@ -199,6 +199,7 @@ overrides:
   zod@^4: 'catalog:'
 
 patchedDependencies:
+  '@electron/universal@3.0.4': patches/@electron__universal@3.0.4.patch
   '@phosphor-icons/react@2.1.10': patches/@phosphor-icons__react@2.1.10.patch
   emscripten-wasm-loader@3.0.3: patches/emscripten-wasm-loader@3.0.3.patch
   eslint-plugin-react-google-translate@1.0.4: patches/eslint-plugin-react-google-translate@1.0.4.patch

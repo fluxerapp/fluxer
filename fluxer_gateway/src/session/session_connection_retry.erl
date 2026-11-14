@@ -93,13 +93,19 @@ connect_to_call_process(CallPid, ChannelId, Attempt, State) ->
     StateWithCall = State#{calls => NewCalls},
     case gateway_rpc_call_lookup:safe_gen_server_call(CallPid, {get_state}, 5000) of
         {ok, {ok, CallData}} when is_map(CallData) ->
-            session_dispatch:handle_dispatch(call_create, CallData, StateWithCall);
+            dispatch_call_create(CallData, StateWithCall);
         {ok, CallData} when is_map(CallData) ->
-            session_dispatch:handle_dispatch(call_create, CallData, StateWithCall);
+            dispatch_call_create(CallData, StateWithCall);
         _Error ->
             demonitor(MonitorRef, [flush]),
             retry_call_or_remove(ChannelId, Attempt, State)
     end.
+
+-spec dispatch_call_create(map(), session_state()) -> {noreply, session_state()}.
+dispatch_call_create(CallData, State) ->
+    session_dispatch:handle_dispatch(
+        call_create, call_state:broadcast_call_event(CallData), State
+    ).
 
 -spec retry_call_or_remove(
     channel_id(), attempt(), session_state()

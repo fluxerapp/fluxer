@@ -8,7 +8,8 @@ use crate::embed_normalizer::normalize_embeds;
 use crate::media_proxy::MediaProxyClient;
 use crate::resolvers::{self, ResolveContext, ResolverResult};
 use crate::types::{NsfwMode, UnfurlRequest, UnfurlResponse, UnfurlResult};
-use fluxer_svc::config::optional_env;
+use anyhow::{Context, anyhow};
+use fluxer_common::config::EnvMap;
 use fluxer_svc::shard::ShardService;
 use moka::future::Cache;
 use ring::signature::RsaKeyPair;
@@ -31,89 +32,119 @@ pub struct UnfurlShard {
     activity_pub_host_key: Option<HostKey>,
 }
 
-impl UnfurlShard {
-    pub fn new(lifetime: Duration) -> Self {
-        let http_client = external_http_client();
-        let media_proxy_http_client = internal_http_client();
+pub struct ShardConfig {
+    media_proxy_endpoint: String,
+    media_proxy_secret: String,
+    media_proxy_public_endpoint: Option<String>,
+    self_hosted: bool,
+    youtube_api_key: Option<String>,
+    klipy_api_key: Option<String>,
+    activity_pub_key: Option<Arc<RsaKeyPair>>,
+    activity_pub_host_key: Option<HostKey>,
+}
 
-        let resolvers = resolvers::build_resolver_chain();
-
-        let media_proxy_endpoint = optional_env("FLUXER_MEDIA_PROXY_ENDPOINT");
-        let media_proxy_secret = optional_env("FLUXER_MEDIA_PROXY_SECRET_KEY");
-        let media_proxy_public_endpoint = optional_env("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
-            .map(|v| fluxer_common::config::normalize_public_endpoint_from_env(&v));
-        let self_hosted = fluxer_common::config::read_bool_env("FLUXER_SELF_HOSTED", false);
+impl ShardConfig {
+    pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
         let (media_proxy_endpoint, media_proxy_secret) = match (
-            media_proxy_endpoint,
-            media_proxy_secret,
+            env.value("FLUXER_MEDIA_PROXY_ENDPOINT"),
+            env.value("FLUXER_MEDIA_PROXY_SECRET_KEY"),
         ) {
             (Some(endpoint), Some(secret_key)) => (endpoint, secret_key),
-            (Some(endpoint), None) => {
-                panic!(
-                    "media proxy endpoint configured without FLUXER_MEDIA_PROXY_SECRET_KEY: {endpoint}"
-                );
-            }
-            (None, Some(_)) => {
-                panic!(
-                    "FLUXER_MEDIA_PROXY_SECRET_KEY configured without FLUXER_MEDIA_PROXY_ENDPOINT"
-                );
-            }
-            (None, None) => {
-                panic!(
-                    "unfurl shard requires FLUXER_MEDIA_PROXY_ENDPOINT and FLUXER_MEDIA_PROXY_SECRET_KEY"
-                );
-            }
+            (Some(endpoint), None) => anyhow::bail!(
+                "media proxy endpoint configured without FLUXER_MEDIA_PROXY_SECRET_KEY: {endpoint}"
+            ),
+            (None, Some(_)) => anyhow::bail!(
+                "FLUXER_MEDIA_PROXY_SECRET_KEY configured without FLUXER_MEDIA_PROXY_ENDPOINT"
+            ),
+            (None, None) => anyhow::bail!(
+                "unfurl shard requires FLUXER_MEDIA_PROXY_ENDPOINT and FLUXER_MEDIA_PROXY_SECRET_KEY"
+            ),
         };
-        tracing::info!(
-            endpoint = %media_proxy_endpoint,
-            public_endpoint = ?media_proxy_public_endpoint,
-            "media proxy client enabled"
-        );
-        let media_proxy = MediaProxyClient::new_with_public_endpoint(
-            &media_proxy_endpoint,
-            &media_proxy_secret,
-            media_proxy_public_endpoint.as_deref(),
-            media_proxy_http_client,
-        );
-        let activity_pub_key =
-            optional_env("FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64").map(|encoded| {
-                let key = signature::parse_signing_key(&encoded).unwrap_or_else(|err| {
-                    panic!("invalid FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64: {err}")
-                });
-                tracing::info!("ActivityPub request signing enabled");
-                Arc::new(key)
-            });
+        let media_proxy_public_endpoint = env
+            .get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
+            .map(|endpoint| env.normalize_public_endpoint(endpoint))
+            .transpose()?;
+        let activity_pub_key = env
+            .get("FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64")
+            .map(|encoded| {
+                signature::parse_signing_key(encoded)
+                    .map(Arc::new)
+                    .map_err(|err| anyhow!("invalid FLUXER_ACTIVITYPUB_SIGNING_KEY_BASE64: {err}"))
+            })
+            .transpose()?;
         let activity_pub_host_key = match (
-            optional_env("FLUXER_ACTIVITYPUB_HOST_KEY_ID"),
-            optional_env("FLUXER_ACTIVITYPUB_HOST_SIGNING_KEY_BASE64"),
+            env.value("FLUXER_ACTIVITYPUB_HOST_KEY_ID"),
+            env.get("FLUXER_ACTIVITYPUB_HOST_SIGNING_KEY_BASE64"),
         ) {
-            (Some(key_id), Some(encoded)) => {
-                let host_key = signature::parse_signing_key(&encoded)
+            (Some(key_id), Some(encoded)) => Some(
+                signature::parse_signing_key(encoded)
                     .and_then(|key| HostKey::new(key, key_id))
-                    .unwrap_or_else(|err| panic!("invalid ActivityPub host key: {err}"));
-                tracing::info!("ActivityPub host key enabled");
-                Some(host_key)
-            }
+                    .map_err(|err| anyhow!("invalid ActivityPub host key: {err}"))?,
+            ),
             (None, None) => None,
-            _ => panic!(
+            _ => anyhow::bail!(
                 "FLUXER_ACTIVITYPUB_HOST_KEY_ID and FLUXER_ACTIVITYPUB_HOST_SIGNING_KEY_BASE64 must be set together"
             ),
         };
+        Ok(Self {
+            media_proxy_endpoint,
+            media_proxy_secret,
+            media_proxy_public_endpoint,
+            self_hosted: env.read_bool("FLUXER_SELF_HOSTED", false),
+            youtube_api_key: env
+                .value("FLUXER_YOUTUBE_API_KEY")
+                .or_else(|| env.value("YOUTUBE_API_KEY")),
+            klipy_api_key: env
+                .value("FLUXER_KLIPY_API_KEY")
+                .or_else(|| env.value("KLIPY_API_KEY")),
+            activity_pub_key,
+            activity_pub_host_key,
+        })
+    }
+}
 
-        Self {
+impl UnfurlShard {
+    pub fn new(lifetime: Duration, config: ShardConfig) -> anyhow::Result<Self> {
+        let http_client = base_http_client_builder()
+            .dns_resolver(Arc::new(crate::network_policy::PinnedDnsResolver))
+            .build()
+            .context("failed to build external HTTP client")?;
+        let media_proxy_http_client = base_http_client_builder()
+            .build()
+            .context("failed to build internal HTTP client")?;
+
+        let resolvers = resolvers::build_resolver_chain();
+
+        tracing::info!(
+            endpoint = %config.media_proxy_endpoint,
+            public_endpoint = ?config.media_proxy_public_endpoint,
+            "media proxy client enabled"
+        );
+        let media_proxy = MediaProxyClient::new_with_public_endpoint(
+            &config.media_proxy_endpoint,
+            &config.media_proxy_secret,
+            config.media_proxy_public_endpoint.as_deref(),
+            media_proxy_http_client,
+        );
+        if config.activity_pub_key.is_some() {
+            tracing::info!("ActivityPub request signing enabled");
+        }
+        if config.activity_pub_host_key.is_some() {
+            tracing::info!("ActivityPub host key enabled");
+        }
+
+        Ok(Self {
             cache: build_l2_cache(lifetime, default_empty_entry_lifetime()),
             lifetime,
             http_client,
             resolvers,
             media_proxy,
-            self_hosted,
-            youtube_api_key: optional_env("FLUXER_YOUTUBE_API_KEY")
-                .or_else(|| optional_env("YOUTUBE_API_KEY")),
-            klipy_api_key: optional_env("FLUXER_KLIPY_API_KEY")
-                .or_else(|| optional_env("KLIPY_API_KEY")),
-            activity_pub_key,
-            activity_pub_host_key,
-        }
+            self_hosted: config.self_hosted,
+            youtube_api_key: config.youtube_api_key,
+            klipy_api_key: config.klipy_api_key,
+            activity_pub_key: config.activity_pub_key,
+            activity_pub_host_key: config.activity_pub_host_key,
+        })
     }
 
     async fn resolve_url(
@@ -251,21 +282,7 @@ fn base_http_client_builder() -> reqwest::ClientBuilder {
         .no_brotli()
         .no_deflate()
         .no_zstd()
-}
-
-fn external_http_client() -> reqwest::Client {
-    base_http_client_builder()
-        .dns_resolver(std::sync::Arc::new(
-            crate::network_policy::PinnedDnsResolver,
-        ))
-        .build()
-        .expect("failed to build external HTTP client")
-}
-
-fn internal_http_client() -> reqwest::Client {
-    base_http_client_builder()
-        .build()
-        .expect("failed to build internal HTTP client")
+        .http1_only()
 }
 
 impl ShardService for UnfurlShard {

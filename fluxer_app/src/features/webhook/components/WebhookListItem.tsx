@@ -18,6 +18,7 @@ import {Input} from '@app/features/ui/components/form/FormInput';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import styles from '@app/features/webhook/components/WebhookListItem.module.css';
 import type {Webhook} from '@app/features/webhook/models/Webhook';
 import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
@@ -165,7 +166,7 @@ export const WebhookListItem: React.FC<WebhookListItemProps> = observer(
 					title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
 					message: () =>
 						i18n._(AVATAR_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: formatFileSize(i18n.locale, GlobalLimits.getAvatarMaxSize()),
+							imageMaxSizeLabel: formatFileSize(getFormattingLocale(), GlobalLimits.getAvatarMaxSize()),
 						}),
 					dataFlx: 'webhook.webhook-list-item.avatar-too-large-error-modal',
 				});

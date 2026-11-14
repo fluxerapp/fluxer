@@ -729,7 +729,7 @@ class ScreenShareCodecNegotiation {
 		this.selectedCodec = selection.codec;
 		this.armCodecChangeSuppression();
 		this.mediaSessionId = createId('media');
-		logger.info('Selected screen share codec from XState capability intersection', selection);
+		logger.debug('Selected screen share codec from XState capability intersection', selection);
 		await this.publishSessionUpdate(room, selection);
 		if (!this.isBindingCurrent(room, bindingRevision)) return null;
 		this.onSelectionChanged?.(room, selection.codec, selection.reason);

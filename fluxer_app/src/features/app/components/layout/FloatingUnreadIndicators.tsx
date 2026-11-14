@@ -234,6 +234,7 @@ export const FloatingUnreadIndicators = observer(
 		scrollToTarget,
 	}: FloatingUnreadIndicatorsProps) => {
 		const [edges, setEdges] = useState<FloatingUnreadEdges>(FloatingUnreadEdgeLayout.EMPTY_EDGES);
+		const [measured, setMeasured] = useState(false);
 		const targetsSignature = useMemo(() => buildFloatingUnreadTargetsSignature(targets), [targets]);
 		const targetsRef = useRef(targets);
 		const getTargetNodeRef = useRef(getTargetNode);
@@ -338,6 +339,7 @@ export const FloatingUnreadIndicators = observer(
 				targetIndex: targetIndexRef.current,
 			});
 			setEdges((current) => FloatingUnreadEdgeLayout.preserveStableEdges({current, next}));
+			setMeasured(true);
 		}, [refreshTargetIndex, scrollerRef]);
 		refreshNowRef.current = refreshNow;
 		const scheduleRefresh = useCallback(
@@ -496,9 +498,11 @@ export const FloatingUnreadIndicators = observer(
 				className={flxElementClassName(styles.layer)}
 				data-flx="app.floating-unread-indicators.layer"
 			>
-				<AnimePresence enterOnMount={false} data-flx="app.floating-unread-indicators.anime-presence">
-					{visibleEdges.map(renderVisibleEdge)}
-				</AnimePresence>
+				{measured && (
+					<AnimePresence enterOnMount={false} data-flx="app.floating-unread-indicators.anime-presence">
+						{visibleEdges.map(renderVisibleEdge)}
+					</AnimePresence>
+				)}
 			</flx-app-floating-unread-indicators-layer>
 		);
 	},

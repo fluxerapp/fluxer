@@ -572,6 +572,15 @@ func runConfigChange(ctx context.Context, app *App, changes []configChange, extr
 	if len(deployment) == 0 {
 		return app.Locked(ctx, v.inst, func() error { return finish(nil) })
 	}
+	if v.inst.State.IsNative() {
+		return app.Locked(ctx, v.inst, func() error {
+			change, err := applyNativeSettings(ctx, app, v.inst, deployment)
+			if err != nil {
+				return err
+			}
+			return finish(change)
+		})
+	}
 	return app.ChangeSettings(ctx, v.inst, func(e *engine.Engine) error {
 		change, err := applySettings(ctx, app, v.inst, e, deployment, "Applying the new settings")
 		if err != nil {

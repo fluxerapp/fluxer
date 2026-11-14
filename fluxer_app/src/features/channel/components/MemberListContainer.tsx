@@ -16,7 +16,7 @@ type ScrollerResizeType = 'container' | 'content';
 interface MemberListContainerProps {
 	channelId: string;
 	identityKey?: string;
-	children: React.ReactNode;
+	children?: React.ReactNode;
 	className?: string;
 	scrollerRef?: React.RefObject<ScrollerHandle | null>;
 	estimatedContentSize?: number | null;

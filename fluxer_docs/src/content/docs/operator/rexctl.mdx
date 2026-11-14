@@ -220,7 +220,7 @@ Read and change Fluxer's settings.
 
 ### rexctl config edit
 
-Opens custom.compose.yml in $VISUAL or $EDITOR. rexctl checks the file, says which services restart and applies it once you agree. Your file stays as it was until it passes the check.
+Opens custom.compose.yml in $VISUAL or $EDITOR. rexctl checks the file, says which services restart and applies it once you agree. Your file stays as it was until it passes the check. On a native instance, it opens the settings rexctl keeps for Fluxer as setting=value lines instead, checks them as rexctl config set does and restarts Fluxer with them.
 
 ```sh
 rexctl config edit
@@ -418,6 +418,10 @@ rexctl install [flags]
 
   Container engine to use (docker or podman).
 
+- `--experimental-native`
+
+  Install Fluxer as one systemd service without containers, set up for this machine. This is experimental.
+
 - `--install-docker`
 
   Install Docker if it's missing. The default is `true`.
@@ -597,6 +601,50 @@ rexctl logs [service] [flags]
 
   Show lines newer than this, like 10m or 2h.
 
+## rexctl migrate
+
+Move your instance out of Docker, off Valkey or SeaweedFS, or onto one Rust process. This is experimental, so rexctl migrate runs only with --experimental-native. rexctl shows what each change saves and removes, backs up your instance first, moves the data, checks it and goes back if anything fails. The move out of Docker runs as root, and so does every command for the new instance. After the move off SeaweedFS, uploads stay read-only until you open them with --open-writes. The old data stays until you remove it with --clean-up after a newer backup.
+
+```sh
+rexctl migrate [flags]
+```
+
+- `--clean-up`
+
+  Remove the Valkey or SeaweedFS data a change left behind, once a newer backup holds what replaced it.
+
+- `--confirm string`
+
+  Your domain, to confirm --clean-up without a prompt.
+
+- `--details`
+
+  Show the machine, versions, date and method behind the typical figures.
+
+- `--dry-run`
+
+  Show what each change saves and removes without changing anything.
+
+- `--experimental-native`
+
+  Turn on rexctl migrate, which is experimental.
+
+- `--migrate string`
+
+  The changes to make, separated by commas: docker, kv, rust and storage.
+
+- `--native-dir string`
+
+  The folder for the instance that runs without Docker, with --migrate docker.
+
+- `--open-writes`
+
+  Let people upload again after the move off SeaweedFS. rexctl can't move the files back after this.
+
+- `--undo string`
+
+  Go back from a change rexctl migrate made: kv, or storage until you open writes.
+
 ## rexctl proxy
 
 Use your own reverse proxy or tunnel in front of Fluxer.
@@ -671,7 +719,7 @@ rexctl restart
 
 ## rexctl restore
 
-Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are.
+Restore your instance from a backup. This works on a new machine too. Copy the backup file there and run this command. A backup without uploads restores only on the instance it was made for, and the uploads there stay as they are. A backup of a Fluxer that runs without containers restores into an empty folder or an instance that runs the same way.
 
 ```sh
 rexctl restore <file> [flags]
@@ -865,9 +913,17 @@ rexctl upgrade [flags]
 
   Show what would happen without changing anything.
 
+- `--experimental-native`
+
+  After the upgrade, show the experimental changes that run Fluxer with fewer services, and make the ones you pick.
+
 - `--json`
 
   Print JSON.
+
+- `--migrate string`
+
+  With --experimental-native, make these changes after the upgrade, separated by commas: docker, kv, rust and storage.
 
 - `--no-backup`
 
@@ -883,7 +939,7 @@ rexctl upgrade [flags]
 
 ## rexctl use
 
-Show which instance rexctl uses when you don't pass --dir and aren't in an instance folder, or pass a folder to use that instance from now on. rexctl remembers each instance it installs. You only need this with more than one instance or one installed by an older rexctl. Each account has its own choice. Root's choice also applies to accounts that have no instance of their own. The services rexctl sets up for starting and upgrading Fluxer always pass their own folder, and this choice doesn't change them.
+Show which instance rexctl uses when you don't pass --dir and aren't in an instance folder, or pass a folder to use that instance from now on. rexctl remembers each instance it installs. You only need this with more than one instance or one installed by an older rexctl. Each account has its own choice. Root's choice also applies to accounts that have no instance of their own. As root, rexctl refuses an instance folder that other accounts can write to. It still uses a folder you pick when other accounts can change a folder above it, and it warns you about that. The services rexctl sets up for starting and upgrading Fluxer always pass their own folder, and this choice doesn't change them.
 
 ```sh
 rexctl use [folder]

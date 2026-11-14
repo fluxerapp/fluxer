@@ -107,18 +107,52 @@ function requireDesktopRuntimeAPIEndpoint(input: string): string {
 	return officialClientApiEndpointForAlias(normalized) ?? normalized;
 }
 
+const backgroundRefreshes = new Map<string, Promise<void>>();
+const refreshedThisLaunch = new Set<string>();
+
+export function allowRememberedRuntimePlans(): void {
+	refreshedThisLaunch.clear();
+}
+
 export async function resolveDesktopRuntimePlan({
 	input,
 	signal,
 }: ResolveDesktopRuntimeConfigInput): Promise<LocalAppRuntimePlan> {
+	const apiEndpoint = requireDesktopRuntimeAPIEndpoint(input);
+	if (refreshedThisLaunch.has(apiEndpoint)) {
+		return await resolveFromNetwork(apiEndpoint, signal);
+	}
+	const remembered = await restoreRememberedRuntimePlanAt(apiEndpoint, apiEndpoint);
+	if (remembered === null) {
+		refreshedThisLaunch.add(apiEndpoint);
+		return await resolveFromNetwork(apiEndpoint, signal);
+	}
+	if (!backgroundRefreshes.has(apiEndpoint)) {
+		const refresh = resolveFromNetwork(apiEndpoint, null)
+			.then(
+				() => undefined,
+				(error: unknown) => {
+					log.warn('Background instance discovery refresh failed', {apiEndpoint, error});
+				},
+			)
+			.finally(() => {
+				backgroundRefreshes.delete(apiEndpoint);
+				refreshedThisLaunch.add(apiEndpoint);
+			});
+		backgroundRefreshes.set(apiEndpoint, refresh);
+	}
+	return remembered;
+}
+
+async function resolveFromNetwork(apiEndpoint: string, signal: AbortSignal | null): Promise<LocalAppRuntimePlan> {
 	try {
-		return await resolveDesktopRuntimePlanAt(input, signal);
+		return await resolveDesktopRuntimePlanAt(apiEndpoint, signal);
 	} catch (error) {
 		if (!(error instanceof DesktopRuntimeDiscoveryDeclaredElsewhereError)) {
 			throw error;
 		}
 		log.info('Instance discovery declared another API origin, resolving that instance', {
-			input,
+			input: apiEndpoint,
 			declaredApiEndpoint: error.declaredApiEndpoint,
 		});
 		return resolveDesktopRuntimePlanAt(error.declaredApiEndpoint, signal, error.apiEndpoint);
@@ -161,6 +195,13 @@ export async function restoreRememberedRuntimePlan(instanceKey: string): Promise
 	} catch {
 		return null;
 	}
+	return await restoreRememberedRuntimePlanAt(apiEndpoint, instanceKey);
+}
+
+async function restoreRememberedRuntimePlanAt(
+	apiEndpoint: string,
+	instanceKey: string,
+): Promise<LocalAppRuntimePlan | null> {
 	const remembered = await readLastServedDiscovery(apiEndpoint);
 	if (remembered === null || remembered.plan.instanceKey !== instanceKey) {
 		return null;

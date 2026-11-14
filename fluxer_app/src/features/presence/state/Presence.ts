@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Initialization from '@app/features/app/state/Initialization';
 import {ResettableStates} from '@app/features/app/state/ResettableStates';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
@@ -23,6 +24,7 @@ import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {normalizeStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import isEqual from 'lodash/isEqual';
 import {makeAutoObservable, observable, observableShallow, reaction} from 'mobx';
 
 interface FlattenedPresence {
@@ -262,9 +264,19 @@ class Presence {
 		TransientPresence.clear();
 		const localStatus = LocalPresence.getStatus();
 		const localCustomStatus = LocalPresence.customStatus;
-		this.clearAllPresenceState();
+		if (Initialization.isStale) {
+			const incoming = new Set(presences?.map((presence) => presence.user.id) ?? []);
+			for (const id of this.presences.keys()) {
+				if (!incoming.has(id)) this.evictPresence(id);
+			}
+			this.remotePresenceCountsByGuild.clear();
+			this.remotePresenceCountVersionByGuild.clear();
+		} else {
+			this.clearAllPresenceState();
+		}
 		this.statuses.set(user.id, localStatus);
-		this.customStatuses.set(user.id, localCustomStatus);
+		if (!isEqual(this.customStatuses.get(user.id), localCustomStatus))
+			this.customStatuses.set(user.id, localCustomStatus);
 		const userGuildIds = new Map<string, Set<string>>();
 		const meContextUserIds = this.buildMeContextUserIds(user.id);
 		for (const guild of guilds) {
@@ -335,6 +347,11 @@ class Presence {
 		}
 		this.bumpPresenceVersion();
 		this.resyncExternalStatusListeners();
+	}
+
+	hydrateSnapshotEntry(userId: string, row: SnapshotPresenceRow): void {
+		this.seedSnapshotPresence(userId, row);
+		this.bumpPresenceVersion();
 	}
 
 	private seedSnapshotPresence(userId: string, row: SnapshotPresenceRow): void {
@@ -479,7 +496,12 @@ class Presence {
 	private handleReadyPresence(presence: WirePresence, initialGuildIds?: Set<string>, hasMeContext = false): void {
 		const {user, status, afk, mobile, custom_status: customStatusPayload} = presence;
 		const normalizedStatus = normalizeStatus(status);
-		const customStatus = fromGatewayCustomStatus(customStatusPayload);
+		const incomingCustomStatus = fromGatewayCustomStatus(customStatusPayload);
+		const existingCustomStatus = this.customStatuses.get(user.id);
+		const customStatus =
+			existingCustomStatus !== undefined && isEqual(existingCustomStatus, incomingCustomStatus)
+				? existingCustomStatus
+				: incomingCustomStatus;
 		const userId = user.id;
 		if (userId === Authentication.currentUserId) {
 			return;

@@ -289,7 +289,7 @@ export function monitorScreenShareDecodeHealth(
 		}
 		if (isFrozen && health.framesDecodedDelta !== null && health.framesDecodedDelta > 0) {
 			isFrozen = false;
-			logger.info('Screen share video decoding resumed', health);
+			logger.debug('Screen share video decoding resumed', health);
 			return;
 		}
 		logger.debug('Screen share video decode health', health);

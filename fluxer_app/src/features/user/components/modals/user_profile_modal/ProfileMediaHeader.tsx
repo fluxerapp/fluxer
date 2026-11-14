@@ -101,7 +101,7 @@ export const ProfileMediaHeader: React.FC<ProfileMediaHeaderProps> = observer(
 		const avatarContainerStyle = useMemo<React.CSSProperties>(
 			() => ({
 				top: PROFILE_MODAL_GEOMETRY.avatarTopPx * avatarScale,
-				left: PROFILE_MODAL_GEOMETRY.avatarLeftPx * avatarScale,
+				insetInlineStart: PROFILE_MODAL_GEOMETRY.avatarLeftPx * avatarScale,
 				borderWidth: PROFILE_MODAL_GEOMETRY.avatarBorderPx * avatarScale,
 			}),
 			[avatarScale],

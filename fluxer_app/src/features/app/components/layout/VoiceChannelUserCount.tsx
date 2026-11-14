@@ -2,7 +2,7 @@
 
 import styles from '@app/features/app/components/layout/VoiceChannelUserCount.module.css';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {observer} from 'mobx-react-lite';
 
 interface VoiceChannelUserCountProps {
@@ -14,7 +14,7 @@ export const VoiceChannelUserCount = observer(function VoiceChannelUserCount({
 	currentUserCount,
 	userLimit,
 }: VoiceChannelUserCountProps) {
-	const formatter = getCachedNumberFormat(getCurrentLocale(), {minimumIntegerDigits: 2, useGrouping: false});
+	const formatter = getCachedNumberFormat(getFormattingLocale(), {minimumIntegerDigits: 2, useGrouping: false});
 	return (
 		<div className={styles.wrapper} data-flx="app.voice-channel-user-count.wrapper">
 			<span className={styles.users} data-flx="app.voice-channel-user-count.users">

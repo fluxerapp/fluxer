@@ -223,6 +223,7 @@ pub struct GuildDetailInfo {
     pub disabled_operations: Option<i32>,
     #[serde(default)]
     pub member_count: u64,
+    pub planned_join_waves_until: Option<String>,
     #[serde(default)]
     pub channels: Vec<GuildChannelSummary>,
     #[serde(default)]

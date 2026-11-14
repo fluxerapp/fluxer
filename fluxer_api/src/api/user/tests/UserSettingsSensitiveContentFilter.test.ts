@@ -143,5 +143,29 @@ describe('User Settings - Sensitive Content Filters', () => {
 				await repository.updateAccountsConfig({date_of_birth: previous});
 			}
 		});
+		test('rejects a non-adult account relaxing a filter after collection is turned off', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+			const repository = getInstanceConfigRepository();
+			const previous = (await repository.getAccountsConfig()).date_of_birth;
+			await repository.updateAccountsConfig({date_of_birth: DateOfBirthPolicies.OFF});
+			try {
+				const response = await createBuilder<{
+					code: string;
+					errors: Array<{
+						path: string;
+						code: string;
+						message: string;
+					}>;
+				}>(harness, account.token)
+					.patch('/users/@me/settings')
+					.body({sensitive_content_guild_filter: SensitiveMediaFilterLevel.SHOW})
+					.expect(HTTP_STATUS.BAD_REQUEST)
+					.execute();
+				expect(response.errors[0]?.path).toBe('sensitive_content_guild_filter');
+				expect(response.errors[0]?.code).toBe(ValidationErrorCodes.AGE_RESTRICTED);
+			} finally {
+				await repository.updateAccountsConfig({date_of_birth: previous});
+			}
+		});
 	});
 });

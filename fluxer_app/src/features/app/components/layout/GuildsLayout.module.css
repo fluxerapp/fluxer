@@ -145,6 +145,13 @@
 	gap: 0;
 }
 
+.nagbarOverlay {
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline: 0;
+	z-index: var(--z-index-elevated-1);
+}
+
 .userAreaWrapper {
 	position: absolute;
 	bottom: 0;

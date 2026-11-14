@@ -17,6 +17,9 @@ import (
 )
 
 func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (map[string]string, error) {
+	if err := CheckCombination(chosen); err != nil {
+		return nil, err
+	}
 	env := map[string]string{}
 	reads := func(v string) bool { return slices.Contains(set.Vars, v) }
 	put := func(v, value string) {
@@ -30,6 +33,9 @@ func Effective(set *stack.Set, chosen, secrets, adminImport map[string]string) (
 		if isRawName(name) {
 			fixed[name] = value
 		}
+	}
+	if mode := chosen[KVMode]; mode != "" {
+		fixed[stack.KVModeVar] = mode
 	}
 	if len(set.Profiles) > 0 {
 		for v, value := range stack.Sizing(Hardware(), chosen[MemoryProfile] == "", fixed) {

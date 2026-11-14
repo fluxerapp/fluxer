@@ -12,7 +12,7 @@ import {supportsDesktopScreenShareAudioCapture} from '@app/features/ui/utils/Nat
 import PrivacyPreferences from '@app/features/user/state/PrivacyPreferences';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import styles from '@app/features/voice/components/modals/screen_share_picker_modal/WebStreamSetupModal.module.css';
-import {useHasHigherVideoQuality} from '@app/features/voice/components/StreamSettingsMenuContent';
+import {useVideoQualityCaps} from '@app/features/voice/components/StreamSettingsMenuContent';
 import {
 	type OfferedScreenShareResolution,
 	type StreamSettingsQualityWrite,
@@ -130,7 +130,7 @@ const PremiumIcon = () => (
 
 export const WebStreamSetupModal = observer(() => {
 	const {i18n} = useLingui();
-	const entitled = useHasHigherVideoQuality();
+	const caps = useVideoQualityCaps();
 	const showPremiumFeatures = shouldShowPremiumFeatures();
 	const supportsAudio = supportsDesktopScreenShareAudioCapture();
 	const [shareAudio, setShareAudio] = useState(true);
@@ -139,7 +139,7 @@ export const WebStreamSetupModal = observer(() => {
 		mode: VoiceSettings.getStreamingMode(),
 		storedResolution: VoiceSettings.getScreenshareResolution(),
 		storedFrameRate: resolveScreenShareFrameRate(VoiceSettings.getVideoFrameRate()),
-		entitled,
+		caps,
 		context: 'display',
 	};
 	const target = resolveScreenShareTarget({
@@ -149,12 +149,11 @@ export const WebStreamSetupModal = observer(() => {
 		bitrate: VoiceSettings.getScreenShareBitrateBudget(),
 	});
 	const menuState = selectStreamSettingsQualityMenuState({quality, target, showPremiumFeatures});
-	const showPremiumIcon = showPremiumFeatures && !entitled;
 	const resolutionTabs: Array<SegmentedTab<OfferedScreenShareResolution>> = menuState.resolutions.map((option) => ({
 		id: option.value,
 		label: getResolutionLabel(i18n, option.value),
 		icon:
-			showPremiumIcon && option.premium ? (
+			showPremiumFeatures && option.locked ? (
 				<PremiumIcon data-flx="voice.screen-share-picker-modal.web-stream-setup-modal.resolution-tabs.premium-icon" />
 			) : undefined,
 	}));
@@ -162,7 +161,7 @@ export const WebStreamSetupModal = observer(() => {
 		id: String(option.value),
 		label: i18n.number(option.value),
 		icon:
-			showPremiumIcon && option.premium ? (
+			showPremiumFeatures && option.locked ? (
 				<PremiumIcon data-flx="voice.screen-share-picker-modal.web-stream-setup-modal.frame-rate-tabs.premium-icon" />
 			) : undefined,
 	}));

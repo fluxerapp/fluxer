@@ -11,6 +11,7 @@ use crate::{
     config::AdminConfig,
     sso::{self, ProviderMetadata},
 };
+use anyhow::Context as _;
 use std::{
     sync::{Arc, Mutex},
     time::{Duration, Instant},
@@ -37,13 +38,17 @@ struct AppStateInner {
 }
 
 impl AppState {
-    pub fn new(config: AdminConfig) -> Self {
+    pub fn try_new(config: AdminConfig) -> anyhow::Result<Self> {
         let http_client = reqwest::Client::builder()
             .user_agent(format!("FluxerAdmin/{} (Rust)", config.build_version))
+            .no_gzip()
+            .no_brotli()
+            .no_deflate()
+            .http1_only()
             .build()
-            .expect("failed to create HTTP client");
-        let sso_http_client = sso::http_client(&config.build_version);
-        Self {
+            .context("failed to create the admin HTTP client")?;
+        let sso_http_client = sso::http_client(&config.build_version)?;
+        Ok(Self {
             inner: Arc::new(AppStateInner {
                 config,
                 http_client,
@@ -53,7 +58,7 @@ impl AppState {
                 report_reasons: Mutex::new(None),
                 sso_provider: Mutex::new(None),
             }),
-        }
+        })
     }
 
     pub fn config(&self) -> &AdminConfig {

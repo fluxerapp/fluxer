@@ -105,6 +105,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.CANNOT_SEND_FRIEND_REQUEST_TO_SELF]: 'friends_and_dms.cannot_send_friend_request_to_self',
 	[APIErrorCodes.CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL]: 'misc.cannot_send_messages_in_non_text_channel',
 	[APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER]: 'friends_and_dms.cannot_send_messages_to_user',
+	[APIErrorCodes.COMMUNITY_MEMBER_DMS_DISABLED]: 'friends_and_dms.community_member_dms_disabled',
 	[APIErrorCodes.CANNOT_TRANSFER_OWNERSHIP_TO_BOT]: 'channels_and_guilds.cannot_transfer_ownership_to_bot',
 	[APIErrorCodes.CAPTCHA_REQUIRED]: 'captcha.required',
 	[APIErrorCodes.COMMUNICATION_DISABLED]: 'account.communication_disabled',
@@ -377,6 +378,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS]:
 		'moderation_and_reports.unclaimed_account_cannot_submit_reports',
 	[APIErrorCodes.UNKNOWN_BADGE]: 'unknown_entities.unknown_badge',
+	[APIErrorCodes.UNKNOWN_BAN]: 'unknown_entities.unknown_ban',
 	[APIErrorCodes.UNKNOWN_CHANNEL]: 'unknown_entities.unknown_channel',
 	[APIErrorCodes.UNKNOWN_CONNECTION_PROVIDER]: 'connections.unknown_provider',
 	[APIErrorCodes.UNKNOWN_EMOJI]: 'stickers_and_emojis.unknown_emoji',

@@ -519,6 +519,7 @@ export function registerIpcHandlers(): void {
 		}
 	});
 	ipcMain.handle('get-accessibility-support-enabled', (): boolean => app.accessibilitySupportEnabled);
+	ipcMain.handle('system-locale-get', (): string => app.getSystemLocale());
 	app.on('accessibility-support-changed', (_event, accessibilitySupportEnabled) => {
 		const mainWindow = getMainWindow();
 		if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -599,6 +600,10 @@ export function registerGatewayTransportHandlers(): void {
 	for (const [channel, handler] of Object.entries(nativeGatewayTransport.ipcRoutes())) {
 		ipcMain.handle(channel, handler);
 	}
+}
+
+export function warmGatewayTransport(): void {
+	nativeGatewayTransport?.warm();
 }
 
 export function cleanupGatewayTransportHandlers(): void {

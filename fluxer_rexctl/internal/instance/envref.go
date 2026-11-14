@@ -52,10 +52,12 @@ var envSections = []envSection{
 		"To run without the bundled LiveKit, add " + stack.OverlayFiles[stack.OverlayExternalVoice] + " to COMPOSE_FILE and set FLUXER_LIVEKIT_BUNDLED to `false`.", ""},
 	{envVoiceServerSection, "Standalone voice servers", "These go in the settings file of a voice server from the voice folder of the compose bundle, such as `fra-server-1.env`, not in Fluxer's .env. `rexctl voice add` and `rexctl voice join` write them for you.", ""},
 	{envVoiceEdgeSection, "Voice edge", "These go in `edge.env` next to voice-edge.compose.yml in the voice folder of the compose bundle. `rexctl voice join` writes them for you.", ""},
-	{"storage", "Object storage", "By default Fluxer keeps files in the bundled object store. To use your own S3-compatible store, set its address and buckets, add " +
+	{"storage", "Object storage", "By default Fluxer keeps files in the bundled object store. To keep them as plain files in a volume instead, add " +
+		stack.OverlayFiles[stack.OverlayFilesystemStore] + " to COMPOSE_FILE. To use your own S3-compatible store, set its address and buckets, add " +
 		stack.OverlayFiles[stack.OverlayExternalObjectStore] + " to COMPOSE_FILE and put its keys in FLUXER_S3_ACCESS_KEY and FLUXER_S3_SECRET_KEY.", ""},
 	{"database", "Database", "Leave these unset to use the bundled Postgres.", ""},
-	{"services", "Cache, queue and search", "Leave these unset to use the bundled Valkey, NATS and Meilisearch.", ""},
+	{"services", "Cache, queue and search", "Leave these unset to use the bundled Valkey, NATS and Meilisearch. To keep cache, rate limit and queue data in Postgres instead of Valkey, add " +
+		stack.OverlayFiles[stack.OverlayKVPostgres] + " to COMPOSE_FILE.", ""},
 	{envNetworkSection, "Outgoing proxy", "These settings are for Fluxer's services. rexctl and the Linux and macOS install script take HTTPS_PROXY, HTTP_PROXY and NO_PROXY from the shell you run them from.", ""},
 	{"sso", "Sign-in", "", ""},
 	{"email", "Email", "The admin panel can also save the delivery mode, the sender and the SMTP server. A value saved there is used first.", ""},

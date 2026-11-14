@@ -29,6 +29,8 @@ export const REXCTL_TARGETS = [
 	{os: 'windows', arch: 'arm64'},
 ] as const;
 
+const NATIVE_ARCHES = ['amd64', 'arm64'] as const;
+
 export interface RexctlAsset {
 	readonly os: string;
 	readonly arch: string;
@@ -44,6 +46,7 @@ export interface RexctlRelease {
 	readonly min_docker: string;
 	readonly state_schema: number;
 	readonly assets: ReadonlyArray<RexctlAsset>;
+	readonly dist: ReadonlyArray<RexctlAsset>;
 	readonly compose_url: string;
 }
 
@@ -85,6 +88,10 @@ export function compareCalVer(a: string, b: string): number {
 function archiveName(version: string, os: string, arch: string): string {
 	const extension = os === 'windows' ? 'zip' : 'tar.gz';
 	return `rexctl_${version}_${os}_${arch}.${extension}`;
+}
+
+function nativeName(version: string, arch: string): string {
+	return `fluxer-${version}-linux-${arch}.tar.zst`;
 }
 
 async function getJSON<T>(url: string): Promise<T | null> {
@@ -153,12 +160,7 @@ function hasEveryArchive(release: GitHubRelease, version: string): boolean {
 async function toRexctlRelease(release: GitHubRelease, version: string): Promise<RexctlRelease | null> {
 	const byName = new Map(release.assets.map((asset) => [asset.name, asset]));
 	let checksums: Map<string, string> | null = null;
-	const assets: Array<RexctlAsset> = [];
-	for (const target of REXCTL_TARGETS) {
-		const asset = byName.get(archiveName(version, target.os, target.arch));
-		if (!asset) {
-			return null;
-		}
+	const sha256Of = async (asset: GitHubAsset): Promise<string | null> => {
 		let sha256 = asset.digest?.startsWith('sha256:') ? asset.digest.slice('sha256:'.length) : '';
 		if (!SHA256.test(sha256)) {
 			if (checksums === null) {
@@ -168,10 +170,24 @@ async function toRexctlRelease(release: GitHubRelease, version: string): Promise
 			}
 			sha256 = checksums.get(asset.name) ?? '';
 		}
-		if (!SHA256.test(sha256)) {
+		return SHA256.test(sha256) ? sha256 : null;
+	};
+	const assets: Array<RexctlAsset> = [];
+	for (const target of REXCTL_TARGETS) {
+		const asset = byName.get(archiveName(version, target.os, target.arch));
+		const sha256 = asset ? await sha256Of(asset) : null;
+		if (!asset || sha256 === null) {
 			return null;
 		}
 		assets.push({os: target.os, arch: target.arch, url: asset.browser_download_url, sha256});
+	}
+	const dist: Array<RexctlAsset> = [];
+	for (const arch of NATIVE_ARCHES) {
+		const asset = byName.get(nativeName(version, arch));
+		const sha256 = asset ? await sha256Of(asset) : null;
+		if (asset && sha256 !== null) {
+			dist.push({os: 'linux', arch, url: asset.browser_download_url, sha256});
+		}
 	}
 	let minFrom = '';
 	let schemaChanged = true;
@@ -219,6 +235,7 @@ async function toRexctlRelease(release: GitHubRelease, version: string): Promise
 		min_docker: minDocker,
 		state_schema: stateSchema,
 		assets,
+		dist,
 		compose_url: byName.get(`${COMPOSE_ASSET_PREFIX}${version}.tar.gz`)?.browser_download_url ?? '',
 	};
 }

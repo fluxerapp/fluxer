@@ -95,9 +95,9 @@ export const OPERATOR_PASS_SHOWCASE_SLIDES: ReadonlyArray<OperatorPassShowcaseSl
 		}),
 		body: msg({
 			message:
-				'The Operator role opens #operators to talk about self-hosting, bots and the API. Hampus, who created {productName}, joins in when he can.',
+				'The pass opens #operators to talk about self-hosting, bots and the API. Hampus, who created {productName}, joins in when he can.',
 			comment:
-				"Text under the heading #operators in Fluxer Labs on a slide in the Operator Pass checkout dialog. Operator is the role's name, keep it in English. #operators is the channel's literal name, keep it unchanged. Opens #operators to talk about means the role gives access to the channel, where people talk about self-hosting, bots and the API. Hampus is a person's first name, keep it as is. Who created {productName} describes him as the person who started and made the software. Use past tense. Joins in when he can means Hampus takes part in the conversation when he has time, never that he answers questions or gives support. Warm and plain, never salesy. No dashes as punctuation and no semicolons.",
+				"Text under the heading #operators in Fluxer Labs on a slide in the Operator Pass checkout dialog. The pass is the Operator Pass. #operators is the channel's literal name, keep it unchanged. Opens #operators to talk about means the pass gives access to the channel, where people talk about self-hosting, bots and the API. Hampus is a person's first name, keep it as is. Who created {productName} describes him as the person who started and made the software. Use past tense. Joins in when he can means Hampus takes part in the conversation when he has time, never that he answers questions or gives support. Warm and plain, never salesy. No dashes as punctuation and no semicolons.",
 		}),
 		alt: msg({
 			message: 'Operators and the Fluxer Team talking about self-hosting in the #operators channel of Fluxer Labs',

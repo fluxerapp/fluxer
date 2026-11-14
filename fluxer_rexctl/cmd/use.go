@@ -20,6 +20,7 @@ func newUseCmd(app *App) *cobra.Command {
 		Long: "Show which instance rexctl uses when you don't pass --dir and aren't in an instance folder, or pass a folder to use that instance from now on. " +
 			"rexctl remembers each instance it installs. You only need this with more than one instance or one installed by an older rexctl. " +
 			"Each account has its own choice. Root's choice also applies to accounts that have no instance of their own. " +
+			"As root, rexctl refuses an instance folder that other accounts can write to. It still uses a folder you pick when other accounts can change a folder above it, and it warns you about that. " +
 			"The services rexctl sets up for starting and upgrading Fluxer always pass their own folder, and this choice doesn't change them.",
 		Args: maxArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
@@ -45,6 +46,7 @@ func runUseShow(app *App) error {
 	if l.Stale != "" {
 		app.warnStale(l)
 	}
+	app.warnShared(l)
 	if _, err := instance.Find(l.Dir); errors.Is(err, instance.ErrNotFound) {
 		app.UI.Info("There's no Fluxer instance in %s (%s).", l.Dir, l.Why())
 		app.UI.Info("Run rexctl use <folder> with the folder Fluxer is in.")
@@ -59,6 +61,13 @@ func runUse(app *App, arg string) error {
 	if err != nil {
 		return err
 	}
+	s := instance.OwnScope()
+	shared := ""
+	if s == instance.ScopeMachine {
+		if shared, err = instance.RootNamed(instance.RealPath(dir)); err != nil {
+			return untrustedRefusal(err)
+		}
+	}
 	switch _, err := instance.Find(dir); {
 	case err == nil, errors.Is(err, instance.ErrLegacy):
 	case errors.Is(err, instance.ErrNotFound):
@@ -66,12 +75,12 @@ func runUse(app *App, arg string) error {
 	default:
 		return ui.Wrap(err, fmt.Sprintf("rexctl can't read the instance in %s.", dir), "Run rexctl as the account that installed Fluxer.")
 	}
-	s := instance.OwnScope()
 	if err := instance.Remember(s, dir, true); err != nil {
 		return ui.Wrap(untrustedRefusal(err), fmt.Sprintf("Couldn't save %s.", instance.RecordPath(s)), "Check that you can write to it, then try again.")
 	}
 	if s == instance.ScopeMachine {
 		app.UI.OK("rexctl uses the instance in %s from now on, for root and for accounts that have no instance of their own.", dir)
+		app.warnShared(instance.Located{Dir: dir, Shared: shared})
 	} else {
 		app.UI.OK("rexctl uses the instance in %s for your account from now on.", dir)
 	}

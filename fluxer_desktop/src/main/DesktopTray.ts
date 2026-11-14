@@ -18,6 +18,7 @@ import {
 	onAccountEngineSummaries,
 } from '@electron/main/AccountEngineHost';
 import {buildAccountMenuEntries, buildAccountMenuItems, createRefreshThrottle} from '@electron/main/AccountMenu';
+import {getAppResourcesPath} from '@electron/main/DesktopDistributionPath';
 import {getDesktopUpdateState, observeDesktopUpdateState} from '@electron/main/DesktopUpdateGate';
 import {checkForUpdatesFromShell, startDesktopUpdateFromShell} from '@electron/main/DesktopUpdatePrompt';
 import {shouldDisableModuleUpdatesForLaunch} from '@electron/main/LaunchOptions';
@@ -45,7 +46,6 @@ const TRAY_POSITION_GUID = TRAY_POSITION_GUIDS[BUILD_CHANNEL];
 interface DesktopTrayController {
 	createWindow: () => BrowserWindow;
 	getMainWindow: () => BrowserWindow | null;
-	isMainWindowTakenOver: () => boolean;
 	hideWindow: () => void;
 	setQuitting: (quitting: boolean) => void;
 	showWindow: () => void;
@@ -224,9 +224,9 @@ export function hasActiveDesktopTray(): boolean {
 
 function getCandidateIconDirs(): Array<string> {
 	const candidates = [
-		path.join(process.resourcesPath, 'icons'),
-		path.join(process.resourcesPath, ICON_DIR_NAME),
-		process.resourcesPath,
+		path.join(getAppResourcesPath(), 'icons'),
+		path.join(getAppResourcesPath(), ICON_DIR_NAME),
+		getAppResourcesPath(),
 		path.join(app.getAppPath(), 'build_resources', ICON_DIR_NAME),
 		path.resolve(process.cwd(), 'build_resources', ICON_DIR_NAME),
 		path.resolve(process.cwd(), 'fluxer_desktop', 'build_resources', ICON_DIR_NAME),
@@ -335,7 +335,7 @@ export function setDesktopTrayUnreadBadge(badge: number): void {
 function ensureMainWindowVisible(): void {
 	if (!controller) return;
 	const mainWindow = controller.getMainWindow();
-	if ((!mainWindow || mainWindow.isDestroyed()) && !controller.isMainWindowTakenOver()) {
+	if (!mainWindow || mainWindow.isDestroyed()) {
 		controller.createWindow();
 	}
 	controller.showWindow();
@@ -492,9 +492,12 @@ function buildTrayMenu(): Menu {
 			click: () => runTrayMenuAction(() => dispatchTrayAction({action: 'toggle-custom-css'})),
 		});
 	}
-	if (getDesktopUpdateState().available) {
+	const desktopUpdate = getDesktopUpdateState();
+	if (desktopUpdate.available) {
 		menuTemplate.push({
-			label: t('desktop.tray.updateNow', {appName: APP_NAME}),
+			label: t(desktopUpdate.replacesShell === true ? 'desktop.tray.restartToUpdate' : 'desktop.tray.reloadToUpdate', {
+				appName: APP_NAME,
+			}),
 			click: () => runTrayMenuAction(startDesktopUpdateFromShell),
 		});
 	}

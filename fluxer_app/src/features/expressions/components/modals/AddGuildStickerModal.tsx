@@ -18,6 +18,7 @@ import {failureCode, failureValidationErrors} from '@app/features/platform/utils
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Form} from '@app/features/ui/components/form/Form';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as FormUtils from '@app/lib/forms';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
@@ -161,9 +162,9 @@ export const AddGuildStickerModal = observer(function AddGuildStickerModal({
 				if (error instanceof ImageCropUtils.ImageOptimizationSizeError || isStickerSizeValidationError(error)) {
 					const fileSize =
 						error instanceof ImageCropUtils.ImageOptimizationSizeError
-							? formatFileSize(i18n.locale, error.actualSizeBytes)
-							: formatFileSize(i18n.locale, file.size);
-					const maxSize = formatFileSize(i18n.locale, maxStickerSize);
+							? formatFileSize(getFormattingLocale(), error.actualSizeBytes)
+							: formatFileSize(getFormattingLocale(), file.size);
+					const maxSize = formatFileSize(getFormattingLocale(), maxStickerSize);
 					const message =
 						error instanceof ImageCropUtils.ImageOptimizationSizeError
 							? i18n._(

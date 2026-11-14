@@ -11,7 +11,7 @@ use crate::{
         state::AppState,
     },
     spool::{SpoolError, spool_to_temp},
-    storage::{RelayBody, RelayPutOptions},
+    storage::{RelayBody, RelayPutOptions, StorageError},
     upload_relay::{BufferReservation, RelayError, target, token},
 };
 use axum::{
@@ -226,6 +226,9 @@ pub(in crate::server) async fn relay_put(
                 .and_then(|streamed| streamed.failure.get())
             {
                 return relay_error(*client_err);
+            }
+            if matches!(err, StorageError::NoSuchUpload) {
+                return relay_error(RelayError::UploadIdMismatch);
             }
             warn!(error = %err, "upload relay upstream S3 PUT failed");
             app.metrics.relay().relay_upstream_failures_hard.inc();

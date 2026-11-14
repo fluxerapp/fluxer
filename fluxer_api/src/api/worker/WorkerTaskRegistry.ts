@@ -22,6 +22,7 @@ import crosspostMessage from '@app/api/worker/tasks/CrosspostMessage';
 import crosspostMessageChunk from '@app/api/worker/tasks/CrosspostMessageChunk';
 import deleteUserMessagesInGuildByTime from '@app/api/worker/tasks/DeleteUserMessagesInGuildByTime';
 import drainActivitySpool from '@app/api/worker/tasks/DrainActivitySpool';
+import endExpiredPlannedJoinWaves from '@app/api/worker/tasks/EndExpiredPlannedJoinWaves';
 import expireAttachments from '@app/api/worker/tasks/ExpireAttachments';
 import expireReportSnapshots from '@app/api/worker/tasks/ExpireReportSnapshots';
 import expireStaleJobs from '@app/api/worker/tasks/ExpireStaleJobs';
@@ -72,11 +73,13 @@ import recordOperatorPassDelivery from '@app/api/worker/tasks/RecordOperatorPass
 import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
 import refreshStorePurchase from '@app/api/worker/tasks/RefreshStorePurchase';
 import removeChannelFollowers from '@app/api/worker/tasks/RemoveChannelFollowers';
+import restatePlannedJoinWaves from '@app/api/worker/tasks/RestatePlannedJoinWaves';
 import scanBillingNotices from '@app/api/worker/tasks/ScanBillingNotices';
 import seedThreadPermissions from '@app/api/worker/tasks/SeedThreadPermissions';
 import sendBillingEmail from '@app/api/worker/tasks/SendBillingEmail';
 import sendOperatorPassWithdrawalReceipt from '@app/api/worker/tasks/SendOperatorPassWithdrawalReceipt';
 import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
+import sweepFilesystemStorage from '@app/api/worker/tasks/SweepFilesystemStorage';
 import sweepVoiceParticipants from '@app/api/worker/tasks/SweepVoiceParticipants';
 import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
 import syncCrosspostedMessage from '@app/api/worker/tasks/SyncCrosspostedMessage';
@@ -140,6 +143,8 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	indexGuildMembers,
 	joinSingleCommunityMembers,
 	liftExpiredGuildInvitePauses,
+	endExpiredPlannedJoinWaves,
+	restatePlannedJoinWaves,
 	messageShred,
 	notifyRegistrationApprovers,
 	operatorPassOfferCompletion,
@@ -167,6 +172,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	pollGooglePlayVoidedPurchases,
 	pollAppStoreNotificationHistory,
 	prunePostgresKvTtl,
+	sweepFilesystemStorage,
 	sweepVoiceParticipants,
 	pruneGuildVisits: pruneGuildVisitsTask,
 	refreshSearchIndex,

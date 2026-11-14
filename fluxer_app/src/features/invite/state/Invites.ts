@@ -3,7 +3,9 @@
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import {isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import {AccountScopedWork} from '@app/features/platform/state/AccountScopedWork';
+import AppStorage, {subscribeAppStorageScope} from '@app/features/platform/state/PersistentStorage';
 import {type InstanceHTTPTarget, instanceTargetIdentity} from '@app/features/platform/transport/InstanceHTTP';
+import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {action, computed, makeAutoObservable, runInAction} from 'mobx';
 
@@ -15,6 +17,40 @@ type InviteSlot =
 	| {loading: false; error: unknown; data: null};
 
 const SETTIMEOUT_LIMIT_MS = 0x7fff_ffff;
+const PREVIEW_STORAGE_KEY = 'Invites:previews';
+const PREVIEW_LIMIT = 100;
+const PREVIEW_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+
+interface StoredPreview {
+	readonly key: string;
+	readonly savedAt: number;
+	readonly invite: Invite;
+}
+
+const previewSlots = new WeakMap<StoredPreview, InviteSlot>();
+
+function previewSlot(preview: StoredPreview): InviteSlot {
+	let slot = previewSlots.get(preview);
+	if (slot === undefined) {
+		slot = {loading: false, error: null, data: preview.invite};
+		previewSlots.set(preview, slot);
+	}
+	return slot;
+}
+
+function readStoredPreviews(): Map<string, StoredPreview> {
+	const stored = AppStorage.getJSON<unknown>(PREVIEW_STORAGE_KEY);
+	const previews = new Map<string, StoredPreview>();
+	if (!Array.isArray(stored)) return previews;
+	const at = Date.now();
+	for (const entry of stored as Array<Partial<StoredPreview>>) {
+		if (typeof entry?.key !== 'string' || typeof entry.savedAt !== 'number' || entry.invite == null) continue;
+		if (typeof entry.invite.code !== 'string' || at - entry.savedAt > PREVIEW_MAX_AGE_MS) continue;
+		if (expired(entry.invite, at)) continue;
+		previews.set(entry.key, entry as StoredPreview);
+	}
+	return previews;
+}
 
 function expiryEpoch(invite: Invite): number | null {
 	const stamp = invite.expires_at;
@@ -66,6 +102,7 @@ class Invites {
 	guildInviteCache: Map<string, Array<Invite>> = new Map();
 	guildFetchStatus: Map<string, FetchStatus> = new Map();
 	private expiryTimers: Map<string, NodeJS.Timeout> = new Map();
+	private previews: Map<string, StoredPreview> = readStoredPreviews();
 
 	constructor() {
 		makeAutoObservable(
@@ -103,8 +140,32 @@ class Invites {
 	}
 
 	getInvite(code: string, target: InstanceHTTPTarget): InviteSlot | null {
-		const slot = this.inviteSlots.get(inviteResourceKey(code, target)) ?? null;
+		const resourceKey = inviteResourceKey(code, target);
+		const slot = this.inviteSlots.get(resourceKey) ?? null;
+		if (slot === null || slot.loading) {
+			const preview = this.previews.get(resourceKey);
+			if (preview && !expired(preview.invite, Date.now())) return previewSlot(preview);
+		}
 		return slot?.data && expired(slot.data, Date.now()) ? null : slot;
+	}
+
+	isPreviewOnly(code: string, target: InstanceHTTPTarget): boolean {
+		const resourceKey = inviteResourceKey(code, target);
+		return !this.inviteSlots.has(resourceKey) && this.previews.has(resourceKey);
+	}
+
+	reloadPreviews(): void {
+		this.previews = readStoredPreviews();
+	}
+
+	private rememberPreview(resourceKey: string, invite: Invite | null): void {
+		const next = new Map(this.previews);
+		next.delete(resourceKey);
+		if (invite !== null) next.set(resourceKey, {key: resourceKey, savedAt: Date.now(), invite});
+		while (next.size > PREVIEW_LIMIT) next.delete(next.keys().next().value!);
+		this.previews = next;
+		if (next.size === 0) AppStorage.removeItem(PREVIEW_STORAGE_KEY);
+		else AppStorage.setJSON(PREVIEW_STORAGE_KEY, Array.from(next.values()));
 	}
 
 	getChannelInvitesFetchStatus(channelId: string): FetchStatus {
@@ -187,8 +248,8 @@ class Invites {
 		const resourceKey = inviteResourceKey(code, target);
 		const inflight = this.pendingRequests.get(resourceKey);
 		if (inflight) return inflight;
-		const cached = this.getInvite(code, target);
-		if (cached?.data) return cached.data;
+		const cached = this.inviteSlots.get(resourceKey);
+		if (cached?.data && !expired(cached.data, Date.now())) return cached.data;
 		runInAction(() => {
 			this.inviteSlots = new Map(this.inviteSlots).set(resourceKey, {loading: true, error: null, data: null});
 		});
@@ -202,6 +263,7 @@ class Invites {
 				const nextPending = new Map(this.pendingRequests);
 				nextPending.delete(resourceKey);
 				const alive = this.filterAlive(fetched, target);
+				this.rememberPreview(resourceKey, alive);
 				this.inviteSlots = new Map(this.inviteSlots).set(resourceKey, {
 					loading: false,
 					error: null,
@@ -217,12 +279,20 @@ class Invites {
 			runInAction(() => {
 				const nextPending = new Map(this.pendingRequests);
 				nextPending.delete(resourceKey);
+				this.pendingRequests = nextPending;
+				const inviteGone = error instanceof HttpError && error.status >= 400 && error.status < 500;
+				if (this.previews.has(resourceKey) && !inviteGone) {
+					const nextSlots = new Map(this.inviteSlots);
+					nextSlots.delete(resourceKey);
+					this.inviteSlots = nextSlots;
+					return;
+				}
+				if (this.previews.has(resourceKey)) this.rememberPreview(resourceKey, null);
 				this.inviteSlots = new Map(this.inviteSlots).set(resourceKey, {
 					loading: false,
 					error,
 					data: null,
 				});
-				this.pendingRequests = nextPending;
 			});
 			throw error;
 		}
@@ -284,6 +354,9 @@ class Invites {
 		for (const [channelId, list] of this.channelInviteCache) nextChannel.set(channelId, removeFromList(list));
 		const nextGuild = new Map<string, Array<Invite>>();
 		for (const [guildId, list] of this.guildInviteCache) nextGuild.set(guildId, removeFromList(list));
+		if (this.previews.has(inviteResourceKey(inviteCode, target))) {
+			this.rememberPreview(inviteResourceKey(inviteCode, target), null);
+		}
 		const nextSlots = new Map(this.inviteSlots);
 		nextSlots.delete(inviteResourceKey(inviteCode, target));
 		this.inviteSlots = nextSlots;
@@ -317,5 +390,7 @@ AccountScopedWork.registerTransition({
 	resume: () => {},
 	released: () => invites.dropFailedInviteSlots(),
 });
+
+subscribeAppStorageScope(invites.reloadPreviews);
 
 export default invites;

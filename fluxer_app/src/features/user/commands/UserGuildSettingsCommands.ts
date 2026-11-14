@@ -5,6 +5,7 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {UserGuildSettingsPartial} from '@app/features/user/models/UserGuildSettings';
 import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
+import {recordGuildSettingsWrite} from '@app/features/user/state/GuildSettingsWriteJournal';
 import type {ChannelOverride, GatewayGuildSettings} from '@app/features/user/state/UserGuildSettings';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import {ME} from '@fluxer/constants/src/AppConstants';
@@ -30,6 +31,7 @@ const mergePayloads = (a: UserGuildSettingsPartial, b: UserGuildSettingsPartial)
 });
 const getUpdateKey = (guildId: string | null): string => guildId ?? ME;
 const addPendingPayload = (key: string, updates: UserGuildSettingsPartial): void => {
+	recordGuildSettingsWrite(key, updates);
 	const currentPending = pendingPayloads.get(key) ?? {};
 	const mergedUpdates = mergePayloads(currentPending, updates);
 	pendingPayloads.set(key, mergedUpdates);
@@ -121,6 +123,17 @@ const scheduleUpdate = (guildId: string | null, updates: UserGuildSettingsPartia
 	);
 	logger.debug(`Scheduled coalesced settings update for guild ${key} in 3 seconds`);
 };
+
+export async function flushPendingGuildSettings(): Promise<void> {
+	const keys = Array.from(pendingUpdates.keys());
+	await Promise.all(
+		keys.map((key) => {
+			clearPendingTimer(key);
+			return flushPendingUpdate(key === ME ? null : key, key);
+		}),
+	);
+	await bulkPersistenceQueue.catch(() => undefined);
+}
 
 export function updateGuildSettings(
 	guildId: string | null,

@@ -31,6 +31,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import Users from '@app/features/user/state/Users';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {canCropFormat} from '@app/features/voice/utils/MediaCapabilities';
 import {getAcceptString} from '@fluxer/constants/src/AssetFormatPolicy';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -224,7 +225,7 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 		},
 		[canManageExpressions, canCreateExpressions, currentUserId],
 	);
-	const stickerMaxSizeLabel = formatFileSize(i18n.locale, guild?.maxStickerSize ?? STICKER_MAX_SIZE);
+	const stickerMaxSizeLabel = formatFileSize(getFormattingLocale(), guild?.maxStickerSize ?? STICKER_MAX_SIZE);
 	return (
 		<div className={styles.container} data-flx="guild.guild-tabs.guild-stickers-tab.container">
 			<CloneAllowedToggle

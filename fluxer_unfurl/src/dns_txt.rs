@@ -9,6 +9,7 @@ use std::net::{IpAddr, Ipv4Addr};
 use std::time::Duration;
 use tokio::task::JoinSet;
 use tokio::time::timeout;
+use tracing::Instrument;
 
 const DNS_TIMEOUT: Duration = Duration::from_millis(1500);
 const DNS_SERVERS: [Ipv4Addr; 8] = [
@@ -53,7 +54,9 @@ where
     let mut lookups = JoinSet::new();
     for server in DNS_SERVERS {
         let record_name = record_name.clone();
-        lookups.spawn(async move { lookup_txt(IpAddr::V4(server), &record_name).await });
+        lookups.spawn(
+            async move { lookup_txt(IpAddr::V4(server), &record_name).await }.in_current_span(),
+        );
     }
     while let Some(result) = lookups.join_next().await {
         match result {

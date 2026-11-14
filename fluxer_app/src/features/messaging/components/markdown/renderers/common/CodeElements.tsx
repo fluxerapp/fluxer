@@ -2,6 +2,7 @@
 
 import {
 	isSupportedHighlightLanguage,
+	registerRetainedCodeSource,
 	useArboriumHighlightedHtml,
 } from '@app/features/code_highlighting/utils/ArboriumHighlighting';
 import {COPY_CODE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -26,7 +27,7 @@ import {
 import {msg} from '@lingui/core/macro';
 import {clsx} from 'clsx';
 import type katexDefault from 'katex';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 const ERROR_RENDERING_LATEX_DESCRIPTOR = msg({
 	message: 'Error rendering LaTeX: {errorAsErrorMessageI18nMsgUnknownError}',
@@ -143,6 +144,11 @@ function RichCodeBlockRenderer({
 		shouldHighlight ? normalisedLanguage : null,
 		shouldHighlight ? content : null,
 	);
+	const codeRef = useRef<HTMLElement | null>(null);
+	useLayoutEffect(() => {
+		if (codeRef.current === null || !shouldHighlight || normalisedLanguage == null) return;
+		return registerRetainedCodeSource(codeRef.current, normalisedLanguage, content);
+	}, [normalisedLanguage, content, shouldHighlight]);
 	const copyButton = (
 		<CopyButton
 			value={content}
@@ -257,6 +263,7 @@ function RichCodeBlockRenderer({
 		highlightedContent = (
 			<code
 				className={clsx(markupStyles.hljs, language)}
+				ref={codeRef}
 				dangerouslySetInnerHTML={{__html: highlightedHtml}}
 				data-flx="messaging.markdown.renderers.common.code-elements.rich-code-block-renderer.code--4"
 			/>

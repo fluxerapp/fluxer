@@ -68,6 +68,8 @@ type upgradeCheckJSON struct {
 
 func newUpgradeCmd(app *App) *cobra.Command {
 	var f upgradeFlags
+	var migrateList string
+	var experimental bool
 	c := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade rexctl and Fluxer to the latest release",
@@ -76,11 +78,17 @@ func newUpgradeCmd(app *App) *cobra.Command {
 			if !c.Flags().Changed("backup") {
 				f.Backup = ""
 			}
+			if migrateList != "" && !experimental {
+				return ui.Usage("Pass --migrate together with --experimental-native.")
+			}
 			err := runUpgrade(c.Context(), app, &f)
 			if !f.Check && !f.DryRun {
 				notifyUpgrade(c.Context(), app, err)
 			}
-			return err
+			if err != nil || f.Check || f.DryRun || f.Prefetch || !experimental {
+				return err
+			}
+			return offerMigrations(c.Context(), app, migrateList)
 		},
 	}
 	fl := c.Flags()
@@ -90,6 +98,8 @@ func newUpgradeCmd(app *App) *cobra.Command {
 	fl.BoolVar(&f.NoBackup, "no-backup", false, "skip the backup before upgrading")
 	fl.StringVar(&f.Backup, "backup", backup.ScopeFull, "what the backup before this upgrade holds, full or without-uploads. When the upgrade changes how uploads are stored, the backup includes them anyway.")
 	fl.BoolVar(&f.DryRun, "dry-run", false, "show what would happen without changing anything")
+	fl.BoolVar(&experimental, "experimental-native", false, "after the upgrade, show the experimental changes that run Fluxer with fewer services, and make the ones you pick")
+	fl.StringVar(&migrateList, "migrate", "", "with --experimental-native, make these changes after the upgrade, separated by commas: docker, kv, rust and storage")
 	fl.StringVar(&f.Resume, release.ResumeFlag, "", "")
 	_ = fl.MarkHidden(release.ResumeFlag)
 	app.jsonFlag(c)
@@ -134,6 +144,9 @@ func runUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	}
 	if err := managed(inst); err != nil {
 		return err
+	}
+	if inst.State.IsNative() {
+		return runNativeUpgrade(ctx, app, inst, f)
 	}
 	if !f.DryRun && inst.State.Upgrade != nil {
 		if handedOver, err := updateBeforeRecovery(ctx, app, f.Resume, f.To, "rexctl upgrade"); err != nil || handedOver {
@@ -278,7 +291,7 @@ func switchBack(ctx context.Context, app *App, inst *instance.Instance, e *engin
 	s, changed, err := dropScheduledBackup(ctx, inst, e)
 	if err != nil {
 		if errors.Is(err, host.ErrNeedsRoot) {
-			return nil, ui.Refused(fmt.Sprintf("Automatic upgrades pass --backup without-uploads, which rexctl %s may not know. Changing that needs root.", to), "Run sudo rexctl upgrade with the same flags.")
+			return nil, ui.Refused(fmt.Sprintf("Automatic upgrades pass --backup without-uploads, which rexctl %s may not know. Changing that needs root, and this machine has no sudo.", to), "Run "+rootAgain(inst.Dir)+" as root.")
 		}
 		return nil, ui.Wrap(err, fmt.Sprintf("Couldn't change automatic upgrades for rexctl %s.", to), "Run rexctl auto-upgrade on again without --backup and with your other flags, then run this upgrade again.")
 	}
@@ -500,6 +513,9 @@ func resumeUpgrade(ctx context.Context, app *App, f *upgradeFlags) error {
 	inst, err := app.Instance()
 	if err != nil {
 		return err
+	}
+	if inst.State.IsNative() {
+		return resumeNativeUpgrade(ctx, app, inst, f)
 	}
 	return app.Change(ctx, inst, func(e *engine.Engine) error {
 		p := inst.State.Upgrade
@@ -1695,7 +1711,7 @@ func selfUpdateError(err error, inst *instance.Instance) error {
 	case errors.Is(err, context.Canceled):
 		return err
 	case errors.Is(err, fs.ErrPermission):
-		fix := fmt.Sprintf("Run sudo rexctl upgrade --dir %s.", inst.Dir)
+		fix := "Run " + sudoAgain(inst.Dir) + "."
 		switch {
 		case runtime.GOOS == "windows":
 			fix = "Run rexctl upgrade from a terminal opened as administrator."
@@ -1771,7 +1787,7 @@ func fluxerName(short string) string {
 
 func versionPair(a, b string) (string, string) {
 	sa, sb := release.Short(a), release.Short(b)
-	if sa == sb {
+	if sa == sb || !release.Valid(a) || !release.Valid(b) {
 		return a, b
 	}
 	return sa, sb

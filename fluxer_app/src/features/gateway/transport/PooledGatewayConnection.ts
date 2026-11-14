@@ -9,6 +9,7 @@ import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
 import {resolveAccountInstanceLabel} from '@app/features/auth/AccountDisplayUtils';
 import AccountAccess from '@app/features/auth/state/AccountAccess';
 import Authentication from '@app/features/auth/state/Authentication';
+import {clearBootState} from '@app/features/boot_state/BootStateBridge';
 import Channels from '@app/features/channel/state/Channels';
 import ForumPosts from '@app/features/forum/state/ForumPosts';
 import ForumReadState from '@app/features/forum/state/ForumReadState';
@@ -463,7 +464,7 @@ export class PooledGatewayConnection {
 		LocalPresence.updatePresence();
 		const presence = LocalPresence.getGatewayPresence();
 		const compression: CompressionType = 'zstd-stream';
-		logger.info(`Using gateway compression: ${compression}`);
+		logger.debug(`Using gateway compression: ${compression}`);
 		let identifyFlags = 0;
 		identifyFlags |= GatewayIdentifyFlags.DEBOUNCE_MESSAGE_REACTIONS;
 		identifyFlags |= GatewayIdentifyFlags.CHANNEL_THREADS;
@@ -487,6 +488,7 @@ export class PooledGatewayConnection {
 			initialGuildId,
 			isMobileLayout: () => MobileLayout.isMobileLayout(),
 			geo: () => ({latitude: GeoIP.latitude, longitude: GeoIP.longitude}),
+			showsRestoredView: () => Initialization.isStale,
 			logName: gatewayLogName(accountKey),
 		});
 		this.installSocketWiring(socket, generation, accountKey);
@@ -982,6 +984,7 @@ export class PooledGatewayConnection {
 	}
 
 	private async completeGatewayAuthenticationFailure(error: GatewayAuthenticationFailedError): Promise<void> {
+		const bootStateCleared = error.accountKey === null ? Promise.resolve() : clearBootState(error.accountKey);
 		const reset = resetClientState({reason: ResetClientStateReason.GATEWAY_AUTH_FAILURE, keepDrafts: true});
 		try {
 			LayerManager.closeAll();
@@ -990,7 +993,7 @@ export class PooledGatewayConnection {
 			logger.error('Failed to retire the gateway after authentication failure', error);
 		}
 		try {
-			await reset;
+			await Promise.all([reset, bootStateCleared]);
 		} catch (error) {
 			logger.error('Failed to clear client state after gateway authentication failure', error);
 		}

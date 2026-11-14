@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import SudoVerificationModal from '@app/features/auth/components/modals/SudoVerificationModal';
 import Sudo from '@app/features/auth/state/AuthSudo';
 import type {SudoVerificationPayload} from '@app/features/auth/types/AuthSudoTypes';
+import {createDefaultLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {AccountScopedWork, accountScopedWorkAbortError} from '@app/features/platform/state/AccountScopedWork';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {HttpMethod} from '@app/features/platform/types/TransportTypes';
-import {isAbortError} from '@app/features/platform/utils/PlatformHelpers';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
@@ -17,6 +16,11 @@ import WebAuthnCredentials from '@app/features/user/state/WebAuthnCredentials';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {MfaMethod, SudoPromptStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable, runInAction} from 'mobx';
+
+const SudoVerificationModal = createDefaultLoadableComponent<Record<string, never>>({
+	displayName: 'SudoVerificationModal',
+	load: () => import('@app/features/auth/components/modals/SudoVerificationModal'),
+});
 
 interface SudoErrorPayload {
 	has_mfa?: boolean;
@@ -125,11 +129,12 @@ class SudoPrompt {
 				if (token) {
 					Sudo.setToken(token);
 				}
-				this.handleTokenReceived(token);
+				this.settle();
 			},
 			invalidate: Sudo.clearToken,
 			prompt: this.handleSudoPrompt,
 			onFailure: this.onSudoVerificationFailed,
+			onSettled: this.settle,
 		});
 		void makeSyncedField(this, {
 			field: 'sudoPrompt',
@@ -250,7 +255,7 @@ class SudoPrompt {
 		this.cleanup();
 	}
 
-	handleTokenReceived(_token: string | null): void {
+	settle(): void {
 		if (!this.isOpen && !this.isVerifying) {
 			return;
 		}
@@ -260,10 +265,6 @@ class SudoPrompt {
 	private onSudoVerificationFailed = (error: unknown): void => {
 		runInAction(() => {
 			this.isVerifying = false;
-			if (isAbortError(error)) {
-				this.cleanup();
-				return;
-			}
 			const responseErr = error instanceof HttpError ? error : null;
 			this.rawError = responseErr;
 			this.mergeFromError(error);

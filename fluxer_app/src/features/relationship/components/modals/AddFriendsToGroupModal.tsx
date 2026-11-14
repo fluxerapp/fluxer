@@ -103,7 +103,10 @@ export const AddFriendsToGroupModal = observer((props: AddFriendsToGroupModalPro
 					data-flx="relationship.add-friends-to-group-modal.friend-selector"
 				/>
 			</Modal.Content>
-			<Modal.Footer data-flx="relationship.add-friends-to-group-modal.modal-footer">
+			<Modal.Footer
+				className={selectorStyles.selectorFooter}
+				data-flx="relationship.add-friends-to-group-modal.modal-footer"
+			>
 				<CopyLinkSection
 					label={
 						hideInviteLinks ? (

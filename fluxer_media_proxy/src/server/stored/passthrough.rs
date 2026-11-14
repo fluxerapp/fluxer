@@ -49,6 +49,18 @@ pub(in crate::server) enum PassthroughDisposition<'a> {
     },
 }
 
+impl PassthroughDisposition<'_> {
+    fn requested_download(&self) -> bool {
+        matches!(
+            self,
+            Self::Attachment {
+                requested_download: true,
+                ..
+            }
+        )
+    }
+}
+
 pub(in crate::server) async fn serve_stored_raw(
     app: &Arc<AppState>,
     method: Method,
@@ -82,9 +94,8 @@ pub(in crate::server) async fn serve_stored_passthrough_stream(
     if method == Method::HEAD {
         return serve_stored_passthrough_head(app, bucket, key, headers, &disposition).await;
     }
-    if app.cfg.mode == DeploymentMode::Mp
-        && image_extension_from_filename(key) == Some(AssetExtension::Svg)
-    {
+    let rasterizes_svg = app.cfg.mode == DeploymentMode::Mp && !disposition.requested_download();
+    if rasterizes_svg && image_extension_from_filename(key) == Some(AssetExtension::Svg) {
         if let Err(err) = app.store.head_object(bucket, key).await {
             return storage_error_response(key, err);
         }
@@ -106,7 +117,7 @@ pub(in crate::server) async fn serve_stored_passthrough_stream(
         return passthrough_unsatisfiable_response(app, bucket, key, object.total_length).await;
     }
     let content_type = passthrough_content_type(&object.content_type, key);
-    if app.cfg.mode == DeploymentMode::Mp && is_svg_content_type(&content_type) {
+    if rasterizes_svg && is_svg_content_type(&content_type) {
         return serve_stored_passthrough_svg(app, method, bucket, key, &disposition).await;
     }
     let total_len = match passthrough_total_len(app, bucket, key, object.total_length).await {
@@ -136,6 +147,7 @@ async fn serve_stored_passthrough_head(
     };
     let content_type = passthrough_content_type(&head.content_type, key);
     if app.cfg.mode == DeploymentMode::Mp
+        && !disposition.requested_download()
         && (is_svg_content_type(&content_type)
             || image_extension_from_filename(key) == Some(AssetExtension::Svg))
     {

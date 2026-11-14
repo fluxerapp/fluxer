@@ -13,7 +13,7 @@ import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
-import {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
+import type {OperatorPassLabsRoleService} from '@app/api/operator_pass/OperatorPassLabsRole';
 import {
 	getSubscriptionCurrentPeriodStart,
 	getSubscriptionPremiumPeriodEnd,
@@ -39,6 +39,7 @@ export class StripePremiumService {
 		private gatewayService: IGatewayService,
 		private guildRepository: GuildRepository,
 		private guildService: GuildService,
+		private labsRoleService: Pick<OperatorPassLabsRoleService, 'resyncLabsRoles'>,
 	) {}
 
 	async setPremiumFromSubscriptionPeriod(
@@ -114,6 +115,7 @@ export class StripePremiumService {
 			user.toRow(),
 		);
 		await dispatchUserUpdate(this.gatewayService, updatedUser);
+		await this.labsRoleService.resyncLabsRoles(userId);
 		Logger.debug({userId, visionarySequence}, 'Lifetime premium granted');
 	}
 
@@ -214,6 +216,7 @@ export class StripePremiumService {
 				user.toRow(),
 			);
 			await dispatchUserUpdate(this.gatewayService, updatedUser);
+			await this.labsRoleService.resyncLabsRoles(userId);
 			Logger.debug({userId, lifetimeSequence: visionarySequenceNumber}, 'Lifetime premium granted from gift');
 			return;
 		}
@@ -287,7 +290,7 @@ export class StripePremiumService {
 	async rejoinVisionariesGuild(userId: UserID, tierContext: TierContext): Promise<void> {
 		await this.assertHasVisionaryCommunityAccess(userId);
 		await this.joinVisionariesGuild(userId, tierContext);
-		await this.syncLabsVisionaryRole(userId);
+		await this.labsRoleService.resyncLabsRoles(userId);
 	}
 
 	private async assertHasVisionaryCommunityAccess(userId: UserID): Promise<void> {
@@ -334,7 +337,6 @@ export class StripePremiumService {
 				throw error;
 			}
 		}
-		await this.syncLabsVisionaryRole(userId);
 	}
 
 	private async joinVisionariesGuild(userId: UserID, tierContext?: TierContext): Promise<void> {
@@ -376,15 +378,5 @@ export class StripePremiumService {
 				'Failed to add visionary role to a rejoining visionary.',
 			);
 		}
-	}
-
-	private async syncLabsVisionaryRole(userId: UserID): Promise<void> {
-		const user = await this.userRepository.findUnique(userId);
-		await new OperatorPassLabsRoleService(this.guildRepository, this.guildService).resyncLabsRoles({
-			id: userId,
-			premiumType: UserPremiumTypes.LIFETIME,
-			premiumFlags: user?.premiumFlags ?? 0,
-			hiddenProfileBadges: user?.hiddenProfileBadges ?? new Set(),
-		});
 	}
 }

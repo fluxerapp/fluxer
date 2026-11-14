@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveFormattingLocale} from '@fluxer/constants/src/Locales';
+
 const rtfCache = new Map<string, Intl.RelativeTimeFormat>();
 
 export function getRelativeTimeFormat(locale: string): Intl.RelativeTimeFormat {
@@ -7,7 +9,7 @@ export function getRelativeTimeFormat(locale: string): Intl.RelativeTimeFormat {
 	if (cached !== undefined) {
 		return cached;
 	}
-	const formatter = new Intl.RelativeTimeFormat(locale, {numeric: 'auto'});
+	const formatter = new Intl.RelativeTimeFormat(resolveFormattingLocale(locale), {numeric: 'auto'});
 	rtfCache.set(locale, formatter);
 	return formatter;
 }

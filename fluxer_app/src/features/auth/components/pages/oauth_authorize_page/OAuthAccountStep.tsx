@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {forwardOneShotRouteToTarget} from '@app/features/app/domain_migration/DomainMigrationBrowser';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {AccountList} from '@app/features/auth/components/accounts/AccountList';
@@ -104,6 +105,9 @@ export const OAuthAccountStep: React.FC<OAuthAccountStepProps> = observer(
 			setFocusSignInOnShow(true);
 		}, []);
 		const startAddAccount = useCallback(() => {
+			if (forwardOneShotRouteToTarget()) {
+				return;
+			}
 			setSignInPurpose({type: AccountSwitcherAuthPurposeType.ADD, instance: RuntimeConfig.getSnapshotOrNull()});
 			setFocusSignInOnShow(true);
 		}, []);

@@ -3,6 +3,7 @@
 import styles from '@app/features/guild/components/UploadSlotInfo.module.css';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Button} from '@app/features/ui/button/Button';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {useLingui} from '@lingui/react';
 import {UploadIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
@@ -19,8 +20,8 @@ interface UploadSlotInfoProps {
 
 export const UploadSlotInfo: React.FC<UploadSlotInfoProps> = observer(
 	({title, currentCount, maxCount, description, uploadButtonText, onUploadClick}) => {
-		const {i18n} = useLingui();
-		const numberFormat = getCachedNumberFormat(i18n.locale);
+		useLingui();
+		const numberFormat = getCachedNumberFormat(getFormattingLocale());
 		const maxSlotCount = maxCount === Number.POSITIVE_INFINITY ? '∞' : numberFormat.format(maxCount);
 		return (
 			<div className={styles.container} data-flx="guild.upload-slot-info.container">

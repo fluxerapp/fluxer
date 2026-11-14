@@ -249,7 +249,7 @@ function applyParsedSnapshot(storageKey: string, parsed: ParsedSnapshot, selfUse
 		}
 		GuildList.handleGatewayReady(parsed.guilds);
 		GuildCount.handleGatewayReady(parsed.guilds);
-		GuildMembers.handleGatewayReady(parsed.guilds);
+		GuildMembers.handleGatewayReady(parsed.guilds, {keepRestoredMembers: false});
 		GuildAvailability.hydrateFromSnapshot(parsed.unavailableGuilds);
 		const threadGuilds = guildsWithChannels(parsed);
 		ThreadGuilds.handleGatewayReady(threadGuilds);
@@ -273,6 +273,158 @@ function applyParsedSnapshot(storageKey: string, parsed: ParsedSnapshot, selfUse
 			UserConnection.setConnections(parsed.userConnections);
 		}
 	});
+}
+
+export function hydrateVisibleSnapshot(
+	storageKey: string,
+	selfUserId: string,
+	entries: StateSnapshotEntries,
+	mentionCounts: ReadonlyMap<string, number>,
+	guildId: string | null,
+	visibleIds: Set<string>,
+): Generator<void> {
+	const snapshot = parseSnapshot(entries, selfUserId);
+	const checkedSelfUser = defaultDependencies.resolveCheckedSelfUser(storageKey);
+	if (checkedSelfUser !== null && checkedSelfUser.id !== selfUserId) {
+		throw new Error(`Checked self user ${checkedSelfUser.id} does not match snapshot user ${selfUserId}`);
+	}
+	const parsed = {
+		...snapshot,
+		guilds: guildsWithChannels(snapshot),
+		selfUser: checkedSelfUser === null ? snapshot.selfUser : checkedSelfUser,
+		readStates: overlayMentionCounts(snapshot.readStates, mentionCounts),
+	};
+	for (const channel of parsed.channels) {
+		if (!visibleIds.has(channel.id)) continue;
+		for (const id of channel.topic?.match(/\d+/g) ?? []) visibleIds.add(id);
+	}
+	const visibleGuildIds = new Set<string>();
+	if (guildId !== null) visibleGuildIds.add(guildId);
+	for (const guild of parsed.guilds) {
+		if (
+			guild.channels.some((channel) => visibleIds.has(channel.id)) ||
+			guild.threads?.some((thread) => visibleIds.has(thread.id))
+		)
+			visibleGuildIds.add(guild.id);
+	}
+	for (const [id, states] of parsed.voiceStates) {
+		if (states.some((state) => state.user_id === selfUserId)) visibleGuildIds.add(id);
+		for (const state of states) visibleIds.add(state.user_id);
+	}
+	const visibleChannels = parsed.channels.filter(
+		(channel) => channel.guild_id == null || visibleGuildIds.has(channel.guild_id),
+	);
+	for (const channel of visibleChannels) {
+		for (const recipient of channel.recipients ?? []) visibleIds.add(recipient.id);
+	}
+	for (const relationship of parsed.relationships) visibleIds.add(relationship.id);
+	for (const [id, presence] of parsed.presences) {
+		if (visibleIds.has(id) && presence.customStatus?.emoji_id) visibleIds.add(presence.customStatus.emoji_id);
+	}
+	const visibleEmojiGuilds = new Set(
+		parsed.guildEmojis
+			.filter(({guildId, emojis}) => visibleGuildIds.has(guildId) || emojis.some((emoji) => visibleIds.has(emoji.id)))
+			.map(({guildId}) => guildId),
+	);
+	const visibleStickerGuilds = new Set(
+		parsed.guildStickers
+			.filter(
+				({guildId, stickers}) => visibleGuildIds.has(guildId) || stickers.some((sticker) => visibleIds.has(sticker.id)),
+			)
+			.map(({guildId}) => guildId),
+	);
+	const visibleChannelIds = new Set(visibleChannels.map((channel) => channel.id));
+	const selectedGuilds = parsed.guilds.filter((guild) => visibleGuildIds.has(guild.id));
+	for (const guild of selectedGuilds) {
+		for (const thread of guild.threads ?? []) visibleChannelIds.add(thread.id);
+	}
+	runInAction(() => {
+		UserPinnedDM.setPinnedDMs(parsed.accountMetadata.pinnedDmIds);
+		AuthSession.handleGatewayReady(parsed.accountMetadata.authSessionIdHash);
+		Users.hydrateFromSnapshot(storageKey, parsed.selfUser, parsed.users);
+		Relationships.hydrateFromSnapshot(parsed.relationships);
+		Guilds.hydrateFromSnapshot(parsed.guilds);
+		if (parsed.userSettings !== null) UserSettings.handleGatewayReady(parsed.userSettings);
+		GuildList.handleGatewayReady(parsed.guilds);
+		GuildCount.handleGatewayReady(parsed.guilds);
+		GuildMembers.handleGatewayReady(selectedGuilds, {keepRestoredMembers: false});
+		GuildAvailability.hydrateFromSnapshot(parsed.unavailableGuilds);
+		ThreadGuilds.handleGatewayReady(selectedGuilds);
+		Channels.hydrateFromSnapshot(visibleChannels, selfUserId);
+		ChannelThreads.handleGatewayReady(selectedGuilds);
+		Permission.handleGatewayReady();
+		for (const guild of selectedGuilds) GuildVerification.handleGuildCreate(guild);
+		UserGuildSettings.hydrateFromSnapshot(parsed.userGuildSettings);
+		ReadStates.hydrateFromSnapshot(new Map(Array.from(parsed.readStates).filter(([id]) => visibleChannelIds.has(id))));
+		Emoji.hydrateFromSnapshot(parsed.guildEmojis.filter(({guildId}) => visibleEmojiGuilds.has(guildId)));
+		Sticker.hydrateFromSnapshot(parsed.guildStickers.filter(({guildId}) => visibleStickerGuilds.has(guildId)));
+		Presence.hydrateFromSnapshot(
+			new Map(Array.from(parsed.presences).filter(([id]) => visibleIds.has(id))),
+			selfUserId,
+		);
+		seedVoiceStatesFromReady(
+			parsed.guilds.map((guild) => ({...guild, voice_states: parsed.voiceStates.get(guild.id) ?? []})),
+		);
+	});
+	return hydrateRemainingSnapshot();
+
+	function* hydrateRemainingSnapshot(): Generator<void> {
+		for (const guild of parsed.guilds) {
+			if (visibleGuildIds.has(guild.id)) continue;
+			GuildMembers.handleGuildCreate({...guild, members: []});
+			yield;
+			for (const member of guild.members) {
+				GuildMembers.hydrateIfMissing(guild.id, member);
+				yield;
+			}
+			ThreadGuilds.handleGuild(guild);
+			Permission.handleGuildRole(guild.id);
+			yield;
+			for (const channel of guild.channels) {
+				Channels.handleChannelCreate({channel});
+				Permission.handleChannelUpdate(channel.id);
+				yield;
+			}
+			for (const thread of guild.threads ?? []) {
+				Channels.upsertThread(thread);
+				Permission.handleChannelUpdate(thread.id);
+				yield;
+			}
+			ChannelThreads.hydrateGuildFromSnapshot(guild);
+			GuildVerification.handleGuildCreate(guild);
+			yield;
+		}
+		for (const [channelId, row] of parsed.readStates) {
+			if (visibleChannelIds.has(channelId)) continue;
+			ReadStates.hydrateSnapshotEntry(channelId, row);
+			yield;
+		}
+		for (const data of parsed.guildEmojis) {
+			if (visibleEmojiGuilds.has(data.guildId)) continue;
+			Emoji.hydrateFromSnapshot([data], {append: true});
+			yield;
+		}
+		for (const data of parsed.guildStickers) {
+			if (visibleStickerGuilds.has(data.guildId)) continue;
+			Sticker.hydrateFromSnapshot([data], {append: true});
+			yield;
+		}
+		for (const [id, row] of parsed.presences) {
+			if (visibleIds.has(id) || id === selfUserId) continue;
+			Presence.hydrateSnapshotEntry(id, row);
+			yield;
+		}
+		MemberSearch.handleGatewayReady();
+		yield;
+		UserNote.loadNotes(parsed.accountMetadata.notes);
+		yield;
+		FavoriteMemes.loadFavoriteMemes(parsed.accountMetadata.favoriteMemes);
+		yield;
+		RtcRegions.setRegions(parsed.accountMetadata.rtcRegions as Array<RtcRegionResponse>);
+		WebAuthnCredentials.setCredentials(parsed.accountMetadata.webAuthnCredentials);
+		if (parsed.userConnections === null) UserConnection.handleGatewayReady();
+		else UserConnection.setConnections(parsed.userConnections);
+	}
 }
 
 function overlayMentionCounts(

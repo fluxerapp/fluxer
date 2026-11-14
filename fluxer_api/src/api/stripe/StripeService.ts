@@ -58,6 +58,7 @@ export class StripeService {
 			this.gatewayService,
 			this.guildRepository,
 			this.guildService,
+			operatorPassServices.roleService,
 		);
 		this.premiumState = new PremiumStateService(
 			this.userRepository,

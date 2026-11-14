@@ -43,7 +43,7 @@ export class VideoSubscriptionManager extends PublicationSubscriptionManager {
 			logger.warn('Participant not found', {participantIdentity});
 			return;
 		}
-		logger.info('Subscribing to video', {participantIdentity, quality: initialQuality});
+		logger.debug('Subscribing to video', {participantIdentity, quality: initialQuality});
 		const cameraPublication = this.findCameraPublication(participant);
 		if (!cameraPublication) {
 			logger.debug('No camera publication found', {participantIdentity});
@@ -65,9 +65,9 @@ export class VideoSubscriptionManager extends PublicationSubscriptionManager {
 			logger.debug('Not subscribed', {participantIdentity});
 			return;
 		}
-		logger.info('Unsubscribing from video', {participantIdentity});
+		logger.debug('Unsubscribing from video', {participantIdentity});
 		this.transition({type: 'subscription.unsubscribe', participantIdentity, source: VoiceTrackSource.Camera});
-		logger.info('Video unsubscribed successfully', {participantIdentity});
+		logger.debug('Video unsubscribed successfully', {participantIdentity});
 	}
 
 	setEnabled(participantIdentity: string, enabled: boolean): void {

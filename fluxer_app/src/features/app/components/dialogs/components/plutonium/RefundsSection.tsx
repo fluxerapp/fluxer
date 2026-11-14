@@ -32,9 +32,9 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import {getFormattedShortDate} from '@app/features/user/utils/DateFormatting';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {getFormattedShortDate} from '@fluxer/date_utils/src/DateFormatting';
 import {formatMinorUnitPrice} from '@fluxer/number_utils/src/PriceFormatting';
 import type {
 	PlutoniumWithdrawalResponse,
@@ -176,7 +176,7 @@ function formatShortDay(isoTimestamp: string | null): string | null {
 	if (!isoTimestamp) return null;
 	const date = new Date(isoTimestamp);
 	if (Number.isNaN(date.getTime())) return null;
-	return getFormattedShortDate(date, getCurrentLocale());
+	return getFormattedShortDate(date);
 }
 
 function showsRefundRow(eligibility: SelfServeRefundEligibilityResponse | null): boolean {

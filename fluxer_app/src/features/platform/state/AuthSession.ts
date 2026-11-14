@@ -4,6 +4,7 @@ import {Endpoints} from '@app/features/app/constants/Endpoints';
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
 import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorageContract';
 import {getAccountKey} from '@app/features/auth/state/AccountStorageKey';
+import {clearBootState} from '@app/features/boot_state/BootStateBridge';
 import type {AccountScopedWorkSuspension} from '@app/features/platform/state/AccountScopedWork';
 import {AuthSessionAccountCatalog} from '@app/features/platform/state/auth_session/AuthSessionAccountCatalog';
 import {
@@ -42,8 +43,10 @@ import {AuthSessionStoredAccountResolver} from '@app/features/platform/state/aut
 import {AuthSessionTransitionGate} from '@app/features/platform/state/auth_session/AuthSessionTransitionGate';
 import {
 	emptyStoredSessionMirror,
+	readDesktopSessionMirror,
 	type StoredSessionMirror,
 } from '@app/features/platform/state/auth_session/SessionCredentialMirror';
+import {getPersistentStorageBackend} from '@app/features/platform/state/PersistentStorageBackend';
 import {mirrorGatewayPrebootSession} from '@app/features/platform/state/PrebootMirror';
 import {instanceTargetFromSnapshot} from '@app/features/platform/transport/InstanceHTTP';
 import {HttpError} from '@app/features/platform/types/EndpointError';
@@ -413,6 +416,8 @@ export class AuthSessionManager {
 					logger.warn(
 						`The active session could not be restored (${initialization.reason}), keeping its credential mirror intact`,
 					);
+				} else {
+					void this.reportSessionLostByWebStorage(catalog.source);
 				}
 				mirrorGatewayPrebootSession(false);
 				this.send({type: 'initialize.noToken'});
@@ -420,7 +425,7 @@ export class AuthSessionManager {
 			}
 			const {mirror, resolution} = initialization;
 			if (resolution.usedMirroredCredential) {
-				logger.info(`Recovered the durable credential for ${resolution.accountKey} from the session mirror`);
+				logger.debug(`Recovered the durable credential for ${resolution.accountKey} from the session mirror`);
 			}
 			await this.restorer.activate(resolution, mirror, () => {
 				this.send({
@@ -437,6 +442,20 @@ export class AuthSessionManager {
 			this.send({type: 'initialize.failed', error: failure});
 			this._initPromise = null;
 			throw failure;
+		}
+	}
+
+	private async reportSessionLostByWebStorage(accountSource: string): Promise<void> {
+		try {
+			const desktop = await readDesktopSessionMirror();
+			if (desktop === null || desktop.storageKey === null || desktop.token === null) {
+				return;
+			}
+			logger.warn(
+				`Booting signed out although the desktop store still holds the session for ${desktop.storageKey} (account source: ${accountSource}, app storage backend: ${getPersistentStorageBackend().kind})`,
+			);
+		} catch (error) {
+			logger.warn('The desktop session mirror could not be read for diagnostics', error);
 		}
 	}
 
@@ -521,6 +540,7 @@ export class AuthSessionManager {
 			return;
 		}
 		this.send({type: 'account.markInvalid', accountKey: resolved.accountKey});
+		void clearBootState(resolved.accountKey);
 		void this.deps.accountStorage
 			.updateAccountValidity(resolved.accountKey, false, expectedToken)
 			.catch((error: unknown) => {
@@ -616,13 +636,22 @@ export class AuthSessionManager {
 
 	async logout(options: {notifyServer?: boolean} = {}): Promise<void> {
 		await this.initialize();
+		const accountKey = this.currentAccountKey;
+		if (accountKey !== null) {
+			await clearBootState(accountKey);
+		}
 		await this.lifecycle.logout(options);
 	}
 
 	async removeAccount(accountKey: string): Promise<void> {
 		await this.initialize();
+		const resolved = this.accountCatalog.resolve(this.accounts, accountKey);
+		if (resolved !== null) {
+			await clearBootState(resolved.accountKey);
+		}
 		await this.lifecycle.removeAccount(accountKey);
 	}
+
 	handleConnectionReady(): void {
 		this.send({type: 'connection.ready'});
 	}
@@ -663,7 +692,10 @@ export class AuthSessionManager {
 		const cleanupErrors: Array<unknown> = [];
 		if (resolved !== null) {
 			try {
-				await this.deps.accountStorage.updateAccountValidity(resolved.accountKey, false);
+				await Promise.all([
+					this.deps.accountStorage.updateAccountValidity(resolved.accountKey, false),
+					clearBootState(resolved.accountKey),
+				]);
 			} catch (error) {
 				cleanupErrors.push(error);
 			}

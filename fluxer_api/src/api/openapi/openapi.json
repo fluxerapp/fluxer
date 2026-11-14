@@ -156,7 +156,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Reissues the expiring signature on attachment URLs. Returns one entry per requested URL, in the order they were requested, each pairing the URL exactly as it was sent with a freshly signed copy. A URL that is not an attachment URL of this instance is returned unchanged. No membership or existence check is performed.",
+				"description": "Reissues the expiring signature on attachment URLs. Returns one entry per requested URL, in the order they were requested, each pairing the URL exactly as it was sent with a freshly signed copy. A URL that is not an attachment URL of this instance is returned unchanged. No membership or existence check is performed. When the instance serves attachments through the API, the refreshed URL points at the API and has no signature.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -8805,6 +8805,73 @@
 			}
 		},
 		"/guilds/{guild_id}/bans/{user_id}": {
+			"get": {
+				"operationId": "get_guild_ban",
+				"summary": "Get guild ban",
+				"tags": ["Guilds"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildBanResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Get guild ban. Requires ban_members permission. Returns the ban for the specified user including the ban reason and expiry time.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the guild", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the guild"
+					},
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the user"
+					}
+				]
+			},
 			"put": {
 				"operationId": "ban_guild_member",
 				"summary": "Ban guild member",
@@ -18185,6 +18252,63 @@
 				},
 				"description": "Lists all OAuth2 applications owned by the authenticated user. Includes application credentials, metadata, and configuration.",
 				"security": [{"sessionToken": []}]
+			}
+		},
+		"/users/@me/attachment-token": {
+			"post": {
+				"operationId": "create_attachment_token",
+				"summary": "Create an attachment token",
+				"tags": ["Messages"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AttachmentAccessTokenResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Creates a token for the one attachment in the given link, for places that cannot send a header, such as a video player, a download or a link opened in the browser. The token works for five minutes, only for that file and only while the session that asked for it stays signed in and can still read the message. Only active when the instance serves attachments through the API.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AttachmentAccessTokenRequest"}}}
+				}
 			}
 		},
 		"/users/@me/authorized-ips": {
@@ -29207,6 +29331,10 @@
 						"items": {"$ref": "#/components/schemas/SnowflakeType"}
 					},
 					"locale": {"$ref": "#/components/schemas/Locale"},
+					"regional_format": {
+						"anyOf": [{"type": "string", "pattern": "^(?:system|[a-z]{2,3}-(?:[A-Z]{2}|\\d{3}))$"}, {"type": "null"}],
+						"description": "The locale used to write dates, times and numbers, such as de-DE, or \"system\" for the device locale. Null follows the interface language. Currency follows the billing country either way."
+					},
 					"restricted_guilds": {
 						"description": "Guilds with DM restrictions",
 						"maxItems": 10000,
@@ -29291,6 +29419,10 @@
 						"description": "AFK timeout in seconds (60-600)"
 					},
 					"time_format": {"$ref": "#/components/schemas/TimeFormatTypesInput"},
+					"timestamp_format": {
+						"$ref": "#/components/schemas/TimestampFormatTypesInput",
+						"description": "Timestamp format preset"
+					},
 					"developer_mode": {"type": "boolean", "description": "Developer mode enabled"},
 					"trusted_domains": {
 						"maxItems": 1000,
@@ -29379,6 +29511,10 @@
 					},
 					"theme": {"type": "string", "description": "The UI theme preference"},
 					"locale": {"$ref": "#/components/schemas/Locale"},
+					"regional_format": {
+						"anyOf": [{"type": "string", "pattern": "^(?:system|[a-z]{2,3}-(?:[A-Z]{2}|\\d{3}))$"}, {"type": "null"}],
+						"description": "The locale used to write dates, times and numbers, such as de-DE, or \"system\" for the device locale. Null follows the interface language. Currency follows the billing country either way."
+					},
 					"restricted_guilds": {
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
@@ -29461,6 +29597,10 @@
 						"$ref": "#/components/schemas/TimeFormatTypes",
 						"description": "The preferred time format setting"
 					},
+					"timestamp_format": {
+						"$ref": "#/components/schemas/TimestampFormatTypes",
+						"description": "The preferred timestamp format preset"
+					},
 					"developer_mode": {"type": "boolean", "description": "Whether developer mode is enabled"},
 					"trusted_domains": {
 						"type": "array",
@@ -29532,6 +29672,7 @@
 					"status",
 					"theme",
 					"locale",
+					"regional_format",
 					"restricted_guilds",
 					"bot_restricted_guilds",
 					"default_guilds_restricted",
@@ -29552,6 +29693,7 @@
 					"custom_status",
 					"afk_timeout",
 					"time_format",
+					"timestamp_format",
 					"developer_mode",
 					"trusted_domains",
 					"default_hide_muted_channels",
@@ -30556,7 +30698,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -30567,7 +30709,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -30943,7 +31085,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -30954,7 +31096,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -32121,6 +32263,31 @@
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/BillingDocumentResponse"}
 			},
+			"AttachmentAccessTokenRequest": {
+				"type": "object",
+				"properties": {
+					"url": {
+						"type": "string",
+						"maxLength": 2048,
+						"description": "The attachment link on the API that the token is for"
+					}
+				},
+				"required": ["url"]
+			},
+			"AttachmentAccessTokenResponse": {
+				"type": "object",
+				"properties": {
+					"token": {"type": "string", "description": "Value for the mt query parameter on the link it was made for"},
+					"expires_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the token stops working"
+					}
+				},
+				"required": ["token", "expires_at"],
+				"additionalProperties": false
+			},
 			"ApplicationListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/ApplicationResponse"}},
 			"AppAttestKeyRegisterRequest": {
 				"type": "object",
@@ -32626,7 +32793,10 @@
 				"description": "The locale code for the user interface language",
 				"x-enumNames": [
 					"AR",
+					"BE",
 					"BG",
+					"BN",
+					"CA",
 					"CS",
 					"DA",
 					"DE",
@@ -32636,6 +32806,7 @@
 					"ES_ES",
 					"ES_419",
 					"FI",
+					"FIL",
 					"FR",
 					"HE",
 					"HI",
@@ -32646,14 +32817,20 @@
 					"JA",
 					"KO",
 					"LT",
+					"LV",
 					"NL",
 					"NO",
 					"PL",
 					"PT_BR",
+					"PT_PT",
 					"RO",
 					"RU",
+					"SK",
+					"SL",
+					"SQ",
 					"SV_SE",
 					"TH",
+					"TOK",
 					"TR",
 					"UK",
 					"VI",
@@ -32662,7 +32839,10 @@
 				],
 				"x-enumDescriptions": [
 					"Arabic",
+					"Belarusian",
 					"Bulgarian",
+					"Bangla",
+					"Catalan",
 					"Czech",
 					"Danish",
 					"German",
@@ -32672,6 +32852,7 @@
 					"Spanish (Spain)",
 					"Spanish (Latin America)",
 					"Finnish",
+					"Filipino",
 					"French",
 					"Hebrew",
 					"Hindi",
@@ -32682,14 +32863,20 @@
 					"Japanese",
 					"Korean",
 					"Lithuanian",
+					"Latvian",
 					"Dutch",
 					"Norwegian",
 					"Polish",
 					"Portuguese (Brazil)",
+					"Portuguese (Portugal)",
 					"Romanian",
 					"Russian",
+					"Slovak",
+					"Slovenian",
+					"Albanian",
 					"Swedish",
 					"Thai",
+					"Toki Pona",
 					"Turkish",
 					"Ukrainian",
 					"Vietnamese",
@@ -32698,7 +32885,10 @@
 				],
 				"enum": [
 					"ar",
+					"be",
 					"bg",
+					"bn",
+					"ca",
 					"cs",
 					"da",
 					"de",
@@ -32708,6 +32898,7 @@
 					"es-ES",
 					"es-419",
 					"fi",
+					"fil",
 					"fr",
 					"he",
 					"hi",
@@ -32718,14 +32909,20 @@
 					"ja",
 					"ko",
 					"lt",
+					"lv",
 					"nl",
 					"no",
 					"pl",
 					"pt-BR",
+					"pt-PT",
 					"ro",
 					"ru",
+					"sk",
+					"sl",
+					"sq",
 					"sv-SE",
 					"th",
+					"tok",
 					"tr",
 					"uk",
 					"vi",
@@ -35581,7 +35778,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -35700,7 +35897,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -36093,6 +36290,36 @@
 					}
 				}
 			},
+			"GuildBanResponse": {
+				"type": "object",
+				"properties": {
+					"user": {"description": "The banned user", "$ref": "#/components/schemas/UserPartialResponse"},
+					"reason": {"description": "The reason for the ban", "type": ["string", "null"]},
+					"moderator_id": {
+						"description": "The ID of the moderator who issued the ban",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"banned_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "ISO8601 timestamp of when the ban was issued"
+					},
+					"expires_at": {
+						"description": "ISO8601 timestamp of when the ban expires (null if permanent)",
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						]
+					}
+				},
+				"required": ["user", "moderator_id", "banned_at"],
+				"additionalProperties": false
+			},
 			"GuildBanListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/GuildBanResponse"}},
 			"AuditLogActionTypeInput": {
 				"description": "The type of action that occurred",
@@ -36294,7 +36521,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
 							},
 							{"type": "null"}
 						]
@@ -38305,7 +38532,11 @@
 						"description": "Text for the SSO sign-in button, or null when the client shows its default label",
 						"type": ["string", "null"]
 					},
-					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
+					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"},
+					"provider_trait": {
+						"description": "User trait that marks an account as linked to the current SSO provider",
+						"type": "string"
+					}
 				},
 				"required": ["enabled", "enforced", "username_from_provider", "display_name", "button_label", "redirect_uri"],
 				"additionalProperties": false
@@ -39443,12 +39674,6 @@
 						"$ref": "#/components/schemas/InstanceBuiltInGuildBadgeImagesSchema"
 					},
 					"hidden_built_in_guild_badges": {"$ref": "#/components/schemas/InstanceHiddenBuiltInGuildBadgesSchema"},
-					"hidden_role_ids": {
-						"description": "IDs of roles that clients leave out wherever a member's roles are shown to other people. The roles still count for permissions and stay in role settings",
-						"maxItems": 16,
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/SnowflakeStringType"}
-					},
 					"voice_origins": {
 						"description": "Origins of every voice server endpoint, such as wss://voice.example.com, for content security policies. Voice servers that share a domain are listed once as a wildcard, such as wss://*.example.com",
 						"maxItems": 1000,
@@ -39473,7 +39698,6 @@
 				],
 				"additionalProperties": false
 			},
-			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
 			"InstanceHiddenBuiltInGuildBadgesSchema": {
 				"maxItems": 3,
 				"type": "array",
@@ -39720,7 +39944,7 @@
 						"type": ["string", "null"]
 					},
 					"custom_css": {
-						"description": "Optional stylesheet a self-hosted instance applies to its web and desktop app, except on sign-in pages",
+						"description": "Optional stylesheet a self-hosted instance applies to its web and desktop app, including on sign-in pages",
 						"type": ["string", "null"]
 					},
 					"upload_limit_message": {
@@ -39875,6 +40099,10 @@
 						"type": ["string", "null"]
 					},
 					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"},
+					"provider_trait": {
+						"description": "User trait that marks an account as linked to the current SSO provider",
+						"type": "string"
+					},
 					"available": {"description": "Whether an SSO provider is configured for this instance", "type": "boolean"}
 				},
 				"required": ["enabled", "enforced", "username_from_provider", "display_name", "button_label", "redirect_uri"],
@@ -39915,6 +40143,10 @@
 					"presigned_attachment_uploads": {
 						"type": "boolean",
 						"description": "Whether clients can request presigned attachment upload URLs"
+					},
+					"proxy_attachments_through_api": {
+						"description": "Whether attachment links point at the API and need the viewer to be signed in. Missing means false",
+						"type": "boolean"
 					},
 					"emails_enabled": {
 						"type": "boolean",
@@ -40195,6 +40427,7 @@
 				"pattern": "^-?[0-9]{1,19}$",
 				"description": "Display position of the badge. Badges are shown in ascending order of this value"
 			},
+			"SnowflakeStringType": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "format": "snowflake"},
 			"BotFlags": {
 				"type": "integer",
 				"minimum": 0,
@@ -41216,7 +41449,7 @@
 				"description": "IDs of the custom badges assigned to it"
 			},
 			"GuildFeatureSchema": {
-				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED, VISITS_ENABLED (other values allowed)",
+				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED, VISITS_ENABLED, MEMBER_DMS_DISABLED, PLANNED_JOIN_WAVES (other values allowed)",
 				"x-enumNames": [
 					"ANIMATED_ICON",
 					"ANIMATED_BANNER",
@@ -41252,7 +41485,9 @@
 					"LARGE_GUILD_OVERRIDE",
 					"VERY_LARGE_GUILD",
 					"ANNOUNCEMENT_CHANNELS_DISABLED",
-					"VISITS_ENABLED"
+					"VISITS_ENABLED",
+					"MEMBER_DMS_DISABLED",
+					"PLANNED_JOIN_WAVES"
 				],
 				"x-enumDescriptions": [
 					"Guild can have an animated icon",
@@ -41289,7 +41524,9 @@
 					"Guild has large guild overrides enabled",
 					"Guild has increased member capacity enabled",
 					"Guild cannot publish announcement messages or gain new followers",
-					"People with an invite or a discovery listing can read channels that @everyone can see without joining"
+					"People with an invite or a discovery listing can read channels that @everyone can see without joining",
+					"Members who aren't friends can't use the guild as a shared guild for direct messages",
+					"Guild expects large planned waves of new members. Invites are not paused after a raid"
 				],
 				"type": "string"
 			},
@@ -43278,36 +43515,6 @@
 					"Thread was updated",
 					"Thread was deleted"
 				]
-			},
-			"GuildBanResponse": {
-				"type": "object",
-				"properties": {
-					"user": {"description": "The banned user", "$ref": "#/components/schemas/UserPartialResponse"},
-					"reason": {"description": "The reason for the ban", "type": ["string", "null"]},
-					"moderator_id": {
-						"description": "The ID of the moderator who issued the ban",
-						"$ref": "#/components/schemas/SnowflakeStringType"
-					},
-					"banned_at": {
-						"type": "string",
-						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-						"description": "ISO8601 timestamp of when the ban was issued"
-					},
-					"expires_at": {
-						"description": "ISO8601 timestamp of when the ban expires (null if permanent)",
-						"anyOf": [
-							{
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-							},
-							{"type": "null"}
-						]
-					}
-				},
-				"required": ["user", "moderator_id", "banned_at"],
-				"additionalProperties": false
 			},
 			"GuildMediaChannelCreateRequest": {
 				"type": "object",
@@ -46749,6 +46956,19 @@
 					"Completely hide sensitive media"
 				]
 			},
+			"TimestampFormatTypes": {
+				"description": "Timestamp format preference",
+				"type": "integer",
+				"enum": [0, 1, 2, 3],
+				"format": "int32",
+				"x-enumNames": ["AUTO", "ISO_8601", "DAY_MONTH_YEAR", "MONTH_DAY_YEAR"],
+				"x-enumDescriptions": [
+					"Write dates the way the regional format does",
+					"Write dates as year-month-day, such as 2026-11-06 21:23",
+					"Write dates as day/month/year, such as 06/11/2026",
+					"Write dates as month/day/year, such as 11/06/2026"
+				]
+			},
 			"TimeFormatTypes": {
 				"description": "Time format preference",
 				"type": "integer",
@@ -46937,6 +47157,21 @@
 					"Completely hide sensitive media"
 				],
 				"enum": [0, 1, 2]
+			},
+			"TimestampFormatTypesInput": {
+				"description": "Timestamp format preference",
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 2147483647,
+				"format": "int32",
+				"x-enumNames": ["AUTO", "ISO_8601", "DAY_MONTH_YEAR", "MONTH_DAY_YEAR"],
+				"x-enumDescriptions": [
+					"Write dates the way the regional format does",
+					"Write dates as year-month-day, such as 2026-11-06 21:23",
+					"Write dates as day/month/year, such as 06/11/2026",
+					"Write dates as month/day/year, such as 11/06/2026"
+				],
+				"enum": [0, 1, 2, 3]
 			},
 			"TimeFormatTypesInput": {
 				"description": "Time format preference",
@@ -47162,6 +47397,7 @@
 					"CHANNEL_HAS_THREADS",
 					"CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED",
 					"COMMUNICATION_DISABLED",
+					"COMMUNITY_MEMBER_DMS_DISABLED",
 					"CONNECTION_ALREADY_EXISTS",
 					"CONNECTION_INITIATION_TOKEN_INVALID",
 					"CONNECTION_INVALID_TYPE",
@@ -47421,6 +47657,7 @@
 					"UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES",
 					"UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS",
 					"UNKNOWN_BADGE",
+					"UNKNOWN_BAN",
 					"UNKNOWN_CHANNEL",
 					"UNKNOWN_CONNECTION_PROVIDER",
 					"UNKNOWN_EMOJI",
@@ -47556,6 +47793,7 @@
 					"Channels with threads can't be converted to announcement channels.",
 					"Only text and announcement channels can be converted into each other.",
 					"Communication is disabled.",
+					"A community you share with this person has turned off direct messages between members who aren't friends.",
 					"A connection of this type with this identifier already exists.",
 					"The connection initiation token is invalid or has expired.",
 					"The connection type is not supported.",
@@ -47815,6 +48053,7 @@
 					"Claim your account to send messages.",
 					"Claim your account to submit reports.",
 					"Badge wasn't found.",
+					"Ban wasn't found.",
 					"Channel wasn't found.",
 					"This kind of connection isn't available on this instance.",
 					"Unknown emoji.",

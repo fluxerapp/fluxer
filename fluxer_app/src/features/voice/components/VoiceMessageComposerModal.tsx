@@ -14,6 +14,7 @@ import {isInsecureBrowserContext} from '@app/features/platform/utils/SecureConte
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {AudioWaveform, computePeaks} from '@app/features/voice/components/AudioWaveform';
 import {LiveRecordingWaveform} from '@app/features/voice/components/LiveRecordingWaveform';
 import styles from '@app/features/voice/components/VoiceMessageComposerModal.module.css';
@@ -423,7 +424,7 @@ const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = obse
 
 	const formatSeconds = useCallback(
 		(value: number) =>
-			getCachedNumberFormat(i18n.locale, {
+			getCachedNumberFormat(getFormattingLocale(), {
 				style: 'unit',
 				unit: 'second',
 				unitDisplay: 'narrow',
@@ -490,7 +491,9 @@ const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps> = obse
 		if (selectionDuration < MIN_DURATION_SECONDS) {
 			setErrorMessage(
 				i18n._(TOO_SHORT_DESCRIPTOR, {
-					seconds: getCachedNumberFormat(i18n.locale, {maximumFractionDigits: 1}).format(MIN_DURATION_SECONDS),
+					seconds: getCachedNumberFormat(getFormattingLocale(), {maximumFractionDigits: 1}).format(
+						MIN_DURATION_SECONDS,
+					),
 				}),
 			);
 			return;

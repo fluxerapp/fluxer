@@ -8,6 +8,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {getVolumeIcon} from '@app/features/voice/components/media_player/components/MediaVolumeControl';
 import styles from '@app/features/voice/components/media_player/MediaVerticalVolumeControl.module.css';
 import {
@@ -241,7 +242,7 @@ export function MediaVerticalVolumeControl({
 						value={sliderValue}
 						orientation="vertical"
 						ariaLabel={i18n._(VOLUME_DESCRIPTOR)}
-						ariaValueText={formatRoundedPercentage(i18n.locale, volumePercent)}
+						ariaValueText={formatRoundedPercentage(getFormattingLocale(), volumePercent)}
 						onValueChange={handleSliderValueChange}
 						onPointerInteractionChange={handleSliderInteractionChange}
 						stopEventPropagation

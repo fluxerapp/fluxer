@@ -8,7 +8,7 @@ use anyhow::Context;
 use base64::Engine;
 use base64::engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig};
 use base64::engine::{DecodePaddingMode, general_purpose};
-use fluxer_svc::config::optional_env;
+use fluxer_common::config::EnvMap;
 use serde::{Deserialize, Serialize};
 
 const PACKAGE_NAMES_ENV: &str = "FLUXER_PLAY_INTEGRITY_PACKAGE_NAMES";
@@ -63,18 +63,18 @@ struct ServiceAccountFile {
 }
 
 impl PlayIntegrityConfig {
-    pub fn from_env() -> anyhow::Result<Self> {
-        let service_account = optional_env(SERVICE_ACCOUNT_ENV)
-            .filter(|path| !path.trim().is_empty())
+    pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
+        let service_account = env
+            .get(SERVICE_ACCOUNT_ENV)
             .map(|path| {
                 std::fs::read_to_string(path.trim())
                     .with_context(|| format!("{SERVICE_ACCOUNT_ENV} could not be read: {path}"))
             })
             .transpose()?;
         Self::parse(
-            optional_env(PACKAGE_NAMES_ENV).as_deref(),
-            optional_env(CERT_SHA256_ENV).as_deref(),
-            optional_env(DEVICE_INTEGRITY_ENV).as_deref(),
+            env.get(PACKAGE_NAMES_ENV),
+            env.get(CERT_SHA256_ENV),
+            env.get(DEVICE_INTEGRITY_ENV),
             service_account.as_deref(),
         )
     }

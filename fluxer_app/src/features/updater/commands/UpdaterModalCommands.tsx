@@ -27,13 +27,18 @@ const DOWNLOAD_INSTALLER_DESCRIPTOR = msg({
 	comment: 'Button label that downloads a desktop update installer.',
 });
 const DESKTOP_UPDATE_RESTARTS_APP_DESCRIPTOR = msg({
-	message: '{productName} closes, installs the update and opens again.',
+	message: '{productName} restarts to finish updating.',
 	comment:
-		'Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.',
+		'Desktop updater modal body after a manual update check finds an update to the desktop app itself. Confirming quits the app, installs the update and opens the app again. productName is the app name.',
+});
+const DESKTOP_UPDATE_RELOADS_APP_DESCRIPTOR = msg({
+	message: '{productName} reloads to finish updating.',
+	comment:
+		'Desktop updater modal body after a manual update check finds an update to the app files only. Confirming reloads the app window in place without quitting. productName is the app name.',
 });
 const UPDATE_NOW_DESCRIPTOR = msg({
 	message: 'Update now',
-	comment: 'Button label that closes the desktop app and opens the updater to install an available update.',
+	comment: 'Button label that applies an available desktop update, by reloading the app window or restarting the app.',
 });
 const LATER_DESCRIPTOR = msg({
 	message: 'Later',
@@ -183,12 +188,21 @@ export function pushManagedShellUpdateModal({
 	);
 }
 
-export function pushDesktopUpdateAvailableModal(onUpdate: () => void | Promise<void>): void {
+export function pushDesktopUpdateAvailableModal({
+	replacesShell,
+	onUpdate,
+}: {
+	replacesShell: boolean;
+	onUpdate: () => void | Promise<void>;
+}): void {
 	ModalCommands.pushWithKey(
 		modal(() => (
 			<ConfirmModal
 				title={i18n._(DESKTOP_UPDATE_AVAILABLE_DESCRIPTOR)}
-				description={i18n._(DESKTOP_UPDATE_RESTARTS_APP_DESCRIPTOR, {productName: RuntimeConfig.productName})}
+				description={i18n._(
+					replacesShell ? DESKTOP_UPDATE_RESTARTS_APP_DESCRIPTOR : DESKTOP_UPDATE_RELOADS_APP_DESCRIPTOR,
+					{productName: RuntimeConfig.productName},
+				)}
 				primaryText={i18n._(UPDATE_NOW_DESCRIPTOR)}
 				secondaryText={i18n._(LATER_DESCRIPTOR)}
 				onPrimary={async () => {

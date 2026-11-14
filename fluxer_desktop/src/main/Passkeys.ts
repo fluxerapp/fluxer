@@ -312,6 +312,7 @@ const NOT_ALLOWED_NATIVE_ERRORS = [
 	/\bTimeout \(/u,
 	/\(0x(?:80090036|800704C7|800705B4|80090035|80090011)\)/iu,
 ];
+const NO_AUTHENTICATOR_NATIVE_ERROR = /\bNoAuthenticator \(/u;
 const INVALID_STATE_NATIVE_ERRORS = [
 	/\(com\.apple\.AuthenticationServices\.AuthorizationError 1006\)/u,
 	/\(0x8009000F\)/iu,
@@ -323,6 +324,9 @@ const webAuthnErrorName = (message: string): string | null => {
 	}
 	if (INVALID_STATE_NATIVE_ERRORS.some((pattern) => pattern.test(message))) {
 		return 'InvalidStateError';
+	}
+	if (NO_AUTHENTICATOR_NATIVE_ERROR.test(message)) {
+		return 'NoAuthenticatorError';
 	}
 	return null;
 };

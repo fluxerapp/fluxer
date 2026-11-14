@@ -991,15 +991,15 @@ msgstr "Impossibile avviare {appName}"
 msgid "{appName} is up to date."
 msgstr "{appName} è aggiornato."
 
-#. Native desktop dialog body under the update available headline when the desktop app itself updates. Explains what Update now does.
-#: src/features/platform/utils/DesktopLocaleBridge.ts
-msgid "{appName} will close, install the update and open again."
-msgstr "{appName} si chiuderà, installerà l'aggiornamento e si riaprirà."
-
 #. Native desktop dialog body under the update available headline when only the app files update. The window reloads and the app itself keeps running.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "{appName} will reload to finish updating."
 msgstr "{appName} si ricaricherà per completare l'aggiornamento."
+
+#. Native desktop dialog body under the update available headline when the desktop app itself updates. Explains what Update now does.
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "{appName} will restart to finish updating."
+msgstr "{appName} si riavvierà per completare l'aggiornamento."
 
 #. TTS sentence spoken for a normal message. {authorName} is the author display name, {formatted} is the speakable message body.
 #: src/features/voice/utils/TtsTextFormatter.ts
@@ -1267,6 +1267,12 @@ msgstr "{count, plural, one {# community in comune} other {# community in comune
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr "{count, plural, one {# nuovo messaggio} other {# nuovi messaggi}}"
+
+#. Short label in the footer of a forum post card, meaning "# new messages". count is the number of unread messages. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
+msgid "{count, plural, one {# new} other {# new}}"
+msgstr ""
 
 #. Heading of the list of Operator Passes in the Operator Pass settings, and the count of passes an account has. Operator Pass is a product name, keep it as is.
 #: src/features/premium/components/operator_pass/OperatorPassHoldingsSection.tsx
@@ -1794,7 +1800,7 @@ msgstr "{mentionCount, plural, one {# menzione} many {# menzioni} other {# menzi
 msgid "{mentionCount, plural, one {# mention} other {# mentions}} on {accountCount, plural, one {# other account} other {# other accounts}}"
 msgstr "{mentionCount, plural, one {# menzione} other {# menzioni}} su {accountCount, plural, one {# altro account} other {# altri account}}"
 
-#. Message group spacing option label.
+#. Current value and track label of the space between message groups slider, for example 16px.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx
 msgid "{messageGroupSpacing}px"
 msgstr "{messageGroupSpacing}px"
@@ -2036,11 +2042,6 @@ msgstr "{productName} non può avviare in modo sicuro l’acquisizione dell’au
 msgid "{productName} cannot start a safe isolated route for this app's audio."
 msgstr "{productName} non può avviare in modo sicuro l’acquisizione isolata dell’audio di questa app."
 
-#. Desktop updater modal body after a manual update check finds an update. Confirming closes the app window and opens the updater. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx
-msgid "{productName} closes, installs the update and opens again."
-msgstr "{productName} si chiude, installa l'aggiornamento e si riapre."
-
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
 msgid "{productName} could not connect to the update service. Check your connection and try again."
@@ -2150,6 +2151,11 @@ msgstr "Kit di recupero {productName}"
 msgid "{productName} registered its keybinds with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
 msgstr "{productName} ha registrato le sue scorciatoie in Hyprland. Associale nella tua configurazione di Hyprland per usarle quando {productName} non è in primo piano."
 
+#. Desktop updater modal body after a manual update check finds an update to the app files only. Confirming reloads the app window in place without quitting. productName is the app name.
+#: src/features/updater/commands/UpdaterModalCommands.tsx
+msgid "{productName} reloads to finish updating."
+msgstr "{productName} si ricarica per completare l'aggiornamento."
+
 #. Nagbar shown after the app restarts while the user was connected to a community voice channel. {productName} is Fluxer, {channelName} is the voice channel name, and {communityName} is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx
 msgid "{productName} restarted while you were connected to the {channelName} channel in the {communityName} community."
@@ -2159,6 +2165,11 @@ msgstr "{productName} è stato riavviato mentre eri connesso al canale {channelN
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx
 msgid "{productName} restarted while you were connected to the call in {directCallName}."
 msgstr "{productName} è stato riavviato mentre eri connesso alla chiamata in {directCallName}."
+
+#. Desktop updater modal body after a manual update check finds an update to the desktop app itself. Confirming quits the app, installs the update and opens the app again. productName is the app name.
+#: src/features/updater/commands/UpdaterModalCommands.tsx
+msgid "{productName} restarts to finish updating."
+msgstr "{productName} si riavvia per completare l'aggiornamento."
 
 #. Item in the textarea spellcheck submenu that opens the full settings page. Trailing horizontal ellipsis (…) indicates the action opens settings.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
@@ -2445,6 +2456,11 @@ msgstr "{username} ha avviato una chiamata."
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} started a thread: {threadName}"
 msgstr "{username} ha avviato un thread: {threadName}"
+
+#. Screen reader value for the chat font size and group spacing sliders, shown on screen as 16px.
+#: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
+msgid "{value} pixels"
+msgstr ""
 
 #. Size of the chosen branding image in the setup wizard. Width and height are numbers.
 #: src/features/app/components/setup/SetupBrandingAssetField.tsx
@@ -4148,6 +4164,11 @@ msgctxt "us-state"
 msgid "Alaska"
 msgstr "Alaska"
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Albanian"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts
 msgid "Alert sound"
@@ -4580,7 +4601,7 @@ msgstr "Hai già un account?"
 msgid "Already joined"
 msgstr "Già iscritto"
 
-#. Status pill on a gift code embed when the gift has already been claimed.
+#. Status line on a gift code embed when the gift has already been claimed.
 #: src/features/channel/components/GiftEmbed.tsx
 msgid "Already redeemed"
 msgstr "Già riscattato"
@@ -4728,10 +4749,10 @@ msgstr "Si è verificato un errore imprevisto"
 msgid "An unexpected error occurred. Try again."
 msgstr "Si è verificato un errore imprevisto. Riprova."
 
-#. Native desktop dialog headline after a manual update check found an update.
+#. Native desktop dialog headline shown once an update has been downloaded and can be applied.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
-msgid "An update for {appName} is available."
-msgstr "È disponibile un aggiornamento per {appName}."
+msgid "An update for {appName} is ready to install."
+msgstr "Un aggiornamento di {appName} è pronto per l'installazione."
 
 #. Description for has:sound. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
@@ -5077,11 +5098,6 @@ msgstr "Badge icona app"
 #: src/features/app/components/setup/SetupBrandingFields.tsx
 msgid "App icons"
 msgstr "Icone dell'app"
-
-#. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "App language: {format}"
-msgstr "Formato orario della lingua dell’app: {format}"
 
 #: src/features/user/components/settings_utils/SettingsConstants.tsx
 msgid "App settings"
@@ -6233,6 +6249,11 @@ msgstr "Motivo del ban"
 msgid "Bandwidth"
 msgstr "Larghezza di banda"
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Bangla"
+msgstr ""
+
 #: src/features/moderation/components/modals/BanMemberModal.tsx
 msgid "Banned {targetUserTag} from the community"
 msgstr "Bannato {targetUserTag} dalla community"
@@ -6316,6 +6337,11 @@ msgstr "Sii il primo a iniziare una conversazione qui."
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx
 msgid "Before date"
 msgstr "Prima del"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Belarusian"
+msgstr ""
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts
@@ -6747,11 +6773,6 @@ msgctxt "keyboard-key-name"
 msgid "Browser home"
 msgstr "Browser: pagina iniziale"
 
-#. Label in the language tab. Preserve {format}.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Browser locale: {format}"
-msgstr "Formato orario del browser: {format}"
-
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts
 msgid "Browser mic gain for custom processing"
@@ -6880,6 +6901,11 @@ msgstr "Pulsante con menu contestuale"
 msgid "Buttons"
 msgstr "Pulsanti"
 
+#. Help text under the theme color picker in the setup wizard branding step.
+#: src/features/app/components/setup/SetupBrandingFields.tsx
+msgid "Buttons and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
+msgstr "Pulsanti ed elementi evidenziati in tutta l'app usano questo colore, e i browser sui telefoni lo usano per la barra degli strumenti. Reimpostalo per mantenere l'indaco di Fluxer."
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons can trigger context menus on click by passing the onClick event directly to openContextMenu."
 msgstr "I pulsanti possono aprire menu contestuali al clic, passando l'evento onClick direttamente a openContextMenu."
@@ -6896,11 +6922,6 @@ msgstr "I pulsanti mostrano un indicatore di caricamento quando submitting è tr
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx
 msgid "Buttons with icons"
 msgstr "Pulsanti con icone"
-
-#. Help text under the theme color picker in the setup wizard branding step.
-#: src/features/app/components/setup/SetupBrandingFields.tsx
-msgid "Buttons, links and highlights across the app use this color, and phone browsers use it for their toolbar. Reset it to keep Fluxer's indigo."
-msgstr "Pulsanti, link ed elementi evidenziati in tutta l'app usano questo colore, e i browser sui telefoni lo usano per la barra degli strumenti. Reimpostalo per mantenere l'indaco di Fluxer."
 
 #. Gift inventory empty-state description. premiumProductName is the premium tab name and product name.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -7349,6 +7370,11 @@ msgstr "Allineamento del riquadro"
 #: src/features/ui/card_alignment_controls/CardAlignmentControls.tsx
 msgid "Card alignment controls"
 msgstr "Controlli di allineamento del riquadro"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Catalan"
+msgstr ""
 
 #. Heading above the category filter list in the Explore search sidebar.
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx
@@ -7910,7 +7936,7 @@ msgid "Channel access"
 msgstr "Accesso al canale"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Channel access denied"
 msgstr "Accesso al canale negato"
 
@@ -8125,7 +8151,7 @@ msgstr "Carattere chat"
 msgid "Chat font scaling"
 msgstr "Dimensione carattere chat"
 
-#. Accessible label for the chat font size select.
+#. Label for the chat font size slider.
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx
 msgid "Chat font size"
 msgstr "Dimensione carattere chat"
@@ -8433,6 +8459,11 @@ msgstr "Scegli gli amici a cui inviare un messaggio."
 msgid "Choose how chat moves after you send a message"
 msgstr "Scegli come scorre la chat dopo l’invio di un messaggio"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Choose how dates, times and numbers are written"
+msgstr ""
+
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
 msgid "Choose how messages are displayed in chat channels."
@@ -8470,6 +8501,11 @@ msgstr "Scegli cosa condividere"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Choose the category that best describes your community. You can change this any time."
 msgstr "Scegli la categoria che descrive meglio la tua community. Puoi cambiarla in qualsiasi momento."
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Choose the order of day, month and year in dates"
+msgstr ""
 
 #. Button on the details step of the DSA report form, shown when the server no longer accepts the chosen reason. Reloads the questions and returns to the reason step.
 #: src/features/moderation/components/report/ReportStepDetails.tsx
@@ -10017,6 +10053,11 @@ msgctxt "us-state"
 msgid "Connecticut"
 msgstr "Connecticut"
 
+#. Heading on the SSO callback page while connecting single sign-on from account settings.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
+msgid "Connecting single sign-on…"
+msgstr ""
+
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
 msgid "Connecting to {domain}…"
@@ -10898,6 +10939,8 @@ msgid "Couldn't complete sign-in. Try again."
 msgstr "Accesso non completato. Riprova."
 
 #. Error title shown when starting to connect single sign-on from account settings fails.
+#. Heading on the SSO callback page when connecting single sign-on from account settings failed.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
 msgstr "Impossibile collegare l'accesso singolo"
@@ -11140,6 +11183,10 @@ msgstr "Impossibile caricare questa community. Riprova tra poco."
 #: src/features/platform/components/loadable/LoadableComponent.tsx
 msgid "Couldn't load this part of the app. Check your connection and try again."
 msgstr "Impossibile caricare questa parte dell'app. Controlla la connessione e riprova."
+
+#: src/features/user/components/settings_utils/ChannelSettingsTabStates.tsx
+msgid "Couldn't load this tab. Check your connection and try again."
+msgstr ""
 
 #. Error modal title shown when the voice regions for a channel fail to load in channel settings.
 #: src/features/channel/components/alerts/VoiceRegionsLoadFailedModal.tsx
@@ -12376,6 +12423,16 @@ msgstr "Data"
 msgid "Date and time"
 msgstr "Data e ora"
 
+#. Title of the language settings section that picks a fixed order for numeric dates. Also a settings search entry label.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
+msgid "Date format"
+msgstr ""
+
+#. Accessible label for the date format choices in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Date format selection"
+msgstr ""
+
 #. Short label in the authentication auth minimal register form core. Keep the tone plain and specific.
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
@@ -12389,6 +12446,11 @@ msgstr "Data di nascita"
 msgid "Date options"
 msgstr "Opzioni data"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Date order"
+msgstr ""
+
 #. Accessible label for the date picker dialog.
 #: src/features/ui/components/form/DateTimePickerField.tsx
 msgid "Date picker"
@@ -12401,10 +12463,20 @@ msgstr "Selettore data"
 msgid "Date posted"
 msgstr "Data di pubblicazione"
 
+#. Help text under the regional format picker in the language settings.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Dates, times and numbers follow this format. Prices stay in the currency of your billing country."
+msgstr ""
+
 #. Short label in the authentication date of birth field. Keep the tone plain and specific.
 #: src/features/auth/flow/DateOfBirthField.tsx
 msgid "Day"
 msgstr "Giorno"
+
+#. Date format option that writes day/month/year. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Day first"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts
@@ -13293,13 +13365,13 @@ msgstr "Stato sviluppatore"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx
 msgid "Developer tools"
 msgstr "Strumenti per sviluppatori"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Gli strumenti per sviluppatori sono disponibili dal badge dello staff nell'intestazione del canale."
 
@@ -13451,6 +13523,7 @@ msgstr "Anteprime messaggi diretti"
 #. Review row label for direct messages.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 #: src/features/channel/components/direct_message/DirectMessageList.tsx
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx
 msgid "Direct messages"
@@ -16619,6 +16692,11 @@ msgstr "Nome file"
 msgid "Files will be sent immediately without preview."
 msgstr "I file verranno inviati immediatamente senza anteprima."
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Filipino"
+msgstr ""
+
 #. Short label in the authentication submit tooltip. Preserve {fieldList}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/auth/flow/SubmitTooltip.tsx
 msgid "Fill out the following fields: {fieldList}"
@@ -16895,6 +16973,11 @@ msgstr "Fluxer non è riuscito a connettersi a {host}. Il server ha risposto: \"
 #: src/features/auth/flow/auth_login_core/AuthLoginBrowserStep.tsx
 msgid "Fluxer couldn't connect to {instanceName} to check whether your browser approved this sign-in. Check your connection, then select \"Try again\"."
 msgstr "Fluxer non è riuscito a raggiungere {instanceName} per controllare se il browser ha approvato questo accesso. Controlla la connessione, poi seleziona \"Riprova\"."
+
+#. Error shown in the desktop app when a passkey prompt starts but no security key is connected to the computer.
+#: src/features/auth/utils/PasskeyErrorMessages.ts
+msgid "Fluxer couldn't find a security key on this computer. Connect your security key and try again, or open Fluxer in your web browser and use your passkey there."
+msgstr "Fluxer non ha trovato nessuna chiave di sicurezza su questo computer. Collega la tua chiave di sicurezza e riprova, oppure apri Fluxer nel browser web e usa lì la tua passkey."
 
 #. Name of the section in the Operator Pass settings tab about the Fluxer Labs community. Fluxer Labs is the name of a community, keep it as is.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts
@@ -17484,6 +17567,11 @@ msgstr "Gli amici possono sempre inviarti messaggi."
 msgid "Friends can always message you. These settings cover people and bots you only share a community with."
 msgstr "Gli amici possono sempre inviarti messaggi. Queste impostazioni riguardano persone e bot con cui condividi solo una community."
 
+#. Help text under the switch that turns off direct messages between community members who are not friends, in the community moderation settings tab.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Friends can still DM each other, and so can members who share another community. Bots aren't affected."
+msgstr "Gli amici possono comunque scriversi in DM, così come i membri che condividono un'altra community. I bot non sono interessati."
+
 #. Privacy option label for people connected through mutual friends.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Friends of friends"
@@ -17926,11 +18014,6 @@ msgstr "Regala {premiumProductName} a un amico per un mese o un anno intero. I r
 msgid "Gift already redeemed"
 msgstr "Regalo già riscattato"
 
-#. Toast confirmation shown after successfully claiming a gift from the gift code embed.
-#: src/features/channel/components/GiftEmbed.tsx
-msgid "Gift claimed"
-msgstr "Regalo riscattato"
-
 #. Error message in the gift inventory tab.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Gift code cannot be empty"
@@ -17945,10 +18028,6 @@ msgstr "Il codice regalo è obbligatorio"
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
 msgid "Gift code is too long"
 msgstr "Il codice regalo è troppo lungo"
-
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx
-msgid "Gift code:"
-msgstr "Codice regalo:"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts
@@ -18015,11 +18094,6 @@ msgstr "Regalo riscattato!"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Gift subscription"
 msgstr "Abbonamento regalo"
-
-#. Title shown on a gift code embed when the gift cannot be resolved due to a non-permanent failure.
-#: src/features/channel/components/GiftEmbed.tsx
-msgid "Gift unavailable"
-msgstr "Regalo non disponibile"
 
 #. Short label in the gift inventory tab. Keep it concise.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx
@@ -20375,6 +20449,13 @@ msgstr "Irlanda"
 msgid "Is this instance for one community or many?"
 msgstr "Questa istanza è per una sola community o per molte?"
 
+#. Date format option named after the international standard. Keep "ISO 8601" as is.
+#. Settings search synonym for the international date format standard. Keep "ISO 8601" as is.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "ISO 8601"
+msgstr ""
+
 #. Line in the dialog for an Operator Pass someone passed on to you. It is the pass.
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
 msgid "It arrives as soon as you accept."
@@ -21004,6 +21085,11 @@ msgstr "Più tardi"
 msgid "Latvia"
 msgstr "Lettonia"
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Latvian"
+msgstr ""
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Launch {productName} at login"
@@ -21454,7 +21540,7 @@ msgid "Link styling"
 msgstr "Stile link"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "Link unavailable"
 msgstr "Link non disponibile"
 
@@ -23256,6 +23342,11 @@ msgstr "Montana"
 msgid "Month"
 msgstr "Mese"
 
+#. Date format option that writes month/day/year. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Month first"
+msgstr ""
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts
 msgid "Monthly"
@@ -24107,6 +24198,12 @@ msgstr "Mai in automatico"
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "New"
 msgstr "Nuovi"
+
+#. Short label in the footer of a forum post card, meaning "new messages", when the exact number is unknown. Keep it as short as possible. It shares one line with the message count and the time.
+#: src/features/forum/utils/ForumMessageDescriptors.ts
+msgctxt "forum-card-footer"
+msgid "New"
+msgstr ""
 
 #. Small badge on a new or recently added app navigation item.
 #: src/features/app/components/layout/GuildsLayout.tsx
@@ -25363,6 +25460,11 @@ msgstr "Bloc Num"
 msgid "Number"
 msgstr "Numero"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Number format"
+msgstr ""
+
 #. Label of the control that sets how many Operator Passes to buy. All of them go to your own account.
 #: src/features/premium/components/operator_pass/checkout/CheckoutChooseStage.tsx
 msgid "Number of passes"
@@ -26166,6 +26268,11 @@ msgstr "Riapri la pagina di pagamento"
 msgid "Open popup"
 msgstr "Apri popup"
 
+#. Tooltip on the media viewer button that closes the viewer and opens the media channel post the media belongs to.
+#: src/features/messaging/components/modals/media_modal/shared.ts
+msgid "Open post"
+msgstr "Apri post"
+
 #. Accessible label for the avatar button in the channel header of a DM. Opens the recipient user profile.
 #: src/features/channel/components/channel_header/shared.ts
 msgid "Open profile for {directMessageName}"
@@ -26251,6 +26358,11 @@ msgstr "Apri Impostazioni di Sistema → Privacy e Sicurezza → Registrazione s
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "Open template JSON"
 msgstr "Apri il JSON del modello"
+
+#. Explains where the code comes from, under the title of the browser page where it is typed. The code is shown by the app the user is signing in to, not by an app that is already signed in. "Signing in on another device?" is the label of a button in that app and must match its translation exactly. PRODUCT_NAME is the app name, such as Fluxer.
+#: src/features/auth/flow/HandoffApprovalFlow.tsx
+msgid "Open the {PRODUCT_NAME} app you're signing in to, select \"Signing in on another device?\" and type the code it shows here. Only enter a code from a device you control."
+msgstr "Apri l'app {PRODUCT_NAME} a cui stai accedendo, seleziona \"Accedi da un altro dispositivo?\" e digita qui il codice che mostra. Inserisci solo un codice da un dispositivo che controlli."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts
@@ -27181,6 +27293,11 @@ msgstr "Le persone possono comunque registrarsi e accedere. Finché non aggiungi
 msgid "People choose a username and a password, and nobody needs an email address. If someone forgets their password, they use the recovery kit they saved, or an admin makes them a reset link."
 msgstr "Le persone scelgono un nome utente e una password, e nessuno ha bisogno di un indirizzo email. Chi dimentica la password usa il kit di recupero che ha salvato, oppure un amministratore gli crea un link di reimpostazione."
 
+#. Sentence after a note about how Fluxer Labs shows a person with a hidden Operator Pass or Visionary badge, and in the "Show #operators" setting. #operators is a channel name, keep it as is. Everyone who can open the channel sees who else is in it.
+#: src/features/user/utils/UserMessageDescriptors.ts
+msgid "People in #operators can see that you're in it."
+msgstr "Le persone in #operators possono vedere che ci sei."
+
 #. Describes the current setting in the privacy setup modal when community members can send direct messages.
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "People in your communities can message you without being friends."
@@ -27798,6 +27915,11 @@ msgstr "Portogallo"
 #: src/features/user/utils/LocaleUtils.ts
 msgid "Portuguese (Brazil)"
 msgstr "Portoghese (Brasile)"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Portuguese (Portugal)"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts
@@ -29227,6 +29349,21 @@ msgstr "La rigenerazione invaliderà il segreto attuale. Aggiorna qualsiasi codi
 msgid "Regenerating will invalidate the current token. Update any code that uses the old value."
 msgstr "La rigenerazione invaliderà il token attuale. Aggiorna qualsiasi codice che usa il vecchio valore."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/LanguageIndex.ts
+msgid "Region"
+msgstr ""
+
+#. Title of the language settings section that picks how dates, times and numbers are written, separately from the interface language. Also a settings search entry label.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
+msgid "Regional format"
+msgstr ""
+
+#. Description of the automatic choice in the time format and date format settings. {format} is an example time or date written in the chosen regional format. Preserve {format}.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Regional format: {format}"
+msgstr ""
+
 #. Generic authentication action label for opening or submitting account registration.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Register"
@@ -29292,6 +29429,11 @@ msgstr "Ritardo di rilascio"
 msgid "Reload"
 msgstr "Ricarica"
 
+#. Tray menu item shown only while a downloaded update of the app files is waiting. Clicking it reloads the window to apply it. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Reload {appName} to update"
+msgstr "Ricarica {appName} per aggiornare"
+
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
 msgid "Reload {PRODUCT_NAME} to fully apply the engine change. Switching between in-app and system spellcheck requires a renderer reload because Electron can't swap providers while running."
 msgstr "Ricarica {PRODUCT_NAME} per applicare completamente il cambio di motore. Il passaggio tra il controllo ortografico in-app e quello di sistema richiede il ricaricamento del renderer, perché Electron non può cambiare provider durante l’esecuzione."
@@ -29307,6 +29449,7 @@ msgid "Reload {productName} to use web update {version}"
 msgstr "Ricarica {productName} per utilizzare l'aggiornamento web {version}"
 
 #. Button on the crash screen that reloads the current app.
+#: src/app/AppBootstrap.tsx
 #: src/features/app/components/ErrorFallback.tsx
 msgid "Reload app"
 msgstr "Ricarica l'app"
@@ -29319,6 +29462,11 @@ msgstr "Ricarica ora"
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx
 msgid "Reload to apply engine change"
 msgstr "Ricarica per applicare la modifica al motore"
+
+#. Tooltip and accessible label on the channel header updater icon in the desktop app when an update to the app files is ready. Clicking it reloads the window in place to finish updating.
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx
+msgid "Reload to update"
+msgstr "Ricarica per aggiornare"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx
@@ -30572,6 +30720,11 @@ msgstr "Rispetta l'intenzione del mittente, senza avvisi quando attiva o disatti
 msgid "Restart {appName}"
 msgstr "Riavvia {appName}"
 
+#. Tray menu item shown only while a downloaded update of the desktop app itself is waiting. Clicking it restarts the app to apply it. {appName} is the desktop app name (typically Fluxer).
+#: src/features/platform/utils/DesktopLocaleBridge.ts
+msgid "Restart {appName} to update"
+msgstr "Riavvia {appName} per aggiornare"
+
 #. Desktop setting description shown when a tray-icon change on Linux requires restart.
 #: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx
 msgid "Restart {productName} for this change to take effect because Linux desktops can't reliably add or remove tray icons at runtime."
@@ -30590,6 +30743,11 @@ msgstr "Riavvia {productName}?"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Restart now"
 msgstr "Riavvia ora"
+
+#. Tooltip and accessible label on the channel header updater icon in the desktop app when an update to the desktop app itself is ready. Clicking it restarts the app to finish updating.
+#: src/features/channel/components/channel_header_components/UpdaterIcon.tsx
+msgid "Restart to update"
+msgstr "Riavvia per aggiornare"
 
 #: src/features/auth/components/pages/EmailRevertPage.tsx
 msgid "Restore account"
@@ -31011,6 +31169,11 @@ msgstr "Russo"
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Safety"
 msgstr "Sicurezza"
+
+#. Regional format option that writes dates, times and numbers the way the interface language does. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Same as language"
+msgstr ""
 
 #. Profile timezone difference text. The target user's timezone currently matches the viewer's timezone.
 #: src/features/user/components/popouts/UserProfileShared.tsx
@@ -31550,6 +31713,11 @@ msgstr "Cerca qualcosa..."
 msgid "Search for channels, people, or communities"
 msgstr "Cerca canali, persone o community"
 
+#. Placeholder in the regional format picker in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Search formats…"
+msgstr ""
+
 #. Generic search-input placeholder for filtering the current friends list.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts
 msgid "Search friends"
@@ -32019,6 +32187,11 @@ msgstr "Seleziona la lingua dell'interfaccia"
 #: src/features/theme_settings/components/QuickCssReference.tsx
 msgid "Select one to add a rule for it to your CSS."
 msgstr "Selezionane uno per aggiungere una regola nel tuo CSS."
+
+#. Accessible label for the regional format picker in the language settings. Keep it concise.
+#: src/features/user/components/modals/tabs/LanguageTab.tsx
+msgid "Select regional format"
+msgstr ""
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx
@@ -33097,15 +33270,10 @@ msgstr "Finestra condivisa"
 msgid "Shared window audio"
 msgstr "Audio della finestra condivisa"
 
-#. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Screen share streaming preset. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at 720p, up to 30 FPS"
-msgstr "Testo nitido a 720p, fino a 30 FPS"
-
-#. Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Sharp text at up to 1080p, 30 FPS"
-msgstr "Testo nitido fino a 1080p, 30 FPS"
+msgid "Sharp text at up to {resolution}, {frameRate} FPS"
+msgstr "Testo nitido fino a {resolution}, {frameRate} FPS"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
@@ -34183,6 +34351,11 @@ msgstr "Slider con valori a passi"
 msgid "Sliders"
 msgstr "Cursori"
 
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Slovak"
+msgstr ""
+
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Slovakia"
@@ -34192,6 +34365,11 @@ msgstr "Slovacchia"
 #: src/features/moderation/components/report/OptionDescriptors.ts
 msgid "Slovenia"
 msgstr "Slovenia"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Slovenian"
+msgstr ""
 
 #. Modal body shown when an action is blocked by rate limiting. Keep plain.
 #: src/features/app/components/alerts/RateLimitedConfirmModal.tsx
@@ -34342,15 +34520,10 @@ msgstr "Faccina sorridente"
 msgid "Smileys"
 msgstr "Faccine"
 
-#. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
+#. Description for the Gaming streaming preset. {frameRate} is a whole number such as 60 and {resolution} is a short label such as 1440p. FPS is a technical token.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 30 FPS at up to 720p"
-msgstr "Fluido a 30 FPS fino a 720p"
-
-#. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx
-msgid "Smooth 60 FPS at up to 1440p"
-msgstr "Fluidi 60 FPS fino a 1440p"
+msgid "Smooth {frameRate} FPS at up to {resolution}"
+msgstr "Fluidi {frameRate} FPS fino a {resolution}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -36057,10 +36230,10 @@ msgstr "I DM di sistema non possono ospitare videochiamate"
 msgid "System DMs cannot host voice calls"
 msgstr "I DM di sistema non possono ospitare chiamate vocali"
 
-#. Label in the language tab. Preserve {format}.
+#. Regional format option that uses the date, time and number settings of the device or browser. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "System locale: {format}"
-msgstr "Formato orario del sistema: {format}"
+msgid "System format"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts
@@ -36518,11 +36691,6 @@ msgstr "Questo è tutto."
 msgid "The {PRODUCT_NAME} app asked to sign in as {requestedIdentifier}, but you chose {name}."
 msgstr "L'app {PRODUCT_NAME} ha richiesto di accedere come {requestedIdentifier}, ma hai scelto {name}."
 
-#. Explains where the code comes from, under the title of the browser page where it is typed. Signing in on another device is the label of a button in the app and must match its translation. PRODUCT_NAME is the app name, such as Fluxer.
-#: src/features/auth/flow/HandoffApprovalFlow.tsx
-msgid "The {PRODUCT_NAME} app on your other device shows it under Signing in on another device. Only enter a code from a device you control."
-msgstr "L'app {PRODUCT_NAME} sul tuo altro dispositivo la mostra sotto \"Accesso da un altro dispositivo\". Inserisci solo un codice da un dispositivo che controlli."
-
 #. Shown after the user cancelled the sign-in request in the browser. PRODUCT_NAME is the app name, such as Fluxer.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx
 msgid "The {PRODUCT_NAME} app was not signed in. You can close this tab."
@@ -36794,16 +36962,6 @@ msgstr "Il numero di pass è cambiato, quindi seleziona di nuovo la casella dell
 msgid "The Operator badge"
 msgstr "Il badge Operator"
 
-#. Description of the Fluxer Labs section in the Operator Pass settings. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs.
-#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
-msgid "The Operator role opens #operators in {labsName}, where you can talk about self-hosting, bots and the API."
-msgstr "Il ruolo Operator apre #operators in {labsName}, dove puoi parlare di self-hosting, bot e API."
-
-#. Text under the heading #operators in Fluxer Labs on a slide in the Operator Pass checkout dialog. Operator is the role's name, keep it in English. #operators is the channel's literal name, keep it unchanged. Opens #operators to talk about means the role gives access to the channel, where people talk about self-hosting, bots and the API. Hampus is a person's first name, keep it as is. Who created {productName} describes him as the person who started and made the software. Use past tense. Joins in when he can means Hampus takes part in the conversation when he has time, never that he answers questions or gives support. Warm and plain, never salesy. No dashes as punctuation and no semicolons.
-#: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
-msgid "The Operator role opens #operators to talk about self-hosting, bots and the API. Hampus, who created {productName}, joins in when he can."
-msgstr "Il ruolo Operator ti dà accesso a #operators per parlare di self-hosting, bot e API. Hampus, che ha creato {productName}, partecipa quando può."
-
 #. Activity log detail row under a removed channel permission override, listing the permissions it explicitly allowed before it was removed. It describes the removed override. It does not mean these permissions are allowed now. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {permissions} is a list of permission names joined into one phrase, for example "View channel and Send messages". A long list ends with a count, for example "View channel, Send messages, and 3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "The override allowed {permissions}"
@@ -36822,6 +36980,11 @@ msgstr "La pagina che cerchi non esiste o è stata spostata."
 #: src/features/premium/components/operator_pass/OperatorPassOfferModal.tsx
 msgid "The pass is yours now."
 msgstr "Ora il pass è tuo."
+
+#. Text under the heading #operators in Fluxer Labs on a slide in the Operator Pass checkout dialog. The pass is the Operator Pass. #operators is the channel's literal name, keep it unchanged. Opens #operators to talk about means the pass gives access to the channel, where people talk about self-hosting, bots and the API. Hampus is a person's first name, keep it as is. Who created {productName} describes him as the person who started and made the software. Use past tense. Joins in when he can means Hampus takes part in the conversation when he has time, never that he answers questions or gives support. Warm and plain, never salesy. No dashes as punctuation and no semicolons.
+#: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
+msgid "The pass opens #operators to talk about self-hosting, bots and the API. Hampus, who created {productName}, joins in when he can."
+msgstr "Il pass apre #operators per parlare di self-hosting, bot e API. Hampus, che ha creato {productName}, partecipa quando può."
 
 #. Error shown when the browser passkey prompt ends without a passkey.
 #: src/features/auth/utils/PasskeyErrorMessages.ts
@@ -37479,6 +37642,11 @@ msgstr "Questa community ha messo in pausa gli inviti."
 msgid "This community has paused invites. You can try again later."
 msgstr "Questa community ha sospeso gli inviti. Puoi riprovare più tardi."
 
+#. Shown in the community privacy modal under the direct messages switch when the community admins have turned off direct messages between members who are not friends, so the personal switch has no effect.
+#: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx
+msgid "This community has turned off DMs between members who aren't friends"
+msgstr "Questa community ha disattivato i DM tra i membri che non sono amici"
+
 #. Description text in the guild at capacity modal.
 #: src/features/guild/components/alerts/GuildAtCapacityModal.tsx
 msgid "This community is at its member limit and isn't accepting new members right now."
@@ -37740,10 +37908,10 @@ msgstr "Questa istanza ha già degli account, quindi il modo di accedere non pu�
 msgid "This instance already has an administrator. Sign in with that account to finish setting it up."
 msgstr "Questa istanza ha già un amministratore. Accedi con quell'account per completare la configurazione."
 
-#. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
+#. Neutral video settings note shown when instance limits cap screen share quality. {resolution} is a short label such as 1080p and {frameRate} is a whole number such as 30. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
-msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
-msgstr "Questa istanza attualmente consente la condivisione dello schermo fino a 720p a 30 FPS."
+msgid "This instance currently allows screen sharing up to {resolution} at {frameRate} FPS."
+msgstr "Questa istanza attualmente consente la condivisione dello schermo fino a {resolution} a {frameRate} FPS."
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
 #: src/features/app/components/setup/SetupRecoveryKitStep.tsx
@@ -37912,7 +38080,7 @@ msgid "This link has expired"
 msgstr "Questo link è scaduto"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "This link is not available for your account."
 msgstr "Questo link non è disponibile per il tuo account."
 
@@ -38591,6 +38759,11 @@ msgstr "Per creare un webhook, apri <0>{channelWebhooksSettingsPath}</0>. Puoi c
 msgid "To let people in, make a registration link in the admin panel."
 msgstr "Per far entrare le persone, crea un link di registrazione nel pannello di amministrazione."
 
+#. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
+msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
+msgstr ""
+
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
 msgstr "Per trasferire la proprietà, vai a {generalSettingsPath} e usa l'opzione \"Trasferisci proprietà\"."
@@ -38723,6 +38896,11 @@ msgstr "Attiva/disattiva attività vocale"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts
 msgid "Token"
 msgstr "Token"
+
+#. Short label in the language and locale names. Keep it concise.
+#: src/features/user/utils/LocaleUtils.ts
+msgid "Toki Pona"
+msgstr ""
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts
@@ -39185,6 +39363,11 @@ msgstr "Spegni la fotocamera del dispositivo"
 msgid "Turn off device stream"
 msgstr "Interrompi lo stream del dispositivo"
 
+#. Switch label in the community moderation settings tab. When on, members of this community who are not friends cannot start or continue direct messages through this community.
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx
+msgid "Turn off DMs between members who aren't friends"
+msgstr "Disattiva i DM tra i membri che non sono amici"
+
 #. Voice menu action that ends the current user screen share.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts
 msgid "Turn off stream"
@@ -39258,6 +39441,16 @@ msgstr "Trasforma le emoticon in emoji"
 msgid "Turn this theme on to see your changes in the app."
 msgstr "Attiva questo tema per vedere le modifiche nell'app."
 
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned off again. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned DMs between members who aren't friends back on"
+msgstr "DM tra i membri che non sono amici riattivati"
+
+#. Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off DMs between members who aren't friends"
+msgstr "DM tra i membri che non sono amici disattivati"
+
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
 msgid "Turned off mature content"
@@ -39313,8 +39506,8 @@ msgstr "Disattivando questa opzione, la tua fotocamera verrà nascosta solo dall
 
 #. Description under the switch "Show #operators" in the Operator Pass settings. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs. Turning it off does not remove the account from the community, the pass or the badge.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
-msgid "Turning this off removes the roles that open #operators in {labsName}, and we won't add them back until you turn it on again."
-msgstr "Se lo disattivi, i ruoli che aprono #operators in {labsName} vengono rimossi e non li aggiungeremo di nuovo finché non lo riattivi."
+msgid "Turning this off takes away your access to #operators in {labsName} until you turn it on again."
+msgstr "Se lo disattivi, perdi l'accesso a #operators in {labsName} finché non lo riattivi."
 
 #. Help under the Klipy API key field in the setup wizard.
 #: src/features/app/components/setup/SetupServicesStep.tsx
@@ -40278,7 +40471,7 @@ msgstr "Aggiorna {productName} per visualizzare questo messaggio."
 msgid "Update app"
 msgstr "Aggiorna l'app"
 
-#. Tooltip and accessible label on the channel header updater icon in the desktop app. Clicking it downloads the update, then either reloads the window or, when the desktop app itself updates, closes it and opens the updater.
+#. Tooltip and accessible label on the channel header updater icon in the desktop app when a new desktop version must be downloaded by hand. Clicking it opens the download.
 #: src/features/channel/components/channel_header_components/UpdaterIcon.tsx
 msgid "Update available"
 msgstr "Aggiornamento disponibile"
@@ -40287,7 +40480,7 @@ msgstr "Aggiornamento disponibile"
 msgid "Update my status"
 msgstr "Aggiorna il mio stato"
 
-#. Button label that closes the desktop app and opens the updater to install an available update.
+#. Button label that applies an available desktop update, by reloading the app window or restarting the app.
 #. Native desktop dialog button that installs the waiting desktop update.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -40354,7 +40547,7 @@ msgstr "Non riceverai più aggiornamenti da questo canale. I messaggi già conse
 msgid "Updating favorites…"
 msgstr "Aggiornamento preferiti…"
 
-#. Tooltip and accessible label on the channel header updater icon in the desktop app while an update the user started is downloading. The app reloads by itself when it is done.
+#. Tooltip and accessible label on the channel header updater icon in the desktop app while an update the user started is being applied. The app reloads or restarts by itself when it is done.
 #: src/features/channel/components/channel_header_components/UpdaterIcon.tsx
 msgid "Updating…"
 msgstr "Aggiornamento in corso…"
@@ -40671,6 +40864,11 @@ msgstr "Usa un altro account"
 msgid "Use a different email"
 msgstr "Usa un indirizzo email diverso"
 
+#. Action label on the sign-in screen that starts sign-in with a passkey or security key registered on the old web address. host is that address, for example web.fluxer.app.
+#: src/features/auth/AuthMessageDescriptors.ts
+msgid "Use a passkey saved for {host}"
+msgstr "Usa una passkey salvata per {host}"
+
 #: src/features/auth/flow/instance_selector/InstancePickerRows.tsx
 msgid "Use a self-hosted instance URL"
 msgstr "Usa un URL di istanza self-hosted"
@@ -40715,11 +40913,6 @@ msgstr "Usa un altro account"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Use autoscrolling"
 msgstr "Usa lo scorrimento automatico"
-
-#. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Use browser locale for time format"
-msgstr "Usa il formato ora del browser"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx
@@ -40875,11 +41068,6 @@ msgstr "Usa gli sticker di altre community con {premiumProductName}"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts
 msgid "Use stickers from other communities."
 msgstr "Usa sticker di altre community."
-
-#. Label in the language tab.
-#: src/features/user/components/modals/tabs/LanguageTab.tsx
-msgid "Use system locale for time format"
-msgstr "Usa le impostazioni internazionali del sistema per il formato dell'ora"
 
 #. Switch label in Settings > Themes on the desktop app, also used as its settings search entry. When on, the account uses the theme shared by every account in the desktop app.
 #: src/features/theme_settings/utils/ThemeSettingsMessageDescriptors.ts
@@ -42363,10 +42551,10 @@ msgstr "Abbiamo inviato un codice a {email}."
 msgid "We sent a new code."
 msgstr "Abbiamo inviato un nuovo codice."
 
-#. Description under the switch "Welcome me in #operators" in the Operator Pass settings. #operators is a channel in the Fluxer Labs community, keep it as is. Turning the switch on after the pass is delivered still queues the one welcome.
+#. Description under the switch "Welcome me in #operators" in the Operator Pass settings. #operators is a channel in the Fluxer Labs community, keep it as is. Turning the switch on after the pass is delivered still queues the one welcome. Operator Pass is a product name and stays untranslated. A limited profile means the profile privacy setting is anything other than "Friends and all communities". A welcome already sent is edited so it no longer mentions the person.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
-msgid "We welcome you by name in #operators once, soon after your pass is delivered or you turn this on."
-msgstr "Ti diamo il benvenuto per nome in #operators una volta sola, poco dopo la consegna del tuo pass o dopo che attivi questa opzione."
+msgid "We welcome you by name in #operators once, soon after your pass is delivered or you turn this on. While your Operator Pass badge is hidden or your profile is limited, we skip the welcome and take your name out of one we already sent."
+msgstr "Ti diamo il benvenuto per nome in #operators una volta sola, poco dopo la consegna del tuo pass o dopo che attivi questa opzione. Finché il tuo badge Operator Pass è nascosto o il tuo profilo è limitato, saltiamo il benvenuto e togliamo il tuo nome da un benvenuto già inviato."
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
@@ -42845,6 +43033,16 @@ msgstr "Quali conversazioni"
 msgid "While push-to-talk is on, your keybind controls your microphone, so the mute button is disabled."
 msgstr "Quando il push-to-talk è attivo, la scorciatoia controlla il microfono, quindi il pulsante per disattivarlo è disabilitato."
 
+#. Note under the Visionary badge row in the "Badges" profile settings. {labsName} is the name of the official community, such as Fluxer Labs. Visionary is the role name and #operators is a channel name, keep both as is. Masked means the switch "Mask Visionary as subscription" is on.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "While this badge is hidden or masked, {labsName} shows you without the Visionary role, and you keep #operators."
+msgstr "Finché questo badge è nascosto o mascherato come abbonamento, {labsName} ti mostra senza il ruolo Visionary e mantieni #operators."
+
+#. Note under the Operator Pass badge row in the "Badges" profile settings. {labsName} is the name of the official community, such as Fluxer Labs. Operator is the role name and #operators is a channel name, keep both as is.
+#: src/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.tsx
+msgid "While this badge is hidden, {labsName} shows you without the Operator role, and you keep #operators."
+msgstr "Finché questo badge è nascosto, {labsName} ti mostra senza il ruolo Operator e mantieni #operators."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts
 msgid "Who can add"
@@ -43038,6 +43236,11 @@ msgstr "Con un nome utente"
 #: src/features/app/components/setup/SetupIdentitySteps.tsx
 msgid "With an email address"
 msgstr "Con un indirizzo email"
+
+#. Privacy > Profile privacy: note under the section title, shown to people with an Operator Pass or Visionary. "Friends and all communities" is the label of the first option, translate it the same way. {labsName} is the name of the official community, such as Fluxer Labs. Operator and Visionary are role names and #operators is a channel name, keep them as is.
+#: src/features/user/components/modals/tabs/privacy_safety_tab/ProfilePrivacyTab.tsx
+msgid "With any choice other than \"Friends and all communities\", {labsName} shows you without the Operator and Visionary roles, and you keep #operators."
+msgstr "Con qualsiasi scelta diversa da \"Amici e tutte le community\", {labsName} ti mostra senza i ruoli Operator e Visionary e mantieni #operators."
 
 #. Description under the screen share bitrate select in the video tab. Automatic is the label of the default option.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx
@@ -43679,7 +43882,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Hai cambiato il tuo tag mentre avevi {PREMIUM_PRODUCT_NAME}. Verrà rigenerato casualmente alla scadenza di {PREMIUM_PRODUCT_NAME}, a meno che non venga rinnovato."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx
+#: src/features/messaging/utils/InAppLinkUtils.tsx
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Non hai accesso al canale in cui è stato inviato questo messaggio."
 
@@ -44153,10 +44356,10 @@ msgstr "Sei nel canale vocale"
 msgid "You're no longer previewing {community}."
 msgstr "Non stai più guardando l'anteprima di {community}."
 
-#. Description of the Fluxer Labs section in the Operator Pass settings when the account is not a member of the community. A button "Join {labsName}" follows it. #operators is a channel name and Operator is the role name, keep both as is. {labsName} is the name of the community, such as Fluxer Labs.
+#. Description of the Fluxer Labs section in the Operator Pass settings when the account is not a member of the community. A button "Join {labsName}" follows it. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs.
 #: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
-msgid "You're not in {labsName}. Joining gives you the Operator role, which opens #operators, where you can talk about self-hosting, bots and the API."
-msgstr "Non sei in {labsName}. Unendoti ottieni il ruolo Operator, che apre #operators, dove puoi parlare di self-hosting, bot e API."
+msgid "You're not in {labsName}. Joining opens #operators, where you can talk about self-hosting, bots and the API."
+msgstr "Non sei in {labsName}. Unendoti si apre #operators, dove puoi parlare di self-hosting, bot e API."
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx
@@ -44644,6 +44847,11 @@ msgstr "Non è stato possibile consegnare il tuo messaggio perché è stato segn
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact the administrators of this instance."
 msgstr "Non è stato possibile consegnare il tuo messaggio perché è stato segnalato dai nostri sistemi di sicurezza. Se ritieni che si tratti di un errore, contatta gli amministratori di questa istanza."
 
+#. System message in a DM after a send fails because the only community the two people share has turned off direct messages between members who are not friends.
+#: src/features/messaging/state/MessageQueue.tsx
+msgid "Your message could not be delivered. A community you share with this person has turned off direct messages between members who aren't friends."
+msgstr "Impossibile consegnare il messaggio. Una community che condividi con questa persona ha disattivato i messaggi diretti tra i membri che non sono amici."
+
 #. Label in the message queue state.
 #: src/features/messaging/state/MessageQueue.tsx
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
@@ -44733,6 +44941,11 @@ msgstr "Tutti gli altri tuoi pass sono già stati proposti. Questo è l'ultimo."
 #: src/features/premium/components/operator_pass/checkout/OperatorPassShowcaseSlides.ts
 msgid "Your pass comes with this certificate. It's a PDF with one page for each pass, and each page has its own number, the name you choose at checkout and the date and time you paid. We email it to you, and in settings each page has its own link that you can open, print or share. Buying for someone else? Put their name on their certificate."
 msgstr "Il tuo pass viene con questo certificato. È un PDF con una pagina per ogni pass, e ogni pagina ha il suo numero, il nome che scegli al checkout e la data e l'ora in cui hai pagato. Te lo inviamo via email, e nelle impostazioni ogni pagina ha il suo link che puoi aprire, stampare o condividere. Acquisti per qualcun altro? Metti il suo nome sul suo certificato."
+
+#. Description of the Fluxer Labs section in the Operator Pass settings. The pass is the Operator Pass. #operators is a channel name, keep it as is. {labsName} is the name of the community, such as Fluxer Labs.
+#: src/features/user/components/modals/tabs/operator_pass_tab/OperatorPassLabsGreetingSetting.tsx
+msgid "Your pass opens #operators in {labsName}, where you can talk about self-hosting, bots and the API."
+msgstr "Il tuo pass apre #operators in {labsName}, dove puoi parlare di self-hosting, bot e API."
 
 #. Name of the section in the Operator Pass settings tab that lists the Operator Passes the account holds.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts

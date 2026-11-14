@@ -8,12 +8,12 @@ import type {User} from '@app/api/models/User';
 import type {UserSettings} from '@app/api/models/UserSettings';
 import {assertTierAllows, NO_TIER_CONTEXT} from '@app/api/user/AccountTier';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
-import {isBugHunterBotUser} from '@app/api/user/UserHelpers';
 import {checkGuildVerificationWithGuildModel} from '@app/api/utils/GuildVerificationUtils';
-import {getMutualGuildsForDmAccess} from '@app/api/utils/MutualGuildDmAccess';
 import {TierGatedActions} from '@fluxer/constants/src/AccountTierConstants';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {CannotSendMessagesToUserError} from '@fluxer/errors/src/domains/channel/CannotSendMessagesToUserError';
+import {CommunityMemberDmsDisabledError} from '@fluxer/errors/src/domains/channel/CommunityMemberDmsDisabledError';
 
 interface DMPermissionValidatorDeps {
 	userRepository: UserRepository;
@@ -35,9 +35,6 @@ export class DMPermissionValidator {
 		const targetUser = await this.deps.userRepository.findUnique(recipientId);
 		if (!targetUser) {
 			throw new CannotSendMessagesToUserError();
-		}
-		if (isBugHunterBotUser(senderUser)) {
-			return;
 		}
 		const isShadowbannedSpammer = !senderUser.isBot && (senderUser.flags & UserFlags.SPAMMER) === UserFlags.SPAMMER;
 		const [senderBlockedTarget, targetBlockedSender, areFriends, targetSettings, senderSettings] = await Promise.all([
@@ -63,9 +60,14 @@ export class DMPermissionValidator {
 			this.deps.guildRepository.listUserGuilds(senderId),
 			this.deps.guildRepository.listUserGuilds(recipientId),
 		]);
-		const mutualGuilds = getMutualGuildsForDmAccess({userGuilds: senderGuilds, targetGuilds});
+		const senderGuildIds: ReadonlySet<bigint> = new Set(senderGuilds.map((guild) => guild.id));
+		const sharedGuilds = targetGuilds.filter((guild) => senderGuildIds.has(guild.id));
+		const involvesBot = senderUser.isBot || targetUser.isBot;
+		const mutualGuilds = involvesBot
+			? sharedGuilds
+			: sharedGuilds.filter((guild) => !guild.features.has(GuildFeatures.MEMBER_DMS_DISABLED));
 		if (mutualGuilds.length === 0) {
-			throw new CannotSendMessagesToUserError();
+			throw sharedGuilds.length > 0 ? new CommunityMemberDmsDisabledError() : new CannotSendMessagesToUserError();
 		}
 		const targetHasRestrictions = hasDmRestrictions(targetSettings, senderUser.isBot);
 		const senderHasRestrictions = hasDmRestrictions(senderSettings, targetUser.isBot);

@@ -19,6 +19,7 @@ mod subscription;
 mod tokens;
 mod vendor;
 
+pub use config::Config;
 pub use server::run;
 
 fn unix_seconds() -> i64 {

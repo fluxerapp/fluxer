@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Use your own proxy
-description: Put nginx, Caddy or another reverse proxy in front of your Fluxer instance.
+description: Put nginx, Caddy, Apache or another reverse proxy in front of your Fluxer instance.
 ---
 
 By default, Fluxer uses ports 80 and 443 and gets its own certificate from Let's Encrypt. If another web server on the machine already uses those ports, Fluxer can serve plain HTTP on a local port for your proxy to forward to.
@@ -99,6 +99,37 @@ server {
 ```
 
 Don't change `$remote_addr` to `$proxy_add_x_forwarded_for`, which keeps the value the visitor sent and lets anyone pretend to come from another address.
+
+Keep `proxy_pass` without a path after the port. With a path such as `http://127.0.0.1:8080/`, nginx decodes and rewrites the request path before it forwards it, and some media URLs stop working.
+
+## Apache
+
+Turn on `mod_proxy`, `mod_proxy_http`, `mod_headers` and `mod_ssl`. `upgrade=websocket` needs Apache 2.4.47 or later.
+
+```apache
+<VirtualHost *:80>
+    ServerName chat.example.com
+    Redirect permanent / https://chat.example.com/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName chat.example.com
+
+    SSLEngine on
+    SSLCertificateFile    /etc/letsencrypt/live/chat.example.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/chat.example.com/privkey.pem
+    SSLProtocol           -all +TLSv1.2 +TLSv1.3
+
+    AllowEncodedSlashes NoDecode
+    ProxyPreserveHost On
+    RequestHeader unset X-Forwarded-For early
+
+    ProxyPass        / http://127.0.0.1:8080/ nocanon upgrade=websocket timeout=3600
+    ProxyPassReverse / http://127.0.0.1:8080/
+</VirtualHost>
+```
+
+Keep `nocanon` and `AllowEncodedSlashes NoDecode`. Without them, Apache rewrites or refuses media URLs that have escaped characters, such as `%3D` and `%2F`. `AllowEncodedSlashes` has to be inside the `VirtualHost`, and Apache doesn't copy it from the main server config. Don't proxy with `RewriteRule` and the `[P]` flag, which refuses the same URLs.
 
 ## Caddy
 

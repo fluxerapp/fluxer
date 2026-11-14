@@ -903,6 +903,9 @@ const INSTANCE_CONFIG_SECTION_APPLIERS = {
 							renew_window_days: readOptionalField(media.attachment_decay, 'renew_window_days'),
 						})
 					: undefined,
+				...omitUndefinedFields({
+					proxy_attachments_through_api: readOptionalField(media, 'proxy_attachments_through_api'),
+				}),
 			});
 			const attachmentDecay = await instanceConfigRepository.getEffectiveAttachmentDecayConfig();
 			if (attachmentDecay.enabled && attachmentExpiryRulesChanged(previousAttachmentDecay, attachmentDecay)) {

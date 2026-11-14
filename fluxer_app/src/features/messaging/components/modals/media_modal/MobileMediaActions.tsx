@@ -20,6 +20,7 @@ import {
 	FORWARD_MEDIA_DESCRIPTOR,
 	MEDIA_CONTROLS_DESCRIPTOR,
 	OPEN_IN_BROWSER_DESCRIPTOR,
+	OPEN_POST_DESCRIPTOR,
 	REPLY_TO_MEDIA_MESSAGE_DESCRIPTOR,
 	RESET_MEDIA_POSITION_DESCRIPTOR,
 	ROTATE_ANTICLOCKWISE_DESCRIPTOR,
@@ -38,6 +39,7 @@ import {
 	ArrowCounterClockwiseIcon,
 	ArrowSquareOutIcon,
 	ArrowsInSimpleIcon,
+	ChatCircleIcon,
 	CopySimpleIcon,
 	DotsThreeIcon,
 	DownloadSimpleIcon,
@@ -73,6 +75,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 		onRotateCCW,
 		onReply,
 		onForward,
+		onViewPost,
 		onClose,
 		canReset = false,
 		canZoomIn = true,
@@ -81,6 +84,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 		onPointerEnter,
 		onPointerLeave,
 		rootRef,
+		closeButtonRef,
 	}: MobileMediaActionsProps) => {
 		const {i18n} = useLingui();
 		const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -280,6 +284,22 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 					},
 					{
 						items: [
+							...(onViewPost
+								? [
+										createItem({
+											id: 'media-view-post',
+											icon: (
+												<ChatCircleIcon
+													size={iconSize}
+													weight="bold"
+													data-flx="messaging.media-modal.mobile-media-actions.groups.chat-circle-icon"
+												/>
+											),
+											label: i18n._(OPEN_POST_DESCRIPTOR),
+											action: onViewPost,
+										}),
+									]
+								: []),
 							...(onReply
 								? [
 										createItem({
@@ -330,6 +350,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 				onForward,
 				onOpenInBrowser,
 				onReply,
+				onViewPost,
 				onReset,
 				onRotateCCW,
 				onRotateCW,
@@ -350,6 +371,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 					data-flx="messaging.media-modal.mobile-media-actions.action-bar"
 				>
 					<ControlButton
+						ref={closeButtonRef}
 						icon={
 							<XIcon
 								size={remFromPx(22)}

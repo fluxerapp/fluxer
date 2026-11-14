@@ -28,6 +28,25 @@ export interface MemberListRangeWindowOptions {
 	rowOffsets?: ReadonlyArray<number> | null;
 }
 
+export function buildInitialMemberListRenderWindow(
+	viewportHeight: number,
+	minimumRowHeight: number,
+): NormalizedMemberListRanges {
+	const end = Math.ceil(viewportHeight / minimumRowHeight) + 1;
+	return normalizeMemberListRanges([
+		[
+			0,
+			Number.isFinite(end) &&
+			Number.isFinite(viewportHeight) &&
+			Number.isFinite(minimumRowHeight) &&
+			viewportHeight > 0 &&
+			minimumRowHeight > 0
+				? end
+				: 64,
+		],
+	]);
+}
+
 interface VisibleRowBounds {
 	startIndex: number;
 	unclampedEnd: number;

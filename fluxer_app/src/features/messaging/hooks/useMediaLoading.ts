@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {forgetRestoredImageSource, wasShownBeforeRestart} from '@app/features/boot_state/BootViewport';
+import {useApiAttachmentSource} from '@app/features/messaging/hooks/useApiAttachmentSources';
 import AttachmentUrlRefresher, {sameAttachmentSource} from '@app/features/messaging/state/AttachmentUrlRefresher';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
@@ -9,6 +11,7 @@ type MediaLoadingElement = HTMLImageElement | HTMLVideoElement;
 type MediaElementStatus = 'loaded' | 'error' | 'pending';
 
 export interface MediaLoadingState {
+	src: string | undefined;
 	loaded: boolean;
 	error: boolean;
 	cached: boolean;
@@ -121,17 +124,19 @@ function pendingMediaLoadingState(src: string, loadEnabled: boolean): MediaLoadi
 }
 
 export function useMediaLoading(
-	src: string,
+	requestedSrc: string,
 	placeholder?: string,
 	options: UseMediaLoadingOptions = {},
 ): MediaLoadingState {
 	const {enabled = true} = options;
+	const {src: displaySrc, failed: fetchFailed} = useApiAttachmentSource(requestedSrc, enabled);
+	const src = displaySrc ?? '';
 	const mediaElementRef = useRef<MediaLoadingElement | null>(null);
 	const refreshedSourceRef = useRef<string | null>(null);
 	const loadEnabled = enabled && src.length > 0;
 	const sourceIdentity = useMemo<MediaLoadingSourceIdentity>(() => ({src, loadEnabled}), [loadEnabled, src]);
 	const committedSourceIdentityRef = useRef(sourceIdentity);
-	const initialCached = loadEnabled && ImageCacheUtils.hasImage(src);
+	const initialCached = loadEnabled && (ImageCacheUtils.hasImage(src) || wasShownBeforeRestart(src));
 	const [cacheAtMount] = useState<MediaLoadingCacheAtMount>(() => ({
 		src,
 		loadEnabled,
@@ -164,11 +169,12 @@ export function useMediaLoading(
 			}
 			if (status === 'error') {
 				ImageCacheUtils.forgetImage(src);
+				forgetRestoredImageSource(src);
 				setSourceState({src, loadEnabled, cached: false, loaded: false, error: true});
 				return;
 			}
 		}
-		const cached = ImageCacheUtils.hasImage(src);
+		const cached = ImageCacheUtils.hasImage(src) || wasShownBeforeRestart(src);
 		setSourceState((currentState) =>
 			keepsLoadedState(currentState, src, loadEnabled)
 				? {...currentState, src}
@@ -193,9 +199,10 @@ export function useMediaLoading(
 			if (mediaElementRef.current !== element) return;
 			if (!mediaElementMatchesSource(element, src)) return;
 			ImageCacheUtils.forgetImage(src);
+			forgetRestoredImageSource(src);
 			if (refreshedSourceRef.current !== src) {
 				refreshedSourceRef.current = src;
-				void AttachmentUrlRefresher.refresh(src, {force: true});
+				void AttachmentUrlRefresher.refresh(requestedSrc, {force: true});
 			}
 			setSourceState((currentState) => {
 				if (currentState.src === src && currentState.loadEnabled === loadEnabled && currentState.loaded) {
@@ -204,11 +211,12 @@ export function useMediaLoading(
 				return {src, loadEnabled, cached: false, loaded: false, error: true};
 			});
 		},
-		[loadEnabled, sourceIdentity, src],
+		[loadEnabled, requestedSrc, sourceIdentity, src],
 	);
 	return {
+		src: displaySrc,
 		loaded: currentSourceState.loaded,
-		error: currentSourceState.error,
+		error: currentSourceState.error || fetchFailed,
 		cached: currentSourceState.cached,
 		cachedOnMount,
 		thumbHashURL,

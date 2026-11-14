@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveFormattingLocale} from '@fluxer/constants/src/Locales';
 import {
 	DAYS_PER_MONTH,
 	DAYS_PER_WEEK,
@@ -19,7 +20,7 @@ function formatDurationSegment(value: number, locale: string, minimumIntegerDigi
 	const key = `${locale}|${minimumIntegerDigits}`;
 	let formatter = durationSegmentFormatters.get(key);
 	if (formatter === undefined) {
-		formatter = new Intl.NumberFormat(locale, {minimumIntegerDigits, useGrouping: false});
+		formatter = new Intl.NumberFormat(resolveFormattingLocale(locale), {minimumIntegerDigits, useGrouping: false});
 		durationSegmentFormatters.set(key, formatter);
 	}
 	return formatter.format(value);

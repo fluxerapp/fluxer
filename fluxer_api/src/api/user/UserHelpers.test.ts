@@ -89,7 +89,7 @@ describe('getBadgePremiumType', () => {
 describe('account standing', () => {
 	const hour = 3_600_000;
 	function standing(flags: bigint, tempBannedUntil: Date | null = null, deletionStartedAt: Date | null = null) {
-		return {flags, tempBannedUntil, deletionStartedAt};
+		return {isBot: false, isSystem: false, flags, tempBannedUntil, deletionStartedAt};
 	}
 	it('treats an active temporary ban as a refused sign-in', () => {
 		const banned = standing(UserFlags.DISABLED, new Date(Date.now() + hour));
@@ -116,6 +116,10 @@ describe('account standing', () => {
 	it('accepts an account in good standing', () => {
 		expect(isSignInRefused(standing(0n))).toBe(false);
 		expect(canOwnerRunBots(standing(0n))).toBe(true);
+	});
+	it('stops bots of a limited owner unless the owner is exempt', () => {
+		expect(canOwnerRunBots(standing(UserFlags.ACCOUNT_LIMITED))).toBe(false);
+		expect(canOwnerRunBots(standing(UserFlags.ACCOUNT_LIMITED | UserFlags.LIMIT_EXEMPT))).toBe(true);
 	});
 });
 

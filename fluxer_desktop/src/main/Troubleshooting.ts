@@ -2,6 +2,7 @@
 
 import {setDesktopTroubleshootingSettings} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
+import {wipeAllBootState} from '@electron/main/BootState';
 import {getLaunchDesktopTroubleshootingSettings} from '@electron/main/DesktopDebugInfo';
 import {destroyDesktopTray} from '@electron/main/DesktopTray';
 import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
@@ -101,6 +102,8 @@ async function resetAppDataAndRestart(): Promise<void> {
 	} catch (error) {
 		logger.warn('Failed to clear HTTP auth cache', {error});
 	}
+	await wipeAllBootState(app.getPath('userData'));
+	logger.info('Cleared boot state');
 	try {
 		clearSavedWindowBounds();
 	} catch (error) {

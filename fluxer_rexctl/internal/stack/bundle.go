@@ -25,6 +25,16 @@ func Bundle(dir string, images map[string]string) error {
 		if err != nil {
 			return err
 		}
+		if o == OverlayRustServer {
+			if data, err = renderRustOverlay(data, [][]byte{files[0].data}); err != nil {
+				return err
+			}
+		}
+		if set.Release != LegacyRelease {
+			if data, err = pinImages(data, set.Release, images); err != nil {
+				return err
+			}
+		}
 		files = append(files, renderedFile{OverlayFiles[o], data})
 	}
 	for _, d := range madeDirs {

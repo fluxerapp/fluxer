@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import {resolveDomainMigrationSide} from '@app/features/app/domain_migration/DomainMigrationCore';
 import {type RuntimeConfigSnapshot, runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {resolveSnapshotInstanceDomain} from '@app/features/auth/AccountDisplayUtils';
@@ -50,6 +51,8 @@ import {Platform} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {PASSKEY_MIGRATION_RP_ID} from '@fluxer/constants/src/PasskeyConstants';
+import {isOfficialInstanceHost} from '@fluxer/instance_bootstrap/src/OfficialInstance';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {browserSupportsWebAuthn} from '@simplewebauthn/browser';
@@ -58,6 +61,8 @@ import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 const logger = Logger.create('useLoginFlow');
 
 const LOGIN_CONNECTING_STATUS_DELAY_MS = 1500;
+
+const PASSKEY_LEGACY_RP_ID = 'fluxer.app';
 
 const PASSKEY_UNAVAILABLE_DESCRIPTOR = msg({
 	message: 'Passkey sign-in is unavailable here.',
@@ -130,6 +135,31 @@ async function runLegacyPasskeyLogin(mfa: MfaChallenge | null): Promise<LegacyPa
 	return result.status === 'completed' ? toLoginSuccessPayload(result) : 'cancelled';
 }
 
+async function performDiscoverablePasskeyCeremony(runtimeSnapshot: RuntimeConfigSnapshot, rpId?: string) {
+	const options = await getWebAuthnAuthenticationOptions(runtimeSnapshot, rpId);
+	const credential = await WebAuthnUtils.performAuthentication(options, runtimeInstanceKey(runtimeSnapshot));
+	return {options, credential};
+}
+
+async function performOfficialAwarePasskeyCeremony(runtimeSnapshot: RuntimeConfigSnapshot) {
+	if (!Platform.isElectron || !isOfficialInstanceHost(runtimeSnapshot.webAppEndpoint)) {
+		return performDiscoverablePasskeyCeremony(runtimeSnapshot);
+	}
+	try {
+		return await performDiscoverablePasskeyCeremony(runtimeSnapshot, PASSKEY_MIGRATION_RP_ID);
+	} catch (error) {
+		if (!(error instanceof Error) || error.name !== 'NotAllowedError') {
+			throw error;
+		}
+		return performDiscoverablePasskeyCeremony(runtimeSnapshot, PASSKEY_LEGACY_RP_ID);
+	}
+}
+
+function resolveLegacyPasskeyHost(): string | null {
+	const side = resolveDomainMigrationSide(window.location.origin);
+	return side?.role === 'target' ? new URL(side.source).host : null;
+}
+
 const handleLoginOutcome = async (
 	result: LoginResult,
 	onLoginSuccess?: (payload: LoginSuccessPayload) => Promise<void> | void,
@@ -168,6 +198,7 @@ interface LoginFormControllerOptions {
 	inviteCode?: string;
 	redirectPath?: string;
 	runtimeSnapshot: RuntimeConfigSnapshot | null;
+	passkeyBridgePageAvailable: boolean;
 	onLoginSuccess?: (payload: LoginSuccessPayload) => Promise<void> | void;
 	onRequireMfa?: (challenge: MfaChallenge) => void;
 	onRequireIpAuthorization?: (challenge: IpAuthorizationChallenge) => void;
@@ -177,6 +208,7 @@ export function useLoginFormController({
 	inviteCode,
 	redirectPath,
 	runtimeSnapshot,
+	passkeyBridgePageAvailable,
 	onLoginSuccess,
 	onRequireMfa,
 	onRequireIpAuthorization,
@@ -231,7 +263,7 @@ export function useLoginFormController({
 	});
 	const handlePasskeyLogin = useCallback(async () => {
 		setIsPasskeyLoading(true);
-		const migrationOrigin = isPasskeyMigrationOrigin();
+		const migrationOrigin = passkeyBridgePageAvailable && isPasskeyMigrationOrigin();
 		let navigating = false;
 		try {
 			const requestRuntimeSnapshot = requireLoginRuntimeSnapshot(runtimeSnapshot);
@@ -241,20 +273,16 @@ export function useLoginFormController({
 					ToastCommands.error(i18n._(PASSKEY_UNAVAILABLE_DESCRIPTOR));
 					return;
 				}
-				const options = await getWebAuthnAuthenticationOptions(requestRuntimeSnapshot);
-				const credential = await WebAuthnUtils.performAuthentication(
-					options,
-					runtimeInstanceKey(requestRuntimeSnapshot),
-				).catch((error: unknown) => {
+				const ceremony = await performOfficialAwarePasskeyCeremony(requestRuntimeSnapshot).catch((error: unknown) => {
 					if (migrationOrigin && isPasskeyCeremonyDismissed(error)) {
 						return null;
 					}
 					throw error;
 				});
-				if (credential !== null) {
+				if (ceremony !== null) {
 					outcome = await authenticateWithWebAuthn({
-						response: credential,
-						challenge: options.challenge,
+						response: ceremony.credential,
+						challenge: ceremony.options.challenge,
 						inviteCode,
 						runtimeSnapshot: requestRuntimeSnapshot,
 					});
@@ -293,7 +321,23 @@ export function useLoginFormController({
 				setIsPasskeyLoading(false);
 			}
 		}
-	}, [inviteCode, onLoginSuccess, redirectPath, i18n, runtimeSnapshot]);
+	}, [inviteCode, onLoginSuccess, passkeyBridgePageAvailable, redirectPath, i18n, runtimeSnapshot]);
+	const legacyPasskeyHost = useMemo(
+		() => (passkeyBridgePageAvailable ? resolveLegacyPasskeyHost() : null),
+		[passkeyBridgePageAvailable],
+	);
+	const handleLegacyPasskeyLogin = useCallback(async () => {
+		setIsPasskeyLoading(true);
+		writePasskeyLoginRoute('legacy');
+		try {
+			await runLegacyPasskeyLogin(null);
+		} catch (err) {
+			writePasskeyLoginRoute('native');
+			logger.error('Legacy passkey login failed', err);
+			ToastCommands.error(i18n._(COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR));
+			setIsPasskeyLoading(false);
+		}
+	}, [i18n]);
 	const connectingMessage =
 		connectingDomain === null ? null : i18n._(CONNECTING_TO_INSTANCE_DESCRIPTOR, {domain: connectingDomain});
 	return {
@@ -303,6 +347,8 @@ export function useLoginFormController({
 		fieldErrors,
 		error,
 		handlePasskeyLogin,
+		handleLegacyPasskeyLogin,
+		legacyPasskeyHost,
 		isPasskeyLoading,
 		connectingMessage,
 	};

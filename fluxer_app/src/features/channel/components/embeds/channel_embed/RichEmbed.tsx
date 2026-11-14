@@ -64,7 +64,7 @@ export const RichEmbed: FC<EmbedProps> = observer(
 				className={clsx(styles.embed, styles.embedFull, markupStyles.markup)}
 				data-search-highlight-scope="message"
 				style={{
-					borderLeft: `4px solid ${getBorderColor(embed.color)}`,
+					borderInlineStart: `4px solid ${getBorderColor(embed.color)}`,
 					maxWidth: formatResponsiveEmbedWidth(useNarrowWidth ? EMBED_MEDIA_MAX_WIDTH : EMBED_TEXT_OUTER_WIDTH),
 				}}
 				data-flx="channel.embeds.embed.rich-embed.embed"
@@ -77,10 +77,14 @@ export const RichEmbed: FC<EmbedProps> = observer(
 						<div className={styles.embedContent} data-flx="channel.embeds.embed.rich-embed.embed-content">
 							<EmbedProvider
 								provider={embed.provider}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.rich-embed.embed-provider"
 							/>
 							<EmbedAuthorComponent
 								author={embed.author}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.rich-embed.embed-author-component"
 							/>
 							<EmbedTitle

@@ -172,6 +172,30 @@
 			"plugins": ["./tools/lint/no-adjacent-jsx-text.grit"]
 		},
 		{
+			"includes": [
+				"fluxer_app/src/**/*.css",
+				"!fluxer_app/src/features/accessibility/components/NekoSprite.module.css",
+				"!fluxer_app/src/features/app/components/layout/AuthLayout.module.css",
+				"!fluxer_app/src/features/channel/components/ChannelOriginIcon.module.css",
+				"!fluxer_app/src/features/messaging/components/modals/MediaModal.module.css",
+				"!fluxer_app/src/features/search/components/quick_switcher/OtherAccountAvatar.module.css",
+				"!fluxer_app/src/features/theme_settings/components/QuickCssEditorPanel.module.css",
+				"!fluxer_app/src/features/ui/components/BaseAvatar.module.css",
+				"!fluxer_app/src/features/ui/components/SliderTooltip.module.css",
+				"!fluxer_app/src/features/ui/floating_pane/FloatingPaneResizeHandles.module.css",
+				"!fluxer_app/src/features/ui/resizable_pane/ResizablePaneHandles.module.css",
+				"!fluxer_app/src/features/ui/tooltip/Tooltip.module.css",
+				"!fluxer_app/src/features/voice/components/AudioWaveform.module.css",
+				"!fluxer_app/src/features/voice/components/LiveRecordingWaveform.module.css",
+				"!fluxer_app/src/features/voice/components/PiPOverlay.module.css",
+				"!fluxer_app/src/features/voice/components/media_player/InlineAudioPlayer.module.css",
+				"!fluxer_app/src/features/voice/components/media_player/MediaProgressBar.module.css",
+				"!fluxer_app/src/features/voice/components/media_player/MediaVolumeControl.module.css",
+				"!fluxer_app/src/features/voice/components/modals/MobileVideoViewer.module.css"
+			],
+			"plugins": ["./tools/lint/no-physical-css.grit"]
+		},
+		{
 			"includes": ["fluxer_app/src/features/i18n/components/AppI18nProvider.tsx"],
 			"linter": {"rules": {"style": {"noRestrictedImports": "off"}}}
 		},

@@ -78,7 +78,7 @@ pub fn simple_tab_content(
             guild_detail_tabs::overview::overview_tab(config, guild, csrf_token, admin_acls)
         }
         "features" => {
-            guild_detail_tabs::features::features_tab(config, &guild_info, csrf_token, admin_acls)
+            guild_detail_tabs::features::features_tab(config, guild, csrf_token, admin_acls)
         }
         "settings" => guild_detail_tabs::settings::settings_tab(
             config,

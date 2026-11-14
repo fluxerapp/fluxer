@@ -9,7 +9,7 @@
 	padding: 0.5rem 0.75rem;
 	border: 0;
 	border-radius: 0.5rem;
-	background-color: var(--background-secondary-alt);
+	background-color: var(--background-header-secondary);
 	color: var(--text-primary);
 	text-align: start;
 	cursor: pointer;
@@ -17,7 +17,7 @@
 }
 
 .chip:hover {
-	background-color: var(--background-modifier-hover);
+	background-image: linear-gradient(var(--background-modifier-hover), var(--background-modifier-hover));
 }
 
 .row {
@@ -56,5 +56,5 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-size: 0.8125rem;
-	color: var(--text-primary-muted);
+	color: var(--text-secondary);
 }

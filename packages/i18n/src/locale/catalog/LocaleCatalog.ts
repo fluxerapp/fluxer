@@ -17,6 +17,7 @@ const LANGUAGE_FALLBACK_BY_LANGUAGE_CODE: Record<string, LocaleCode> = {
 };
 const LOCALE_ALIASES: Partial<Record<LocaleCode, ReadonlyArray<string>>> = {
 	[Locales.EN_US]: ['en'],
+	[Locales.FIL]: ['tl'],
 	[Locales.NO]: ['nb', 'nn'],
 	[Locales.SV_SE]: ['sv'],
 };

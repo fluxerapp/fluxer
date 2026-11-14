@@ -567,6 +567,18 @@ export const TIME_FORMAT_DESCRIPTOR = msg({
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
 
+export const REGIONAL_FORMAT_DESCRIPTOR = msg({
+	message: 'Regional format',
+	comment:
+		'Title of the language settings section that picks how dates, times and numbers are written, separately from the interface language. Also a settings search entry label.',
+});
+
+export const DATE_FORMAT_DESCRIPTOR = msg({
+	message: 'Date format',
+	comment:
+		'Title of the language settings section that picks a fixed order for numeric dates. Also a settings search entry label.',
+});
+
 export const TIME_DESCRIPTOR = msg({
 	message: 'Time',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

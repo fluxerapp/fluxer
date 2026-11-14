@@ -1,24 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
-import {
-	openOAuthAuthorizeModalFromUrl,
-	parseOAuthAuthorizeModalUrl,
-} from '@app/features/auth/commands/OAuthAuthorizeModalCommands';
-import * as ChannelGateCommands from '@app/features/channel/commands/ChannelGateCommands';
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {getDMDisplayName, getIcon, getName} from '@app/features/channel/utils/ChannelUtils';
-import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
 import {joinDiscoveryGuild} from '@app/features/discovery/commands/DiscoveryJoinCommands';
 import DiscoveryChannelPreviews from '@app/features/discovery/state/DiscoveryChannelPreviews';
 import {GuildAcronym} from '@app/features/guild/components/GuildAcronym';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
 import {COPY_LINK_DESCRIPTOR, OPEN_LINK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import {LinkDestinationTooltip} from '@app/features/messaging/components/LinkDestinationTooltip';
 import jumpLinkStyles from '@app/features/messaging/components/markdown/renderers/MessageJumpLink.module.css';
@@ -31,6 +22,11 @@ import {ExternalLinkWarningModal} from '@app/features/messaging/components/modal
 import {useOpenInBrowserOnMiddleClick} from '@app/features/messaging/hooks/useOpenInBrowserOnMiddleClick';
 import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {MIDDLE_MOUSE_BUTTON} from '@app/features/messaging/utils/ExternalLinkUtils';
+import {
+	getInAppLinkAction,
+	promptForJumpGate,
+	showChannelAccessDeniedModal,
+} from '@app/features/messaging/utils/InAppLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import type {LinkNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
@@ -43,19 +39,13 @@ import {
 } from '@app/features/navigation/utils/AppPageLinks';
 import {
 	handleDeepLinkUrl,
-	isInternalChannelHost,
 	parseChannelJumpLink,
-	parseChannelUrl,
 	parseMessageJumpLink,
-	parseUserProfileUrl,
 	parseUserSettingsDeepLink,
 } from '@app/features/navigation/utils/DeepLinkUtils';
-import {currentInstanceTarget} from '@app/features/platform/transport/InstanceHTTP';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
-import * as ThemeCommands from '@app/features/theme/commands/ThemeCommands';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
-import * as ThemeUtils from '@app/features/theme/utils/ThemeUtils';
 import {loadThreadsForMessages} from '@app/features/threads/commands/ThreadCommands';
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
 import {CopyLinkIcon, OpenLinkIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
@@ -67,9 +57,8 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {CaretRightIcon} from '@app/features/ui/icons/DirectionalIcons';
-import {APP_PROTOCOL_PREFIX, APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
+import {isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
-import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import {
 	getUserSettingsSectionLabel,
 	getUserSettingsTabIconDescriptor,
@@ -135,66 +124,15 @@ const SETTINGS_LINK_DESCRIPTOR = msg({
 	message: 'settings link',
 	comment: 'Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.',
 });
-const CHANNEL_ACCESS_DENIED_DESCRIPTOR = msg({
-	message: 'Channel access denied',
-	comment: 'Title of the alert shown when clicking a message link the user does not have permission to view.',
-});
-const YOU_DO_NOT_HAVE_ACCESS_TO_THE_CHANNEL_DESCRIPTOR = msg({
-	message: 'You do not have access to the channel where this message was sent.',
-	comment: 'Body of the access-denied alert for clicked message links.',
-});
 const NO_ACCESS_DESCRIPTOR = msg({
 	message: 'No access',
 	comment: 'Inline text shown inside a custom message link pill when the linked message cannot be accessed.',
-});
-const DEVELOPER_TOOLS_DESCRIPTOR = msg({
-	message: 'Developer tools',
-	comment: 'Title of the info alert shown when clicking an internal developer-tools deep link.',
-});
-const DEVELOPER_TOOLS_ARE_AVAILABLE_FROM_THE_STAFF_BADGE_DESCRIPTOR = msg({
-	message: 'Developer tools are available from the staff badge in the channel header.',
-	comment: 'Body of the developer-tools info alert. Refers to the staff badge button in the channel header.',
-});
-const LINK_UNAVAILABLE_DESCRIPTOR = msg({
-	message: 'Link unavailable',
-	comment: 'Title of the alert shown when clicking an internal link that is not available to the current account.',
-});
-const THIS_LINK_IS_NOT_AVAILABLE_FOR_YOUR_ACCOUNT_DESCRIPTOR = msg({
-	message: 'This link is not available for your account.',
-	comment: 'Body of the link-unavailable alert.',
 });
 const INVITE_LINK_MASKED_DESCRIPTOR = msg({
 	message: 'Invite link masked while sharing',
 	comment: 'Inline replacement text shown for invite links while streaming privacy is active.',
 });
 const logger = new Logger('LinkRenderer');
-
-function showChannelAccessDeniedModal(i18n: I18n): void {
-	ModalCommands.push(
-		modal(() => (
-			<ConfirmModal
-				title={i18n._(CHANNEL_ACCESS_DENIED_DESCRIPTOR)}
-				description={i18n._(YOU_DO_NOT_HAVE_ACCESS_TO_THE_CHANNEL_DESCRIPTOR)}
-				data-flx="messaging.markdown.renderers.link-renderer.show-channel-access-denied-modal.confirm-modal"
-			/>
-		)),
-	);
-}
-
-function getJumpGateGuildId(channel: Channel, scope?: string | null): string | null {
-	if (channel.guildId) return channel.guildId;
-	if (scope && scope !== ME) return scope;
-	return null;
-}
-
-function promptForJumpGate(channel: Channel, scope: string | null | undefined, onConfirm: () => void): boolean {
-	return ChannelGateCommands.promptForChannelGate({
-		channel,
-		channelId: channel.id,
-		guildId: getJumpGateGuildId(channel, scope),
-		onConfirm,
-	});
-}
 
 function useJumpLinkAuxClick(url: string, interactive: boolean) {
 	return useCallback(
@@ -794,9 +732,6 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const {url, text} = node;
 	const openInBrowser = useOpenInBrowserOnMiddleClick(url);
 	const content = text ? renderChildren([text], LINK_CONTENT_OPTION_OVERRIDES) : url;
-	const inviteCode = InviteUtils.findInviteUrl(url);
-	const themeCode = ThemeUtils.findThemeUrl(url);
-	const userProfileId = parseUserProfileUrl(url);
 	const messageJumpTarget = parseMessageJumpLink(url);
 	const channelJumpTarget = messageJumpTarget ? null : parseChannelJumpLink(url);
 	const jumpTarget = messageJumpTarget ?? channelJumpTarget;
@@ -920,164 +855,30 @@ export const LinkRenderer = observer(function LinkRenderer({
 			</span>
 		);
 	}
-	const shouldShowAccessDeniedModal = Boolean(jumpTarget && !jumpChannel);
-	let isInternal = false;
+	const openInApp = getInAppLinkAction(url, {
+		i18n,
+		guildId: options.guildId,
+		returnToMessageId: options.messageId,
+		returnChannelId: options.channelId,
+	});
+	const isInternal = openInApp !== null;
 	let handleClick: ((e: React.MouseEvent) => void) | undefined;
 	let isUntrustedExternalDestination = false;
-	if (userProfileId) {
-		handleClick = (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			void UserProfileCommands.openLinkedUserProfile(userProfileId, options.guildId);
-		};
-		isInternal = true;
-	} else if (shouldShowAccessDeniedModal) {
-		handleClick = (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			showChannelAccessDeniedModal(i18n);
-		};
-		isInternal = true;
-	} else if (url === `${APP_PROTOCOL_PREFIX}dev` || url === `${APP_PROTOCOL_SCHEME}dev`) {
-		handleClick = (e) => {
-			e.preventDefault();
-			if (DeveloperMode.isDeveloper) {
-				ModalCommands.push(
-					modal(() => (
-						<ConfirmModal
-							title={i18n._(DEVELOPER_TOOLS_DESCRIPTOR)}
-							description={i18n._(DEVELOPER_TOOLS_ARE_AVAILABLE_FROM_THE_STAFF_BADGE_DESCRIPTOR)}
-							data-flx="messaging.markdown.renderers.link-renderer.handle-click.confirm-modal--2"
-						/>
-					)),
-				);
-			} else {
-				ModalCommands.push(
-					modal(() => (
-						<ConfirmModal
-							title={i18n._(LINK_UNAVAILABLE_DESCRIPTOR)}
-							description={i18n._(THIS_LINK_IS_NOT_AVAILABLE_FOR_YOUR_ACCOUNT_DESCRIPTOR)}
-							data-flx="messaging.markdown.renderers.link-renderer.handle-click.confirm-modal--3"
-						/>
-					)),
-				);
-			}
-		};
-		isInternal = true;
-	} else if (appPage) {
-		handleClick = (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			navigateToAppPage(appPage);
-		};
-		isInternal = true;
-	} else if (isAppProtocolUrl(url)) {
-		handleClick = (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			if (handleDeepLinkUrl(url)) return;
-			ModalCommands.push(
-				modal(() => (
-					<ConfirmModal
-						title={i18n._(LINK_UNAVAILABLE_DESCRIPTOR)}
-						description={i18n._(THIS_LINK_IS_NOT_AVAILABLE_FOR_YOUR_ACCOUNT_DESCRIPTOR)}
-						data-flx="messaging.markdown.renderers.link-renderer.handle-click.confirm-modal--4"
-					/>
-				)),
-			);
-		};
-		isInternal = true;
-	} else {
+	if (!isInternal) {
 		try {
-			const oauthAuthorizeUrl = parseOAuthAuthorizeModalUrl(url);
-			const parsed = oauthAuthorizeUrl ?? new URL(url);
-			if (oauthAuthorizeUrl) {
+			isUntrustedExternalDestination = !TrustedDomain.isTrustedDomain(new URL(url).hostname);
+			if (isUntrustedExternalDestination) {
 				handleClick = (e) => {
 					e.preventDefault();
-					e.stopPropagation();
-					if (!openOAuthAuthorizeModalFromUrl(url)) {
-						void openExternalUrl(url);
-					}
+					ModalCommands.push(
+						modal(() => (
+							<ExternalLinkWarningModal
+								url={url}
+								data-flx="messaging.markdown.renderers.link-renderer.handle-click.external-link-warning-modal"
+							/>
+						)),
+					);
 				};
-				isInternal = true;
-			} else {
-				isInternal = isInternalChannelHost(parsed.host) && parsed.pathname.startsWith('/channels/');
-			}
-			if (!handleClick && inviteCode) {
-				handleClick = (e) => {
-					e.preventDefault();
-					void InviteCommands.openAcceptModal(inviteCode, currentInstanceTarget());
-				};
-				isInternal = true;
-			} else if (!handleClick && themeCode) {
-				handleClick = (e) => {
-					e.preventDefault();
-					ThemeCommands.openAcceptModal(themeCode, i18n, RuntimeConfig.getSnapshot());
-				};
-				isInternal = true;
-			} else if (!handleClick && isInternal) {
-				const channelJump = channelJumpTarget;
-				if (messageJumpTarget && jumpChannel) {
-					const targetChannelId = messageJumpTarget.channelId;
-					const targetMessageId = messageJumpTarget.messageId;
-					handleClick = (e) => {
-						e.preventDefault();
-						const navigateToTarget = () => {
-							if (LinkChannelCommands.openLinkChannel(jumpChannel, {skipGate: true})) {
-								return;
-							}
-							goToMessage(targetChannelId, targetMessageId, {
-								returnToMessageId: options.messageId,
-								returnChannelId: options.channelId,
-							});
-						};
-						if (promptForJumpGate(jumpChannel, messageJumpTarget.scope, navigateToTarget)) {
-							return;
-						}
-						navigateToTarget();
-					};
-				} else if (channelJump) {
-					handleClick = (e) => {
-						e.preventDefault();
-						const navigateToTarget = () => {
-							if (jumpChannel && LinkChannelCommands.openLinkChannel(jumpChannel, {skipGate: true})) {
-								return;
-							}
-							NavigationCommands.selectChannel(
-								channelJump.scope === ME ? undefined : channelJump.scope,
-								channelJump.channelId,
-							);
-						};
-						if (jumpChannel && promptForJumpGate(jumpChannel, channelJump.scope, navigateToTarget)) {
-							return;
-						}
-						navigateToTarget();
-					};
-				} else if (parseChannelUrl(url)) {
-					handleClick = (e) => {
-						e.preventDefault();
-						NavigationCommands.deselectGuild();
-					};
-				} else {
-					isInternal = false;
-				}
-			}
-			if (!isInternal && !inviteCode) {
-				const isTrusted = TrustedDomain.isTrustedDomain(parsed.hostname);
-				isUntrustedExternalDestination = !isTrusted;
-				if (!isTrusted) {
-					handleClick = (e) => {
-						e.preventDefault();
-						ModalCommands.push(
-							modal(() => (
-								<ExternalLinkWarningModal
-									url={url}
-									data-flx="messaging.markdown.renderers.link-renderer.handle-click.external-link-warning-modal"
-								/>
-							)),
-						);
-					};
-				}
 			}
 		} catch (_error) {
 			logger.warn('Invalid URL in link:', url);
@@ -1096,6 +897,11 @@ export const LinkRenderer = observer(function LinkRenderer({
 				onFocus={warmAttachmentUrl}
 				onClick={(e) => {
 					e.stopPropagation();
+					if (openInApp) {
+						e.preventDefault();
+						openInApp();
+						return;
+					}
 					if (handleClick) {
 						handleClick(e);
 						return;

@@ -116,7 +116,7 @@
 	color: var(--text-tertiary);
 	white-space: nowrap;
 	min-width: 4.375rem;
-	text-align: right;
+	text-align: end;
 }
 
 .controls {
@@ -292,7 +292,7 @@
 	font-variant-numeric: tabular-nums;
 	color: var(--text-secondary);
 	min-width: 2rem;
-	text-align: right;
+	text-align: end;
 }
 
 :global(.theme-light) .mobileProgressFill:not(.mobileProgressFillActive) {

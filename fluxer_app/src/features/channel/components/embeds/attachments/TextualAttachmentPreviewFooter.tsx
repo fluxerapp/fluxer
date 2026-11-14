@@ -10,6 +10,7 @@ import {MORE_OPTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDes
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowsOutIcon, CaretDownIcon, DotsThreeIcon} from '@phosphor-icons/react';
@@ -39,7 +40,7 @@ export function TextualAttachmentPreviewFooter({
 	const fileName = getAttachmentFileName(attachment);
 	let fileSizeLabel = '';
 	if (typeof attachment.size === 'number') {
-		fileSizeLabel = formatFileSize(i18n.locale, attachment.size);
+		fileSizeLabel = formatFileSize(getFormattingLocale(), attachment.size);
 	}
 	let expandButtonLabel: string;
 	if (countKind === 'row') {

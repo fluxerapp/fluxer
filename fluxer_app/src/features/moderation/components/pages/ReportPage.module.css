@@ -141,8 +141,6 @@
 
 .eyebrow {
 	margin: 0;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
 	font-size: 0.75rem;
 	color: var(--text-tertiary);
 }

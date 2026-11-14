@@ -31,6 +31,7 @@ import {
 	MOTION_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import Users from '@app/features/user/state/Users';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {
 	ANNOUNCE_NEW_MESSAGES_DESCRIPTOR,
 	DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR,
@@ -234,7 +235,10 @@ const AccessibilityTtsTabContent: React.FC = observer(() => {
 	const ttsRate = Accessibility.ttsRate;
 	const selectedTtsRate = getNearestTtsRate(ttsRate);
 	const ttsRateOptions: ReadonlyArray<ComboboxOption<number>> = useMemo(() => {
-		const formatter = getCachedNumberFormat(i18n.locale, {minimumFractionDigits: 1, maximumFractionDigits: 1});
+		const formatter = getCachedNumberFormat(getFormattingLocale(), {
+			minimumFractionDigits: 1,
+			maximumFractionDigits: 1,
+		});
 		return TTS_RATE_OPTIONS.map((value) => ({value, label: `x${formatter.format(value)}`}));
 	}, [i18n.locale]);
 	const [isSpeaking, setIsSpeaking] = useState(false);

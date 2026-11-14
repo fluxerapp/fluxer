@@ -64,6 +64,8 @@ x-fluxer-env: &fluxer-env
 
   FLUXER_KV_URL: ${FLUXER_KV_URL:-redis://valkey:6379/0}
   FLUXER_KV_MODE: ${FLUXER_KV_MODE:-}
+  FLUXER_KV_POSTGRES_MAX_CONNECTIONS: ${FLUXER_KV_POSTGRES_MAX_CONNECTIONS:-}
+  FLUXER_KV_POSTGRES_MAX_BYTES: ${FLUXER_KV_POSTGRES_MAX_BYTES:-}
   FLUXER_NATS_URL: ${FLUXER_NATS_URL:-nats://nats:4222}
   FLUXER_NATS_JETSTREAM_URL: ${FLUXER_NATS_JETSTREAM_URL:-${FLUXER_NATS_URL:-nats://nats:4222}}
   FLUXER_NATS_AUTH_TOKEN: ${FLUXER_NATS_AUTH_TOKEN:-}
@@ -417,6 +419,7 @@ services:
     environment:
       GOMEMLIMIT: ${FLUXER_SEAWEEDFS_GOMEMLIMIT:-1536MiB}
       WEED_MASTER_VOLUME_GROWTH_COPY_1: ${FLUXER_SEAWEEDFS_VOLUME_GROWTH:-1}
+      WEED_FILER_OPTIONS_MAX_FILE_NAME_LENGTH: "1024"
     command: ["server", "-s3", "-s3.iam=false", "-dir=/data", "-master.telemetry=${FLUXER_SEAWEEDFS_TELEMETRY:-false}", "-master.volumeSizeLimitMB=${FLUXER_SEAWEEDFS_VOLUME_SIZE_LIMIT_MB:-1024}", "-master.garbageThreshold=${FLUXER_SEAWEEDFS_GARBAGE_THRESHOLD:-0.1}", "-volume.max=${FLUXER_SEAWEEDFS_VOLUME_MAX:-10000}", "-s3.concurrentFileUploadLimit=${FLUXER_SEAWEEDFS_S3_CONCURRENT_UPLOADS:-5}"]
     volumes:
       - seaweedfs-data:/data
@@ -801,6 +804,7 @@ services:
       <<: *fluxer-rust-env
       FLUXER_SVC_NAME: snowflakes
       FLUXER_SVC_MODE: combined
+      FLUXER_SNOWFLAKES_WORKER_GUARD: "true"
     healthcheck: *fluxer-svc-healthcheck
     depends_on:
       nats: {condition: service_healthy}

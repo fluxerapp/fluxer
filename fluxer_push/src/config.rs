@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use fluxer_common::config::{parse_bool, parse_number};
+use fluxer_common::config::{EnvMap, parse_bool, parse_number};
 
 use anyhow::Context as _;
 use fluxer_common::secret::SecretString;
@@ -220,6 +220,10 @@ pub enum Config {
 }
 
 impl Config {
+    pub fn from_env(env: &EnvMap) -> anyhow::Result<Self> {
+        Self::load_from_iter(Mode::Delivery, env.iter())
+    }
+
     pub fn load_from_iter<I, K, V>(mode: Mode, vars: I) -> anyhow::Result<Self>
     where
         I: IntoIterator<Item = (K, V)>,

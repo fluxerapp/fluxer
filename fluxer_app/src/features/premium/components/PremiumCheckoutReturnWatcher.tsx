@@ -3,6 +3,7 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {offerAuthenticatorCalmly} from '@app/features/auth/components/modals/AuthenticatorOfferModal';
 import Accounts from '@app/features/auth/state/Accounts';
+import {deliverPurchasedChatGift, hasPendingChatGiftSend} from '@app/features/gift/state/ChatGiftSend';
 import * as OperatorPassModalCommands from '@app/features/premium/commands/OperatorPassModalCommands';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
@@ -21,6 +22,8 @@ import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useRef} from 'react';
 
 const REFRESH_COOLDOWN_MS = 2000;
+const CHAT_GIFT_POLL_INTERVAL_MS = 3000;
+const CHAT_GIFT_POLL_ATTEMPTS = 40;
 
 interface ActivePremiumCheckoutReturnWatcherProps {
 	readonly currentUserId: string;
@@ -66,6 +69,17 @@ const ActivePremiumCheckoutReturnWatcher = observer(function ActivePremiumChecko
 		PlutoniumPageCommands.openPlutoniumPage();
 		void offerAuthenticatorCalmly();
 	}, [isPremium, currentUserId, showPremiumFeatures]);
+	useEffect(() => {
+		if (!isFocused || !isVisible || !hasPendingChatGiftSend()) return;
+		let attempts = 0;
+		const timer = setInterval(() => {
+			attempts += 1;
+			void deliverPurchasedChatGift().then((done) => {
+				if (done || attempts >= CHAT_GIFT_POLL_ATTEMPTS || !hasPendingChatGiftSend()) clearInterval(timer);
+			});
+		}, CHAT_GIFT_POLL_INTERVAL_MS);
+		return () => clearInterval(timer);
+	}, [isFocused, isVisible]);
 	useEffect(() => {
 		if (!operatorPassArrived || !isOperatorPassAvailable()) return;
 		OperatorPassModalCommands.reopenCheckoutModalAfterReturn();

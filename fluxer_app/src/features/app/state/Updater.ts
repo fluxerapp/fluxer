@@ -593,14 +593,17 @@ class Updater {
 			return;
 		}
 		if (this.isNative && this.updateInfo.native.available) {
-			logger.info('Native update is available but not installable in-app; opening desktop downloads...');
+			logger.debug('Native update is available but not installable in-app; opening desktop downloads...');
 			await openExternalUrl(DESKTOP_DOWNLOAD_URL);
 		}
 	}
 
 	private showCurrentUpdateState(): void {
 		if (this.desktopUpdateAvailable) {
-			showUpdaterModal((modals) => modals.pushDesktopUpdateAvailableModal(() => this.startDesktopUpdate()));
+			const replacesShell = this.desktopUpdateReplacesShell;
+			showUpdaterModal((modals) =>
+				modals.pushDesktopUpdateAvailableModal({replacesShell, onUpdate: () => this.startDesktopUpdate()}),
+			);
 			return;
 		}
 		if (this.nativeManualUpdateAvailable) {

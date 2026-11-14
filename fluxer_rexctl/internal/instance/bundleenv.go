@@ -27,6 +27,9 @@ var envOverlays = []struct {
 	{stack.OverlayProxy, "for your own reverse proxy"},
 	{stack.OverlayTunnel, "for a tunnel"},
 	{stack.OverlayExternalObjectStore, "for your own object store"},
+	{stack.OverlayFilesystemStore, "for uploaded files kept as plain files in a volume instead of SeaweedFS"},
+	{stack.OverlayKVPostgres, "for cache, rate limit and queue data kept in Postgres instead of Valkey"},
+	{stack.OverlayRustServer, "for the Rust services in one container"},
 	{stack.OverlayIPv6, "for IPv6 on Fluxer's network"},
 	{stack.OverlayExternalVoice, "for voice servers of your own without the bundled LiveKit"},
 }

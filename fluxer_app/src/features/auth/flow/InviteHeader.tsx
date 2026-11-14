@@ -7,7 +7,7 @@ import {formatNumber} from '@app/features/i18n/utils/IntlCache';
 import {isGroupDmInvite, isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import {BaseAvatar} from '@app/features/ui/components/BaseAvatar';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import type {GroupDmInvite, GuildInvite, Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {Plural, Trans} from '@lingui/react/macro';
@@ -40,7 +40,7 @@ interface PreviewGuildInviteHeaderProps {
 }
 
 function formatInviteCount(value: number): string {
-	return formatNumber(value, getCurrentLocale());
+	return formatNumber(value, getFormattingLocale());
 }
 
 export const GuildInviteHeader = observer(function GuildInviteHeader({invite}: GuildInviteHeaderProps) {

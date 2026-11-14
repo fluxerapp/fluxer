@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Initialization from '@app/features/app/state/Initialization';
 import {Relationship, type RelationshipWire} from '@app/features/relationship/models/Relationship';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
+import isEqual from 'lodash/isEqual';
 import {makeAutoObservable} from 'mobx';
 
 class Relationships {
@@ -12,11 +14,15 @@ class Relationships {
 	}
 
 	loadRelationships(relationships: ReadonlyArray<RelationshipWire>): void {
-		const newRelationships: Record<string, Relationship> = {};
-		for (const relationship of relationships) {
-			newRelationships[relationship.id] = new Relationship(relationship);
+		if (!Initialization.isStale) this.relationships = {};
+		const incoming = new Set(relationships.map((relationship) => relationship.id));
+		for (const id of Object.keys(this.relationships)) {
+			if (!incoming.has(id)) delete this.relationships[id];
 		}
-		this.relationships = newRelationships;
+		for (const relationship of relationships) {
+			const next = new Relationship(relationship);
+			if (!isEqual(this.relationships[relationship.id], next)) this.relationships[relationship.id] = next;
+		}
 	}
 
 	hydrateFromSnapshot(relationships: ReadonlyArray<RelationshipWire>): void {

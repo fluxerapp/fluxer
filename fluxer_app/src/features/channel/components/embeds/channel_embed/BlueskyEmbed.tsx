@@ -193,7 +193,7 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 					...(isNested
 						? {maxWidth: '100%', width: '100%'}
 						: {
-								borderLeft: `4px solid ${getBorderColor(embed.color)}`,
+								borderInlineStart: `4px solid ${getBorderColor(embed.color)}`,
 								maxWidth: formatResponsiveEmbedWidth(blueskyOuterMaxWidth),
 							}),
 				}}
@@ -204,10 +204,14 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 						<div className={styles.embedContent} data-flx="channel.embeds.embed.bluesky-embed.embed-content">
 							<EmbedProvider
 								provider={embed.provider}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.bluesky-embed.embed-provider"
 							/>
 							<EmbedAuthorComponent
 								author={embed.author}
+								messageId={message.id}
+								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.bluesky-embed.embed-author-component"
 							/>
 							{!isNested && (

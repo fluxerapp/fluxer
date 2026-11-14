@@ -125,6 +125,7 @@ export async function revertEmailChange(
 			{
 				email: tokenData.email,
 				email_verified: true,
+				email_bounced: false,
 				totp_secret: null,
 				authenticator_types: null,
 				password_hash: passwordHash,

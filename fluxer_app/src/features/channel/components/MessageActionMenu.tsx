@@ -122,6 +122,7 @@ interface MessageActionMenuOptions {
 	sourceChannel?: MessagePermissions['channel'] | null;
 	quickReactionCount?: number;
 	submenuReactionCount?: number;
+	hideReply?: boolean;
 }
 
 export const messageActionMenuItemIds = {
@@ -170,6 +171,7 @@ export const useMessageActionMenuData = (
 		sourceChannel,
 		quickReactionCount = 5,
 		submenuReactionCount = 16,
+		hideReply = false,
 	} = options;
 	const permissions = useMessagePermissions(message, sourceChannel);
 	const handlers = useMemo(
@@ -287,7 +289,7 @@ export const useMessageActionMenuData = (
 					),
 				});
 			}
-			if (message.isUserMessage() && supportsInteractiveActions && permissions?.canSendMessages) {
+			if (message.isUserMessage() && supportsInteractiveActions && permissions?.canSendMessages && !hideReply) {
 				interactionActions.push({
 					id: messageActionMenuItemIds.reply,
 					icon: <ReplyIcon size={20} data-flx="channel.message-action-menu.groups.reply-icon" />,
@@ -494,6 +496,7 @@ export const useMessageActionMenuData = (
 		handleSpeakMessage,
 		handleReportMessage,
 		handleDebugMessage,
+		hideReply,
 		i18n.locale,
 	]);
 	const quickReactionRowVisible =

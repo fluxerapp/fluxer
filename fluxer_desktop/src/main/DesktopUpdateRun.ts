@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {errorMessage as describeFailure} from '@electron/common/ErrorMessage';
-
-import type {DesktopUpdateCheck} from '@electron/main/DesktopUpdateGate';
+import {type DesktopUpdateCheck, publishDesktopUpdateCheck} from '@electron/main/DesktopUpdateGate';
 import type {ModuleLaunchAttempt} from '@electron/main/ModuleStore';
+import type {ShellUpdateCapability, ShellUpdatePlan} from '@electron/main/ShellUpdateCapability';
 
 export interface DesktopUpdateProbe {
 	readonly shellLatestVersion: string;
@@ -11,16 +11,12 @@ export interface DesktopUpdateProbe {
 	readonly modulesChanged: boolean;
 }
 
-export interface ShellSelfUpdateResult {
+interface ShellSelfUpdateResult {
 	readonly reason: string;
 	readonly detail: string | null;
 }
 
 export interface DesktopUpdateTakeover {
-	readonly begin: () => Promise<void>;
-	readonly restore: () => void;
-	readonly closeApp: () => Promise<void>;
-	readonly reopen: (launchAttempt: ModuleLaunchAttempt | null) => void;
 	readonly reloadInPlace: (launchAttempt: ModuleLaunchAttempt) => Promise<void>;
 }
 
@@ -32,11 +28,10 @@ interface DesktopUpdateLogger {
 
 interface DesktopUpdateRunOptions {
 	readonly probe: () => Promise<DesktopUpdateProbe>;
-	readonly canSelfUpdateShell: boolean;
-	readonly runShellSelfUpdate: () => Promise<ShellSelfUpdateResult>;
-	readonly installModules: () => Promise<ModuleLaunchAttempt | null>;
+	readonly stageModules: () => Promise<boolean>;
+	readonly activateStagedModules: () => Promise<ModuleLaunchAttempt | null>;
+	readonly shellUpdatePlan: ShellUpdatePlan;
 	readonly takeover: DesktopUpdateTakeover;
-	readonly publish: (check: DesktopUpdateCheck) => void;
 	readonly openDownloadsPage: () => Promise<void>;
 	readonly reportFailure?: (failure: ShellSelfUpdateResult) => void;
 	readonly logger: DesktopUpdateLogger;
@@ -44,24 +39,24 @@ interface DesktopUpdateRunOptions {
 }
 
 const SHELL_FEED_BEHIND_RETRY_MS = 10 * 60_000;
+const BOOT_STATE_FLUSH_TIMEOUT_MS = 1500;
 
-interface FilteredProbe {
-	readonly check: DesktopUpdateCheck;
-	readonly shellLatestVersion: string;
-}
+type ShellSelfUpdatePlan = Extract<ShellUpdatePlan, {capability: typeof ShellUpdateCapability.SELF_UPDATE}>;
 
 export class DesktopUpdateRun {
 	private readonly options: DesktopUpdateRunOptions;
 	private readonly now: () => number;
+	private readonly shellPlan: ShellSelfUpdatePlan | null;
 	private launchSettled = false;
 	private shellFeedBehind: {readonly version: string; readonly at: number} | null = null;
 	private shellInstallFailed = false;
-	private lastShellFailure: ShellSelfUpdateResult | null = null;
-	private lastCheck: DesktopUpdateCheck | null = null;
+	private lastCheck: DesktopUpdateCheck = {shellReady: false, modulesReady: false};
 
 	public constructor(options: DesktopUpdateRunOptions) {
 		this.options = options;
 		this.now = options.now ?? Date.now;
+		const plan = options.shellUpdatePlan;
+		this.shellPlan = 'updater' in plan ? plan : null;
 	}
 
 	public markLaunchSettled(): void {
@@ -69,10 +64,20 @@ export class DesktopUpdateRun {
 	}
 
 	public async check({manual = false}: {readonly manual?: boolean} = {}): Promise<DesktopUpdateCheck> {
+		const {logger} = this.options;
 		if (manual) {
 			this.shellFeedBehind = null;
 		}
-		return (await this.probe()).check;
+		const startedAt = this.now();
+		const probe = await this.options.probe();
+		const modulesReady = probe.modulesChanged && (await this.options.stageModules());
+		const shellReady = await this.stageShell(probe);
+		const check = {shellReady, modulesReady};
+		if (shellReady || modulesReady) {
+			logger.info('Staged the desktop update in the background', {...check, elapsedMs: this.now() - startedAt});
+		}
+		this.lastCheck = check;
+		return check;
 	}
 
 	public async start(): Promise<void> {
@@ -82,135 +87,88 @@ export class DesktopUpdateRun {
 			logger.warn('Ignoring a desktop update start before the renderer confirmed its launch');
 			return;
 		}
-		if (this.shellInstallFailed && this.lastCheck?.modulesChanged !== true) {
-			logger.warn('The shell update failed to install this session, opening the downloads page instead');
-			await this.options.openDownloadsPage();
+		const check = this.lastCheck;
+		if (check.shellReady) {
+			if (this.shellInstallFailed && !check.modulesReady) {
+				logger.warn('The shell update failed to install this session, opening the downloads page instead');
+				await this.options.openDownloadsPage();
+				return;
+			}
+			await this.applyShell(check, startedAt);
 			return;
 		}
-		if (this.lastCheck != null && !this.lastCheck.shellNewer && this.lastCheck.modulesChanged) {
-			await this.startInPlace(startedAt);
-			return;
+		if (check.modulesReady) {
+			await this.applyModulesInPlace(check, startedAt);
 		}
-		logger.info('Starting the desktop update');
-		const probing = this.probe();
-		probing.catch(() => {});
-		await this.startWithTakeover(startedAt, probing);
 	}
 
-	private async startInPlace(startedAt: number): Promise<void> {
+	private async stageShell(probe: DesktopUpdateProbe): Promise<boolean> {
+		const plan = this.shellPlan;
+		if (plan == null || !probe.shellNewer || this.isShellFeedBehind(probe.shellLatestVersion)) {
+			return false;
+		}
+		const {stageShellUpdate} = await import('@electron/main/ShellSelfUpdate');
+		const result = await stageShellUpdate(plan);
+		if (result.status === 'staged') {
+			return true;
+		}
+		if (result.failure.reason === 'no-update') {
+			this.shellFeedBehind = {version: probe.shellLatestVersion, at: this.now()};
+		}
+		return false;
+	}
+
+	private async applyShell(check: DesktopUpdateCheck, startedAt: number): Promise<void> {
+		const {logger} = this.options;
+		await this.flushBootState();
+		const {applyStagedShellUpdate} = await import('@electron/main/ShellSelfUpdate');
+		const failure = applyStagedShellUpdate();
+		if (failure == null) {
+			logger.info('Applying the staged shell update, the app restarts now', {elapsedMs: this.now() - startedAt});
+			return;
+		}
+		logger.error('The staged shell update failed to apply', failure);
+		if (failure.reason === 'install-failed') {
+			this.shellInstallFailed = true;
+		}
+		this.publish({shellReady: false, modulesReady: check.modulesReady});
+		this.options.reportFailure?.(failure);
+	}
+
+	private async applyModulesInPlace(check: DesktopUpdateCheck, startedAt: number): Promise<void> {
 		const {logger, takeover} = this.options;
-		logger.info('Starting the module update in place, the shell stays as it is');
-		let probe: FilteredProbe;
-		try {
-			probe = await this.probe();
-		} catch (error) {
-			logger.warn('The desktop update check failed, leaving the app as it is', error);
-			this.options.reportFailure?.({reason: 'check-failed', detail: describeFailure(error)});
-			return;
-		}
-		const {check} = probe;
-		if (check.shellNewer) {
-			logger.info('A newer shell appeared since the last check, updating it behind the splash');
-			await this.startWithTakeover(startedAt, Promise.resolve(probe));
-			return;
-		}
-		if (!check.modulesChanged) {
-			this.publish(check);
-			return;
-		}
+		await this.flushBootState();
 		let launchAttempt: ModuleLaunchAttempt | null;
 		try {
-			launchAttempt = await this.options.installModules();
+			launchAttempt = await this.options.activateStagedModules();
 		} catch (error) {
-			logger.error('The module update failed, the app keeps running on the installed modules', error);
-			this.publish(check);
-			this.options.reportFailure?.({reason: 'download-failed', detail: describeFailure(error)});
+			logger.error(
+				'The staged module update failed to activate, the app keeps running on the installed modules',
+				error,
+			);
+			this.publish({shellReady: check.shellReady, modulesReady: false});
+			this.options.reportFailure?.({reason: 'install-failed', detail: describeFailure(error)});
 			return;
 		}
-		this.publish({shellNewer: false, modulesChanged: false});
-		logger.info('Installed the module update in place', {
+		this.publish({shellReady: check.shellReady, modulesReady: false});
+		logger.info('Activated the staged module update in place', {
 			activated: launchAttempt != null,
 			elapsedMs: this.now() - startedAt,
 		});
 		if (launchAttempt != null) {
+			const {prepareBootStateReload} = await import('@electron/main/BootState');
+			await prepareBootStateReload();
 			await takeover.reloadInPlace(launchAttempt);
 		}
 	}
 
-	private async startWithTakeover(startedAt: number, probing: Promise<FilteredProbe>): Promise<void> {
-		const {logger, takeover} = this.options;
-		await takeover.begin();
-		logger.info('The update splash took the app windows over', {elapsedMs: this.now() - startedAt});
-		let probe: FilteredProbe;
-		try {
-			probe = await probing;
-		} catch (error) {
-			logger.warn('The desktop update check failed, giving the app windows back', error);
-			takeover.restore();
-			this.options.reportFailure?.({reason: 'check-failed', detail: describeFailure(error)});
-			return;
-		}
-		const {check} = probe;
-		logger.info('Checked for the desktop update', {...check, elapsedMs: this.now() - startedAt});
-		if (!check.shellNewer && !check.modulesChanged) {
-			this.publish(check);
-			takeover.restore();
-			return;
-		}
-		await takeover.closeApp();
-		logger.info('Closed the app windows for the update', {elapsedMs: this.now() - startedAt});
-		let launchAttempt: ModuleLaunchAttempt | null = null;
-		let remaining = check;
-		let failure: ShellSelfUpdateResult | null = null;
-		try {
-			if (check.shellNewer) {
-				remaining = await this.updateShell(probe);
-				failure = this.lastShellFailure;
-			}
-			if (check.modulesChanged) {
-				launchAttempt = await this.options.installModules();
-				remaining = {shellNewer: remaining.shellNewer, modulesChanged: false};
-				logger.info('Installed the module update', {
-					activated: launchAttempt != null,
-					elapsedMs: this.now() - startedAt,
-				});
-			}
-		} catch (error) {
-			logger.error('The desktop update failed, reopening the app on the installed modules', error);
-			failure = {reason: 'download-failed', detail: describeFailure(error)};
-		} finally {
-			this.publish(remaining);
-			takeover.reopen(launchAttempt);
-		}
-		if (failure != null) {
-			this.options.reportFailure?.(failure);
-		}
-	}
-
-	private async updateShell(probe: FilteredProbe): Promise<DesktopUpdateCheck> {
-		const {logger} = this.options;
-		const result = await this.options.runShellSelfUpdate();
-		logger.warn('The shell self update did not restart the app', result);
-		this.lastShellFailure = result.reason === 'no-update' ? null : result;
-		if (result.reason === 'no-update') {
-			this.shellFeedBehind = {version: probe.shellLatestVersion, at: this.now()};
-			return {shellNewer: false, modulesChanged: probe.check.modulesChanged};
-		}
-		if (result.reason === 'install-failed') {
-			this.shellInstallFailed = true;
-		}
-		return probe.check;
-	}
-
-	private async probe(): Promise<FilteredProbe> {
-		const probe = await this.options.probe();
-		const check = {
-			shellNewer:
-				this.options.canSelfUpdateShell && probe.shellNewer && !this.isShellFeedBehind(probe.shellLatestVersion),
-			modulesChanged: probe.modulesChanged,
-		};
-		this.lastCheck = check;
-		return {check, shellLatestVersion: probe.shellLatestVersion};
+	private async flushBootState(): Promise<void> {
+		const [{requestBootStateFlush}, {getMainWindow}] = await Promise.all([
+			import('@electron/main/BootState'),
+			import('@electron/main/Window'),
+		]);
+		const result = await requestBootStateFlush(getMainWindow()?.webContents ?? null, BOOT_STATE_FLUSH_TIMEOUT_MS);
+		this.options.logger.info('Flushed the boot state before applying the update', {result});
 	}
 
 	private isShellFeedBehind(version: string): boolean {
@@ -220,6 +178,6 @@ export class DesktopUpdateRun {
 
 	private publish(check: DesktopUpdateCheck): void {
 		this.lastCheck = check;
-		this.options.publish(check);
+		publishDesktopUpdateCheck(check);
 	}
 }

@@ -20,8 +20,5 @@
 		"gateway-socket.win32-arm64-msvc.node",
 		"gateway-socket.linux-x64-gnu.node",
 		"gateway-socket.linux-arm64-gnu.node"
-	],
-	"scripts": {
-		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon"
-	}
+	]
 }

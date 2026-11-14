@@ -5,6 +5,7 @@
 
 -export([
     build_call_event/1,
+    broadcast_call_event/1,
     caller_from_state/1,
     put_caller/2,
     format_voice_state/1,
@@ -13,20 +14,33 @@
     find_session_by_pid/2,
     remove_session_entry/2,
     user_has_session/2,
+    voice_state_connection_id/1,
+    voice_user_ids/1,
+    user_voice_states/2,
+    without_session_voice_states/2,
+    session_has_voice_state/2,
+    voice_states_by_user/1,
+    voice_states_by_connection/1,
     sync_voice_state_count_diff/2,
     cleanup_voice_state_counts/1
 ]).
 
 -spec build_call_event(map()) -> map().
 build_call_event(State) ->
-    #{
+    broadcast_call_event(#{
         channel_id => integer_to_binary(maps:get(channel_id, State)),
         message_id => integer_to_binary(maps:get(message_id, State)),
         region => maps:get(region, State),
         ringing => integer_list_to_binaries(maps:get(ringing, State)),
+        voice_states => format_voice_states(maps:get(voice_states, State))
+    }).
+
+-spec broadcast_call_event(map()) -> map().
+broadcast_call_event(CallData) ->
+    (maps:with([channel_id, message_id, region, ringing], CallData))#{
         voice_states => [
             voice_state_utils:sanitize_voice_state_for_broadcast(VS)
-         || VS <- format_voice_states(maps:get(voice_states, State))
+         || VS <- maps:get(voice_states, CallData, [])
         ]
     }.
 
@@ -66,10 +80,58 @@ format_voice_state(VoiceState) ->
         VoiceState
     ).
 
--spec format_voice_states(#{integer() => map()}) -> [map()].
+-spec format_voice_states(#{binary() => map()}) -> [map()].
 format_voice_states(VoiceStates) ->
     Sorted = lists:keysort(1, maps:to_list(VoiceStates)),
-    [format_voice_state(VS) || {_UserId, VS} <- Sorted].
+    [format_voice_state(VS) || {_ConnectionId, VS} <- Sorted].
+
+-spec voice_user_ids(#{binary() => map()}) -> [integer()].
+voice_user_ids(VoiceStates) ->
+    lists:usort([
+        UserId
+     || VS <- maps:values(VoiceStates),
+        UserId <- [voice_state_utils:voice_state_user_id(VS)],
+        is_integer(UserId)
+    ]).
+
+-spec user_voice_states(integer(), #{binary() => map()}) -> #{binary() => map()}.
+user_voice_states(UserId, VoiceStates) ->
+    maps:filter(
+        fun(_ConnectionId, VS) -> voice_state_utils:voice_state_user_id(VS) =:= UserId end,
+        VoiceStates
+    ).
+
+-spec without_session_voice_states(binary(), #{binary() => map()}) -> #{binary() => map()}.
+without_session_voice_states(SessionId, VoiceStates) ->
+    maps:filter(
+        fun(_ConnectionId, VS) -> maps:get(<<"session_id">>, VS, undefined) =/= SessionId end,
+        VoiceStates
+    ).
+
+-spec session_has_voice_state(binary(), #{binary() => map()}) -> boolean().
+session_has_voice_state(SessionId, VoiceStates) ->
+    lists:any(
+        fun(VS) -> maps:get(<<"session_id">>, VS, undefined) =:= SessionId end,
+        maps:values(VoiceStates)
+    ).
+
+-spec voice_states_by_user(#{binary() => map()}) -> #{integer() => map()}.
+voice_states_by_user(VoiceStates) ->
+    maps:from_list([
+        {UserId, VS}
+     || VS <- maps:values(VoiceStates),
+        UserId <- [voice_state_utils:voice_state_user_id(VS)],
+        is_integer(UserId)
+    ]).
+
+-spec voice_states_by_connection(map()) -> #{binary() => map()}.
+voice_states_by_connection(VoiceStates) ->
+    maps:from_list([
+        {ConnectionId, VS}
+     || VS <- maps:values(VoiceStates),
+        ConnectionId <- [voice_state_connection_id(VS)],
+        is_binary(ConnectionId)
+    ]).
 
 -spec user_has_session(integer(), #{binary() => {integer(), pid(), reference()}}) -> boolean().
 user_has_session(UserId, Sessions) ->
@@ -122,16 +184,16 @@ sync_voice_state_count_diff(OldState, NewState) ->
 -spec sync_replaced_voice_states(map(), map()) -> ok.
 sync_replaced_voice_states(OldVoiceStates, NewVoiceStates) ->
     maps:foreach(
-        fun(UserId, OldVoiceState) ->
-            sync_replaced_voice_state(UserId, OldVoiceState, NewVoiceStates)
+        fun(ConnectionId, OldVoiceState) ->
+            sync_replaced_voice_state(ConnectionId, OldVoiceState, NewVoiceStates)
         end,
         OldVoiceStates
     ),
     sync_voice_state_counts(NewVoiceStates).
 
 -spec sync_replaced_voice_state(term(), map(), map()) -> ok.
-sync_replaced_voice_state(UserId, OldVoiceState, NewVoiceStates) ->
-    case maps:get(UserId, NewVoiceStates, undefined) of
+sync_replaced_voice_state(ConnectionId, OldVoiceState, NewVoiceStates) ->
+    case maps:get(ConnectionId, NewVoiceStates, undefined) of
         NewVS when is_map(NewVS) ->
             maybe_remove_replaced(OldVoiceState, NewVS);
         _ ->
@@ -150,7 +212,7 @@ maybe_remove_replaced(OldVoiceState, NewVoiceState) ->
 -spec sync_voice_state_counts(map()) -> ok.
 sync_voice_state_counts(VoiceStates) ->
     maps:foreach(
-        fun(_UserId, VoiceState) ->
+        fun(_ConnectionId, VoiceState) ->
             _ = voice_state_counts_cache:upsert_voice_state(VoiceState),
             ok
         end,
@@ -161,7 +223,7 @@ sync_voice_state_counts(VoiceStates) ->
 -spec cleanup_voice_state_counts(map()) -> ok.
 cleanup_voice_state_counts(VoiceStates) ->
     maps:foreach(
-        fun(_UserId, VoiceState) ->
+        fun(_ConnectionId, VoiceState) ->
             remove_voice_state_count(VoiceState)
         end,
         VoiceStates

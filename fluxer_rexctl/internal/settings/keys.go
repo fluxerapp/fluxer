@@ -5,6 +5,7 @@ package settings
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"maps"
 	"slices"
 	"strings"
@@ -32,6 +33,7 @@ type Key struct {
 	Confirm  string
 	Validate func(string) error
 	Options  []string
+	File     string
 	Help     string
 }
 
@@ -65,6 +67,25 @@ const (
 	DiskProfile     = "disk.profile"
 	EngineHost      = "engine.host"
 	ImagesPrefix    = "images."
+	RustProcess     = "rust.process"
+	StorageBackend  = "storage.backend"
+	KVMode          = "kv.mode"
+)
+
+const (
+	RustSingle        = "single"
+	RustPerService    = "per-service"
+	StorageS3         = "s3"
+	StorageFilesystem = "filesystem"
+	KVStandalone      = "standalone"
+	KVCluster         = "cluster"
+	KVPostgres        = "postgres"
+)
+
+const (
+	RustServerOverlayFile       = "rust-server.compose.yml"
+	FilesystemObjectOverlayFile = "filesystem-object-store.compose.yml"
+	KVPostgresOverlayFile       = "kv-postgres.compose.yml"
 )
 
 const (
@@ -105,6 +126,8 @@ func SignsAttachments(mode string) bool {
 }
 
 const storageConfirm = "Files people already uploaded stay where they are. rexctl doesn't move them."
+
+const migrateConfirm = "Data already stored stays where it is. Run rexctl migrate --experimental-native to move it over instead."
 
 var named = buildNamed()
 
@@ -169,6 +192,15 @@ func buildNamed() []Key {
 			Help: "small to keep logs, the database write-ahead log and the upload spool smaller on a small disk, or empty for the usual sizes"},
 		{Name: EngineHost, Type: "endpoint", Validate: validEndpoint,
 			Help: "The Docker or Podman engine that runs Fluxer"},
+		{Name: RustProcess, Type: "choice", Vars: []string{"FLUXER_RUST_PROCESS"}, Options: []string{RustPerService, RustSingle}, Validate: oneOf(RustPerService, RustSingle), File: RustServerOverlayFile,
+			Confirm: "The Rust services restart.",
+			Help:    "single to run the Rust services in one container, or per-service for one container each"},
+		{Name: StorageBackend, Type: "choice", Vars: []string{"FLUXER_STORAGE_BACKEND"}, Options: []string{StorageS3, StorageFilesystem}, Validate: oneOf(StorageS3, StorageFilesystem), File: FilesystemObjectOverlayFile,
+			Confirm: migrateConfirm,
+			Help:    "filesystem to keep uploaded files as plain files in a volume, or s3 for SeaweedFS or the object store set in storage.endpoint"},
+		{Name: KVMode, Type: "choice", Vars: []string{"FLUXER_KV_MODE"}, Options: []string{KVStandalone, KVCluster, KVPostgres}, Validate: oneOf(KVStandalone, KVCluster, KVPostgres), File: KVPostgresOverlayFile,
+			Confirm: migrateConfirm,
+			Help:    "postgres to keep cache, rate limit and queue data in the database, standalone for the Valkey container, or cluster for a Redis-compatible cluster at FLUXER_KV_URL"},
 	}
 	for _, svc := range slices.Sorted(maps.Keys(ImageVars)) {
 		help := "The image the " + svc + " container runs"
@@ -278,6 +310,14 @@ func otherName(name, use string) error {
 }
 
 func releaseReads(set *stack.Set, custom []string, k Key) bool {
+	if k.File != "" {
+		if set.Files == nil {
+			return false
+		}
+		if _, err := fs.Stat(set.Files, k.File); err != nil {
+			return false
+		}
+	}
 	if k.Name == MemoryProfile {
 		return len(set.Profiles) > 0
 	}
@@ -314,4 +354,46 @@ func generatedStateful(name string) bool {
 		}
 	}
 	return false
+}
+
+func CheckCombination(chosen map[string]string) error {
+	if strings.TrimSpace(chosen[StorageBackend]) == StorageFilesystem && strings.TrimSpace(chosen[StorageEndpoint]) != "" {
+		return &Error{Key: StorageBackend,
+			Problem: "storage.backend filesystem keeps files on this machine, and storage.endpoint points at another object store.",
+			Fix:     "Run rexctl config unset storage.endpoint, or rexctl config set storage.backend s3."}
+	}
+	return nil
+}
+
+var dockerOnlyVars = []string{"FLUXER_IMAGE_TAG", "FLUXER_REGISTRY", "FLUXER_REGISTRY_OWNER", "FLUXER_POSTGRES_SHM_SIZE", "FLUXER_WORKER_REPLICAS"}
+
+var dockerOnlySuffixes = []string{"_MEMORY_LIMIT", "_MEMORY_RESERVATION", "_HEALTHCHECK_INTERVAL", "_HEALTHCHECK_RETRIES", "_HEALTHCHECK_START_PERIOD"}
+
+func DockerOnly(name string) bool {
+	switch {
+	case name == ImagesRegistry, name == IPv6, name == EngineHost, strings.HasPrefix(name, ImagesPrefix):
+		return true
+	case slices.Contains(dockerOnlyVars, name), slices.Contains(slices.Collect(maps.Values(ImageVars)), name):
+		return true
+	}
+	return slices.ContainsFunc(dockerOnlySuffixes, func(s string) bool { return strings.HasSuffix(name, s) })
+}
+
+func ForNative(set *stack.Set, chosen map[string]string) (kept map[string]string, left, refused []string) {
+	kept = map[string]string{}
+	for _, name := range slices.Sorted(maps.Keys(chosen)) {
+		value := chosen[name]
+		k, named := namedKey(name)
+		switch {
+		case DockerOnly(name):
+			if strings.TrimSpace(value) != "" {
+				left = append(left, name)
+			}
+		case named && releaseReads(set, nil, k), !named && isRawName(name) && slices.Contains(set.Vars, name):
+			kept[name] = value
+		default:
+			refused = append(refused, name)
+		}
+	}
+	return kept, left, refused
 }

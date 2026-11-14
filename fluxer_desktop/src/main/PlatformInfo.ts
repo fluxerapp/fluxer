@@ -107,6 +107,7 @@ function loadNativePlatformInfo(): NativePlatformInfoModule | null {
 }
 
 async function detectRosettaMode(): Promise<boolean> {
+	if (process.arch === 'arm64') return false;
 	const mod = loadMacSysctl();
 	if (!mod?.sysctlByNameInt) return false;
 	try {
@@ -118,6 +119,7 @@ async function detectRosettaMode(): Promise<boolean> {
 }
 
 async function detectHardwareArch(): Promise<string> {
+	if (process.arch === 'arm64') return 'arm64';
 	const mod = loadMacSysctl();
 	if (!mod?.sysctlByNameInt) return os.arch();
 	try {

@@ -44,6 +44,16 @@
 	);
 }
 
+.bottomFadeStatusAtBottomFullHeight {
+	height: 5rem;
+	background: linear-gradient(
+		to bottom,
+		transparent 4rem,
+		var(--messages-bottom-fade-fill) calc(4rem + var(--composer-status-safe-gap)),
+		var(--messages-bottom-fade-fill) 100%
+	);
+}
+
 .bottomFadeStatusScrolled {
 	height: 5rem;
 	background: linear-gradient(
@@ -218,9 +228,12 @@
 }
 
 .newMessagesBarAction {
-	border-radius: var(--radius-full);
 	flex: 0 0 auto;
 	white-space: nowrap;
+}
+
+.newMessagesBar button.newMessagesBarAction {
+	border-radius: var(--radius-full);
 }
 
 @media (max-width: 520px) {

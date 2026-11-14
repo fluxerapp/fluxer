@@ -74,8 +74,6 @@
 .sectionSubtitle {
 	font-weight: 600;
 	font-size: 0.75rem;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 	margin: 1rem 0 0.625rem 0;
 	color: var(--text-tertiary);
 }
@@ -176,8 +174,6 @@
 	margin-bottom: 0.25rem;
 	font-weight: 600;
 	font-size: 0.75rem;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
 	color: var(--text-tertiary);
 }
 

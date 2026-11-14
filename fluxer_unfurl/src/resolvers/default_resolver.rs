@@ -97,6 +97,8 @@ async fn resolve_html(ctx: &ResolveContext<'_>) -> anyhow::Result<ResolverResult
             .get(reqwest::header::CONTENT_TYPE)
             .and_then(|value| value.to_str().ok()),
     );
+    let page = html_parser::parse_page(&html, &final_url);
+    drop(html);
 
     let final_ctx = ResolveContext {
         url: final_url.clone(),
@@ -115,7 +117,7 @@ async fn resolve_html(ctx: &ResolveContext<'_>) -> anyhow::Result<ResolverResult
         ctx.media_proxy,
         ctx.nsfw_mode,
         &final_url,
-        &html,
+        &page,
     )
     .await
         && !embeds.is_empty()
@@ -124,17 +126,17 @@ async fn resolve_html(ctx: &ResolveContext<'_>) -> anyhow::Result<ResolverResult
     }
 
     if urls_differ(&ctx.url, &final_url)
-        && let Some(embeds) = try_canonical_activity_pub(ctx, &final_url, &html).await
+        && let Some(embeds) = try_canonical_activity_pub(ctx, &final_url, &page).await
         && !embeds.is_empty()
     {
         return Ok(ResolverResult { embeds });
     }
 
-    let og = html_parser::parse_opengraph(&html);
-    let twitter_card = html_parser::parse_twitter_card(&html);
-
-    let mediawiki_article = fetch_mediawiki_article(&final_ctx, &html).await;
-    let oembed_data = fetch_oembed_data(&final_ctx, &html).await;
+    let mediawiki_article = fetch_mediawiki_article(&final_ctx, &page).await;
+    let oembed_data = fetch_oembed_data(&final_ctx, &page).await;
+    let html_parser::PageMetadata {
+        og, twitter_card, ..
+    } = page;
 
     let mut image_media = resolve_image_media(&final_ctx, &og, oembed_data.as_ref()).await;
     if let Some(first) = image_media.first_mut()
@@ -490,15 +492,15 @@ fn urls_differ(a: &Url, b: &Url) -> bool {
 async fn try_canonical_activity_pub(
     ctx: &ResolveContext<'_>,
     final_url: &Url,
-    html: &str,
+    page: &html_parser::PageMetadata,
 ) -> Option<Vec<MessageEmbed>> {
-    let canonical = html_parser::find_canonical_url(html, final_url)?;
-    let canonical_url = Url::parse(&canonical).ok()?;
+    let canonical = page.canonical_url.as_deref()?;
+    let canonical_url = Url::parse(canonical).ok()?;
     if !urls_differ(&canonical_url, final_url) {
         return None;
     }
     let client = ctx.activity_pub_client();
-    let ap_post = activity_pub::fetcher::fetch_activity_pub(client, &canonical).await?;
+    let ap_post = activity_pub::fetcher::fetch_activity_pub(client, canonical).await?;
     let post_url = ap_post
         .url
         .as_deref()
@@ -556,8 +558,9 @@ mod tests {
             ..Default::default()
         });
         let page = url("https://example.com/page");
-        let og = html_parser::parse_opengraph(html);
-        let twitter_card = html_parser::parse_twitter_card(html);
+        let html_parser::PageMetadata {
+            og, twitter_card, ..
+        } = html_parser::parse_page(html, &page);
         let player_url = twitter_card
             .classifying_card
             .as_deref()

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::html_parser;
 use crate::http_fetch;
 use scraper::Selector;
 use serde::Deserialize;
@@ -38,8 +37,7 @@ pub struct OEmbedResponse {
     pub url: Option<String>,
 }
 
-pub fn discover_oembed_url(html: &str) -> Vec<OEmbedEndpoint> {
-    let doc = html_parser::parse_document(html);
+pub(crate) fn discover_oembed_endpoints(doc: &scraper::Html) -> Vec<OEmbedEndpoint> {
     let sel = match Selector::parse("link") {
         Ok(s) => s,
         Err(_) => return Vec::new(),

@@ -1,14 +1,52 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import ChannelInvitesTab from '@app/features/channel/components/modals/channel_tabs/ChannelInvitesTab';
-import ChannelPermissionsTab from '@app/features/channel/components/modals/channel_tabs/ChannelPermissionsTab';
-import ChannelWebhooksTab from '@app/features/channel/components/modals/channel_tabs/ChannelWebhooksTab';
-import {ChannelOverviewTabForType} from '@app/features/forum/components/settings/ForumOverviewTab';
+import {
+	createDefaultLoadableComponent,
+	createNamedLoadableComponent,
+} from '@app/features/platform/components/loadable/LoadableComponent';
+import {
+	ChannelSettingsTabPending,
+	ChannelSettingsTabUnavailable,
+} from '@app/features/user/components/settings_utils/ChannelSettingsTabStates';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {GearIcon, type Icon, ShieldIcon, TicketIcon, WebhooksLogoIcon} from '@phosphor-icons/react';
 import type React from 'react';
+
+interface ChannelSettingsTabProps {
+	channelId: string;
+}
+
+const ChannelOverviewTabForType = createNamedLoadableComponent<ChannelSettingsTabProps>({
+	displayName: 'ChannelOverviewTabForType',
+	LoadingComponent: ChannelSettingsTabPending,
+	ErrorComponent: ChannelSettingsTabUnavailable,
+	load: async () =>
+		(await import('@app/features/forum/components/settings/ForumOverviewTab')).ChannelOverviewTabForType,
+});
+const ChannelPermissionsTab = createDefaultLoadableComponent<ChannelSettingsTabProps>({
+	displayName: 'ChannelPermissionsTab',
+	LoadingComponent: ChannelSettingsTabPending,
+	ErrorComponent: ChannelSettingsTabUnavailable,
+	load: () => import('@app/features/channel/components/modals/channel_tabs/ChannelPermissionsTab'),
+});
+const ChannelInvitesTab = createDefaultLoadableComponent<ChannelSettingsTabProps>({
+	displayName: 'ChannelInvitesTab',
+	LoadingComponent: ChannelSettingsTabPending,
+	ErrorComponent: ChannelSettingsTabUnavailable,
+	load: () => import('@app/features/channel/components/modals/channel_tabs/ChannelInvitesTab'),
+});
+const ChannelWebhooksTab = createDefaultLoadableComponent<ChannelSettingsTabProps>({
+	displayName: 'ChannelWebhooksTab',
+	LoadingComponent: ChannelSettingsTabPending,
+	ErrorComponent: ChannelSettingsTabUnavailable,
+	load: () => import('@app/features/channel/components/modals/channel_tabs/ChannelWebhooksTab'),
+});
+
+export function preloadChannelSettingsOverviewTab(): Promise<boolean> {
+	return ChannelOverviewTabForType.preload();
+}
 
 const OVERVIEW_DESCRIPTOR = msg({
 	message: 'Overview',

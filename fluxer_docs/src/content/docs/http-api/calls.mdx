@@ -69,7 +69,7 @@ Changes the RTC region of an active call, even if you aren't connected to it. Se
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | The region was updated, or no change was requested |
-| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` with `INVALID_OR_RESTRICTED_RTC_REGION` when the region is unknown or restricted |
+| 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` with `INVALID_OR_RESTRICTED_RTC_REGION` when the region is unknown, restricted or [hidden](/admin-api/voice/#hidden-regions) and the call isn't already in it |
 | 404 | [error response](/http-api/#error-response) | `NO_ACTIVE_CALL` when the channel has no call |
 
 The rate limit is 10 requests per 10 seconds, on the `channel:call:update::channel_id` bucket.
@@ -99,6 +99,7 @@ A new call sends [Call Create](/gateway/events/#call-create) and [Message Create
 | 204 | empty | The ring request was accepted |
 | 400 | [error response](/http-api/#error-response) | `INVALID_FORM_BODY` with `USER_NOT_IN_CHANNEL` when a recipient isn't in the channel or is you |
 | 400 | [error response](/http-api/#error-response) | `CANNOT_SEND_MESSAGES_TO_USER` when you can't message the other recipient |
+| 400 | [error response](/http-api/#error-response) | `COMMUNITY_MEMBER_DMS_DISABLED` when the only guilds you share with the other recipient have `MEMBER_DMS_DISABLED` |
 | 400 | [error response](/http-api/#error-response) | `CALL_ALREADY_EXISTS` when another request started the call at the same time |
 | 403 | [error response](/http-api/#error-response) | `NEW_CONVERSATIONS_LIMITED` under the [new conversation limit](/http-api/users/private-channels/#new-conversation-limit) |
 | 403 | [error response](/http-api/#error-response) | `UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES` or `DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED` when your [account tier](/http-api/users/#account-tiers) can't send direct messages |

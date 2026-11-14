@@ -128,10 +128,8 @@
 	margin-top: 0.125rem;
 	margin-bottom: 0.125rem;
 	font-weight: 600;
-	font-size: 0.6875rem;
+	font-size: 0.75rem;
 	color: var(--text-tertiary);
-	text-transform: uppercase;
-	letter-spacing: 0.03em;
 }
 
 .categoryPermissions {
@@ -190,10 +188,8 @@
 	margin-top: 0.25rem;
 	margin-bottom: 0.125rem;
 	font-weight: 600;
-	font-size: 0.6875rem;
+	font-size: 0.75rem;
 	color: var(--text-tertiary);
-	text-transform: uppercase;
-	letter-spacing: 0.03em;
 }
 
 .roleCategoryPermissions {

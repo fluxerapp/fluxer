@@ -19,7 +19,6 @@ import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
 import {
 	dispatchOperatorPassUserUpdate,
-	isOperatorPassEntitled,
 	isOperatorPassPermanentlyRemoved,
 	isOperatorPassRemovalActive,
 	loadOperatorPassEntitlementState,
@@ -279,7 +278,7 @@ export class OperatorPassHoldingService {
 			premiumFlags === current.premiumFlags
 				? current
 				: await this.deps.userRepository.patchUpsert(current.id, {premium_flags: premiumFlags}, current.toRow());
-		await this.deps.roleService.resyncLabsRoles(updated);
+		await this.deps.roleService.resyncLabsRoles(updated.id);
 		if (show) {
 			await this.deps.roleService.queueGreetingIfDue(updated);
 		}
@@ -975,10 +974,7 @@ export class OperatorPassHoldingService {
 	}
 
 	private async syncRoleAndPresence(userId: UserID): Promise<void> {
-		const user = await this.deps.userRepository.findUnique(userId);
-		const entitled =
-			user !== null && isOperatorPassEntitled(await loadOperatorPassEntitlementState(this.deps.repository, userId));
-		await this.deps.roleService.syncLabsRoles(userId, user, entitled);
+		await this.deps.roleService.resyncLabsRoles(userId);
 		await this.dispatchPassesUpdate([userId]);
 		await dispatchOperatorPassUserUpdate(
 			{

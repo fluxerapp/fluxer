@@ -10,18 +10,27 @@ import (
 var Services = []string{
 	"edge", "postgres", "valkey", "nats", "meilisearch", "seaweedfs", "seaweedfs-init", "livekit",
 	"api", "worker", "gateway", "media-proxy", "push", "static-proxy", "app-proxy", "admin",
-	"snowflakes", "users", "gifs", "messages", "unfurl",
+	"snowflakes", "users", "gifs", "messages", "unfurl", RustService, ObjectsInitService,
 }
 
-var OneShot = map[string]bool{"seaweedfs-init": true}
+const (
+	ObjectsInitService = "objects-init"
+	ObjectsVolume      = "objects-data"
+	SeaweedFSVolume    = "seaweedfs-data"
+	ValkeyVolume       = "valkey-data"
+	ObjectsRoot        = "/var/lib/fluxer/objects"
+	ObjectsLayout      = `{"v":1}`
+	KVModeVar          = "FLUXER_KV_MODE"
+	WorkerReplicasVar  = "FLUXER_WORKER_REPLICAS"
+)
+
+var OneShot = map[string]bool{"seaweedfs-init": true, ObjectsInitService: true}
 
 var Volumes = []string{
-	"edge-data", "edge-config", "postgres-data", "valkey-data", "nats-data", "meilisearch-data", "seaweedfs-data",
+	"edge-data", "edge-config", "postgres-data", ValkeyVolume, "nats-data", "meilisearch-data", SeaweedFSVolume, ObjectsVolume,
 }
 
-var BackupVolumes = []string{"seaweedfs-data", "valkey-data", "nats-data", "meilisearch-data"}
-
-var UploadsServices = []string{"seaweedfs", "seaweedfs-init"}
+var BackupVolumes = []string{SeaweedFSVolume, ObjectsVolume, ValkeyVolume, "nats-data", "meilisearch-data"}
 
 type DataMount struct {
 	Service string
@@ -30,10 +39,46 @@ type DataMount struct {
 
 var DataMounts = map[string]DataMount{
 	"postgres-data":    {Service: "postgres", Target: "/var/lib/postgresql/data"},
-	"valkey-data":      {Service: "valkey", Target: "/data"},
+	ValkeyVolume:       {Service: "valkey", Target: "/data"},
 	"nats-data":        {Service: "nats", Target: "/data"},
 	"meilisearch-data": {Service: "meilisearch", Target: "/meili_data"},
-	"seaweedfs-data":   {Service: "seaweedfs", Target: "/data"},
+	SeaweedFSVolume:    {Service: "seaweedfs", Target: "/data"},
+	ObjectsVolume:      {Service: "media-proxy", Target: ObjectsRoot},
+}
+
+func FilesystemStorage(settings map[string]string) bool {
+	return strings.TrimSpace(settings["storage.backend"]) == "filesystem"
+}
+
+func KVPostgres(settings map[string]string) bool {
+	return strings.TrimSpace(settings["kv.mode"]) == "postgres"
+}
+
+func UploadsVolume(settings map[string]string) string {
+	if FilesystemStorage(settings) {
+		return ObjectsVolume
+	}
+	return SeaweedFSVolume
+}
+
+func UploadsServices(settings map[string]string) []string {
+	if FilesystemStorage(settings) {
+		return []string{ObjectsInitService}
+	}
+	return []string{"seaweedfs", "seaweedfs-init"}
+}
+
+func SkippedVolumes(settings map[string]string) []string {
+	var out []string
+	if FilesystemStorage(settings) {
+		out = append(out, SeaweedFSVolume)
+	} else {
+		out = append(out, ObjectsVolume)
+	}
+	if KVPostgres(settings) {
+		out = append(out, ValkeyVolume)
+	}
+	return out
 }
 
 var PublishedPorts = []Port{

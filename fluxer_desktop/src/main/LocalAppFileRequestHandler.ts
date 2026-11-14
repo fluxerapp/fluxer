@@ -17,7 +17,7 @@ import {
 import {t} from '@electron/main/MainI18n';
 import {HttpStatus, MimeType} from '@fluxer/constants/src/HttpConstants';
 
-const LOCAL_APP_REWRITTEN_FILE_MAX_BYTES = 4 * 1024 * 1024;
+export const LOCAL_APP_REWRITTEN_FILE_MAX_BYTES = 4 * 1024 * 1024;
 
 const GET_METHOD = 'GET';
 const HEAD_METHOD = 'HEAD';
@@ -31,6 +31,9 @@ const METHOD_NOT_ALLOWED_HEADERS: Readonly<Record<string, string>> = Object.free
 export interface LocalAppIndexContext {
 	readonly prebootTheme: string | null;
 	readonly productName: string | null;
+	readonly bootStateExpectedFor: (declaredFormat: string | null) => boolean;
+	readonly bootStatePrewarmed: () => Promise<void>;
+	readonly bootSession: () => Promise<boolean | null>;
 	readonly instanceOrigins?: ReadonlyArray<string>;
 }
 
@@ -127,7 +130,7 @@ export class DesktopLocalAppFileRequestHandler {
 		const file = await this.files.readForResponse(resolved.filePath, LOCAL_APP_REWRITTEN_FILE_MAX_BYTES, signal);
 		try {
 			if (index) {
-				return this.buildIndexResponse({request, headers, file});
+				return await this.buildIndexResponse({request, headers, file});
 			}
 			return buildRewrittenResponse(
 				request,
@@ -140,14 +143,17 @@ export class DesktopLocalAppFileRequestHandler {
 		}
 	}
 
-	private buildIndexResponse({request, headers, file}: RewrittenLocalAppFileRequest): Response {
+	private async buildIndexResponse({request, headers, file}: RewrittenLocalAppFileRequest): Promise<Response> {
 		const context = this.indexContext();
+		const [, bootSession] = await Promise.all([context.bootStatePrewarmed(), context.bootSession()]);
 		const nonce = randomLocalAppCSPNonce();
 		const html = rewriteLocalAppIndexHTML({
 			html: file.contents.toString('utf8'),
 			nonce,
 			prebootTheme: context.prebootTheme,
 			productName: context.productName,
+			bootStateExpectedFor: context.bootStateExpectedFor,
+			bootSession,
 		});
 		headers.set('Content-Security-Policy', buildLocalAppCSP({nonce, instanceOrigins: context.instanceOrigins}));
 		return buildRewrittenResponse(request, headers, file, html);

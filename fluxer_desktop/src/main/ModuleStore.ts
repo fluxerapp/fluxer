@@ -29,8 +29,10 @@ import {isDesktopModuleName} from '@fluxer/desktop_ipc/src/ModuleContract';
 
 const MODULE_STORE_DIRECTORY_NAME = 'modules';
 const MODULE_STATE_FILE_NAME = 'state.json';
-const MODULE_STATE_VERSION = 3;
+const MODULE_STATE_VERSION = 4;
+const MODULE_STATE_MIGRATABLE_VERSIONS: ReadonlySet<unknown> = new Set([3, MODULE_STATE_VERSION]);
 const MODULE_UNREADABLE_STATE_SUFFIX = '.unreadable';
+const RETIRED_UPDATE_MARKER_NAMES: ReadonlyArray<string> = ['update-pending', 'update-requested'];
 const MODULE_DOWNLOAD_DIRECTORY_NAME = 'download';
 const MODULE_DOWNLOAD_INCOMING_DIRECTORY_NAME = 'incoming';
 const MODULE_STORE_TREE_DIRECTORY_NAME = 'store';
@@ -124,6 +126,13 @@ class ModuleStoreInstallationMissingError extends ModuleStoreError {
 	}
 }
 
+class ModuleStoreFloorUnsatisfiedError extends ModuleStoreError {
+	public constructor(modules: ReadonlyArray<string>) {
+		super(`refusing to persist a floor that no installed module set satisfies for ${modules.join(', ')}`);
+		this.name = 'ModuleStoreFloorUnsatisfiedError';
+	}
+}
+
 class ModuleStoreGarbageCollectionOrderError extends ModuleStoreError {
 	public constructor() {
 		super('module garbage collection ran before a successful launch');
@@ -160,6 +169,18 @@ interface ModuleManifestHighWater extends ModuleManifestFeedIdentity {
 	readonly manifestSha256: string;
 }
 
+interface ModuleStagedManifest {
+	readonly metadata_version: number;
+	readonly build_version: string;
+}
+
+export interface ModuleStagedSet {
+	readonly modules: Readonly<Record<string, string>>;
+	readonly manifest: ModuleStagedManifest;
+	readonly floor: Readonly<Record<string, string>>;
+	readonly staged_at: number;
+}
+
 interface ModuleStoreState {
 	readonly state_version: number;
 	readonly shell_version: string;
@@ -169,10 +190,12 @@ interface ModuleStoreState {
 	readonly rejected: Readonly<Record<string, string>>;
 	readonly floor: Readonly<Record<string, string>>;
 	readonly shell_ranges: Readonly<Record<string, ModuleShellRange>>;
+	readonly shell_minimum_version: string | null;
 	readonly manifest_high_water: ReadonlyArray<ModuleManifestHighWater>;
 	readonly last_manifest_etag: string | null;
 	readonly last_manifest_fetch: string | null;
 	readonly boot_attempt: number;
+	readonly staged: ModuleStagedSet | null;
 }
 
 const ModuleStoreStateFileStatus = Object.freeze({
@@ -668,27 +691,41 @@ async function readValidInstalledModule(
 	if (manifest.module !== moduleName) {
 		return null;
 	}
-	const validatedDirectories = new Set<string>([directory]);
+	const directoryChecks = new Map<string, Promise<boolean>>([[directory, Promise.resolve(true)]]);
+	const checkDirectory = (current: string): Promise<boolean> => {
+		const cached = directoryChecks.get(current);
+		if (cached !== undefined) return cached;
+		const parent = path.dirname(current);
+		if (parent === current) return Promise.resolve(false);
+		const checking = checkDirectory(parent).then(async (parentValid) => {
+			if (!parentValid) return false;
+			const stats = await installationPathStats(current);
+			if (stats === null) return false;
+			return stats.isDirectory() && !stats.isSymbolicLink();
+		});
+		directoryChecks.set(current, checking);
+		return checking;
+	};
 	const files: Array<InstalledModuleFile> = [];
 	for (const file of manifest.files) {
-		const segments = file.path.split('/');
-		let current = directory;
-		for (let index = 0; index < segments.length - 1; index += 1) {
-			current = path.join(current, segments[index]);
-			if (validatedDirectories.has(current)) {
-				continue;
-			}
-			const parentStats = await installationPathStats(current);
-			if (parentStats == null || !parentStats.isDirectory() || parentStats.isSymbolicLink()) {
-				return null;
-			}
-			validatedDirectories.add(current);
-		}
 		const absolutePath = path.resolve(directory, file.path);
 		if (!isPathInsideRoot(directory, absolutePath)) {
 			return null;
 		}
 		files.push({relativePath: file.path, absolutePath});
+	}
+	const parentResults = new Map<string, PromiseSettledResult<boolean>>();
+	await forEachConcurrently(files, async ({absolutePath}) => {
+		try {
+			parentResults.set(absolutePath, {status: 'fulfilled', value: await checkDirectory(path.dirname(absolutePath))});
+		} catch (reason) {
+			parentResults.set(absolutePath, {status: 'rejected', reason});
+		}
+	});
+	for (const {absolutePath} of files) {
+		const result = parentResults.get(absolutePath);
+		if (result?.status === 'rejected') throw result.reason;
+		if (result?.status !== 'fulfilled' || !result.value) return null;
 	}
 	const stampable = !manifestDeclaresStampFile(manifest);
 	const manifestSha256 = createHash('sha256').update(bytes).digest('hex');
@@ -736,12 +773,31 @@ export function sameModuleMap(
 	return leftKeys.every((key) => left[key] === right[key]);
 }
 
+export function unsatisfiedFloorModules(
+	floor: Readonly<Record<string, string>>,
+	satisfiers: ReadonlyArray<Readonly<Record<string, string>>>,
+): ReadonlyArray<string> {
+	return Object.keys(floor)
+		.filter((moduleName) => !satisfiers.some((modules) => modules[moduleName] === floor[moduleName]))
+		.sort();
+}
+
 function sortModuleMap(value: Readonly<Record<string, string>>): Record<string, string> {
 	const sorted: Record<string, string> = {};
 	for (const key of Object.keys(value).sort()) {
 		sorted[key] = value[key];
 	}
 	return sorted;
+}
+
+function assertFloorSatisfied(
+	floor: Readonly<Record<string, string>>,
+	satisfiers: ReadonlyArray<Readonly<Record<string, string>>>,
+): void {
+	const unsatisfied = unsatisfiedFloorModules(floor, satisfiers);
+	if (unsatisfied.length > 0) {
+		throw new ModuleStoreFloorUnsatisfiedError(unsatisfied);
+	}
 }
 
 function moduleManifestFeedKey(feed: ModuleManifestFeedIdentity): string {
@@ -980,6 +1036,57 @@ function isMissingStateFileError(error: unknown): boolean {
 	);
 }
 
+function sortStagedSet(staged: ModuleStagedSet | null): ModuleStagedSet | null {
+	if (staged == null) {
+		return null;
+	}
+	return Object.freeze({
+		modules: Object.freeze(sortModuleMap(staged.modules)),
+		manifest: Object.freeze({...staged.manifest}),
+		floor: Object.freeze(sortModuleMap(staged.floor)),
+		staged_at: staged.staged_at,
+	});
+}
+
+function parseStagedSet(value: unknown, statePath: string): ModuleStagedSet | null {
+	if (value === undefined || value === null) {
+		return null;
+	}
+	if (typeof value !== 'object' || Array.isArray(value)) {
+		throw new ModuleStoreStateCorruptError(statePath, 'staged must be an object or null');
+	}
+	const record = value as Record<string, unknown>;
+	const modules = parseModuleMap(record['modules']);
+	const floor = parseModuleMap(record['floor']);
+	const manifest = record['manifest'];
+	const stagedAt = record['staged_at'];
+	if (modules === null || floor === null || Object.keys(modules).length === 0) {
+		throw new ModuleStoreStateCorruptError(statePath, 'staged module maps are invalid');
+	}
+	if (typeof manifest !== 'object' || manifest === null || Array.isArray(manifest)) {
+		throw new ModuleStoreStateCorruptError(statePath, 'staged manifest is invalid');
+	}
+	const metadataVersion = (manifest as Record<string, unknown>)['metadata_version'];
+	const buildVersion = (manifest as Record<string, unknown>)['build_version'];
+	if (
+		typeof metadataVersion !== 'number' ||
+		!Number.isSafeInteger(metadataVersion) ||
+		metadataVersion < 0 ||
+		typeof buildVersion !== 'string' ||
+		buildVersion.length === 0 ||
+		typeof stagedAt !== 'number' ||
+		!Number.isFinite(stagedAt)
+	) {
+		throw new ModuleStoreStateCorruptError(statePath, 'staged metadata is invalid');
+	}
+	return sortStagedSet({
+		modules,
+		manifest: {metadata_version: metadataVersion, build_version: buildVersion},
+		floor,
+		staged_at: stagedAt,
+	});
+}
+
 function parseModuleStoreState(bytes: Buffer, statePath: string): ModuleStoreState {
 	let parsed: unknown;
 	try {
@@ -992,7 +1099,7 @@ function parseModuleStoreState(bytes: Buffer, statePath: string): ModuleStoreSta
 	}
 	const record = parsed as Record<string, unknown>;
 	const stateVersion = record['state_version'];
-	if (stateVersion !== MODULE_STATE_VERSION) {
+	if (!MODULE_STATE_MIGRATABLE_VERSIONS.has(stateVersion)) {
 		throw new ModuleStoreStateUnsupportedVersionError(statePath, stateVersion);
 	}
 	const shellVersion = record['shell_version'];
@@ -1018,7 +1125,8 @@ function parseModuleStoreState(bytes: Buffer, statePath: string): ModuleStoreSta
 	}
 	const lastManifestEtag = parseOptionalString(record['last_manifest_etag']);
 	const lastManifestFetch = parseOptionalString(record['last_manifest_fetch']);
-	if (lastManifestEtag === undefined || lastManifestFetch === undefined) {
+	const shellMinimumVersion = parseOptionalString(record['shell_minimum_version'] ?? null);
+	if (lastManifestEtag === undefined || lastManifestFetch === undefined || shellMinimumVersion === undefined) {
 		throw new ModuleStoreStateCorruptError(statePath, 'manifest fetch metadata is invalid');
 	}
 	const bootAttempt = record['boot_attempt'];
@@ -1034,10 +1142,12 @@ function parseModuleStoreState(bytes: Buffer, statePath: string): ModuleStoreSta
 		rejected,
 		floor,
 		shell_ranges: parseShellRanges(record['shell_ranges']),
+		shell_minimum_version: shellMinimumVersion,
 		manifest_high_water: manifestHighWater,
 		last_manifest_etag: lastManifestEtag,
 		last_manifest_fetch: lastManifestFetch,
 		boot_attempt: bootAttempt,
+		staged: stateVersion === MODULE_STATE_VERSION ? parseStagedSet(record['staged'], statePath) : null,
 	};
 }
 
@@ -1051,10 +1161,12 @@ function createInitialModuleStoreState(shellVersion: string, releaseChannel: str
 		rejected: {},
 		floor: {},
 		shell_ranges: {},
+		shell_minimum_version: null,
 		manifest_high_water: [],
 		last_manifest_etag: null,
 		last_manifest_fetch: null,
 		boot_attempt: 0,
+		staged: null,
 	};
 }
 
@@ -1070,6 +1182,7 @@ function serializeModuleStoreState(state: ModuleStoreState): string {
 			floor: sortModuleMap(state.floor),
 			linux_security_minimum: null,
 			shell_ranges: sortShellRanges(state.shell_ranges),
+			shell_minimum_version: state.shell_minimum_version,
 			manifest_high_water: state.manifest_high_water.map((entry) => ({
 				release_channel: entry.releaseChannel,
 				platform: entry.platform,
@@ -1080,6 +1193,18 @@ function serializeModuleStoreState(state: ModuleStoreState): string {
 			last_manifest_etag: state.last_manifest_etag,
 			last_manifest_fetch: state.last_manifest_fetch,
 			boot_attempt: state.boot_attempt,
+			staged:
+				state.staged == null
+					? null
+					: {
+							modules: sortModuleMap(state.staged.modules),
+							manifest: {
+								metadata_version: state.staged.manifest.metadata_version,
+								build_version: state.staged.manifest.build_version,
+							},
+							floor: sortModuleMap(state.staged.floor),
+							staged_at: state.staged.staged_at,
+						},
 		},
 		null,
 		'\t',
@@ -1100,6 +1225,7 @@ export class ModuleStore {
 	private readonly installCoordinator = new ModuleInstallCoordinator<ModuleInstallation>();
 	private readonly installationsAwaitingCommit = new Set<string>();
 	private readonly installationsAwaitingDurability = new Map<string, InstalledFileStamps | null>();
+	private readonly validations = new Map<string, Promise<ValidInstalledModule | null>>();
 	private durabilityWork: Promise<void> = Promise.resolve();
 	private readonly packagesInUse = new Set<string>();
 	private stateWrites: Promise<void> = Promise.resolve();
@@ -1124,14 +1250,18 @@ export class ModuleStore {
 		readonly releaseChannel: string;
 	}): Promise<ModuleStore> {
 		const resolved = path.resolve(root);
-		await createDirectory(resolved);
-		await createDirectory(path.join(resolved, MODULE_DOWNLOAD_DIRECTORY_NAME, MODULE_DOWNLOAD_INCOMING_DIRECTORY_NAME));
-		await createDirectory(path.join(resolved, MODULE_STORE_TREE_DIRECTORY_NAME));
 		const statePath = path.join(resolved, MODULE_STATE_FILE_NAME);
+		const stateOpening = ModuleStore.readState(statePath);
+		void stateOpening.catch(() => undefined);
+		await Promise.all([
+			createDirectory(resolved),
+			createDirectory(path.join(resolved, MODULE_DOWNLOAD_DIRECTORY_NAME, MODULE_DOWNLOAD_INCOMING_DIRECTORY_NAME)),
+			createDirectory(path.join(resolved, MODULE_STORE_TREE_DIRECTORY_NAME)),
+		]);
 		let stateFile: ModuleStoreStateFile;
 		let unreadableState: string | null = null;
 		try {
-			stateFile = await ModuleStore.readState(statePath);
+			stateFile = await stateOpening;
 		} catch (error) {
 			if (
 				!(error instanceof ModuleStoreStateCorruptError) &&
@@ -1153,6 +1283,7 @@ export class ModuleStore {
 		const store = new ModuleStore(resolved, stateFile.state);
 		if (stateFile.state.shell_version !== shellVersion) {
 			store.convergingShellVersion = shellVersion;
+			await Promise.all(RETIRED_UPDATE_MARKER_NAMES.map((name) => fs.rm(path.join(resolved, name), {force: true})));
 		}
 		if (stateFile.state.release_channel !== releaseChannel) {
 			await store.writeState({...store.state, release_channel: releaseChannel});
@@ -1204,10 +1335,6 @@ export class ModuleStore {
 
 	public get recoveredUnreadableState(): string | null {
 		return this.unreadableStatePath;
-	}
-
-	public get shellVersionChanged(): boolean {
-		return this.convergingShellVersion != null;
 	}
 
 	public async recordShellVersionConverged(): Promise<void> {
@@ -1336,6 +1463,7 @@ export class ModuleStore {
 			}
 			throw error;
 		}
+		this.validations.delete(directory);
 		await fsyncDirectory(path.dirname(directory));
 		this.installationsAwaitingCommit.add(`${moduleName}/${sha256}`);
 		this.installationsAwaitingDurability.set(directory, stamps);
@@ -1361,8 +1489,27 @@ export class ModuleStore {
 		return this.durabilityWork;
 	}
 
+	public beginValidationPass(): void {
+		this.validations.clear();
+	}
+
 	private readValidInstallation(directory: string, moduleName: string): Promise<ValidInstalledModule | null> {
-		return readValidInstalledModule(directory, moduleName, this.installationsAwaitingDurability.get(directory) ?? null);
+		const cached = this.validations.get(directory);
+		if (cached != null) {
+			return cached;
+		}
+		const validation = readValidInstalledModule(
+			directory,
+			moduleName,
+			this.installationsAwaitingDurability.get(directory) ?? null,
+		);
+		this.validations.set(directory, validation);
+		validation.catch(() => {
+			if (this.validations.get(directory) === validation) {
+				this.validations.delete(directory);
+			}
+		});
+		return validation;
 	}
 
 	public getPartialPackagePath(sha256: string): string {
@@ -1430,10 +1577,91 @@ export class ModuleStore {
 		await fsyncDirectory(this.downloadRoot);
 	}
 
-	public async commit(next: Readonly<Record<string, string>>): Promise<ModuleStoreState> {
+	public async commit(
+		next: Readonly<Record<string, string>>,
+		floor: Readonly<Record<string, string>>,
+	): Promise<ModuleStoreState> {
 		return await this.withStateLock(async () => {
 			const committed = await this.resolveInstalled(next);
-			return await this.writeState({...this.state, committed, previous: this.state.committed});
+			assertFloorSatisfied(floor, [committed]);
+			return await this.writeState({
+				...this.state,
+				committed,
+				previous: sameModuleMap(this.state.committed, committed) ? this.state.previous : this.state.committed,
+				floor,
+			});
+		});
+	}
+
+	public getStaged(): ModuleStagedSet | null {
+		return this.state.staged;
+	}
+
+	public async recordStaged({
+		staged,
+		etag,
+		fetchedAt,
+		manifest,
+		advertised,
+	}: {
+		readonly staged: ModuleStagedSet | null;
+		readonly etag: string | null;
+		readonly fetchedAt: string;
+		readonly manifest: ModuleManifestFeedObservation;
+		readonly advertised: Readonly<Record<string, string>>;
+	}): Promise<ModuleStoreState> {
+		return await this.withStateLock(async () => {
+			const manifestHighWater = advanceManifestHighWater(this.state.manifest_high_water, manifest);
+			let next: ModuleStoreState = {...this.state, staged: null};
+			if (staged != null) {
+				const modules = await this.resolveInstalled(staged.modules);
+				assertFloorSatisfied(staged.floor, [this.state.committed, modules]);
+				next = {...this.state, staged: {...staged, modules}, floor: staged.floor};
+			}
+			return await this.writeState({
+				...next,
+				rejected: retainRejected(this.state.rejected, advertised),
+				last_manifest_etag: etag,
+				last_manifest_fetch: fetchedAt,
+				manifest_high_water: manifestHighWater,
+			});
+		});
+	}
+
+	public async discardStaged(): Promise<void> {
+		await this.withStateLock(async () => {
+			if (this.state.staged != null) {
+				await this.writeState({...this.state, staged: null});
+			}
+		});
+	}
+
+	public async activateStagedAtBoot(): Promise<Readonly<Record<string, string>> | null> {
+		return await this.withStateLock(async () => {
+			const activated = await this.activateStagedLocked(0);
+			return activated?.committed ?? null;
+		});
+	}
+
+	public async activateStagedForRendererReload(): Promise<ModuleLaunchAttempt | null> {
+		return await this.withStateLock(async () => {
+			const activated = await this.activateStagedLocked(1);
+			return activated == null ? null : this.createLaunchAttempt(activated.committed);
+		});
+	}
+
+	private async activateStagedLocked(bootAttempt: number): Promise<ModuleStoreState | null> {
+		const staged = this.state.staged;
+		if (staged == null) {
+			return null;
+		}
+		const committed = await this.resolveInstalled({...this.state.committed, ...staged.modules});
+		return await this.writeState({
+			...this.state,
+			committed,
+			previous: this.state.committed,
+			staged: null,
+			boot_attempt: bootAttempt,
 		});
 	}
 
@@ -1463,32 +1691,6 @@ export class ModuleStore {
 		});
 	}
 
-	public async activateMergedForRendererReload(
-		installed: Readonly<Record<string, string>>,
-		dropped: ReadonlySet<string> = new Set(),
-	): Promise<ModuleLaunchAttempt | null> {
-		return await this.withStateLock(async () => {
-			const merged: Record<string, string> = {...this.state.committed, ...installed};
-			for (const moduleName of dropped) {
-				if (installed[moduleName] === undefined) {
-					delete merged[moduleName];
-				}
-			}
-			const committed = await this.resolveInstalled(merged);
-			if (sameModuleMap(this.state.committed, committed)) {
-				return null;
-			}
-			const previous = this.state.committed;
-			const activated = await this.writeState({
-				...this.state,
-				committed,
-				previous,
-				boot_attempt: 1,
-			});
-			return this.createLaunchAttempt(activated.committed);
-		});
-	}
-
 	private async resolveInstalled(next: Readonly<Record<string, string>>): Promise<Record<string, string>> {
 		const resolved: Record<string, string> = {};
 		for (const moduleName of Object.keys(next).sort()) {
@@ -1512,25 +1714,34 @@ export class ModuleStore {
 		etag,
 		fetchedAt,
 		manifest,
-		floor,
 		advertised,
 	}: {
 		readonly etag: string | null;
 		readonly fetchedAt: string;
 		readonly manifest: ModuleManifestFeedObservation;
-		readonly floor?: Readonly<Record<string, string>>;
-		readonly advertised?: Readonly<Record<string, string>>;
+		readonly advertised: Readonly<Record<string, string>>;
 	}): Promise<ModuleStoreState> {
 		return await this.withStateLock(async () => {
 			const manifestHighWater = advanceManifestHighWater(this.state.manifest_high_water, manifest);
 			return await this.writeState({
 				...this.state,
-				rejected: advertised == null ? this.state.rejected : retainRejected(this.state.rejected, advertised),
+				rejected: retainRejected(this.state.rejected, advertised),
 				last_manifest_etag: etag,
 				last_manifest_fetch: fetchedAt,
-				floor: floor == null ? this.state.floor : sortModuleMap(floor),
 				manifest_high_water: manifestHighWater,
 			});
+		});
+	}
+
+	public getShellMinimumVersion(): string | null {
+		return this.state.shell_minimum_version;
+	}
+
+	public async recordShellMinimumVersion(version: string): Promise<void> {
+		await this.withStateLock(async () => {
+			if (this.state.shell_minimum_version !== version) {
+				await this.writeState({...this.state, shell_minimum_version: version});
+			}
 		});
 	}
 
@@ -1740,12 +1951,13 @@ export class ModuleStore {
 
 	private async collectGarbageExclusively(now: number): Promise<ModuleGarbageCollectionResult> {
 		const keep = new Set<string>(this.installationsAwaitingCommit);
-		for (const map of [this.state.committed, this.state.previous]) {
+		for (const map of [this.state.committed, this.state.previous, this.state.staged?.modules ?? {}]) {
 			for (const [moduleName, sha256] of Object.entries(map)) {
 				keep.add(`${moduleName}/${sha256}`);
 			}
 		}
 		const removedDirectories = await this.removeUnkeptInstallations(keep);
+		this.validations.clear();
 		const stalePackages = await this.removeStalePackages(now);
 		const staleIncoming = await this.removeStaleIncomingDownloads(now);
 		return {removedDirectories, removedPackages: [...stalePackages, ...staleIncoming]};
@@ -1862,8 +2074,9 @@ export class ModuleStore {
 			floor: sortModuleMap(next.floor),
 			shell_ranges: sortShellRanges(next.shell_ranges),
 			manifest_high_water: sortManifestHighWater(next.manifest_high_water),
+			staged: sortStagedSet(next.staged),
 		};
-		for (const [moduleName, sha256] of Object.entries(this.state.committed)) {
+		for (const [moduleName, sha256] of Object.entries({...this.state.committed, ...this.state.staged?.modules})) {
 			this.installationsAwaitingCommit.delete(`${moduleName}/${sha256}`);
 		}
 		return this.state;

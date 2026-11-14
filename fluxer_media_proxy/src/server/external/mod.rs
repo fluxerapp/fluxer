@@ -46,6 +46,7 @@ use axum::{
     response::Response,
 };
 use bytes::Bytes;
+use fluxer_common::external_media_path::{ExternalPathError, verify_signed_proxy_path};
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 const EXTERNAL_SNIFF_PREFIX_BYTES: usize = 8192;
@@ -198,16 +199,12 @@ impl<'a> PreparedExternalRequest<'a> {
         let Some((sig, proxy_path)) = rest.split_once('/') else {
             return Err(Box::new(text(StatusCode::BAD_REQUEST, "Bad Request")));
         };
-        if !fluxer_common::external_media_path::verify_signature(
-            proxy_path,
-            sig,
-            app.cfg.secret_key.as_bytes(),
-        ) {
-            return Err(Box::new(text(StatusCode::UNAUTHORIZED, "Unauthorized")));
-        }
-        let Ok(url) = fluxer_common::external_media_path::reconstruct_original_url(proxy_path)
-        else {
-            return Err(Box::new(text(StatusCode::BAD_REQUEST, "Bad Request")));
+        let url = match verify_signed_proxy_path(proxy_path, sig, app.cfg.secret_key.as_bytes()) {
+            Ok(url) => url,
+            Err(ExternalPathError::InvalidSignature) => {
+                return Err(Box::new(text(StatusCode::UNAUTHORIZED, "Unauthorized")));
+            }
+            Err(_) => return Err(Box::new(text(StatusCode::BAD_REQUEST, "Bad Request"))),
         };
         let url_ext_is_svg =
             image_extension_from_filename(&url_filename(&url)) == Some(AssetExtension::Svg);

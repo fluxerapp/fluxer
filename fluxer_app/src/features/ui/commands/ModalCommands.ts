@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {flushBootHydration} from '@app/features/boot_state/BootHydration';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {closeBottomSheetThen} from '@app/features/ui/bottom_sheet/BottomSheetTransitionUtils';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -44,6 +45,7 @@ interface ExplicitPortalHostPush {
 }
 
 function pushModal(modal: ModalRender, explicitPortalHost?: ExplicitPortalHostPush): void {
+	flushBootHydration();
 	ContextMenuCommands.close();
 	if (isDuplicateModal(modal.modalType)) return;
 	const isBackground = isBackgroundModal(modal.modalType);
@@ -69,6 +71,7 @@ export function pushToPortalHost({modal, portalHost}: PushToPortalHostOptions): 
 }
 
 export function pushWithKey(modal: ModalRender, key: string): void {
+	flushBootHydration();
 	ContextMenuCommands.close();
 	if (isDuplicateModal(modal.modalType)) return;
 	const isBackground = isBackgroundModal(modal.modalType);

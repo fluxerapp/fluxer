@@ -771,3 +771,9 @@ export const GIFTS_DESCRIPTOR = msg({
 	message: 'Gifts',
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
+
+export const OPERATORS_MEMBERS_SEE_YOU_DESCRIPTOR = msg({
+	message: "People in #operators can see that you're in it.",
+	comment:
+		'Sentence after a note about how Fluxer Labs shows a person with a hidden Operator Pass or Visionary badge, and in the "Show #operators" setting. #operators is a channel name, keep it as is. Everyone who can open the channel sees who else is in it.',
+});

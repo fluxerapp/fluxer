@@ -15,11 +15,13 @@ import {CharacterCountAnnouncer} from '@app/features/ui/character_counter/Charac
 import styles from '@app/features/ui/components/form/FormInput.module.css';
 import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
+import {LinguiContext} from '@lingui/react';
 import {useLingui} from '@lingui/react/macro';
 import {EyeIcon, EyeSlashIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
-import React, {useCallback, useId, useLayoutEffect, useMemo, useReducer, useRef, useState} from 'react';
+import React, {useCallback, useContext, useId, useLayoutEffect, useMemo, useReducer, useRef, useState} from 'react';
 
 const HIDE_PASSWORD_DESCRIPTOR = msg({
 	message: 'Hide password',
@@ -393,9 +395,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 		},
 		forwardedRef,
 	) => {
-		const {i18n} = useLingui();
+		useContext(LinguiContext);
 		const disableAutofocus = shouldDisableAutofocusOnMobile();
-		const numberFormat = getCachedNumberFormat(i18n.locale);
+		const numberFormat = getCachedNumberFormat(getFormattingLocale());
 		const currentValue = useMemo(() => value || '', [value]);
 		const currentLength = useMemo(() => String(currentValue).length, [currentValue]);
 		const textareaRef = useRef<HTMLTextAreaElement | null>(null);

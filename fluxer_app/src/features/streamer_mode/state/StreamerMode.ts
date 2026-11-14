@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {APP_STORAGE_STREAMER_MODE_KEY as STORAGE_KEY} from '@app/features/platform/state/AppStorageDatabase';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {makePersistent, stopPersistent} from '@app/features/platform/utils/MobXPersistence';
+import {awaitHydration, makePersistent, stopPersistent} from '@app/features/platform/utils/MobXPersistence';
 import {initializeStore} from '@app/features/platform/utils/StoreInitialization';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
-import {makeAutoObservable, reaction, runInAction} from 'mobx';
+import {makeAutoObservable, reaction, runInAction, when} from 'mobx';
 
 const POLL_INTERVAL_MS = 15_000;
-const STORAGE_KEY = 'StreamerMode';
 const logger = new Logger('StreamerMode');
 
 class StreamerModeState {
@@ -18,6 +18,7 @@ class StreamerModeState {
 	disableSounds = true;
 	disableNotifications = true;
 	autoDetectedCaptureApp = false;
+	captureAppStatusKnown = false;
 	nagbarDismissed = false;
 	private pollTimer: NodeJS.Timeout | null = null;
 	private pollInFlight = false;
@@ -80,6 +81,11 @@ class StreamerModeState {
 
 	get enabled(): boolean {
 		return this.manualEnabled || (this.autoEnable && this.autoDetectedCaptureApp);
+	}
+
+	async whenRedactionSettled(): Promise<void> {
+		await awaitHydration(STORAGE_KEY);
+		await when(() => this.manualEnabled || !this.autoEnable || this.captureAppStatusKnown);
 	}
 
 	get shouldHidePersonalInformation(): boolean {
@@ -149,10 +155,12 @@ class StreamerModeState {
 		if (!this.autoEnable) {
 			this.stopCaptureAppPolling();
 			this.autoDetectedCaptureApp = false;
+			this.captureAppStatusKnown = true;
 			return;
 		}
 		if (!getElectronAPI()?.getStreamerModeCaptureAppStatus) {
 			this.autoDetectedCaptureApp = false;
+			this.captureAppStatusKnown = true;
 			return;
 		}
 		if (this.pollTimer == null) {
@@ -188,6 +196,7 @@ class StreamerModeState {
 		} finally {
 			runInAction(() => {
 				this.pollInFlight = false;
+				this.captureAppStatusKnown = true;
 			});
 		}
 	}

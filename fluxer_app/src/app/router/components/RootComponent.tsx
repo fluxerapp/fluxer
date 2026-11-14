@@ -4,7 +4,6 @@ import {Routes} from '@app/app/Routes';
 import {isAutoRedirectExemptPath} from '@app/app/router/RouterConstants';
 import {KeyboardModeListener} from '@app/features/app/components/layout/KeyboardModeListener';
 import {MobileBottomNav} from '@app/features/app/components/layout/MobileBottomNav';
-import {SelfHostedSetupWizardGate} from '@app/features/app/components/setup/SelfHostedSetupWizardGate';
 import {AppSkeleton} from '@app/features/app/components/skeleton/AppSkeleton';
 import {useLoadingSkeletonRetention} from '@app/features/app/hooks/useLoadingSkeletonRetention';
 import {useSkeletonLayoutMemoryCapture} from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
@@ -26,6 +25,7 @@ import {useLastLocationPersistence} from '@app/features/navigation/hooks/useLast
 import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
 import {navigateToWithMobileHistory} from '@app/features/navigation/utils/MobileNavigation';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {createNamedLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import * as PushSubscriptionService from '@app/features/platform/push/PushSubscriptionService';
 import SessionManager from '@app/features/platform/state/AuthSession';
@@ -40,6 +40,12 @@ import Users from '@app/features/user/state/Users';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+
+const SelfHostedSetupWizardGate = createNamedLoadableComponent({
+	displayName: 'SelfHostedSetupWizardGate',
+	load: async () =>
+		(await import('@app/features/app/components/setup/SelfHostedSetupWizardGate')).SelfHostedSetupWizardGate,
+});
 
 const logger = new Logger('RootComponent');
 export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({children}) => {

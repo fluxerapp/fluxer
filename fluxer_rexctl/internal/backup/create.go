@@ -220,6 +220,11 @@ func instanceValues(inst *instance.Instance) map[string]string {
 	return values
 }
 
+func ExternalData(inst *instance.Instance) (database, uploads bool) {
+	values := instanceValues(inst)
+	return externalPostgres(values), externalUploads(inst, values)
+}
+
 func externalPostgres(values map[string]string) bool {
 	if h := values["FLUXER_POSTGRES_HOST"]; h != "" && h != postgresService {
 		return true
@@ -295,24 +300,37 @@ func volumesToCopy(ctx context.Context, inst *instance.Instance, values map[stri
 	if scope == ScopeWithoutUploads {
 		definition = uploadsDefinition(inst)
 	}
-	return pickVolumes(model, p.Name, have, externalUploads(inst, values), scope, definition, mark, m), nil
+	var chosen map[string]string
+	if inst.State != nil {
+		chosen = inst.State.Settings
+	}
+	return pickVolumes(model, p.Name, have, chosen, externalUploads(inst, values), scope, definition, mark, m), nil
 }
 
-func pickVolumes(model *types.Project, project string, have []engine.Volume, skipUploads bool, scope, definition string, mark bool, m *Manifest) []volumeRef {
+func pickVolumes(model *types.Project, project string, have []engine.Volume, chosen map[string]string, skipUploads bool, scope, definition string, mark bool, m *Manifest) []volumeRef {
 	if skipUploads {
 		m.Skipped = append(m.Skipped, SkippedUploads)
 	}
+	uploads := stack.UploadsVolume(chosen)
+	left := stack.SkippedVolumes(chosen)
 	var out []volumeRef
 	for _, short := range stack.BackupVolumes {
 		v, ok := dataVolume(model, project, have, short)
-		if short == UploadsVolume && ok && !skipUploads && scope == ScopeWithoutUploads && definition != "" {
+		if slices.Contains(left, short) {
+			if ok {
+				m.Left = append(m.Left, short)
+			}
+			continue
+		}
+		if short == uploads && ok && !skipUploads && scope == ScopeWithoutUploads && definition != "" {
 			if ref := uploadsRef(v, have, mark); ref != nil {
+				ref.Short = uploadsShort(short)
 				ref.Definition = definition
 				m.Scope, m.Uploads = ScopeWithoutUploads, ref
 				continue
 			}
 		}
-		if skipUploads && short == UploadsVolume {
+		if skipUploads && short == uploads {
 			continue
 		}
 		if ok {
@@ -320,6 +338,13 @@ func pickVolumes(model *types.Project, project string, have []engine.Volume, ski
 		}
 	}
 	return out
+}
+
+func uploadsShort(short string) string {
+	if short == stack.SeaweedFSVolume {
+		return ""
+	}
+	return short
 }
 
 const UploadsIDFile = ".rexctl-uploads-id"
@@ -346,11 +371,19 @@ func uploadsRef(v volumeRef, have []engine.Volume, mark bool) *UploadsRef {
 }
 
 func UploadsDefinition(set *stack.Set, st *instance.State) string {
+	if stack.FilesystemStorage(st.Settings) {
+		overlay, err := stack.ReadFile(set, stack.OverlayFiles[stack.OverlayFilesystemStore])
+		if err != nil {
+			return ""
+		}
+		return stack.Hash([]byte(stack.ObjectsVolume + "\n" + stack.ObjectsLayout + "\n" + string(overlay)))
+	}
+	services := stack.UploadsServices(st.Settings)
 	refs := maps.Clone(st.Images.Refs)
-	for _, svc := range stack.UploadsServices {
+	for _, svc := range services {
 		delete(refs, svc)
 	}
-	def, err := stack.ServicesDefinition(set, stack.OverlaysFor(st.Settings), refs, stack.UploadsServices...)
+	def, err := stack.ServicesDefinition(set, stack.OverlaysFor(st.Settings), refs, services...)
 	if err != nil {
 		return ""
 	}
@@ -406,6 +439,8 @@ func findVolume(vols []engine.Volume, project, short string) (string, bool) {
 	}
 	return "", false
 }
+
+const stagingDir = ".staging"
 
 var helperServices = []string{postgresService, "valkey", "nats"}
 
@@ -815,9 +850,21 @@ func compressSpool(ctx context.Context, w *archiveWriter, spoolPath string) erro
 	}
 }
 
-const volumeTarScript = `b=$(find /data -type f -exec stat -c '%i %s' {} + | awk '!seen[$1]++ { t += $2 } END { print t + 0 }') || exit 1
+const (
+	volumeTarScript = `b=$(find /data -type f -exec stat -c '%i %s' {} + | awk '!seen[$1]++ { t += $2 } END { print t + 0 }') || exit 1
 tar -cf - -C /data . || exit 1
 echo "rexctl-bytes $b" >&2`
+	objectsTarScript = `b=$(find /data -path /data/` + stagingDir + ` -prune -o -type f -exec stat -c '%i %s' {} + | awk '!seen[$1]++ { t += $2 } END { print t + 0 }') || exit 1
+tar -cf - -C /data --exclude=./` + stagingDir + ` . || exit 1
+echo "rexctl-bytes $b" >&2`
+)
+
+func tarScript(short string) string {
+	if short == stack.ObjectsVolume {
+		return objectsTarScript
+	}
+	return volumeTarScript
+}
 
 func copyVolume(ctx context.Context, spool *volumeSpool, p *engine.Project, image string, v volumeRef) error {
 	ctx, cancel := context.WithCancel(ctx)
@@ -829,7 +876,7 @@ func copyVolume(ctx context.Context, spool *volumeSpool, p *engine.Project, imag
 		err := p.Helper(ctx, engine.HelperOptions{
 			Image:      image,
 			Entrypoint: []string{"sh", "-c"},
-			Command:    []string{volumeTarScript},
+			Command:    []string{tarScript(v.short)},
 			Mounts:     []engine.Mount{v.mount("/data", true)},
 			Stdout:     pw,
 			Stderr:     &stderr,
@@ -889,7 +936,7 @@ func relayVolume(spool *volumeSpool, short string, tr *tar.Reader) (int64, error
 		}
 		inner := strings.TrimPrefix(strings.TrimPrefix(hdr.Name, "./"), "/")
 		inner = strings.TrimSuffix(inner, "/")
-		if short == UploadsVolume && inner == UploadsIDFile && hdr.Typeflag == tar.TypeReg {
+		if uploadsVolume(short) && inner == UploadsIDFile && hdr.Typeflag == tar.TypeReg {
 			copied += hdr.Size
 			continue
 		}

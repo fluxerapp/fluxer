@@ -41,7 +41,7 @@ A meme object is one saved file. You can change only `name`, `alt_text` and `tag
 | placeholder | ?string | The thumbhash placeholder recorded at save time |
 | nsfw | boolean | Whether the media is flagged as explicit, from the source message or the media scan |
 
-<sup>1</sup> A new [signed attachment URL](/http-api/messages/#signed-attachment-urls) on every read
+<sup>1</sup> A new [signed attachment URL](/http-api/messages/#signed-attachment-urls) on every read, or an [attachment URL on the API](/http-api/messages/#attachment-urls-on-the-api) that only you can open
 
 <sup>2</sup> Both are set or both are null. The value is `klipy` or `tenor`
 
@@ -286,7 +286,7 @@ The rate limit is 30 requests per 10 seconds, on the `favorite_meme:delete` buck
 
 <RouteHeader method="POST" path="/v1/users/@me/favorite-gifs/resolve" />
 
-Looks up GIF URLs and returns a [resolved GIF entry](#resolved-gif-entry-object) for each one without saving anything. A URL Fluxer can't find still gets an entry, with an empty `media` map.
+Looks up GIF URLs and returns a [resolved GIF entry](#resolved-gif-entry-object) for each one without saving anything. A URL Fluxer can't find still gets an entry, with an empty `media` map. When [attachment URLs point at the API](/http-api/messages/#attachment-urls-on-the-api), an attachment you can't read gets that empty entry too, and the entries for attachments you can read point at the API.
 
 ### Request headers
 

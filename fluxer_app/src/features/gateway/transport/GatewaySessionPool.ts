@@ -133,8 +133,12 @@ class GatewaySessionPool {
 			return;
 		}
 		this.start();
+		const storesRestored = Initialization.isStale;
+		if (storesRestored) {
+			this.startForegroundRecovery(accountKey);
+		}
 		void this.handoff
-			.bootForeground(accountKey)
+			.bootForeground(accountKey, {storesRestored})
 			.catch((error: unknown) => {
 				logger.warn('Failed to restore the foreground account from the account engine', {accountKey, error});
 			})
@@ -276,7 +280,7 @@ class GatewaySessionPool {
 				this.stopForegroundRecovery();
 				return;
 			}
-			logger.info('Retrying foreground gateway recovery after it was exhausted', {accountKey});
+			logger.warn('Retrying foreground gateway recovery after it was exhausted', {accountKey});
 			this.startForegroundRecovery(accountKey);
 		};
 		const handleVisibilityChange = (): void => {
@@ -316,7 +320,7 @@ class GatewaySessionPool {
 	async completePromote(accountKey: string): Promise<void> {
 		const startedAtMs = Date.now();
 		const mode = await this.handoff.completePromotion(accountKey);
-		logger.info('Foreground promotion completed', {accountKey, mode, elapsedMs: Date.now() - startedAtMs});
+		logger.debug('Foreground promotion completed', {accountKey, mode, elapsedMs: Date.now() - startedAtMs});
 	}
 
 	rollbackPromote(accountKey: string): Promise<void> {
@@ -326,7 +330,7 @@ class GatewaySessionPool {
 	async demoteForegroundForAccountSwitch(): Promise<ForegroundDemotionOutcome> {
 		const startedAtMs = Date.now();
 		const outcome = await this.handoff.demoteForeground();
-		logger.info('Foreground demotion completed', {...outcome, elapsedMs: Date.now() - startedAtMs});
+		logger.debug('Foreground demotion completed', {...outcome, elapsedMs: Date.now() - startedAtMs});
 		return outcome;
 	}
 

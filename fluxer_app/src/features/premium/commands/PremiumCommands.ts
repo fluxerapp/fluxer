@@ -152,7 +152,7 @@ export async function setPremiumPerksDisabled(disabled: boolean): Promise<Premiu
 export async function createCustomerPortalSession(): Promise<string> {
 	try {
 		const response = await http.post<UrlResponse>(Endpoints.PREMIUM_CUSTOMER_PORTAL);
-		logger.info('Customer portal session created');
+		logger.debug('Customer portal session created');
 		return response.body.url;
 	} catch (error) {
 		logger.error('Customer portal session creation failed', error);
@@ -175,7 +175,7 @@ export async function createCheckoutSession(
 		const response = await http.post<UrlResponse>(checkoutEndpoint(isGift), {
 			body: checkoutSessionBody(priceId, country, isGift, paymentMethod, isBusiness, cnpj),
 		});
-		logger.info('Checkout session created', {priceId, countryCode, isGift, paymentMethod, isBusiness});
+		logger.debug('Checkout session created', {priceId, countryCode, isGift, paymentMethod, isBusiness});
 		return response.body.url;
 	} catch (error) {
 		logger.error('Checkout session creation failed', error);
@@ -186,7 +186,7 @@ export async function createCheckoutSession(
 export async function cancelSubscriptionAtPeriodEnd(): Promise<void> {
 	try {
 		await post(Endpoints.PREMIUM_CANCEL_SUBSCRIPTION);
-		logger.info('Subscription set to cancel at period end');
+		logger.debug('Subscription set to cancel at period end');
 	} catch (error) {
 		logger.error('Failed to cancel subscription at period end', error);
 		throw error;
@@ -196,7 +196,7 @@ export async function cancelSubscriptionAtPeriodEnd(): Promise<void> {
 export async function reactivateSubscription(): Promise<void> {
 	try {
 		await post(Endpoints.PREMIUM_REACTIVATE_SUBSCRIPTION);
-		logger.info('Subscription reactivated');
+		logger.debug('Subscription reactivated');
 	} catch (error) {
 		logger.error('Failed to reactivate subscription', error);
 		throw error;
@@ -206,7 +206,7 @@ export async function reactivateSubscription(): Promise<void> {
 export async function endPremiumGracePeriod(): Promise<void> {
 	try {
 		await post(Endpoints.PREMIUM_GRACE_END);
-		logger.info('Premium grace period ended');
+		logger.debug('Premium grace period ended');
 	} catch (error) {
 		logger.error('Failed to end premium grace period', error);
 		throw error;
@@ -219,7 +219,7 @@ export async function changeSubscriptionBillingCycle(billingCycle: 'monthly' | '
 			billing_cycle: billingCycle,
 			effective_at: 'period_end',
 		});
-		logger.info('Subscription billing cycle change scheduled', {billingCycle});
+		logger.debug('Subscription billing cycle change scheduled', {billingCycle});
 	} catch (error) {
 		logger.error('Failed to change subscription billing cycle', error);
 		throw error;
@@ -229,7 +229,7 @@ export async function changeSubscriptionBillingCycle(billingCycle: 'monthly' | '
 export async function switchSubscriptionToListPrice(): Promise<SwitchToListPriceResponse> {
 	try {
 		const response = await http.post<SwitchToListPriceResponse>(Endpoints.PREMIUM_SWITCH_TO_LIST_PRICE);
-		logger.info('Subscription list price switch requested', response.body);
+		logger.debug('Subscription list price switch requested', response.body);
 		return response.body;
 	} catch (error) {
 		logger.error('Failed to switch subscription to the current list price', error);
@@ -240,7 +240,7 @@ export async function switchSubscriptionToListPrice(): Promise<SwitchToListPrice
 export async function cancelPendingSubscriptionChange(): Promise<void> {
 	try {
 		await post(Endpoints.PREMIUM_CANCEL_PENDING_SUBSCRIPTION_CHANGE);
-		logger.info('Pending subscription billing-cycle change canceled');
+		logger.debug('Pending subscription billing-cycle change canceled');
 	} catch (error) {
 		logger.error('Failed to cancel pending subscription billing-cycle change', error);
 		throw error;
@@ -250,7 +250,7 @@ export async function cancelPendingSubscriptionChange(): Promise<void> {
 export async function refundLatestPurchase(): Promise<SelfServeRefundResponse> {
 	try {
 		const response = await http.post<SelfServeRefundResponse>(Endpoints.PREMIUM_REFUND_LATEST);
-		logger.info('Self-serve refund issued', response.body);
+		logger.debug('Self-serve refund issued', response.body);
 		return response.body;
 	} catch (error) {
 		logger.error('Failed to issue self-serve refund', error);
@@ -271,7 +271,7 @@ export async function withdrawPurchase(
 		const response = await http.post<SelfServeRefundResponse>(Endpoints.PREMIUM_WITHDRAW(purchaseId), {
 			body: request,
 		});
-		logger.info('Plutonium purchase withdrawn', response.body);
+		logger.debug('Plutonium purchase withdrawn', response.body);
 		return response.body;
 	} catch (error) {
 		logger.error('Plutonium withdrawal failed', error);
@@ -282,7 +282,7 @@ export async function withdrawPurchase(
 export async function rejoinVisionaryGuild(): Promise<void> {
 	try {
 		await http.post(Endpoints.PREMIUM_VISIONARY_REJOIN);
-		logger.info('Visionary guild rejoin requested');
+		logger.debug('Visionary guild rejoin requested');
 	} catch (error) {
 		logger.error('Failed to rejoin Visionary guild', error);
 		throw error;

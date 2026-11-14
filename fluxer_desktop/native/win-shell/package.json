@@ -21,7 +21,6 @@
 		"win-shell.win32-arm64-msvc.node"
 	],
 	"scripts": {
-		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
 		"check:windows:x64": "cargo check --manifest-path Cargo.toml --target x86_64-pc-windows-msvc",
 		"check:windows:arm64": "cargo check --manifest-path Cargo.toml --target aarch64-pc-windows-msvc"
 	}

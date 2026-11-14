@@ -43,8 +43,9 @@ const BACKEND_REASON: &str = "Windows WebAuthn broker backend (webauthn.dll). \
      addon still loads on older builds and `isSupported()` returns false there.";
 #[cfg(target_os = "linux")]
 const BACKEND_REASON: &str = "Linux WebAuthn backend (bundled libfido2, HID transport, U2F \
-     fallback disabled). Requires a CTAP authenticator on USB-HID; \
-     `isSupported()` returns false when no authenticator is enumerated.";
+     fallback disabled). Ceremonies need a CTAP authenticator on USB-HID; \
+     `isSupported()` returns true whenever libfido2 can enumerate HID devices, \
+     even before a security key is plugged in.";
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 const BACKEND_REASON: &str = "no WebAuthn backend is compiled in for this platform";
 

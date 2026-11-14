@@ -6406,6 +6406,10 @@
 				{
 					"name": "invites_paused_until",
 					"type": "timestamp"
+				},
+				{
+					"name": "planned_join_waves_until",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((guild_id))",
@@ -10147,6 +10151,14 @@
 					"type": "int"
 				},
 				{
+					"name": "regional_format",
+					"type": "text"
+				},
+				{
+					"name": "timestamp_format",
+					"type": "int"
+				},
+				{
 					"name": "incoming_call_flags",
 					"type": "int"
 				},
@@ -10697,6 +10709,10 @@
 				},
 				{
 					"name": "is_default",
+					"type": "boolean"
+				},
+				{
+					"name": "hidden",
 					"type": "boolean"
 				},
 				{

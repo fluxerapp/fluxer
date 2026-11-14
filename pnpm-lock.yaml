@@ -471,6 +471,7 @@ overrides:
   zod@^4: 4.6.7
 
 patchedDependencies:
+  '@electron/universal@3.0.4': 89eb2c71ca988f424f2c75cf28b566b156c55b06a0b6cd01d06f9a6763e754bb
   '@phosphor-icons/react@2.1.10': 9b0b481de857aa7a7525f023baea9da72be4574ff72825e39d959e6979d78eea
   emscripten-wasm-loader@3.0.3: 65d0567cd2da382764aee3839187feb5284662c4a9f0b755f1e52163c5e36399
   eslint-plugin-react-google-translate@1.0.4: 343c47e52467ec6018beff92d73b6ca2cf231399d98116925687451e8bd527d8
@@ -950,10 +951,16 @@ importers:
       ioredis:
         specifier: 'catalog:'
         version: 6.0.0(supports-color@7.2.0)
+      pg:
+        specifier: 'catalog:'
+        version: 8.23.1
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
+      '@types/pg':
+        specifier: 'catalog:'
+        version: 8.23.1
       typescript:
         specifier: catalog:ts7
         version: 7.0.2
@@ -1968,6 +1975,9 @@ importers:
       typescript:
         specifier: catalog:ts7
         version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@opentelemetry/api@1.9.1)(@types/node@26.6.6)(happy-dom@20.14.6)(msw@3.0.3(@types/node@26.6.6)(graphql@16.14.2)(supports-color@7.2.0)(typescript@7.0.2)(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/desktop_ipc:
     dependencies:
@@ -14004,7 +14014,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@electron/universal@3.0.4(supports-color@7.2.0)':
+  '@electron/universal@3.0.4(patch_hash=89eb2c71ca988f424f2c75cf28b566b156c55b06a0b6cd01d06f9a6763e754bb)(supports-color@7.2.0)':
     dependencies:
       '@electron/asar': 4.1.1
       debug: 4.4.3(supports-color@7.2.0)
@@ -16657,7 +16667,7 @@ snapshots:
       '@electron/notarize': 3.1.1(supports-color@7.2.0)
       '@electron/osx-sign': 2.4.0(supports-color@7.2.0)
       '@electron/rebuild': 4.2.0(supports-color@7.2.0)
-      '@electron/universal': 3.0.4(supports-color@7.2.0)
+      '@electron/universal': 3.0.4(patch_hash=89eb2c71ca988f424f2c75cf28b566b156c55b06a0b6cd01d06f9a6763e754bb)(supports-color@7.2.0)
       '@malept/flatpak-bundler': 0.4.0(supports-color@7.2.0)
       '@noble/hashes': 2.4.0
       '@peculiar/webcrypto': 1.7.1

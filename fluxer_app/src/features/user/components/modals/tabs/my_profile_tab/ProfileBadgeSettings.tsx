@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
-import {OPERATOR_PASS_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {OPERATOR_PASS_NAME, PRODUCT_LABS_COMMUNITY_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getPremiumProductName} from '@app/features/premium/utils/PremiumUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -13,7 +14,10 @@ import {PROFILE_BADGES_SECTION_ID} from '@app/features/user/commands/UserSetting
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/ProfileBadgeSettings.module.css';
 import type {ProfileBadgePreviewState} from '@app/features/user/hooks/useOwnProfileBadges';
 import {profileBadgeImageUrl} from '@app/features/user/utils/ProfileUtils';
-import {PROFILE_BADGES_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
+import {
+	OPERATORS_MEMBERS_SEE_YOU_DESCRIPTOR,
+	PROFILE_BADGES_DESCRIPTOR,
+} from '@app/features/user/utils/UserMessageDescriptors';
 import type {OwnProfileBadgeResponse} from '@fluxer/schema/src/domains/user/ProfileBadgeSchemas';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -62,6 +66,21 @@ const VISIONARY_NUMBER_NEEDS_VISIONARY_DESCRIPTOR = msg({
 	comment:
 		'Note under the Visionary ID row in the "Badges" profile settings, shown while its switch is disabled because the Visionary badge is hidden or shown as a regular subscription. Visionary is a product name and stays untranslated.',
 });
+const OPERATOR_PASS_LABS_ROLE_NOTE_DESCRIPTOR = msg({
+	message: 'While this badge is hidden, {labsName} shows you without the Operator role, and you keep #operators.',
+	comment:
+		'Note under the Operator Pass badge row in the "Badges" profile settings. {labsName} is the name of the official community, such as Fluxer Labs. Operator is the role name and #operators is a channel name, keep both as is.',
+});
+const VISIONARY_LABS_ROLE_NOTE_DESCRIPTOR = msg({
+	message:
+		'While this badge is hidden or masked, {labsName} shows you without the Visionary role, and you keep #operators.',
+	comment:
+		'Note under the Visionary badge row in the "Badges" profile settings. {labsName} is the name of the official community, such as Fluxer Labs. Visionary is the role name and #operators is a channel name, keep both as is. Masked means the switch "Mask Visionary as subscription" is on.',
+});
+const LABS_ROLE_NOTES: Partial<Record<string, MessageDescriptor>> = {
+	operator_pass: OPERATOR_PASS_LABS_ROLE_NOTE_DESCRIPTOR,
+	visionary: VISIONARY_LABS_ROLE_NOTE_DESCRIPTOR,
+};
 const HIDE_PURCHASE_DATE_DESCRIPTOR = msg({
 	message: 'Hide {premiumProductName} purchase date',
 	comment:
@@ -211,6 +230,7 @@ function BadgeList({
 					const numberHasNoEffect =
 						badge.key === 'visionary_number' && (hidden.has('visionary') || variants.premium_badge_masked);
 					const badgeVariants = shown ? (BADGE_VARIANTS[badge.key] ?? []) : [];
+					const labsRoleNote = RuntimeConfig.isSelfHosted() ? undefined : LABS_ROLE_NOTES[badge.key];
 					return (
 						<li key={badge.key} className={styles.item} data-flx="user.profile-badge-settings.item">
 							<div className={styles.row} data-flx="user.profile-badge-settings.row">
@@ -235,6 +255,11 @@ function BadgeList({
 							{numberHasNoEffect && (
 								<p className={styles.note} data-flx="user.profile-badge-settings.note">
 									{i18n._(VISIONARY_NUMBER_NEEDS_VISIONARY_DESCRIPTOR)}
+								</p>
+							)}
+							{labsRoleNote && (
+								<p className={styles.note} data-flx="user.profile-badge-settings.labs-role-note">
+									{`${i18n._(labsRoleNote, {labsName: PRODUCT_LABS_COMMUNITY_NAME})} ${i18n._(OPERATORS_MEMBERS_SEE_YOU_DESCRIPTOR)}`}
 								</p>
 							)}
 							{badgeVariants.length > 0 && (

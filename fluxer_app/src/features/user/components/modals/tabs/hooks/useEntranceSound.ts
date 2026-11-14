@@ -18,6 +18,7 @@ import * as PremiumModalCommands from '@app/features/premium/commands/PremiumMod
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {INVALID_AUDIO_FILE_DESCRIPTOR} from '@app/features/user/utils/UserMessageDescriptors';
 import {
 	openEntranceSoundTrimmerModal,
@@ -103,7 +104,9 @@ function validationErrorMessage(
 	validation: Extract<EntranceSoundFileValidationResult, {valid: false}>,
 ): string {
 	if (validation.reason === 'too_large') {
-		return i18n._(ENTRANCE_SOUND_TOO_LARGE_DESCRIPTOR, {limit: formatFileSize(i18n.locale, ENTRANCE_SOUND_MAX_BYTES)});
+		return i18n._(ENTRANCE_SOUND_TOO_LARGE_DESCRIPTOR, {
+			limit: formatFileSize(getFormattingLocale(), ENTRANCE_SOUND_MAX_BYTES),
+		});
 	}
 	return i18n._(ENTRANCE_SOUND_INVALID_FORMAT_DESCRIPTOR);
 }

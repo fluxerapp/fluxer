@@ -74,6 +74,8 @@ spec:
               value: {{ .gomemlimit | quote }}
             - name: WEED_MASTER_VOLUME_GROWTH_COPY_1
               value: {{ include "fluxer.string" .volumeGrowth | quote }}
+            - name: WEED_FILER_OPTIONS_MAX_FILE_NAME_LENGTH
+              value: "1024"
           ports:
             - name: s3
               containerPort: 8333

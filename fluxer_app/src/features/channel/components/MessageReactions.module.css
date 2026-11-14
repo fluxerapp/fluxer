@@ -16,6 +16,15 @@
 	margin-inline-end: 0.25rem;
 }
 
+.uniformRows .reactionContainer {
+	display: flex;
+}
+
+.uniformRows .reactionPickerButton {
+	box-sizing: border-box;
+	height: 1.875rem;
+}
+
 .reactionButton {
 	appearance: none;
 	background: var(--background-secondary);

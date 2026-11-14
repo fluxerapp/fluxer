@@ -283,7 +283,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 			activeCaptureSignatureRef.current = captureSignature;
 			updateLevel();
 			if (profile.deepFilter) {
-				logger.info('Applied DeepFilterNet3 noise suppression for mic test');
+				logger.debug('Applied DeepFilterNet3 noise suppression for mic test');
 			}
 		} catch (error) {
 			if (!isCurrent()) return;

@@ -82,8 +82,7 @@
 .headerGradient {
 	position: absolute;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline: 0;
 	height: 3rem;
 	background: linear-gradient(to bottom, var(--voice-overlay-strong) 0%, transparent 100%);
 	display: flex;
@@ -145,8 +144,7 @@
 .footerGradient {
 	position: absolute;
 	bottom: 0;
-	left: 0;
-	right: 0;
+	inset-inline: 0;
 	height: 3rem;
 	background: linear-gradient(to top, var(--voice-overlay-strong) 0%, transparent 100%);
 	display: flex;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {Channel, type ChannelWire} from '@app/features/channel/models/Channel';
@@ -250,7 +251,20 @@ class Channels {
 	}
 
 	handleGatewayReady({channels}: {channels: ReadonlyArray<WireChannel>}): void {
-		this.replaceChannelsFromSnapshot(channels, Authentication.currentUserId);
+		if (!Initialization.isStale) {
+			this.replaceChannelsFromSnapshot(channels, Authentication.currentUserId);
+			return;
+		}
+		const incoming = new Set(channels.map((channel) => channel.id));
+		for (const id of this.channelsById.keys()) {
+			if (!incoming.has(id)) this.removeChannel(id);
+		}
+		this.optimisticChannelBackups.clear();
+		for (const channel of channels) {
+			if (channel.recipients) Users.cacheUsers([...channel.recipients]);
+			this.setChannel(channel);
+		}
+		this.syncPersonalNotesChannel(Authentication.currentUserId, personalNotesEnabled());
 	}
 
 	hydrateFromSnapshot(channels: ReadonlyArray<WireChannel>, selfUserId: string): void {

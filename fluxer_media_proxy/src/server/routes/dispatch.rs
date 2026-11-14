@@ -840,4 +840,46 @@ mod tests {
         assert_eq!(Some("64"), filtered.get("width").map(String::as_str));
         assert_eq!(Some("1"), filtered.get("download").map(String::as_str));
     }
+
+    #[tokio::test]
+    async fn a_proxy_re_encoded_external_path_is_authorised_only_by_its_signature() {
+        use fluxer_common::external_media_path::{
+            build_external_media_proxy_path, create_signature,
+        };
+        let tmp = tempfile::tempdir().expect("storage root");
+        let app = dispatch_app("mp", tmp.path(), &[]);
+        let signed_path = build_external_media_proxy_path("http://127.0.0.1/emojis/1.png?size=48")
+            .expect("path builds");
+        let received = signed_path.replace("%3D", "=");
+        assert_ne!(signed_path, received);
+        let signature = create_signature(&signed_path, b"secret");
+        let other = create_signature(&signed_path, b"other");
+        let query = "?format=webp&width=72&height=71";
+        let refused = dispatch_uri(
+            &app,
+            Method::GET,
+            &format!("/external/{other}/{received}{query}"),
+            &[],
+            None,
+        )
+        .await;
+        assert_eq!(StatusCode::UNAUTHORIZED, refused.status());
+        assert_eq!(
+            0,
+            counter(&app, "fluxer_media_proxy_blocked_url_attempts_total")
+        );
+        let authorised = dispatch_uri(
+            &app,
+            Method::GET,
+            &format!("/external/{signature}/{received}{query}"),
+            &[],
+            None,
+        )
+        .await;
+        assert_eq!(StatusCode::BAD_REQUEST, authorised.status());
+        assert_eq!(
+            1,
+            counter(&app, "fluxer_media_proxy_blocked_url_attempts_total")
+        );
+    }
 }

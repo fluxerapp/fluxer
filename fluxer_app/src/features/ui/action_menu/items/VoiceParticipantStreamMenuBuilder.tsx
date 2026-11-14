@@ -23,7 +23,6 @@ import {
 } from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-
 import type {
 	MenuCheckboxType,
 	MenuGroupType,
@@ -32,6 +31,7 @@ import type {
 	MenuSubmenuItemType,
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import {copyVoiceDiagnostics} from '@app/features/voice/commands/VoiceDiagnosticsCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {changeActiveScreenShare, stopActiveScreenShare} from '@app/features/voice/components/ActiveScreenShareMenu';
@@ -168,7 +168,7 @@ function buildStreamAudioActions(
 				StreamAudioPrefs.setVolume(source.streamKey, value);
 				VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(userId);
 			},
-			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
+			onFormat: (value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 			factoryDefaultValue: 100,
 		},
 	];

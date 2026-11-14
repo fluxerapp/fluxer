@@ -308,9 +308,7 @@
 .reasonLabel {
 	font-weight: 600;
 	color: var(--text-primary-muted);
-	font-size: 0.6875rem;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
+	font-size: 0.75rem;
 }
 
 .reasonValue {

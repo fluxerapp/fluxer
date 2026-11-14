@@ -14,6 +14,7 @@ import {
 	getEffectiveGuildVerificationLevel,
 } from '@fluxer/constants/src/GuildConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
+import isEqual from 'lodash/isEqual';
 import {makeAutoObservable} from 'mobx';
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
@@ -67,7 +68,8 @@ class GuildVerification {
 			clearTimeout(this.timers[guildId]);
 			delete this.timers[guildId];
 		}
-		this.verificationStatus = Object.freeze(newVerificationStatus);
+		if (!isEqual(this.verificationStatus, newVerificationStatus))
+			this.verificationStatus = Object.freeze(newVerificationStatus);
 	}
 
 	handleGuildMemberUpdate(guildId: string): void {
@@ -95,7 +97,8 @@ class GuildVerification {
 				}, delay);
 			}
 		}
-		this.verificationStatus = Object.freeze(newVerificationStatus);
+		if (!isEqual(this.verificationStatus, newVerificationStatus))
+			this.verificationStatus = Object.freeze(newVerificationStatus);
 		this.timers = newTimers;
 	}
 
@@ -120,7 +123,8 @@ class GuildVerification {
 				this.recomputeGuild(guildId);
 			}, delay);
 		}
-		this.verificationStatus = Object.freeze(newVerificationStatus);
+		if (!isEqual(this.verificationStatus, newVerificationStatus))
+			this.verificationStatus = Object.freeze(newVerificationStatus);
 		this.timers = newTimers;
 	}
 

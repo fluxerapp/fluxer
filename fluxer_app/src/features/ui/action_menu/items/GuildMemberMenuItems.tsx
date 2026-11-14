@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import Guilds from '@app/features/guild/state/Guilds';
 import {CHANGE_NICKNAME_DESCRIPTOR, ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -21,7 +20,6 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNicknameModal';
 import type {User} from '@app/features/user/models/User';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {isRoleHiddenFromDisplay} from '@fluxer/constants/src/RoleDisplayUtils';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -55,9 +53,7 @@ export const ManageRolesMenuItem: React.FC<ManageRolesMenuItemProps> = observer(
 		if (canManageRoles) return allRoles;
 		const memberRoles = currentMember?.roles;
 		if (!memberRoles) return [];
-		return allRoles.filter(
-			({role}) => memberRoles.has(role.id) && !isRoleHiddenFromDisplay(role.id, RuntimeConfig.hiddenRoleIds),
-		);
+		return allRoles.filter(({role}) => memberRoles.has(role.id));
 	}, [allRoles, canManageRoles, currentMember]);
 	const handleToggleRole = useCallback(
 		async (roleId: string, hasRole: boolean, canToggle: boolean) => {

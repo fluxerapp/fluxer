@@ -9,6 +9,7 @@ import RollingTypingSender from '@app/features/typing/rolling/RollingTypingSende
 import {useEffect, useRef} from 'react';
 
 interface UseTextareaDraftAndTypingOptions {
+	bootFrameDraftRef?: React.RefObject<boolean>;
 	draftOwner: DraftCommands.DraftOwner;
 	channelId: string;
 	value: string;
@@ -27,6 +28,7 @@ function cloneSegments(segments: ReadonlyArray<MentionSegment> | null | undefine
 }
 
 export const useTextareaDraftAndTyping = ({
+	bootFrameDraftRef,
 	draftOwner,
 	channelId,
 	value,
@@ -80,7 +82,7 @@ export const useTextareaDraftAndTyping = ({
 		};
 	}, [draftOwner, channelId, enabled, setValue, previousValueRef]);
 	useEffect(() => {
-		if (isEditingMessageInComposer) {
+		if (isEditingMessageInComposer || bootFrameDraftRef?.current) {
 			return;
 		}
 		if (!draft || previousValueRef.current === undefined || !DraftCommands.ownsActiveDrafts(draftOwner)) {

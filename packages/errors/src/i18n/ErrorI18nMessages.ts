@@ -499,6 +499,8 @@ export const ERROR_I18N_MESSAGES = {
 	'friends_and_dms.cannot_send_friend_request_to_blocked_user': "You can't send a friend request to a blocked user.",
 	'friends_and_dms.cannot_send_friend_request_to_self': "You can't send a friend request to yourself.",
 	'friends_and_dms.cannot_send_messages_to_user': "You can't send messages to this user.",
+	'friends_and_dms.community_member_dms_disabled':
+		"A community you share with this person has turned off direct messages between members who aren't friends.",
 	'friends_and_dms.duplicate_recipients_not_allowed': "Duplicate recipients aren't allowed.",
 	'friends_and_dms.friend_request_blocked': 'User does not accept friend requests at this time.',
 	'friends_and_dms.not_friends': "You're not friends with this user.",
@@ -729,6 +731,7 @@ export const ERROR_I18N_MESSAGES = {
 	'tos_and_age.must_be_minimum_age':
 		'You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.',
 	'unknown_entities.unknown_badge': "Badge wasn't found.",
+	'unknown_entities.unknown_ban': "Ban wasn't found.",
 	'unknown_entities.unknown_channel': "Channel wasn't found.",
 	'unknown_entities.unknown_forum_tag': "Tag wasn't found.",
 	'unknown_entities.unknown_guild': "Community wasn't found.",

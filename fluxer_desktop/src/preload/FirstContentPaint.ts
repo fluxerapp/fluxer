@@ -11,15 +11,22 @@ type FrameScheduler = (callback: () => void) => unknown;
 export function createFirstContentPaintSignal(
 	renderer: FirstContentPaintRenderer,
 	scheduleFrame: FrameScheduler,
-): () => void {
+	onContentPainted: (view: 'restored' | 'other') => void,
+): (view?: 'restored') => void {
 	let signalled = false;
-	return () => {
+	const signal = (view: 'restored' | 'other'): void => {
+		onContentPainted(view);
+		renderer.send(DESKTOP_FIRST_CONTENT_PAINTED_CHANNEL);
+	};
+	return (view) => {
 		if (signalled) return;
 		signalled = true;
+		if (view === 'restored') {
+			signal(view);
+			return;
+		}
 		scheduleFrame(() => {
-			scheduleFrame(() => {
-				renderer.send(DESKTOP_FIRST_CONTENT_PAINTED_CHANNEL);
-			});
+			scheduleFrame(() => signal('other'));
 		});
 	};
 }

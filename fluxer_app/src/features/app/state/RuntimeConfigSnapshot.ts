@@ -85,7 +85,6 @@ export interface RuntimeConfigSnapshot extends RuntimeConfigIdentity {
 	readonly customBadgesVersion: string | null;
 	readonly builtInGuildBadgeImages: InstanceBuiltInGuildBadgeImages;
 	readonly hiddenBuiltInGuildBadges: InstanceHiddenBuiltInGuildBadges;
-	readonly hiddenRoleIds: ReadonlyArray<string>;
 }
 
 export class InvalidRuntimeConfigSnapshotError extends Error {
@@ -286,6 +285,7 @@ function readFeatures(value: unknown): InstanceFeatures {
 		'email_codes',
 		'date_of_birth_step',
 		'discovery_enabled',
+		'proxy_attachments_through_api',
 	] as const) {
 		const value = readOptionalBoolean(source, key, `features.${key}`);
 		if (value !== undefined) {
@@ -350,6 +350,10 @@ function readSso(value: unknown): InstanceSso | null {
 	const available = readOptionalBoolean(source, 'available', 'sso.available');
 	if (available !== undefined) {
 		sso.available = available;
+	}
+	const providerTrait = readOptionalText(source, 'provider_trait');
+	if (providerTrait != null) {
+		sso.provider_trait = providerTrait;
 	}
 	return sso;
 }
@@ -665,16 +669,6 @@ function readHiddenBuiltInGuildBadges(value: unknown): InstanceHiddenBuiltInGuil
 	return BUILT_IN_GUILD_BADGE_KINDS.filter((kind) => value.includes(kind));
 }
 
-function readHiddenRoleIds(value: unknown): ReadonlyArray<string> {
-	if (value === undefined) {
-		return [];
-	}
-	if (!Array.isArray(value) || !value.every((id) => typeof id === 'string')) {
-		invalid('hiddenRoleIds', 'must be an array of strings');
-	}
-	return [...value];
-}
-
 export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnapshot {
 	const source = readRecord(value, 'root');
 	return {
@@ -712,6 +706,5 @@ export function requireRuntimeConfigSnapshot(value: unknown): RuntimeConfigSnaps
 				: readNonEmptyString(source, 'customBadgesVersion', 'customBadgesVersion'),
 		builtInGuildBadgeImages: readBuiltInGuildBadgeImages(source.builtInGuildBadgeImages),
 		hiddenBuiltInGuildBadges: readHiddenBuiltInGuildBadges(source.hiddenBuiltInGuildBadges),
-		hiddenRoleIds: readHiddenRoleIds(source.hiddenRoleIds),
 	};
 }

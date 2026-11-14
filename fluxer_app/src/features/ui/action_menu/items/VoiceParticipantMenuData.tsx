@@ -133,6 +133,7 @@ import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import {canPerform} from '@app/features/user/utils/AccountGates';
 import {blockedDmConfirmModal, openDMChannelOrShowError} from '@app/features/user/utils/DMActionUtils';
+import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
@@ -396,7 +397,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(user.id);
 				}
 			},
-			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
+			onFormat: (value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 			factoryDefaultValue: 100,
 		});
 		const buildConnectionVolumeSlider = (targetConnectionId: string): MenuSliderType => ({
@@ -410,7 +411,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					VoiceRuntime.engine?.applyLocalAudioPreferencesForUser(user.id);
 				}
 			},
-			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
+			onFormat: (value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 			factoryDefaultValue: 100,
 		});
 		const buildVolumeControls = (targetConnectionId?: string): Array<MenuSliderType> => {
@@ -434,7 +435,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					minValue: 0,
 					maxValue: 200,
 					onChange: (value: number) => EntranceSoundListenerPrefs.setVolume(user.id, value),
-					onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
+					onFormat: (value: number) => formatRoundedPercentage(getFormattingLocale(), value),
 					factoryDefaultValue: 100,
 				},
 			],

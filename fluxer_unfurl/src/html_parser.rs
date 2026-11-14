@@ -173,10 +173,23 @@ fn parse_with_depth_limit(
     parser.finish()
 }
 
-pub(crate) fn parse_document(html: &str) -> Html {
-    parse_with_depth_limit(html, Html::new_document(), |sink| {
-        driver::parse_document(sink, ParseOpts::default())
+pub(crate) fn with_document<T>(html: &str, read: impl FnOnce(&Html) -> T) -> T {
+    off_worker(|| {
+        read(&parse_with_depth_limit(
+            html,
+            Html::new_document(),
+            |sink| driver::parse_document(sink, ParseOpts::default()),
+        ))
     })
+}
+
+fn off_worker<T>(work: impl FnOnce() -> T) -> T {
+    match tokio::runtime::Handle::try_current() {
+        Ok(handle) if handle.runtime_flavor() == tokio::runtime::RuntimeFlavor::MultiThread => {
+            tokio::task::block_in_place(work)
+        }
+        _ => work(),
+    }
 }
 
 pub(crate) fn parse_fragment(fragment: &str) -> Html {
@@ -258,10 +271,39 @@ impl MetaTags {
     }
 }
 
-pub fn parse_opengraph(html: &str) -> OgMetadata {
-    let doc = parse_document(html);
-    let meta = MetaTags::parse(&doc);
+#[derive(Debug, Default, Clone)]
+pub struct PageMetadata {
+    pub og: OgMetadata,
+    pub twitter_card: TwitterCardMetadata,
+    pub rsd_url: Option<String>,
+    pub activity_pub_link: Option<String>,
+    pub has_fediverse_profile_username: bool,
+    pub canonical_url: Option<String>,
+    pub apple_touch_icon: Option<String>,
+    pub oembed_endpoints: Vec<crate::oembed::OEmbedEndpoint>,
+}
 
+pub fn parse_page(html: &str, base_url: &url::Url) -> PageMetadata {
+    with_document(html, |doc| {
+        let meta = MetaTags::parse(doc);
+        PageMetadata {
+            og: opengraph(doc, &meta),
+            twitter_card: twitter_card(&meta),
+            rsd_url: rsd_url(doc),
+            activity_pub_link: activity_pub_link(doc),
+            has_fediverse_profile_username: has_fediverse_profile_username(&meta),
+            canonical_url: canonical_url(doc, base_url),
+            apple_touch_icon: apple_touch_icon(doc, base_url),
+            oembed_endpoints: crate::oembed::discover_oembed_endpoints(doc),
+        }
+    })
+}
+
+pub(crate) fn opengraph_of(doc: &Html) -> OgMetadata {
+    opengraph(doc, &MetaTags::parse(doc))
+}
+
+fn opengraph(doc: &Html, meta: &MetaTags) -> OgMetadata {
     let description = meta
         .first("og:description")
         .or_else(|| meta.first("description"));
@@ -276,7 +318,7 @@ pub fn parse_opengraph(html: &str) -> OgMetadata {
         title: meta.first("og:title"),
         description,
         image,
-        images: extract_image_urls(&meta),
+        images: extract_image_urls(meta),
         image_alt: meta
             .first("og:image:alt")
             .or_else(|| meta.first("twitter:image:alt"))
@@ -299,7 +341,7 @@ pub fn parse_opengraph(html: &str) -> OgMetadata {
     if og.title.is_none() {
         og.title = meta
             .first("twitter:title")
-            .or_else(|| document_title(&doc))
+            .or_else(|| document_title(doc))
             .or_else(|| meta.first("title"));
     }
 
@@ -320,10 +362,7 @@ fn document_title(doc: &Html) -> Option<String> {
     Some(trimmed.to_owned())
 }
 
-pub fn parse_twitter_card(html: &str) -> TwitterCardMetadata {
-    let doc = parse_document(html);
-    let meta = MetaTags::parse(&doc);
-
+fn twitter_card(meta: &MetaTags) -> TwitterCardMetadata {
     TwitterCardMetadata {
         classifying_card: meta
             .all("twitter:card")
@@ -333,8 +372,7 @@ pub fn parse_twitter_card(html: &str) -> TwitterCardMetadata {
     }
 }
 
-pub fn find_rsd_url(html: &str) -> Option<String> {
-    let doc = parse_document(html);
+fn rsd_url(doc: &Html) -> Option<String> {
     let sel = Selector::parse("link").ok()?;
 
     for el in doc.select(&sel) {
@@ -361,8 +399,7 @@ pub fn find_rsd_url(html: &str) -> Option<String> {
     None
 }
 
-pub fn find_activity_pub_link(html: &str) -> Option<String> {
-    let doc = parse_document(html);
+fn activity_pub_link(doc: &Html) -> Option<String> {
     let sel = Selector::parse("link").ok()?;
 
     for el in doc.select(&sel) {
@@ -393,9 +430,7 @@ pub fn find_activity_pub_link(html: &str) -> Option<String> {
     None
 }
 
-pub fn has_fediverse_profile_username(html: &str) -> bool {
-    let doc = parse_document(html);
-    let meta = MetaTags::parse(&doc);
+fn has_fediverse_profile_username(meta: &MetaTags) -> bool {
     meta.all("og:profile:username")
         .chain(meta.all("profile:username"))
         .any(is_acct_shaped)
@@ -417,8 +452,7 @@ fn is_acct_shaped(value: &str) -> bool {
         })
 }
 
-pub fn find_canonical_url(html: &str, base_url: &url::Url) -> Option<String> {
-    let doc = parse_document(html);
+fn canonical_url(doc: &Html, base_url: &url::Url) -> Option<String> {
     let sel = Selector::parse("link[rel=\"canonical\"]").ok()?;
     let el = doc.select(&sel).next()?;
     let href = el.value().attr("href")?;
@@ -428,8 +462,7 @@ pub fn find_canonical_url(html: &str, base_url: &url::Url) -> Option<String> {
     base_url.join(href).ok().map(|u| u.to_string())
 }
 
-pub fn find_apple_touch_icon(html: &str, base_url: &url::Url) -> Option<String> {
-    let doc = parse_document(html);
+fn apple_touch_icon(doc: &Html, base_url: &url::Url) -> Option<String> {
     for selector in [
         r#"link[rel="apple-touch-icon"][sizes="180x180"]"#,
         r#"link[rel="apple-touch-icon"]"#,
@@ -502,6 +535,46 @@ mod tests {
         let mut html =
             String::from(r#"<html><head><meta property="og:title" content="Kept"></head><body>"#);
         html.push_str(&"<div>".repeat(200_000));
-        assert_eq!(parse_opengraph(&html).title.as_deref(), Some("Kept"));
+        let base = url::Url::parse("https://example.com/").unwrap();
+        assert_eq!(parse_page(&html, &base).og.title.as_deref(), Some("Kept"));
+    }
+
+    #[test]
+    fn parse_page_reads_every_field_from_one_parse() {
+        let html = r#"<html><head>
+            <meta property="og:title" content="Post">
+            <meta name="twitter:card" content="player">
+            <meta name="twitter:player" content="https://player.example/embed">
+            <meta property="profile:username" content="@alice@social.example">
+            <link rel="EditURI" type="application/rsd+xml" href="/w/api.php?action=rsd">
+            <link rel="alternate" type="application/activity+json" href="/notes/1">
+            <link rel="canonical" href="/canonical">
+            <link rel="apple-touch-icon" href="/icon.png">
+            <link rel="alternate" type="application/json+oembed" href="/oembed?format=json">
+        </head></html>"#;
+        let base = url::Url::parse("https://social.example/post/1").unwrap();
+        let page = parse_page(html, &base);
+        assert_eq!(page.og.title.as_deref(), Some("Post"));
+        assert_eq!(
+            page.twitter_card.classifying_card.as_deref(),
+            Some("player")
+        );
+        assert_eq!(
+            page.twitter_card.player.as_deref(),
+            Some("https://player.example/embed")
+        );
+        assert!(page.has_fediverse_profile_username);
+        assert_eq!(page.rsd_url.as_deref(), Some("/w/api.php?action=rsd"));
+        assert_eq!(page.activity_pub_link.as_deref(), Some("/notes/1"));
+        assert_eq!(
+            page.canonical_url.as_deref(),
+            Some("https://social.example/canonical")
+        );
+        assert_eq!(
+            page.apple_touch_icon.as_deref(),
+            Some("https://social.example/icon.png")
+        );
+        assert_eq!(page.oembed_endpoints.len(), 1);
+        assert_eq!(page.oembed_endpoints[0].url, "/oembed?format=json");
     }
 }

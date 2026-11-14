@@ -14345,6 +14345,10 @@
 					"latitude": {"description": "Geographic latitude coordinate", "type": "number"},
 					"longitude": {"description": "Geographic longitude coordinate", "type": "number"},
 					"is_default": {"description": "Whether this is the default region", "type": "boolean"},
+					"hidden": {
+						"description": "Whether to leave the region out of the region lists clients show, while placement still uses it",
+						"type": "boolean"
+					},
 					"vip_only": {"description": "Whether this region is restricted to VIP users", "type": "boolean"},
 					"required_guild_features": {
 						"description": "Guild features required to use this region",
@@ -14391,6 +14395,10 @@
 							"latitude": {"type": "number", "description": "Geographic latitude coordinate"},
 							"longitude": {"type": "number", "description": "Geographic longitude coordinate"},
 							"is_default": {"type": "boolean", "description": "Whether this is the default region"},
+							"hidden": {
+								"type": "boolean",
+								"description": "Whether the region is left out of the region lists clients show, while placement still uses it"
+							},
 							"vip_only": {"type": "boolean", "description": "Whether this region is restricted to VIP users"},
 							"required_guild_features": {
 								"maxItems": 100,
@@ -14433,6 +14441,7 @@
 							"latitude",
 							"longitude",
 							"is_default",
+							"hidden",
 							"vip_only",
 							"required_guild_features",
 							"allowed_guild_ids",
@@ -14455,6 +14464,11 @@
 					"latitude": {"type": "number", "description": "Geographic latitude coordinate"},
 					"longitude": {"type": "number", "description": "Geographic longitude coordinate"},
 					"is_default": {"default": false, "description": "Whether this is the default region", "type": "boolean"},
+					"hidden": {
+						"default": false,
+						"description": "Whether to leave the region out of the region lists clients show, while placement still uses it",
+						"type": "boolean"
+					},
 					"vip_only": {
 						"default": false,
 						"description": "Whether this region is restricted to VIP users",
@@ -14507,6 +14521,10 @@
 								"latitude": {"type": "number", "description": "Geographic latitude coordinate"},
 								"longitude": {"type": "number", "description": "Geographic longitude coordinate"},
 								"is_default": {"type": "boolean", "description": "Whether this is the default region"},
+								"hidden": {
+									"type": "boolean",
+									"description": "Whether the region is left out of the region lists clients show, while placement still uses it"
+								},
 								"vip_only": {"type": "boolean", "description": "Whether this region is restricted to VIP users"},
 								"required_guild_features": {
 									"maxItems": 100,
@@ -14549,6 +14567,7 @@
 								"latitude",
 								"longitude",
 								"is_default",
+								"hidden",
 								"vip_only",
 								"required_guild_features",
 								"allowed_guild_ids",
@@ -17669,6 +17688,7 @@
 							"max_bio_length",
 							"max_bookmarks",
 							"max_bot_attachment_file_size",
+							"max_camera_resolution",
 							"max_channels_per_category",
 							"max_custom_backgrounds",
 							"max_embeds_per_message",
@@ -17695,6 +17715,8 @@
 							"max_reactions_per_message",
 							"max_relationships",
 							"max_screen_share_bitrate",
+							"max_screen_share_frame_rate",
+							"max_screen_share_resolution",
 							"max_users_per_message_reaction",
 							"max_voice_message_duration",
 							"max_webhooks_per_channel",
@@ -18363,9 +18385,10 @@
 									"effective"
 								],
 								"additionalProperties": false
-							}
+							},
+							"proxy_attachments_through_api": {"type": "boolean"}
 						},
-						"required": ["attachment_decay"],
+						"required": ["attachment_decay", "proxy_attachments_through_api"],
 						"additionalProperties": false
 					},
 					"billing": {"$ref": "#/components/schemas/InstanceBillingResponse"},
@@ -18884,6 +18907,10 @@
 										"maximum": 9007199254740991
 									}
 								}
+							},
+							"proxy_attachments_through_api": {
+								"description": "Whether attachment links point at the API, which checks that the viewer can read the message before it hands over the file",
+								"type": "boolean"
 							}
 						}
 					},
@@ -19261,6 +19288,12 @@
 						"type": "array",
 						"items": {"allOf": [{"$ref": "#/components/schemas/GuildFeatureSchema"}]}
 					},
+					"planned_join_waves_until": {
+						"description": "When PLANNED_JOIN_WAVES ends, as an ISO 8601 timestamp in the future. Null keeps it on with no end, and leaving it out keeps the current end. Only accepted while the guild has or gains PLANNED_JOIN_WAVES",
+						"nullable": true,
+						"type": "string",
+						"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
+					},
 					"badge_ids": {"allOf": [{"$ref": "#/components/schemas/CustomBadgeIdsType"}]},
 					"fields": {
 						"maxItems": 10,
@@ -19348,6 +19381,13 @@
 							"rules_channel_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
 							"disabled_operations": {"$ref": "#/components/schemas/Int32Type"},
 							"member_count": {"$ref": "#/components/schemas/Int32Type"},
+							"planned_join_waves_until": {
+								"nullable": true,
+								"description": "When PLANNED_JOIN_WAVES ends, or null when it has no end or is off",
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
 							"channels": {
 								"type": "array",
 								"items": {
@@ -19435,6 +19475,7 @@
 							"rules_channel_id",
 							"disabled_operations",
 							"member_count",
+							"planned_join_waves_until",
 							"channels",
 							"roles"
 						],
@@ -21718,7 +21759,7 @@
 				"description": "Why the action is taken"
 			},
 			"GuildFeatureSchema": {
-				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED, VISITS_ENABLED (other values allowed)",
+				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED, VISITS_ENABLED, MEMBER_DMS_DISABLED, PLANNED_JOIN_WAVES (other values allowed)",
 				"x-enumNames": [
 					"ANIMATED_ICON",
 					"ANIMATED_BANNER",
@@ -21754,7 +21795,9 @@
 					"LARGE_GUILD_OVERRIDE",
 					"VERY_LARGE_GUILD",
 					"ANNOUNCEMENT_CHANNELS_DISABLED",
-					"VISITS_ENABLED"
+					"VISITS_ENABLED",
+					"MEMBER_DMS_DISABLED",
+					"PLANNED_JOIN_WAVES"
 				],
 				"x-enumDescriptions": [
 					"Guild can have an animated icon",
@@ -21791,7 +21834,9 @@
 					"Guild has large guild overrides enabled",
 					"Guild has increased member capacity enabled",
 					"Guild cannot publish announcement messages or gain new followers",
-					"People with an invite or a discovery listing can read channels that @everyone can see without joining"
+					"People with an invite or a discovery listing can read channels that @everyone can see without joining",
+					"Members who aren't friends can't use the guild as a shared guild for direct messages",
+					"Guild expects large planned waves of new members. Invites are not paused after a raid"
 				],
 				"type": "string"
 			},
@@ -27036,6 +27081,10 @@
 					"latitude": {"type": "number", "description": "Geographic latitude coordinate"},
 					"longitude": {"type": "number", "description": "Geographic longitude coordinate"},
 					"is_default": {"type": "boolean", "description": "Whether this is the default region"},
+					"hidden": {
+						"type": "boolean",
+						"description": "Whether the region is left out of the region lists clients show, while placement still uses it"
+					},
 					"vip_only": {"type": "boolean", "description": "Whether this region is restricted to VIP users"},
 					"required_guild_features": {
 						"maxItems": 100,
@@ -27073,6 +27122,7 @@
 					"latitude",
 					"longitude",
 					"is_default",
+					"hidden",
 					"vip_only",
 					"required_guild_features",
 					"allowed_guild_ids",
@@ -27158,6 +27208,7 @@
 					"CHANNEL_HAS_THREADS",
 					"CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED",
 					"COMMUNICATION_DISABLED",
+					"COMMUNITY_MEMBER_DMS_DISABLED",
 					"CONNECTION_ALREADY_EXISTS",
 					"CONNECTION_INITIATION_TOKEN_INVALID",
 					"CONNECTION_INVALID_TYPE",
@@ -27417,6 +27468,7 @@
 					"UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES",
 					"UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS",
 					"UNKNOWN_BADGE",
+					"UNKNOWN_BAN",
 					"UNKNOWN_CHANNEL",
 					"UNKNOWN_CONNECTION_PROVIDER",
 					"UNKNOWN_EMOJI",
@@ -27552,6 +27604,7 @@
 					"Channels with threads can't be converted to announcement channels.",
 					"Only text and announcement channels can be converted into each other.",
 					"Communication is disabled.",
+					"A community you share with this person has turned off direct messages between members who aren't friends.",
 					"A connection of this type with this identifier already exists.",
 					"The connection initiation token is invalid or has expired.",
 					"The connection type is not supported.",
@@ -27811,6 +27864,7 @@
 					"Claim your account to send messages.",
 					"Claim your account to submit reports.",
 					"Badge wasn't found.",
+					"Ban wasn't found.",
 					"Channel wasn't found.",
 					"This kind of connection isn't available on this instance.",
 					"Unknown emoji.",

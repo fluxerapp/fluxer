@@ -15,9 +15,14 @@ export function openPlutoniumPage(): void {
 	RouterUtils.transitionTo(Routes.PLUTONIUM);
 }
 
-export function openGiftPlutoniumModal(): void {
+export function openGiftPlutoniumModal(chatChannelId?: string): void {
 	ModalCommands.push(
-		modal(() => <GiftPlutoniumModal data-flx="premium.plutonium-page-commands.open-gift-plutonium-modal.modal" />),
+		modal(() => (
+			<GiftPlutoniumModal
+				chatChannelId={chatChannelId}
+				data-flx="premium.plutonium-page-commands.open-gift-plutonium-modal.modal"
+			/>
+		)),
 	);
 }
 

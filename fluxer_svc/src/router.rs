@@ -15,7 +15,8 @@ use std::future::Future;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::Notify;
-use tracing::{debug, warn};
+use tokio_util::sync::CancellationToken;
+use tracing::{Instrument, debug, warn};
 
 pub const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const ROUTER_DRAIN_LINGER: Duration = Duration::from_secs(2);
@@ -439,6 +440,7 @@ pub async fn run_router<S>(
     config: &ServiceConfig,
     service: S,
     transport: impl Transport,
+    shutdown: CancellationToken,
 ) -> anyhow::Result<()>
 where
     S: RouterService,
@@ -477,10 +479,10 @@ where
                 handler_metrics.clone(),
             )
         },
-        crate::shutdown::wait_for_shutdown(),
+        shutdown,
     );
 
-    let listener = tokio::spawn(listen_for_shard_states(transport, name, states));
+    let listener = tokio::spawn(listen_for_shard_states(transport, name, states).in_current_span());
     let result = requests.await;
     listener.abort();
     result

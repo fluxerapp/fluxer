@@ -2,6 +2,7 @@
 
 import {runtimeInstanceKey} from '@app/features/app/state/InstanceSnapshotStore';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {isApiAttachmentUrl} from '@app/features/messaging/utils/ApiAttachmentUrl';
 import {unwrapDesktopLocalResourceURL} from '@app/features/messaging/utils/DesktopLocalResourceTarget';
 import {isDesktopLocalAppDocument} from '@app/features/platform/DesktopLocalAppRuntime';
 import {
@@ -154,7 +155,7 @@ function isCurrentRuntimeRemoteResourceTarget(target: URL): boolean {
 		const sourceOrigin = originSource(source);
 		if (sourceOrigin != null && sourceOrigin === targetOrigin) return true;
 	}
-	return false;
+	return isApiAttachmentUrl(target.toString());
 }
 
 function originSource(value: string | null): string | null {
