@@ -3404,6 +3404,26 @@ msgstr "Lisää pikanäppäin"
 msgid "Add a passkey to sign in with your fingerprint, face or screen lock. You can also do this later in settings."
 msgstr "Lisää pääsyavain kirjautuaksesi sisään sormenjäljellä, kasvoillasi tai näytön lukituksella. Voit tehdä tämän myös myöhemmin asetuksista."
 
+#. Description of the account settings row for single sign-on when the account has no other way to sign in. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect {providerName}."
+msgstr "Lisää tilillesi salasana tai pääsyavain ennen kuin irrotat palvelun {providerName}."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect single sign-on."
+msgstr "Lisää tilillesi salasana tai pääsyavain ennen kuin irrotat kertakirjautumisen."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the instance allows sign-in with codes sent by email. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect {providerName}."
+msgstr "Lisää salasana tai pääsyavain tai vahvista sähköpostiosoitteesi, jotta voit kirjautua sähköpostitse lähetetyillä koodeilla, ennen kuin irrotat palvelun {providerName}."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in, the instance allows sign-in with codes sent by email and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect single sign-on."
+msgstr "Lisää salasana tai pääsyavain tai vahvista sähköpostiosoitteesi, jotta voit kirjautua sähköpostitse lähetetyillä koodeilla, ennen kuin irrotat kertakirjautumisen."
+
 #. Form placeholder for the tag input on an expression form.
 #: src/features/expressions/components/modals/TagListField.tsx
 msgid "Add a tag"
@@ -10056,7 +10076,7 @@ msgstr "Connecticut"
 #. Heading on the SSO callback page while connecting single sign-on from account settings.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Connecting single sign-on…"
-msgstr ""
+msgstr "Yhdistetään kertakirjautumista…"
 
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -11056,6 +11076,11 @@ msgstr "Webhookin poistaminen epäonnistui"
 #: src/features/guild/hooks/useDeleteMyMessagesInGuild.tsx
 msgid "Couldn't delete your messages"
 msgstr "Viestejäsi ei voitu poistaa"
+
+#. Error title shown when disconnecting single sign-on fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Couldn't disconnect single sign-on"
+msgstr "Kertakirjautumisen irrottaminen epäonnistui"
 
 #. Modal title shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13770,6 +13795,17 @@ msgstr "Hylkää ääniviesti"
 msgid "Disconnect"
 msgstr "Katkaise yhteys"
 
+#. Button that disconnects the account from single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgctxt "sso"
+msgid "Disconnect"
+msgstr "Irrota"
+
+#. Confirmation title when disconnecting the current account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect {providerName}?"
+msgstr "Irrotetaanko {providerName}?"
+
 #. Voice menu action that disconnects every active device or session from voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Disconnect all devices"
@@ -13791,6 +13827,11 @@ msgstr "Katkaise yhteys kanavalta {channel}"
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Disconnect from voice"
 msgstr "Katkaise puhelu"
+
+#. Confirmation title when disconnecting the current account from single sign-on and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect single sign-on?"
+msgstr "Irrotetaanko kertakirjautuminen?"
 
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Disconnect socket"
@@ -34254,11 +34295,11 @@ msgid "Single line"
 msgstr "Yksi rivi"
 
 #. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
-#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
+#. Label of the account settings row for single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
-msgstr "Yhden kirjautumisen tunnistautuminen"
+msgstr "Kertakirjautuminen"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx
 msgid "Single user (all statuses)"
@@ -37942,6 +37983,16 @@ msgstr "Tämä instanssi ei käytä HTTPS:ää"
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr "Tähän instanssiin ei ole vielä määritetty kertakirjautumista. Pyydä ylläpitäjää ottamaan se käyttöön."
 
+#. Description of the account settings row for single sign-on when the instance requires it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with {providerName}."
+msgstr "Tämä instanssi edellyttää kirjautumista palvelun {providerName} kautta."
+
+#. Description of the account settings row for single sign-on when the instance requires it and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with single sign-on."
+msgstr "Tämä instanssi edellyttää kirjautumista kertakirjautumisen kautta."
+
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "This instance was upgraded from a version of Fluxer that used email sign-in, so it stays on email."
@@ -38772,7 +38823,7 @@ msgstr "Päästä ihmisiä sisään luomalla rekisteröitymislinkki hallintapane
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
-msgstr ""
+msgstr "Jos haluat kirjautua tähän tiliin palvelun {providerName} kautta, yhdistä se verkkosovelluksessa selaimella."
 
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
@@ -43637,6 +43688,16 @@ msgstr "Voit poistaa <0>{readMessageHistoryPermissionLabel}</0>-käyttöoikeuden
 msgid "You can sign back in at any time."
 msgstr "Voit kirjautua takaisin milloin tahansa."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with {providerName}."
+msgstr "Voit kirjautua tähän tiliin palvelun {providerName} kautta."
+
+#. Description of the account settings row that disconnects the account from single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with single sign-on."
+msgstr "Voit kirjautua tähän tiliin kertakirjautumisen kautta."
+
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
@@ -44178,6 +44239,16 @@ msgstr "Moderaattorit mykistivät äänesi"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Sinut ohjataan osoitteeseen {redirectHostname} valtuutuksen jälkeen."
+
+#. Warning shown before disconnecting single sign-on. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with {providerName} anymore. You can still use your other sign-in methods."
+msgstr "Et voi enää kirjautua palvelun {providerName} kautta. Voit edelleen käyttää muita kirjautumistapojasi."
+
+#. Warning shown before disconnecting single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with single sign-on anymore. You can still use your other sign-in methods."
+msgstr "Et voi enää kirjautua kertakirjautumisen kautta. Voit edelleen käyttää muita kirjautumistapojasi."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx

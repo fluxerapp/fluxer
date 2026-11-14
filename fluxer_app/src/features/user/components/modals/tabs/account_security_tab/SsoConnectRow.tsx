@@ -12,10 +12,9 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useState} from 'react';
 
-const SINGLE_SIGN_ON_DESCRIPTOR = msg({
+export const SINGLE_SIGN_ON_DESCRIPTOR = msg({
 	message: 'Single sign-on',
-	comment:
-		'Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.',
+	comment: 'Label of the account settings row for single sign-on when the admin has not given the provider a name.',
 });
 const CONNECT_SSO_FAILED_DESCRIPTOR = msg({
 	message: "Couldn't connect single sign-on",

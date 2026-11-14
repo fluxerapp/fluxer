@@ -464,6 +464,27 @@ The body is the [sudo verification object](/http-api/users/mfa/#sudo-verificatio
 
 The rate limit is 10 requests per 10 seconds, on the shared `auth:sso:start` bucket.
 
+## Disconnect SSO
+
+<RouteHeader method="DELETE" path="/v1/users/@me/sso" mfa />
+
+Disconnects the instance's SSO provider from the current account after [sudo mode](/http-api/users/mfa/#sudo-mode) and sends [User Update](/gateway/events/#user-update). The account needs another way to sign in, which is a password, a passkey or [email code sign-in](#send-an-email-code) with a confirmed email address. Without one the route returns `LOCAL_SIGN_IN_METHOD_REQUIRED`. It returns `SSO_REQUIRED` while the instance enforces SSO. The route still works after the instance turns SSO off, and it doesn't sign out other sessions.
+
+### JSON body
+
+The body is the [sudo verification object](/http-api/users/mfa/#sudo-verification-object).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The provider was disconnected |
+| 403 | [error response](/http-api/#error-response) | `SUDO_MODE_REQUIRED` without a valid sudo proof |
+| 403 | [error response](/http-api/#error-response) | `SSO_REQUIRED` when the instance enforces SSO |
+| 403 | [error response](/http-api/#error-response) | `LOCAL_SIGN_IN_METHOD_REQUIRED` when the account has no other way to sign in |
+
+The rate limit is 10 requests per minute, on the `user:sso:unlink` bucket.
+
 ## Register an account
 
 <RouteHeader method="POST" path="/v1/auth/register" unauthenticated />

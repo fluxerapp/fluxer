@@ -3404,6 +3404,26 @@ msgstr "Pridėti spartųjį klavišą"
 msgid "Add a passkey to sign in with your fingerprint, face or screen lock. You can also do this later in settings."
 msgstr "Pridėkite prieigos raktą, kad prisijungtumėte piršto antspaudu, veidu arba ekrano užraktu. Vėliau tai galėsite padaryti ir nustatymuose."
 
+#. Description of the account settings row for single sign-on when the account has no other way to sign in. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect {providerName}."
+msgstr "Prieš atjungdamas {providerName}, pridėk prie paskyros slaptažodį arba prieigos raktą."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect single sign-on."
+msgstr "Prieš atjungdamas vienkartinį prisijungimą, pridėk prie paskyros slaptažodį arba prieigos raktą."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the instance allows sign-in with codes sent by email. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect {providerName}."
+msgstr "Prieš atjungdamas {providerName}, pridėk slaptažodį arba prieigos raktą arba patvirtink el. pašto adresą, kad galėtum prisijungti el. paštu gautais kodais."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in, the instance allows sign-in with codes sent by email and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect single sign-on."
+msgstr "Prieš atjungdamas vienkartinį prisijungimą, pridėk slaptažodį arba prieigos raktą arba patvirtink el. pašto adresą, kad galėtum prisijungti el. paštu gautais kodais."
+
 #. Form placeholder for the tag input on an expression form.
 #: src/features/expressions/components/modals/TagListField.tsx
 msgid "Add a tag"
@@ -10056,7 +10076,7 @@ msgstr "Konektikutas"
 #. Heading on the SSO callback page while connecting single sign-on from account settings.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Connecting single sign-on…"
-msgstr ""
+msgstr "Susiejamas vienkartinis prisijungimas…"
 
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -11056,6 +11076,11 @@ msgstr "Nepavyko ištrinti šio webhooko"
 #: src/features/guild/hooks/useDeleteMyMessagesInGuild.tsx
 msgid "Couldn't delete your messages"
 msgstr "Nepavyko ištrinti jūsų žinučių"
+
+#. Error title shown when disconnecting single sign-on fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Couldn't disconnect single sign-on"
+msgstr "Nepavyko atjungti vienkartinio prisijungimo"
 
 #. Modal title shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13770,6 +13795,17 @@ msgstr "Atmesti balso žinutę"
 msgid "Disconnect"
 msgstr "Atjungti"
 
+#. Button that disconnects the account from single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgctxt "sso"
+msgid "Disconnect"
+msgstr "Atjungti"
+
+#. Confirmation title when disconnecting the current account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect {providerName}?"
+msgstr "Atjungti {providerName}?"
+
 #. Voice menu action that disconnects every active device or session from voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Disconnect all devices"
@@ -13791,6 +13827,11 @@ msgstr "Atsijungti nuo „{channel}“"
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Disconnect from voice"
 msgstr "Atsijungti nuo balso pokalbio"
+
+#. Confirmation title when disconnecting the current account from single sign-on and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect single sign-on?"
+msgstr "Atjungti vienkartinį prisijungimą?"
 
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Disconnect socket"
@@ -34063,7 +34104,7 @@ msgstr "Prisijungti naudojant senąją {productName} programėlę"
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 msgid "Sign in with your organization's single sign-on provider."
-msgstr "Prisijunkite naudodami savo organizacijos vieningo prisijungimo (SSO) teikėją."
+msgstr "Prisijunkite naudodami savo organizacijos vienkartinio prisijungimo (SSO) teikėją."
 
 #. Generic action label that signs the current user out of the app.
 #. Quiet text button on the date of birth step that signs out instead.
@@ -34255,7 +34296,7 @@ msgid "Single line"
 msgstr "Viena eilutė"
 
 #. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
-#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
+#. Label of the account settings row for single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
@@ -37941,7 +37982,17 @@ msgstr "Ši instancija nenaudoja HTTPS"
 #. Explanation shown in place of the single sign-on description when the instance offers no SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
-msgstr "Ši paskyra nebaigė nustatyti vieno prisijungimo. Paprašykite administratoriaus jį įjungti."
+msgstr "Ši instancija nebaigė nustatyti vienkartinio prisijungimo. Paprašykite administratoriaus jį įjungti."
+
+#. Description of the account settings row for single sign-on when the instance requires it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with {providerName}."
+msgstr "Ši instancija reikalauja, kad prisijungtum per {providerName}."
+
+#. Description of the account settings row for single sign-on when the instance requires it and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with single sign-on."
+msgstr "Ši instancija reikalauja, kad prisijungtum vienkartiniu prisijungimu."
 
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -38773,7 +38824,7 @@ msgstr "Norėdami įleisti žmones, sukurkite registracijos nuorodą administrat
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
-msgstr ""
+msgstr "Jei nori prisijungti prie šios paskyros per {providerName}, susiek ją žiniatinklio programoje naršyklėje."
 
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
@@ -43638,6 +43689,16 @@ msgstr "Galite pašalinti <0>{readMessageHistoryPermissionLabel}</0> leidimą i�
 msgid "You can sign back in at any time."
 msgstr "Prisijungti galėsite bet kada."
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with {providerName}."
+msgstr "Prie šios paskyros gali prisijungti per {providerName}."
+
+#. Description of the account settings row that disconnects the account from single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with single sign-on."
+msgstr "Prie šios paskyros gali prisijungti vienkartiniu prisijungimu."
+
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
@@ -44179,6 +44240,16 @@ msgstr "Moderatoriai išjungė jūsų garsą"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "Po autorizacijos būsite nukreipti į {redirectHostname}."
+
+#. Warning shown before disconnecting single sign-on. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with {providerName} anymore. You can still use your other sign-in methods."
+msgstr "Nebegalėsi prisijungti per {providerName}. Kitus prisijungimo būdus galėsi naudoti toliau."
+
+#. Warning shown before disconnecting single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with single sign-on anymore. You can still use your other sign-in methods."
+msgstr "Nebegalėsi prisijungti vienkartiniu prisijungimu. Kitus prisijungimo būdus galėsi naudoti toliau."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx

@@ -3397,6 +3397,26 @@ msgstr ""
 msgid "Add a passkey to sign in with your fingerprint, face or screen lock. You can also do this later in settings."
 msgstr ""
 
+#. Description of the account settings row for single sign-on when the account has no other way to sign in. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect {providerName}."
+msgstr "o pana e nimi len anu ilo open tawa lipu sina. ni la, sina ken weka e {providerName}."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey to your account before you disconnect single sign-on."
+msgstr "o pana e nimi len anu ilo open tawa lipu sina. ni la, sina ken weka e nasin kama wan."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in and the instance allows sign-in with codes sent by email. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect {providerName}."
+msgstr "o pana e nimi len anu ilo open, anu o awen e nimi sina pi lipu kon. ni la, sina ken kama kepeken nanpa lipu, li ken weka e {providerName}."
+
+#. Description of the account settings row for single sign-on when the account has no other way to sign in, the instance allows sign-in with codes sent by email and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect single sign-on."
+msgstr "o pana e nimi len anu ilo open, anu o awen e nimi sina pi lipu kon. ni la, sina ken kama kepeken nanpa lipu, li ken weka e nasin kama wan."
+
 #. Form placeholder for the tag input on an expression form.
 #: src/features/expressions/components/modals/TagListField.tsx
 msgid "Add a tag"
@@ -10049,7 +10069,7 @@ msgstr ""
 #. Heading on the SSO callback page while connecting single sign-on from account settings.
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 msgid "Connecting single sign-on…"
-msgstr ""
+msgstr "mi linja e nasin kama wan…"
 
 #. Auth status shown while connecting to an instance, when the instance selector resolves it or when sign-in waits for the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -10936,7 +10956,7 @@ msgstr ""
 #: src/features/auth/components/pages/SsoCallbackPage.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Couldn't connect single sign-on"
-msgstr ""
+msgstr "mi ken ala linja e nasin kama wan"
 
 #. Auth error shown when connecting to an instance fails, in the instance selector or when sign-in cannot reach the live connection. Domain is interpolated.
 #: src/features/auth/flow/instance_selector/InstanceDiscoveryFailure.ts
@@ -11049,6 +11069,11 @@ msgstr ""
 #: src/features/guild/hooks/useDeleteMyMessagesInGuild.tsx
 msgid "Couldn't delete your messages"
 msgstr ""
+
+#. Error title shown when disconnecting single sign-on fails.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Couldn't disconnect single sign-on"
+msgstr "mi ken ala weka e nasin kama wan"
 
 #. Modal title shown when a desktop update download fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx
@@ -13763,6 +13788,17 @@ msgstr ""
 msgid "Disconnect"
 msgstr ""
 
+#. Button that disconnects the account from single sign-on.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgctxt "sso"
+msgid "Disconnect"
+msgstr "o weka"
+
+#. Confirmation title when disconnecting the current account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect {providerName}?"
+msgstr "sina wile ala wile weka e {providerName}?"
+
 #. Voice menu action that disconnects every active device or session from voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Disconnect all devices"
@@ -13784,6 +13820,11 @@ msgstr ""
 #: src/features/platform/utils/DesktopLocaleBridge.ts
 msgid "Disconnect from voice"
 msgstr ""
+
+#. Confirmation title when disconnecting the current account from single sign-on and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "Disconnect single sign-on?"
+msgstr "sina wile ala wile weka e nasin kama wan?"
 
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx
 msgid "Disconnect socket"
@@ -34247,11 +34288,11 @@ msgid "Single line"
 msgstr ""
 
 #. Heading of the single sign-on panel when the admin has not given the sign-in provider a name.
-#. Label of the account settings row for connecting single sign-on when the admin has not given the provider a name.
+#. Label of the account settings row for single sign-on when the admin has not given the provider a name.
 #: src/features/auth/flow/AuthSsoPanel.tsx
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "Single sign-on"
-msgstr ""
+msgstr "nasin kama wan"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx
 msgid "Single user (all statuses)"
@@ -37935,6 +37976,16 @@ msgstr ""
 msgid "This instance has not finished setting up single sign-on. Ask an administrator to enable it."
 msgstr ""
 
+#. Description of the account settings row for single sign-on when the instance requires it. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with {providerName}."
+msgstr "ma ilo ni la sina wile kama kepeken {providerName}."
+
+#. Description of the account settings row for single sign-on when the instance requires it and the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "This instance requires you to sign in with single sign-on."
+msgstr "ma ilo ni la sina wile kama kepeken nasin kama wan."
+
 #. Setup wizard explanation of why the sign-in method is fixed: the instance is older than username sign-in.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
 msgid "This instance was upgraded from a version of Fluxer that used email sign-in, so it stays on email."
@@ -38765,7 +38816,7 @@ msgstr ""
 #. Description of the account settings row for single sign-on in the desktop app, which cannot connect it. providerName is the provider name typed by the admin.
 #: src/features/user/components/modals/tabs/account_security_tab/SsoConnectRow.tsx
 msgid "To sign in to this account with {providerName}, connect it in the web app in a browser."
-msgstr ""
+msgstr "sina wile kama lon lipu ni kepeken {providerName} la, o linja e ona lon ilo pi lipu linja."
 
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx
 msgid "To transfer ownership, go to {generalSettingsPath} and use the transfer ownership option."
@@ -43630,6 +43681,16 @@ msgstr ""
 msgid "You can sign back in at any time."
 msgstr ""
 
+#. Description of the account settings row that disconnects the account from the instance's single sign-on provider. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with {providerName}."
+msgstr "sina ken kama lon lipu ni kepeken {providerName}."
+
+#. Description of the account settings row that disconnects the account from single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You can sign in to this account with single sign-on."
+msgstr "sina ken kama lon lipu ni kepeken nasin kama wan."
+
 #. Cooldown notice in the new thread pane when the parent channel has slowmode. seconds is the wait time.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "You can start another thread in {seconds, plural, one {# second} other {# seconds}}."
@@ -44171,6 +44232,16 @@ msgstr ""
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr ""
+
+#. Warning shown before disconnecting single sign-on. providerName is the provider name typed by the admin.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with {providerName} anymore. You can still use your other sign-in methods."
+msgstr "tenpo kama la sina ken ala kama kepeken {providerName}. sina ken awen kepeken nasin kama ante sina."
+
+#. Warning shown before disconnecting single sign-on when the admin has not given the provider a name.
+#: src/features/user/components/modals/tabs/account_security_tab/SsoDisconnectRow.tsx
+msgid "You won't be able to sign in with single sign-on anymore. You can still use your other sign-in methods."
+msgstr "tenpo kama la sina ken ala kama kepeken nasin kama wan. sina ken awen kepeken nasin kama ante sina."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx
