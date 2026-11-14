@@ -176,7 +176,7 @@ pub(crate) fn build_virtual_sink_props_for(
 ) -> PropertiesBox {
     let media_class = match kind {
         VirtualSinkKind::LegacyVirtualSource => "Audio/Source/Virtual",
-        VirtualSinkKind::PrivateAudioSink => "Audio/Sink",
+        VirtualSinkKind::PrivateAudioSink => "Audio/Sink/Internal",
     };
     let mut props = properties! {
         "factory.name" => "support.null-audio-sink",
