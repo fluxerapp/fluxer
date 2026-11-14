@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DEFAULT_ROLE_COLOR_HEX, getRoleColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
+import {getRoleSwatchColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildRolesTab.module.css';
+import {SelfAssignableRolesSwitch} from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/SelfAssignableRolesSwitch';
 import {
 	applyRoleUpdate,
 	type RoleUpdate,
@@ -18,6 +19,7 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
 interface MobileRoleListProps {
+	guildId: string;
 	roles: Array<GuildRole>;
 	roleUpdates: Map<string, RoleUpdate>;
 	canManageRoles: boolean;
@@ -27,7 +29,7 @@ interface MobileRoleListProps {
 }
 
 export const MobileRoleList: React.FC<MobileRoleListProps> = observer(
-	({roles, roleUpdates, canManageRoles, isRoleLocked, onCreateRole, onSelectRole}) => {
+	({guildId, roles, roleUpdates, canManageRoles, isRoleLocked, onCreateRole, onSelectRole}) => {
 		const {i18n} = useLingui();
 		return (
 			<div className={styles.container} data-flx="guild.guild-tabs.guild-roles-tab.container">
@@ -49,6 +51,10 @@ export const MobileRoleList: React.FC<MobileRoleListProps> = observer(
 							<Trans>Create role</Trans>
 						</Button>
 					</div>
+					<SelfAssignableRolesSwitch
+						guildId={guildId}
+						data-flx="guild.guild-tabs.guild-roles-tab.mobile-role-list.self-assignable-roles-switch"
+					/>
 					<div className={styles.mobileRoles} data-flx="guild.guild-tabs.guild-roles-tab.mobile-roles">
 						{roles.map((role: GuildRole) => {
 							const roleWithUpdates = applyRoleUpdate(role, roleUpdates.get(role.id));
@@ -65,8 +71,7 @@ export const MobileRoleList: React.FC<MobileRoleListProps> = observer(
 									<div
 										className={styles.roleDot}
 										style={{
-											backgroundColor:
-												roleWithUpdates.color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(roleWithUpdates.color),
+											backgroundColor: getRoleSwatchColor(roleWithUpdates),
 										}}
 										data-flx="guild.guild-tabs.guild-roles-tab.role-dot"
 									/>

@@ -5,11 +5,14 @@ import {PreloadableUserPopout} from '@app/features/channel/components/Preloadabl
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
+import {openSelfAssignableRolesPage} from '@app/features/guild/commands/SelfAssignableRoleCommands';
 import Guilds from '@app/features/guild/state/Guilds';
+import {shouldShowSelfAssignableRolesEntry} from '@app/features/guild/utils/SelfAssignableRoles';
+import {ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {MentionLabel} from '@app/features/messaging/components/markdown/renderers/MentionLabel';
 import type {RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
-import {GuildNavKind, MentionKind} from '@app/features/messaging/utils/markdown/parser/Enums';
+import {MentionKind} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {MentionNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
@@ -32,6 +35,7 @@ import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
+import {ShieldIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -48,12 +52,63 @@ const CHANNEL_LINK_DESCRIPTOR = msg({
 	message: 'channel link',
 	comment: 'Short label in the messaging mention renderer. Keep it concise.',
 });
+const ROLES_PAGE_LINK_DESCRIPTOR = msg({
+	message: 'roles page link',
+	comment:
+		'Screen reader description of a clickable mention in a message that opens the community Roles page, where members pick roles for themselves. Keep it concise and lowercase, like "channel link".',
+});
 const UNKNOWN_MENTION_DESCRIPTOR = msg({message: 'unknown-mention'});
 
 function isMentionableThreadFeatureChannel(channel: Channel): boolean {
 	if (!ThreadGuilds.isActive(channel.guildId)) return false;
 	if (channel.isThread()) return ChannelThreads.getThread(channel.id) != null;
 	return channel.isThreadOnly();
+}
+
+interface InteractiveMentionProps {
+	readonly roleDescription: string;
+	readonly onActivate: (event: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => void;
+	readonly menuOpen?: boolean;
+	readonly onMouseDown?: React.MouseEventHandler<HTMLElement>;
+	readonly onContextMenu?: React.MouseEventHandler<HTMLElement>;
+	readonly children: React.ReactNode;
+}
+
+function InteractiveMention({
+	roleDescription,
+	onActivate,
+	menuOpen,
+	onMouseDown,
+	onContextMenu,
+	children,
+}: InteractiveMentionProps): React.ReactElement {
+	return (
+		<FocusRing offset={-2} data-flx="messaging.markdown.renderers.mention-renderer.interactive-mention.focus-ring">
+			<span
+				role="button"
+				tabIndex={0}
+				className={clsx(markupStyles.mention, markupStyles.interactive)}
+				aria-haspopup={menuOpen === undefined ? undefined : 'menu'}
+				aria-expanded={menuOpen}
+				aria-roledescription={roleDescription}
+				onMouseDown={onMouseDown}
+				onClick={(event) => {
+					event.stopPropagation();
+					onActivate(event);
+				}}
+				onKeyDown={(event) => {
+					if (!isKeyboardActivationKey(event.key)) return;
+					event.preventDefault();
+					event.stopPropagation();
+					onActivate(event);
+				}}
+				onContextMenu={onContextMenu}
+				data-flx="messaging.markdown.renderers.mention-renderer.interactive-mention.button.stop-propagation"
+			>
+				{children}
+			</span>
+		</FocusRing>
+	);
 }
 
 interface InteractiveChannelMentionProps {
@@ -78,59 +133,92 @@ function InteractiveChannelMention({channel, roleDescription}: InteractiveChanne
 		NavigationCommands.selectChannel(guildId, channel.id);
 	};
 	return (
-		<FocusRing offset={-2} data-flx="messaging.markdown.renderers.mention-renderer.focus-ring--2">
-			<span
-				role="button"
-				tabIndex={0}
-				className={clsx(markupStyles.mention, markupStyles.interactive)}
-				aria-haspopup="menu"
-				aria-expanded={isOpen}
-				aria-roledescription={roleDescription}
-				onMouseDown={channel.isThread() ? preventShiftSelection : undefined}
-				onClick={(event) => {
-					event.stopPropagation();
-					activate(event);
-				}}
-				onKeyDown={(event) => {
-					if (!isKeyboardActivationKey(event.key)) return;
-					event.preventDefault();
-					event.stopPropagation();
-					activate(event);
-				}}
-				onContextMenu={(event) => {
-					event.preventDefault();
-					event.stopPropagation();
-					ContextMenuCommands.openFromEvent(
-						event,
-						({onClose}) =>
-							channel.isThread() ? (
-								<ThreadContextMenu
-									thread={channel}
-									onClose={onClose}
-									data-flx="messaging.markdown.renderers.mention-renderer.thread-context-menu"
-								/>
-							) : (
-								<ChannelContextMenu
-									channel={channel}
-									onClose={onClose}
-									data-flx="messaging.markdown.renderers.mention-renderer.channel-context-menu"
-								/>
-							),
-						withTracking(),
-					);
-				}}
-				data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation--2"
+		<InteractiveMention
+			roleDescription={roleDescription}
+			onActivate={activate}
+			menuOpen={isOpen}
+			onMouseDown={channel.isThread() ? preventShiftSelection : undefined}
+			onContextMenu={(event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				ContextMenuCommands.openFromEvent(
+					event,
+					({onClose}) =>
+						channel.isThread() ? (
+							<ThreadContextMenu
+								thread={channel}
+								onClose={onClose}
+								data-flx="messaging.markdown.renderers.mention-renderer.thread-context-menu"
+							/>
+						) : (
+							<ChannelContextMenu
+								channel={channel}
+								onClose={onClose}
+								data-flx="messaging.markdown.renderers.mention-renderer.channel-context-menu"
+							/>
+						),
+					withTracking(),
+				);
+			}}
+			data-flx="messaging.markdown.renderers.mention-renderer.interactive-channel-mention.interactive-mention.prevent-shift-selection"
+		>
+			<MentionLabel
+				icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}
+				data-flx="messaging.markdown.renderers.mention-renderer.interactive-channel-mention.mention-label"
 			>
-				<MentionLabel
-					icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}
-					data-flx="messaging.markdown.renderers.mention-renderer.interactive-channel-mention.mention-label"
-				>
-					{channel.name}
-				</MentionLabel>
-			</span>
-		</FocusRing>
+				{channel.name}
+			</MentionLabel>
+		</InteractiveMention>
 	);
 }
+
+interface RolesNavigationMentionProps {
+	guildId: string | null;
+	interactive: boolean;
+	label: string;
+	roleDescription: string;
+}
+
+const RolesNavigationMention = observer(function RolesNavigationMention({
+	guildId,
+	interactive,
+	label,
+	roleDescription,
+}: RolesNavigationMentionProps): React.ReactElement {
+	const guild = guildId == null ? null : Guilds.getGuild(guildId);
+	const content = (
+		<MentionLabel
+			icon={
+				<ShieldIcon
+					className={mentionRendererStyles.channelIcon}
+					data-flx="messaging.markdown.renderers.mention-renderer.roles-navigation-mention.shield-icon"
+				/>
+			}
+			data-flx="messaging.markdown.renderers.mention-renderer.roles-navigation-mention.mention-label"
+		>
+			{label}
+		</MentionLabel>
+	);
+	if (!interactive || guild == null || !shouldShowSelfAssignableRolesEntry(guild)) {
+		return (
+			<span
+				className={markupStyles.mention}
+				data-flx="messaging.markdown.renderers.mention-renderer.roles-navigation-mention.span"
+			>
+				{content}
+			</span>
+		);
+	}
+	return (
+		<InteractiveMention
+			roleDescription={roleDescription}
+			onActivate={() => openSelfAssignableRolesPage(guild.id)}
+			data-flx="messaging.markdown.renderers.mention-renderer.roles-navigation-mention.interactive-mention"
+		>
+			{content}
+		</InteractiveMention>
+	);
+});
 
 export const MentionRenderer = observer(function MentionRenderer({
 	node,
@@ -359,37 +447,16 @@ export const MentionRenderer = observer(function MentionRenderer({
 			);
 		}
 		case MentionKind.GuildNavigation: {
-			const {navigationType} = kind;
-			let content: string;
-			switch (navigationType) {
-				case GuildNavKind.Customize:
-					content = '<id:customize>';
-					break;
-				case GuildNavKind.Browse:
-					content = '<id:browse>';
-					break;
-				case GuildNavKind.Guide:
-					content = '<id:guide>';
-					break;
-				case GuildNavKind.LinkedRoles: {
-					const linkedRolesId = (kind as {navigationType: 'LinkedRoles'; id?: string}).id;
-					content = linkedRolesId ? `<id:linked-roles:${linkedRolesId}>` : '<id:linked-roles>';
-					break;
-				}
-				default:
-					content = `<id:${navigationType}>`;
-					break;
-			}
+			const channel = channelId ? Channels.getChannel(channelId) : undefined;
 			return (
-				<span
+				<RolesNavigationMention
 					key={id}
-					className={markupStyles.mention}
-					data-flx="messaging.markdown.renderers.mention-renderer.span--12"
-				>
-					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--12">
-						{content}
-					</MentionLabel>
-				</span>
+					guildId={channel?.guildId || options.guildId || null}
+					interactive={!shouldDisableInteractions}
+					label={i18n._(ROLES_DESCRIPTOR)}
+					roleDescription={i18n._(ROLES_PAGE_LINK_DESCRIPTOR)}
+					data-flx="messaging.markdown.renderers.mention-renderer.roles-navigation-mention"
+				/>
 			);
 		}
 		default:

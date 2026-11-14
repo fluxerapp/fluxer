@@ -198,6 +198,21 @@ export const GUILD_MEMBER_DMS_DISABLED_ROW = msg({
 	comment:
 		'Activity log detail line under a community settings update, shown when the setting that stops direct messages between community members who are not friends was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.',
 });
+export const GUILD_SELF_ASSIGNABLE_ROLES_TURNED_ON_ROW = msg({
+	message: 'Turned on self-assignable roles',
+	comment:
+		'Activity log detail line under a community settings update, shown when self-assignable roles were turned on, so members can give themselves the roles listed on the Roles page. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.',
+});
+export const GUILD_SELF_ASSIGNABLE_ROLES_TURNED_OFF_ROW = msg({
+	message: 'Turned off self-assignable roles',
+	comment:
+		'Activity log detail line under a community settings update, shown when self-assignable roles were turned off, so members can no longer give themselves roles from the Roles page. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.',
+});
+export const GUILD_SELF_ASSIGNABLE_ROLE_SECTIONS_CHANGED_ROW = msg({
+	message: 'Changed the self-assignable role sections',
+	comment:
+		'Activity log detail line under a community settings update, shown when the sections of roles that members can give themselves were edited (text, roles or order). It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.',
+});
 export const GUILD_MEMBER_DMS_ENABLED_ROW = msg({
 	message: "Turned DMs between members who aren't friends back on",
 	comment:

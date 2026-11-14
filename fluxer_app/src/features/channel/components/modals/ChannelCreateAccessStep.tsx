@@ -4,7 +4,7 @@ import {
 	getOverrideMemberLabel,
 	selectOverrideMembers,
 } from '@app/features/app/components/dialogs/shared/AddOverrideMemberSearch';
-import {DEFAULT_ROLE_COLOR_HEX, getRoleColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
+import {getRoleSwatchColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import styles from '@app/features/channel/components/modals/ChannelCreateModal.module.css';
 import type {ChannelCreateOverwrite} from '@app/features/channel/utils/ChannelCreateModalUtils';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -134,7 +134,7 @@ export const ChannelCreateAccessStep = observer(({guildId, selected, onChange}: 
 										<span className={styles.accessLabel} data-flx="channel.channel-create-access-step.role-label">
 											<span
 												className={styles.roleDot}
-												style={{backgroundColor: role.color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(role.color)}}
+												style={{backgroundColor: getRoleSwatchColor(role)}}
 												data-flx="channel.channel-create-access-step.role-dot"
 											/>
 											{role.name}

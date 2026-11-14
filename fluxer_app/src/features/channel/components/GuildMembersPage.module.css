@@ -10,26 +10,6 @@
 	overflow: hidden;
 }
 
-.headerLeftContent {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	min-width: 0;
-	color: var(--text-primary);
-}
-
-.headerIcon {
-	flex-shrink: 0;
-	color: var(--text-tertiary);
-}
-
-.headerLabel {
-	font-weight: 600;
-	font-size: 1rem;
-	line-height: 1.5rem;
-	white-space: nowrap;
-}
-
 .content {
 	display: grid;
 	grid-template-rows: auto minmax(0, 1fr);

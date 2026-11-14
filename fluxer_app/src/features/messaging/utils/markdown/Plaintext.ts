@@ -6,7 +6,6 @@ import {formatTimestamp} from '@app/features/messaging/utils/markdown/DateFormat
 import {
 	AlertType,
 	EmojiKind,
-	GuildNavKind,
 	MentionKind,
 	NodeType,
 	TableAlignment,
@@ -38,6 +37,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ROLES_PAGE_MENTION_PLAIN_TEXT} from '@fluxer/constants/src/GuildConstants';
 import type {ChannelMention} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -423,28 +423,8 @@ function renderMentionToPlaintext(node: MentionNode, options: PlaintextRenderOpt
 			}
 			return commandName;
 		}
-		case MentionKind.GuildNavigation: {
-			const {navigationType} = kind;
-			switch (navigationType) {
-				case GuildNavKind.Customize:
-					return '#customize';
-				case GuildNavKind.Browse:
-					return '#browse';
-				case GuildNavKind.Guide:
-					return '#guide';
-				case GuildNavKind.LinkedRoles: {
-					const linkedRolesId = (
-						kind as {
-							navigationType: 'LinkedRoles';
-							id?: string;
-						}
-					).id;
-					return linkedRolesId ? `#linked-roles:${linkedRolesId}` : '#linked-roles';
-				}
-				default:
-					return `#${navigationType}`;
-			}
-		}
+		case MentionKind.GuildNavigation:
+			return ROLES_PAGE_MENTION_PLAIN_TEXT;
 		default:
 			return `@${options.i18n._(UNKNOWN_MENTION_LABEL)}`;
 	}

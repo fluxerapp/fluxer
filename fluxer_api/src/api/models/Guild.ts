@@ -3,6 +3,10 @@
 import type {ChannelID, GuildID, UserID, VanityURLCode} from '@app/api/BrandedTypes';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import {
+	GuildSelfAssignableRoleSection,
+	selfAssignableRoleSectionsToRow,
+} from '@app/api/models/GuildSelfAssignableRoleSection';
+import {
 	type GuildExplicitContentFilterType,
 	type GuildMFALevelValue,
 	type GuildNSFWLevelValue,
@@ -52,6 +56,7 @@ export class Guild {
 	readonly messageHistoryCutoff: Date | null;
 	readonly invitesPausedUntil: Date | null;
 	readonly plannedJoinWavesUntil: Date | null;
+	readonly selfAssignableRoleSections: ReadonlyArray<GuildSelfAssignableRoleSection>;
 	readonly version: number;
 
 	constructor(row: GuildRow) {
@@ -95,6 +100,9 @@ export class Guild {
 		this.messageHistoryCutoff = row.message_history_cutoff ?? null;
 		this.invitesPausedUntil = row.invites_paused_until ?? null;
 		this.plannedJoinWavesUntil = row.planned_join_waves_until ?? null;
+		this.selfAssignableRoleSections = (row.self_assignable_role_sections ?? []).map(
+			(section) => new GuildSelfAssignableRoleSection(section),
+		);
 		this.version = row.version;
 	}
 
@@ -137,6 +145,7 @@ export class Guild {
 			message_history_cutoff: this.messageHistoryCutoff,
 			invites_paused_until: this.invitesPausedUntil,
 			planned_join_waves_until: this.plannedJoinWavesUntil,
+			self_assignable_role_sections: selfAssignableRoleSectionsToRow(this.selfAssignableRoleSections),
 			version: this.version,
 		};
 	}

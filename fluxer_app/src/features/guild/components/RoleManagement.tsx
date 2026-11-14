@@ -9,11 +9,11 @@ import GuildSettingsModalState from '@app/features/guild/state/GuildSettingsModa
 import Guilds from '@app/features/guild/state/Guilds';
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {useGuildRoleOptions} from '@app/features/permissions/hooks/useGuildRoleOptions';
 import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
-import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
-import itemStyles from '@app/features/ui/action_menu/items/MenuItems.module.css';
+import {RoleCheckboxMenuItem, roleCheckboxSheetItem} from '@app/features/ui/action_menu/items/RoleMenuItems';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
@@ -166,7 +166,6 @@ const ManageRolesMenuContent: React.FC<ManageRolesMenuContentProps> = observer(f
 	const {i18n} = useLingui();
 	const guild = Guilds.getGuild(guildId);
 	const currentMember = GuildMembers.getMember(guildId, userId);
-	const {canManageRole} = useRoleHierarchy(guild);
 	const rolesSettingsPath = useMemo(() => formatGuildSettingsPath(i18n, 'roles'), [i18n.locale]);
 	const handleOpenGuildSettings = useCallback(() => {
 		if (GuildSettingsModalState.navigateToTab(guildId, 'roles')) {
@@ -187,16 +186,7 @@ const ManageRolesMenuContent: React.FC<ManageRolesMenuContentProps> = observer(f
 			),
 		);
 	}, [guildId, onClose]);
-	const allRoles = useMemo(() => {
-		if (!guild) return [];
-		return Object.values(guild.roles)
-			.filter((role) => !role.isEveryone)
-			.sort((a, b) => b.position - a.position)
-			.map((role) => ({
-				role,
-				canManage: canManageRole({id: role.id, position: role.position, permissions: role.permissions}),
-			}));
-	}, [guild, canManageRole]);
+	const allRoles = useGuildRoleOptions(guild);
 	const handleToggleRole = useCallback(
 		async (roleId: string, hasRole: boolean, canManage: boolean) => {
 			if (!canManage) return;
@@ -225,33 +215,15 @@ const ManageRolesMenuContent: React.FC<ManageRolesMenuContentProps> = observer(f
 			{allRoles.map(({role, canManage}) => {
 				const hasRole = currentMember?.roles.has(role.id) ?? false;
 				return (
-					<CheckboxItem
+					<RoleCheckboxMenuItem
 						key={role.id}
+						role={role}
 						checked={hasRole}
 						disabled={!canManage}
-						onCheckedChange={() => handleToggleRole(role.id, hasRole, canManage)}
-						closeOnChange={false}
+						onToggle={() => handleToggleRole(role.id, hasRole, canManage)}
+						onRoleContextMenu={(event) => openRoleContextMenu(event, role.id)}
 						data-flx="guild.role-management.manage-roles-menu-content.checkbox-item"
-					>
-						{/* biome-ignore lint/a11y/noStaticElementInteractions: context-menu affordance inside a CheckboxItem. */}
-						<div
-							className={itemStyles.roleContainer}
-							onContextMenu={(event) => openRoleContextMenu(event, role.id)}
-							data-flx="guild.role-management.manage-roles-menu-content.div.open-role-context-menu"
-						>
-							<div
-								className={itemStyles.roleIcon}
-								style={{backgroundColor: ColorUtils.int2rgb(role.color)}}
-								data-flx="guild.role-management.manage-roles-menu-content.div"
-							/>
-							<span
-								className={clsx(itemStyles.roleName, !canManage && itemStyles.roleDisabled)}
-								data-flx="guild.role-management.manage-roles-menu-content.span"
-							>
-								{role.name}
-							</span>
-						</div>
-					</CheckboxItem>
+					/>
 				);
 			})}
 		</MenuGroup>
@@ -274,7 +246,6 @@ export const ManageRolesBottomSheet: React.FC<ManageRolesBottomSheetProps> = obs
 	const {i18n} = useLingui();
 	const guild = Guilds.getGuild(guildId);
 	const currentMember = GuildMembers.getMember(guildId, userId);
-	const {canManageRole} = useRoleHierarchy(guild);
 	const rolesSettingsPath = useMemo(() => formatGuildSettingsPath(i18n, 'roles'), [i18n.locale]);
 	const manageRolesLabel = PermissionUtils.formatPermissionLabel(i18n, Permissions.MANAGE_ROLES);
 	const handleOpenGuildSettings = useCallback(() => {
@@ -296,16 +267,7 @@ export const ManageRolesBottomSheet: React.FC<ManageRolesBottomSheetProps> = obs
 			),
 		);
 	}, [guildId, onClose]);
-	const allRoles = useMemo(() => {
-		if (!guild) return [];
-		return Object.values(guild.roles)
-			.filter((role) => !role.isEveryone)
-			.sort((a, b) => b.position - a.position)
-			.map((role) => ({
-				role,
-				canManage: canManageRole({id: role.id, position: role.position, permissions: role.permissions}),
-			}));
-	}, [guild, canManageRole]);
+	const allRoles = useGuildRoleOptions(guild);
 	const menuGroups: Array<MenuGroupType> = useMemo(() => {
 		if (allRoles.length === 0) {
 			return [
@@ -330,8 +292,8 @@ export const ManageRolesBottomSheet: React.FC<ManageRolesBottomSheetProps> = obs
 			{
 				items: allRoles.map(({role, canManage}) => {
 					const hasRole = currentMember?.roles.has(role.id) ?? false;
-					return {
-						label: role.name,
+					return roleCheckboxSheetItem({
+						role,
 						checked: hasRole,
 						disabled: !canManage,
 						onChange: async () => {
@@ -342,14 +304,7 @@ export const ManageRolesBottomSheet: React.FC<ManageRolesBottomSheetProps> = obs
 								await GuildMemberCommands.addRole(guildId, userId, role.id);
 							}
 						},
-						icon: (
-							<div
-								className={styles.roleColorIndicator}
-								style={{backgroundColor: ColorUtils.int2rgb(role.color)}}
-								data-flx="guild.role-management.menu-groups.role-color-indicator"
-							/>
-						),
-					};
+					});
 				}),
 			},
 		];

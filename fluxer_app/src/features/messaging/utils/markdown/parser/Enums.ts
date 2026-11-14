@@ -72,10 +72,7 @@ export const TableAlignment = {
 export type TableAlignment = ValueOf<typeof TableAlignment>;
 
 export const GuildNavKind = {
-	Customize: 'Customize',
-	Browse: 'Browse',
-	Guide: 'Guide',
-	LinkedRoles: 'LinkedRoles',
+	Roles: 'Roles',
 } as const;
 
 export type GuildNavKind = ValueOf<typeof GuildNavKind>;

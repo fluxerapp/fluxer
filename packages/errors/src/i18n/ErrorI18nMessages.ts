@@ -670,9 +670,12 @@ export const ERROR_I18N_MESSAGES = {
 	'roles.cannot_reorder_everyone_role': "You can't reorder the @everyone role.",
 	'roles.cannot_set_everyone_hoist': "You can't set hoist position for the @everyone role.",
 	'roles.cannot_set_everyone_icon': "The @everyone role can't have an icon.",
+	'roles.duplicate_self_assignable_role': 'Each role can only be in one self-assignable role section.',
 	'roles.icon_and_emoji_exclusive': 'A role can have an image icon or an emoji, not both.',
 	'roles.icon_source_and_icon_exclusive': 'Set a role icon or copy one from another role, not both.',
 	'roles.invalid_role_id': 'Invalid role ID: {roleId}.',
+	'roles.max_self_assigned_roles_reached':
+		"You can't have more than {count, plural, one {# role} other {# roles}} from this section.",
 	'roles.parse_and_users_or_roles_cannot_be_used_together':
 		"You can't use `parse` together with `allowed_mentions.users` or `allowed_mentions.roles`.",
 	'stickers_and_emojis.custom_emoji_not_found': "Custom emoji wasn't found.",

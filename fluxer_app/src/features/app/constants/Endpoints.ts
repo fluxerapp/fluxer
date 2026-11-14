@@ -127,6 +127,7 @@ export const Endpoints = {
 	GUILD_ROLE: (guildId: string, roleId: string) => `/guilds/${guildId}/roles/${roleId}`,
 	GUILD_ROLES: (guildId: string) => `/guilds/${guildId}/roles`,
 	GUILD_ROLE_HOIST_POSITIONS: (guildId: string) => `/guilds/${guildId}/roles/hoist-positions`,
+	GUILD_SELF_ASSIGNABLE_ROLES: (guildId: string) => `/guilds/${guildId}/self-assignable-roles`,
 	GUILD_DELETE: (guildId: string) => `/guilds/${guildId}/delete`,
 	GUILD_TRANSFER_OWNERSHIP: (guildId: string) => `/guilds/${guildId}/transfer-ownership`,
 	GUILD_EMOJI: (guildId: string, emojiId: string) => `/guilds/${guildId}/emojis/${emojiId}`,

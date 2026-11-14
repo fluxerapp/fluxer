@@ -2,6 +2,7 @@
 
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildRolesTab.module.css';
 import {RoleItem} from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem';
+import {SelfAssignableRolesSwitch} from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/SelfAssignableRolesSwitch';
 import {
 	applyRoleUpdate,
 	ROLE_DND_TYPE,
@@ -33,6 +34,7 @@ const RoleDragAutoScroll: React.FC<{listRef: React.RefObject<HTMLDivElement | nu
 };
 
 interface RoleSidebarProps {
+	guildId: string;
 	roles: Array<GuildRole>;
 	hoistedRoles: Array<GuildRole>;
 	selectedRoleId: string | null;
@@ -66,6 +68,7 @@ interface RoleSidebarProps {
 
 export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 	({
+		guildId,
 		roles,
 		hoistedRoles,
 		selectedRoleId,
@@ -234,6 +237,10 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 							<Trans>Custom hoist order</Trans>
 						</Button>
 					)}
+					<SelfAssignableRolesSwitch
+						guildId={guildId}
+						data-flx="guild.guild-tabs.guild-roles-tab.role-sidebar.self-assignable-roles-switch"
+					/>
 				</div>
 				<div
 					ref={listRef}

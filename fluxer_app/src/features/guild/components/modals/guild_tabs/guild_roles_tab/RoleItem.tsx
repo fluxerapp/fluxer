@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DEFAULT_ROLE_COLOR_HEX, getRoleColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
+import {getRoleSwatchColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import {DropIndicator} from '@app/features/app/components/layout/DropIndicator';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
@@ -241,7 +241,7 @@ export const RoleItem: React.FC<RoleItemProps> = observer(
 				>
 					<div
 						className={styles.roleDot}
-						style={{backgroundColor: role.color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(role.color)}}
+						style={{backgroundColor: getRoleSwatchColor(role)}}
 						data-flx="guild.guild-tabs.guild-roles-tab.role-item.role-dot"
 					/>
 					{(hasIcon || reserveIconSlot) && (

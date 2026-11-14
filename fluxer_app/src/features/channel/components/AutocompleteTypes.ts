@@ -40,6 +40,7 @@ export type AutocompleteOption =
 	| AutocompleteMentionRoleOption
 	| AutocompleteSpecialMentionOption
 	| {type: 'channel'; channel: Channel}
+	| {type: 'guildNavigation'; navigation: 'roles'; label: string}
 	| {type: 'emoji'; emoji: FlatEmoji}
 	| {type: 'command'; command: Command}
 	| {type: 'meme'; meme: FavoriteMeme}
@@ -72,6 +73,9 @@ export const isMentionRole = (o: AutocompleteOption): o is AutocompleteMentionRo
 export const isSpecialMention = (o: AutocompleteOption): o is AutocompleteSpecialMentionOption =>
 	o.type === 'mention' && (o.kind === '@everyone' || o.kind === '@here');
 export const isChannel = (o: AutocompleteOption): o is {type: 'channel'; channel: Channel} => o.type === 'channel';
+export const isGuildNavigation = (
+	o: AutocompleteOption,
+): o is {type: 'guildNavigation'; navigation: 'roles'; label: string} => o.type === 'guildNavigation';
 export const isEmoji = (o: AutocompleteOption): o is {type: 'emoji'; emoji: FlatEmoji} => o.type === 'emoji';
 export const isCommand = (o: AutocompleteOption): o is {type: 'command'; command: Command} => o.type === 'command';
 export const isMeme = (o: AutocompleteOption): o is {type: 'meme'; meme: FavoriteMeme} => o.type === 'meme';

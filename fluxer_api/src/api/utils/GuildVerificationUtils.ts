@@ -11,6 +11,11 @@ import {
 	GuildVerificationLevel,
 	getEffectiveGuildVerificationLevel,
 } from '@fluxer/constants/src/GuildConstants';
+import {
+	GuildVerificationWaitReason,
+	getGuildVerificationWait,
+	isExemptFromGuildVerification,
+} from '@fluxer/constants/src/GuildVerificationRules';
 import {AccountTooNewForGuildError} from '@fluxer/errors/src/domains/guild/AccountTooNewForGuildError';
 import {
 	GuildVerificationRequiredError,
@@ -19,7 +24,6 @@ import {
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {ms} from 'itty-time';
 
 interface VerificationParams {
 	user: User;
@@ -31,35 +35,23 @@ interface VerificationParams {
 
 function checkGuildVerification(params: VerificationParams): void {
 	const {user, ownerId, verificationLevel, memberJoinedAt, memberRoles} = params;
-	if (user.id === ownerId) {
-		return;
-	}
-	if (verificationLevel === GuildVerificationLevel.NONE) {
-		return;
-	}
-	if (user.isBot) {
-		return;
-	}
-	if (memberRoles && memberRoles.size > 0) {
-		return;
-	}
+	const exempt = isExemptFromGuildVerification({
+		verificationLevel,
+		isOwner: user.id === ownerId,
+		isBot: user.isBot,
+		hasRoles: (memberRoles?.size ?? 0) > 0,
+	});
+	if (exempt) return;
 	assertTierAllows(user, TierGatedActions.GUILD_VERIFICATION, NO_TIER_CONTEXT);
-	if (verificationLevel >= GuildVerificationLevel.MEDIUM) {
-		const createdAt = snowflakeToDate(BigInt(user.id)).getTime();
-		const accountAge = Date.now() - createdAt;
-		if (accountAge < ms('5 minutes')) {
-			throw new AccountTooNewForGuildError();
-		}
-	}
-	if (verificationLevel >= GuildVerificationLevel.HIGH) {
-		if (memberJoinedAt) {
-			const joinedAtTime =
-				typeof memberJoinedAt === 'string' ? new Date(memberJoinedAt).getTime() : memberJoinedAt.getTime();
-			const membershipDuration = Date.now() - joinedAtTime;
-			if (membershipDuration < ms('10 minutes')) {
-				throw new GuildVerificationRequiredError(GuildVerificationRequiredReasons.MEMBERSHIP_AGE);
-			}
-		}
+	const wait = getGuildVerificationWait({
+		verificationLevel,
+		accountCreatedAt: snowflakeToDate(BigInt(user.id)).getTime(),
+		memberJoinedAt: memberJoinedAt ? new Date(memberJoinedAt).getTime() : null,
+		now: Date.now(),
+	});
+	if (wait?.reason === GuildVerificationWaitReason.ACCOUNT_TOO_NEW) throw new AccountTooNewForGuildError();
+	if (wait?.reason === GuildVerificationWaitReason.NOT_MEMBER_LONG_ENOUGH) {
+		throw new GuildVerificationRequiredError(GuildVerificationRequiredReasons.MEMBERSHIP_AGE);
 	}
 }
 

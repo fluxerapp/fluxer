@@ -52,6 +52,9 @@ import {
 	GUILD_OWNERSHIP_TRANSFERRED_SUMMARY,
 	GUILD_RENAMED_ROW,
 	GUILD_RENAMED_SUMMARY,
+	GUILD_SELF_ASSIGNABLE_ROLE_SECTIONS_CHANGED_ROW,
+	GUILD_SELF_ASSIGNABLE_ROLES_TURNED_OFF_ROW,
+	GUILD_SELF_ASSIGNABLE_ROLES_TURNED_ON_ROW,
 	GUILD_SETTINGS_UPDATED_SUMMARY,
 	GUILD_STICKER_CLONING_ALLOWED_ROW,
 	GUILD_STICKER_CLONING_STOPPED_ROW,
@@ -109,6 +112,7 @@ import {
 	GuildNSFWLevel,
 	GuildSplashCardAlignment,
 	GuildVerificationLevel,
+	SELF_ASSIGNABLE_ROLE_SECTION_AUDIT_KEYS,
 	SystemChannelFlags,
 } from '@fluxer/constants/src/GuildConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
@@ -229,6 +233,10 @@ const OWNER_CROWN_HIDDEN_TOGGLE: Toggle = {
 const MEMBER_DMS_DISABLED_TOGGLE: Toggle = {
 	on: {tone: 'neutral', descriptor: GUILD_MEMBER_DMS_DISABLED_ROW},
 	off: {tone: 'neutral', descriptor: GUILD_MEMBER_DMS_ENABLED_ROW},
+};
+const SELF_ASSIGNABLE_ROLES_TOGGLE: Toggle = {
+	on: {tone: 'add', descriptor: GUILD_SELF_ASSIGNABLE_ROLES_TURNED_ON_ROW},
+	off: {tone: 'remove', descriptor: GUILD_SELF_ASSIGNABLE_ROLES_TURNED_OFF_ROW},
 };
 const EMOJI_CLONING_TOGGLE: Toggle = {
 	on: {tone: 'add', descriptor: GUILD_EMOJI_CLONING_ALLOWED_ROW},
@@ -537,6 +545,11 @@ function presentVanityUrl(entry: GuildAuditLogEntryResponse, actor: AuditLogPlac
 	}
 }
 
+function presentSelfAssignableRoleSections(entry: GuildAuditLogEntryResponse): GuildChange | null {
+	if (SELF_ASSIGNABLE_ROLE_SECTION_AUDIT_KEYS.every((key) => readChange(entry, key) === null)) return null;
+	return settingChange('self_assignable_role_sections', 'neutral', GUILD_SELF_ASSIGNABLE_ROLE_SECTIONS_CHANGED_ROW);
+}
+
 export function presentGuildUpdate(entry: GuildAuditLogEntryResponse): AuditLogDomainResult {
 	const actor = actorPlaceholder(entry);
 	const features = readFeatureLists(entry);
@@ -586,6 +599,12 @@ export function presentGuildUpdate(entry: GuildAuditLogEntryResponse): AuditLogD
 			readFeatureAdded(features, GuildFeatures.MEMBER_DMS_DISABLED),
 			MEMBER_DMS_DISABLED_TOGGLE,
 		),
+		toggleChange(
+			'self_assignable_roles',
+			readFeatureAdded(features, GuildFeatures.SELF_ASSIGNABLE_ROLES_ENABLED),
+			SELF_ASSIGNABLE_ROLES_TOGGLE,
+		),
+		presentSelfAssignableRoleSections(entry),
 		presentMessageHistoryCutoff(entry),
 		presentInvitesPaused(features, actor),
 		toggleChange(

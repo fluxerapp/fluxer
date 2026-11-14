@@ -3,10 +3,12 @@
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelDisplayUtils from '@app/features/channel/utils/ChannelUtils';
 import Guilds from '@app/features/guild/state/Guilds';
+import {ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
 import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.css';
 import type {ComposerMentionType} from '@app/features/lexical/composer/nodes/ComposerMentionNode';
 import {MentionWithTooltip} from '@app/features/lexical/composer/nodes/MentionTooltipContent';
+import {MentionLabel} from '@app/features/messaging/components/markdown/renderers/MentionLabel';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import mentionRendererStyles from '@app/features/theme/styles/MentionRenderer.module.css';
 import Users from '@app/features/user/state/Users';
@@ -14,6 +16,7 @@ import * as DisplayNameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {ShieldIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useContext} from 'react';
 
@@ -31,6 +34,27 @@ interface ComposerMentionPillProps {
 	mentionType: ComposerMentionType;
 	mentionId: string;
 	display: string;
+}
+
+interface IconMentionPillProps {
+	readonly mentionType: string;
+	readonly icon: React.ReactNode;
+	readonly label: React.ReactNode;
+}
+
+function IconMentionPill({mentionType, icon, label}: IconMentionPillProps): React.ReactElement {
+	return (
+		<span
+			className={markupStyles.mention}
+			contentEditable={false}
+			data-lexical-mention-type={mentionType}
+			data-flx="lexical.composer.nodes.composer-mention-pill.icon-mention-pill.span"
+		>
+			<MentionLabel icon={icon} data-flx="lexical.composer.nodes.composer-mention-pill.icon-mention-pill.mention-label">
+				{label}
+			</MentionLabel>
+		</span>
+	);
 }
 
 export const ComposerMentionPill = observer(({mentionType, mentionId, display}: ComposerMentionPillProps) => {
@@ -63,19 +87,30 @@ export const ComposerMentionPill = observer(({mentionType, mentionId, display}: 
 			);
 		}
 		return (
-			<span
-				className={markupStyles.mention}
-				contentEditable={false}
-				data-lexical-mention-type="channel"
-				data-flx="lexical.composer.nodes.composer-mention-pill.span--2"
-			>
-				{ChannelDisplayUtils.getIcon(channel == null ? {type: ChannelTypes.GUILD_TEXT} : channel, {
+			<IconMentionPill
+				mentionType="channel"
+				icon={ChannelDisplayUtils.getIcon(channel == null ? {type: ChannelTypes.GUILD_TEXT} : channel, {
 					className: mentionRendererStyles.channelIcon,
 				})}
-				<span className={mentionRendererStyles.label} data-flx="lexical.composer.nodes.composer-mention-pill.span--3">
-					{label}
-				</span>
-			</span>
+				label={label}
+				data-flx="lexical.composer.nodes.composer-mention-pill.icon-mention-pill"
+			/>
+		);
+	}
+
+	if (mentionType === 'navigation') {
+		return (
+			<IconMentionPill
+				mentionType="navigation"
+				icon={
+					<ShieldIcon
+						className={mentionRendererStyles.channelIcon}
+						data-flx="lexical.composer.nodes.composer-mention-pill.shield-icon"
+					/>
+				}
+				label={i18n._(ROLES_DESCRIPTOR)}
+				data-flx="lexical.composer.nodes.composer-mention-pill.icon-mention-pill--2"
+			/>
 		);
 	}
 

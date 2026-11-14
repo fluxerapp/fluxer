@@ -253,6 +253,7 @@ These are the values of the top-level `code`, and the [OpenAPI document](/http-a
 | `MAX_INVITES` | You can't have more than {count} invites |
 | `MAX_PINNED_THREADS_IN_FORUM` | This channel is at its pinned post limit of {count} |
 | `MAX_REACTIONS` | You can't have more than {count} reactions |
+| `MAX_SELF_ASSIGNED_ROLES` | You can't have more than {count} roles from this section |
 | `MAX_STICKERS` | You can't have more than {count} stickers |
 | `MAX_THREAD_MEMBERS` | This thread is at its member limit of {count} |
 | `MAX_WEBHOOKS_PER_CHANNEL` | You can't have more than {count} webhooks per channel |
@@ -471,6 +472,7 @@ These are the values of `code` inside `errors`.
 | `DUPLICATE_ATTACHMENT_IDS_NOT_ALLOWED` | Duplicate attachment IDs aren't allowed |
 | `DUPLICATE_FILE_INDEX` | Duplicate file index: {index} |
 | `DUPLICATE_RECIPIENTS_NOT_ALLOWED` | Duplicate recipients aren't allowed |
+| `DUPLICATE_SELF_ASSIGNABLE_ROLE` | Each role can only be in one self-assignable role section |
 | `EMAIL_ALREADY_IN_USE` | Email is already in use |
 | `EMAIL_DELIVERY_REQUIRES_EMAIL_IDENTITY` | Email delivery only works when people sign in with an email |
 | `EMAIL_DOMAIN_NOT_ALLOWED` | This instance only accepts email addresses from certain domains |

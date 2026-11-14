@@ -178,18 +178,12 @@ fn write_mention(out: &mut Vec<u8>, kind: &MentionKind) {
             write_optional_str(out, subcommand.as_deref());
             write_str(out, id);
         }
-        MentionKind::GuildNavigation {
-            navigation_type,
-            id,
-        } => {
+        MentionKind::GuildNavigation { navigation_type } => {
             out.push(4);
             out.push(match navigation_type {
-                GuildNavigationType::Customize => 0,
-                GuildNavigationType::Browse => 1,
-                GuildNavigationType::Guide => 2,
-                GuildNavigationType::LinkedRoles => 3,
+                GuildNavigationType::Roles => 0,
             });
-            write_optional_str(out, id.as_deref());
+            write_optional_str(out, None);
         }
         MentionKind::Everyone => out.push(5),
         MentionKind::Here => out.push(6),

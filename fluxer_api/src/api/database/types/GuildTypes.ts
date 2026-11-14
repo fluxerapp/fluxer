@@ -14,6 +14,19 @@ import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType'
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import type {MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
 
+export interface GuildSelfAssignableRoleUdt {
+	role_id: RoleID;
+	description: string | null;
+}
+
+export interface GuildSelfAssignableRoleSectionUdt {
+	section_id: bigint;
+	content: string | null;
+	roles: Array<GuildSelfAssignableRoleUdt> | null;
+	max_roles?: number | null;
+	required_role_ids?: Array<RoleID> | null;
+}
+
 export interface GuildRow {
 	guild_id: GuildID;
 	owner_id: UserID;
@@ -52,6 +65,7 @@ export interface GuildRow {
 	message_history_cutoff: Date | null;
 	invites_paused_until: Date | null;
 	planned_join_waves_until: Date | null;
+	self_assignable_role_sections?: Array<GuildSelfAssignableRoleSectionUdt> | null;
 	version: number;
 }
 
@@ -93,6 +107,7 @@ export const GUILD_COLUMNS = [
 	'message_history_cutoff',
 	'invites_paused_until',
 	'planned_join_waves_until',
+	'self_assignable_role_sections',
 	'version',
 ] as const satisfies ReadonlyArray<keyof GuildRow>;
 

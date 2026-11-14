@@ -478,6 +478,11 @@ msgstr "{actor} followed an announcement channel into {channel}"
 msgid "{actor} gave {target} the role {role}"
 msgstr "{actor} gave {target} the role {role}"
 
+#. Activity log summary for a member who gave a role to themselves outside the Roles page, for example a moderator who can manage roles. "Themselves" means the same member as {actor}. {actor} is that member, shown as a clickable user chip. {role} is the role, shown as a role chip with its name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
+msgid "{actor} gave themselves the role {role}"
+msgstr "{actor} gave themselves the role {role}"
+
 #. Activity log summary for a member who was kicked from the community. {actor} is the member who kicked them, shown as a clickable user chip, or the word System. {target} is the member who was kicked, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "{actor} kicked {target}"
@@ -587,6 +592,16 @@ msgstr "{actor} removed the permission override for the role {role} from {channe
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "{actor} removed the role {role} from {target}"
 msgstr "{actor} removed the role {role} from {target}"
+
+#. Activity log summary for a member who took a role away from themselves outside the Roles page, for example a moderator who can manage roles. The role is taken away from the member, and the role itself is not deleted. "Themselves" means the same member as {actor}. {actor} is that member, shown as a clickable user chip. {role} is the role, shown as a role chip with its name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
+msgid "{actor} removed the role {role} from themselves"
+msgstr "{actor} removed the role {role} from themselves"
+
+#. Activity log summary for a member who took a role away from themselves on the Roles page, where members pick roles for themselves. A "self-assigned role" is a role members can give to and take away from themselves. The role is taken away from the member, and the role itself is not deleted. {actor} is that member, shown as a clickable user chip. {role} is the role, shown as a role chip with its name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
+msgid "{actor} removed the self-assigned role {role}"
+msgstr "{actor} removed the self-assigned role {role}"
 
 #. Activity log summary for a timeout that was ended early. A timeout is the moderation action that stops a member from sending messages, reacting and joining voice until it ends. It is not a ban, a kick or a community mute. {actor} is the member who removed the timeout, shown as a clickable user chip, or the word System. {target} is the member whose timeout was removed, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
@@ -702,6 +717,11 @@ msgstr "{actor} reset the member list position for the role {role}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
 msgid "{actor} resumed invites"
 msgstr "{actor} resumed invites"
+
+#. Activity log summary for a member who gave a role to themselves on the Roles page, where members pick roles for themselves. "Self-assigned" means the member gave the role to themselves. {actor} is that member, shown as a clickable user chip. {role} is the role, shown as a role chip with its name.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
+msgid "{actor} self-assigned the role {role}"
+msgstr "{actor} self-assigned the role {role}"
 
 #. Activity log summary for a role that was given its own place in the order of role groups in the member list. Until then that order followed the role list. The member list position is where the group of members with this role appears in the member list. It is not a position of the member list itself. {actor} is the member who set it, shown as a clickable user chip, or the word System. {role} is the role, shown in bold with its name, or deleted-role when its name is unknown. The app adds the bold, so do not add ** or <b>. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts
@@ -917,6 +937,11 @@ msgstr "{actor} updated the webhook {name}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
 msgid "{actor} updated their community profile"
 msgstr "{actor} updated their community profile"
+
+#. Activity log summary for a member who changed their own roles when several roles changed at once or the changed role was not recorded. Each role that changed is listed as a detail line below. "Their" means the same member as {actor}. {actor} is that member, shown as a clickable user chip.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts
+msgid "{actor} updated their roles"
+msgstr "{actor} updated their roles"
 
 #. Label in the user settings voice activity section. Preserve {additionalCount}; it is inserted by code.
 #: src/features/user/components/profile/VoiceActivitySection.tsx
@@ -3434,6 +3459,11 @@ msgstr "Add a password or passkey, or confirm your email address to sign in with
 msgid "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect single sign-on."
 msgstr "Add a password or passkey, or confirm your email address to sign in with emailed codes, before you disconnect single sign-on."
 
+#. Empty state of the Roles page for community managers when no self-assignable role sections exist.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesView.tsx
+msgid "Add a section with some text and roles, and members can give themselves those roles here."
+msgstr "Add a section with some text and roles, and members can give themselves those roles here."
+
 #. Form placeholder for the tag input on an expression form.
 #: src/features/expressions/components/modals/TagListField.tsx
 msgid "Add a tag"
@@ -3747,6 +3777,11 @@ msgstr "Add another instance"
 msgid "Add another reaction"
 msgstr "Add another reaction"
 
+#. Error under a self-assignable role section that has no roles. The section cannot be saved like this.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Add at least one role."
+msgstr "Add at least one role."
+
 #. OAuth authorization destination step title. The user chooses where a bot will be added.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep.tsx
 msgid "Add bot to a destination"
@@ -3908,6 +3943,7 @@ msgstr "Add reverse image search engine"
 
 #. Button or menu action label in the community role management. Keep it concise.
 #: src/features/guild/components/RoleManagement.tsx
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
 msgid "Add role"
 msgstr "Add role"
 
@@ -3915,6 +3951,11 @@ msgstr "Add role"
 #: src/features/user/utils/UserMessageDescriptors.ts
 msgid "Add search engine"
 msgstr "Add search engine"
+
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesView.tsx
+msgid "Add section"
+msgstr "Add section"
 
 #. Error message in the quick CSS editor window when sharing empty quick CSS.
 #: src/features/theme_settings/components/QuickCssFiles.tsx
@@ -5036,6 +5077,11 @@ msgstr "Answer the incoming call"
 #: src/features/user/components/modals/tabs/keybinds_tab/shared.ts
 msgid "Any key"
 msgstr "Any key"
+
+#. Value of the self-assignable role section slider at its lowest point, meaning no limit on how many of its roles a member can choose.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Any number of roles"
+msgstr "Any number of roles"
 
 #. Description for has:file. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts
@@ -7909,6 +7955,11 @@ msgstr "Changed the role colour from {oldColor} to {newColor}"
 msgid "Changed the role icon from {oldEmoji} to {newEmoji}"
 msgstr "Changed the role icon from {oldEmoji} to {newEmoji}"
 
+#. Activity log detail line under a community settings update, shown when the sections of roles that members can give themselves were edited (text, roles or order). It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Changed the self-assignable role sections"
+msgstr "Changed the self-assignable role sections"
+
 #. Activity log detail line under a community settings update, shown when the system channel, where the app posts messages such as member joins, was moved to another channel. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldChannel} is the previous system channel and {newChannel} is the new system channel, both shown as channel chips.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
 msgid "Changed the system channel from {oldChannel} to {newChannel}"
@@ -8532,6 +8583,11 @@ msgstr "Choose how times are displayed throughout the app"
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Choose how you'd like to pay for this subscription."
 
+#. Hint on the Roles page above the roles of a self-assignable role section where members can only have one role. Choosing another role swaps it.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesView.tsx
+msgid "Choose one"
+msgstr "Choose one"
+
 #: src/features/connection/components/modals/AddConnectionModal.tsx
 msgid "Choose one of the methods below to prove domain ownership. You only need to complete one."
 msgstr "Choose one of the methods below to prove domain ownership. You only need to complete one."
@@ -8574,6 +8630,11 @@ msgstr "Choose the tab or window in your browser"
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx
 msgid "Choose the time zone {productName} uses to calculate your UTC offset for profile local time."
 msgstr "Choose the time zone {productName} uses to calculate your UTC offset for profile local time."
+
+#. Hint on the Roles page above the roles of a self-assignable role section that limits how many of its roles a member can have. {count} is the limit and is at least 2.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesView.tsx
+msgid "Choose up to {count}"
+msgstr "Choose up to {count}"
 
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthPermissionsStep.tsx
 msgid "Choose what {clientLabel} can do in your community. Uncheck any permissions you don't want to grant."
@@ -13027,6 +13088,11 @@ msgstr "Delete role"
 msgid "Delete saved media"
 msgstr "Delete saved media"
 
+#. Accessible label of the button that removes a section in the self-assignable role editor.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Delete section"
+msgstr "Delete section"
+
 #. Destructive action that deletes the selected sticker.
 #: src/features/emoji/components/stickers/StickerGridItem.tsx
 msgid "Delete sticker"
@@ -13243,6 +13309,16 @@ msgstr "Describe what your community is about"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts
 msgid "Description"
 msgstr "Description"
+
+#. Placeholder of the text box next to a role in the self-assignable role section editor. Members see the text with the role, so they know what they are choosing.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Description (optional)"
+msgstr "Description (optional)"
+
+#. Accessible label of the text box next to a role in the self-assignable role section editor. {roleName} is the role name.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Description for {roleName}"
+msgstr "Description for {roleName}"
 
 #. Form validation error for a description that is too long.
 #: src/features/expressions/components/modals/sticker_form/StickerFormFields.tsx
@@ -14774,6 +14850,11 @@ msgstr "Edit saved media form"
 msgid "Edit search engine"
 msgstr "Edit search engine"
 
+#. Label of the pencil button on the Roles page, and of the button in Community settings, that opens the editor for self-assignable role sections.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleMessages.ts
+msgid "Edit sections"
+msgstr "Edit sections"
+
 #. Action that opens the edit-sticker modal.
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx
 msgid "Edit sticker"
@@ -15933,6 +16014,11 @@ msgstr "Every pass from this order that is still on your account ends now, and o
 msgid "Everyone"
 msgstr "Everyone"
 
+#. Shown under the required roles of a self-assignable role section in the editor when none are set.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Everyone can see this section."
+msgstr "Everyone can see this section."
+
 #. Bullet point in the P2P call dialog. Plutonium is the name of the paid subscription and must not be translated. 4K and fps are video terms.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts
 msgid "Everyone in the call gets Plutonium stream quality for free, with up to 4K source resolution and 60 fps."
@@ -16938,6 +17024,11 @@ msgstr "Finish paying"
 #: src/features/premium/components/modals/OperatorPassCheckoutModal.tsx
 msgid "Finish paying on {paymentProviderName}, then come back to {productName}."
 msgstr "Finish paying on {paymentProviderName}, then come back to {productName}."
+
+#. Notice on the Roles page when the community requires a finished account. A button next to it starts the missing step, such as adding or confirming an email.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesVerificationNotice.tsx
+msgid "Finish setting up your account to pick roles in this community."
+msgstr "Finish setting up your account to pick roles in this community."
 
 #. Button on the review screen that saves every choice and finishes setup.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx
@@ -22721,6 +22812,26 @@ msgstr "Members are removed when offline unless given a role."
 msgid "Members are visible after you join."
 msgstr "Members are visible after you join."
 
+#. Help text under the self-assignable roles switch in the community roles settings. "Roles page" is the page where members give themselves self-assignable roles.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/SelfAssignableRolesSwitch.tsx
+msgid "Members can give themselves roles from the Roles page."
+msgstr "Members can give themselves roles from the Roles page."
+
+#. Info note at the top of the role editor in community settings, shown when the role is listed as a self-assignable role.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx
+msgid "Members can give themselves this role from the Roles page."
+msgstr "Members can give themselves this role from the Roles page."
+
+#. Shown on the Roles page under a self-assignable role section whose roles were all deleted.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesView.tsx
+msgid "Members can't see this section until it has a role."
+msgstr "Members can't see this section until it has a role."
+
+#. Label of the slider in a self-assignable role section that sets how many of its roles each member can choose. The chosen value shows next to it, for example "Only one role".
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Members may choose"
+msgstr "Members may choose"
+
 #. Help text of the moderated switch in the forum tag editor.
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Members who can manage posts can add or remove it."
@@ -23573,6 +23684,11 @@ msgstr "Mouse forward button"
 msgid "Move"
 msgstr "Move"
 
+#. Accessible label of the drag handle that moves a role up or down in a self-assignable role section. {roleName} is the role name.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Move {roleName}"
+msgstr "Move {roleName}"
+
 #. Submenu label that moves every active device into another voice channel.
 #: src/features/ui/action_menu/VoiceParticipantContextMenu.tsx
 msgid "Move all devices to…"
@@ -23644,6 +23760,16 @@ msgstr "Move members"
 #: src/features/auth/components/accounts/account_switcher/AccountSwitcherMessages.ts
 msgid "Move right"
 msgstr "Move right"
+
+#. Accessible label of the button that moves a section one place down in the self-assignable role editor.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Move section down"
+msgstr "Move section down"
+
+#. Accessible label of the button that moves a section one place up in the self-assignable role editor.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Move section up"
+msgstr "Move section up"
 
 #. Accessible label of the drag handle in the header of the floating quick CSS editor.
 #: src/features/theme_settings/components/QuickCssWorkspace.tsx
@@ -25027,6 +25153,11 @@ msgstr "No ring"
 msgid "No roles available"
 msgstr "No roles available"
 
+#. Shown in the role picker of the self-assignable role section editor when every role is already used or none exist.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolePicker.tsx
+msgid "No roles to add"
+msgstr "No roles to add"
+
 #. Empty-state text in the community role management. Preserve {rolesSettingsPath}; it is inserted by code.
 #: src/features/guild/components/RoleManagement.tsx
 msgid "No roles yet. Add roles in {rolesSettingsPath}"
@@ -25058,6 +25189,11 @@ msgstr "No screens or windows were returned by the Linux screen sharing portal. 
 #: src/features/channel/components/pickers/gif/GifPickerView.tsx
 msgid "No search results"
 msgstr "No search results"
+
+#. Shown in the self-assignable role editor when there are no sections.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "No sections yet. Add one to let members pick roles for themselves."
+msgstr "No sections yet. Add one to let members pick roles for themselves."
 
 #. Plain text body returned by the desktop app when a request has no active server to go to. Rarely seen by users.
 #: src/features/platform/utils/DesktopLocaleBridge.ts
@@ -25860,6 +25996,11 @@ msgstr "Only friends can call you (recommended)"
 msgid "Only letters, numbers, and underscores"
 msgstr "Only letters, numbers, and underscores"
 
+#. Shown on the Roles page under a self-assignable role section that only members with certain roles can see.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesView.tsx
+msgid "Only members with a required role can see this section."
+msgstr "Only members with a required role can see this section."
+
 #: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx
 msgid "Only members with the \"{manageCommunityPermissionLabel}\" permission can change this."
 msgstr "Only members with the \"{manageCommunityPermissionLabel}\" permission can change this."
@@ -25878,6 +26019,11 @@ msgstr "Only moderators can apply this tag."
 #: src/features/forum/utils/ForumMessageDescriptors.ts
 msgid "Only moderators can use this tag"
 msgstr "Only moderators can use this tag"
+
+#. Value of the self-assignable role section slider that limits each member to one role from the section. Choosing another role swaps it.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Only one role"
+msgstr "Only one role"
 
 #. Registration mode option where only people with a registration link can sign up.
 #: src/features/app/components/setup/SetupWizardSteps.tsx
@@ -25918,6 +26064,11 @@ msgstr "Only selected members and roles will be able to view this channel."
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Only show message previews for DMs with unread messages"
+
+#. Label above the roles a member needs one of to see a self-assignable role section and choose its roles. Leave it empty to show the section to everyone.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Only show to members with"
+msgstr "Only show to members with"
 
 #: src/features/voice/components/StreamSettingsMenuContent.tsx
 msgid "Only speakers"
@@ -27680,6 +27831,11 @@ msgstr "Pick at least one tag for this post."
 #: src/features/user/components/modals/tabs/LanguageTab.tsx
 msgid "Pick one or more dictionaries. Words from any selected dictionary are accepted, which is useful for multilingual chats."
 msgstr "Pick one or more dictionaries. Words from any selected dictionary are accepted, which is useful for multilingual chats."
+
+#. Intro text at the top of the Roles page, where members give themselves self-assignable roles.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesView.tsx
+msgid "Pick roles for yourself. You can change them at any time."
+msgstr "Pick roles for yourself. You can change them at any time."
 
 #. Plutonium page comparison row label for the custom username tag perk.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts
@@ -29652,6 +29808,11 @@ msgstr "Remove {emojiNameWithColons} reaction from {reactorName}?"
 msgid "Remove {engineName}"
 msgstr "Remove {engineName}"
 
+#. Accessible label of the button that takes a role out of a self-assignable role section. {roleName} is the role name.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Remove {roleName} from this section"
+msgstr "Remove {roleName} from this section"
+
 #. Confirm dialog body before removing a member from a group DM.
 #. Confirm dialog body before removing a member from a group DM.
 #: src/features/ui/action_menu/GroupDMContextMenu.tsx
@@ -31219,9 +31380,19 @@ msgstr "Roles"
 msgid "Roles and members"
 msgstr "Roles and members"
 
+#. Screen reader description of a clickable mention in a message that opens the community Roles page, where members pick roles for themselves.
+#: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx
+msgid "roles page link"
+msgstr "roles page link"
+
 #: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx
 msgid "Roles updated successfully"
 msgstr "Roles updated successfully"
+
+#. Accessible label of the Roles row at the top of the channel list while its page is open. Members pick self-assignable roles on that page.
+#: src/features/app/components/layout/ChannelListContent.tsx
+msgid "Roles, selected"
+msgstr "Roles, selected"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts
@@ -31399,6 +31570,7 @@ msgstr "Save banner"
 
 #. Primary button in the privacy setup modal after the user picks a different setting.
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
 #: src/features/user/components/modals/PrivacySetupModal.tsx
 msgid "Save changes"
 msgstr "Save changes"
@@ -32135,6 +32307,11 @@ msgstr "Secret"
 msgid "Secrets & tokens"
 msgstr "Secrets & tokens"
 
+#. Heading of one section card in the self-assignable role section editor. {sectionNumber} is the 1-based position of the section.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Section {sectionNumber}"
+msgstr "Section {sectionNumber}"
+
 #. Short label in the authentication email revert page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/EmailRevertPage.tsx
 msgid "Secure your account"
@@ -32429,6 +32606,11 @@ msgstr "Selections"
 #: src/features/theme_settings/components/QuickCssReference.tsx
 msgid "Selectors"
 msgstr "Selectors"
+
+#. Switch label in the community roles settings. When on, members can give themselves the roles that managers list on the Roles page.
+#: src/features/guild/components/modals/guild_tabs/guild_roles_tab/SelfAssignableRolesSwitch.tsx
+msgid "Self-assignable roles"
+msgstr "Self-assignable roles"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts
@@ -35694,6 +35876,11 @@ msgstr "Stop patching Node.prototype insertBefore and removeChild. The app will 
 msgid "Stop previewing"
 msgstr "Stop previewing"
 
+#. Accessible label of the button that removes a role from the roles members need to see a self-assignable role section. {roleName} is the role name.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Stop requiring {roleName}"
+msgstr "Stop requiring {roleName}"
+
 #. Action that stops ringing the selected participant in a voice call.
 #: src/features/ui/action_menu/items/CallMenuItems.tsx
 msgid "Stop ringing"
@@ -36561,6 +36748,11 @@ msgstr "Teal"
 msgid "Teleporting you to another voice region..."
 msgstr "Teleporting you to another voice region..."
 
+#. Placeholder of the text box in a self-assignable role section in the editor.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Tell members what these roles are for"
+msgstr "Tell members what these roles are for"
+
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx
 msgid "Template"
 msgstr "Template"
@@ -37421,6 +37613,11 @@ msgstr "There are no recent messages in this thread."
 msgid "There are no roles to assign in this community at this time, but you can create a new role in <0>{rolesSettingsPath}</0>."
 msgstr "There are no roles to assign in this community at this time, but you can create a new role in <0>{rolesSettingsPath}</0>."
 
+#. Empty state of the Roles page for members when the community has no self-assignable roles.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesView.tsx
+msgid "There are no roles to pick right now."
+msgstr "There are no roles to pick right now."
+
 #. Empty state of the thread browser.
 #: src/features/threads/utils/ThreadMessageDescriptors.ts
 msgid "There are no threads"
@@ -37466,6 +37663,11 @@ msgstr "There was an error loading the webhooks for this channel. Try again."
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
 msgid "There was an error loading the webhooks. Try again."
 msgstr "There was an error loading the webhooks. Try again."
+
+#. Title of the Roles page when the community has turned off self-assignable roles or has none set up for members.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesPage.tsx
+msgid "There's nothing to pick here"
+msgstr "There's nothing to pick here"
 
 #. Shown above the list of CSS attributes in the "Reference" tab of the quick CSS editor.
 #: src/features/theme_settings/components/QuickCssReference.tsx
@@ -37779,6 +37981,11 @@ msgstr "This comment is never closed. Add \"*/\" at its end."
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx
 msgid "This community doesn't have any invite links yet. Go to a channel and create an invite to invite people."
 msgstr "This community doesn't have any invite links yet. Go to a channel and create an invite to invite people."
+
+#. Description of the Roles page when there are no self-assignable roles for the current member.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesPage.tsx
+msgid "This community doesn't have any roles you can give yourself."
+msgstr "This community doesn't have any roles you can give yourself."
 
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx
 msgid "This community doesn't have any webhooks yet. Go to {channelWebhooksSettingsPath} to create one."
@@ -39642,6 +39849,11 @@ msgstr "Turned off DMs between members who aren't friends"
 msgid "Turned off mature content"
 msgstr "Turned off mature content"
 
+#. Activity log detail line under a community settings update, shown when self-assignable roles were turned off, so members can no longer give themselves roles from the Roles page. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned off self-assignable roles"
+msgstr "Turned off self-assignable roles"
+
 #. Activity log detail row under an updated channel that no longer has slowmode, the wait between messages from one member. Use the same term for slowmode as the Slowmode channel setting. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts
 msgid "Turned off slowmode"
@@ -39666,6 +39878,11 @@ msgstr "Turned off the member's microphone in this community"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
 msgid "Turned on mature content"
 msgstr "Turned on mature content"
+
+#. Activity log detail line under a community settings update, shown when self-assignable roles were turned on, so members can give themselves the roles listed on the Roles page. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
+msgid "Turned on self-assignable roles"
+msgstr "Turned on self-assignable roles"
 
 #. Activity log detail line under a community settings update, shown when the community started showing a content warning before members can view it. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts
@@ -40169,9 +40386,11 @@ msgstr "unknown role"
 
 #. Fallback label for a role mention whose role no longer exists, in the message composer. Keep it concise.
 #. Fallback label in channel permissions when a role override references a role that is not loaded.
+#. Label in the self-assignable role section editor for a required role that was deleted. Nobody has it, so the section stays hidden until it is removed.
 #. Reason spoken by screen readers when a slash-command argument does not match any role.
 #. Short label in the messaging mention renderer. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.tsx
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
 #: src/features/lexical/composer/nodes/ComposerMentionPill.tsx
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx
@@ -40602,6 +40821,11 @@ msgstr "Until I turn it back on"
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts
 msgid "Unverified email"
 msgstr "Unverified email"
+
+#. Value of the self-assignable role section slider that limits how many of its roles each member can choose. {count} is the limit and is at least 2.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRoleSectionsEditor.tsx
+msgid "Up to {count, plural, one {# role} other {# roles}}"
+msgstr "Up to {count, plural, one {# role} other {# roles}}"
 
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up when people search in Explore."
@@ -43985,6 +44209,11 @@ msgstr "You can't message this user"
 msgid "You can't message yourself"
 msgstr "You can't message yourself"
 
+#. Title of the notice on the Roles page when the member doesn't meet the community's verification level yet. The roles are shown but can't be picked.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesVerificationNotice.tsx
+msgid "You can't pick roles yet"
+msgstr "You can't pick roles yet"
+
 #. Inline tooltip on a disabled permission checkbox when removing it would lock the editor out of further permission changes.
 #: src/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.tsx
 msgid "You can't remove this permission because it would remove it from you."
@@ -44213,6 +44442,11 @@ msgstr "You have version {version}."
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx
 msgid "You haven't authorized any applications to access your account."
 msgstr "You haven't authorised any applications to access your account."
+
+#. Notice on the Roles page when the community requires members to have joined a few minutes ago. A countdown next to it shows when the member can pick roles.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesVerificationNotice.tsx
+msgid "You haven't been a member of this community long enough to pick roles."
+msgstr "You haven't been a member of this community long enough to pick roles."
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx
 msgid "You haven't been a member of this community long enough to send messages."
@@ -44763,6 +44997,11 @@ msgstr "Your account is connected to single sign-on."
 #: src/features/user/utils/AccountGatePresentation.tsx
 msgid "Your account is not yet claimed. Without a username and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
 msgstr "Your account hasn't been claimed yet. Without a username and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
+
+#. Notice on the Roles page when the community requires accounts to be a few minutes old. A countdown next to it shows when the member can pick roles.
+#: src/features/guild/components/self_assignable_roles/SelfAssignableRolesVerificationNotice.tsx
+msgid "Your account is too new to pick roles in this community."
+msgstr "Your account is too new to pick roles in this community."
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx
 msgid "Your account is too new to send messages in this community."

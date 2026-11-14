@@ -52,6 +52,12 @@ const AuditLogOptionsSchema = z.object({
 	message_id: z.string().optional().describe('Message ID for relevant actions'),
 	members_removed: z.number().optional().describe('Number of members removed'),
 	role_name: z.string().optional().describe('Name of the role when the entry was written'),
+	self_assignable: z
+		.boolean()
+		.optional()
+		.describe(
+			'Whether the member added or removed the role themselves through self-assignable role sections, present only when true',
+		),
 	type: z
 		.number()
 		.optional()

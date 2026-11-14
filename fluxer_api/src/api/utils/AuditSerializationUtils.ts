@@ -3,8 +3,24 @@
 import type {Channel} from '@app/api/models/Channel';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildEmoji} from '@app/api/models/GuildEmoji';
+import type {GuildSelfAssignableRoleSection} from '@app/api/models/GuildSelfAssignableRoleSection';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {SelfAssignableRoleSectionAuditKey} from '@fluxer/constants/src/GuildConstants';
+
+function serializeSelfAssignableRoleSectionsForAudit(
+	sections: ReadonlyArray<GuildSelfAssignableRoleSection>,
+): Record<SelfAssignableRoleSectionAuditKey, unknown> {
+	return {
+		self_assignable_role_ids: sections.flatMap((section) => section.roles.map((role) => role.roleId.toString())),
+		self_assignable_role_descriptions: sections.flatMap((section) => section.roles.map((role) => role.description)),
+		self_assignable_role_section_contents: sections.map((section) => section.content),
+		self_assignable_role_section_max_roles: sections.map((section) => section.maxRoles ?? 0),
+		self_assignable_required_role_ids: sections.flatMap((section) =>
+			section.requiredRoleIds.map((roleId) => roleId.toString()),
+		),
+	};
+}
 
 export function serializeGuildForAudit(guild: Guild): Record<string, unknown> {
 	return {
@@ -40,6 +56,7 @@ export function serializeGuildForAudit(guild: Guild): Record<string, unknown> {
 		disabled_operations: guild.disabledOperations,
 		member_count: guild.memberCount,
 		message_history_cutoff: guild.messageHistoryCutoff ? guild.messageHistoryCutoff.toISOString() : null,
+		...serializeSelfAssignableRoleSectionsForAudit(guild.selfAssignableRoleSections),
 	};
 }
 

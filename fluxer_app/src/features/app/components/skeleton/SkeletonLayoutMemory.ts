@@ -351,6 +351,7 @@ export interface RememberedSkeletonGuildChannelGroup {
 
 export interface RememberedSkeletonGuildChannelList {
 	readonly membersRowVisible: boolean;
+	readonly rolesRowVisible?: boolean;
 	readonly groups: ReadonlyArray<RememberedSkeletonGuildChannelGroup>;
 }
 
@@ -697,7 +698,13 @@ const GUILD_PRESENTATION_KEYS = new Set([
 	'bannerPlacement',
 	'bannerAspectRatio',
 ]);
-const GUILD_CHANNEL_LIST_KEYS = new Set(['capturedAt', 'fingerprint', 'membersRowVisible', 'groups']);
+const GUILD_CHANNEL_LIST_KEYS = new Set([
+	'capturedAt',
+	'fingerprint',
+	'membersRowVisible',
+	'rolesRowVisible',
+	'groups',
+]);
 const GUILD_CHANNEL_GROUP_KEYS = new Set(['categoryHeaderVisible', 'collapsed', 'categoryNameWidthPx', 'channels']);
 const GUILD_CHANNEL_ROW_KEYS = new Set(['voice', 'nameWidthPx']);
 const MEMBER_SURFACE_KINDS = new Set<string>(Object.values(SkeletonMemberSurfaceKind));
@@ -1714,6 +1721,7 @@ function parseGuildChannelLists(
 			typeof rawList.fingerprint !== 'string' ||
 			!FINGERPRINT_PATTERN.test(rawList.fingerprint) ||
 			typeof rawList.membersRowVisible !== 'boolean' ||
+			(rawList.rolesRowVisible !== undefined && typeof rawList.rolesRowVisible !== 'boolean') ||
 			seenFingerprints.has(rawList.fingerprint)
 		) {
 			staleRecordNeedsRewrite = true;
@@ -1733,6 +1741,7 @@ function parseGuildChannelLists(
 				capturedAt: rawList.capturedAt,
 				fingerprint: rawList.fingerprint,
 				membersRowVisible: rawList.membersRowVisible,
+				rolesRowVisible: rawList.rolesRowVisible === true,
 				groups,
 			}),
 		);
@@ -2687,6 +2696,7 @@ function commitGuildChannelList(list: PendingSkeletonGuildChannelList): void {
 		capturedGuildChannelListFingerprintsThisSession.has(list.fingerprint) &&
 		current[current.length - 1]?.fingerprint === list.fingerprint &&
 		previous?.membersRowVisible === list.membersRowVisible &&
+		(previous.rolesRowVisible ?? false) === (list.rolesRowVisible ?? false) &&
 		areGuildChannelGroupsEqual(previous.groups, list.groups)
 	) {
 		rememberFingerprintInSession(
@@ -3434,6 +3444,7 @@ export function reportSkeletonGuildChannelList(guildId: string, list: Remembered
 	const normalizedList: PendingSkeletonGuildChannelList = Object.freeze({
 		fingerprint: createGuildFingerprint(guildId),
 		membersRowVisible: list.membersRowVisible,
+		rolesRowVisible: list.rolesRowVisible === true,
 		groups: Object.freeze(normalizedGroups),
 	});
 	const next = pendingGuildChannelLists.filter((entry) => entry.fingerprint !== normalizedList.fingerprint);

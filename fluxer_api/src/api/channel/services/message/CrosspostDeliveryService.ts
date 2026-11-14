@@ -70,7 +70,12 @@ import {
 	SENDABLE_MESSAGE_FLAGS,
 	WebhookTypes,
 } from '@fluxer/constants/src/ChannelConstants';
-import {GuildFeatures, GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import {
+	GuildFeatures,
+	GuildOperations,
+	ROLES_PAGE_MENTION_PLAIN_TEXT,
+	ROLES_PAGE_MENTION_TOKEN,
+} from '@fluxer/constants/src/GuildConstants';
 import {THREAD_MESSAGE_FLAG_MASK} from '@fluxer/constants/src/ThreadConstants';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
@@ -194,6 +199,7 @@ function crosspostSourceFingerprint(source: Message): string {
 
 const ROLE_MENTION_PATTERN = /<@&(\d+)>/g;
 const MARKDOWN_ESCAPABLE_PATTERN = /[[\]()\\*_~`@#|:<>-]/g;
+const PLAIN_ROLES_PAGE_MENTION = ROLES_PAGE_MENTION_PLAIN_TEXT.replace(MARKDOWN_ESCAPABLE_PATTERN, '\\$&');
 
 function plainRoleMention(name: string): string {
 	const label = name.startsWith('@') ? name : `@${name}`;
@@ -793,7 +799,7 @@ export class CrosspostDeliveryService {
 		return {
 			kind: 'ready',
 			payload: {
-				content: await this.contentWithPlainRoleMentions(source),
+				content: await this.contentWithPlainGuildMentions(source),
 				flags: MessageFlags.IS_CROSSPOST | (message.flags & SENDABLE_MESSAGE_FLAGS),
 				attachments,
 				embeds,
@@ -802,9 +808,10 @@ export class CrosspostDeliveryService {
 		};
 	}
 
-	private async contentWithPlainRoleMentions(source: CrosspostSourceContext): Promise<string | null> {
-		const content = source.message.content;
-		if (!content || !source.channel.guildId) return content;
+	private async contentWithPlainGuildMentions(source: CrosspostSourceContext): Promise<string | null> {
+		const original = source.message.content;
+		if (!original || !source.channel.guildId) return original;
+		const content = original.replaceAll(ROLES_PAGE_MENTION_TOKEN, PLAIN_ROLES_PAGE_MENTION);
 		const roleIds = new Set(Array.from(content.matchAll(ROLE_MENTION_PATTERN), (match) => match[1]!));
 		if (roleIds.size === 0) return content;
 		const roles = await this.deps.guildRepository.listRolesByIds(

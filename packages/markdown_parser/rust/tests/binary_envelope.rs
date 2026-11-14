@@ -59,3 +59,8 @@ fn spoiler_and_heading_golden_bytes() {
         [1, 2, 7, 1, 1, 0, 1, b'h', 6, 1, 1, 0, 1, b's']
     );
 }
+
+#[test]
+fn roles_navigation_golden_bytes() {
+    assert_eq!(encode("<id:roles>"), [1, 1, 14, 4, 0, 0]);
+}

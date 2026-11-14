@@ -430,18 +430,8 @@ fn render_mention_to_plaintext(kind: &MentionKind, options: &PlaintextOptions) -
             }
             command
         }
-        MentionKind::GuildNavigation {
-            navigation_type,
-            id,
-            ..
-        } => match navigation_type {
-            GuildNavigationType::Customize => "#customize".to_owned(),
-            GuildNavigationType::Browse => "#browse".to_owned(),
-            GuildNavigationType::Guide => "#guide".to_owned(),
-            GuildNavigationType::LinkedRoles => id.as_ref().map_or_else(
-                || "#linked-roles".to_owned(),
-                |value| format!("#linked-roles:{value}"),
-            ),
+        MentionKind::GuildNavigation { navigation_type } => match navigation_type {
+            GuildNavigationType::Roles => "#roles".to_owned(),
         },
     }
 }

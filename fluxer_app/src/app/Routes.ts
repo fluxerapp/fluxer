@@ -63,6 +63,7 @@ export const Routes = {
 	dmChannel: (channelId: string) => `/channels/@me/${channelId}`,
 	favoritesChannel: (channelId: string) => `/channels/@favorites/${channelId}`,
 	guildMembers: (guildId: string) => `/channels/${guildId}/members`,
+	guildRoles: (guildId: string) => `/channels/${guildId}/roles`,
 	guildChannel: (guildId: string, channelId?: string) =>
 		channelId ? `/channels/${guildId}/${channelId}` : `/channels/${guildId}`,
 	channelMessage: (guildId: string, channelId: string, messageId: string) =>

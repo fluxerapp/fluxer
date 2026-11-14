@@ -12,6 +12,7 @@ import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {
 	GuildIdParam,
+	GuildIdRoleIdParam,
 	GuildIdUserIdParam,
 	GuildIdUserIdRoleIdParam,
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
@@ -330,6 +331,62 @@ export function GuildMemberController(app: HonoApp) {
 			const guildId = createGuildID(guild_id);
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			await ctx.get('guildService').moderation.unbanMember({userId, guildId, targetId}, auditLogReason);
+			return ctx.body(null, 204);
+		},
+	);
+	app.put(
+		'/guilds/:guild_id/members/@me/roles/:role_id',
+		RateLimitMiddleware(RateLimitConfigs.GUILD_MEMBER_ROLE_ADD),
+		LoginRequired,
+		Validator('param', GuildIdRoleIdParam),
+		OpenAPI({
+			operationId: 'add_current_guild_member_role',
+			summary: 'Add role to current guild member',
+			responseSchema: null,
+			statusCode: 204,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Guilds'],
+			description:
+				"Add a role to the current user. Any member can add a role listed in self_assignable_role_sections while the guild has the SELF_ASSIGNABLE_ROLES_ENABLED feature. In a section whose max_roles is 1, this also removes the member's other roles from that section. With a higher max_roles, it fails once the member has that many roles from the section. A section with required_role_ids only lets members with one of those roles add or remove its roles. Picking a role from a section also needs the member to meet the guild's verification level, the same as sending a message.",
+		}),
+		async (ctx) => {
+			const {guild_id, role_id} = ctx.req.valid('param');
+			const userId = ctx.get('user').id;
+			const guildId = createGuildID(guild_id);
+			const roleId = createRoleID(role_id);
+			const requestCache = ctx.get('requestCache');
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
+			await ctx
+				.get('guildService')
+				.selfAssignableRoles.addRoleToSelf({userId, guildId, roleId, requestCache}, auditLogReason);
+			return ctx.body(null, 204);
+		},
+	);
+	app.delete(
+		'/guilds/:guild_id/members/@me/roles/:role_id',
+		RateLimitMiddleware(RateLimitConfigs.GUILD_MEMBER_ROLE_REMOVE),
+		LoginRequired,
+		Validator('param', GuildIdRoleIdParam),
+		OpenAPI({
+			operationId: 'remove_current_guild_member_role',
+			summary: 'Remove role from current guild member',
+			responseSchema: null,
+			statusCode: 204,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Guilds'],
+			description:
+				'Remove a role from the current user. Any member can remove a role listed in self_assignable_role_sections while the guild has the SELF_ASSIGNABLE_ROLES_ENABLED feature. A section with required_role_ids only lets members with one of those roles remove its roles.',
+		}),
+		async (ctx) => {
+			const {guild_id, role_id} = ctx.req.valid('param');
+			const userId = ctx.get('user').id;
+			const guildId = createGuildID(guild_id);
+			const roleId = createRoleID(role_id);
+			const requestCache = ctx.get('requestCache');
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
+			await ctx
+				.get('guildService')
+				.selfAssignableRoles.removeRoleFromSelf({userId, guildId, roleId, requestCache}, auditLogReason);
 			return ctx.body(null, 204);
 		},
 	);

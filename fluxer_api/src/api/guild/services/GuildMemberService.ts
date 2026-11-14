@@ -8,7 +8,7 @@ import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository'
 import {GuildMemberAuditService} from '@app/api/guild/services/member/GuildMemberAuditService';
 import {GuildMemberEventService} from '@app/api/guild/services/member/GuildMemberEventService';
 import {GuildMemberOperationsService} from '@app/api/guild/services/member/GuildMemberOperationsService';
-import {GuildMemberRoleService} from '@app/api/guild/services/member/GuildMemberRoleService';
+import {GuildMemberRoleService, type PickedRoleSection} from '@app/api/guild/services/member/GuildMemberRoleService';
 import {
 	type GuildMemberRoleWriteLocks,
 	withGuildMemberRoleWriteLock,
@@ -40,9 +40,10 @@ export class GuildMemberService {
 		roleId: RoleID;
 		requestCache: RequestCache;
 		auditLogReason?: string | null;
+		selfAssignable?: boolean;
 		mutate: () => Promise<void>;
 	}): Promise<void> {
-		const {actorId: userId, targetId, guildId, roleId, requestCache, auditLogReason, mutate} = params;
+		const {actorId: userId, targetId, guildId, roleId, requestCache, auditLogReason, selfAssignable, mutate} = params;
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
@@ -58,7 +59,10 @@ export class GuildMemberService {
 				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
 				targetId: targetId,
 				auditLogReason: auditLogReason ?? null,
-				metadata: role ? {role_name: role.name} : undefined,
+				metadata: {
+					...(role ? {role_name: role.name} : {}),
+					...(selfAssignable ? {self_assignable: 'true'} : {}),
+				},
 				changes: this.guildAuditLogService.computeChanges(
 					previousSnapshot,
 					this.auditService.serializeMemberForAudit(updatedMember),
@@ -283,6 +287,49 @@ export class GuildMemberService {
 			actorId: params.initiatorId,
 			auditLogReason: null,
 			mutate: () => this.roleService.systemRemoveMemberRole(params),
+		});
+	}
+
+	async selfAddMemberRole(
+		params: {
+			userId: UserID;
+			guildId: GuildID;
+			roleId: RoleID;
+			section: PickedRoleSection;
+			requestCache: RequestCache;
+		},
+		auditLogReason?: string | null,
+	): Promise<void> {
+		await this.applyRoleChange({
+			...params,
+			actorId: params.userId,
+			targetId: params.userId,
+			auditLogReason,
+			selfAssignable: true,
+			mutate: () =>
+				this.roleService.systemAddMemberRole(
+					{targetId: params.userId, guildId: params.guildId, roleId: params.roleId},
+					{keepTemporary: true, section: params.section},
+				),
+		});
+	}
+
+	async selfRemoveMemberRole(
+		params: {userId: UserID; guildId: GuildID; roleId: RoleID; requestCache: RequestCache},
+		auditLogReason?: string | null,
+	): Promise<void> {
+		await this.applyRoleChange({
+			...params,
+			actorId: params.userId,
+			targetId: params.userId,
+			auditLogReason,
+			selfAssignable: true,
+			mutate: () =>
+				this.roleService.systemRemoveMemberRole({
+					targetId: params.userId,
+					guildId: params.guildId,
+					roleId: params.roleId,
+				}),
 		});
 	}
 

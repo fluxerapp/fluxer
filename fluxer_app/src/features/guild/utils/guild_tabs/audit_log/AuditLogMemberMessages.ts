@@ -137,6 +137,31 @@ export const MEMBER_ROLES_UPDATED_SUMMARY = msg({
 	comment:
 		'Activity log summary for a change to the roles of a member when several roles changed at once or the changed role was not recorded. Each role that changed is listed as a detail line below. {actor} is the member who changed the roles, shown as a clickable user chip, or the word System. {target} is the member whose roles changed, shown as a clickable user chip.',
 });
+export const MEMBER_OWN_ROLE_ADDED_SUMMARY = msg({
+	message: '{actor} gave themselves the role {role}',
+	comment:
+		'Activity log summary for a member who gave a role to themselves outside the Roles page, for example a moderator who can manage roles. "Themselves" means the same member as {actor}. {actor} is that member, shown as a clickable user chip. {role} is the role, shown as a role chip with its name.',
+});
+export const MEMBER_OWN_ROLE_REMOVED_SUMMARY = msg({
+	message: '{actor} removed the role {role} from themselves',
+	comment:
+		'Activity log summary for a member who took a role away from themselves outside the Roles page, for example a moderator who can manage roles. The role is taken away from the member, and the role itself is not deleted. "Themselves" means the same member as {actor}. {actor} is that member, shown as a clickable user chip. {role} is the role, shown as a role chip with its name.',
+});
+export const MEMBER_OWN_ROLES_UPDATED_SUMMARY = msg({
+	message: '{actor} updated their roles',
+	comment:
+		'Activity log summary for a member who changed their own roles when several roles changed at once or the changed role was not recorded. Each role that changed is listed as a detail line below. "Their" means the same member as {actor}. {actor} is that member, shown as a clickable user chip.',
+});
+export const MEMBER_SELF_ASSIGNED_ROLE_ADDED_SUMMARY = msg({
+	message: '{actor} self-assigned the role {role}',
+	comment:
+		'Activity log summary for a member who gave a role to themselves on the Roles page, where members pick roles for themselves. "Self-assigned" means the member gave the role to themselves. {actor} is that member, shown as a clickable user chip. {role} is the role, shown as a role chip with its name.',
+});
+export const MEMBER_SELF_ASSIGNED_ROLE_REMOVED_SUMMARY = msg({
+	message: '{actor} removed the self-assigned role {role}',
+	comment:
+		'Activity log summary for a member who took a role away from themselves on the Roles page, where members pick roles for themselves. A "self-assigned role" is a role members can give to and take away from themselves. The role is taken away from the member, and the role itself is not deleted. {actor} is that member, shown as a clickable user chip. {role} is the role, shown as a role chip with its name.',
+});
 export const MEMBER_ROLE_ADDED_BY_SYSTEM_SUMMARY = msg({
 	message: 'The system gave {target} the role {role}',
 	comment:

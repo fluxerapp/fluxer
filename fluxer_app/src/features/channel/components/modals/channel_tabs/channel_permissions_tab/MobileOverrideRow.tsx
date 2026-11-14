@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DEFAULT_ROLE_COLOR_HEX, getRoleColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
+import {getRoleSwatchColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import styles from '@app/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.module.css';
 import type {PermissionOverwrite} from '@app/features/channel/components/modals/channel_tabs/channel_permissions_tab/shared';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -38,7 +38,7 @@ export const MobileOverrideRow: React.FC<MobileOverrideRowProps> = ({
 			<div
 				className={styles.roleDot}
 				style={{
-					backgroundColor: color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(color || 0),
+					backgroundColor: getRoleSwatchColor({color: color ?? 0}),
 				}}
 				data-flx="channel.channel-tabs.channel-permissions-tab.role-dot"
 			/>

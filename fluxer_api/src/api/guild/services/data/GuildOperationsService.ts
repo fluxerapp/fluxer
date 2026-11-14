@@ -167,6 +167,7 @@ const USER_TOGGLEABLE_GUILD_FEATURES: ReadonlySet<string> = new Set([
 	GuildFeatures.HIDE_OWNER_CROWN,
 	GuildFeatures.VISITS_ENABLED,
 	GuildFeatures.MEMBER_DMS_DISABLED,
+	GuildFeatures.SELF_ASSIGNABLE_ROLES_ENABLED,
 ]);
 const SUPPORTED_SYSTEM_CHANNEL_FLAGS = SystemChannelFlags.SUPPRESS_JOIN_NOTIFICATIONS;
 const GUILD_SETTINGS_AUDIT_KEYS: ReadonlySet<string> = new Set([
@@ -429,6 +430,7 @@ export class GuildOperationsService {
 			message_history_cutoff: null,
 			invites_paused_until: null,
 			planned_join_waves_until: null,
+			self_assignable_role_sections: null,
 			version: 1,
 		};
 		batch.addPrepared(Guilds.insert(guildData));
@@ -544,6 +546,12 @@ export class GuildOperationsService {
 			}
 		}
 		const updatedFeatures = this.computeUpdatedFeatures(previousFeatures, data.features);
+		if (
+			previousFeatures.has(GuildFeatures.SELF_ASSIGNABLE_ROLES_ENABLED) !==
+			updatedFeatures.has(GuildFeatures.SELF_ASSIGNABLE_ROLES_ENABLED)
+		) {
+			await checkPermission(Permissions.MANAGE_ROLES);
+		}
 		const endsInvitePause = memberEndsInvitePause(currentGuild, updatedFeatures);
 		if (endsInvitePause) {
 			updatedFeatures.delete(GuildFeatures.RAID_DETECTED);

@@ -61,9 +61,9 @@
 				else if (p === '/channels/@me') {
 					ck = 'other';
 					cb = 1;
-				} else if (!dmr && !fav && /\/members$/.test(p)) ck = 'other';
+				} else if (!dmr && !fav && /\/(members|roles)$/.test(p)) ck = 'other';
 				var cid = ch0 ? seg[3] || '' : '';
-				if (cid === 'members') cid = '';
+				if (cid === 'members' || cid === 'roles') cid = '';
 				cid = cid.slice(0, 32);
 				var kind = dmr ? 2 : 0,
 					dl = !window.electron && !PWA(),
@@ -97,6 +97,7 @@
 					gn: 0,
 					gd: 0,
 					gm: 0,
+					gr: 0,
 					sr: 0,
 					sam: MO ? 2 : 7,
 					ss: 1,
@@ -204,7 +205,7 @@
 				}
 				var gid = p.split('/')[2] || '';
 				if (d.sv === 'guild' && s.sv === 'guild' && gid !== '' && s.p.split('/')[2] === gid) {
-					G = ['gb', 'ga', 'gn', 'gd', 'gm', 'gl', 'rgi'];
+					G = ['gb', 'ga', 'gn', 'gd', 'gm', 'gr', 'gl', 'rgi'];
 					for (i = 0; i < G.length; i++) {
 						k = G[i];
 						if (s[k] !== undefined) d[k] = s[k];
@@ -482,6 +483,15 @@
 				}
 				function PZ(w, g) {
 					return 'width:' + w + ';height:' + g + ';';
+				}
+				function PR(w) {
+					return V(
+						'members-section',
+						V(
+							'grow ' + BC + 'grow-ch ' + BC + 'grow-mem',
+							B(PZ('1.25rem', '1.25rem'), RS + M + ' ' + BC + 'grow-icon') + B(PZ(w, '0.75rem'), RP),
+						),
+					);
 				}
 				var S = ' ' + BC + 's',
 					M = ' ' + BC + 'm',
@@ -777,15 +787,9 @@
 						var nav = '';
 						if (gb === 2) nav += V('detached-banner', B('width:100%;height:100%;', R0 + M), ab);
 						nav += V('top-spacer', '');
-						if (h.gm === 1)
-							nav +=
-								V(
-									'members-section',
-									V(
-										'grow ' + BC + 'grow-ch ' + BC + 'grow-mem',
-										B(PZ('1.25rem', '1.25rem'), RS + M + ' ' + BC + 'grow-icon') + B(PZ('4rem', '0.75rem'), RP),
-									),
-								) + V('members-sep', '');
+						if (h.gm === 1) nav += PR('4rem');
+						if (h.gr === 1) nav += PR('3rem');
+						if (h.gm === 1 || h.gr === 1) nav += V('members-sep', '');
 						var groups = '';
 						for (i = 0; i < cats.length; i++) {
 							var ct = cats[i],

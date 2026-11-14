@@ -35,6 +35,7 @@ import {getGuildAuth} from '@app/api/guild/services/GuildMfaEnforcement';
 import {GuildModerationService} from '@app/api/guild/services/GuildModerationService';
 import {GuildRoleService} from '@app/api/guild/services/GuildRoleService';
 import {GuildSearchService} from '@app/api/guild/services/GuildSearchService';
+import {GuildSelfAssignableRoleService} from '@app/api/guild/services/role/GuildSelfAssignableRoleService';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
 import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
@@ -86,6 +87,7 @@ export class GuildService {
 	public readonly data: GuildDataService;
 	public readonly members: GuildMemberService;
 	public readonly roles: GuildRoleService;
+	public readonly selfAssignableRoles: GuildSelfAssignableRoleService;
 	public readonly moderation: GuildModerationService;
 	public readonly content: GuildContentService;
 	public readonly channels: GuildChannelService;
@@ -162,6 +164,15 @@ export class GuildService {
 			limitConfigService,
 			userRepository,
 			entityAssetService,
+		);
+		this.selfAssignableRoles = new GuildSelfAssignableRoleService(
+			guildRepository,
+			gatewayService,
+			userRepository,
+			snowflakeService,
+			guildAuditLogService,
+			cacheService,
+			this.members,
 		);
 		this.moderation = new GuildModerationService(
 			guildRepository,

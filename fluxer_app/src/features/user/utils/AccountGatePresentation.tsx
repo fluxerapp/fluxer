@@ -4,6 +4,7 @@ import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSla
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {openBouncedEmailChange, useVerifyEmailAction} from '@app/features/auth/hooks/useVerifyEmailAction';
 import {ADD_EMAIL_DESCRIPTOR, CLAIM_ACCOUNT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {Button} from '@app/features/ui/button/Button';
 import Users from '@app/features/user/state/Users';
 import {EmailDeliveryStates} from '@fluxer/constants/src/AccountConfigConstants';
 import {
@@ -660,6 +661,23 @@ export function useAccountGateAction(gate: AccountGate, onComplete?: () => void)
 	const presentation = getAccountGatePresentation(i18n, gate, onComplete);
 	return {text: presentation.actionLabel, onClick: presentation.onAction, submitting: false};
 }
+
+export const AccountGateButton: React.FC<{readonly gate: AccountGate; readonly onComplete?: () => void}> = observer(
+	({gate, onComplete}) => {
+		const action = useAccountGateAction(gate, onComplete);
+		return (
+			<Button
+				small={true}
+				onClick={action.onClick}
+				disabled={action.submitting}
+				submitting={action.submitting}
+				data-flx="user.account-gate-presentation.account-gate-button.button.click"
+			>
+				{action.text}
+			</Button>
+		);
+	},
+);
 
 interface AccountGateSlateProps {
 	readonly gate: AccountGate;

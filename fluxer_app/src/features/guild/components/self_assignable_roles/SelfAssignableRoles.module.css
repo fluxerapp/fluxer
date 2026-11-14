@@ -1,0 +1,430 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.pageScroller {
+	height: 100%;
+	min-height: 0;
+}
+
+.layoutContainer {
+	container-type: inline-size;
+}
+
+.layout {
+	display: grid;
+	grid-template-areas:
+		'profile'
+		'roles';
+	grid-template-columns: minmax(0, 1fr);
+	gap: 1.5rem;
+	width: 100%;
+	max-width: 45rem;
+	margin-inline: auto;
+	padding: 1.5rem 1.25rem;
+	box-sizing: border-box;
+}
+
+.layoutInModal {
+	max-width: none;
+	padding: 0 0 1rem;
+}
+
+.profileColumn {
+	grid-area: profile;
+	display: flex;
+	justify-content: center;
+	min-width: 0;
+}
+
+.view {
+	grid-area: roles;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	min-width: 0;
+}
+
+@container (min-width: 50rem) {
+	.layout:not(.layoutInModal) {
+		grid-template-areas: 'roles profile';
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: start;
+		max-width: 68rem;
+	}
+
+	.layout:not(.layoutInModal) .profileColumn {
+		position: sticky;
+		inset-block-start: 1.5rem;
+	}
+}
+
+.intro {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	min-width: 0;
+}
+
+.introText {
+	margin: 0;
+	min-width: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	min-width: 0;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	border: 0.0625rem solid var(--background-header-secondary);
+	background-color: var(--background-secondary-alt);
+}
+
+.sectionContent {
+	min-width: 0;
+	font-size: 0.9375rem;
+	line-height: 1.375rem;
+	color: var(--text-primary);
+	overflow-wrap: anywhere;
+}
+
+.sectionHint {
+	margin: 0;
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+	color: var(--text-primary-muted);
+}
+
+.roleChips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.roleCards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.roleChip,
+.roleCard {
+	--role-toggle-background: var(--background-tertiary);
+	border: 0.0625rem solid var(--background-header-secondary);
+	background-color: var(--role-toggle-background);
+	color: var(--text-primary);
+	text-align: start;
+	cursor: pointer;
+	transition:
+		background-color 150ms ease,
+		border-color 150ms ease;
+}
+
+:global(.theme-light) .roleChip,
+:global(.theme-light) .roleCard {
+	--role-toggle-background: var(--background-primary);
+}
+
+.roleChip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-height: 2rem;
+	max-width: 100%;
+	padding: 0.25rem 0.75rem;
+	border-radius: 624.9375rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	line-height: 1.25rem;
+}
+
+.roleCard {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	min-width: 0;
+	padding: 0.625rem 0.75rem;
+	border-radius: 0.5rem;
+}
+
+.roleChip:hover:not(:disabled),
+.roleCard:hover:not(:disabled) {
+	background-color: var(--background-modifier-hover);
+}
+
+.roleChip:disabled,
+.roleCard:disabled {
+	cursor: default;
+	opacity: 0.7;
+}
+
+.roleToggleSelected {
+	border-color: var(--brand-primary);
+	background-color: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+}
+
+.roleToggleSelected:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--brand-primary) 22%, transparent);
+}
+
+.roleCardHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+	font-size: 0.875rem;
+	font-weight: 500;
+	line-height: 1.25rem;
+}
+
+.roleCardHeader .roleChipName {
+	flex: 1;
+}
+
+.roleCardDescription {
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+	color: var(--text-primary-muted);
+	overflow-wrap: anywhere;
+}
+
+.roleSwatch {
+	width: 0.625rem;
+	height: 0.625rem;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.roleChipName {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.roleChipCheck {
+	flex-shrink: 0;
+	color: var(--brand-primary);
+}
+
+.emptyState {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 2rem 1rem;
+	border-radius: 0.5rem;
+	border: 0.0625rem dashed var(--background-header-secondary);
+	text-align: center;
+}
+
+.emptyStateText {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.editorSectionHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.editorSectionTitle {
+	margin: 0;
+	min-width: 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.editorSectionActions {
+	display: flex;
+	flex-shrink: 0;
+	gap: 0.25rem;
+}
+
+.editorRoles {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.editorRoleList {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+}
+
+.editorRolePill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-height: 1.75rem;
+	max-width: 100%;
+	padding-inline-start: 0.5rem;
+	padding-inline-end: 0.125rem;
+	border-radius: 0.25rem;
+	border: 0.0625rem solid var(--background-header-secondary);
+	background-color: var(--background-primary);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	line-height: 1.125rem;
+	color: var(--text-primary);
+}
+
+.editorRolePillRemove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 1.5rem;
+	height: 1.5rem;
+	border: none;
+	border-radius: 0.25rem;
+	background: transparent;
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.editorRolePillRemove:hover {
+	color: var(--text-primary);
+	background-color: var(--background-modifier-hover);
+}
+
+.editorRoleRows {
+	container-type: inline-size;
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	min-width: 0;
+}
+
+.editorRoleRows > .addRoleButton {
+	align-self: flex-start;
+}
+
+.editorRoleRow {
+	display: grid;
+	grid-template-areas: 'handle role description remove';
+	grid-template-columns: auto minmax(0, 12rem) minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.25rem 0.5rem;
+	min-width: 0;
+	padding: 0.25rem;
+	border-radius: 0.375rem;
+	border: 0.0625rem solid var(--background-header-secondary);
+	background-color: var(--background-primary);
+}
+
+@container (max-width: 32rem) {
+	.editorRoleRow {
+		grid-template-areas:
+			'handle role remove'
+			'handle description description';
+		grid-template-columns: auto minmax(0, 1fr) auto;
+	}
+}
+
+.editorRoleRowDragging {
+	opacity: 0.35;
+}
+
+.editorRoleHandle {
+	grid-area: handle;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	align-self: stretch;
+	width: 1.5rem;
+	padding: 0;
+	border: none;
+	border-radius: 0.25rem;
+	background: transparent;
+	color: var(--text-tertiary);
+	cursor: grab;
+}
+
+.editorRoleHandle:hover:not(:disabled) {
+	color: var(--text-primary);
+	background-color: var(--background-modifier-hover);
+}
+
+.editorRoleHandle:disabled {
+	cursor: default;
+	opacity: 0.4;
+}
+
+.editorRoleName {
+	grid-area: role;
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.editorRoleDescription {
+	grid-area: description;
+	min-width: 0;
+}
+
+.editorRoleRemove {
+	grid-area: remove;
+}
+
+.addRoleButton {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	min-height: 1.75rem;
+	padding-inline: 0.5rem;
+	border-radius: 0.25rem;
+	border: 0.0625rem dashed var(--background-header-secondary);
+	background: transparent;
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.addRoleButton:hover:not(:disabled),
+.addRoleButton[data-context-menu-open='true'] {
+	color: var(--text-primary);
+	border-color: var(--text-tertiary);
+}
+
+.addRoleButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.editorFooter {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.editorFooterActions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-inline-start: auto;
+}

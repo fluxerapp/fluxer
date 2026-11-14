@@ -20,6 +20,7 @@ import {
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import Guilds from '@app/features/guild/state/Guilds';
 import {createSubmittableRoleOrderIds} from '@app/features/guild/utils/GuildRoleOrderUtils';
+import {isRoleSelfAssignable} from '@app/features/guild/utils/SelfAssignableRoles';
 import {CANCEL_DESCRIPTOR, TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import Permission from '@app/features/permissions/state/Permission';
@@ -639,6 +640,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 		if (!guild || !currentUser) return null;
 		return (
 			<RoleSidebar
+				guildId={guildId}
 				roles={roles}
 				hoistedRoles={hoistedRoles}
 				selectedRoleId={selectedRoleId}
@@ -664,6 +666,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			/>
 		);
 	}, [
+		guildId,
 		guild,
 		currentUser,
 		roles,
@@ -737,6 +740,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	if (isMobile && !mobileShowEditor) {
 		return (
 			<MobileRoleList
+				guildId={guildId}
 				roles={roles}
 				roleUpdates={roleUpdates}
 				canManageRoles={canManageRoles}
@@ -754,6 +758,7 @@ const GuildRolesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			selectedRole={selectedRole}
 			selectedRoleWithUpdates={selectedRoleWithUpdates}
 			selectedRoleLocked={selectedRoleLocked}
+			selectedRoleSelfAssignable={selectedRole != null && isRoleSelfAssignable(guild, selectedRole.id)}
 			canManageRoles={canManageRoles}
 			mentionEveryonePermissionLabel={mentionEveryonePermissionLabel}
 			permissionSearchQuery={permissionSearchQuery}

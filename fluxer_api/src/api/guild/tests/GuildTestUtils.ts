@@ -15,8 +15,13 @@ export async function updateGuild(
 	token: string,
 	guildId: string,
 	updates: Partial<GuildUpdateRequest>,
+	status = 200,
 ): Promise<GuildResponse> {
-	return createBuilder<GuildResponse>(harness, token).patch(`/guilds/${guildId}`).body(updates).execute();
+	return createBuilder<GuildResponse>(harness, token)
+		.patch(`/guilds/${guildId}`)
+		.body(updates)
+		.expect(status)
+		.execute();
 }
 
 export async function getGuildChannels(
@@ -68,10 +73,12 @@ export async function removeMemberRole(
 	guildId: string,
 	userId: string,
 	roleId: string,
+	status = 204,
+	code?: string,
 ): Promise<void> {
 	await createBuilder(harness, token)
 		.delete(`/guilds/${guildId}/members/${userId}/roles/${roleId}`)
-		.expect(204)
+		.expect(status, code)
 		.execute();
 }
 
@@ -179,8 +186,13 @@ export async function addMemberRole(
 	guildId: string,
 	userId: string,
 	roleId: string,
+	status = 204,
+	code?: string,
 ): Promise<void> {
-	await createBuilder(harness, token).put(`/guilds/${guildId}/members/${userId}/roles/${roleId}`).expect(204).execute();
+	await createBuilder(harness, token)
+		.put(`/guilds/${guildId}/members/${userId}/roles/${roleId}`)
+		.expect(status, code)
+		.execute();
 }
 
 export async function getMember(

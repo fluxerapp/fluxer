@@ -11,6 +11,7 @@ import {
 	isCommandOptionalAdd,
 	isEmoji,
 	isGif,
+	isGuildNavigation,
 	isMeme,
 	isMentionMember,
 	isMentionRole,
@@ -30,6 +31,8 @@ import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import {filterStickersForAutocomplete} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import * as KlipyUtils from '@app/features/expressions/utils/KlipyUtils';
 import Guilds from '@app/features/guild/state/Guilds';
+import {shouldShowSelfAssignableRolesEntry} from '@app/features/guild/utils/SelfAssignableRoles';
+import {ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {
 	createComposerCommandReplacement,
 	getComposerAutocompleteReplacementStart,
@@ -37,6 +40,7 @@ import {
 import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
 import {applyComposerReplacement, createComposerEmojiPayload} from '@app/features/lexical/composer/ComposerInsertion';
 import type {ComposerInsertPayload} from '@app/features/lexical/composer/composerOffsets';
+import {createRolesNavigationPayload} from '@app/features/lexical/composer/guildNavigationMentions';
 import {normalizeSlotAutocompleteQuery as normalizeSlotQuery} from '@app/features/lexical/composer/SlashSlotAutocompleteQuery';
 import type {SlashOptionalContext, SlashSlotAutocompleteContext} from '@app/features/lexical/composer/slashSlots';
 import {
@@ -429,7 +433,8 @@ export function useLexicalAutocomplete({
 				if (channel == null) {
 					break;
 				}
-				options = matchSorter(
+				const rolesOption = buildRolesNavigationOption(channel.guildId ?? null, matchedText, i18n);
+				const channelOptions = matchSorter(
 					getMentionableGuildChannels(channel.guildId == null ? '' : channel.guildId),
 					matchedText,
 					{
@@ -442,7 +447,8 @@ export function useLexicalAutocomplete({
 						channel: candidate,
 					}))
 					.sort((a, b) => mentionSortPosition(a.channel) - mentionSortPosition(b.channel))
-					.slice(0, MENTION_RESULT_LIMIT);
+					.slice(0, rolesOption == null ? MENTION_RESULT_LIMIT : MENTION_RESULT_LIMIT - 1);
+				options = rolesOption == null ? channelOptions : [...channelOptions, rolesOption];
 				break;
 			}
 			case 'emojiReaction': {
@@ -946,6 +952,18 @@ function slashOptionalContextEquals(a: SlashOptionalContext | null, b: SlashOpti
 	return a.options.every((option, index) => option.name === b.options[index]!.name);
 }
 
+function buildRolesNavigationOption(guildId: string | null, query: string, i18n: I18n): AutocompleteOption | null {
+	const guild = guildId == null ? null : Guilds.getGuild(guildId);
+	if (guild == null || !shouldShowSelfAssignableRolesEntry(guild)) {
+		return null;
+	}
+	const label = i18n._(ROLES_DESCRIPTOR);
+	if (query.length > 0 && matchSorter([label], query).length === 0) {
+		return null;
+	}
+	return {type: 'guildNavigation', navigation: 'roles', label};
+}
+
 function optionToPayload(option: AutocompleteOption, channel: Channel | null): ComposerInsertPayload | null {
 	const channelGuildId: string | null = channel == null || channel.guildId == null ? null : channel.guildId;
 	if (isMentionMember(option)) {
@@ -989,6 +1007,9 @@ function optionToPayload(option: AutocompleteOption, channel: Channel | null): C
 			display: `#${option.channel.name}`,
 			wire: `<#${option.channel.id}>`,
 		};
+	}
+	if (isGuildNavigation(option)) {
+		return createRolesNavigationPayload(option.label);
 	}
 	if (isEmoji(option)) {
 		return createComposerEmojiPayload(option.emoji);

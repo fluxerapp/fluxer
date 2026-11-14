@@ -102,10 +102,3 @@
 .noRolesLink:hover {
 	text-decoration: underline;
 }
-
-.roleColorIndicator {
-	height: 0.75rem;
-	width: 0.75rem;
-	border-radius: 624.9375rem;
-	flex-shrink: 0;
-}

@@ -44,8 +44,10 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {hasForumUnread} from '@app/features/forum/state/ForumReadState';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
+import {openSelfAssignableRolesPage} from '@app/features/guild/commands/SelfAssignableRoleCommands';
 import type {Guild} from '@app/features/guild/models/Guild';
-import {MEMBERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {shouldShowSelfAssignableRolesEntry} from '@app/features/guild/utils/SelfAssignableRoles';
+import {MEMBERS_DESCRIPTOR, ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -74,7 +76,7 @@ import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_CHANNELS_PER_CATEGORY} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {UsersIcon} from '@phosphor-icons/react';
+import {type Icon, ShieldIcon, UsersIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type {MotionValue} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
@@ -97,6 +99,11 @@ const CHANNELS_DESCRIPTOR = msg({
 const MEMBERS_SELECTED_DESCRIPTOR = msg({
 	message: 'Members, selected',
 	comment: 'Short label in the app layout channel list content.',
+});
+const ROLES_SELECTED_DESCRIPTOR = msg({
+	message: 'Roles, selected',
+	comment:
+		'Accessible label of the Roles row at the top of the channel list while its page is open. Members pick self-assignable roles on that page.',
 });
 const NEW_MESSAGES_DESCRIPTOR = msg({
 	message: 'New messages',
@@ -126,6 +133,7 @@ interface ResolvedChannelGroup {
 function createChannelListProjectionKey(
 	groups: ReadonlyArray<ResolvedChannelGroup>,
 	membersRowVisible: boolean,
+	rolesRowVisible: boolean,
 ): string {
 	const groupKeys = groups.map((group) => {
 		const channelKeys = [...group.visibleTextChannels, ...group.visibleVoiceChannels].map(
@@ -133,7 +141,7 @@ function createChannelListProjectionKey(
 		);
 		return `${group.category?.id ?? ''}~${group.category?.name ?? ''}~${group.isCollapsed}~${channelKeys.join(',')}`;
 	});
-	return `${membersRowVisible}|${groupKeys.join('|')}`;
+	return `${membersRowVisible}|${rolesRowVisible}|${groupKeys.join('|')}`;
 }
 
 function createRememberedChannelGroups(
@@ -175,6 +183,59 @@ interface ChannelListContentProps {
 	readonly scrollY: MotionValue<number>;
 	readonly banner: GuildBannerPresentation;
 }
+interface GuildPageRowProps {
+	readonly icon: Icon;
+	readonly name: string;
+	readonly selectedLabel: string;
+	readonly selected: boolean;
+	readonly onActivate: () => void;
+}
+
+const GuildPageRow: React.FC<GuildPageRowProps> = ({icon: RowIcon, name, selectedLabel, selected, onActivate}) => {
+	const handleKeyDown = useCallback(
+		(event: React.KeyboardEvent) => {
+			if (!isKeyboardActivationKey(event.key)) return;
+			event.preventDefault();
+			onActivate();
+		},
+		[onActivate],
+	);
+	return (
+		<div className={styles.membersSection} data-flx="app.channel-list-content.guild-page-row.members-section">
+			<GenericChannelItem
+				containerClassName={channelItemStyles.container}
+				className={clsx(
+					channelItemStyles.channelItem,
+					channelItemStyles.channelItemRegular,
+					selected && channelItemStyles.channelItemSelected,
+					!selected && channelItemStyles.channelItemHoverable,
+				)}
+				isSelected={selected}
+				aria-label={selected ? selectedLabel : name}
+				aria-current={selected ? 'page' : undefined}
+				onClick={onActivate}
+				onKeyDown={handleKeyDown}
+				data-flx="app.channel-list-content.guild-page-row.generic-channel-item.activate"
+			>
+				<ChannelItemContent
+					icon={
+						<RowIcon
+							size={remFromPx(20)}
+							className={clsx(
+								channelItemStyles.channelItemIcon,
+								selected ? channelItemStyles.channelItemIconSelected : channelItemStyles.channelItemIconUnselected,
+							)}
+							data-flx="app.channel-list-content.guild-page-row.row-icon"
+						/>
+					}
+					name={name}
+					data-flx="app.channel-list-content.guild-page-row.channel-item-content"
+				/>
+			</GenericChannelItem>
+		</div>
+	);
+};
+
 export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelListContentProps) => {
 	const threadsActive = ThreadGuilds.isActive(guild.id);
 	const {i18n} = useLingui();
@@ -211,15 +272,19 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 	const isMobile = MobileLayout.enabled;
 	const canViewMembers =
 		!isMobile && ((Permission.getGuildPermissions(guild.id) ?? 0n) & MEMBERS_PAGE_PERMISSIONS) !== 0n;
+	const canViewRoles = shouldShowSelfAssignableRolesEntry(guild);
 	const guildPrefix = `/channels/${guild.id}/`;
 	let selectedChannelInGuildId: string | null = null;
 	let isMembersSelected = false;
+	let isRolesSelected = false;
 	if (location.pathname.startsWith(guildPrefix)) {
 		const tail = location.pathname.slice(guildPrefix.length);
 		const slash = tail.indexOf('/');
 		const segment = slash === -1 ? tail : tail.slice(0, slash);
 		if (segment === 'members') {
 			isMembersSelected = true;
+		} else if (segment === 'roles') {
+			isRolesSelected = !isMobile;
 		} else if (segment.length > 0) {
 			selectedChannelInGuildId = segment;
 		}
@@ -227,14 +292,9 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 	const handleMembersClick = useCallback(() => {
 		RouterUtils.transitionTo(Routes.guildMembers(guild.id));
 	}, [guild.id]);
-	const handleMembersKeyDown = useCallback(
-		(event: React.KeyboardEvent) => {
-			if (!isKeyboardActivationKey(event.key)) return;
-			event.preventDefault();
-			handleMembersClick();
-		},
-		[handleMembersClick],
-	);
+	const handleRolesClick = useCallback(() => {
+		openSelfAssignableRolesPage(guild.id);
+	}, [guild.id]);
 	const collapsedCategories = useMemo(() => {
 		const overrides = userGuildSettings?.channel_overrides;
 		if (!overrides) return null;
@@ -520,10 +580,11 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 		() => {
 			reportSkeletonGuildChannelList(guild.id, {
 				membersRowVisible: canViewMembers,
+				rolesRowVisible: canViewRoles,
 				groups: createRememberedChannelGroups(resolvedGroups, channelGroupsContainerRef.current),
 			});
 		},
-		`${guild.id}|${createChannelListProjectionKey(resolvedGroups, canViewMembers)}`,
+		`${guild.id}|${createChannelListProjectionKey(resolvedGroups, canViewMembers, canViewRoles)}`,
 	);
 	return (
 		<div
@@ -564,43 +625,27 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 						/>
 					</div>
 					{canViewMembers && (
-						<>
-							<div className={styles.membersSection} data-flx="app.channel-list-content.members-section">
-								<GenericChannelItem
-									containerClassName={channelItemStyles.container}
-									className={clsx(
-										channelItemStyles.channelItem,
-										channelItemStyles.channelItemRegular,
-										isMembersSelected && channelItemStyles.channelItemSelected,
-										!isMembersSelected && channelItemStyles.channelItemHoverable,
-									)}
-									isSelected={isMembersSelected}
-									aria-label={isMembersSelected ? i18n._(MEMBERS_SELECTED_DESCRIPTOR) : i18n._(MEMBERS_DESCRIPTOR)}
-									aria-current={isMembersSelected ? 'page' : undefined}
-									onClick={handleMembersClick}
-									onKeyDown={handleMembersKeyDown}
-									data-flx="app.channel-list-content.generic-channel-item.members-click"
-								>
-									<ChannelItemContent
-										icon={
-											<UsersIcon
-												size={remFromPx(20)}
-												className={clsx(
-													channelItemStyles.channelItemIcon,
-													isMembersSelected
-														? channelItemStyles.channelItemIconSelected
-														: channelItemStyles.channelItemIconUnselected,
-												)}
-												data-flx="app.channel-list-content.users-icon"
-											/>
-										}
-										name={i18n._(MEMBERS_DESCRIPTOR)}
-										data-flx="app.channel-list-content.channel-item-content"
-									/>
-								</GenericChannelItem>
-							</div>
-							<div className={styles.membersSeparator} data-flx="app.channel-list-content.members-separator" />
-						</>
+						<GuildPageRow
+							icon={UsersIcon}
+							name={i18n._(MEMBERS_DESCRIPTOR)}
+							selectedLabel={i18n._(MEMBERS_SELECTED_DESCRIPTOR)}
+							selected={isMembersSelected}
+							onActivate={handleMembersClick}
+							data-flx="app.channel-list-content.guild-page-row"
+						/>
+					)}
+					{canViewRoles && (
+						<GuildPageRow
+							icon={ShieldIcon}
+							name={i18n._(ROLES_DESCRIPTOR)}
+							selectedLabel={i18n._(ROLES_SELECTED_DESCRIPTOR)}
+							selected={isRolesSelected}
+							onActivate={handleRolesClick}
+							data-flx="app.channel-list-content.guild-page-row--2"
+						/>
+					)}
+					{(canViewMembers || canViewRoles) && (
+						<div className={styles.membersSeparator} data-flx="app.channel-list-content.members-separator" />
 					)}
 					<div
 						ref={channelGroupsContainerRef}
@@ -620,7 +665,6 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 										onChannelDrop={handleChannelDrop}
 										onDragStateChange={setActiveDragItem}
 										isSelectedByPath={selectedChannelInGuildId === group.category.id}
-										isOnMembersRoute={isMembersSelected}
 										data-flx="app.channel-list-content.channel-item"
 									/>
 								)}
@@ -643,7 +687,6 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 											onChannelDrop={handleChannelDrop}
 											onDragStateChange={setActiveDragItem}
 											isSelectedByPath={selectedChannelInGuildId === ch.id}
-											isOnMembersRoute={isMembersSelected}
 											data-flx="app.channel-list-content.channel-item--2"
 										/>
 									))}
@@ -659,7 +702,6 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 												onChannelDrop={handleChannelDrop}
 												onDragStateChange={setActiveDragItem}
 												isSelectedByPath={selectedChannelInGuildId === ch.id}
-												isOnMembersRoute={isMembersSelected}
 												data-flx="app.channel-list-content.channel-item--4"
 											/>
 											<SidebarThreadList
@@ -682,7 +724,6 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 												onChannelDrop={handleChannelDrop}
 												onDragStateChange={setActiveDragItem}
 												isSelectedByPath={selectedChannelInGuildId === ch.id}
-												isOnMembersRoute={isMembersSelected}
 												data-flx="app.channel-list-content.channel-item--3"
 											/>
 										);

@@ -23,6 +23,19 @@ interface GuildRecordOptions {
 	instanceId?: string;
 }
 
+export interface GuildSelfAssignableRole {
+	readonly id: string;
+	readonly description: string;
+}
+
+export interface GuildSelfAssignableRoleSection {
+	readonly id: string;
+	readonly content: string;
+	readonly roles: ReadonlyArray<GuildSelfAssignableRole>;
+	readonly maxRoles: number | null;
+	readonly requiredRoleIds: ReadonlyArray<string>;
+}
+
 type GuildInput = WireGuild | Guild;
 type GuildInputWithRoleRecord = Omit<WireGuild, 'roles'> & {
 	roles: Readonly<Record<string, GuildRole>>;
@@ -67,6 +80,7 @@ export class Guild {
 	readonly visiting: boolean;
 	readonly messageHistoryCutoff: string | null;
 	readonly memberCount: number;
+	readonly selfAssignableRoleSections: ReadonlyArray<GuildSelfAssignableRoleSection>;
 
 	constructor(guild: GuildConstructorInput, options?: GuildRecordOptions) {
 		this.instanceId =
@@ -108,6 +122,7 @@ export class Guild {
 		this.unavailable = guild.unavailable ?? false;
 		this.visiting = guild.visiting === true;
 		this.memberCount = this.normalizeMemberCount(guild);
+		this.selfAssignableRoleSections = this.normalizeSelfAssignableRoleSections(guild);
 	}
 
 	private normalizeField<T>(guild: GuildConstructorInput, snakeCase: keyof WireGuild, camelCase: keyof Guild): T {
@@ -265,12 +280,37 @@ export class Guild {
 		return (guild as Guild).memberCount ?? 0;
 	}
 
+	private normalizeSelfAssignableRoleSections(
+		guild: GuildConstructorInput,
+	): ReadonlyArray<GuildSelfAssignableRoleSection> {
+		if (!this.isGuildInput(guild)) {
+			return (guild as Guild).selfAssignableRoleSections ?? [];
+		}
+		return Object.freeze(
+			(guild.self_assignable_role_sections ?? []).map((section) =>
+				Object.freeze({
+					id: section.id,
+					content: section.content ?? '',
+					roles: Object.freeze(
+						(section.roles ?? []).map((role) => Object.freeze({id: role.id, description: role.description ?? ''})),
+					),
+					maxRoles: section.max_roles ?? null,
+					requiredRoleIds: Object.freeze([...(section.required_role_ids ?? [])]),
+				}),
+			),
+		);
+	}
+
 	private isGuildInput(guild: GuildConstructorInput): guild is WireGuild {
 		return 'vanity_url_code' in guild;
 	}
 
 	get disabledOperations(): number {
 		return this._disabledOperations;
+	}
+
+	get selfAssignableRolesEnabled(): boolean {
+		return this.features.has(GuildFeatures.SELF_ASSIGNABLE_ROLES_ENABLED);
 	}
 
 	get nsfwLevel(): number {
@@ -330,6 +370,13 @@ export class Guild {
 			default_message_notifications: this.defaultMessageNotifications,
 			disabled_operations: this._disabledOperations,
 			message_history_cutoff: this.messageHistoryCutoff,
+			self_assignable_role_sections: this.selfAssignableRoleSections.map((section) => ({
+				id: section.id,
+				content: section.content,
+				roles: section.roles.map((role) => ({id: role.id, description: role.description})),
+				max_roles: section.maxRoles,
+				required_role_ids: [...section.requiredRoleIds],
+			})),
 			joined_at: this.joinedAt ?? undefined,
 			unavailable: this.unavailable,
 			visiting: this.visiting ? true : undefined,

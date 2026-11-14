@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import {SettingsSection} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/components/GuildOverviewTabSettingsSection';
+import {useGuildFeatureToggle} from '@app/features/guild/hooks/useGuildFeatureToggle';
 import Guilds from '@app/features/guild/state/Guilds';
 import GuildVisitsRollout from '@app/features/guild/state/GuildVisitsRollout';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -11,7 +11,6 @@ import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useState} from 'react';
 
 const logger = new Logger('GuildVisitsSection');
 
@@ -43,22 +42,13 @@ export const GuildVisitsSection = observer(function GuildVisitsSection({
 	canManageGuild: boolean;
 }) {
 	const {i18n} = useLingui();
-	const [saving, setSaving] = useState(false);
+	const {saving, setEnabled} = useGuildFeatureToggle(guildId, GuildFeatures.VISITS_ENABLED, (error) => {
+		logger.error('Failed to toggle visits', error);
+		ToastCommands.error(i18n._(UPDATE_FAILED_DESCRIPTOR));
+	});
 	const guild = Guilds.getGuild(guildId);
 	if (!guild || !GuildVisitsRollout.enabled) return null;
 	const enabled = guild.features.has(GuildFeatures.VISITS_ENABLED);
-	const handleChange = async (next: boolean) => {
-		if (saving || !canManageGuild) return;
-		setSaving(true);
-		try {
-			await GuildCommands.toggleFeature(guildId, GuildFeatures.VISITS_ENABLED, next);
-		} catch (error) {
-			logger.error('Failed to toggle visits', error);
-			ToastCommands.error(i18n._(UPDATE_FAILED_DESCRIPTOR));
-		} finally {
-			setSaving(false);
-		}
-	};
 	return (
 		<SettingsSection
 			title={i18n._(VISITORS_TITLE_DESCRIPTOR)}
@@ -68,7 +58,7 @@ export const GuildVisitsSection = observer(function GuildVisitsSection({
 				label={i18n._(LET_PEOPLE_LOOK_AROUND_DESCRIPTOR)}
 				description={i18n._(LET_PEOPLE_LOOK_AROUND_HELP_DESCRIPTOR)}
 				value={enabled}
-				onChange={handleChange}
+				onChange={setEnabled}
 				disabled={!canManageGuild || saving}
 				data-flx="guild.guild-tabs.guild-overview-tab.guild-visits-section.switch"
 			/>

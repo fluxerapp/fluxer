@@ -29,6 +29,7 @@ const CHANNEL_LABEL_HEIGHT = '0.75rem';
 const CHANNEL_LABEL_WIDTH_MIN = 34;
 const CHANNEL_LABEL_WIDTH_RANGE = 40;
 const MEMBERS_LABEL_WIDTH = '4rem';
+const ROLES_LABEL_WIDTH = '3rem';
 
 interface GuildChannelSpec {
 	readonly labelWidth: string;
@@ -100,6 +101,34 @@ function GuildChannelSkeletonRow({width}: {readonly width: string}) {
 	);
 }
 
+function GuildPageRowSkeleton({labelWidth}: {readonly labelWidth: string}) {
+	return (
+		<flx-app-guild-sidebar-skeleton-members
+			className={flxElementClassName(styles.membersSection)}
+			data-flx="app.skeleton.guild-sidebar-skeleton.guild-page-row-skeleton.members-section"
+		>
+			<flx-app-guild-sidebar-skeleton-members-row
+				className={flxElementClassName(styles.row, styles.rowChannel, styles.rowMembers)}
+				data-flx="app.skeleton.guild-sidebar-skeleton.guild-page-row-skeleton.row"
+			>
+				<SkeletonBlock
+					width={CHANNEL_ICON_SIZE}
+					height={CHANNEL_ICON_SIZE}
+					radius={SkeletonRadius.SMALL}
+					emphasis={SkeletonEmphasis.MUTED}
+					className={styles.channelIcon}
+					data-flx="app.skeleton.guild-sidebar-skeleton.guild-page-row-skeleton.channel-icon"
+				/>
+				<SkeletonLine
+					width={labelWidth}
+					height={CHANNEL_LABEL_HEIGHT}
+					data-flx="app.skeleton.guild-sidebar-skeleton.guild-page-row-skeleton.skeleton-line"
+				/>
+			</flx-app-guild-sidebar-skeleton-members-row>
+		</flx-app-guild-sidebar-skeleton-members>
+	);
+}
+
 function GuildCategorySkeletonGroup({category}: {readonly category: GuildCategorySpec}) {
 	return (
 		<flx-app-guild-sidebar-skeleton-group
@@ -154,6 +183,7 @@ export const GuildChannelListSkeleton: React.FC<GuildChannelListSkeletonProps> =
 		return createRememberedCategorySpecs(channelList);
 	}, [channelList]);
 	const membersRowVisible = channelList?.membersRowVisible ?? false;
+	const rolesRowVisible = channelList?.rolesRowVisible ?? false;
 	let detachedBannerStyle: React.CSSProperties | undefined;
 	if (detachedBannerAspectRatio != null) {
 		detachedBannerStyle = {aspectRatio: `${detachedBannerAspectRatio}`};
@@ -184,35 +214,22 @@ export const GuildChannelListSkeleton: React.FC<GuildChannelListSkeletonProps> =
 				data-flx="app.skeleton.guild-sidebar-skeleton.guild-channel-list-skeleton.top-spacer"
 			/>
 			{membersRowVisible && (
-				<>
-					<flx-app-guild-sidebar-skeleton-members
-						className={flxElementClassName(styles.membersSection)}
-						data-flx="app.skeleton.guild-sidebar-skeleton.guild-channel-list-skeleton.members-section"
-					>
-						<flx-app-guild-sidebar-skeleton-members-row
-							className={flxElementClassName(styles.row, styles.rowChannel, styles.rowMembers)}
-							data-flx="app.skeleton.guild-sidebar-skeleton.guild-channel-list-skeleton.row"
-						>
-							<SkeletonBlock
-								width={CHANNEL_ICON_SIZE}
-								height={CHANNEL_ICON_SIZE}
-								radius={SkeletonRadius.SMALL}
-								emphasis={SkeletonEmphasis.MUTED}
-								className={styles.channelIcon}
-								data-flx="app.skeleton.guild-sidebar-skeleton.guild-channel-list-skeleton.channel-icon"
-							/>
-							<SkeletonLine
-								width={MEMBERS_LABEL_WIDTH}
-								height={CHANNEL_LABEL_HEIGHT}
-								data-flx="app.skeleton.guild-sidebar-skeleton.guild-channel-list-skeleton.skeleton-line"
-							/>
-						</flx-app-guild-sidebar-skeleton-members-row>
-					</flx-app-guild-sidebar-skeleton-members>
-					<flx-app-guild-sidebar-skeleton-members-separator
-						className={flxElementClassName(styles.membersSeparator)}
-						data-flx="app.skeleton.guild-sidebar-skeleton.guild-channel-list-skeleton.members-separator"
-					/>
-				</>
+				<GuildPageRowSkeleton
+					labelWidth={MEMBERS_LABEL_WIDTH}
+					data-flx="app.skeleton.guild-sidebar-skeleton.guild-channel-list-skeleton.guild-page-row-skeleton"
+				/>
+			)}
+			{rolesRowVisible && (
+				<GuildPageRowSkeleton
+					labelWidth={ROLES_LABEL_WIDTH}
+					data-flx="app.skeleton.guild-sidebar-skeleton.guild-channel-list-skeleton.guild-page-row-skeleton--2"
+				/>
+			)}
+			{(membersRowVisible || rolesRowVisible) && (
+				<flx-app-guild-sidebar-skeleton-members-separator
+					className={flxElementClassName(styles.membersSeparator)}
+					data-flx="app.skeleton.guild-sidebar-skeleton.guild-channel-list-skeleton.members-separator"
+				/>
 			)}
 			<flx-app-guild-sidebar-skeleton-groups
 				className={flxElementClassName(styles.groups)}

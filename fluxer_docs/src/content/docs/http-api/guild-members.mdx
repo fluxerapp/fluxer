@@ -291,7 +291,7 @@ Adds one role to a member. You need [MANAGE_ROLES](/http-api/permissions/), an [
 | 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` without MANAGE_ROLES or a higher role than the role |
 | 404 | [error response](/http-api/#error-response) | `UNKNOWN_ROLE` when the role doesn't exist and you're the owner |
 
-Fluxer sends [Guild Member Update](/gateway/events/#guild-member-update), and a new role makes a temporary member permanent.
+Fluxer sends [Guild Member Update](/gateway/events/#guild-member-update), and a temporary member becomes permanent, even if they already have the role.
 
 The rate limit is 20 requests per 10 seconds, on the `guild:member:role:add::guild_id` bucket.
 
@@ -313,3 +313,41 @@ Removes one role from a member. The rules are the same as [Add guild member role
 Fluxer sends [Guild Member Update](/gateway/events/#guild-member-update).
 
 The rate limit is 20 requests per 10 seconds, on the `guild:member:role:remove::guild_id` bucket.
+
+## Add current member role
+
+<RouteHeader method="PUT" path="/v1/guilds/{guild_id}/members/@me/roles/{role_id}" bot auditReason />
+
+Adds one role to you. Any member can add a role from the guild's [self-assignable role sections](/http-api/guilds/#self-assignable-role-section-object) while the guild has `SELF_ASSIGNABLE_ROLES_ENABLED`, without `MANAGE_ROLES`. If the role's section has a `max_roles` of 1, Fluxer also takes your other roles from that section in the same update. With a higher `max_roles`, it fails once you have that many roles from the section. If the section has `required_role_ids`, you need one of those roles to add or remove its roles. You also need to meet the guild's [verification level](/http-api/guilds/#verification-levels) before you can add a role from a section, the same as for sending messages. Any other role follows the rules of [Add guild member role](#add-guild-member-role).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | You have the role |
+| 400 | [error response](/http-api/#error-response) | `INVALID_ROLE_ID` for the everyone role |
+| 400 | [error response](/http-api/#error-response) | `MAX_SELF_ASSIGNED_ROLES` when you already have the most roles the section allows |
+| 403 | [error response](/http-api/#error-response) | `GUILD_VERIFICATION_REQUIRED`, `GUILD_EMAIL_VERIFICATION_REQUIRED` or `ACCOUNT_TOO_NEW_FOR_GUILD` when you don't meet the guild's verification level yet |
+| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` when the role isn't self-assignable and you can't manage it |
+
+Fluxer sends [Guild Member Update](/gateway/events/#guild-member-update) and records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with you as the actor. A self-assignable role doesn't make a temporary member permanent.
+
+The rate limit is 20 requests per 10 seconds, on the `guild:member:role:add::guild_id` bucket, shared with [Add guild member role](#add-guild-member-role).
+
+## Remove current member role
+
+<RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/members/@me/roles/{role_id}" bot auditReason />
+
+Removes one role from you. The rules are the same as [Add current member role](#add-current-member-role), so you can't remove a self-assignable role yourself while the guild doesn't have `SELF_ASSIGNABLE_ROLES_ENABLED`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | You don't have the role |
+| 400 | [error response](/http-api/#error-response) | `INVALID_ROLE_ID` for the everyone role |
+| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` when the role isn't self-assignable and you can't manage it |
+
+Fluxer sends [Guild Member Update](/gateway/events/#guild-member-update) and records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with you as the actor.
+
+The rate limit is 20 requests per 10 seconds, on the `guild:member:role:remove::guild_id` bucket, shared with [Remove guild member role](#remove-guild-member-role).

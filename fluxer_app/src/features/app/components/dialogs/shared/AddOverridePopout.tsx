@@ -6,7 +6,7 @@ import {
 	selectOverrideMembers,
 } from '@app/features/app/components/dialogs/shared/AddOverrideMemberSearch';
 import styles from '@app/features/app/components/dialogs/shared/AddOverridePopout.module.css';
-import {DEFAULT_ROLE_COLOR_HEX, getRoleColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
+import {getRoleSwatchColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import Guilds from '@app/features/guild/state/Guilds';
 import {ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -136,7 +136,7 @@ export const AddOverridePopout: React.FC<AddOverridePopoutProps> = observer(func
 					<div
 						className={styles.roleIndicator}
 						style={{
-							backgroundColor: role.color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(role.color),
+							backgroundColor: getRoleSwatchColor(role),
 						}}
 						data-flx="app.add-override-popout.role-items.role-indicator"
 					/>

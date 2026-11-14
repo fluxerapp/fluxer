@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ROLES_NAVIGATION_ID} from '@app/features/lexical/composer/guildNavigationMentions';
 import {$getComposerLineNodes} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
 import {
 	$createComposerCommandNode,
@@ -38,6 +39,7 @@ import {
 } from '@app/features/lexical/composer/SlashSlotPersistence';
 import {isSpecialMentionKind} from '@app/features/lexical/composer/specialMentions';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
+import {ROLES_PAGE_MENTION_TOKEN} from '@fluxer/constants/src/GuildConstants';
 import {
 	$createLineBreakNode,
 	$createParagraphNode,
@@ -100,6 +102,8 @@ function isValidSegmentWire(segment: MentionSegment): boolean {
 			const match = SLOT_CHANNEL_WIRE_RE.exec(segment.actualText);
 			return match != null && match[1] === segment.id;
 		}
+		case 'navigation':
+			return segment.id === ROLES_NAVIGATION_ID && segment.actualText === ROLES_PAGE_MENTION_TOKEN;
 		case 'special':
 			return (
 				isSpecialMentionKind(segment.id) && segment.actualText === segment.id && segment.displayText === segment.id

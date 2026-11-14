@@ -118,6 +118,20 @@ export const ContentWarningLevel = {
 	CONTENT_WARNING: 1,
 } as const;
 export const CONTENT_WARNING_TEXT_MAX_LENGTH = 200;
+export const MAX_SELF_ASSIGNABLE_ROLE_SECTIONS = 10;
+export const MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION = 25;
+export const SELF_ASSIGNABLE_ROLE_SECTION_CONTENT_MAX_LENGTH = 1000;
+export const SELF_ASSIGNABLE_ROLE_DESCRIPTION_MAX_LENGTH = 100;
+export const ROLES_PAGE_MENTION_TOKEN = '<id:roles>';
+export const ROLES_PAGE_MENTION_PLAIN_TEXT = '#roles';
+export const SELF_ASSIGNABLE_ROLE_SECTION_AUDIT_KEYS = [
+	'self_assignable_role_ids',
+	'self_assignable_role_descriptions',
+	'self_assignable_role_section_contents',
+	'self_assignable_role_section_max_roles',
+	'self_assignable_required_role_ids',
+] as const;
+export type SelfAssignableRoleSectionAuditKey = (typeof SELF_ASSIGNABLE_ROLE_SECTION_AUDIT_KEYS)[number];
 export const GuildFeatures = {
 	ANIMATED_ICON: 'ANIMATED_ICON',
 	ANIMATED_BANNER: 'ANIMATED_BANNER',
@@ -156,6 +170,7 @@ export const GuildFeatures = {
 	VISITS_ENABLED: 'VISITS_ENABLED',
 	MEMBER_DMS_DISABLED: 'MEMBER_DMS_DISABLED',
 	PLANNED_JOIN_WAVES: 'PLANNED_JOIN_WAVES',
+	SELF_ASSIGNABLE_ROLES_ENABLED: 'SELF_ASSIGNABLE_ROLES_ENABLED',
 } as const;
 
 export type GuildFeature = ValueOf<typeof GuildFeatures>;

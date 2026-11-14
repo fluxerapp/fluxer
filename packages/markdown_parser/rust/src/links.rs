@@ -256,24 +256,8 @@ pub(crate) fn parse_mention(text: &str, flags: u32) -> Option<ParserResult> {
             if !ParserFlags::has(flags, ParserFlags::ALLOW_GUILD_NAVIGATIONS) {
                 return None;
             }
-            let mut parts = inner.split(':');
-            let id_label = parts.next()?;
-            let nav_type = parts.next()?;
-            let nav_id = parts.next();
-            if parts.next().is_some() || id_label != "id" {
-                return None;
-            }
-            let navigation = guild_navigation_type(nav_type)?;
-            if navigation != GuildNavigationType::LinkedRoles && nav_id.is_some() {
-                return None;
-            }
-            return mention(
-                MentionKind::GuildNavigation {
-                    navigation_type: navigation,
-                    id: nav_id.map(ToOwned::to_owned),
-                },
-                end,
-            );
+            let navigation_type = guild_navigation_type(inner.strip_prefix("id:")?)?;
+            return mention(MentionKind::GuildNavigation { navigation_type }, end);
         }
         _ => {}
     }
@@ -1056,10 +1040,7 @@ fn special_shortcode_text(name: &str) -> Option<&'static str> {
 
 fn guild_navigation_type(value: &str) -> Option<GuildNavigationType> {
     match value {
-        "customize" => Some(GuildNavigationType::Customize),
-        "browse" => Some(GuildNavigationType::Browse),
-        "guide" => Some(GuildNavigationType::Guide),
-        "linked-roles" => Some(GuildNavigationType::LinkedRoles),
+        "roles" => Some(GuildNavigationType::Roles),
         _ => None,
     }
 }

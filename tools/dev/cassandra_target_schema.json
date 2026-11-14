@@ -654,6 +654,44 @@
 					"type": "bigint"
 				}
 			]
+		},
+		{
+			"name": "self_assignable_role",
+			"fields": [
+				{
+					"name": "role_id",
+					"type": "bigint"
+				},
+				{
+					"name": "description",
+					"type": "text"
+				}
+			]
+		},
+		{
+			"name": "self_assignable_role_section",
+			"fields": [
+				{
+					"name": "section_id",
+					"type": "bigint"
+				},
+				{
+					"name": "content",
+					"type": "text"
+				},
+				{
+					"name": "roles",
+					"type": "frozen<list<self_assignable_role>>"
+				},
+				{
+					"name": "max_roles",
+					"type": "int"
+				},
+				{
+					"name": "required_role_ids",
+					"type": "list<bigint>"
+				}
+			]
 		}
 	],
 	"tables": [
@@ -6418,6 +6456,10 @@
 				{
 					"name": "planned_join_waves_until",
 					"type": "timestamp"
+				},
+				{
+					"name": "self_assignable_role_sections",
+					"type": "frozen<list<self_assignable_role_section>>"
 				}
 			],
 			"primary_key": "((guild_id))",

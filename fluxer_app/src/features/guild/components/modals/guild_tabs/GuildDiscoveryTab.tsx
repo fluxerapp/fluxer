@@ -4,7 +4,6 @@ import {showGenericErrorModal} from '@app/features/app/components/alerts/Generic
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
-
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.module.css';
 import Guilds from '@app/features/guild/state/Guilds';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -16,6 +15,7 @@ import {Form} from '@app/features/ui/components/form/Form';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Input, Textarea} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
+import {InfoAlert} from '@app/features/ui/info_alert/InfoAlert';
 import {getSortedDiscoveryLanguages} from '@app/features/user/utils/LocaleUtils';
 import {useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {
@@ -34,7 +34,7 @@ import type {
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans, useLingui} from '@lingui/react/macro';
-import {InfoIcon, WarningIcon} from '@phosphor-icons/react';
+import {WarningIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -425,41 +425,18 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				</div>
 			)}
 			{application?.status === DiscoveryApplicationStatus.APPROVED && !hiddenForMatureContent && (
-				<div className={styles.info} data-flx="guild.guild-tabs.guild-discovery-tab.info">
-					<div className={styles.infoContent} data-flx="guild.guild-tabs.guild-discovery-tab.info-content">
-						<div className={styles.infoIcon} data-flx="guild.guild-tabs.guild-discovery-tab.info-icon">
-							<InfoIcon
-								size={remFromPx(20)}
-								weight="fill"
-								data-flx="guild.guild-tabs.guild-discovery-tab.info-icon--2"
-							/>
-						</div>
-						<p className={styles.infoText} data-flx="guild.guild-tabs.guild-discovery-tab.info-text">
-							<Trans>
-								Your community is listed in Explore. You can update your listing details below or withdraw to remove it.
-							</Trans>
-						</p>
-					</div>
-				</div>
+				<InfoAlert data-flx="guild.guild-tabs.guild-discovery-tab.info">
+					<Trans>
+						Your community is listed in Explore. You can update your listing details below or withdraw to remove it.
+					</Trans>
+				</InfoAlert>
 			)}
 			{application?.status === DiscoveryApplicationStatus.PENDING && (
-				<div className={styles.info} data-flx="guild.guild-tabs.guild-discovery-tab.info--2">
-					<div className={styles.infoContent} data-flx="guild.guild-tabs.guild-discovery-tab.info-content--2">
-						<div className={styles.infoIcon} data-flx="guild.guild-tabs.guild-discovery-tab.info-icon--3">
-							<InfoIcon
-								size={remFromPx(20)}
-								weight="fill"
-								data-flx="guild.guild-tabs.guild-discovery-tab.info-icon--4"
-							/>
-						</div>
-						<p className={styles.infoText} data-flx="guild.guild-tabs.guild-discovery-tab.info-text--2">
-							<Trans>
-								Your application is pending review. You can still update your listing details or withdraw the
-								application.
-							</Trans>
-						</p>
-					</div>
-				</div>
+				<InfoAlert data-flx="guild.guild-tabs.guild-discovery-tab.info--2">
+					<Trans>
+						Your application is pending review. You can still update your listing details or withdraw the application.
+					</Trans>
+				</InfoAlert>
 			)}
 			{(canApply || hasActiveApplication) && (
 				<Form form={form} onSubmit={handleSubmit} data-flx="guild.guild-tabs.guild-discovery-tab.form.submit">

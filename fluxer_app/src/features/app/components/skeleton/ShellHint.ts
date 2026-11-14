@@ -296,6 +296,7 @@ export function writeShellHint(): void {
 			gn: measuredWidth(guildPresentation?.headerNameWidthPx ?? 0),
 			gd: flag(guildPresentation?.badgeVisible === true),
 			gm: flag(guildChannelList?.membersRowVisible === true),
+			gr: flag(guildChannelList?.rolesRowVisible === true),
 			sr: clampRounded(dmSidebar?.channelRowCount ?? 0, 0, MAX_DM_SIDEBAR_ROWS),
 			sam: shell.sidebar === SkeletonSidebarVariant.DM ? resolveDMActionMask(dmSidebar, mobile) : 0,
 			ss: flag(dmSidebar?.sectionVisible ?? true),

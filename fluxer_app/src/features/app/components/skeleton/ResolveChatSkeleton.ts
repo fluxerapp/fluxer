@@ -43,7 +43,7 @@ function resolveChannelId(pathname: string): string | null {
 		return null;
 	}
 	const channelId = pathname.split('/')[CHANNEL_ID_PATH_INDEX];
-	if (!channelId || channelId === 'members') {
+	if (!channelId || channelId === 'members' || channelId === 'roles') {
 		return null;
 	}
 	return channelId;

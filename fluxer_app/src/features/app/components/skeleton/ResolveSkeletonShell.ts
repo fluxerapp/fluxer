@@ -27,6 +27,7 @@ export type SkeletonShell =
 	| {chrome: 'bare'; content: SkeletonContent};
 
 const GUILD_MEMBERS_PATH_SUFFIX = '/members';
+const GUILD_ROLES_PATH_SUFFIX = '/roles';
 const USER_PROFILE_PATH_PREFIX = '/users/';
 const GUILD_ROOT_PATH_SEGMENT_COUNT = 3;
 
@@ -59,6 +60,9 @@ function resolveFavoritesContent(pathname: string): SkeletonContent {
 function resolveGuildContent(pathname: string): SkeletonContent {
 	if (pathname.endsWith(GUILD_MEMBERS_PATH_SUFFIX)) {
 		return {kind: 'page', route: SkeletonSimplePageRoute.GUILD_MEMBERS};
+	}
+	if (pathname.endsWith(GUILD_ROLES_PATH_SUFFIX)) {
+		return {kind: 'empty'};
 	}
 	return {kind: 'chat'};
 }

@@ -8,8 +8,10 @@ import type {ThreadViewer} from '@app/api/experiment/ChannelThreadsGate';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {mapGuildRoleToResponse} from '@app/api/guild/GuildModel';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
 import {getGuildAuth} from '@app/api/guild/services/GuildMfaEnforcement';
 import {withGuildMemberRoleWriteLock} from '@app/api/guild/services/member/GuildMemberRoleWriteLock';
+import {pruneRoleFromSelfAssignableSections} from '@app/api/guild/services/role/GuildSelfAssignableRoleService';
 import {computeMovedIds, getMemberListRoleOrderIds} from '@app/api/guild/services/role/RoleOrderAuditUtils';
 import {
 	resolveProtectedBitActor,
@@ -71,6 +73,8 @@ interface RoleIconChange {
 }
 
 export class GuildRoleService {
+	private readonly helpers: GuildDataHelpers;
+
 	private async buildRoleManageCheck(
 		guildId: GuildID,
 		userId: UserID,
@@ -109,7 +113,9 @@ export class GuildRoleService {
 		private readonly limitConfigService: LimitConfigService,
 		private readonly userRepository: UserRepository,
 		private readonly entityAssetService: EntityAssetService,
-	) {}
+	) {
+		this.helpers = new GuildDataHelpers(gatewayService, guildAuditLogService, userRepository);
+	}
 
 	async systemCreateRole(params: {
 		initiatorId: UserID;
@@ -414,6 +420,15 @@ export class GuildRoleService {
 		);
 		const liveRole = await this.guildRepository.getRole(role.id, guildId);
 		await this.guildRepository.deleteRole(guildId, role.id);
+		try {
+			await pruneRoleFromSelfAssignableSections(
+				{guildRepository: this.guildRepository, helpers: this.helpers, locks: this.cacheService},
+				guildId,
+				role.id,
+			);
+		} catch (error) {
+			Logger.error({error, guildId, roleId: role.id}, 'Failed to remove a deleted role from self-assignable roles');
+		}
 		const iconHashes = new Set([role.iconHash, liveRole?.iconHash ?? null]);
 		for (const iconHash of iconHashes) {
 			if (!iconHash) continue;

@@ -189,17 +189,10 @@ fn write_mention_kind(out: &mut String, kind: &MentionKind) {
             write_str(out, id);
             out.push('}');
         }
-        MentionKind::GuildNavigation {
-            navigation_type,
-            id,
-        } => {
+        MentionKind::GuildNavigation { navigation_type } => {
             out.push_str("{\"kind\":\"GuildNavigation\"");
             out.push_str(key!("navigationType"));
             let _ = write!(out, "\"{navigation_type:?}\"");
-            if let Some(id) = id {
-                out.push_str(key!("id"));
-                write_str(out, id);
-            }
             out.push('}');
         }
         MentionKind::Everyone => out.push_str("{\"kind\":\"Everyone\"}"),

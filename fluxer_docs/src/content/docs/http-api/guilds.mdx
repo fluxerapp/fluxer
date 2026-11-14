@@ -46,6 +46,7 @@ A guild is a community with its own channels, roles, members and settings. Membe
 | default_message_notifications | integer | [Default message notification level](#default-message-notification-levels) |
 | disabled_operations | integer | [Disabled guild operations](#disabled-guild-operations) |
 | message_history_cutoff<sup>3</sup> | ?ISO8601 timestamp | Earliest message a member without `READ_MESSAGE_HISTORY` can see |
+| self_assignable_role_sections | array[[self-assignable role section](#self-assignable-role-section-object) object] | Sections of roles that members can give themselves, in display order (at most 10). Members can only use them while the guild has `SELF_ASSIGNABLE_ROLES_ENABLED` |
 | permissions?<sup>4</sup> | decimal string | Your permissions in the guild |
 | roles?<sup>5</sup> | array[[guild role](/http-api/permissions/#guild-role-object) object] | Guild roles |
 | emojis?<sup>5</sup> | array[[guild emoji](/http-api/guild-emojis/#guild-emoji-object) object] | Guild emojis |
@@ -93,7 +94,8 @@ A guild is a community with its own channels, roles, members and settings. Membe
   "explicit_content_filter": 1,
   "default_message_notifications": 1,
   "disabled_operations": 0,
-  "message_history_cutoff": null
+  "message_history_cutoff": null,
+  "self_assignable_role_sections": []
 }
 ```
 
@@ -123,6 +125,48 @@ Invites return this smaller guild object, and its asset fields follow the same f
 | visits_enabled?<sup>1</sup> | boolean | Whether you can [visit](#visiting-guilds) the guild from this invite |
 
 <sup>1</sup> Only [Get invite](/http-api/invites/#get-invite) returns this field, and only with the `guild_visits` assignment
+
+## Self-assignable role section object
+
+A section is some text and the roles that members can add to and remove from themselves with [Add current member role](/http-api/guild-members/#add-current-member-role) and [Remove current member role](/http-api/guild-members/#remove-current-member-role), while the guild has `SELF_ASSIGNABLE_ROLES_ENABLED`. You change the sections with [Modify guild self-assignable roles](#modify-guild-self-assignable-roles).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the section |
+| content | string | Markdown text shown above the roles (at most 1000 characters). Empty when the section has no text |
+| roles<sup>1</sup> | array[[self-assignable role](#self-assignable-role-object) object] | The roles in the section, in display order (at most 25) |
+| max_roles | ?integer | The most roles a member can choose from the section, or null for no limit. With 1, choosing another role swaps it for the one they have |
+| required_role_ids<sup>2</sup> | array[snowflake] | IDs of roles a member needs one of to see the section and add or remove its roles. Empty when everyone can |
+
+<sup>1</sup> A role is in at most one section. Deleting a role takes it out of its section, so a section can end up with no roles
+
+<sup>2</sup> Deleting a role leaves it in `required_role_ids`, where nobody can have it, so a section whose required roles were all deleted stays hidden until someone removes them. Apps hide a section from members without a required role, but it is still part of the guild object
+
+### Example
+
+```json
+{
+  "id": "1489002177550843990",
+  "content": "Choose your class!",
+  "roles": [
+    {"id": "1489002177550843991", "description": "Casts spells from afar"},
+    {"id": "1489002177550843992", "description": ""}
+  ],
+  "max_roles": 1,
+  "required_role_ids": []
+}
+```
+
+### Self-assignable role object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the role |
+| description | string | Plain text shown with the role, so members know what they're choosing (at most 100 characters). Empty when the role has none |
 
 ## Guild creation template object
 
@@ -230,7 +274,7 @@ A template lists the roles and channels that [Create guild](#create-guild) creat
 
 ## Verification levels
 
-The verification level decides who can send messages in the guild. The owner, bots and members with at least one role skip the check.
+The verification level decides who can send messages in the guild and pick its self-assignable roles. The owner, bots and members with at least one role skip the check.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -343,6 +387,7 @@ Only the [Admin API](/admin-api/guilds/) sets these bits.
 | PARTNERED | Guild has partnered status |
 | PLANNED_JOIN_WAVES | Guild expects large planned waves of new members. Invites aren't paused after a raid |
 | RAID_DETECTED | Set together with `INVITES_DISABLED` while invites are paused after a raid |
+| SELF_ASSIGNABLE_ROLES_ENABLED<sup>3</sup> | Members can add and remove the roles in the guild's [self-assignable role sections](#self-assignable-role-section-object) on themselves |
 | TEXT_CHANNEL_FLEXIBLE_NAMES<sup>3</sup> | Text, announcement, forum and media channel names keep uppercase letters, spaces and punctuation |
 | UNAVAILABLE_FOR_EVERYONE<sup>5</sup> | Guild is unavailable to every account, including the owner |
 | UNAVAILABLE_FOR_EVERYONE_BUT_STAFF<sup>5</sup> | Guild is unavailable to every account without the instance staff flag |
@@ -571,7 +616,7 @@ Changes guild settings and returns the updated [guild object](#guild-object). Yo
 
 <sup>4</sup> Needs `INVITE_SPLASH`
 
-<sup>5</sup> You can only add or remove `INVITES_DISABLED`, `TEXT_CHANNEL_FLEXIBLE_NAMES`, `DETACHED_BANNER`, `CLONE_EMOJI_ENABLED`, `CLONE_STICKER_ENABLED`, `HIDE_OWNER_CROWN`, `VISITS_ENABLED` and `MEMBER_DMS_DISABLED`, and Fluxer keeps every other feature the guild has
+<sup>5</sup> You can only add or remove `INVITES_DISABLED`, `TEXT_CHANNEL_FLEXIBLE_NAMES`, `DETACHED_BANNER`, `CLONE_EMOJI_ENABLED`, `CLONE_STICKER_ENABLED`, `HIDE_OWNER_CROWN`, `VISITS_ENABLED`, `MEMBER_DMS_DISABLED` and `SELF_ASSIGNABLE_ROLES_ENABLED`, and Fluxer keeps every other feature the guild has. Adding or removing `SELF_ASSIGNABLE_ROLES_ENABLED` also needs `MANAGE_ROLES`
 
 :::caution[Leaving out a feature you can change removes it]
 Send the current `features` array with your changes applied.
@@ -588,6 +633,52 @@ Send the current `features` array with your changes applied.
 Every successful request sends [Guild Update](/gateway/events/#guild-update), and a request that changes something also records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry.
 
 The rate limit is 20 requests per 10 seconds, on the `guild:update::guild_id` bucket.
+
+## Modify guild self-assignable roles
+
+<RouteHeader method="PUT" path="/v1/guilds/{guild_id}/self-assignable-roles" bot auditReason mfa />
+
+Replaces the guild's [self-assignable role sections](#self-assignable-role-section-object) and returns them. You need `MANAGE_GUILD` and `MANAGE_ROLES`, which are [elevated permissions](/http-api/permissions/#elevated-permissions). Each role that isn't already in a section must be below your highest role, unless you own the guild. So must a listed role that your change opens to more members: removing its section's required roles, adding another one (members only need one of them), or moving it to a less restricted section. Otherwise, roles that are already in a section can stay or be taken out, wherever they are. Fluxer keeps the sections whether or not the guild has `SELF_ASSIGNABLE_ROLES_ENABLED`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sections | array[[self-assignable role section request](#self-assignable-role-section-request-object) object] | Every section in display order (at most 10). An empty array removes them all |
+
+### Self-assignable role section request object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id?<sup>1</sup> | snowflake | The ID of an existing section to keep |
+| content? | string | Markdown text shown above the roles (at most 1000 characters). Defaults to empty |
+| roles<sup>2</sup> | array[[self-assignable role request](#self-assignable-role-request-object) object] | The roles, in display order (1-25) |
+| max_roles? | ?integer | The most roles a member can choose from the section (1-25). Leave it out or null for no limit |
+| required_role_ids?<sup>3</sup> | array[snowflake] | IDs of roles a member needs one of to see the section and add or remove its roles (at most 25). Leave it out or empty to show the section to everyone |
+
+<sup>1</sup> A section without an `id`, or with one that doesn't match an existing section, gets a new ID
+
+<sup>2</sup> A role can only be in one section, and @everyone can't be in any. Fails with the field code `INVALID_ROLE_ID` for @everyone or a role that isn't in the guild, and `DUPLICATE_SELF_ASSIGNABLE_ROLE` for a role that is listed twice
+
+<sup>3</sup> Fails with the field code `INVALID_ROLE_ID` for @everyone or a role that isn't in the guild, unless the same section already required that deleted role
+
+### Self-assignable role request object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the role |
+| description? | string | Plain text shown with the role, so members know what they're choosing (at most 100 characters). Defaults to empty |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[self-assignable role section](#self-assignable-role-section-object) object] | The sections were saved |
+| 403 | [error response](/http-api/#error-response) | `MISSING_PERMISSIONS` without both permissions, or when a role you add or open to more members isn't below your highest role |
+
+Every successful request sends [Guild Update](/gateway/events/#guild-update). A request that changes the sections also records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the `self_assignable_role_ids`, `self_assignable_role_descriptions`, `self_assignable_role_section_contents`, `self_assignable_role_section_max_roles` and `self_assignable_required_role_ids` keys.
+
+The rate limit is 10 requests per minute, on the `guild:self_assignable_roles:update::guild_id` bucket.
 
 ## Delete guild
 

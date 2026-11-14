@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import {CloneSettingUpdateFailedModal} from '@app/features/guild/components/alerts/CloneSettingUpdateFailedModal';
 import styles from '@app/features/guild/components/modals/guild_tabs/CloneAllowedToggle.module.css';
+import {useGuildFeatureToggle} from '@app/features/guild/hooks/useGuildFeatureToggle';
 import Guilds from '@app/features/guild/state/Guilds';
 import Permission from '@app/features/permissions/state/Permission';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
@@ -14,7 +14,6 @@ import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {useState} from 'react';
 
 const logger = new Logger('CloneAllowedToggle');
 
@@ -28,29 +27,20 @@ export const CloneAllowedToggle = observer(({guildId, kind}: CloneAllowedToggleP
 	const guild = Guilds.getGuild(guildId);
 	const canManageGuild = Permission.can(Permissions.MANAGE_GUILD, {guildId});
 	const manageCommunityPermissionLabel = formatPermissionLabel(i18n, Permissions.MANAGE_GUILD);
-	const [saving, setSaving] = useState(false);
+	const feature = kind === 'emoji' ? GuildFeatures.CLONE_EMOJI_ENABLED : GuildFeatures.CLONE_STICKER_ENABLED;
+	const {saving, setEnabled} = useGuildFeatureToggle(guildId, feature, (error) => {
+		logger.error(`Failed to toggle clone-${kind}-allowed for guild ${guildId}`, error);
+		ModalCommands.push(
+			modal(() => (
+				<CloneSettingUpdateFailedModal
+					kind={kind}
+					data-flx="guild.guild-tabs.clone-allowed-toggle.handle-change.clone-setting-update-failed-modal"
+				/>
+			)),
+		);
+	});
 	if (!guild) return null;
 	const allowed = kind === 'emoji' ? guild.cloneEmojiAllowed : guild.cloneStickerAllowed;
-	const handleChange = async (nextAllowed: boolean) => {
-		if (saving || !canManageGuild) return;
-		setSaving(true);
-		try {
-			const feature = kind === 'emoji' ? GuildFeatures.CLONE_EMOJI_ENABLED : GuildFeatures.CLONE_STICKER_ENABLED;
-			await GuildCommands.toggleFeature(guildId, feature, nextAllowed);
-		} catch (error) {
-			logger.error(`Failed to toggle clone-${kind}-allowed for guild ${guildId}`, error);
-			ModalCommands.push(
-				modal(() => (
-					<CloneSettingUpdateFailedModal
-						kind={kind}
-						data-flx="guild.guild-tabs.clone-allowed-toggle.handle-change.clone-setting-update-failed-modal"
-					/>
-				)),
-			);
-		} finally {
-			setSaving(false);
-		}
-	};
 	const label =
 		kind === 'emoji' ? <Trans>Let others clone your emojis</Trans> : <Trans>Let others clone your stickers</Trans>;
 	const description =
@@ -71,7 +61,7 @@ export const CloneAllowedToggle = observer(({guildId, kind}: CloneAllowedToggleP
 		<div className={styles.container} data-flx="guild.guild-tabs.clone-allowed-toggle.container">
 			<Switch
 				value={allowed}
-				onChange={handleChange}
+				onChange={setEnabled}
 				disabled={!canManageGuild || saving}
 				label={label}
 				description={description}

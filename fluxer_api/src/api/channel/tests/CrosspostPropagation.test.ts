@@ -141,6 +141,15 @@ describe('Crosspost propagation', () => {
 		expect((await onlyCopy(world.b.t1.id, source.id)).content).toBe('Bye \\@Beta \\*Testers\\* and \\@everyone');
 	});
 
+	test('the Roles page mention shows as plain text in copies on delivery and edit', async () => {
+		await followInto(harness, world, world.b.t1.id);
+		const source = await postAndPublish(harness, world, {content: 'Grab roles in <id:roles>'});
+		expect((await onlyCopy(world.b.t1.id, source.id)).content).toBe('Grab roles in \\#roles');
+		await edit(source.id, {content: 'Still <id:roles>, not <id:customize>'});
+		await world.worker.drain();
+		expect((await onlyCopy(world.b.t1.id, source.id)).content).toBe('Still \\#roles, not <id:customize>');
+	});
+
 	test('embed edits and suppress-embeds toggles propagate, including flag-only edits', async () => {
 		await followInto(harness, world, world.b.t1.id);
 		const embedded = await postAndPublish(harness, world, {content: 'card', embeds: [{title: 'Old title'}]});

@@ -5,6 +5,8 @@ import {
 	GuildFeatures,
 	GuildOperations,
 	GuildOperationsDescriptions,
+	MAX_SELF_ASSIGNABLE_ROLE_SECTIONS,
+	MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION,
 	SystemChannelFlags,
 	SystemChannelFlagsDescriptions,
 } from '@fluxer/constants/src/GuildConstants';
@@ -130,6 +132,11 @@ export const GuildFeatureSchema = withOpenApiType(
 				'PLANNED_JOIN_WAVES',
 				'Guild expects large planned waves of new members. Invites are not paused after a raid',
 			],
+			[
+				GuildFeatures.SELF_ASSIGNABLE_ROLES_ENABLED,
+				'SELF_ASSIGNABLE_ROLES_ENABLED',
+				'Members can add and remove the roles in self_assignable_role_sections on themselves',
+			],
 		],
 		'A guild feature flag',
 	),
@@ -139,6 +146,42 @@ const GuildFeatureListSchema = z
 	.array(GuildFeatureSchema)
 	.overwrite(normalizeGuildFeatures)
 	.describe('Array of guild feature flags');
+export const GuildSelfAssignableRoleResponse = z.object({
+	id: SnowflakeStringType.describe('The ID of the role'),
+	description: z.string().describe('Plain text shown with the role. Empty when the role has none'),
+});
+
+export type GuildSelfAssignableRoleResponse = z.infer<typeof GuildSelfAssignableRoleResponse>;
+
+export const GuildSelfAssignableRoleSectionResponse = z.object({
+	id: SnowflakeStringType.describe('The unique identifier for this section'),
+	content: z.string().describe('Markdown text shown above the roles. Empty when the section has no text'),
+	roles: z
+		.array(GuildSelfAssignableRoleResponse)
+		.max(MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION)
+		.describe('The roles members can add and remove on themselves, in display order'),
+	max_roles: z
+		.int()
+		.nullable()
+		.describe(
+			'The most roles a member can choose from this section, or null for no limit. With 1, choosing another role swaps it for the one they have',
+		),
+	required_role_ids: z
+		.array(SnowflakeStringType)
+		.max(MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION)
+		.describe(
+			'IDs of roles a member needs one of to see this section and add or remove its roles. Empty when everyone can. May include deleted roles',
+		),
+});
+
+export type GuildSelfAssignableRoleSectionResponse = z.infer<typeof GuildSelfAssignableRoleSectionResponse>;
+
+export const GuildSelfAssignableRoleSectionListResponse = z
+	.array(GuildSelfAssignableRoleSectionResponse)
+	.max(MAX_SELF_ASSIGNABLE_ROLE_SECTIONS)
+	.describe('Self-assignable role sections in display order');
+
+export type GuildSelfAssignableRoleSectionListResponse = z.infer<typeof GuildSelfAssignableRoleSectionListResponse>;
 export const GuildResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this guild'),
 	name: z.string().describe('The name of the guild'),
@@ -206,6 +249,9 @@ export const GuildResponse = z.object({
 		.describe(
 			'ISO8601 timestamp controlling how far back members without Read Message History can access messages. When null, no historical access is allowed.',
 		),
+	self_assignable_role_sections: GuildSelfAssignableRoleSectionListResponse.describe(
+		'Sections of roles that members can add and remove on themselves, in display order. Members can only use them while the guild has the SELF_ASSIGNABLE_ROLES_ENABLED feature',
+	),
 	permissions: PermissionStringType.optional().describe('The current user permissions in this guild when available'),
 	roles: z.array(GuildRoleResponse).optional().describe('Roles in the guild from gateway state'),
 	emojis: z.array(GuildEmojiResponse).optional().describe('Emojis in the guild from gateway state'),
@@ -304,6 +350,7 @@ export interface Guild {
 	readonly default_message_notifications?: number;
 	readonly disabled_operations?: number;
 	readonly message_history_cutoff?: string | null;
+	readonly self_assignable_role_sections?: ReadonlyArray<GuildSelfAssignableRoleSectionResponse>;
 	readonly joined_at?: string;
 	readonly unavailable?: boolean;
 	readonly visiting?: boolean;

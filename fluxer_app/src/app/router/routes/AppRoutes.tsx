@@ -89,6 +89,12 @@ const GuildMembersPage = createNamedLoadableComponent<AppRouteComponentProps>({
 	displayName: 'GuildMembersPage',
 	load: async () => (await import('@app/features/channel/components/GuildMembersPage')).GuildMembersPage,
 });
+const SelfAssignableRolesPage = createNamedLoadableComponent<AppRouteComponentProps>({
+	displayName: 'SelfAssignableRolesPage',
+	load: async () =>
+		(await import('@app/features/guild/components/self_assignable_roles/SelfAssignableRolesPage'))
+			.SelfAssignableRolesPage,
+});
 const BookmarksBottomSheet = createNamedLoadableComponent<AppRouteComponentProps>({
 	displayName: 'BookmarksBottomSheet',
 	load: async () => (await import('@app/features/channel/components/modals/BookmarksBottomSheet')).BookmarksBottomSheet,
@@ -357,6 +363,16 @@ const membersRoute = createRoute({
 		return <GuildMembersPage guildId={guildId} data-flx="app.router.app-routes.guild-members-page" />;
 	},
 });
+const rolesRoute = createRoute({
+	getParentRoute: () => channelsRoute,
+	id: 'guildRoles',
+	path: '/channels/:guildId/roles',
+	preload: SelfAssignableRolesPage.preload,
+	component: () => {
+		const {guildId} = useParams() as {guildId: string};
+		return <SelfAssignableRolesPage guildId={guildId} data-flx="app.router.app-routes.self-assignable-roles-page" />;
+	},
+});
 const channelRoute = createRoute({
 	getParentRoute: () => channelsRoute,
 	id: 'channel',
@@ -441,6 +457,6 @@ export const appRouteTree = appLayoutRoute.addChildren([
 		legacyPlutoniumRoute,
 		operatorPassRoute,
 		favoritesRoute.addChildren([favoritesChannelRoute]),
-		channelsRoute.addChildren([membersRoute, channelRoute.addChildren([messageRoute, threadPanelRoute])]),
+		channelsRoute.addChildren([membersRoute, rolesRoute, channelRoute.addChildren([messageRoute, threadPanelRoute])]),
 	]),
 ]);

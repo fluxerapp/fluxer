@@ -324,6 +324,9 @@ function buildAuditLogOptions(options: Map<string, string>): AuditLogOptions | u
 			case 'role_name':
 				mapped.role_name = value;
 				break;
+			case 'self_assignable':
+				mapped.self_assignable = parseBooleanOption(value);
+				break;
 			case 'type':
 				assignNumericOption(mapped, 'type', value);
 				break;

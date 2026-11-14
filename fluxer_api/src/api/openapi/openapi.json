@@ -10247,6 +10247,136 @@
 				}
 			}
 		},
+		"/guilds/{guild_id}/members/@me/roles/{role_id}": {
+			"put": {
+				"operationId": "add_current_guild_member_role",
+				"summary": "Add role to current guild member",
+				"tags": ["Guilds"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Add a role to the current user. Any member can add a role listed in self_assignable_role_sections while the guild has the SELF_ASSIGNABLE_ROLES_ENABLED feature. In a section whose max_roles is 1, this also removes the member's other roles from that section. With a higher max_roles, it fails once the member has that many roles from the section. A section with required_role_ids only lets members with one of those roles add or remove its roles. Picking a role from a section also needs the member to meet the guild's verification level, the same as sending a message.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the guild", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the guild"
+					},
+					{
+						"name": "role_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the role", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the role"
+					}
+				]
+			},
+			"delete": {
+				"operationId": "remove_current_guild_member_role",
+				"summary": "Remove role from current guild member",
+				"tags": ["Guilds"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Remove a role from the current user. Any member can remove a role listed in self_assignable_role_sections while the guild has the SELF_ASSIGNABLE_ROLES_ENABLED feature. A section with required_role_ids only lets members with one of those roles remove its roles.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the guild", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the guild"
+					},
+					{
+						"name": "role_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the role", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the role"
+					}
+				]
+			}
+		},
 		"/guilds/{guild_id}/members/{user_id}": {
 			"get": {
 				"operationId": "get_guild_member",
@@ -11037,6 +11167,80 @@
 						"description": "The ID of the role"
 					}
 				]
+			}
+		},
+		"/guilds/{guild_id}/self-assignable-roles": {
+			"put": {
+				"operationId": "update_guild_self_assignable_roles",
+				"summary": "Update self-assignable role sections",
+				"tags": ["Guilds"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {"$ref": "#/components/schemas/GuildSelfAssignableRoleSectionListResponse"}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Replace the self-assignable role sections of a guild. Requires manage_guild and manage_roles permissions. Roles that are not already self-assignable must be below your highest role, and so must a listed role that the change opens to more members, by removing or adding to its section's required roles or by moving it to a less restricted section. Members can only use the sections while the guild has the SELF_ASSIGNABLE_ROLES_ENABLED feature.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the guild", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the guild"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {"$ref": "#/components/schemas/GuildSelfAssignableRoleSectionsUpdateRequest"}
+						}
+					}
+				}
 			}
 		},
 		"/guilds/{guild_id}/stickers": {
@@ -31538,6 +31742,10 @@
 							{"type": "null"}
 						]
 					},
+					"self_assignable_role_sections": {
+						"description": "Sections of roles that members can add and remove on themselves, in display order. Members can only use them while the guild has the SELF_ASSIGNABLE_ROLES_ENABLED feature",
+						"$ref": "#/components/schemas/GuildSelfAssignableRoleSectionListResponse"
+					},
 					"permissions": {
 						"description": "The current user permissions in this guild when available",
 						"$ref": "#/components/schemas/Permissions"
@@ -31607,7 +31815,8 @@
 					"content_warning_level",
 					"explicit_content_filter",
 					"default_message_notifications",
-					"disabled_operations"
+					"disabled_operations",
+					"self_assignable_role_sections"
 				],
 				"additionalProperties": false
 			},
@@ -35663,6 +35872,66 @@
 					}
 				},
 				"required": ["name", "image"]
+			},
+			"GuildSelfAssignableRoleSectionsUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"sections": {
+						"maxItems": 10,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of an existing section to keep. Leave it out to add a new section",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"content": {
+									"default": "",
+									"description": "Markdown text shown above the roles (0-1000 characters)",
+									"type": "string"
+								},
+								"roles": {
+									"minItems": 1,
+									"maxItems": 25,
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"id": {"description": "The ID of the role", "$ref": "#/components/schemas/SnowflakeType"},
+											"description": {
+												"default": "",
+												"description": "Plain text shown with the role, so members know what they are choosing (0-100 characters)",
+												"type": "string"
+											}
+										},
+										"required": ["id"]
+									},
+									"description": "The roles members can add and remove on themselves, in display order (1-25)"
+								},
+								"max_roles": {
+									"description": "The most roles a member can choose from this section (1-25). With 1, choosing another role swaps it for the one they have. Leave it out or null for no limit",
+									"anyOf": [{"type": "integer", "minimum": 1, "maximum": 25}, {"type": "null"}]
+								},
+								"required_role_ids": {
+									"description": "IDs of roles a member needs one of to see this section and add or remove its roles (at most 25). Leave it out or empty to show the section to everyone",
+									"maxItems": 25,
+									"type": "array",
+									"items": {"$ref": "#/components/schemas/SnowflakeType"}
+								}
+							},
+							"required": ["roles"]
+						},
+						"description": "Every section in display order (max 10). Replaces the existing sections"
+					}
+				},
+				"required": ["sections"]
+			},
+			"GuildSelfAssignableRoleSectionListResponse": {
+				"maxItems": 10,
+				"type": "array",
+				"items": {"$ref": "#/components/schemas/GuildSelfAssignableRoleSectionResponse"},
+				"description": "Self-assignable role sections in display order"
 			},
 			"GuildRoleUpdateRequest": {
 				"type": "object",
@@ -41514,7 +41783,7 @@
 				"description": "IDs of the custom badges assigned to it"
 			},
 			"GuildFeatureSchema": {
-				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED, VISITS_ENABLED, MEMBER_DMS_DISABLED, PLANNED_JOIN_WAVES (other values allowed)",
+				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED, VISITS_ENABLED, MEMBER_DMS_DISABLED, PLANNED_JOIN_WAVES, SELF_ASSIGNABLE_ROLES_ENABLED (other values allowed)",
 				"x-enumNames": [
 					"ANIMATED_ICON",
 					"ANIMATED_BANNER",
@@ -41552,7 +41821,8 @@
 					"ANNOUNCEMENT_CHANNELS_DISABLED",
 					"VISITS_ENABLED",
 					"MEMBER_DMS_DISABLED",
-					"PLANNED_JOIN_WAVES"
+					"PLANNED_JOIN_WAVES",
+					"SELF_ASSIGNABLE_ROLES_ENABLED"
 				],
 				"x-enumDescriptions": [
 					"Guild can have an animated icon",
@@ -41591,7 +41861,8 @@
 					"Guild cannot publish announcement messages or gain new followers",
 					"People with an invite or a discovery listing can read channels that @everyone can see without joining",
 					"Members who aren't friends can't use the guild as a shared guild for direct messages",
-					"Guild expects large planned waves of new members. Invites are not paused after a raid"
+					"Guild expects large planned waves of new members. Invites are not paused after a raid",
+					"Members can add and remove the roles in self_assignable_role_sections on themselves"
 				],
 				"type": "string"
 			},
@@ -43423,6 +43694,10 @@
 							"message_id": {"description": "Message ID for relevant actions", "type": "string"},
 							"members_removed": {"description": "Number of members removed", "type": "number"},
 							"role_name": {"description": "Name of the role when the entry was written", "type": "string"},
+							"self_assignable": {
+								"description": "Whether the member added or removed the role themselves through self-assignable role sections, present only when true",
+								"type": "boolean"
+							},
 							"type": {
 								"description": "Channel type for CHANNEL_CREATE, CHANNEL_UPDATE and CHANNEL_DELETE. Overwrite target type (0 role, 1 member) for CHANNEL_OVERWRITE_*",
 								"type": "number"
@@ -44309,6 +44584,49 @@
 					{"name": "AVATAR_UNSET", "value": "1", "description": "Guild member avatar is unset"},
 					{"name": "BANNER_UNSET", "value": "2", "description": "Guild member banner is unset"}
 				]
+			},
+			"GuildSelfAssignableRoleSectionResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier for this section",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"content": {
+						"type": "string",
+						"description": "Markdown text shown above the roles. Empty when the section has no text"
+					},
+					"roles": {
+						"maxItems": 25,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/GuildSelfAssignableRoleResponse"},
+						"description": "The roles members can add and remove on themselves, in display order"
+					},
+					"max_roles": {
+						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
+						"description": "The most roles a member can choose from this section, or null for no limit. With 1, choosing another role swaps it for the one they have"
+					},
+					"required_role_ids": {
+						"maxItems": 25,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
+						"description": "IDs of roles a member needs one of to see this section and add or remove its roles. Empty when everyone can. May include deleted roles"
+					}
+				},
+				"required": ["id", "content", "roles", "max_roles", "required_role_ids"],
+				"additionalProperties": false
+			},
+			"GuildSelfAssignableRoleResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the role", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"description": {
+						"type": "string",
+						"description": "Plain text shown with the role. Empty when the role has none"
+					}
+				},
+				"required": ["id", "description"],
+				"additionalProperties": false
 			},
 			"GuildStickerWithUserResponse": {
 				"type": "object",
@@ -47590,6 +47908,7 @@
 					"MAX_PINNED_THREADS_IN_FORUM",
 					"MAX_INVITES",
 					"MAX_REACTIONS",
+					"MAX_SELF_ASSIGNED_ROLES",
 					"MAX_STICKERS",
 					"MAX_THREAD_MEMBERS",
 					"MAX_WEBHOOKS_PER_CHANNEL",
@@ -47987,6 +48306,7 @@
 					"This channel is at its pinned post limit of {count}.",
 					"You can't have more than {count, plural, one {# invite} other {# invites}}.",
 					"You can't have more than {count, plural, one {# reaction} other {# reactions}}.",
+					"You can't have more than {count, plural, one {# role} other {# roles}} from this section.",
 					"You can't have more than {count, plural, one {# sticker} other {# stickers}}.",
 					"This thread is at its member limit of {count}.",
 					"You can't have more than {count, plural, one {# webhook} other {# webhooks}} per channel.",

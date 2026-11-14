@@ -400,14 +400,6 @@ function cleanNode(node: CleanableNode): Node {
 		if (!('subcommandGroup' in node.kind)) node.kind.subcommandGroup = undefined;
 		if (!('subcommand' in node.kind)) node.kind.subcommand = undefined;
 	}
-	if (
-		node.type === 'Mention' &&
-		node.kind?.kind === 'GuildNavigation' &&
-		node.kind.navigationType === 'LinkedRoles' &&
-		!('id' in node.kind)
-	) {
-		node.kind.id = undefined;
-	}
 	if ('children' in node && Array.isArray(node.children)) {
 		node.children = node.children.map((child) => cleanNode(child));
 	}

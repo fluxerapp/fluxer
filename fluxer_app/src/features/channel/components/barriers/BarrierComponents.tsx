@@ -16,8 +16,8 @@ import {Button} from '@app/features/ui/button/Button';
 import {openMessagingPausedHelpModal} from '@app/features/user/components/modals/MessagingPausedHelpModal';
 import {
 	type AccountGate,
+	AccountGateButton,
 	getAccountGatePresentation,
-	useAccountGateAction,
 } from '@app/features/user/utils/AccountGatePresentation';
 import {ACCOUNT_LIMITED_NOTICE_DESCRIPTOR} from '@app/features/user/utils/AccountLimitUtils';
 import {getFormattingLocale} from '@app/features/user/utils/LocaleUtils';
@@ -132,7 +132,7 @@ export const BarrierBase = observer(({message, action, icon, channel}: BarrierBa
 		</div>
 	);
 });
-const CountdownTimer = observer(({initialTime}: {initialTime: number}) => {
+export const CountdownTimer = observer(({initialTime}: {initialTime: number}) => {
 	const [timeRemaining, setTimeRemaining] = useState<number>(initialTime);
 	useEffect(() => {
 		if (timeRemaining <= 0) return;
@@ -170,7 +170,6 @@ const CountdownTimer = observer(({initialTime}: {initialTime: number}) => {
 export const AccountGateBarrier = observer(({gate}: {gate: AccountGate}) => {
 	const {i18n} = useLingui();
 	const presentation = getAccountGatePresentation(i18n, gate);
-	const action = useAccountGateAction(gate);
 	return (
 		<BarrierBase
 			message={presentation.description}
@@ -182,15 +181,10 @@ export const AccountGateBarrier = observer(({gate}: {gate: AccountGate}) => {
 				/>
 			}
 			action={
-				<Button
-					small={true}
-					onClick={action.onClick}
-					disabled={action.submitting}
-					submitting={action.submitting}
-					data-flx="channel.barriers.barrier-components.account-gate-barrier.button.action"
-				>
-					{action.text}
-				</Button>
+				<AccountGateButton
+					gate={gate}
+					data-flx="channel.barriers.barrier-components.account-gate-barrier.account-gate-button"
+				/>
 			}
 			data-flx="channel.barriers.barrier-components.account-gate-barrier.barrier-base"
 		/>

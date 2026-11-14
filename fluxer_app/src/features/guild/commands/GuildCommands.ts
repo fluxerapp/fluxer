@@ -20,7 +20,11 @@ import type {
 	DiscoveryStatusResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 import type {GuildVanityURLUpdateResponse} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import type {Guild, GuildVanityURLResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import type {
+	Guild,
+	GuildSelfAssignableRoleSectionResponse,
+	GuildVanityURLResponse,
+} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRole} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {TemplateSerializedGuild} from '@fluxer/schema/src/domains/guild/GuildTemplateSchemas';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
@@ -216,6 +220,36 @@ export async function toggleFeature(guildId: string, feature: string, enabled: b
 		features.delete(feature);
 	}
 	return await update(guildId, {features: Array.from(features)});
+}
+
+export interface SelfAssignableRoleInput {
+	id: string;
+	description: string;
+}
+
+export interface SelfAssignableRoleSectionInput {
+	id?: string;
+	content: string;
+	roles: Array<SelfAssignableRoleInput>;
+	max_roles: number | null;
+	required_role_ids: Array<string>;
+}
+
+export async function updateSelfAssignableRoleSections(
+	guildId: string,
+	sections: ReadonlyArray<SelfAssignableRoleSectionInput>,
+): Promise<Array<GuildSelfAssignableRoleSectionResponse>> {
+	try {
+		const response = await http.put<Array<GuildSelfAssignableRoleSectionResponse>>(
+			Endpoints.GUILD_SELF_ASSIGNABLE_ROLES(guildId),
+			{body: {sections}},
+		);
+		logger.debug(`Updated self-assignable role sections in guild ${guildId}`);
+		return response.body;
+	} catch (error) {
+		logger.error(`Failed to update self-assignable role sections in guild ${guildId}:`, error);
+		throw error;
+	}
 }
 
 export async function moveChannel(guildId: string, operation: ChannelMoveOperation): Promise<void> {

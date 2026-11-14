@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ChannelHeader} from '@app/features/channel/components/ChannelHeader';
+import {ChannelPageHeaderTitle} from '@app/features/channel/components/ChannelPageHeaderTitle';
 import {ChannelViewScaffold} from '@app/features/channel/components/channel_view/ChannelViewScaffold';
-import styles from '@app/features/channel/components/GuildMembersPage.module.css';
 import {MembersTableView} from '@app/features/channel/components/guild_members_page/MembersTableView';
 import Guilds from '@app/features/guild/state/Guilds';
 import {MEMBERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Users from '@app/features/user/state/Users';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {useLingui} from '@lingui/react/macro';
@@ -26,19 +25,11 @@ export const GuildMembersPage: React.FC<GuildMembersPageProps> = observer(({guil
 	useFluxerDocumentTitle(useMemo(() => [i18n._(MEMBERS_DESCRIPTOR), guild?.name], [guild?.name, i18n.locale]));
 	const headerLeftContent = useMemo(
 		() => (
-			<div
-				className={styles.headerLeftContent}
-				data-flx="channel.guild-members-page.header-left-content.header-left-content"
-			>
-				<UsersIcon
-					className={styles.headerIcon}
-					size={remFromPx(20)}
-					data-flx="channel.guild-members-page.header-left-content.header-icon"
-				/>
-				<span className={styles.headerLabel} data-flx="channel.guild-members-page.header-left-content.header-label">
-					{i18n._(MEMBERS_DESCRIPTOR)}
-				</span>
-			</div>
+			<ChannelPageHeaderTitle
+				icon={UsersIcon}
+				label={i18n._(MEMBERS_DESCRIPTOR)}
+				data-flx="channel.guild-members-page.header-left-content.channel-page-header-title"
+			/>
 		),
 		[i18n.locale],
 	);

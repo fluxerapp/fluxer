@@ -78,6 +78,7 @@ function createDummyGuildResponse(params: {guildId: GuildID; userId: UserID}): G
 		default_message_notifications: 0,
 		disabled_operations: 0,
 		message_history_cutoff: null,
+		self_assignable_role_sections: [],
 	};
 }
 

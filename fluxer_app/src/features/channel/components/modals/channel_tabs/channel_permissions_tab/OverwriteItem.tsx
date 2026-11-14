@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DEFAULT_ROLE_COLOR_HEX, getRoleColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
+import {getRoleSwatchColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import styles from '@app/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.module.css';
 import {OverwriteContextMenu} from '@app/features/channel/components/modals/channel_tabs/channel_permissions_tab/OverwriteContextMenu';
@@ -53,7 +53,7 @@ export const OverwriteItem: React.FC<OverwriteItemProps> = observer(
 			overwriteIcon = (
 				<div
 					className={styles.roleDot}
-					style={{backgroundColor: color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(color || 0)}}
+					style={{backgroundColor: getRoleSwatchColor({color: color ?? 0})}}
 					data-flx="channel.channel-tabs.channel-permissions-tab.overwrite-item.role-dot"
 				/>
 			);

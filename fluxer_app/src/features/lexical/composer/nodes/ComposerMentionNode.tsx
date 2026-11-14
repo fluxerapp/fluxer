@@ -8,7 +8,7 @@ import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegment
 import type {DOMExportOutput, EditorConfig, LexicalNode, NodeKey, SerializedLexicalNode, Spread} from 'lexical';
 import type {CSSProperties, JSX} from 'react';
 
-export type ComposerMentionType = 'user' | 'role' | 'channel' | 'special';
+export type ComposerMentionType = 'user' | 'role' | 'channel' | 'navigation' | 'special';
 
 export const ComposerMentionPresentation = {
 	none: 0,

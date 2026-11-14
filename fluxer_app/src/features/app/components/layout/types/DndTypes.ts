@@ -13,6 +13,7 @@ export const DragItemType = Object.freeze({
 	FAVORITES_CHANNEL: 'favorites-channel',
 	FAVORITES_CATEGORY: 'favorites-category',
 	ACCOUNT_TILE: 'account-tile',
+	SELF_ASSIGNABLE_ROLE: 'self-assignable-role',
 } as const);
 
 export type DragItemType = (typeof DragItemType)[keyof typeof DragItemType];
@@ -78,4 +79,10 @@ export interface ConnectionDragItem {
 export interface AccountTileDragItem {
 	type: typeof DragItemType.ACCOUNT_TILE;
 	accountKey: string;
+}
+
+export interface SelfAssignableRoleDragItem {
+	type: typeof DragItemType.SELF_ASSIGNABLE_ROLE;
+	sectionKey: string;
+	roleId: string;
 }

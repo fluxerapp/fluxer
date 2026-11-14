@@ -12,6 +12,7 @@ import {Button} from '@app/features/ui/button/Button';
 import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerField';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import {InfoAlert} from '@app/features/ui/info_alert/InfoAlert';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon, TrashIcon} from '@phosphor-icons/react';
@@ -50,6 +51,11 @@ const MEMBERS_WITH_THE_PERMISSION_CAN_ALWAYS_MENTION_ROLES_DESCRIPTOR = msg({
 	comment:
 		'Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.',
 });
+const ROLE_IS_SELF_ASSIGNABLE_DESCRIPTOR = msg({
+	message: 'Members can give themselves this role from the Roles page.',
+	comment:
+		'Info note at the top of the role editor in community settings, shown when the role is listed as a self-assignable role.',
+});
 const SEARCH_PERMISSIONS_DESCRIPTOR = msg({
 	message: 'Search permissions',
 	comment: 'Placeholder in the search input above the permission list in the role editor.',
@@ -61,6 +67,7 @@ interface RoleEditorProps {
 	selectedRole: GuildRole | null;
 	selectedRoleWithUpdates: GuildRole | null;
 	selectedRoleLocked: boolean;
+	selectedRoleSelfAssignable: boolean;
 	canManageRoles: boolean;
 	mentionEveryonePermissionLabel: string;
 	permissionSearchQuery: string;
@@ -82,6 +89,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = observer(
 		selectedRole,
 		selectedRoleWithUpdates,
 		selectedRoleLocked,
+		selectedRoleSelfAssignable,
 		canManageRoles,
 		mentionEveryonePermissionLabel,
 		permissionSearchQuery,
@@ -142,6 +150,11 @@ export const RoleEditor: React.FC<RoleEditorProps> = observer(
 										</Button>
 									)}
 								</div>
+								{selectedRoleSelfAssignable && (
+									<InfoAlert data-flx="guild.guild-tabs.guild-roles-tab.role-editor.self-assignable-notice">
+										{i18n._(ROLE_IS_SELF_ASSIGNABLE_DESCRIPTOR)}
+									</InfoAlert>
+								)}
 								<div className={styles.sectionSubtitle} data-flx="guild.guild-tabs.guild-roles-tab.section-subtitle">
 									<Trans>Display</Trans>
 								</div>

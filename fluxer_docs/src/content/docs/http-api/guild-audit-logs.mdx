@@ -84,7 +84,7 @@ Each value is an `action_type`, and the `action_type` query filter takes the sam
 | 22 | MEMBER_BAN_ADD | Ban created or replaced. `target_id` is the user and the option is `delete_message_seconds` |
 | 23 | MEMBER_BAN_REMOVE | Ban removed. `target_id` is the user |
 | 24 | MEMBER_UPDATE | Member changed. `target_id` is the user |
-| 25 | MEMBER_ROLE_UPDATE | One role added to or removed from a member. `target_id` is the user and the option is `role_name` |
+| 25 | MEMBER_ROLE_UPDATE | One role added to or removed from a member. `target_id` is the user and the options are `role_name` and `self_assignable` |
 | 26 | MEMBER_MOVE<sup>3</sup> | Member moved to another voice channel. `target_id` is the user |
 | 27 | MEMBER_DISCONNECT<sup>3</sup> | Member disconnected from voice. `target_id` is the user |
 | 28 | BOT_ADD | Bot added. `target_id` is the user and the option is `temporary` |
@@ -143,6 +143,7 @@ An action records only the options listed for it in [audit actions](#audit-actio
 | members_removed<sup>2</sup> | number | The number of memberships the action removed |
 | message_id | string | The ID of the message the action concerns |
 | role_name | string | The name of the role when the entry was written |
+| self_assignable | boolean | Whether the member added or removed the role themselves through self-assignable role sections, present only when true |
 | temporary | boolean | Whether the invite or bot membership is temporary |
 | type | number | The channel type, permission overwrite type or webhook type |
 | uses<sup>2</sup> | number | The use count of the invite |
@@ -205,6 +206,11 @@ Recorded by [GUILD_UPDATE](#audit-actions).
 | disabled_operations<sup>1</sup> | number | The [disabled guild operations](/http-api/guilds/#disabled-guild-operations) mask |
 | member_count<sup>1</sup> | number | The member count |
 | message_history_cutoff | ?ISO8601 timestamp | The message history cutoff |
+| self_assignable_role_ids | array[string] | The IDs of the roles in the [self-assignable role sections](/http-api/guilds/#self-assignable-role-section-object), section by section |
+| self_assignable_role_descriptions | array[string] | The description of each role in the self-assignable role sections, in the same order as `self_assignable_role_ids` |
+| self_assignable_role_section_contents | array[string] | The text of each self-assignable role section, in order |
+| self_assignable_role_section_max_roles | array[integer] | The most roles a member can choose from each self-assignable role section, in order. 0 means no limit |
+| self_assignable_required_role_ids | array[string] | The IDs of the roles members need to see each self-assignable role section, section by section |
 
 <sup>1</sup> Never recorded
 

@@ -6,12 +6,13 @@ import {CHANGE_NICKNAME_DESCRIPTOR, ROLES_DESCRIPTOR} from '@app/features/i18n/u
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {useGuildRoleOptions} from '@app/features/permissions/hooks/useGuildRoleOptions';
 import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy';
 import Permission from '@app/features/permissions/state/Permission';
-import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
-import {CheckboxItem, SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
+import {SubMenu as MenuItemSubmenu} from '@app/features/ui/action_menu/ContextMenu';
 import {ChangeNicknameIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import itemStyles from '@app/features/ui/action_menu/items/MenuItems.module.css';
+import {RoleCheckboxMenuItem, RoleMenuItemLabel} from '@app/features/ui/action_menu/items/RoleMenuItems';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
@@ -37,18 +38,8 @@ export const ManageRolesMenuItem: React.FC<ManageRolesMenuItemProps> = observer(
 	const {i18n} = useLingui();
 	const guild = Guilds.getGuild(guildId);
 	const currentMember = GuildMembers.getMember(guildId, member.user.id);
-	const {canManageRole} = useRoleHierarchy(guild);
 	const canManageRoles = Permission.can(Permissions.MANAGE_ROLES, {guildId});
-	const allRoles = useMemo(() => {
-		if (!guild) return [];
-		return Object.values(guild.roles)
-			.filter((role) => !role.isEveryone)
-			.sort((a, b) => b.position - a.position)
-			.map((role) => ({
-				role,
-				canManage: canManageRole({id: role.id, position: role.position, permissions: role.permissions}),
-			}));
-	}, [guild, canManageRole]);
+	const allRoles = useGuildRoleOptions(guild);
 	const visibleRoles = useMemo(() => {
 		if (canManageRoles) return allRoles;
 		const memberRoles = currentMember?.roles;
@@ -77,33 +68,15 @@ export const ManageRolesMenuItem: React.FC<ManageRolesMenuItemProps> = observer(
 								const hasRole = currentMember?.roles.has(role.id) ?? false;
 								const canToggle = canManageRoles && canManage;
 								return (
-									<CheckboxItem
+									<RoleCheckboxMenuItem
 										key={role.id}
+										role={role}
 										checked={hasRole}
 										disabled={!canToggle}
-										onCheckedChange={() => handleToggleRole(role.id, hasRole, canToggle)}
-										closeOnChange={false}
+										onToggle={() => handleToggleRole(role.id, hasRole, canToggle)}
+										onRoleContextMenu={(event) => openRoleContextMenu(event, role.id)}
 										data-flx="ui.action-menu.items.guild-member-menu-items.manage-roles-menu-item.checkbox-item"
-									>
-										{/* biome-ignore lint/a11y/noStaticElementInteractions: context-menu affordance inside a CheckboxItem. */}
-										<div
-											className={itemStyles.roleContainer}
-											onContextMenu={(event) => openRoleContextMenu(event, role.id)}
-											data-flx="ui.action-menu.items.guild-member-menu-items.manage-roles-menu-item.role-container.open-role-context-menu"
-										>
-											<div
-												className={itemStyles.roleIcon}
-												style={{backgroundColor: ColorUtils.int2rgb(role.color)}}
-												data-flx="ui.action-menu.items.guild-member-menu-items.manage-roles-menu-item.div"
-											/>
-											<span
-												className={!canToggle ? itemStyles.roleDisabled : undefined}
-												data-flx="ui.action-menu.items.guild-member-menu-items.manage-roles-menu-item.span"
-											>
-												{role.name}
-											</span>
-										</div>
-									</CheckboxItem>
+									/>
 								);
 							})
 						: visibleRoles.map(({role}) => (
@@ -118,22 +91,10 @@ export const ManageRolesMenuItem: React.FC<ManageRolesMenuItemProps> = observer(
 										onContextMenu={(event) => openRoleContextMenu(event, role.id)}
 										data-flx="ui.action-menu.items.guild-member-menu-items.manage-roles-menu-item.group.open-role-context-menu--2"
 									>
-										<div
-											className={itemStyles.roleContainer}
+										<RoleMenuItemLabel
+											role={role}
 											data-flx="ui.action-menu.items.guild-member-menu-items.manage-roles-menu-item.div--2"
-										>
-											<div
-												className={itemStyles.roleIcon}
-												style={{backgroundColor: ColorUtils.int2rgb(role.color)}}
-												data-flx="ui.action-menu.items.guild-member-menu-items.manage-roles-menu-item.div--3"
-											/>
-											<span
-												className={itemStyles.roleName}
-												data-flx="ui.action-menu.items.guild-member-menu-items.manage-roles-menu-item.span--2"
-											>
-												{role.name}
-											</span>
-										</div>
+										/>
 										<div
 											className={itemStyles.readonlyRoleSpacer}
 											data-flx="ui.action-menu.items.guild-member-menu-items.manage-roles-menu-item.div--4"

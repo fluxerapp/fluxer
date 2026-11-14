@@ -445,8 +445,7 @@ function alignNode(node: Node, format: MarkdownHlFormat, ctx: AlignContext): voi
 
 const EMOJI_TOKEN_RE = /^(?:<a?:[A-Za-z0-9_+~-]+:\d+>|:[\p{L}\p{N}_+~.-]{2,}:(?::skin-tone-[1-5]:)?)/u;
 const TIMESTAMP_TOKEN_RE = /^<t:-?\d+(?::[tTdDfFsSR])?>/;
-const MENTION_TOKEN_RE =
-	/^(?:<@!?\d+>|<@&\d+>|<#\d+>|<\/[^:>\n]+:\d+>|<id:(?:customize|browse|guide|linked-roles(?::[^:>\n]*)?)>|@everyone|@here)/;
+const MENTION_TOKEN_RE = /^(?:<@!?\d+>|<@&\d+>|<#\d+>|<\/[^:>\n]+:\d+>|<id:roles>|@everyone|@here)/;
 
 function alignOpaque(tokenRe: RegExp, literal: string | null, format: MarkdownHlFormat, ctx: AlignContext): void {
 	const match = tokenRe.exec(ctx.source.slice(ctx.pos));

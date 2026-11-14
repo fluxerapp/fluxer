@@ -2,6 +2,7 @@
 
 import type {
 	AlertType,
+	GuildNavKind,
 	NodeType,
 	TableAlignment,
 	TimestampStyle,
@@ -158,12 +159,7 @@ type MentionType =
 	  }
 	| {
 			kind: 'GuildNavigation';
-			navigationType: 'Customize' | 'Browse' | 'Guide';
-	  }
-	| {
-			kind: 'GuildNavigation';
-			navigationType: 'LinkedRoles';
-			id?: string;
+			navigationType: GuildNavKind;
 	  }
 	| {
 			kind: 'Everyone';

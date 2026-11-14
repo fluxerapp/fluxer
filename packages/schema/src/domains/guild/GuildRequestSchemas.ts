@@ -4,6 +4,10 @@ import {
 	CONTENT_WARNING_TEXT_MAX_LENGTH,
 	GuildMemberProfileFlags,
 	GuildMemberProfileFlagsDescriptions,
+	MAX_SELF_ASSIGNABLE_ROLE_SECTIONS,
+	MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION,
+	SELF_ASSIGNABLE_ROLE_DESCRIPTION_MAX_LENGTH,
+	SELF_ASSIGNABLE_ROLE_SECTION_CONTENT_MAX_LENGTH,
 	SystemChannelFlags,
 	SystemChannelFlagsDescriptions,
 } from '@fluxer/constants/src/GuildConstants';
@@ -41,6 +45,7 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {MentionReplyPreferencesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
 import {PasswordType} from '@fluxer/schema/src/primitives/UserValidators';
+import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 function coerceBlankStringToNull(value: unknown): unknown {
@@ -388,6 +393,59 @@ const GuildRolePositionItem = z.object({
 export const GuildRolePositionsRequest = z.array(GuildRolePositionItem).max(10000);
 
 export type GuildRolePositionsRequest = z.infer<typeof GuildRolePositionsRequest>;
+
+const GuildSelfAssignableRoleRequest = z.object({
+	id: SnowflakeType.describe('The ID of the role'),
+	description: createStringType(0, SELF_ASSIGNABLE_ROLE_DESCRIPTION_MAX_LENGTH)
+		.default('')
+		.describe(
+			`Plain text shown with the role, so members know what they are choosing (0-${SELF_ASSIGNABLE_ROLE_DESCRIPTION_MAX_LENGTH} characters)`,
+		),
+});
+
+const GuildSelfAssignableRoleSectionRequest = z
+	.object({
+		id: SnowflakeType.optional().describe('The ID of an existing section to keep. Leave it out to add a new section'),
+		content: createStringType(0, SELF_ASSIGNABLE_ROLE_SECTION_CONTENT_MAX_LENGTH)
+			.default('')
+			.describe(
+				`Markdown text shown above the roles (0-${SELF_ASSIGNABLE_ROLE_SECTION_CONTENT_MAX_LENGTH} characters)`,
+			),
+		roles: z
+			.array(GuildSelfAssignableRoleRequest)
+			.min(1)
+			.max(MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION)
+			.describe(
+				`The roles members can add and remove on themselves, in display order (1-${MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION})`,
+			),
+		max_roles: z
+			.int()
+			.min(1)
+			.max(MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION)
+			.nullish()
+			.describe(
+				`The most roles a member can choose from this section (1-${MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION}). With 1, choosing another role swaps it for the one they have. Leave it out or null for no limit`,
+			),
+		required_role_ids: z
+			.array(SnowflakeType)
+			.max(MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION)
+			.optional()
+			.describe(
+				`IDs of roles a member needs one of to see this section and add or remove its roles (at most ${MAX_SELF_ASSIGNABLE_ROLES_PER_SECTION}). Leave it out or empty to show the section to everyone`,
+			),
+	})
+	.register(schemaMetadata, {preserveEmptyValues: true});
+
+export const GuildSelfAssignableRoleSectionsUpdateRequest = z.object({
+	sections: z
+		.array(GuildSelfAssignableRoleSectionRequest)
+		.max(MAX_SELF_ASSIGNABLE_ROLE_SECTIONS)
+		.describe(
+			`Every section in display order (max ${MAX_SELF_ASSIGNABLE_ROLE_SECTIONS}). Replaces the existing sections`,
+		),
+});
+
+export type GuildSelfAssignableRoleSectionsUpdateRequest = z.infer<typeof GuildSelfAssignableRoleSectionsUpdateRequest>;
 
 export const GuildMemberListQuery = z.object({
 	limit: z.coerce

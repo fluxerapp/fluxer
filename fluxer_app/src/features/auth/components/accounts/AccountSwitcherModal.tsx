@@ -61,7 +61,6 @@ import {
 	mostRecentOtherAccount,
 	saveSwitcherOrder,
 } from '@app/features/auth/state/AccountSwitcherAccounts';
-import {moveKey} from '@app/features/auth/state/AccountSwitcherOrder';
 import Accounts from '@app/features/auth/state/Accounts';
 import {AuthRegisterDraftContext, useAuthRegisterDraft} from '@app/features/auth/state/AuthRegisterDraftContext';
 import {useAccountSwitcherLogic} from '@app/features/auth/utils/AccountSwitcherModalUtils';
@@ -78,6 +77,7 @@ import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {ModalStackContext} from '@app/features/ui/utils/ModalStackContext';
 import Window from '@app/features/window/state/Window';
+import {moveKey} from '@app/lib/list/MoveKey';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';

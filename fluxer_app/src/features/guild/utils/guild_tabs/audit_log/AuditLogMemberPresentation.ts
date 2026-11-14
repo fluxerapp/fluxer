@@ -58,6 +58,9 @@ import {
 	MEMBER_OWN_PROFILE_UPDATED_SUMMARY,
 	MEMBER_OWN_PRONOUNS_REMOVED_SUMMARY,
 	MEMBER_OWN_PRONOUNS_SET_SUMMARY,
+	MEMBER_OWN_ROLE_ADDED_SUMMARY,
+	MEMBER_OWN_ROLE_REMOVED_SUMMARY,
+	MEMBER_OWN_ROLES_UPDATED_SUMMARY,
 	MEMBER_PRONOUNS_REMOVED_ROW,
 	MEMBER_PRONOUNS_SET_ROW,
 	MEMBER_PRUNE_SUMMARY,
@@ -68,6 +71,8 @@ import {
 	MEMBER_ROLE_REMOVED_ROW,
 	MEMBER_ROLE_REMOVED_SUMMARY,
 	MEMBER_ROLES_UPDATED_SUMMARY,
+	MEMBER_SELF_ASSIGNED_ROLE_ADDED_SUMMARY,
+	MEMBER_SELF_ASSIGNED_ROLE_REMOVED_SUMMARY,
 	MEMBER_SERVER_DEAFEN_APPLIED_ROW,
 	MEMBER_SERVER_DEAFEN_APPLIED_SUMMARY,
 	MEMBER_SERVER_DEAFEN_REMOVED_ROW,
@@ -353,15 +358,30 @@ function temporaryRows(entry: GuildAuditLogEntryResponse): Array<AuditLogDetailR
 	return [detailRow('temporary', 'neutral', MEMBER_NO_LONGER_TEMPORARY_ROW)];
 }
 
+function isSelfAssignableChange(entry: GuildAuditLogEntryResponse): boolean {
+	return readBoolean(readOption(entry, 'self_assignable')) === true;
+}
+
 function roleChangeSummary(
 	subject: MemberSubject,
 	change: SingleRoleChange,
 	role: AuditLogPlaceholder,
+	selfAssignable: boolean,
 ): AuditLogSentence {
-	const {actor, target} = subject;
-	return change.kind === 'added'
-		? sentence(MEMBER_ROLE_ADDED_SUMMARY, {actor, target, role})
-		: sentence(MEMBER_ROLE_REMOVED_SUMMARY, {actor, target, role});
+	const {actor, target, self} = subject;
+	const added = change.kind === 'added';
+	if (!self) return sentence(added ? MEMBER_ROLE_ADDED_SUMMARY : MEMBER_ROLE_REMOVED_SUMMARY, {actor, target, role});
+	if (selfAssignable) {
+		const descriptor = added ? MEMBER_SELF_ASSIGNED_ROLE_ADDED_SUMMARY : MEMBER_SELF_ASSIGNED_ROLE_REMOVED_SUMMARY;
+		return sentence(descriptor, {actor, role});
+	}
+	return sentence(added ? MEMBER_OWN_ROLE_ADDED_SUMMARY : MEMBER_OWN_ROLE_REMOVED_SUMMARY, {actor, role});
+}
+
+function rolesUpdatedSummary({actor, target, self}: MemberSubject): AuditLogSentence {
+	return self
+		? sentence(MEMBER_OWN_ROLES_UPDATED_SUMMARY, {actor})
+		: sentence(MEMBER_ROLES_UPDATED_SUMMARY, {actor, target});
 }
 
 function nicknameGroup(entry: GuildAuditLogEntryResponse, subject: MemberSubject): MemberChangeGroup | null {
@@ -410,13 +430,12 @@ function rolesGroup(entry: GuildAuditLogEntryResponse, subject: MemberSubject): 
 	const single = readSingleRoleChange(changes);
 	if (single !== null) {
 		return {
-			summary: roleChangeSummary(subject, single, rolePlaceholder(single.roleId, null)),
+			summary: roleChangeSummary(subject, single, rolePlaceholder(single.roleId, null), isSelfAssignableChange(entry)),
 			summaryRows: [],
 			rows,
 		};
 	}
-	const {actor, target} = subject;
-	return {summary: sentence(MEMBER_ROLES_UPDATED_SUMMARY, {actor, target}), summaryRows: rows, rows};
+	return {summary: rolesUpdatedSummary(subject), summaryRows: rows, rows};
 }
 
 function timeoutGroup(entry: GuildAuditLogEntryResponse, subject: MemberSubject): MemberChangeGroup | null {
@@ -610,9 +629,8 @@ export function presentMemberRoleUpdate(entry: GuildAuditLogEntryResponse): Audi
 	const single = readSingleRoleChange(changes);
 	const temporary = temporaryRows(entry);
 	if (single === null) {
-		const {actor, target} = subject;
 		return {
-			summary: sentence(MEMBER_ROLES_UPDATED_SUMMARY, {actor, target}),
+			summary: rolesUpdatedSummary(subject),
 			rows: [...roleRows(changes), ...temporary],
 			blocks: [],
 		};
@@ -620,7 +638,11 @@ export function presentMemberRoleUpdate(entry: GuildAuditLogEntryResponse): Audi
 	const role = rolePlaceholder(single.roleId, readString(readOption(entry, 'role_name')));
 	const {target} = subject;
 	if (subject.actor.kind !== 'system') {
-		return {summary: roleChangeSummary(subject, single, role), rows: temporary, blocks: []};
+		return {
+			summary: roleChangeSummary(subject, single, role, isSelfAssignableChange(entry)),
+			rows: temporary,
+			blocks: [],
+		};
 	}
 	const systemSummary =
 		single.kind === 'added' ? MEMBER_ROLE_ADDED_BY_SYSTEM_SUMMARY : MEMBER_ROLE_REMOVED_BY_SYSTEM_SUMMARY;

@@ -391,6 +391,8 @@ export const getRoleColor = (color: number): string => {
 	return `#${color.toString(16).padStart(6, '0')}`;
 };
 export const DEFAULT_ROLE_COLOR_HEX = '#99aab5';
+export const getRoleSwatchColor = (role: {readonly color: number}): string =>
+	role.color === 0 ? DEFAULT_ROLE_COLOR_HEX : getRoleColor(role.color);
 export const sortRolesByPosition = <T extends {id: string; position: number}>(roles: Array<T>): Array<T> => {
 	return roles.sort((a, b) => {
 		if (b.position !== a.position) {

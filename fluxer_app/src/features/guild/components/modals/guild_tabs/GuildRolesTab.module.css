@@ -293,3 +293,11 @@
 .mobileBackRow {
 	margin-bottom: 0.5rem;
 }
+
+.selfAssignableSwitch {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.5rem;
+	padding-top: 0.25rem;
+}

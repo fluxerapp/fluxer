@@ -14,6 +14,7 @@ import type {GuildBan} from '@app/api/models/GuildBan';
 import type {GuildEmoji} from '@app/api/models/GuildEmoji';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {GuildRole} from '@app/api/models/GuildRole';
+import type {GuildSelfAssignableRoleSection} from '@app/api/models/GuildSelfAssignableRoleSection';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import {hiddenGuildMember, isHiddenPartial} from '@app/api/user/ProfileVisibility';
 import {getEffectiveGuildMfaLevel} from '@fluxer/constants/src/GuildConstants';
@@ -24,7 +25,11 @@ import type {
 	GuildStickerWithUserResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {GuildPartialResponse, GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import type {
+	GuildPartialResponse,
+	GuildResponse,
+	GuildSelfAssignableRoleSectionResponse,
+} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
@@ -78,7 +83,20 @@ export function mapGuildToGuildResponse(
 		default_message_notifications: guild.defaultMessageNotifications,
 		disabled_operations: guild.disabledOperations,
 		message_history_cutoff: guild.messageHistoryCutoff ? guild.messageHistoryCutoff.toISOString() : null,
+		self_assignable_role_sections: guild.selfAssignableRoleSections.map(mapGuildSelfAssignableRoleSectionToResponse),
 		permissions: options?.permissions != null ? options.permissions.toString() : undefined,
+	};
+}
+
+export function mapGuildSelfAssignableRoleSectionToResponse(
+	section: GuildSelfAssignableRoleSection,
+): GuildSelfAssignableRoleSectionResponse {
+	return {
+		id: section.id.toString(),
+		content: section.content,
+		roles: section.roles.map((role) => ({id: role.roleId.toString(), description: role.description})),
+		max_roles: section.maxRoles,
+		required_role_ids: section.requiredRoleIds.map((roleId) => roleId.toString()),
 	};
 }
 

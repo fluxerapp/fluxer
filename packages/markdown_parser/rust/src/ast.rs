@@ -194,8 +194,6 @@ pub enum MentionKind {
     GuildNavigation {
         #[serde(rename = "navigationType")]
         navigation_type: GuildNavigationType,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        id: Option<String>,
     },
     Everyone,
     Here,
@@ -203,10 +201,7 @@ pub enum MentionKind {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 pub enum GuildNavigationType {
-    Customize,
-    Browse,
-    Guide,
-    LinkedRoles,
+    Roles,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
