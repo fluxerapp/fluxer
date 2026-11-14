@@ -146,8 +146,9 @@ const STARTED_A_THREAD_NAMED_DESCRIPTOR = msg({
 		'Plain text summary of the thread created system message. username is the author, threadName the thread name.',
 });
 const OWNERSHIP_TRANSFER_DESCRIPTOR = msg({
-	message: '{username} has just received ownership of this community',
-	comment: 'System message shown inline when community ownership is transferred. username is the new owner.',
+	message: '{username} received ownership of this community.',
+	comment:
+		'System message shown in the designated channel when community ownership is transferred. {username} is the new owner, rendered as a user tag.',
 });
 
 interface StringifyableMessage {

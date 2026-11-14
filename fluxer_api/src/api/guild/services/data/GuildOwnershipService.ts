@@ -70,7 +70,7 @@ export class GuildOwnershipService {
 			auditLogReason: auditLogReason ?? null,
 			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, OWNERSHIP_AUDIT_KEYS),
 		});
-		await this.channelService.messages.system.sendOwnershipTransferSystemMessage({guildId, targetUserId: newOwnerId});
+		await this.channelService.messages.system.sendOwnershipTransferSystemMessage({guildId, newOwnerId});
 		return mapGuildToGuildResponse(updatedGuild);
 	}
 }

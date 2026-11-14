@@ -2412,11 +2412,6 @@ msgstr "{username} a schimbat numele canalului."
 msgid "{username} followed {name} into this channel. Messages published there will appear here."
 msgstr "{username} a urmat {name} în acest canal. Mesajele publicate acolo vor apărea aici."
 
-#. System message shown inline when community ownership is transferred. username is the new owner.
-#: src/features/messaging/utils/SystemMessageUtils.tsx
-msgid "{username} has just received ownership of this community"
-msgstr ""
-
 #. System message in a group DM when a member removes themself from the group.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} has left the group."
@@ -2441,6 +2436,11 @@ msgstr "{username} pe {instanceName} folosește tema aplicației desktop acum. M
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} pinned a message to this channel."
 msgstr "{username} a fixat un mesaj pe acest canal."
+
+#. System message shown in chat when community ownership is transferred. {username} is the new owner, rendered as a user tag.
+#: src/features/messaging/utils/SystemMessageUtils.tsx
+msgid "{username} received ownership of this community."
+msgstr ""
 
 #. System message in a group DM when one member removes another. username is the actor, userName is the removed user.
 #: src/features/messaging/utils/SystemMessageUtils.tsx

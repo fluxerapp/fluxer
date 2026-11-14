@@ -2412,11 +2412,6 @@ msgstr "{username}님이 채널 이름을 변경했습니다."
 msgid "{username} followed {name} into this channel. Messages published there will appear here."
 msgstr "{username}님이 {name}을(를) 이 채널로 팔로우했습니다. 해당 채널에 게시된 메시지가 여기에 표시됩니다."
 
-#. System message shown inline when community ownership is transferred. username is the new owner.
-#: src/features/messaging/utils/SystemMessageUtils.tsx
-msgid "{username} has just received ownership of this community"
-msgstr ""
-
 #. System message in a group DM when a member removes themself from the group.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} has left the group."
@@ -2441,6 +2436,11 @@ msgstr "{username}님이 현재 {instanceName}에서 데스크톱 앱 테마를 
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} pinned a message to this channel."
 msgstr "{username}님이 이 채널에 메시지를 고정했습니다."
+
+#. System message shown in chat when community ownership is transferred. {username} is the new owner, rendered as a user tag.
+#: src/features/messaging/utils/SystemMessageUtils.tsx
+msgid "{username} received ownership of this community."
+msgstr ""
 
 #. System message in a group DM when one member removes another. username is the actor, userName is the removed user.
 #: src/features/messaging/utils/SystemMessageUtils.tsx

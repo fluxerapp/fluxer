@@ -8,7 +8,7 @@ import type {MessagePersistenceService} from '@app/api/channel/services/message/
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
-import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import {MessageTypes, type MessageTypeValue} from '@fluxer/constants/src/ChannelConstants';
 
 export class MessageSystemService {
 	constructor(
@@ -20,30 +20,27 @@ export class MessageSystemService {
 	) {}
 
 	async sendJoinSystemMessage({guildId, userId}: {guildId: GuildID; userId: UserID}): Promise<void> {
-		const guild = await this.guildRepository.findUnique(guildId);
-		if (!guild?.systemChannelId) return;
-		const systemChannel = await this.channelRepository.channelData.findUnique(guild.systemChannelId);
-		if (!systemChannel) return;
-		const messageId = createMessageID(await this.snowflakeService.generateForChannel(systemChannel.id));
-		const {message} = await this.persistenceService.createMessage({
-			messageId,
-			channelId: systemChannel.id,
-			userId,
-			type: MessageTypes.USER_JOIN,
-			content: null,
-			flags: 0,
-			guildId,
-			channel: systemChannel,
-		});
-		await dispatchMessageCreateBroadcast({gatewayService: this.gatewayService, channel: systemChannel, message});
+		await this.sendSystemMessage({guildId, userId, type: MessageTypes.USER_JOIN});
 	}
 
 	async sendOwnershipTransferSystemMessage({
 		guildId,
-		targetUserId,
+		newOwnerId,
 	}: {
 		guildId: GuildID;
-		targetUserId: UserID;
+		newOwnerId: UserID;
+	}): Promise<void> {
+		await this.sendSystemMessage({guildId, userId: newOwnerId, type: MessageTypes.OWNERSHIP_TRANSFER});
+	}
+
+	private async sendSystemMessage({
+		guildId,
+		userId,
+		type,
+	}: {
+		guildId: GuildID;
+		userId: UserID;
+		type: MessageTypeValue;
 	}): Promise<void> {
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild?.systemChannelId) return;
@@ -53,8 +50,8 @@ export class MessageSystemService {
 		const {message} = await this.persistenceService.createMessage({
 			messageId,
 			channelId: systemChannel.id,
-			userId: targetUserId,
-			type: MessageTypes.OWNERSHIP_TRANSFER,
+			userId,
+			type,
 			content: null,
 			flags: 0,
 			guildId,

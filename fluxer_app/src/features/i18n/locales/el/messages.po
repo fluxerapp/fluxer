@@ -2412,11 +2412,6 @@ msgstr "Ο/Η {username} άλλαξε το όνομα του καναλιού."
 msgid "{username} followed {name} into this channel. Messages published there will appear here."
 msgstr "Το {username} ακολούθησε το {name} σε αυτό το κανάλι. Τα μηνύματα που δημοσιεύονται εκεί θα εμφανίζονται εδώ."
 
-#. System message shown inline when community ownership is transferred. username is the new owner.
-#: src/features/messaging/utils/SystemMessageUtils.tsx
-msgid "{username} has just received ownership of this community"
-msgstr ""
-
 #. System message in a group DM when a member removes themself from the group.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} has left the group."
@@ -2441,6 +2436,11 @@ msgstr "Το {username} στο {instanceName} χρησιμοποιεί αυτή�
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} pinned a message to this channel."
 msgstr "Ο/Η {username} καρφίτσωσε ένα μήνυμα σε αυτό το κανάλι."
+
+#. System message shown in chat when community ownership is transferred. {username} is the new owner, rendered as a user tag.
+#: src/features/messaging/utils/SystemMessageUtils.tsx
+msgid "{username} received ownership of this community."
+msgstr ""
 
 #. System message in a group DM when one member removes another. username is the actor, userName is the removed user.
 #: src/features/messaging/utils/SystemMessageUtils.tsx

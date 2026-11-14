@@ -2412,11 +2412,6 @@ msgstr "{username} שינה/שינתה את שם הערוץ."
 msgid "{username} followed {name} into this channel. Messages published there will appear here."
 msgstr "{username} עקב אחרי {name} לערוץ הזה. הודעות שפורסמו שם יופיעו כאן."
 
-#. System message shown inline when community ownership is transferred. username is the new owner.
-#: src/features/messaging/utils/SystemMessageUtils.tsx
-msgid "{username} has just received ownership of this community"
-msgstr ""
-
 #. System message in a group DM when a member removes themself from the group.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} has left the group."
@@ -2441,6 +2436,11 @@ msgstr "{username} ב-{instanceName} משתמש כרגע בנושא של אפל�
 #: src/features/messaging/utils/SystemMessageUtils.tsx
 msgid "{username} pinned a message to this channel."
 msgstr "{username} הצמיד/ה הודעה לערוץ זה."
+
+#. System message shown in chat when community ownership is transferred. {username} is the new owner, rendered as a user tag.
+#: src/features/messaging/utils/SystemMessageUtils.tsx
+msgid "{username} received ownership of this community."
+msgstr ""
 
 #. System message in a group DM when one member removes another. username is the actor, userName is the removed user.
 #: src/features/messaging/utils/SystemMessageUtils.tsx
