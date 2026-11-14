@@ -176,7 +176,7 @@ function applyUnreadBadge(badge: number): void {
 	} else if (process.platform === 'darwin' && badge === UNREAD_BADGE_DOT) {
 		app.dock?.setBadge('•');
 	} else {
-		app.setBadgeCount(Math.max(badge, 0));
+		app.setBadgeCount(badge === UNREAD_BADGE_DOT ? 1 : badge);
 	}
 	setDesktopTrayUnreadBadge(badge);
 }
