@@ -150,6 +150,7 @@ export interface LexicalComposerInputProps {
 	focusRingEnabled?: boolean;
 	className?: string;
 	id?: string;
+	tabIndex?: number;
 	ariaLabel?: string;
 	ariaLabelledBy?: string;
 	ariaDescribedBy?: string;
@@ -242,6 +243,7 @@ const ComposerInner = ({
 	focusRingEnabled = false,
 	className,
 	id,
+	tabIndex,
 	ariaLabel,
 	ariaLabelledBy,
 	ariaDescribedBy,
@@ -767,6 +769,7 @@ const ComposerInner = ({
 							className={clsx(styles.editable, className)}
 							id={id}
 							spellCheck
+							tabIndex={tabIndex}
 							onKeyDown={handleEditableKeyDown}
 							onPointerDown={handleEditablePointerDown}
 							onClick={handleEditableClick}
