@@ -17,6 +17,8 @@ const MAX_RENDERED_BYTES: usize = 64 * 1024;
 struct PushPlaintextContext {
     #[serde(default)]
     preserve_markdown: bool,
+    #[serde(default)]
+    hide_spoilers: bool,
     #[serde(default = "default_include_emoji_names")]
     include_emoji_names: bool,
     #[serde(default)]
@@ -37,6 +39,7 @@ impl From<PushPlaintextContext> for PlaintextOptions {
     fn from(value: PushPlaintextContext) -> Self {
         Self {
             preserve_markdown: value.preserve_markdown,
+            hide_spoilers: value.hide_spoilers,
             include_emoji_names: value.include_emoji_names,
             include_link_urls: value.include_link_urls,
             users: value.users,

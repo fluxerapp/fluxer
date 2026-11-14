@@ -60,6 +60,7 @@ is_safe_codepoint(_) -> true.
 default_context(Context) ->
     #{
         <<"preserve_markdown">> => maps:get(<<"preserve_markdown">>, Context, true),
+        <<"hide_spoilers">> => maps:get(<<"hide_spoilers">>, Context, true),
         <<"include_emoji_names">> => maps:get(<<"include_emoji_names">>, Context, true),
         <<"include_link_urls">> => maps:get(<<"include_link_urls">>, Context, false),
         <<"users">> => bounded_name_map(maps:get(<<"users">>, Context, #{})),
